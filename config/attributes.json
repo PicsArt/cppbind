@@ -1,0 +1,29 @@
+{
+    "prefix":{
+        "inheritable": true,
+        "default": null,
+        "allowed_on": ["class", "namespace", "enum"]
+    },
+    "file":{
+        "inheritable": true,
+        "default": "{file_name}",
+        "allowed_on": ["class", "namespace", "enum"]
+    },
+    "module":
+    {
+        "inheritable": true,
+        "default": "{namesapces}",
+        "allowed_on": ["class", "namespace", "enum"]
+    },
+    "name":
+    {
+        "inheritable": false,
+        "default": "{object_name}"
+    },
+    "shared_ref":
+    {
+        "inheritable": false,
+        "default": false,
+        "allowed_on": ["class"]
+    }
+}

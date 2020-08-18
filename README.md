@@ -41,25 +41,25 @@ IEG_MODULE(name, platform)
 IEG_INFO(field, value)
 IEG_INFO(field, value, platform)
 ```
-# Python API
+## Python API
 
 All code generation rules are defined via python. The generator defines a strict API by which users can write rules to build generated code.  Library has 2 key classes - context and builder. For each command corresponding python function will be called with context and builder arguments.  Example:
 ```python
-	def gen_class(context, builder):
-		context.module
-		context.file
-		context.info.is_ref
-		# code
+def gen_class(context, builder):
+	context.module
+	context.file
+	context.info.is_ref
+	# code
 ```
-# Context
+## Context
 
 Context is a class which provides contextual information about current commands. For example for IEG_GEN_METHOD command contextual information is file name, return value type information, arguments information, method name, keywords (static) and also user additional attributes (IEG_NAME, …). 
-Also context must have a method which will return another context  of the  other command located in the same level or above. The levels are defined by opening “{“ and closing “}” scopes in c++ code. This future will be useful for getter and setter generation in such  languages as swift or kotlin.
+Also context must have a method which will return another context  of the  other command located in the same level or above. The levels are defined by opening “{“ and closing “}” scopes in c++ code. This feature will be useful for getter and setter generation in such  languages as swift or kotlin.
 Context has property type which represents the type information about the current command type. It can be “file”, “class”, “enum”, “method”, “getter”, “setter”, … (Also the typing can be done with class inheritance). Context has a mutable ‘info’ object. Each command function can modify the info object properties. Also the IEG_INFO(field, value) attribute will add a field to the ‘info’ object.
 
 Note: command functions will be called by command list order.
 
-# Builder
+## Builder
 Builder is a class that provides functionality to build code via string.
 
 Builder has scopes and can create and share files alonge all builders. Each file has a name and physical path and it is also derived from Scope. Scope is a logical code snapped which has relative tabulation. 
@@ -139,7 +139,7 @@ def gen_method(context, builder):
 ```
 
 
-## System requirements
+# System requirements
  Operating system: Linux, Mac, Windows
 
 # iegnen installation for developers

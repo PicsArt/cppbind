@@ -6,7 +6,7 @@
  * kotlin_module_name: pi.xxx 
  * swift_prefix: PI
  */
-namespace pi::utils {
+namespace pi_utils {
     /**
      * commants
      * 

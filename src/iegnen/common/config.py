@@ -1,12 +1,24 @@
 import os
 import configparser
 import json
+from ctypes.util import find_library
+import clang.cindex as cli
 
 DEFAULT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
 DEFAULT_CONFIG = os.path.join(DEFAULT_CONFIG_DIR, "iegnen_config.cfg")
 
 DEFAULT_CONFIG_DIRS = ['', '~/', './', DEFAULT_CONFIG_DIR]
 
+clang_lib = find_library('clang-9')
+
+if clang_lib is None:
+    print("clang dev is not installed. Please read README.md")
+    exit(1)
+
+
+# setting clang library file.
+# in feature we might  consider to have path optionally defined in config
+cli.Config.set_library_file(clang_lib)
 
 def load_json_file(x):
     for p in DEFAULT_CONFIG_DIRS:
@@ -58,12 +70,16 @@ class IEG_Config(object):
         Args:
             file_names: list of file names that is going to be loaded
         """
+        class name_space:
+            def __repr__(self):
+                return f"name_space({self.__dict__})"
+
         cnfg = read_config()
 
         if file_names is not None:
             cnfg.read(file_names)
 
-        self.cnfg = cnfg
+        # self.cnfg = cnfg
         self.defaults = cnfg.defaults()
 
         # load language parameters
@@ -76,8 +92,16 @@ class IEG_Config(object):
                 raise e
 
         self.attributes = cnfg.getjson_or_file("API", "attributes")
-        self.source_dir = cnfg.get("PARSER", "source_dir")
         self.api_start_kw = cnfg.get("API", "parser_start")
+
+        self.parser = name_space()
+        self.parser.__dict__.update(cnfg.items("PARSER"))
+
+        self.logging = name_space()
+        self.logging.__dict__.update(cnfg.items("LOG"))
+
+    def __repr__(self):
+        return f"IEG_Config({repr(self.__dict__)})"
 
 config = IEG_Config(["~/iegnen_config.cfg", "iegnen_config.cfg"])
 

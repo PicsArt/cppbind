@@ -45,7 +45,11 @@ if __name__ == "__main__":
                         help='dumps included files as well.')
     args = parser.parse_args()
     index = cli.Index.create()
-    tu = index.parse(args.cppfile)
+    options = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES|\
+        cli.TranslationUnit.PARSE_INCOMPLETE
+    clang_args = ['-x', 'c++']
+    # options = 0
+    tu = index.parse(path=args.cppfile, args=clang_args, options=options)
     print('Translation unit:', tu.spelling)
     print('Include files:')
     for f in tu.get_includes():

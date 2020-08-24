@@ -1,5 +1,6 @@
 """
 """
+from collections import OrderedDict
 
 
 class Node(object):
@@ -8,7 +9,7 @@ class Node(object):
                  parent=None, children=None):
         self.clang_cursor = clang_cursor
         self.api = api
-        self.args = args
+        self.args = args or OrderedDict()
         self.parent = parent
         self.children = children or []
 
@@ -24,6 +25,12 @@ class Node(object):
 
     def __repr__(self):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
+
+    @property
+    def kind(self):
+        assert self.clang_cursor, "cursor is not provided"
+        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
+        return cl_kind
 
 
 class IEG_Ast(object):

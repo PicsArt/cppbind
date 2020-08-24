@@ -63,7 +63,7 @@ def test_parser_build_ir(parser_config, attributes, api_start_kw):
     ir = ir_builder.ir
 
     print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '8fe3110d937ef2efbbadcb7ce9e7ee7e',\
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == '77f9b7b2473281fca830413864ccc3b6',\
         "ir representation string has bean changed."
 
 
@@ -78,12 +78,12 @@ def test_parser_build_ir(parser_config, attributes, api_start_kw):
             * comments
             *
             * __API__
-            * kotlin_file_name: utils
-            * kotlin_module_name: pi.xxx
+            * kotlin_file: utils
+            * kotlin_module: pi.xxx
             * swift_prefix: PI
             */
             """,
-            "abe00c74b36f5d81e5b65d5a62c3ea79"
+            "94137d3090145bf7174d13fb603f9fd2"
         ),
         (
             'attributes',
@@ -97,7 +97,7 @@ def test_parser_build_ir(parser_config, attributes, api_start_kw):
             * shared_ref: False
             */
             """,
-            "abd4e0093baae4729c61c6c7ddbd457b"
+            "fca495c771f32a7e157ef214991d7386"
         )
     ],
     indirect=['attributes', 'api_start_kw']
@@ -125,9 +125,9 @@ def test_API_parser(attributes, api_start_kw, test_data, res_md5):
             * comments
             *
             * __API__
-            * kotlin_file_name: utils
+            * kotlin_file: utils
             dd
-            * kotlin_module_name: pi.xxx
+            * kotlin_module: pi.xxx
             * swift_prefix: PI
             */
             """,

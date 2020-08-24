@@ -7,9 +7,15 @@ from collections import OrderedDict
 
 class APIParser(object):
 
-    def __init__(self, attributes, api_start_kw):
+    # todo: read thous from config
+    ALL_PLATFORMS = ['linux', 'windows', 'ios']
+    ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
+
+    def __init__(self, attributes, api_start_kw, platforms=None, languages=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
+        self.platforms = platforms or APIParser.ALL_PLATFORMS
+        self.languages = languages or APIParser.ALL_LANGUAGES
 
     def parse(self, raw_comment):
         """
@@ -22,10 +28,8 @@ class APIParser(object):
         if index == -1:
             return api, attr_dict
         # else
-        ALL_PLATFORMS = ['linux', 'windows', 'ios']
-        ALL_LANGUAGES = ['swift', 'java', 'python']
         ATTR_REGEXPR =\
-            rf"[\s*/]*(?:({'|'.join(ALL_LANGUAGES)})_)?(?:({'|'.join(ALL_PLATFORMS)})_)?([^\d\W]\w*)\s*:\s*(.+)$"
+            rf"[\s*/]*(?:({'|'.join(self.languages)})_)?(?:({'|'.join(self.platforms)})_)?([^\d\W]\w*)\s*:\s*(.+)$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
@@ -43,20 +47,25 @@ class APIParser(object):
             if language:
                 language = [language]
             else:
-                language = ALL_LANGUAGES + ['__all__']
+                language = self.languages + ['__all__']
 
             if platform:
                 platform = [platform]
             else:
-                platform = ALL_PLATFORMS + ['__all__']
+                platform = self.platforms + ['__all__']
 
             if attr == 'gen':
                 api = value
             else:
+                # now check attribute
+                # attribute should be in attributes
+                if attr not in self.attributes:
+                    raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
+
                 for p in platform:
                     for lang in language:
-                        attr_dict.setdefault((p, lang),
-                                             OrderedDict())[attr] = value
+                        attr_dict.setdefault(attr,
+                                             OrderedDict())[p, lang] = value
 
         return api, attr_dict
 

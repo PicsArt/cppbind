@@ -2,8 +2,8 @@
  * comments
  * 
  * __API__
- * kotlin_file_name: utils
- * kotlin_module_name: pi.xxx 
+ * kotlin_file: utils
+ * kotlin_module: pi.xxx 
  * swift_prefix: PI
  */
 namespace pi::utils {
@@ -14,7 +14,7 @@ namespace pi::utils {
      * gen: class
      * shared_ref: False
      */
-    struct Example
+    class Example
     {
         /**
          * commants

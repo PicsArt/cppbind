@@ -17,8 +17,8 @@ class CXXParser(object):
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
         cli.TranslationUnit.PARSE_INCOMPLETE
 
-    def __init__(self, filter=None, processor=None, config=None):
-        self.config = config or default_config
+    def __init__(self, filter=None, processor=None, parser_config=None):
+        self.config = parser_config or default_config.parser
         self.current_file = None
         self.filter = filter or cxx_ieg_filter
 
@@ -36,8 +36,8 @@ class CXXParser(object):
 
         # build parser arguments
         args = ['-x', 'c++']
-        glob_filter = self.config.parser.src_glob or "*"
-        files = os.path.join(self.config.parser.source_dir, glob_filter)
+        glob_filter = self.config.src_glob or "*"
+        files = os.path.join(self.config.source_dir, glob_filter)
 
         logging.info(f"parsing files: {files}")
         for file_name in glob.glob(files):
@@ -51,22 +51,55 @@ class CXXParser(object):
         Pares cxx files and returns generator of cursors
         """
         for tu in self.parss_tu_x():
-            for c in self.walk(tu.cursor):
+            for c in self.cursor_walk(tu.cursor):
                 yield c
 
-    def walk(self, node):
+    def cursor_walk(self, cursor):
         """
-        walk ast recursively by filtering using filter
+        cursor_walk ast recursively by filtering using filter
         """
-        if self.filter.filter_cursor(node):
-            logging.debug(f"Filtering node: {node}")
+        if self.filter.filter_cursor(cursor):
+            logging.debug(f"Filtering cursor: {cursor}")
             return
 
-        # process current node
-        yield node
+        # processor current cursor
+        yield cursor
 
         # now if needed dive into children
-        if not self.filter.filter_cursor_children(node):
-            for child in node.get_children():
-                for descendant in self.walk(child):
+        if not self.filter.filter_cursor_children(cursor):
+            for child in cursor.get_children():
+                for descendant in self.cursor_walk(child):
                     yield descendant
+
+    def parse(self, processor):
+
+        for tu in self.parss_tu_x():
+
+            if hasattr(processor, 'start_tu'):
+                processor.start_tu(tu)
+
+            self._process_cursor(tu.cursor, processor)
+
+            if hasattr(processor, 'end_tu'):
+                processor.end_tu(tu)
+
+    def _process_cursor(self, cursor, processor):
+
+        if self.filter.filter_cursor(cursor):
+            logging.debug(f"Filtering cursor: {cursor}")
+            return
+
+        # process current cursor
+        if hasattr(processor, 'start_cursor'):
+            processor.start_cursor(cursor)
+
+        if callable(processor):
+            processor(cursor)
+
+        # now if needed dive into children
+        if not self.filter.filter_cursor_children(cursor):
+            for child in cursor.get_children():
+                self._process_cursor(child, processor)
+
+        if hasattr(processor, 'end_cursor'):
+            processor.end_cursor(cursor)

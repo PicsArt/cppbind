@@ -20,6 +20,7 @@ if clang_lib is None:
 # in feature we might  consider to have path optionally defined in config
 cli.Config.set_library_file(clang_lib)
 
+
 def load_json_file(x):
     for p in DEFAULT_CONFIG_DIRS:
         file_name = os.path.join(p, x)
@@ -33,11 +34,11 @@ def load_json_file(x):
 def load_json_or_file(x):
     try:
         return load_json_file(x)
-    except:
+    except Exception:
         return json.loads(x)
 
 
-def read_config(config_file = None):
+def read_config(config_file=None):
     """
     creates and loads config file.
     Args:
@@ -62,7 +63,7 @@ class IEG_Config(object):
     Loads IEG config file into structure
     """
 
-    def __init__(self, file_names = None):
+    def __init__(self, file_names=None):
         """
         initilizes conifg
 
@@ -103,5 +104,5 @@ class IEG_Config(object):
     def __repr__(self):
         return f"IEG_Config({repr(self.__dict__)})"
 
-config = IEG_Config(["~/iegnen_config.cfg", "iegnen_config.cfg"])
 
+config = IEG_Config(["~/iegnen_config.cfg", "iegnen_config.cfg"])

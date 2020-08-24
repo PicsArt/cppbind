@@ -31,3 +31,27 @@ def config():
     cnfg.parser.source_dir = TEST_CXX_DIR
 
     return cnfg
+
+
+@pytest.fixture(scope="session")
+def parser_config(config):
+    """
+    Fixture returns ieg parser config for test.
+    """
+    return config.parser
+
+
+@pytest.fixture(scope="session")
+def attributes(config):
+    """
+    Fixture returns ieg attributes config for test.
+    """
+    return config.attributes
+
+
+@pytest.fixture(scope="session")
+def api_start_kw(config):
+    """
+    Fixture returns ieg attributes config for test.
+    """
+    return config.api_start_kw

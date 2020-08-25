@@ -27,7 +27,7 @@ class Node(object):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
 
     @property
-    def kind(self):
+    def kind_name(self):
         assert self.clang_cursor, "cursor is not provided"
         cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
         return cl_kind

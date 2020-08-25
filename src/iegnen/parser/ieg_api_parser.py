@@ -7,19 +7,17 @@ from collections import OrderedDict
 
 class APIParser(object):
 
-    # todo: read thous from config
-    ALL_PLATFORMS = ['linux', 'windows', 'ios']
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
 
-    def __init__(self, attributes, api_start_kw, platforms=None, languages=None):
+    def __init__(self, attributes, api_start_kw, languages=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
-        self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.languages = languages or APIParser.ALL_LANGUAGES
+        self.languages = list(self.languages)
 
     def parse(self, raw_comment):
         """
-        Pares comment to extract API command and its attributes
+        Parse comment to extract API command and its attributes
         """
         api = None
         attr_dict = OrderedDict()
@@ -29,7 +27,7 @@ class APIParser(object):
             return api, attr_dict
         # else
         ATTR_REGEXPR =\
-            rf"[\s*/]*(?:({'|'.join(self.languages)})_)?(?:({'|'.join(self.platforms)})_)?([^\d\W]\w*)\s*:\s*(.+)$"
+            rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*:\s*(.+)$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
@@ -41,7 +39,7 @@ class APIParser(object):
             if not m:
                 # error
                 raise Exception(line)
-            language, platform, attr, value = m.groups()
+            language, attr, value = m.groups()
             value = value.strip()
 
             if language:
@@ -49,12 +47,7 @@ class APIParser(object):
             else:
                 language = self.languages + ['__all__']
 
-            if platform:
-                platform = [platform]
-            else:
-                platform = self.platforms + ['__all__']
-
-            if attr == 'gen':
+            if api is None and attr == 'gen':
                 api = value
             else:
                 # now check attribute
@@ -62,10 +55,9 @@ class APIParser(object):
                 if attr not in self.attributes:
                     raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
 
-                for p in platform:
-                    for lang in language:
-                        attr_dict.setdefault(attr,
-                                             OrderedDict())[p, lang] = value
+                for lang in language:
+                    attr_dict.setdefault(attr,
+                                         OrderedDict())[lang] = value
 
         return api, attr_dict
 

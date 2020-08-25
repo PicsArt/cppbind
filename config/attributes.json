@@ -2,7 +2,7 @@
     "prefix":{
         "inheritable": true,
         "default": null,
-        "allowed_on": ["class", "struct_decl", "namespace", "enum"]
+        "allowed_on": ["class", "struct", "namespace", "enum"]
     },
     "file":{
         "inheritable": true,
@@ -12,7 +12,7 @@
     "module":
     {
         "inheritable": true,
-        "default": "{namesapces}",
+        "default": "{parent.module}{moduel_name}",
         "allowed_on": ["class", "struct", "namespace", "enum"]
     },
     "name":
@@ -24,6 +24,6 @@
     {
         "inheritable": false,
         "default": false,
-        "allowed_on": ["class", "struct_decl"]
+        "allowed_on": ["class", "struct"]
     }
 }

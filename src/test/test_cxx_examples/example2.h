@@ -3,7 +3,7 @@
  * testing comments
  * __API__
  * gen: module
- * linux_name: test
+ * name: test
  * file: src/test.py
  */
 namespace test_api{
@@ -13,7 +13,7 @@ namespace test_api{
  * testing comments
  * __API__
  * gen: enum
- * linux_name: test
+ * name: test
  */
 enum RoomType{rt_notspecified, rt_leavingroom, rt_bedroom};
 
@@ -22,7 +22,7 @@ enum RoomType{rt_notspecified, rt_leavingroom, rt_bedroom};
  * testing comments
  * __API__
  * gen: class
- * linux_name: test
+ * name: test
  */
 class Person {
 
@@ -31,7 +31,7 @@ class Person {
      * testing comments
      * __API__
      * gen: method
-     * linux_name: test
+     * name: test
      */
     int age() const{
         if(true)

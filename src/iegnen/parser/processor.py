@@ -9,9 +9,8 @@ from iegnen import (
 from iegnen.parser.ieg_api_parser import APIParser
 from iegnen.ir.ast import IEG_Ast, Node
 
-# todo: read thous from config
-ALL_PLATFORMS = ['linux', 'windows', 'ios']
-ALL_LANGUAGES = set(default_config.languages)
+ALL_LANGUAGES = list(default_config.languages)
+ALL_LANGUAGES = sorted(ALL_LANGUAGES)
 
 
 class CXXPrintProcsessor(object):
@@ -30,7 +29,7 @@ class CXXIEGIRBuilder(object):
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
         self.attributes = attributes
-        self.ieg_api_parser = APIParser(self.attributes, api_start_kw)
+        self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES)
         self.ir = IEG_Ast()
         self.node_stack = []
 
@@ -58,38 +57,37 @@ class CXXIEGIRBuilder(object):
 
             # add all missing attributes
             for att_name, properties in self.attributes.items():
-                for platform in ALL_PLATFORMS:
-                    for lang in ALL_LANGUAGES:
-                        att_val = args.get(
-                            att_name,
-                            OrderedDict()
-                        ).get(
-                            (platform, lang),
-                            None
-                        )
+                for lang in ALL_LANGUAGES:
+                    att_val = args.get(
+                        att_name,
+                        {}
+                    ).get(lang, None)
 
-                        new_att_val = att_val
+                    new_att_val = att_val
+                    if new_att_val is None:
+                        # inherit from parent or add default value
+                        if properties["inheritable"]:
+                            parrent_args = self.node_stack[-2].args
+                            assert parrent_args is not None, f"Args missing for node {self.node_stack[-2]}"
+                            new_att_val = parrent_args.get(
+                                att_name,
+                                {}
+                            ).get(lang, None)
+
                         if new_att_val is None:
-                            # inherit from parent or add default value
-                            if properties["inheritable"]:
-                                parrent_args = self.node_stack[-2].args
-                                assert parrent_args is not None, f"Args missing for node {self.node_stack[-2]}"
-                                new_att_val = parrent_args.get(att_name, None)
+                            # use default value
+                            new_att_val = properties.get("default", None)
+                    else:
+                        # attribute is set check weather or not it is allowed.
+                        if "allowed_on" in properties:
+                            node_kind = current_node.kind_name
+                            if node_kind not in properties["allowed_on"]:
+                                raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
 
-                            if new_att_val is None:
-                                # use default value
-                                new_att_val = properties.get("default", None)
-                        else:
-                            # attribute is set check weather or not it is allowed.
-                            if "allowed_on" in properties:
-                                node_kind = current_node.kind
-                                if node_kind not in properties["allowed_on"]:
-                                    raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
-
-                        # now we need to process variables of value
-                        if new_att_val is not None:
-                            args.setdefault(att_name,
-                                            OrderedDict())[platform, lang] = new_att_val
+                    # now we need to process variables of value
+                    if new_att_val is not None:
+                        args.setdefault(att_name,
+                                        OrderedDict())[lang] = new_att_val
 
             current_node.api = api
             assert args is not None

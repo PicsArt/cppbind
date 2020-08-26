@@ -5,7 +5,7 @@ import copy
 
 import pytest
 from iegnen.common.config import config as default_config
-from . import TEST_CXX_DIR
+from . import TEST_CXX_DIR, TEST_OUT_DIR
 
 
 def test_dummy():
@@ -55,3 +55,11 @@ def api_start_kw(config):
     Fixture returns ieg attributes config for test.
     """
     return config.api_start_kw
+
+
+@pytest.fixture(scope="session")
+def out_dir():
+    """
+    Fixture returns out_dir for test files.
+    """
+    return TEST_OUT_DIR

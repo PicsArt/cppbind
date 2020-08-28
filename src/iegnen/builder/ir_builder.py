@@ -100,4 +100,4 @@ class CXXIEGIRBuilder(object):
             parent_node.add_children(node)
 
 
-cxx_ieg_processor = CXXIEGIRBuilder()
+cxx_ieg_ir_builder = CXXIEGIRBuilder()

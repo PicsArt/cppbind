@@ -2,7 +2,9 @@ import os
 import pytest
 import hashlib
 
-from iegnen.builder.builder import Builder, Scope
+from iegnen.builder.out_builder import Builder, Scope
+from iegnen.builder.ir_builder import CXXIEGIRBuilder
+from iegnen.parser.ieg_parser import CXXParser
 
 
 def test_builder(out_dir):
@@ -19,4 +21,23 @@ def test_builder(out_dir):
     class_scope.add(None, Scope(name="new_method"))
 
     builder.get_scope("new_method").add("function a", Scope("return something", tab=1))
-    print(f"output=\n{str(file_scope)}")
+    result = str(file_scope)
+    print(f"output=\n{result}")
+    assert hashlib.md5(result.encode()).hexdigest() == '7069d55149d357558aee93c65be23b71',\
+        "Builder output has bean changed"
+
+
+# @pytest.mark.skip(reason="Due to dict test is not stable")
+def test__build_ir(parser_config, attributes, api_start_kw):
+    parsser = CXXParser(parser_config=parser_config)
+    # print(config)
+
+    ir_builder = CXXIEGIRBuilder(attributes=attributes,
+                                 api_start_kw=api_start_kw)
+    parsser.parse(ir_builder)
+
+    ir = ir_builder.ir
+
+    print(ir)
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == '4581f6efe8d7f1e658a4f813f75f255b',\
+        "ir representation string has bean changed."

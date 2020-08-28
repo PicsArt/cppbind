@@ -3,7 +3,9 @@ Builder module allows rule script to add source code blokes
 to generated output.
 """
 
-TAB_STR='\t'
+
+TAB_STR = '\t'
+
 
 class Scope(object):
 
@@ -66,6 +68,10 @@ class File(Scope):
         super().__init__(**kwargs)
         self.file_path = file_path
 
+    def dump_output(self):
+        # todo temporary
+        print(str(self))
+
 
 class Builder(object):
 
@@ -73,6 +79,10 @@ class Builder(object):
         self._scope_stack = [dict()]
         self._files = dict()
         self.last_file_scope = None
+
+    def dump_outputs(self):
+        for fl in self._files:
+            fl.dump_output()
 
     def get_file(self, file_name, file_path, create=True):
         file_scope = self._files.get(file_path, self.lookup_scope(file_name))
@@ -97,7 +107,7 @@ class Builder(object):
         self._scope_stack.pop()
 
     def clear_scope_stack(self):
-        self._scope_stack[-1]={}
+        self._scope_stack[-1] = {}
 
     def lookup_scope(self, scope_name):
         return self.__lookup_scope(scope_name)

@@ -83,6 +83,8 @@ class IEG_Config(object):
         # self.cnfg = cnfg
         self.defaults = cnfg.defaults()
 
+        self.default_config_dirs = DEFAULT_CONFIG_DIRS
+
         # load language parameters
         self.languages = {}
         for lang, v in cnfg.items("LANGUAGE"):

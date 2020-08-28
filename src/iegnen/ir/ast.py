@@ -11,7 +11,7 @@ class Node(object):
         self.api = api
         self.args = args or OrderedDict()
         self.parent = parent
-        self.children = children or []
+        self._children = children or []
 
     def add_children(self, node):
         """TODO: Docstring for add_children.
@@ -21,7 +21,11 @@ class Node(object):
 
         """
         node.parent = self
-        self.children.append(node)
+        self._children.append(node)
+
+    @property
+    def children(self):
+        return self._children
 
     def __repr__(self):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
@@ -32,6 +36,20 @@ class Node(object):
         cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
         return cl_kind
 
+    @property
+    def displayname(self):
+        assert self.clang_cursor, "cursor is not provided"
+        return self.clang_cursor.displayname
+
+    @property
+    def ancestor_with_api(self):
+        node = self.parent
+        while(node):
+            node = node.parent
+            if node and node.api:
+                return node
+        return node
+
 
 class IEG_Ast(object):
 
@@ -40,3 +58,22 @@ class IEG_Ast(object):
 
     def __repr__(self):
         return f"IEG_Ast({self.__dict__})"
+
+    def walk(self):
+        """
+        """
+        for root in self.roots:
+            for node in self.cursor_walk(root):
+                yield node
+
+    def cursor_walk(self, cursor):
+        """
+        """
+
+        # processor current cursor
+        yield cursor
+
+        # now if needed dive into children
+        for child in cursor.children:
+            for descendant in self.cursor_walk(child):
+                yield descendant

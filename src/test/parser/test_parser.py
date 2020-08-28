@@ -4,7 +4,7 @@ import hashlib
 
 from iegnen.parser.ieg_parser import CXXParser
 from iegnen.parser.ieg_api_parser import APIParser
-from iegnen.parser.processor import CXXPrintProcsessor, CXXIEGIRBuilder
+from iegnen.builder.ir_builder import CXXPrintProcsessor
 
 
 def test_parser(parser_config):
@@ -49,22 +49,6 @@ def test_parser_processor_cr_counter(parser_config):
 
     assert count == 34, "number of cursors has bean changed"
     assert max_dept == 7, "max depth has bean changed"
-
-
-# @pytest.mark.skip(reason="Due to dict test is not stable")
-def test_parser_build_ir(parser_config, attributes, api_start_kw):
-    parsser = CXXParser(parser_config=parser_config)
-    # print(config)
-
-    ir_builder = CXXIEGIRBuilder(attributes=attributes,
-                                 api_start_kw=api_start_kw)
-    parsser.parse(ir_builder)
-
-    ir = ir_builder.ir
-
-    print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '4581f6efe8d7f1e658a4f813f75f255b',\
-        "ir representation string has bean changed."
 
 
 @pytest.mark.parametrize(

@@ -2,9 +2,9 @@
  * comments
  * 
  * __API__
- * kotlin_file_name: utils
- * kotlin_module_name: pi.xxx 
- * swift_prefix: PI
+ * kotlin.file: utils
+ * kotlin.module: pi.xxx 
+ * swift.prefix: PI
  */
 namespace pi::utils {
     /**
@@ -21,7 +21,7 @@ namespace pi::utils {
          * 
          * __API__
          * gen: enum
-         * swift_name: ExampleType
+         * swift.name: ExampleType
          */
         enum class Type { A, B, C };
 
@@ -31,7 +31,7 @@ namespace pi::utils {
          * commants
          * 
          * __API__
-         * gen: constuctor
+         * gen: constructor
          * 
          */
         Example(int& x, std::shared_ptr<Type> t, std::string name = "XXX");

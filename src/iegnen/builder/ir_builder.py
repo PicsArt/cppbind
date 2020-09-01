@@ -3,9 +3,7 @@ Processor module provides various processor for ieg parser
 """
 
 from collections import OrderedDict
-from iegnen import (
-    default_config as default_config,
-)
+from iegnen import default_config as default_config
 from iegnen.parser.ieg_api_parser import APIParser
 from iegnen.ir.ast import IEG_Ast, Node
 
@@ -32,11 +30,13 @@ class CXXIEGIRBuilder(object):
         self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES)
         self.ir = IEG_Ast()
         self.node_stack = []
+        self.__sys_vars = {}
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = Node(tu.cursor)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
+        self.__update_internal_vars(current_node)
 
     def end_tu(self, tu, *args, **kwargs):
         current_node = self.node_stack.pop()
@@ -47,6 +47,7 @@ class CXXIEGIRBuilder(object):
     def start_cursor(self, cursor, *args, **kwargs):
         current_node = Node(cursor)
         self.node_stack.append(current_node)
+        self.__update_internal_vars(current_node)
 
         if self.ieg_api_parser.has_api(cursor.raw_comment):
             # todo: inheriting, error check, defaults and value parsing
@@ -84,14 +85,26 @@ class CXXIEGIRBuilder(object):
                             if node_kind not in properties["allowed_on"]:
                                 raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
 
-                    # now we need to process variables of value
+                    # now we need to process variables of value and set value
                     if new_att_val is not None:
+                        if isinstance(new_att_val, str):
+                            new_att_val = new_att_val.format(**self.__sys_vars)
                         args.setdefault(att_name,
                                         OrderedDict())[lang] = new_att_val
 
             current_node.api = api
             assert args is not None
             current_node.args = args
+
+    def __update_internal_vars(self, node):
+        file_name = node.file_name
+        object_name = node.clang_cursor.spelling
+        module_name = "TODO"
+        self.__sys_vars.update(dict(
+            object_name=object_name,
+            module_name=module_name,
+            file_name=file_name,
+        ))
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()

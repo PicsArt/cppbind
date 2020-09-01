@@ -1,5 +1,4 @@
 import os
-import pytest
 import hashlib
 
 from iegnen.builder.out_builder import Builder, Scope
@@ -28,7 +27,7 @@ def test_builder(out_dir):
 
 
 # @pytest.mark.skip(reason="Due to dict test is not stable")
-def test__build_ir(parser_config, attributes, api_start_kw):
+def test_build_ir(parser_config, attributes, api_start_kw):
     parsser = CXXParser(parser_config=parser_config)
     # print(config)
 
@@ -39,5 +38,5 @@ def test__build_ir(parser_config, attributes, api_start_kw):
     ir = ir_builder.ir
 
     print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '4581f6efe8d7f1e658a4f813f75f255b',\
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == '9a2770fc7a69905398b9537b89b4c4b3',\
         "ir representation string has bean changed."

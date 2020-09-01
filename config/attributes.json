@@ -12,7 +12,7 @@
     "module":
     {
         "inheritable": true,
-        "default": "{parent.module}{moduel_name}",
+        "default": "{module_name}",
         "allowed_on": ["class", "struct", "namespace", "enum"]
     },
     "name":

@@ -1,7 +1,17 @@
-
+from iegnen.builder.out_builder import Scope
 # from iegnen import context_of_type
 
+
 def gen_class(ctx, builder):
+    file_path = "test"# path
+    # get or create logical file
+    builder.get_file(ctx.file, file_path).add(
+        f"class {ctx.name} {{",
+                             Scope(name="enum", tab = 1),
+                             Scope(name="class_body", tab = 1),
+                             Scope(name="class_constructors", tab = 1),
+                             "}",
+    )
     pass
     # print(ctx.type) # class
     # print(ctx.shared_ref) # False
@@ -10,22 +20,37 @@ def gen_class(ctx, builder):
     # print(ctx.name) # Example
 
 
+# def gen_module(ctx, builder):
+    # # get or create logical file
+    # file_path = "test"# path
+    # # get or create logical file
+    # builder.get_file(ctx.file, file_path).get_scope("module", True).add(
+                             # Scope(name="enum", tab = 1)
+    # )
+
+
 def gen_enum(ctx, builder):
+    builder.get_scope(ctx.module, True).get_scope("enum").add(
+        f"enum {ctx.name} ",
+        f"{ctx.enum_values}",
+    )
     pass
     # print(ctx.type) # enum
     # print(ctx.module) # pi.xxx.Example
     # print(ctx.file) # pi.utils
     # print(ctx.name) # Type
 
-
-def gen_enum_case(ctx, builder):
-    pass
     # print(ctx.type) # enum_case
     # print(ctx.name) # A
     # print(ctx.value) # 0
 
 
 def gen_constructor(ctx, builder):
+    builder.get_scope("class_constructors").add(
+        f"void {ctx.name}() ",
+        f"{ctx.args}",
+    )
+
     pass
     # print(ctx.type) # constuctor
     # print(ctx.name) # Example
@@ -37,6 +62,10 @@ def gen_constructor(ctx, builder):
 
 
 def gen_method(ctx, builder):
+    # get or create logical file
+    builder.get_scope("class_body").add(
+        f"{ctx.result_type} {ctx.name}({ctx.args}) ",
+    )
     pass
     # print(ctx.type) # method
     # print(ctx.name) # f

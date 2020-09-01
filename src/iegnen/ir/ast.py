@@ -45,10 +45,15 @@ class Node(object):
     def ancestor_with_api(self):
         node = self.parent
         while(node):
-            node = node.parent
-            if node and node.api:
+            if node.api:
                 return node
+            node = node.parent
         return node
+
+    @property
+    def file_name(self):
+        file_name = self.clang_cursor.extent.start.file.name
+        return file_name
 
 
 class IEG_Ast(object):

@@ -42,7 +42,7 @@ class Scope(object):
 
         if scope is None and create:
             scope = Scope(name=scope_name, builder=self.builder)
-            self.add([scope])
+            self.add(scope)
 
         return scope
 
@@ -81,7 +81,7 @@ class Builder(object):
         self.last_file_scope = None
 
     def dump_outputs(self):
-        for fl in self._files:
+        for name, fl in self._files.items():
             fl.dump_output()
 
     def get_file(self, file_name, file_path, create=True):

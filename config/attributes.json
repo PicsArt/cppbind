@@ -11,7 +11,7 @@
     },
     "module":
     {
-        "inheritable": true,
+        "inheritable": false,
         "default": "{module_name}",
         "allowed_on": ["class", "struct", "namespace", "enum"]
     },

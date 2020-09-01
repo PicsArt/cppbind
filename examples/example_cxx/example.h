@@ -3,7 +3,7 @@
  * 
  * __API__
  * kotlin.file: utils
- * kotlin.module: pi.xxx 
+ * module: pi.xxx 
  * kotlin.prefix: PI
  */
 namespace pi::utils {
@@ -11,16 +11,8 @@ namespace pi::utils {
      * commants
      * 
      * __API__
-     * gen: enum
-     * swift.name: ExampleType
-     */
-    //enum class Type2 { A, B, C };
-
-    /**
-     * commants
-     * 
-     * __API__
      * gen: class
+     * module: pi.xxx 
      * shared_ref: False
      */
     struct Example
@@ -30,6 +22,7 @@ namespace pi::utils {
          * 
          * __API__
          * gen: enum
+         * module: pi.xxx.Example 
          * swift.name: ExampleType
          */
         enum class Type { A, B, C };
@@ -51,7 +44,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type* t, int i =10, char* test = "XXX");
+        Type f(Type t, int i =10, char* test = "XXX");
 
         /**
          * commants
@@ -61,4 +54,13 @@ namespace pi::utils {
          */
         int get_attribute(char* test = "XXX");
     };
+    /**
+     * commants
+     * 
+     * __API__
+     * gen: enum
+     * module: pi.xxx
+     * swift.name: ExampleType
+     */
+    enum class Type2 { A2, B2, C2 };
 }

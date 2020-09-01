@@ -11,7 +11,7 @@ class Scope(object):
 
     def __init__(self, *parts, name=None, tab=0, tab_str=None, builder=None):
         self.builder = builder
-        self.parts = [[]]
+        self.parts = []
         self.tab = tab
         self.tab_str = tab_str or TAB_STR
         self._name = name
@@ -25,11 +25,9 @@ class Scope(object):
         """
         Adds text or scope to corresponding partition
         """
-        len_diff = len(parts) - len(self.parts)
-        self.parts += [[] for i in range(len_diff)]
-        for container, data in zip(self.parts, parts):
+        for data in parts:
             if data is not None:
-                container.append(data)
+                self.parts.append(data)
                 if isinstance(data, Scope):
                     assert self.builder, "to be able to add scope builder should be specified."
                     data.builder = self.builder
@@ -53,8 +51,7 @@ class Scope(object):
 
         lines = [
             (self.tab_str*self.tab)+s+'\n'
-            for part in self.parts
-            for line in part
+            for line in self.parts
             for s in str(line).splitlines()
         ]
         str_scope = ''.join(lines)
@@ -69,8 +66,15 @@ class File(Scope):
         self.file_path = file_path
 
     def dump_output(self):
-        # todo temporary
-        print(str(self))
+        with open(self.file_path, 'wt') as f:
+            f.write(str(self))
+
+    def get_scope_by_path(self, scope_name, create=False):
+        path = scope_name.split('.')
+        scope = self
+        for p in path:
+            scope = scope.get_scope(p, create)
+        return scope
 
 
 class Builder(object):

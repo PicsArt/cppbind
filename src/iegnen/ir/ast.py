@@ -42,6 +42,16 @@ class Node(object):
         return self.clang_cursor.displayname
 
     @property
+    def spelling(self):
+        assert self.clang_cursor, "cursor is not provided"
+        return self.clang_cursor.spelling
+
+    @property
+    def type_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        return self.clang_cursor.type.spelling
+
+    @property
     def ancestor_with_api(self):
         node = self.parent
         while(node):

@@ -59,6 +59,10 @@ class Context(object):
         return self.node.clang_cursor.result_type.spelling
 
     @property
+    def cursor(self):
+        return self.node.clang_cursor
+
+    @property
     def enum_values(self):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.ENUM_DECL]:
@@ -78,7 +82,10 @@ class Context(object):
 
     @property
     def parent(self):
-        return self.runner.get_context(self.lang, self.node.parent)
+        return self.runner.access_context(self.lang, self.node.parent)
+
+    def find_by_type(self, search_type):
+        return self.runner.get_context(self.lang, search_type)
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
@@ -97,9 +104,8 @@ class RunRule(object):
         self.ir = ir
         # calling order should be such as that parent node processes first
         self.api_call_order = [
-            {'module'},
             {'class', 'enum'},
-            {'enum_case', 'constructor'},
+            {'constructor'},
             {'method'},
             {}
         ]
@@ -114,23 +120,38 @@ class RunRule(object):
         processed = dict()
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
-            for node in self.ir.walk():
-                if node.api and (not calling_api or
-                                 node.api in calling_api)\
-                        and node not in processed:
-                    # call api
-                    _ancestor = node.ancestor_with_api
-                    if _ancestor in processed:
-                        # for already called api resume builders scope stack
-                        # this code assumes that child nodes (if any) are going to be processed next
-                        logging.debug(f"Restoring stack for {node.displayname}.")
-                        self.restore_stacks(builders, processed[_ancestor])
 
-                    map(lambda b: b.add_scope_stack(), builders.values())
+            def _run_recursive(node):
+                stack_added = False
+                if node in processed:
+                    # for already called api resume builders scope stack
+                    logging.debug(f"Restoring stack for {node.displayname}.")
+                    self.restore_stacks(builders, processed[node])
+                    logging.debug(f"Restored stack {[s.keys() for s in processed[node]['java']]}.")
+                elif node.api and (not calling_api or node.api in calling_api):
+                    # allocate scope
+                    stack_added = True
+                    for b in builders.values():
+                        b.add_scope_stack()
+
+                    # call api
                     self.call_api(rules, node.api, node, builders)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node] = self.capture_stacks(builders)
-                    map(lambda b: b.pop_scope_stack(), builders.values())
+                    logging.debug(f"Captured stack {[s.keys() for s in processed[node]['java']]}.")
+
+                if node.children:
+                    logging.debug(f"Processing children for {node.displayname}.")
+                    for child in node.children:
+                        _run_recursive(child)
+                    logging.debug(f"End processing children for {node.displayname}.")
+
+                if stack_added:
+                    for b in builders.values():
+                        b.pop_scope_stack()
+
+            for root in self.ir.roots:
+                _run_recursive(root)
 
     def capture_stacks(self, builders):
         return {lang: copy.copy(builder._scope_stack) for lang, builder in builders.items()}
@@ -144,10 +165,16 @@ class RunRule(object):
         for lang, builder in builders.items():
             logging.debug(f"Call API: {api} on {node.displayname} for {lang}")
             func = getattr(rules[lang], att_name)
-            func(self.get_context(lang, node), builder)
+            func(self.access_context(lang, node), builder)
 
-    def get_context(self, lang, node):
+    def access_context(self, lang, node):
+        if node is None:
+            return None
         cntx = self.all_contexts.setdefault(lang,
-                                            {}).setdefault(node,
+                                            {}).setdefault(node.type_name,
                                                            Context(self, node, lang))
+        return cntx
+
+    def get_context(self, lang, type_name):
+        cntx = self.all_contexts.get(lang, {}).get(type_name, None)
         return cntx

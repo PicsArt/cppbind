@@ -3,16 +3,18 @@ from iegnen.builder.out_builder import Scope
 
 
 def gen_class(ctx, builder):
-    file_path = "test"# path
     # get or create logical file
-    builder.get_file(ctx.file, file_path).add(
+    file_path = f"local_expr/{ctx.lang}_test.h"# path
+    scope = builder.get_file(ctx.file, file_path) # .get_scope(ctx.module, True)
+    scope.add(
+        "",
+        f"module={ctx.module}",
         f"class {ctx.name} {{",
                              Scope(name="enum", tab = 1),
                              Scope(name="class_body", tab = 1),
                              Scope(name="class_constructors", tab = 1),
                              "}",
-    )
-    pass
+                             )
     # print(ctx.type) # class
     # print(ctx.shared_ref) # False
     # print(ctx.module) # pi.xxx
@@ -22,15 +24,18 @@ def gen_class(ctx, builder):
 
 # def gen_module(ctx, builder):
     # # get or create logical file
-    # file_path = "test"# path
-    # # get or create logical file
+    file_path = f"local_expr/{ctx.lang}_test.h"# path
     # builder.get_file(ctx.file, file_path).get_scope("module", True).add(
                              # Scope(name="enum", tab = 1)
     # )
 
 
 def gen_enum(ctx, builder):
-    builder.get_scope(ctx.module, True).get_scope("enum").add(
+    file_path = f"local_expr/{ctx.lang}_test.h"# path
+    scope = builder.get_file(ctx.file, file_path) # .get_scope(ctx.module, True)
+
+    scope.get_scope("enum", True).add(
+        f"module={ctx.module}",
         f"enum {ctx.name} ",
         f"{ctx.enum_values}",
     )
@@ -47,6 +52,7 @@ def gen_enum(ctx, builder):
 
 def gen_constructor(ctx, builder):
     builder.get_scope("class_constructors").add(
+        f"module={ctx.module}",
         f"void {ctx.name}() ",
         f"{ctx.args}",
     )
@@ -63,8 +69,11 @@ def gen_constructor(ctx, builder):
 
 def gen_method(ctx, builder):
     # get or create logical file
+
+    reslut_context = ctx.find_by_type(ctx.result_type)
     builder.get_scope("class_body").add(
-        f"{ctx.result_type} {ctx.name}({ctx.args}) ",
+        f"module={ctx.module}",
+        f"{reslut_context and reslut_context.cursor.type.spelling} {ctx.name}({ctx.args}) ",
     )
     pass
     # print(ctx.type) # method

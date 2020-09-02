@@ -3,6 +3,7 @@ Builder module allows rule script to add source code blokes
 to generated output.
 """
 
+from iegnen import logging as logging
 
 TAB_STR = '\t'
 
@@ -66,6 +67,7 @@ class File(Scope):
         self.file_path = file_path
 
     def dump_output(self):
+        logging.info(f"Writing output for {self.name} into {self.file_path}")
         with open(self.file_path, 'wt') as f:
             f.write(str(self))
 

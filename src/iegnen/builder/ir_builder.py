@@ -2,6 +2,7 @@
 Processor module provides various processor for ieg parser
 """
 
+import copy
 from collections import OrderedDict
 from iegnen import default_config as default_config
 from iegnen.parser.ieg_api_parser import APIParser
@@ -88,7 +89,7 @@ class CXXIEGIRBuilder(object):
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
-                            new_att_val = new_att_val.format(**self.__sys_vars)
+                            new_att_val = new_att_val.format(**self.get_sys_vars(lang))
                         args.setdefault(att_name,
                                         OrderedDict())[lang] = new_att_val
 
@@ -99,12 +100,38 @@ class CXXIEGIRBuilder(object):
     def __update_internal_vars(self, node):
         file_name = node.file_name
         object_name = node.clang_cursor.spelling
-        module_name = "TODO"
+        module_name = ""
         self.__sys_vars.update(dict(
             object_name=object_name,
             module_name=module_name,
             file_name=file_name,
         ))
+
+    def get_sys_vars(self, lang):
+        sys_vars = copy.copy(self.__sys_vars)
+        module_name = self.get_module_name(lang)
+        sys_vars['module_name'] = module_name
+        return sys_vars
+
+    def get_module_name(self, lang):
+        module_att_name = 'module'
+        if module_att_name not in self.attributes:
+            return ''
+        parent_module = []
+        properties = self.attributes[module_att_name]
+        allowed_on = properties.get('allowed_on', [])
+        for node in reversed(self.node_stack[:-1]):
+            if not allowed_on or node.kind_name in allowed_on:
+                mod = node.args.get("module", None)
+                if mod is not None:
+                    parent_module = [mod.get(lang)]
+                    break
+
+        current_node = self.node_stack[-1]
+        if not allowed_on or current_node.kind_name in allowed_on:
+            parent_module.append(current_node.spelling)
+
+        return '.'.join(parent_module)
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()

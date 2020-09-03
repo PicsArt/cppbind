@@ -22,7 +22,7 @@ def test_builder(out_dir):
     builder.get_scope("new_method").add("function a", Scope("return something", tab=1))
     result = str(file_scope)
     print(f"output=\n{result}")
-    assert hashlib.md5(result.encode()).hexdigest() == '7069d55149d357558aee93c65be23b71',\
+    assert hashlib.md5(result.encode()).hexdigest() == '0179f22c51279fdc282a779455aa8a1f',\
         "Builder output has bean changed"
 
 
@@ -38,5 +38,5 @@ def test_build_ir(parser_config, attributes, api_start_kw):
     ir = ir_builder.ir
 
     print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '3e95a69105618109602772889b9f7eb2',\
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == '26279dc6ec82f4aec602c0be0e8a48bd',\
         "ir representation string has bean changed."

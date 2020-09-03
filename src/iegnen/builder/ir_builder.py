@@ -3,6 +3,7 @@ Processor module provides various processor for ieg parser
 """
 
 import copy
+import os
 from collections import OrderedDict
 from iegnen import default_config as default_config
 from iegnen.parser.ieg_api_parser import APIParser
@@ -51,7 +52,6 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
 
         if self.ieg_api_parser.has_api(cursor.raw_comment):
-            # todo: inheriting, error check, defaults and value parsing
             api, args =\
                 self.ieg_api_parser.parse(cursor.raw_comment)
 
@@ -98,13 +98,15 @@ class CXXIEGIRBuilder(object):
             current_node.args = args
 
     def __update_internal_vars(self, node):
-        file_name = node.file_name
+        file_full_name = node.file_name
+        file_name = os.path.splitext(os.path.basename(file_full_name))[0]
         object_name = node.clang_cursor.spelling
         module_name = ""
         self.__sys_vars.update(dict(
             object_name=object_name,
             module_name=module_name,
             file_name=file_name,
+            file_full_name=file_full_name,
         ))
 
     def get_sys_vars(self, lang):

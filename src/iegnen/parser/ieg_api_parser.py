@@ -55,9 +55,18 @@ class APIParser(object):
                 if attr not in self.attributes:
                     raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
 
+                array = self.attributes[attr].get('array', False)
+
+                if attr in attr_dict and not array:
+                    # redefinition or array
+                    raise Exception(f"Attribute {attr} is defined in multiple places.")
+
                 for lang in language:
-                    attr_dict.setdefault(attr,
-                                         OrderedDict())[lang] = value
+                    att_lang_ditct = attr_dict.setdefault(attr, OrderedDict())
+                    if array:
+                        att_lang_ditct.setdefault(lang, []).append(value)
+                    else:
+                        att_lang_ditct[lang] = value
 
         return api, attr_dict
 

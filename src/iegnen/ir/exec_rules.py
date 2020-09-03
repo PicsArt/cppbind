@@ -89,10 +89,11 @@ class Context(object):
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
-        if not val:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}' attribute.")
+        if val is None:
+            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
+API has no '{name}' attribute for {self.node.displayname}.")
         val = val.get(self.lang, None)
-        if not val:
+        if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
                                     attribute for language {self.lang}.")
         return val
@@ -110,7 +111,7 @@ class RunRule(object):
             {}
         ]
 
-    def run(self, rules, builders):
+    def run(self, rules, builders):  # noqa: C901
 
         # running order is defined by type of node
         # at first we run nodes for namespace/class/enums and then for methods
@@ -123,12 +124,15 @@ class RunRule(object):
 
             def _run_recursive(node):
                 stack_added = False
-                if node in processed:
-                    # for already called api resume builders scope stack
-                    logging.debug(f"Restoring stack for {node.displayname}.")
-                    self.restore_stacks(builders, processed[node])
-                    logging.debug(f"Restored stack {[s.keys() for s in processed[node]['java']]}.")
-                elif node.api and (not calling_api or node.api in calling_api):
+                if node.api and (not calling_api or node.api in calling_api) and node not in processed:
+                    ancesstor = node.ancestor_with_api
+                    if ancesstor in processed:
+                        # for already called api resume builders scope stack
+                        logging.debug(f"Restoring stack for {ancesstor.displayname}.")
+                        self.restore_stacks(builders, processed[ancesstor])
+                        logging.debug(
+                            f"Restored stack {[s.keys() for s in next(iter(processed[ancesstor].values()))]}."
+                        )
                     # allocate scope
                     stack_added = True
                     for b in builders.values():
@@ -138,7 +142,7 @@ class RunRule(object):
                     self.call_api(rules, node.api, node, builders)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node] = self.capture_stacks(builders)
-                    logging.debug(f"Captured stack {[s.keys() for s in processed[node]['java']]}.")
+                    logging.debug(f"Captured stack {[s.keys() for s in next(iter(processed[node].values()))]}.")
 
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
@@ -151,14 +155,18 @@ class RunRule(object):
                         b.pop_scope_stack()
 
             for root in self.ir.roots:
+                for b in builders.values():
+                    b.add_scope_stack()
                 _run_recursive(root)
+                for b in builders.values():
+                    b.pop_scope_stack()
 
     def capture_stacks(self, builders):
         return {lang: copy.copy(builder._scope_stack) for lang, builder in builders.items()}
 
     def restore_stacks(self, builders, capture_data):
         for lang, builder in builders.items():
-            builder._scope_stack = capture_data[lang]
+            builder._scope_stack = copy.copy(capture_data[lang])
 
     def call_api(self, rules, api, node, builders):
         att_name = "gen_" + api

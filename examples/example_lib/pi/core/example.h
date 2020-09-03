@@ -3,11 +3,14 @@
  * 
  * __API__
  * kotlin.file: utils
+ * kotlin.package: utils
+ * kotlin.include: android.os.Parcel
+ * kotlin.include: android.os.Test
  * kotlin.prefix: PI
  */
 namespace pi::utils {
     /**
-     * commants
+     * comments
      * 
      * __API__
      * gen: class
@@ -17,7 +20,7 @@ namespace pi::utils {
     struct Example
     {
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: enum
@@ -26,9 +29,8 @@ namespace pi::utils {
         enum class Type { A, B, C };
 
 
-
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: constructor
@@ -37,27 +39,35 @@ namespace pi::utils {
         Example(int& x, std::string name = "XXX");
 
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, char* test = "XXX");
+        Type f(Type t, int i =10, const char* test = "XXX");
 
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: method
          */
-        int get_attribute(char* test = "XXX");
+        int set_attribute(const char* test = "XXX");
+
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        int get_attribute();
     };
     /**
-     * commants
+     * comments
      * 
      * __API__
      * gen: enum
      * swift.name: ExampleType
      */
-    enum class Type2 { A2, B2, C2 };
+    enum class Type2 { A2, B2=10, C2 };
 }

@@ -4,17 +4,16 @@ from iegnen.builder.out_builder import Scope
 
 def gen_class(ctx, builder):
     # get or create logical file
-    file_path = f"local_expr/{ctx.lang}_test.h"# path
-    scope = builder.get_file(ctx.file, file_path) # .get_scope(ctx.module, True)
+    file_path = f"local_expr/{ctx.lang}_test.h"  # path
+    scope = builder.get_file(ctx.file, file_path)  # .get_scope(ctx.module, True)
     scope.add(
-        "",
         f"module={ctx.module}",
         f"class {ctx.name} {{",
-                             Scope(name="enum", tab = 1),
-                             Scope(name="class_body", tab = 1),
-                             Scope(name="class_constructors", tab = 1),
-                             "}",
-                             )
+        Scope(name="enum", tab=1),
+        Scope(name="class_body", tab=1),
+        Scope(name="class_constructors", tab=1),
+        "}",
+        )
     # print(ctx.type) # class
     # print(ctx.shared_ref) # False
     # print(ctx.module) # pi.xxx
@@ -24,15 +23,15 @@ def gen_class(ctx, builder):
 
 # def gen_module(ctx, builder):
     # # get or create logical file
-    file_path = f"local_expr/{ctx.lang}_test.h"# path
+    # file_path = f"local_expr/{ctx.lang}_test.h"  # path
     # builder.get_file(ctx.file, file_path).get_scope("module", True).add(
-                             # Scope(name="enum", tab = 1)
+    # Scope(name="enum", tab = 1)
     # )
 
 
 def gen_enum(ctx, builder):
-    file_path = f"local_expr/{ctx.lang}_test.h"# path
-    scope = builder.get_file(ctx.file, file_path) # .get_scope(ctx.module, True)
+    file_path = f"local_expr/{ctx.lang}_test.h"  # path
+    scope = builder.get_file(ctx.file, file_path)  # .get_scope(ctx.module, True)
 
     scope.get_scope("enum", True).add(
         f"module={ctx.module}",
@@ -70,10 +69,10 @@ def gen_constructor(ctx, builder):
 def gen_method(ctx, builder):
     # get or create logical file
 
-    reslut_context = ctx.find_by_type(ctx.result_type)
+    result_context = ctx.find_by_type(ctx.result_type)
     builder.get_scope("class_body").add(
         f"module={ctx.module}",
-        f"{reslut_context and reslut_context.cursor.type.spelling} {ctx.name}({ctx.args}) ",
+        f"{result_context and result_context.cursor.type.spelling} {ctx.name}({ctx.args}) ",
     )
     pass
     # print(ctx.type) # method

@@ -4,10 +4,10 @@ import json
 from ctypes.util import find_library
 import clang.cindex as cli
 
-DEFAULT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
-DEFAULT_CONFIG = os.path.join(DEFAULT_CONFIG_DIR, "iegnen_config.cfg")
+PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
+PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegnen_config.cfg")
 
-DEFAULT_CONFIG_DIRS = ['', '~/', './', DEFAULT_CONFIG_DIR]
+DEFAULT_CONFIG_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
 clang_lib = find_library('clang-9')
 
@@ -44,7 +44,7 @@ def read_config(config_file=None):
     Args:
         config_file: default config file
     """
-    config_file = config_file or DEFAULT_CONFIG
+    config_file = config_file or PROJECT_CONFIG
 
     config = configparser.ConfigParser(
         converters={

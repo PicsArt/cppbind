@@ -5,15 +5,18 @@ builtin_type = {
     'int': 'Int',
     'short': 'Short',
     'long': 'Long',
+    'unsigned long': 'Long',
     'float': 'Float',
     'double': 'Double',
     'char': 'String',
-    'std::string': 'String',
+    'std::__cxx11::basic_string': 'String',
+    'std::vector': 'List<{0}>',
+    'std::map': 'Map<{0}, {1}>',
+    'std::shared_ptr': '{0}',
 }
 
 
-def _lookup_kt_type(ctx, type_ctx):
-    unqualified_name = type_ctx.unqualified_name
+def _lookup_kt_type_name(ctx, unqualified_name):
     ref_ctx = ctx.find_by_type(unqualified_name)
     if ref_ctx is None:
         name = builtin_type.get(unqualified_name, None)
@@ -22,11 +25,23 @@ def _lookup_kt_type(ctx, type_ctx):
     return name
 
 
-def lookup_kt_type(ctx, type_ctx):
-    name = _lookup_kt_type(ctx, type_ctx)
+def lookup_kt_type(ctx, type_ctx, rise_error=True):
+    unqualified_name = type_ctx.unqualified_name
+    name = _lookup_kt_type_name(ctx, unqualified_name)
+
     if name is None:
-        name = _lookup_kt_type(ctx, type_ctx.pointee_type) or _lookup_kt_type(ctx, type_ctx.pointee_type.canonical_type)
-        if name is None:
+        if type_ctx.pointee_type != type_ctx:
+            return lookup_kt_type(ctx, type_ctx.pointee_type)
+        else:
+            if type_ctx.canonical_type != type_ctx:
+                return lookup_kt_type(ctx, type_ctx.canonical_type)
+        if type_ctx.is_template:
+            tmpl_format = _lookup_kt_type_name(ctx, type_ctx.template_type_name)
+            if tmpl_format is not None:
+                return tmpl_format.format(
+                    *[lookup_kt_type(ctx, arg_type, False) for arg_type in type_ctx.template_argument_types]
+                )
+        if rise_error:
             raise KeyError(f"Can not find type for {type_ctx.name}")
     return name
 
@@ -42,8 +57,8 @@ def build_arg_str(ctx, arg):
     return arg_str
 
 
-def build_args_str(ctx):
-    args = [build_arg_str(ctx, arg) for arg in ctx.args]
+def build_args_str(ctx, args=None):
+    args = args or [build_arg_str(ctx, arg) for arg in ctx.args]
     if args:
         args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
     else:
@@ -79,18 +94,23 @@ def gen_class(ctx, builder):
     # get or create logical file
     file_scope = get_file(ctx, builder)
     file_scope['body'].add(
-        f"class {ctx.name} internal constructor(id: Long): NativeParcelabObject(id){{",
+        f"class {ctx.name}",
+        Scope(name="main_constructor", tab=1),
+        "{",
         Scope(name="head", tab=1),
         Scope(name="body", tab=1),
         "}",
         "\n",
     )
+    base_type = lookup_kt_type(ctx, ctx.base_types[0]) if ctx.base_types else "RNativeParcelableObject"
+    file_scope["main_constructor"].add(
+        f"internal constructor(id: Long): {base_type}(id)")
 
 
 def gen_constructor(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    args = build_args_str(ctx)
+    args = build_args_str(ctx, ["id: Long"] + [build_arg_str(ctx, arg) for arg in ctx.args])
 
     header = f"constructor({args}): this(id) {{"
     body = f"test code for {ctx.name}"
@@ -101,14 +121,6 @@ def gen_constructor(ctx, builder):
         "}",
         "\n",
     )
-    pass
-    # print(ctx.type) # constuctor
-    # print(ctx.name) # Example
-    # print(ctx.args)
-    # [{'name': 'x', 'type': 'int', 'ptr': None},
-    #  {'name':'t', 'type': 'Type', 'ptr': 'shared'},
-    #  {'name': 'name', 'type': 'std::string', 'default': 'XXX', 'ptr': None}]
-    # print(ctx.parent.shared_ref)  # False
 
 
 def gen_enum(ctx, builder):

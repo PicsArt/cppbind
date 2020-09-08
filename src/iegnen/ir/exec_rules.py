@@ -33,16 +33,34 @@ class TypeContext(object):
 
     @property
     def canonical_type(self):
-        return TypeContext(self.runner, self.lang, self.clang_type.get_canonical())
+        clang_canonical = self.clang_type.get_canonical()
+        if clang_canonical.spelling != self.clang_type.spelling:
+            return TypeContext(self.runner, self.lang, clang_canonical)
+        return self
 
     @property
     def is_template(self):
-        return self.clang_type.get_num_template_arguments() != 0
+        return self.clang_type.get_num_template_arguments() != -1
 
     @property
     def template_argument_types(self):
         return [TypeContext(self.runner, self.lang, self.clang_type.get_template_argument_type(num))
                 for num in range(self.clang_type.get_num_template_arguments())]
+
+    def get_num_template_arguments(self):
+        return self.clang_type.get_num_template_arguments()
+
+    def get_template_argument_type(self, num):
+        return self.clang_type.get_template_argument_type(num)
+
+    @property
+    def template_type_name(self):
+        # todo:self.declaration_cursor.spelling does not return name space or full name
+        name = self.unqualified_name
+        end_indx = name.index('<')
+        if end_indx != -1:
+            return name[:end_indx].strip()
+        return name
 
     @property
     def is_rval_referance(self):
@@ -122,11 +140,11 @@ class Context(object):
 
         return [
             TypeContext(self.runner, self.lang, base_specifier.type)
-            for base_specifier in self.base_type_specifiers
+            for base_specifier in self.base_types_specifier_cursor
         ]
 
     @property
-    def base_type_specifiers(self):
+    def base_types_specifier_cursor(self):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")

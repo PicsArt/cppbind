@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <map>
+#include <memory>
 /**
  * comments
  * 
@@ -48,7 +50,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type* t, const char* t2 = nullptr, int i = 10, const string& test = "XXX");
+        Type f(Type* t, const char* t2 = nullptr, size_t i = 10, const string& test = "XXX");
 
         /**
          * comments
@@ -84,8 +86,9 @@ namespace pi::utils {
      */
     class Example2 : public Example, std::string
     {
-        //using ExampleVec = std::vector<Example>;
-        using ExampleVec = Example;
+        using example_t = std::shared_ptr<Example>;
+        using ExampleVec = std::vector<example_t>;
+        using ExampleMap = map<string, ExampleVec>;
         /**
          * comments
          * 
@@ -102,5 +105,12 @@ namespace pi::utils {
          * gen: method
          */
         ExampleVec get_examples();
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        ExampleMap get_examples_map();
     };
 }

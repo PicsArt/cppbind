@@ -2,9 +2,59 @@
 """
 import copy
 import clang.cindex as cli
-from iegnen import (
-    logging as logging
+from iegnen.utils.clang import (
+    get_unqualified_type_name,
+    is_rval_referance
 )
+from iegnen import logging as logging
+
+
+class TypeContext(object):
+
+    def __init__(self, runner, lang, clang_type):
+        self.runner = runner
+        self.lang = lang
+        self.clang_type = clang_type
+
+    @property
+    def name(self):
+        return self.clang_type.spelling
+
+    @property
+    def unqualified_name(self):
+        return get_unqualified_type_name(self.name)
+
+    @property
+    def pointee_type(self):
+        clang_pointee = self.clang_type.get_pointee()
+        if clang_pointee.spelling:
+            return TypeContext(self.runner, self.lang, clang_pointee)
+        return self
+
+    @property
+    def canonical_type(self):
+        return TypeContext(self.runner, self.lang, self.clang_type.get_canonical())
+
+    @property
+    def is_template(self):
+        return self.clang_type.get_num_template_arguments() != 0
+
+    @property
+    def template_argument_types(self):
+        return [TypeContext(self.runner, self.lang, self.clang_type.get_template_argument_type(num))
+                for num in range(self.clang_type.get_num_template_arguments())]
+
+    @property
+    def is_rval_referance(self):
+        return is_rval_referance(self.clang_type)
+
+    @property
+    def declaration_cursor(self):
+        return self.clang_type.get_declaration()
+
+    @property
+    def declaration(self):
+        return self.runner.get_context(self.lang, self.declaration_cursor.type.spelling)
 
 
 class Context(object):
@@ -16,7 +66,7 @@ class Context(object):
         self.lang = lang
 
     @property
-    def type(self):
+    def kind_name(self):
         return self.node.kind_name
 
     @property
@@ -35,14 +85,20 @@ class Context(object):
                     cli.CursorKind.IMAGINARY_LITERAL,
                     cli.CursorKind.STRING_LITERAL,
                     cli.CursorKind.CHARACTER_LITERAL,
+                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
+                    cli.CursorKind.GNU_NULL_EXPR,
+                    cli.CursorKind.NULL_STMT,
                 ]:
-                    val = next(def_curs.get_tokens(), None)
-                    if val:
-                        val = val.spelling
+                    if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
+                        val = 'NULL'
+                    else:
+                        val = next(def_curs.get_tokens(), None)
+                        if val:
+                            val = val.spelling
             return val
 
         for arg_c in self.node.clang_cursor.get_arguments():
-            arg_params = dict(name=arg_c.spelling, type=arg_c.type.spelling)
+            arg_params = dict(name=arg_c.spelling,  type=TypeContext(self.runner, self.lang, arg_c.type), cursor=arg_c)
 
             def_val = get_default(arg_c)
             if def_val:
@@ -56,7 +112,29 @@ class Context(object):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL]:
             raise AttributeError(f"{self.__class__.__name__}.returns is invalid.")
-        return self.node.clang_cursor.result_type.spelling
+        return TypeContext(self.runner, self.lang, self.node.clang_cursor.result_type)
+
+    @property
+    def base_types(self):
+
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+            raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
+
+        return [
+            TypeContext(self.runner, self.lang, base_specifier.type)
+            for base_specifier in self.base_type_specifiers
+        ]
+
+    @property
+    def base_type_specifiers(self):
+
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+            raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
+
+        return [base_specifier
+                for base_specifier in self.node.clang_cursor.get_children()
+                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER
+                ]
 
     @property
     def cursor(self):
@@ -81,7 +159,7 @@ class Context(object):
         return _vals
 
     @property
-    def parent(self):
+    def parent_context(self):
         return self.runner.access_context(self.lang, self.node.parent)
 
     def find_by_type(self, search_type):

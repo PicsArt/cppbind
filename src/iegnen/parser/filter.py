@@ -63,6 +63,8 @@ class CXXParserFilter(object):
         return False
 
     def filter_by_file(self, node):
+        if node.extent.start.file is None:
+            return True
         if self.include_files:
             return node.extent.start.file.name not in self.include_files
         return False

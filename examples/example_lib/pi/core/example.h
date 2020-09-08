@@ -1,3 +1,5 @@
+#include <string>
+#include <vector>
 /**
  * comments
  * 
@@ -9,6 +11,7 @@
  * kotlin.prefix: PI
  */
 namespace pi::utils {
+    using namespace std;
     /**
      * comments
      * 
@@ -27,6 +30,7 @@ namespace pi::utils {
          * swift.name: ExampleType
          */
         enum class Type { A, B, C };
+        typedef Type type_t;
 
 
         /**
@@ -44,7 +48,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, const char* test = "XXX");
+        Type f(Type* t, const char* t2 = nullptr, int i = 10, const string& test = "XXX");
 
         /**
          * comments
@@ -52,7 +56,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        int set_attribute(const char* test = "XXX");
+        int set_attribute(type_t* test = NULL);
 
         /**
          * comments
@@ -70,4 +74,33 @@ namespace pi::utils {
      * swift.name: ExampleType
      */
     enum class Type2 { A2, B2=10, C2 };
+    /**
+     * comments
+     * 
+     * __API__
+     * gen: class
+     * shared_ref: False
+     * kotlin.module: pi.xxx.Example
+     */
+    class Example2 : public Example, std::string
+    {
+        //using ExampleVec = std::vector<Example>;
+        using ExampleVec = Example;
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: constructor
+         * 
+         */
+        Example2(Example2* parent);
+
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        ExampleVec get_examples();
+    };
 }

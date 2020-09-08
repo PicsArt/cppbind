@@ -1,16 +1,54 @@
 import os
 from iegnen.builder.out_builder import Scope
 
+builtin_type = {
+    'int': 'Int',
+    'short': 'Short',
+    'long': 'Long',
+    'float': 'Float',
+    'double': 'Double',
+    'char': 'String',
+    'std::string': 'String',
+}
 
-def lookup_kt_type(ctx, type_name):
-    return type_name
+
+def _lookup_kt_type(ctx, type_ctx):
+    unqualified_name = type_ctx.unqualified_name
+    ref_ctx = ctx.find_by_type(unqualified_name)
+    if ref_ctx is None:
+        name = builtin_type.get(unqualified_name, None)
+    else:
+        name = ref_ctx.name
+    return name
+
+
+def lookup_kt_type(ctx, type_ctx):
+    name = _lookup_kt_type(ctx, type_ctx)
+    if name is None:
+        name = _lookup_kt_type(ctx, type_ctx.pointee_type) or _lookup_kt_type(ctx, type_ctx.pointee_type.canonical_type)
+        if name is None:
+            raise KeyError(f"Can not find type for {type_ctx.name}")
+    return name
 
 
 def build_arg_str(ctx, arg):
     arg_str = arg['name'] + ': ' + lookup_kt_type(ctx, arg['type'])
     if 'default' in arg:
-        arg_str += "? = " + arg['default']
-        return arg_str
+        val = arg['default']
+        if val in ['nullptr', 'NULL']:
+            arg_str += '? = null'
+        else:
+            arg_str += " = " + val
+    return arg_str
+
+
+def build_args_str(ctx):
+    args = [build_arg_str(ctx, arg) for arg in ctx.args]
+    if args:
+        args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
+    else:
+        args = ''
+    return args
 
 
 def get_file(ctx, builder):
@@ -50,6 +88,19 @@ def gen_class(ctx, builder):
 
 
 def gen_constructor(ctx, builder):
+    file_scope = get_file(ctx, builder)
+
+    args = build_args_str(ctx)
+
+    header = f"constructor({args}): this(id) {{"
+    body = f"test code for {ctx.name}"
+
+    file_scope['head'].add(
+        header,
+        Scope(body, tab=1),
+        "}",
+        "\n",
+    )
     pass
     # print(ctx.type) # constuctor
     # print(ctx.name) # Example
@@ -73,12 +124,7 @@ def gen_enum(ctx, builder):
 def gen_method(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    args = [build_arg_str(ctx, arg) for arg in ctx.args]
-    if args:
-        args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
-    else:
-        args = ''
-
+    args = build_args_str(ctx)
     result = lookup_kt_type(ctx, ctx.result_type)
     header = f"fun {ctx.name}({args}): {result} {{"
     body = f"test code for {ctx.name}"

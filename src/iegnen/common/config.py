@@ -87,12 +87,8 @@ class IEG_Config(object):
 
         # load language parameters
         self.languages = {}
-        for lang, v in cnfg.items("LANGUAGE"):
-            try:
-                self.languages[lang] = load_json_or_file(v)
-            except json.decoder.JSONDecodeError as e:
-                # TODO: error reporting
-                raise e
+        for lang in cnfg.getlist("LANGUAGE", "all_languages"):
+            self.languages[lang] = self.__load_language(cnfg, lang)
 
         self.attributes = cnfg.getjson_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
@@ -105,6 +101,10 @@ class IEG_Config(object):
 
     def __repr__(self):
         return f"IEG_Config({repr(self.__dict__)})"
+
+    def __load_language(self, cnfg, lang):
+        lang_section = cnfg.items(lang.upper())
+        return {k: v for k, v in lang_section}
 
 
 config = IEG_Config(["~/iegnen_config.cfg", "iegnen_config.cfg"])

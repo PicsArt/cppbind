@@ -1,3 +1,6 @@
+#ifndef __EXAMPLE_H__
+#define __EXAMPLE_H__
+
 #include <string>
 #include <vector>
 #include <map>
@@ -76,41 +79,6 @@ namespace pi::utils {
      * swift.name: ExampleType
      */
     enum class Type2 { A2, B2=10, C2 };
-    /**
-     * comments
-     * 
-     * __API__
-     * gen: class
-     * shared_ref: False
-     * kotlin.module: pi.xxx.Example
-     */
-    class Example2 : public Example, std::string
-    {
-        using example_t = std::shared_ptr<Example>;
-        using ExampleVec = std::vector<example_t>;
-        using ExampleMap = map<string, ExampleVec>;
-        /**
-         * comments
-         * 
-         * __API__
-         * gen: constructor
-         * 
-         */
-        Example2(Example2* parent);
-
-        /**
-         * comments
-         * 
-         * __API__
-         * gen: method
-         */
-        ExampleVec get_examples();
-        /**
-         * comments
-         * 
-         * __API__
-         * gen: method
-         */
-        ExampleMap get_examples_map();
-    };
 }
+
+#endif

@@ -214,6 +214,7 @@ class RunRule(object):
 
         # walk is traversing in dept first order
         self.all_contexts = dict()
+        # executes once for a type
         processed = dict()
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
@@ -250,12 +251,15 @@ class RunRule(object):
                     for b in builders.values():
                         b.pop_scope_stack()
 
+            # create common scope for entire ir
+            for b in builders.values():
+                b.add_scope_stack()
+
             for root in self.ir.roots:
-                for b in builders.values():
-                    b.add_scope_stack()
                 _run_recursive(root)
-                for b in builders.values():
-                    b.pop_scope_stack()
+
+            for b in builders.values():
+                b.pop_scope_stack()
 
     def capture_stacks(self, builders):
         return {lang: copy.copy(builder._scope_stack) for lang, builder in builders.items()}

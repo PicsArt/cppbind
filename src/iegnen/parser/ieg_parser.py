@@ -40,6 +40,12 @@ class CXXParser(object):
         files = os.path.join(self.config.source_dir, glob_filter)
 
         logging.info(f"parsing files: {files}")
+
+        all_files = glob.glob(files, recursive=True)
+        all_files = [os.path.abspath(fp) for fp in all_files]
+        logging.debug(f"parsing found files: {all_files}")
+        logging.debug(f"Clang args: {args}")
+
         for file_name in glob.glob(files, recursive=True):
             logging.info(f"parsing file {file_name}")
             self.current_file = file_name

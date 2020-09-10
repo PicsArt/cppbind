@@ -41,8 +41,9 @@ namespace pi::utils {
          * 
          * __API__
          * gen: method
+         * wrapper: jet_get_examples
          */
-        ExampleVec get_examples();
+        ExampleVec get_examples(){return ExampleVec()}
         /**
          * comments
          * 

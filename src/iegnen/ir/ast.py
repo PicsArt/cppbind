@@ -14,13 +14,13 @@ class Node(object):
         self._children = children or []
 
     def __eq__(self, other):
-        return self.type_name == other.type_name
+        return self.type_name == other.type_name and self.displayname == other.displayname
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.type_name)
+        return hash(self.type_name) ^ hash(self.displayname)
 
     def add_children(self, node):
         """TODO: Docstring for add_children.

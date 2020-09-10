@@ -57,8 +57,7 @@ def build_arg_str(ctx, arg):
     return arg_str
 
 
-def build_args_str(ctx, args=None):
-    args = args or [build_arg_str(ctx, arg) for arg in ctx.args]
+def build_args_str(args):
     if args:
         args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
     else:
@@ -99,6 +98,8 @@ def gen_class(ctx, builder):
         "{",
         Scope(name="head", tab=1),
         Scope(name="body", tab=1),
+        "///// External wrapper functions ////////////\n",
+        Scope(name="private_external", tab=1),
         "}",
         "\n",
     )
@@ -110,7 +111,7 @@ def gen_class(ctx, builder):
 def gen_constructor(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    args = build_args_str(ctx, ["id: Long"] + [build_arg_str(ctx, arg) for arg in ctx.args])
+    args = build_args_str(["id: Long"] + [build_arg_str(ctx, arg) for arg in ctx.args])
 
     header = f"constructor({args}): this(id) {{"
     body = f"test code for {ctx.name}"
@@ -136,7 +137,7 @@ def gen_enum(ctx, builder):
 def gen_method(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    args = build_args_str(ctx)
+    args = build_args_str([build_arg_str(ctx, arg) for arg in ctx.args])
     result = lookup_kt_type(ctx, ctx.result_type)
     header = f"fun {ctx.name}({args}): {result} {{"
     body = f"test code for {ctx.name}"
@@ -146,4 +147,12 @@ def gen_method(ctx, builder):
         Scope(body, tab=1),
         "}",
         "\n",
+    )
+
+    # TODO for complex type use id for builtin use directly
+    wrapper_args = build_args_str([f"{arg['name']}: Long" for arg in ctx.args])
+    wrapper_result = ": Long" if ctx.result_type else ""
+
+    file_scope['private_external'].add(
+        f"private external fun {ctx.wrapper.replace('.','_')}({wrapper_args}){wrapper_result}"
     )

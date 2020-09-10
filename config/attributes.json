@@ -31,6 +31,12 @@
         "inheritable": false,
         "default": "{object_name}"
     },
+    "wrapper":
+    {
+        "inheritable": false,
+        "default": "{module_name}_{object_name}",
+        "allowed_on": ["cxx_method", "function"]
+    },
     "include":
     {
         "inheritable": true,

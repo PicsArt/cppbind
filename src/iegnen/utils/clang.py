@@ -4,24 +4,62 @@ Helper functions working with clang
 import clang.cindex as cli
 
 
-def get_pointee_type_name(type):
-    return type.get_pointee().spelling or type.spelling
+def get_pointee_type(clang_type):
+    return clang_type.get_pointee() if clang_type.get_pointee().spelling else clang_type
 
 
-def get_pointee_type(type):
-    return type.get_pointee() if type.get_pointee().spelling else type
+def get_canonical_type(clang_type):
+    return clang_type.get_canonical() if clang_type.get_canonical().spelling else clang_type
+
+
+def is_template(clang_type):
+    return clang_type.get_num_template_arguments() != -1
+
+
+def template_argument_types(clang_type):
+    return [clang_type.get_template_argument_type(num)
+            for num in range(clang_type.get_num_template_arguments())]
+
+
+def template_type_name(clang_type):
+    name = get_unqualified_type_name(clang_type)
+    end_indx = name.index('<')
+    if end_indx != -1:
+        return name[:end_indx].strip()
+    return name
 
 
 def is_rval_referance(cursor):
     return cursor.kind == cli.TypeKind.LVALUEREFERENCE
 
 
-def get_unqualified_type_name(type_name):
+def _get_unqualified_type_name(type_name):
     """
     TODO: python API is missing
     """
     qualifiers = ["const ", "volatile "]
     for qual in qualifiers:
         if type_name.startswith(qual):
-            return get_unqualified_type_name(type_name[len(qual):])
+            return _get_unqualified_type_name(type_name[len(qual):])
     return type_name
+
+
+def get_unqualified_type_name(clang_type):
+    return _get_unqualified_type_name(clang_type.spelling)
+
+
+def get_semantic_ancestors(cursor):
+    ancestors = []
+    _cursor = cursor.semantic_parent
+
+    while(_cursor):
+        ancestors.append(_cursor)
+        _cursor = _cursor.semantic_parent
+
+    return ancestors[::-1]
+
+
+def get_full_name(cursor):
+    ancestors = get_semantic_ancestors(cursor)
+    ancestors = ancestors[1::] + [cursor]
+    return '::'.join([c.spelling for c in ancestors])

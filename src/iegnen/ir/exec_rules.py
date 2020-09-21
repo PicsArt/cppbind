@@ -2,77 +2,7 @@
 """
 import copy
 import clang.cindex as cli
-from iegnen.utils.clang import (
-    get_unqualified_type_name,
-    is_rval_referance
-)
 from iegnen import logging as logging
-
-
-class TypeContext(object):
-
-    def __init__(self, runner, lang, clang_type):
-        self.runner = runner
-        self.lang = lang
-        self.clang_type = clang_type
-
-    @property
-    def name(self):
-        return self.clang_type.spelling
-
-    @property
-    def unqualified_name(self):
-        return get_unqualified_type_name(self.name)
-
-    @property
-    def pointee_type(self):
-        clang_pointee = self.clang_type.get_pointee()
-        if clang_pointee.spelling:
-            return TypeContext(self.runner, self.lang, clang_pointee)
-        return self
-
-    @property
-    def canonical_type(self):
-        clang_canonical = self.clang_type.get_canonical()
-        if clang_canonical.spelling != self.clang_type.spelling:
-            return TypeContext(self.runner, self.lang, clang_canonical)
-        return self
-
-    @property
-    def is_template(self):
-        return self.clang_type.get_num_template_arguments() != -1
-
-    @property
-    def template_argument_types(self):
-        return [TypeContext(self.runner, self.lang, self.clang_type.get_template_argument_type(num))
-                for num in range(self.clang_type.get_num_template_arguments())]
-
-    def get_num_template_arguments(self):
-        return self.clang_type.get_num_template_arguments()
-
-    def get_template_argument_type(self, num):
-        return self.clang_type.get_template_argument_type(num)
-
-    @property
-    def template_type_name(self):
-        # todo:self.declaration_cursor.spelling does not return name space or full name
-        name = self.unqualified_name
-        end_indx = name.index('<')
-        if end_indx != -1:
-            return name[:end_indx].strip()
-        return name
-
-    @property
-    def is_rval_referance(self):
-        return is_rval_referance(self.clang_type)
-
-    @property
-    def declaration_cursor(self):
-        return self.clang_type.get_declaration()
-
-    @property
-    def declaration(self):
-        return self.runner.get_context(self.lang, self.declaration_cursor.type.spelling)
 
 
 class Context(object):
@@ -116,7 +46,7 @@ class Context(object):
             return val
 
         for arg_c in self.node.clang_cursor.get_arguments():
-            arg_params = dict(name=arg_c.spelling,  type=TypeContext(self.runner, self.lang, arg_c.type), cursor=arg_c)
+            arg_params = dict(name=arg_c.spelling,  type=arg_c.type, cursor=arg_c)
 
             def_val = get_default(arg_c)
             if def_val:
@@ -130,7 +60,7 @@ class Context(object):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL]:
             raise AttributeError(f"{self.__class__.__name__}.returns is invalid.")
-        return TypeContext(self.runner, self.lang, self.node.clang_cursor.result_type)
+        return self.node.clang_cursor.result_type
 
     @property
     def base_types(self):
@@ -139,7 +69,7 @@ class Context(object):
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
 
         return [
-            TypeContext(self.runner, self.lang, base_specifier.type)
+            base_specifier.type
             for base_specifier in self.base_types_specifier_cursor
         ]
 

@@ -48,6 +48,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+bazel-*
 develop-eggs/
 dist/
 downloads/

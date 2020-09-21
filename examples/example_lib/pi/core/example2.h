@@ -22,11 +22,16 @@ namespace pi::utils {
      * shared_ref: False
      * kotlin.module: pi.xxx.Example
      */
-    class Example2 : public Example, std::string
+    class Example2 : public Example
     {
-        using example_t = std::shared_ptr<Example>;
+        using example_t = Example*;
+        //using example_t = std::shared_ptr<Example>;
         using ExampleVec = std::vector<example_t>;
-        using ExampleMap = map<string, ExampleVec>;
+        using ExampleMap = map<string, example_t>;
+        using example2_t = long;
+        using Example2Vec = std::vector<example2_t>;
+        using Example2Map = map<string, example2_t>;
+        using Example3Map = map<string, ExampleVec>;
         /**
          * comments
          * 
@@ -41,7 +46,6 @@ namespace pi::utils {
          * 
          * __API__
          * gen: method
-         * wrapper: jet_get_examples
          */
         ExampleVec get_examples(){return ExampleVec()}
         /**
@@ -51,6 +55,27 @@ namespace pi::utils {
          * gen: method
          */
         ExampleMap get_examples_map();
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        void set_examples_map(const ExampleMap& data_map, const Example2Map& data2_map, const Example3Map& data3_map);
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        void set_examples(ExampleVec data_vec, Example2Vec data2_vec);
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        Example2Vec get_examples2_vec();
     };
 }
 #endif

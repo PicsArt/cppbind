@@ -65,10 +65,10 @@ class Scope(object):
         for data in parts:
             if data is not None:
                 if isinstance(data, Scope):
-                    assert self.builder, "to be able to add scope builder should be specified."
                     data.builder = self.builder
                     # also if name is not empty add to builder for lookup
                     if data.name:
+                        assert self.builder, "to be able to add name scope builder should be specified."
                         self.builder.register_scope(data, dept)
 
     def __getitem__(self, scope_name):
@@ -87,6 +87,9 @@ class Scope(object):
         str_scope = ''.join(lines)
 
         return str_scope
+
+    def __bool__(self):
+        return bool(self.parts)
 
 
 class File(Scope):

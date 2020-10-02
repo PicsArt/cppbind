@@ -1,17 +1,18 @@
 """
 """
-import copy
+import types
 import clang.cindex as cli
 from iegnen import logging as logging
 
 
 class Context(object):
 
-    def __init__(self, runner, node, lang):
+    def __init__(self, runner, node, lang, lang_config):
         assert node.clang_cursor, "cursor is not provided"
         self.runner = runner
         self.node = node
         self.lang = lang
+        self.config = types.SimpleNamespace(**lang_config)
 
     @property
     def kind_name(self):
@@ -108,7 +109,7 @@ class Context(object):
 
     @property
     def parent_context(self):
-        return self.runner.access_context(self.lang, self.node.parent)
+        return self.runner.get_context(self.lang, self.node.parent.type_name)
 
     def find_by_type(self, search_type):
         return self.runner.get_context(self.lang, search_type)
@@ -137,7 +138,7 @@ class RunRule(object):
             {}
         ]
 
-    def run(self, rules, builders):  # noqa: C901
+    def run(self, rules, builders, langs_config):  # noqa: C901
 
         # running order is defined by type of node
         # at first we run nodes for namespace/class/enums and then for methods
@@ -158,7 +159,7 @@ class RunRule(object):
                         logging.debug(f"Restoring stack for {ancesstor.displayname}.")
                         self.restore_stacks(builders, processed[ancesstor])
                         logging.debug(
-                            f"Restored stack {[s.keys() for s in next(iter(processed[ancesstor].values()))]}."
+                            f"Restored stack {self.__str_stacks(processed[ancesstor])}."
                         )
                     # allocate scope
                     stack_added = True
@@ -166,10 +167,10 @@ class RunRule(object):
                         b.add_scope_stack()
 
                     # call api
-                    self.call_api(rules, node.api, node, builders)
+                    self.call_api(rules, node.api, node, builders, langs_config)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node] = self.capture_stacks(builders)
-                    logging.debug(f"Captured stack {[s.keys() for s in next(iter(processed[node].values()))]}.")
+                    logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
 
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
@@ -182,6 +183,9 @@ class RunRule(object):
                         b.pop_scope_stack()
 
             # create common scope for entire ir
+            # we have to add this scope to be able to allow write into single file from multiple roots
+            # since we do not have gen api for file
+            # we register file and add one scope
             for b in builders.values():
                 b.add_scope_stack()
 
@@ -192,27 +196,32 @@ class RunRule(object):
                 b.pop_scope_stack()
 
     def capture_stacks(self, builders):
-        return {lang: copy.copy(builder._scope_stack) for lang, builder in builders.items()}
+        return {lang: builder.capture_stacks() for lang, builder in builders.items()}
 
     def restore_stacks(self, builders, capture_data):
         for lang, builder in builders.items():
-            builder._scope_stack = copy.copy(capture_data[lang])
+            builder.restore_stacks(capture_data[lang])
 
-    def call_api(self, rules, api, node, builders):
+    def call_api(self, rules, api, node, builders, langs_config):
         att_name = "gen_" + api
         for lang, builder in builders.items():
             logging.debug(f"Call API: {api} on {node.displayname} for {lang}")
             func = getattr(rules[lang], att_name)
-            func(self.access_context(lang, node), builder)
+            func(self.access_context(lang, node, langs_config[lang]), builder)
 
-    def access_context(self, lang, node):
+    def access_context(self, lang, node, lang_config):
         if node is None:
             return None
         cntx = self.all_contexts.setdefault(lang,
                                             {}).setdefault(node.type_name,
-                                                           Context(self, node, lang))
+                                                           Context(self, node, lang, lang_config))
         return cntx
 
     def get_context(self, lang, type_name):
         cntx = self.all_contexts.get(lang, {}).get(type_name, None)
         return cntx
+
+    def __str_stacks(self, capture_data):
+        # first lang stack data
+        stack_data = next(iter(capture_data.values()))
+        return f"{[s.keys() for fs in stack_data.values() for s in fs]}"

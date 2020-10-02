@@ -1,6 +1,7 @@
 """
 Helper codes for kotlin conversion
 """
+import clang.cindex as cli
 import iegnen.utils.clang as cutil
 
 OBJECT_CXX_ID_TYPE = 'jobjectid'
@@ -236,11 +237,10 @@ class ObjJniToCxxConvertor(ObjConvertor):
                          clang_type=clang_type)
 
     def conversion_snipped(self, name):
-        target = self.target_clang_type.spelling
-        pointee = self.target_clang_type.get_pointee().spelling
-        pointee = pointee or target
+        pointee = cutil.get_unqualified_type_name(cutil.get_pointee_type(self.target_clang_type))
         # TODO do we need target or target_type_info.target_clang_type is enough
-        return f"{target} {self.converted_name(name)} = RefFromLong<{pointee}>(id)"
+        dereferencer = '*' if self.target_clang_type.kind is not cli.TypeKind.POINTER else ''
+        return f"{self.target_type_name} {self.converted_name(name)} = {dereferencer}RefFromLong<{pointee}>(id)"
 
 
 class ObjCxxToJniConvertor(ObjConvertor):
@@ -321,7 +321,7 @@ class ArrayKotlinConvertor(ArrayConvertor):
         # TODO
         array_arg_converter = self.template_args[0]
         return f"""val {self.converted_name(name)}: \
-            MutableList<{array_arg_converter.target_type_name}> = mutableListOf()
+MutableList<{array_arg_converter.target_type_name}> = mutableListOf()
 for (data in {name}) {{
 {indent(array_arg_converter.conversion_snipped('data'), 4)}
     {self.converted_name(name)}.add({array_arg_converter.converted_name('data')})
@@ -373,7 +373,6 @@ class ArrayJniToCxxConvertor(ArrayConvertor):
         super().__init__(converter_type="jni_to_cxx", target_type_info=target_type_name, clang_type=clang_type)
 
     def conversion_snipped(self, name):
-        # TODO
         array_arg_converter = self.template_args[0]
         temp_name = f"_{self.converted_name(name)}"
         return f"""
@@ -420,7 +419,7 @@ class MapKotlinToNativeConvertor(MapConvertor):
         return f"""val tmp_key_{self.converted_name(name)} = {self.jni_type_prefix_k}Array({name}.size)
 val tmp_val_{self.converted_name(name)} = {self.jni_type_prefix_v}Array({name}.size)
 val {self.converted_name(name)} = \
-    {self.target_type_name}(tmp_key_{self.converted_name(name)}, tmp_val_{self.converted_name(name)})
+{self.target_type_name}(tmp_key_{self.converted_name(name)}, tmp_val_{self.converted_name(name)})
 var index = 0
 for ((key, value) in {name}) {{
 {indent(key_converter.conversion_snipped('key'), 4)}

@@ -4,6 +4,7 @@ to generated output.
 """
 
 import os
+import copy
 from iegnen import logging as logging
 
 TAB_STR = '    '
@@ -11,8 +12,8 @@ TAB_STR = '    '
 
 class Scope(object):
 
-    def __init__(self, *parts, name=None, tab=0, tab_str=None, builder=None, parts_spliter='\n'):
-        self.builder = builder
+    def __init__(self, *parts, name=None, tab=0, tab_str=None, file_scope=None, parts_spliter='\n'):
+        self.file_scope = file_scope
         self.parts = []
         self.tab = tab
         self.parts_spliter = parts_spliter
@@ -43,10 +44,11 @@ class Scope(object):
         self._register_scopes(*parts)
 
     def get_scope(self, scope_name, create=False):
-        scope = self.builder.lookup_scope(scope_name)
+        scope = self.file_scope.lookup_scope(scope_name)
 
         if scope is None and create:
-            scope = Scope(name=scope_name, builder=self.builder)
+            logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
+            scope = Scope(name=scope_name, file_scope=self.file_scope)
             self.add(scope)
 
         return scope
@@ -55,21 +57,23 @@ class Scope(object):
         if len(parts) == 0:
             return
         # register scopes
-        if self.builder:
-            dept = self.builder._lookup_scope_dept(self)
-            assert dept, f"current {repr(self)} scope is not register"
+        if self.file_scope:
+            dept = self.file_scope._lookup_scope_dept(self)
+            assert dept is not None, f"current {repr(self)} scope is not register"
             # register as child
             if dept != -1:
                 dept += 1
+            # else:
+                # assert False, "Reached max preallocated stack"
 
         for data in parts:
             if data is not None:
                 if isinstance(data, Scope):
-                    data.builder = self.builder
-                    # also if name is not empty add to builder for lookup
+                    data.file_scope = self.file_scope
+                    # also if name is not empty add to file_scope for lookup
                     if data.name:
-                        assert self.builder, "to be able to add name scope builder should be specified."
-                        self.builder.register_scope(data, dept)
+                        assert self.file_scope, "to be able to add name scope file_scope should be specified."
+                        self.file_scope.register_scope(data, dept)
 
     def __getitem__(self, scope_name):
         return self.get_scope(scope_name, create=True)
@@ -95,8 +99,10 @@ class Scope(object):
 class File(Scope):
 
     def __init__(self, file_path, **kwargs):
-        super().__init__(**kwargs)
         self.file_path = file_path
+        self._scope_stack = [dict()]
+        super().__init__(file_scope=self, **kwargs)
+        self.register_scope(self)
 
     def dump_output(self):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
@@ -104,34 +110,9 @@ class File(Scope):
         with open(self.file_path, 'wt') as f:
             f.write(str(self))
 
-
-class Builder(object):
-
-    def __init__(self):
-        self._scope_stack = [dict()]
-        self._files = dict()
-        self.last_file_scope = None
-
-    def dump_outputs(self):
-        for name, fl in self._files.items():
-            fl.dump_output()
-
-    def get_file(self, file_name, file_path=None, create=True):
-        file_path = file_path or file_name
-        file_scope = self._files.get(file_path, self.lookup_scope(file_name))
-        assert file_scope is None or file_scope.name == file_name
-
-        if file_scope is None and create:
-            file_scope = File(file_path, builder=self, name=file_name)
-            self._files[file_path] = file_scope
-            self.register_scope(file_scope, dept=0)
-
-        self.last_file_scope = file_scope
-        return file_scope
-
     def register_scope(self, scope, dept=-1):
-        assert self._scope_stack and scope.name
-        self._scope_stack[dept].setdefault(scope.name, scope)
+        assert self.scope_stack and scope.name
+        self.scope_stack[dept].setdefault(scope.name, scope)
 
     def add_scope_stack(self):
         self._scope_stack.append(dict())
@@ -140,35 +121,31 @@ class Builder(object):
         self._scope_stack.pop()
 
     def clear_scope_stack(self):
-        self._scope_stack[-1] = {}
+        self.scope_stack[-1] = {}
 
     def lookup_scope(self, scope_name):
         scope, dept = self._lookup_scope_by_name(scope_name)
         return scope
 
-    def get_scope(self, scope_name, create=False):
-        scope = self.lookup_scope(scope_name)
-
-        if scope is None and create and self.last_file_scope:
-            scope = self.last_file_scope.get_scope(scope_name, create)
-
-        return scope
+    @property
+    def scope_stack(self):
+        return self._scope_stack
 
     def __getitem__(self, scope_name):
         return self.get_scope(scope_name, create=True)
 
     def _lookup_scope_by_name(self, scope_name, dept=-1):
-        if len(self._scope_stack) < -dept:
+        if len(self.scope_stack) < -dept:
             return None, -1
 
-        scope = self._scope_stack[dept].get(scope_name, None)
+        scope = self.scope_stack[dept].get(scope_name, None)
         if scope is not None:
             return scope, dept
 
         return self._lookup_scope_by_name(scope_name, dept-1)
 
     def _lookup_scope_dept(self, scope, dept=-1):
-        if len(self._scope_stack) < -dept:
+        if len(self.scope_stack) < -dept:
             return None
 
         found_scope, found_dept = self._lookup_scope_by_name(scope.name, dept)
@@ -178,3 +155,50 @@ class Builder(object):
         if found_scope is scope:
             return found_dept
         return self._lookup_scope_dept(scope, found_dept-1)
+
+
+class Builder(object):
+
+    def __init__(self):
+        self._current_dept = 0
+        self._files = dict()
+
+    def dump_outputs(self):
+        for name, fl in self._files.items():
+            fl.dump_output()
+
+    def get_file(self, file_name, file_path=None, create=True):
+        file_path = file_path or file_name
+        file_scope = self._files.get(file_path, None)
+        assert file_scope is None or file_scope.name == file_name
+
+        if file_scope is None and create:
+            logging.debug(f"Creating File Scope {file_path}, current depth is {self._current_dept}.")
+            file_scope = File(file_path, name=file_name)
+            for i in range(self._current_dept):
+                file_scope.add_scope_stack()
+            self._files[file_path] = file_scope
+
+        return file_scope
+
+    def add_scope_stack(self):
+        self._current_dept += 1
+        for fl in self._files.values():
+            fl.add_scope_stack()
+
+    def pop_scope_stack(self):
+        self._current_dept -= 1
+        for fl in self._files.values():
+            fl.pop_scope_stack()
+
+    def clear_scope_stack(self):
+        for fl in self._files.values():
+            fl.clear_scope_stack()
+
+    def capture_stacks(self):
+        return {file_name: copy.copy(fl.scope_stack) for file_name, fl in self._files.items()}
+
+    def restore_stacks(self, capture_data):
+        for file_name, fl in self._files.items():
+            if file_name in capture_data:
+                fl._scope_stack = copy.copy(capture_data[file_name])

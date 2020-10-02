@@ -24,7 +24,7 @@ namespace pi::utils {
      */
     class Example2 : public Example
     {
-        using example_t = Example*;
+        using example_t = const Example&;
         //using example_t = std::shared_ptr<Example>;
         using ExampleVec = std::vector<example_t>;
         using ExampleMap = map<string, example_t>;

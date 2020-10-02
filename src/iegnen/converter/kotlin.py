@@ -657,6 +657,7 @@ type_mapping = {
     'std::__cxx11::basic_string': string_converter(),
     'std::vector': array_converter(),
     'std::map': map_converter(),
+    'std::unordered_map': map_converter(),
     'std::shared_ptr': template_converter('{0}', '{0}', '{0}'),
 }
 

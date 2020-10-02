@@ -1,4 +1,5 @@
 import os
+import types
 import configparser
 import json
 from ctypes.util import find_library
@@ -71,9 +72,6 @@ class IEG_Config(object):
         Args:
             file_names: list of file names that is going to be loaded
         """
-        class name_space:
-            def __repr__(self):
-                return f"name_space({self.__dict__})"
 
         cnfg = read_config()
 
@@ -93,10 +91,10 @@ class IEG_Config(object):
         self.attributes = cnfg.getjson_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
 
-        self.parser = name_space()
+        self.parser = types.SimpleNamespace()
         self.parser.__dict__.update(cnfg.items("PARSER"))
 
-        self.logging = name_space()
+        self.logging = types.SimpleNamespace()
         self.logging.__dict__.update(cnfg.items("LOG"))
 
     def __repr__(self):

@@ -58,13 +58,14 @@ class Scope(object):
             return
         # register scopes
         if self.file_scope:
-            dept = self.file_scope._lookup_scope_dept(self)
-            assert dept is not None, f"current {repr(self)} scope is not register"
-            # register as child
-            if dept != -1:
-                dept += 1
-            # else:
-                # assert False, "Reached max preallocated stack"
+            if self is not self.file_scope:
+                dept = self.file_scope._lookup_scope_dept(self)
+                assert dept is not None, f"current {repr(self)} scope is not register"
+                # register as child
+                if dept != -1:
+                    dept += 1
+            else:
+                dept = 0
 
         for data in parts:
             if data is not None:
@@ -100,9 +101,8 @@ class File(Scope):
 
     def __init__(self, file_path, **kwargs):
         self.file_path = file_path
-        self._scope_stack = [dict()]
+        self._scope_stack = []
         super().__init__(file_scope=self, **kwargs)
-        self.register_scope(self)
 
     def dump_output(self):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
@@ -185,11 +185,16 @@ class Builder(object):
         self._current_dept += 1
         for fl in self._files.values():
             fl.add_scope_stack()
+            assert len(fl._scope_stack) == self._current_dept,\
+                f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
 
     def pop_scope_stack(self):
         self._current_dept -= 1
         for fl in self._files.values():
             fl.pop_scope_stack()
+            assert len(fl._scope_stack) == self._current_dept,\
+                breakpoint()
+                # f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
 
     def clear_scope_stack(self):
         for fl in self._files.values():
@@ -202,3 +207,5 @@ class Builder(object):
         for file_name, fl in self._files.items():
             if file_name in capture_data:
                 fl._scope_stack = copy.copy(capture_data[file_name])
+                self._current_dept = len(fl._scope_stack)
+

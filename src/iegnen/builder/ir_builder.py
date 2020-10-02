@@ -32,7 +32,7 @@ class CXXIEGIRBuilder(object):
         self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES)
         self.ir = IEG_Ast()
         self.node_stack = []
-        self.__sys_vars = {}
+        self._sys_vars = {}
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = Node(tu.cursor)
@@ -102,7 +102,7 @@ class CXXIEGIRBuilder(object):
         file_name = os.path.splitext(os.path.basename(file_full_name))[0]
         object_name = node.clang_cursor.spelling
         module_name = ""
-        self.__sys_vars.update(dict(
+        self._sys_vars.update(dict(
             object_name=object_name,
             module_name=module_name,
             file_name=file_name,
@@ -110,7 +110,7 @@ class CXXIEGIRBuilder(object):
         ))
 
     def get_sys_vars(self, lang):
-        sys_vars = copy.copy(self.__sys_vars)
+        sys_vars = copy.copy(self._sys_vars)
         module_name = self.get_module_name(lang)
         sys_vars['module_name'] = module_name
         return sys_vars

@@ -283,12 +283,13 @@ def gen_class(ctx, builder):
         "}",
         "\n",
     )
-    base_type = convert.build_type_converter(
-        ctx, ctx.base_types[0]
-    ).type_name.kotlin if ctx.base_types else "RNativeParcelableObject"
+    base_types = ctx.base_types
+    base = convert.build_type_converter(
+        ctx, base_types[0]
+    ).type_name.kotlin if base_types else "RNativeParcelableObject"
 
     file_scope["main_constructor"].add(
-        f"internal constructor(id: Long): {base_type}(id)")
+        f"internal constructor(id: Long): {base}(id)")
 
 
 def gen_constructor(ctx, builder):

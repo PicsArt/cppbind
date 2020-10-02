@@ -35,7 +35,9 @@ class CXXParser(object):
         index = cli.Index.create()
 
         # build parser arguments
-        args = ['-x', 'c++']
+        args = ['-x', 'c++', '--std=c++17'] +\
+            self.config.clang_args.split(',') + ['-I' + includeDir.strip()
+                                                 for includeDir in self.config.include_dirs.split(',')]
         glob_filter = self.config.src_glob or "*"
         files = os.path.join(self.config.source_dir, glob_filter)
 
@@ -50,7 +52,13 @@ class CXXParser(object):
             logging.info(f"parsing file {file_name}")
             self.current_file = file_name
             tu = index.parse(path=file_name, args=args, options=CXXParser.CLANG_DEF_OPTIONS)
-            yield tu
+
+            hass_error = False
+            for diagnostic in tu.diagnostics:
+                logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
+                logging.debug(diagnostic)
+            if not hass_error:
+                yield tu
 
     def parss_x(self):
         """

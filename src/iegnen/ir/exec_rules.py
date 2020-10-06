@@ -64,6 +64,31 @@ class Context(object):
         return self.node.clang_cursor.result_type
 
     @property
+    def setter(self):
+        if self.node.api != 'getter':
+            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+
+        search_api = 'setter'
+        name = self.name
+        if name.lower().startswith('get'):
+            name = name[3:].lstrip('_')
+        search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:]}
+        return self.find_adjacent(search_names, search_api)
+
+    @property
+    def getter(self):
+        if self.node.api != 'setter':
+            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+
+        search_api = 'getter'
+        name = self.name
+        if name.lower().startswith('set'):
+            name = name[3:].lstrip('_')
+        search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],
+                        name, name[:1].lower() + name[1:]}
+        return self.find_adjacent(search_names, search_api)
+
+    @property
     def base_types(self):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
@@ -114,11 +139,19 @@ class Context(object):
     def find_by_type(self, search_type):
         return self.runner.get_context(self.lang, search_type)
 
+    def find_adjacent(self, search_names, search_api=None):
+        return next(self.find_adjacents(search_names, search_api), None)
+
+    def find_adjacents(self, search_names, search_api=None):
+        return (self.find_by_type(node.full_displayname) for node in self.node.parent.children
+                if (search_api is None or node.api == search_api)
+                and node.spelling in search_names)
+
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
         if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
-API has no '{name}' attribute for {self.node.displayname}.")
+ API has no '{name}' attribute for {self.node.displayname}.")
         val = val.get(self.lang, None)
         if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
@@ -135,6 +168,8 @@ class RunRule(object):
             {'class', 'enum'},
             {'constructor'},
             {'method'},
+            {'getter'},
+            {'setter'},
             {}
         ]
 
@@ -144,7 +179,18 @@ class RunRule(object):
         # at first we run nodes for namespace/class/enums and then for methods
 
         # walk is traversing in dept first order
-        self.all_contexts = dict()
+        assert builders.keys() == langs_config.keys()
+        self.allocate_all_contexts(langs_config)
+
+        # init all rules
+        init_att_name = "gen_init"
+        for lang, builder in builders.items():
+            logging.debug(f"Initialising rule for {lang}.")
+            func = getattr(rules[lang], init_att_name)
+            if func:
+                config = types.SimpleNamespace(**langs_config[lang])
+                func(config, builder)
+
         # executes once for a type
         processed = dict()
         for calling_api in self.api_call_order:
@@ -167,7 +213,7 @@ class RunRule(object):
                         b.add_scope_stack()
 
                     # call api
-                    self.call_api(rules, node.api, node, builders, langs_config)
+                    self.call_api(rules, node, builders)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node] = self.capture_stacks(builders)
                     logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
@@ -202,24 +248,31 @@ class RunRule(object):
         for lang, builder in builders.items():
             builder.restore_stacks(capture_data[lang])
 
-    def call_api(self, rules, api, node, builders, langs_config):
+    def call_api(self, rules, node, builders):
+        api = node.api
         att_name = "gen_" + api
         for lang, builder in builders.items():
             logging.debug(f"Call API: {api} on {node.displayname} for {lang}")
             func = getattr(rules[lang], att_name)
-            func(self.access_context(lang, node, langs_config[lang]), builder)
+            func(self.get_context(lang, node.full_displayname), builder)
 
-    def access_context(self, lang, node, lang_config):
-        if node is None:
-            return None
+    def create_context(self, lang, node, lang_config):
+        assert node is not None
         cntx = self.all_contexts.setdefault(lang,
-                                            {}).setdefault(node.type_name,
+                                            {}).setdefault(node.full_displayname,
                                                            Context(self, node, lang, lang_config))
         return cntx
 
     def get_context(self, lang, type_name):
         cntx = self.all_contexts.get(lang, {}).get(type_name, None)
         return cntx
+
+    def allocate_all_contexts(self, langs_config):
+        logging.debug("Allocating context for all nodes")
+        self.all_contexts = dict()
+        for node in self.ir.walk():
+            for lang, config in langs_config.items():
+                self.create_context(lang, node, config)
 
     def __str_stacks(self, capture_data):
         # first lang stack data

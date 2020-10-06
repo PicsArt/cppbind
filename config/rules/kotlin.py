@@ -1,39 +1,10 @@
 import os
+import shutil
+import glob
+from iegnen.common.config import PROJECT_CONFIG_DIR
 from iegnen.builder.out_builder import Scope
 import iegnen.converter.kotlin as convert
-
-
-def kt_arg_str(type_name, name, default=None, **kwargs):
-    arg_str = name + ': ' + type_name
-    if default:
-        val = default
-        if val in ['nullptr', 'NULL']:
-            arg_str += '? = null'
-        else:
-            arg_str += " = " + val
-    return arg_str
-
-
-def kt_jni_arg_str(type_name, name, **kwargs):
-    arg_str = name + ': ' + type_name
-    return arg_str
-
-
-def cxx_jni_arg_str(type_name, name, **kwargs):
-    arg_str = type_name + ' ' + name
-    return arg_str
-
-
-def format_args_str(args):
-    if args:
-        args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
-    else:
-        args = ''
-    return args
-
-
-def jni_func_name(ctx):
-    return f'j{ctx.name.capitalize()}'
+from iegnen import logging
 
 
 def build_jni_func_cxx(ctx, builder):
@@ -58,7 +29,7 @@ def build_jni_func_cxx(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg_scope.add(cxx_jni_arg_str(type_name=type_converter.type_name.jni, **arg))
+        arg_scope.add(convert.cxx_jni_arg_str(type_name=type_converter.type_name.jni, **arg))
         converter_code = type_converter.converter_code.from_jni_to_cxx
         cxx_call_args.append(converter_code.converted_name(arg['name']))
         # now add conversion code into body if needed
@@ -75,7 +46,7 @@ def build_jni_func_cxx(ctx, builder):
 
     package = ctx.package.replace('.', '_')
     class_name = ctx.parent_context.name.replace("_", "_1")
-    method_name = jni_func_name(ctx).replace("_", "_1")
+    method_name = convert.jni_func_name(ctx).replace("_", "_1")
 
     result_cxx_name = result_type_converter.type_name.jni
 
@@ -93,7 +64,7 @@ def build_jni_func_cxx(ctx, builder):
     jni_cxx_file['body_cxx'].add(
         jni_cxx_func,
         Scope(
-            "return pi::handleNativeCrash(env, [&] {",
+            "return jni::handleNativeCrash(env, [&] {",
             Scope(
                 *body,
                 tab=1
@@ -116,14 +87,14 @@ def build_jni_func(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg = kt_jni_arg_str(type_name=type_converter.type_name.native, **arg)
+        arg = convert.kt_jni_arg_str(type_name=type_converter.type_name.native, **arg)
         arg_scope.add(arg)
 
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
 
     result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
     # TODO for complex type use id for builtin use directly
-    jni_func = f"{jni_func_name(ctx)}({args_str}): {result_type_converter.type_name.native}"
+    jni_func = f"{convert.jni_func_name(ctx)}({args_str}): {result_type_converter.type_name.native}"
 
     file_scope['private_external'].add(
         f"private external fun {jni_func}"
@@ -150,7 +121,7 @@ def build_jni_constructor_cxx(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg_scope.add(cxx_jni_arg_str(type_name=type_converter.type_name.jni, **arg))
+        arg_scope.add(convert.cxx_jni_arg_str(type_name=type_converter.type_name.jni, **arg))
         converter_code = type_converter.converter_code.from_jni_to_cxx
         cxx_call_args.append(converter_code.converted_name(arg['name']))
         # now add conversion code into body if needed
@@ -174,7 +145,7 @@ Java_{package}_{class_name}_{method_name}({args_str}){{'
     jni_cxx_file['body_cxx'].add(
         jni_cxx_func,
         Scope(
-            "return pi::handleNativeCrash(env, [&] {",
+            "return jni::handleNativeCrash(env, [&] {",
             Scope(
                 *body,
                 tab=1
@@ -197,7 +168,7 @@ def build_jni_constructor(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg = kt_jni_arg_str(type_name=type_converter.type_name.native, **arg)
+        arg = convert.kt_jni_arg_str(type_name=type_converter.type_name.native, **arg)
         arg_scope.add(arg)
 
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
@@ -219,20 +190,17 @@ def get_cxx_jni_file(ctx, builder):
 
     module_dir = os.path.join(package_prefix, ctx.package).replace('.', os.sep)
     file_path = os.path.join(out_dir, module_dir, ctx.file + '.cpp')
-    file_scope = builder.get_file(file_path)
 
-    file_scope["include_cxx"].add_unique(
-        convert.CXX_INCLUDES,
-        "\n",
-    )
-    file_scope["typedefs_cxx"].add_unique(
-        convert.CXX_OBJECT_MAP_DEF_SNIPPED,
-        convert.CXX_OBJECT_OBJID_DEF_SNIPPED,
-        convert.CXX_HELPERS,
-        "\n",
-    )
+    def init_func(fscope):
+        fscope["include_cxx"].add_unique(
+            convert.get_includes(),
+        )
+        fscope["helpers_cxx"].add_unique(
+            convert.CXX_HELPERS,
+        )
+        fscope.get_scope('body_cxx', create=True)
 
-    file_scope.get_scope('body_cxx', create=True)
+    file_scope = builder.get_file(file_path, init_func=init_func)
 
     return file_scope
 
@@ -243,20 +211,44 @@ def get_file(ctx, builder):
 
     module_dir = os.path.join(package_prefix, ctx.package).replace('.', os.sep)
     file_path = os.path.join(out_dir, module_dir, ctx.file + '.kt')
-    file_scope = builder.get_file(file_path)
-    file_scope["package"].add_unique(
-        f"package {package_prefix}.{ctx.package}",
-        "\n",
-    )
+
+    def init_func(fscope):
+        fscope["package"].add_unique(
+            f"package {package_prefix}.{ctx.package}",
+            "\n",
+        )
+
+        fscope["include"].add_unique(
+            *[f"import {imp}" for imp in ctx.include],
+            "\n",
+        )
+
+        fscope.get_scope('body', create=True)
+
+    file_scope = builder.get_file(file_path, init_func=init_func)
 
     file_scope["include"].add_unique(
         *[f"import {imp}" for imp in ctx.include],
         "\n",
     )
 
-    file_scope.get_scope('body', create=True)
-
     return file_scope
+
+
+def gen_init(config, builder):
+    prj_rel = os.path.relpath(config.cxx_out_dir, config.out_prj_dir)
+    cxx_helpers_dir = config.cxx_helpers_dir
+    if not os.path.isabs(cxx_helpers_dir):
+        if not os.path.isdir(cxx_helpers_dir):
+            cxx_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, cxx_helpers_dir))
+    cxx_helpers_files = os.path.join(cxx_helpers_dir, '**/*.h*')
+    for file_name in glob.glob(cxx_helpers_files, recursive=True):
+        logging.info(f"Using helper file {file_name}")
+        file_rel_name = os.path.relpath(file_name, cxx_helpers_dir)
+        incude_name = os.path.join(prj_rel, file_rel_name)
+        logging.info(f"Helper include name {incude_name}")
+        convert.CXX_INCLUDE_NAMES.append(incude_name)
+        shutil.copyfile(file_name, os.path.join(config.cxx_out_dir, file_rel_name))
 
 
 def gen_enum(ctx, builder):
@@ -305,8 +297,8 @@ def gen_constructor(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg_scope.add(kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
-        # now add conversion code into body if needed
+        arg_scope.add(convert.kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
+
         converter_code = type_converter.converter_code.from_kotlin_to_native
         jni_call_args.append(converter_code.converted_name(arg['name']))
         # now add conversion code into body if needed
@@ -343,7 +335,7 @@ def gen_method(ctx, builder):
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg_scope.add(kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
+        arg_scope.add(convert.kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
         converter_code = type_converter.converter_code.from_kotlin_to_native
         jni_call_args.append(converter_code.converted_name(arg['name']))
         # now add conversion code into body if needed
@@ -356,7 +348,7 @@ def gen_method(ctx, builder):
     result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
     # todo for jni to koti
     converter_code = result_type_converter.converter_code.from_native_to_kotlin
-    body.append(f"val result = {jni_func_name(ctx)}({', '.join(jni_call_args)});")
+    body.append(f"val result = {convert.jni_func_name(ctx)}({', '.join(jni_call_args)});")
     body.append(converter_code.conversion_snipped('result'))
 
     result_name = converter_code.converted_name('result')
@@ -373,3 +365,55 @@ def gen_method(ctx, builder):
         "\n",
     )
     build_jni_func(ctx, builder)
+
+
+def gen_getter(ctx, builder):
+    breakpoint()
+    file_scope = get_file(ctx, builder)
+
+    arg_scope = Scope(tab=1, parts_spliter=',\n')
+
+    body = []
+    jni_call_args = []
+
+    for arg in ctx.args:
+        # lookup type, create argument list and conversion code
+        type_ctx = arg['type']
+        type_converter = convert.build_type_converter(ctx, type_ctx)
+
+        arg_scope.add(convert.kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
+
+        converter_code = type_converter.converter_code.from_kotlin_to_native
+        jni_call_args.append(converter_code.converted_name(arg['name']))
+        # now add conversion code into body if needed
+        snipped = converter_code.conversion_snipped(arg['name'])
+        if snipped:
+            body.append(snipped)
+
+    args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
+
+    result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
+    # todo for jni to koti
+    converter_code = result_type_converter.converter_code.from_native_to_kotlin
+    body.append(f"val result = {convert.jni_func_name(ctx)}({', '.join(jni_call_args)});")
+    body.append(converter_code.conversion_snipped('result'))
+
+    result_name = converter_code.converted_name('result')
+    body.append(f"return {result_name}")
+
+    header = f"fun {ctx.name}({args_str}): {result_type_converter.type_name.kotlin} {{"
+    file_scope['body'].add(
+        header,
+        Scope(
+            *body,
+            tab=1
+        ),
+        "}",
+        "\n",
+    )
+    build_jni_func(ctx, builder)
+
+
+def gen_setter(ctx, builder):
+    breakpoint()
+    pass

@@ -1,6 +1,7 @@
 """
 """
 from collections import OrderedDict
+import iegnen.utils.clang as cutil
 
 
 class Node(object):
@@ -14,13 +15,13 @@ class Node(object):
         self._children = children or []
 
     def __eq__(self, other):
-        return self.type_name == other.type_name and self.displayname == other.displayname
+        return self.full_displayname == other.full_displayname
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.type_name) ^ hash(self.displayname)
+        return hash(self.full_displayname)
 
     def add_children(self, node):
         """TODO: Docstring for add_children.
@@ -61,18 +62,41 @@ class Node(object):
         return self.clang_cursor.type.spelling
 
     @property
+    def full_displayname(self):
+        assert self.clang_cursor, "cursor is not provided"
+        if not hasattr(self, '_full_displayname'):
+            self._full_displayname = cutil.get_full_displayname(self.clang_cursor)
+
+        return self._full_displayname
+
+    @property
     def ancestor_with_api(self):
-        node = self.parent
-        while(node):
-            if node.api:
-                return node
-            node = node.parent
-        return node
+        if not hasattr(self, '_ancestor_with_api'):
+            node = self.parent
+            while(node):
+                if node.api:
+                    return node
+                node = node.parent
+            self._ancestor_with_api = node
+
+        return self._ancestor_with_api
 
     @property
     def file_name(self):
         file_name = self.clang_cursor.extent.start.file.name
         return file_name
+
+    def walk_preorder(self):
+        """
+        """
+
+        # processor current node
+        yield self
+
+        # now if needed dive into children
+        for child in self.children:
+            for descendant in child.walk_preorder():
+                yield descendant
 
 
 class IEG_Ast(object):
@@ -87,17 +111,5 @@ class IEG_Ast(object):
         """
         """
         for root in self.roots:
-            for node in self.cursor_walk(root):
+            for node in root.walk_preorder():
                 yield node
-
-    def cursor_walk(self, cursor):
-        """
-        """
-
-        # processor current cursor
-        yield cursor
-
-        # now if needed dive into children
-        for child in cursor.children:
-            for descendant in self.cursor_walk(child):
-                yield descendant

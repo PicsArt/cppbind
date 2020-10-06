@@ -63,3 +63,9 @@ def get_full_name(cursor):
     ancestors = get_semantic_ancestors(cursor)
     ancestors = ancestors[1::] + [cursor]
     return '::'.join([c.spelling for c in ancestors])
+
+
+def get_full_displayname(cursor):
+    ancestors = get_semantic_ancestors(cursor)
+    ancestors = ancestors[1::] + [cursor]
+    return '::'.join([c.displayname for c in ancestors])

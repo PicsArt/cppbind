@@ -43,13 +43,15 @@ class Scope(object):
         # register scopes
         self._register_scopes(*parts)
 
-    def get_scope(self, scope_name, create=False):
+    def get_scope(self, scope_name, create=False, init_func=None):
         scope = self.file_scope.lookup_scope(scope_name)
 
         if scope is None and create:
             logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
             scope = Scope(name=scope_name, file_scope=self.file_scope)
             self.add(scope)
+            if init_func:
+                init_func(scope)
 
         return scope
 
@@ -167,7 +169,8 @@ class Builder(object):
         for name, fl in self._files.items():
             fl.dump_output()
 
-    def get_file(self, file_name, file_path=None, create=True):
+    def get_file(self, file_name, file_path=None, create=True, init_func=None):
+        assert init_func is None or create, "init func should specified only if create is true."
         file_path = file_path or file_name
         file_scope = self._files.get(file_path, None)
         assert file_scope is None or file_scope.name == file_name
@@ -178,6 +181,8 @@ class Builder(object):
             for i in range(self._current_dept):
                 file_scope.add_scope_stack()
             self._files[file_path] = file_scope
+            if init_func:
+                init_func(file_scope)
 
         return file_scope
 
@@ -193,8 +198,7 @@ class Builder(object):
         for fl in self._files.values():
             fl.pop_scope_stack()
             assert len(fl._scope_stack) == self._current_dept,\
-                breakpoint()
-                # f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
+                f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
 
     def clear_scope_stack(self):
         for fl in self._files.values():
@@ -204,8 +208,21 @@ class Builder(object):
         return {file_name: copy.copy(fl.scope_stack) for file_name, fl in self._files.items()}
 
     def restore_stacks(self, capture_data):
+        restoring_dept = None
         for file_name, fl in self._files.items():
             if file_name in capture_data:
                 fl._scope_stack = copy.copy(capture_data[file_name])
-                self._current_dept = len(fl._scope_stack)
+                if restoring_dept is None:
+                    restoring_dept = len(fl._scope_stack)
+                else:
+                    assert restoring_dept == len(fl._scope_stack),\
+                        f"Scope imbalance for {file_name} scope dept is {len(fl._scope_stack)}"
+            else:
+                logging.debug(f"Current scope is {self._current_dept}, {file_name} scope is {len(fl._scope_stack)}.")
 
+        if restoring_dept is not None:
+            self._current_dept = restoring_dept
+
+        for file_name, fl in self._files.items():
+            s_len = len(fl._scope_stack)
+            fl._scope_stack += [dict()] * (self._current_dept - s_len)

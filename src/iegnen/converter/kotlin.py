@@ -11,61 +11,14 @@ OBJECT_ID_TYPE = 'Long'
 OBJECT_TYPE = 'Object'
 OBJECT_INFO_TYPE = 'tmpObject'
 
-
-CXX_INCLUDES = '''
-#include "jni.h"
-'''
-
-CXX_OBJECT_MAP_DEF_SNIPPED = f'typedef {OBJECT_CXX_TYPE} {OBJECT_CXX_MAP_TYPE};'
-CXX_OBJECT_OBJID_DEF_SNIPPED = """
-typedef jlong jobjectid;
-typedef jlongArray jobjectidArray;
-"""
+CXX_INCLUDE_NAMES = ["jni.h"]
 
 
-CXX_HELPERS = """
-std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p) {
-    jclass pairClass = env->FindClass("android/util/Pair");
-    jfieldID first = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID second = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
-
-    return std::pair(env->GetObjectField(p, first), env->GetObjectField(p, second));
-}
+CXX_HELPERS = ""
 
 
-jobject make_jni_pair(JNIEnv *env, jobject first, jobject second) {
-    // Get the pair class that we wish to return an instance of
-    jclass pairClass = env->FindClass("android/util/Pair");
-
-    // Get the method id of an empty constructor in class
-    jmethodID constructor = (*env)->GetMethodID(env, pairClass, "<init>", "()V");
-
-    // Create an instance of class
-    jobject obj = (*env)->NewObject(env, pairClass, constructor);
-
-    // Get Field references
-    jfieldID first_field = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID second_field = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
-
-    // Set fields for object
-    (*env)->SetFloatField(env, obj, first_field, first);
-    (*env)->SetFloatField(env, obj, second_field, second);
-    return obj
-}
-
-
-std::string jni_to_string(JNIEnv* env, jstring jStr) {
-    auto cstr = env->GetStringUTFChars(jStr, 0);
-    std::string str = cstr;
-    env->ReleaseStringUTFChars(jStr, cstr);
-    return std::move(str);
-}
-
-
-jstring string_to_jni(JNIEnv* env, const std::string& str) {
-    return env->NewStringUTF(str.c_str());
-}
-"""
+def get_includes():
+    return '\n'.join([f'#include "{n}"' for n in CXX_INCLUDE_NAMES])
 
 
 def indent(s, numSpaces):
@@ -116,6 +69,40 @@ def jni_array_set(type_converter):
     prefix = jni_type_prefix(type_converter)
     # else
     return f'Set{prefix}ArrayRegion'
+
+
+def kt_arg_str(type_name, name, default=None, **kwargs):
+    arg_str = name + ': ' + type_name
+    if default:
+        val = default
+        if val in ['nullptr', 'NULL']:
+            arg_str += '? = null'
+        else:
+            arg_str += " = " + val
+    return arg_str
+
+
+def kt_jni_arg_str(type_name, name, **kwargs):
+    arg_str = name + ': ' + type_name
+    return arg_str
+
+
+def cxx_jni_arg_str(type_name, name, **kwargs):
+    arg_str = type_name + ' ' + name
+    return arg_str
+
+
+def format_args_str(args):
+    from iegnen.builder.out_builder import Scope
+    if args:
+        args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
+    else:
+        args = ''
+    return args
+
+
+def jni_func_name(ctx):
+    return f'j{ctx.name.capitalize()}'
 
 
 class TypeInfo:

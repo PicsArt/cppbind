@@ -38,7 +38,8 @@ class WrapperGenerator(object):
         # TODO it could be more effective if we dump builders once they are ready, but for now keep them till end
         logging.debug("Creating builders and running rules on IR.")
         builders = {lang: Builder() for lang in lang2rule}
-        run_rule.run(lang2rule, builders, default_config.languages)
+        lang_cofigs = {lang: default_config.languages[lang] for lang in lang2rule}
+        run_rule.run(lang2rule, builders, lang_cofigs)
         # now we can dump builders into file
         logging.debug("Dumping builders to files.")
 

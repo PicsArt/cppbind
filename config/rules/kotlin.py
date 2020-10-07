@@ -57,7 +57,9 @@ def build_jni_func_cxx(ctx, builder):
 
     result_name = converter_code.converted_name('result')
 
-    body.append(converter_code.conversion_snipped('result'))
+    res_snipped = converter_code.conversion_snipped('result')
+    if res_snipped:
+        body.append(res_snipped)
     body.append(f"return {result_name};")
 
     jni_cxx_file = get_cxx_jni_file(ctx, builder)
@@ -269,6 +271,7 @@ def gen_class(ctx, builder):
         Scope(name="main_constructor", tab=1),
         "{",
         Scope(name="head", tab=1),
+        Scope(name="properties", tab=1),
         Scope(name="body", tab=1),
         "///// External wrapper functions ////////////\n",
         Scope(name="private_external", tab=1),
@@ -317,7 +320,7 @@ def gen_constructor(ctx, builder):
         header,
         Scope(*body, tab=1),
         "}",
-        "\n",
+        "",
     )
     build_jni_constructor(ctx, builder)
 
@@ -348,8 +351,10 @@ def gen_method(ctx, builder):
     result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
     # todo for jni to koti
     converter_code = result_type_converter.converter_code.from_native_to_kotlin
-    body.append(f"val result = {convert.jni_func_name(ctx)}({', '.join(jni_call_args)});")
-    body.append(converter_code.conversion_snipped('result'))
+    body.append(f"val result = {convert.jni_func_name(ctx)}({', '.join(jni_call_args)})")
+    res_snipped = converter_code.conversion_snipped('result')
+    if res_snipped:
+        body.append(res_snipped)
 
     result_name = converter_code.converted_name('result')
     body.append(f"return {result_name}")
@@ -368,52 +373,73 @@ def gen_method(ctx, builder):
 
 
 def gen_getter(ctx, builder):
-    breakpoint()
     file_scope = get_file(ctx, builder)
 
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    assert not ctx.args, "getter should not have arguments"
+    setter_ctx = ctx.setter
 
-    body = []
-    jni_call_args = []
+    getter_body = []
+    setter_body = []
+    result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
 
-    for arg in ctx.args:
+    if setter_ctx:
+        assert len(setter_ctx.args) == 1, "Setter should have one argument."
+        jni_call_arg = []
+
+        arg = setter_ctx.args[0]
         # lookup type, create argument list and conversion code
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
 
-        arg_scope.add(convert.kt_arg_str(type_name=type_converter.type_name.kotlin, **arg))
-
         converter_code = type_converter.converter_code.from_kotlin_to_native
-        jni_call_args.append(converter_code.converted_name(arg['name']))
+        jni_call_arg = converter_code.converted_name('value')
         # now add conversion code into body if needed
-        snipped = converter_code.conversion_snipped(arg['name'])
+        snipped = converter_code.conversion_snipped('value')
         if snipped:
-            body.append(snipped)
+            setter_body.append(snipped)
 
-    args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
+        setter_body.append(f"{convert.jni_func_name(setter_ctx)}({jni_call_arg})")
 
-    result_type_converter = convert.build_type_converter(ctx, ctx.result_type)
-    # todo for jni to koti
     converter_code = result_type_converter.converter_code.from_native_to_kotlin
-    body.append(f"val result = {convert.jni_func_name(ctx)}({', '.join(jni_call_args)});")
-    body.append(converter_code.conversion_snipped('result'))
+    getter_body.append(f"val result = {convert.jni_func_name(ctx)}()")
+    res_snipped = converter_code.conversion_snipped('result')
+    if res_snipped:
+        getter_body.append(res_snipped)
 
     result_name = converter_code.converted_name('result')
-    body.append(f"return {result_name}")
+    getter_body.append(f"return {result_name}")
 
-    header = f"fun {ctx.name}({args_str}): {result_type_converter.type_name.kotlin} {{"
-    file_scope['body'].add(
+    header = f"{'var' if setter_ctx else 'val'} {ctx.name}: {result_type_converter.type_name.kotlin}"
+    parts = [
         header,
         Scope(
-            *body,
+            "get() {",
+            Scope(
+                *getter_body,
+                tab=1
+            ),
+            "}",
             tab=1
         ),
-        "}",
-        "\n",
-    )
+    ]
+    if setter_ctx:
+        parts.append(
+            Scope(
+                "set(value) {",
+                Scope(
+                    *setter_body,
+                    tab=1
+                ),
+                "}",
+                tab=1
+            ),
+        )
+
+    file_scope['properties'].add(*parts, '')
     build_jni_func(ctx, builder)
+    if setter_ctx:
+        build_jni_func(setter_ctx, builder)
 
 
 def gen_setter(ctx, builder):
-    breakpoint()
     pass

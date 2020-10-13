@@ -21,10 +21,12 @@ class APIParser(object):
         """
         api = None
         attr_dict = OrderedDict()
+        pure_comment = []
 
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
             return api, attr_dict
+        pure_comment.extend(comment_line.lstrip('/* ') for comment_line in raw_comment[:index].splitlines()[:-1])
         # else
         ATTR_REGEXPR =\
             rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*:\s*(.+)$"
@@ -68,7 +70,7 @@ class APIParser(object):
                     else:
                         att_lang_ditct[lang] = value
 
-        return api, attr_dict
+        return api, attr_dict, pure_comment
 
     def has_api(self, raw_comment):
         """

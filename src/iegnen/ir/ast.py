@@ -7,9 +7,10 @@ import iegnen.utils.clang as cutil
 class Node(object):
 
     def __init__(self, clang_cursor, api=None, args=None,
-                 parent=None, children=None):
+                 parent=None, children=None, pure_comment=None):
         self.clang_cursor = clang_cursor
         self.api = api
+        self.pure_comment = pure_comment
         self.args = args or OrderedDict()
         self.parent = parent
         self._children = children or []

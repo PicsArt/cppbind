@@ -8,6 +8,14 @@ import iegnen.converter.kotlin as convert
 from iegnen import logging
 
 
+def make_kotlin_comment(pure_comment):
+    nl = '\n * '
+    if not pure_comment:
+        return ""
+    return f"""/**{nl.join(pure_comment)}
+ */"""
+
+
 def build_jni_func_cxx(ctx, builder):
 
     arg_scope = Scope(tab=1, parts_spliter=',\n')
@@ -294,6 +302,7 @@ def gen_init(config, *args, **kwargs):
 def gen_enum(ctx, builder):
     file_scope = get_file(ctx, builder)
     file_scope['body'].add(
+        make_kotlin_comment(ctx.node.pure_comment),
         f"enum class {ctx.name}(val value: Int){{",
         convert.indent(',\n'.join([f"{case['name']}({case['value']})" for case in ctx.enum_values]), 3) + ';',
         "",
@@ -314,6 +323,7 @@ def gen_class(ctx, builder):
         o_classification += "open "
 
     file_scope['body'].add(
+        make_kotlin_comment(ctx.node.pure_comment),
         f"{o_classification}class {ctx.name}",
         Scope(name="main_constructor", tab=1),
         "{",
@@ -364,6 +374,7 @@ def gen_constructor(ctx, builder):
     header = f"constructor({args_str}): this() {{"
 
     file_scope['head'].add(
+        make_kotlin_comment(ctx.node.pure_comment),
         header,
         Scope(*body, tab=1),
         "}",
@@ -415,6 +426,7 @@ def gen_method(ctx, builder):
 
     header = f"{o_v_classification}fun {ctx.name}({args_str}): {result_type_converter.type_name.kotlin} {{"
     file_scope['body'].add(
+        make_kotlin_comment(ctx.node.pure_comment),
         header,
         Scope(
             *body,
@@ -465,6 +477,7 @@ def gen_getter(ctx, builder):
 
     header = f"{'var' if setter_ctx else 'val'} {ctx.name}: {result_type_converter.type_name.kotlin}"
     parts = [
+        make_kotlin_comment(ctx.node.pure_comment),
         header,
         Scope(
             "get() {",

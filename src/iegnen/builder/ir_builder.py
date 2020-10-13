@@ -52,7 +52,7 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
 
         if self.ieg_api_parser.has_api(cursor.raw_comment):
-            api, args =\
+            api, args, pure_comment =\
                 self.ieg_api_parser.parse(cursor.raw_comment)
 
             args = args or OrderedDict()
@@ -94,6 +94,7 @@ class CXXIEGIRBuilder(object):
                                         OrderedDict())[lang] = new_att_val
 
             current_node.api = api
+            current_node.pure_comment = pure_comment
             assert args is not None
             current_node.args = args
 

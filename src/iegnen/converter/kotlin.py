@@ -10,6 +10,7 @@ OBJECT_CXX_MAP_TYPE = 'jmapobject'
 OBJECT_ID_TYPE = 'Long'
 OBJECT_TYPE = 'Object'
 OBJECT_INFO_TYPE = 'tmpObject'
+ENUM_INFO_TYPE = 'tmpEnum'
 
 CXX_INCLUDE_NAMES = ["jni.h"]
 
@@ -42,16 +43,16 @@ def jni_type_prefix(type_converter):
     if isinstance(type_converter, ObjConvertor):
         return 'Long'
     # else
-    return 'Object'
+    return OBJECT_TYPE
 
 
 def jni_array_get(type_converter):
 
     if isinstance(type_converter, ObjConvertor):
-        return "GetLongArray"
+        return "getLongArray"
 
     if not type_converter.primitive_type:
-        return "GetObjectArrayElement"
+        return "getObjectArray"
 
     prefix = jni_type_prefix(type_converter)
     # else
@@ -237,7 +238,7 @@ class ObjCxxToJniConvertor(ObjConvertor):
                          clang_type=clang_type)
 
     def conversion_snipped(self, name):
-        return f"{self.target_type_name} {self.converted_name(name)} = UnsafeRefAsLong({name})"
+        return f"{self.target_type_name} {self.converted_name(name)} = UnsafeRefAsLong({name});"
 
 
 class ObjKotlinToNativeConvertor(ObjConvertor):
@@ -258,6 +259,46 @@ class ObjNativeToKotlinConvertor(ObjConvertor):
 
     def conversion_snipped(self, name):
         return f"val {self.converted_name(name)} = {self.target_type_name}({name})"
+
+
+class EnumJniToCxxConvertor(ObjConvertor):
+
+    def __init__(self, target_type_info, clang_type):
+        super().__init__(converter_type='jni_to_cxx', target_type_info=target_type_info,
+                         clang_type=clang_type)
+
+    def conversion_snipped(self, name):
+        return f"auto {self.converted_name(name)} = ({self.target_type_name}){name};"
+
+
+class EnumCxxToJniConvertor(ObjConvertor):
+
+    def __init__(self, clang_type):
+        super().__init__(converter_type='cxx_to_jni', target_type_info='jint',
+                         clang_type=clang_type)
+
+    def conversion_snipped(self, name):
+        return f"{self.target_type_name} {self.converted_name(name)} = ({self.target_type_name}){name};"
+
+
+class EnumKotlinToNativeConvertor(ObjConvertor):
+
+    def __init__(self, clang_type):
+        super().__init__(converter_type='kotlin_to_native', target_type_info='Int',
+                         clang_type=clang_type)
+
+    def conversion_snipped(self, name):
+        return f"val {self.converted_name(name)} = {name}.value"
+
+
+class EnumNativeToKotlinConvertor(ObjConvertor):
+
+    def __init__(self, target_type_info, clang_type):
+        super().__init__(converter_type='native_to_kotlin', target_type_info=target_type_info,
+                         clang_type=clang_type)
+
+    def conversion_snipped(self, name):
+        return f"val {self.converted_name(name)} = {self.target_type_name}.getByValue({name})!!"
 
 
 class StringJniToCxxConvertor(TypeConvertor):
@@ -403,16 +444,20 @@ class MapKotlinToNativeConvertor(MapConvertor):
         key_converter = self.template_args[0]
         val_converter = self.template_args[1]
 
-        return f"""val tmp_key_{self.converted_name(name)} = {self.jni_type_prefix_k}Array({name}.size)
-val tmp_val_{self.converted_name(name)} = {self.jni_type_prefix_v}Array({name}.size)
+        def array_init(converter):
+            return "" if converter.primitive_type else f"{{{converter.target_type_name}()}}"
+
+        return f"""val tmp_key_{self.converted_name(name)} =\
+{key_converter.target_type_name}Array({name}.size){array_init(key_converter)}
+val tmp_val_{self.converted_name(name)} = {val_converter.target_type_name}Array({name}.size){array_init(val_converter)}
 val {self.converted_name(name)} = \
 {self.target_type_name}(tmp_key_{self.converted_name(name)}, tmp_val_{self.converted_name(name)})
 var index = 0
 for ((key, value) in {name}) {{
 {indent(key_converter.conversion_snipped('key'), 4)}
 {indent(val_converter.conversion_snipped('value'), 4)}
-    tmp_key_{self.converted_name(name)}[i] = {key_converter.converted_name('key')}
-    tmp_val_{self.converted_name(name)}[i] = {val_converter.converted_name('val')}
+    tmp_key_{self.converted_name(name)}[index] = {key_converter.converted_name('key')}
+    tmp_val_{self.converted_name(name)}[index] = {val_converter.converted_name('value')}
     index++
 }}
 """
@@ -483,9 +528,9 @@ class MapJniToCxxConvertor(MapConvertor):
 auto {temp_name} = extract_jni_pair(env, {name});
 auto key{temp_name} = {self.jni_array_get_k}(env, {temp_name}.first);
 auto val{temp_name} = {self.jni_array_get_v}(env, {temp_name}.second);
-for (int i = 0; i < key{temp_name}.size(); ++i) {{
-    auto ktmp = key{temp_name}[i]
-    auto vtmp = val{temp_name}[i]
+for (size_t i = 0; i < key{temp_name}.size(); ++i) {{
+    auto ktmp = key{temp_name}[i];
+    auto vtmp = val{temp_name}[i];
 {indent(key_converter.conversion_snipped('ktmp'), 4)}
 {indent(val_converter.conversion_snipped('vtmp'), 4)}
     {self.converted_name(name)}.\
@@ -528,6 +573,27 @@ def object_converter():
         cxx_to_jni = ObjCxxToJniConvertor(clang_type)
         kotlin_to_native = ObjKotlinToNativeConvertor(clang_type)
         native_to_kotlin = ObjNativeToKotlinConvertor(ref_ctx.name, clang_type)
+        return TypeInfo(
+            dict(
+                jni_to_cxx=jni_to_cxx,
+                cxx_to_jni=cxx_to_jni,
+                kotlin_to_native=kotlin_to_native,
+                native_to_kotlin=native_to_kotlin,
+                kotlin=native_to_kotlin,
+                jni=cxx_to_jni,
+                native=kotlin_to_native,
+            )
+        )
+
+    return make
+
+
+def enum_converter():
+    def make(clang_type, ref_ctx):
+        jni_to_cxx = EnumJniToCxxConvertor(clang_type.spelling, clang_type)
+        cxx_to_jni = EnumCxxToJniConvertor(clang_type)
+        kotlin_to_native = EnumKotlinToNativeConvertor(clang_type)
+        native_to_kotlin = EnumNativeToKotlinConvertor(ref_ctx.name, clang_type)
         return TypeInfo(
             dict(
                 jni_to_cxx=jni_to_cxx,
@@ -632,7 +698,8 @@ def map_converter():
 
 type_mapping = {
     OBJECT_INFO_TYPE: object_converter(),
-    'void': simple_converter('void', 'void', 'Void'),
+    ENUM_INFO_TYPE: enum_converter(),
+    'void': simple_converter('void', 'Void', 'Void'),
     'int': simple_converter('jint', 'Int', 'Int'),
     'short': simple_converter('jshort', 'Short', 'Short'),
     'long': simple_converter('jlong', 'Long', 'Long'),
@@ -694,7 +761,10 @@ class Converter:
 def create_type_info(ctx, search_name, depth, clang_type, template_args=None, **kwargs):
     ref_ctx = ctx.find_by_type(search_name)
     if ref_ctx is not None:
-        search_name = OBJECT_INFO_TYPE
+        if clang_type.kind == cli.TypeKind.ENUM:
+            search_name = ENUM_INFO_TYPE
+        else:
+            search_name = OBJECT_INFO_TYPE
 
     type_converter = type_mapping.get(search_name, None)
 

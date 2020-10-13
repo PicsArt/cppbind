@@ -1,6 +1,7 @@
 import os
 import shutil
 import glob
+import iegnen.utils.clang as cutil
 from iegnen.common.config import PROJECT_CONFIG_DIR
 from iegnen.builder.out_builder import Scope
 import iegnen.converter.kotlin as convert
@@ -22,7 +23,7 @@ def build_jni_func_cxx(ctx, builder):
 
     cxx_name = ctx.cursor.spelling
     full_class_name = ctx.cursor.semantic_parent.type.spelling
-    body.append(f"auto* this_object = RefFromLong<{full_class_name}>(id)")
+    body.append(f"auto this_object = RefFromLong<{full_class_name}>(id);")
     cxx_call_args = []
     for arg in ctx.args:
         # lookup type, create argument list and conversion code
@@ -52,15 +53,15 @@ def build_jni_func_cxx(ctx, builder):
 
     jni_cxx_func = f'extern "C" JNIEXPORT {result_cxx_name} Java_{package}_{class_name}_{method_name}({args_str}){{'
 
-    body.append(f"auto result = this_object->{cxx_name}({', '.join(cxx_call_args)});")
-    # TODO result conversion needs to be from cxx to jni
-
-    result_name = converter_code.converted_name('result')
-
-    res_snipped = converter_code.conversion_snipped('result')
-    if res_snipped:
-        body.append(res_snipped)
-    body.append(f"return {result_name};")
+    if result_cxx_name != 'void':
+        body.append(f"auto result = this_object->{cxx_name}({', '.join(cxx_call_args)});")
+        result_name = converter_code.converted_name('result')
+        res_snipped = converter_code.conversion_snipped('result')
+        if res_snipped:
+            body.append(res_snipped)
+        body.append(f"return {result_name};")
+    else:
+        body.append(f"this_object->{cxx_name}({', '.join(cxx_call_args)});")
 
     jni_cxx_file = get_cxx_jni_file(ctx, builder)
     jni_cxx_file['body_cxx'].add(
@@ -72,10 +73,11 @@ def build_jni_func_cxx(ctx, builder):
                 tab=1
             ),
             "}",
+            ");",
             tab=1
         ),
         "}",
-        "\n",
+        "",
     )
 
 
@@ -116,7 +118,8 @@ def build_jni_constructor_cxx(ctx, builder):
     )
     body = []
 
-    cxx_name = ctx.cursor.spelling
+    cxx_type_name = ctx.cursor.lexical_parent.type.spelling
+    # cxx_type_name = ctx.node.full_displayname
     cxx_call_args = []
     for arg in ctx.args:
         # lookup type, create argument list and conversion code
@@ -140,8 +143,8 @@ def build_jni_constructor_cxx(ctx, builder):
     jni_cxx_func = f'extern "C" JNIEXPORT {convert.OBJECT_CXX_ID_TYPE} \
 Java_{package}_{class_name}_{method_name}({args_str}){{'
 
-    body.append(f"auto this_object = new {cxx_name}({', '.join(cxx_call_args)});")
-    body.append("return UnsafeRefAsLong(this_object)")
+    body.append(f"auto this_object = new {cxx_type_name}({', '.join(cxx_call_args)});")
+    body.append("return UnsafeRefAsLong(this_object);")
 
     jni_cxx_file = get_cxx_jni_file(ctx, builder)
     jni_cxx_file['body_cxx'].add(
@@ -153,10 +156,11 @@ Java_{package}_{class_name}_{method_name}({args_str}){{'
                 tab=1
             ),
             "}",
+            ");",
             tab=1
         ),
         "}",
-        "\n",
+        "",
     )
 
 
@@ -196,6 +200,7 @@ def get_cxx_jni_file(ctx, builder):
     def init_func(fscope):
         fscope["include_cxx"].add_unique(
             convert.get_includes(),
+            # also include ctx header file
         )
         fscope["helpers_cxx"].add_unique(
             convert.CXX_HELPERS,
@@ -204,6 +209,10 @@ def get_cxx_jni_file(ctx, builder):
 
     file_scope = builder.get_file(file_path, init_func=init_func)
 
+    file_scope["include_cxx"].add_unique(
+        # also include ctx header file
+        f'#include "{ctx.prj_rel_file_name}"'
+    )
     return file_scope
 
 
@@ -225,6 +234,12 @@ def get_file(ctx, builder):
             "\n",
         )
 
+        fscope["type_alias"].add_unique(
+            "typealias StringArray = Array<String>",
+            "typealias ObjectArray = Array<Any>",
+            "\n",
+        )
+
         fscope.get_scope('body', create=True)
 
     file_scope = builder.get_file(file_path, init_func=init_func)
@@ -237,7 +252,8 @@ def get_file(ctx, builder):
     return file_scope
 
 
-def gen_init(config, builder):
+def gen_init(config, *args, **kwargs):
+    # handle cxx helper files
     prj_rel = os.path.relpath(config.cxx_out_dir, config.out_prj_dir)
     cxx_helpers_dir = config.cxx_helpers_dir
     if not os.path.isabs(cxx_helpers_dir):
@@ -250,14 +266,41 @@ def gen_init(config, builder):
         incude_name = os.path.join(prj_rel, file_rel_name)
         logging.info(f"Helper include name {incude_name}")
         convert.CXX_INCLUDE_NAMES.append(incude_name)
-        shutil.copyfile(file_name, os.path.join(config.cxx_out_dir, file_rel_name))
+        target_file = os.path.join(config.cxx_out_dir, file_rel_name)
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
+        shutil.copyfile(file_name, target_file)
+
+    # now handle kotlin helper files
+    kotlin_imports = []
+    prj_rel = os.path.relpath(config.out_dir, config.out_prj_dir)
+    kotlin_helpers_dir = config.kotlin_helpers_dir
+    if not os.path.isabs(kotlin_helpers_dir):
+        if not os.path.isdir(kotlin_helpers_dir):
+            kotlin_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, kotlin_helpers_dir))
+    kotlin_helpers_files = os.path.join(kotlin_helpers_dir, '**/*.kt')
+    java_helpers_files = os.path.join(kotlin_helpers_dir, '**/*.java')
+    for file_name in glob.glob(java_helpers_files, recursive=True) +\
+            glob.glob(kotlin_helpers_files, recursive=True):
+        logging.info(f"Using helper file {file_name}")
+        file_rel_name = os.path.relpath(file_name, kotlin_helpers_dir)
+        import_name = os.path.join(prj_rel, file_rel_name)
+        logging.info(f"Helper import name {import_name}")
+        kotlin_imports.append(incude_name)
+        target_file = os.path.join(config.out_dir, file_rel_name)
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
+        shutil.copyfile(file_name, target_file)
 
 
 def gen_enum(ctx, builder):
     file_scope = get_file(ctx, builder)
     file_scope['body'].add(
-        f"enum class {ctx.name}{{",
-        Scope(*[f"{case['name']}({case['value']})" for case in ctx.enum_values], parts_spliter=',\n', tab=1),
+        f"enum class {ctx.name}(val value: Int){{",
+        convert.indent(',\n'.join([f"{case['name']}({case['value']})" for case in ctx.enum_values]), 3) + ';',
+        "",
+        convert.indent("""companion object {
+    private val values = values();
+    fun getByValue(value: Int) = values.firstOrNull { it.value == value }
+}""", 3),
         "}",
         "\n",
     )
@@ -266,8 +309,12 @@ def gen_enum(ctx, builder):
 def gen_class(ctx, builder):
     # get or create logical file
     file_scope = get_file(ctx, builder)
+    o_classification = ""
+    if not cutil.is_final_cursor(ctx.cursor):
+        o_classification += "open "
+
     file_scope['body'].add(
-        f"class {ctx.name}",
+        f"{o_classification}class {ctx.name}",
         Scope(name="main_constructor", tab=1),
         "{",
         Scope(name="head", tab=1),
@@ -281,10 +328,10 @@ def gen_class(ctx, builder):
     base_types = ctx.base_types
     base = convert.build_type_converter(
         ctx, base_types[0]
-    ).type_name.kotlin if base_types else "RNativeParcelableObject"
+    ).type_name.kotlin + '()' if base_types else "RNativeObject(0)"
 
     file_scope["main_constructor"].add(
-        f"internal constructor(id: Long): {base}(id)")
+        f"internal constructor(): {base}")
 
 
 def gen_constructor(ctx, builder):
@@ -311,10 +358,10 @@ def gen_constructor(ctx, builder):
 
     # create object
     create_object = 'jConstructor'
-    body.append(f"val id = {create_object}({', '.join(jni_call_args)})")
+    body.append(f"this.id = {create_object}({', '.join(jni_call_args)})")
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
 
-    header = f"constructor({args_str}): this(id) {{"
+    header = f"constructor({args_str}): this() {{"
 
     file_scope['head'].add(
         header,
@@ -359,7 +406,14 @@ def gen_method(ctx, builder):
     result_name = converter_code.converted_name('result')
     body.append(f"return {result_name}")
 
-    header = f"fun {ctx.name}({args_str}): {result_type_converter.type_name.kotlin} {{"
+    o_v_classification = ""
+    if not cutil.is_final_cursor(ctx.cursor):
+        o_v_classification += "open "
+
+    if ctx.cursor.get_overriden_cursors():
+        o_v_classification += "override "
+
+    header = f"{o_v_classification}fun {ctx.name}({args_str}): {result_type_converter.type_name.kotlin} {{"
     file_scope['body'].add(
         header,
         Scope(
@@ -442,4 +496,9 @@ def gen_getter(ctx, builder):
 
 
 def gen_setter(ctx, builder):
-    pass
+
+    getter_ctx = ctx.getter
+    # todo if only setter should we generate it here?
+    if getter_ctx:
+        return
+    # else

@@ -2,6 +2,7 @@
 Helper functions working with clang
 """
 import clang.cindex as cli
+from itertools import chain
 
 
 def get_pointee_type(clang_type):
@@ -69,3 +70,15 @@ def get_full_displayname(cursor):
     ancestors = get_semantic_ancestors(cursor)
     ancestors = ancestors[1::] + [cursor]
     return '::'.join([c.displayname for c in ancestors])
+
+
+def is_final_cursor(cursor):
+    if cursor.kind == cli.CursorKind.CXX_METHOD:
+        if not cursor.is_virtual_method():
+            return True
+        return cli.CursorKind.CXX_FINAL_ATTR in chain(
+            (c.kind for c in cursor.get_children()),
+            (c.kind for c in cursor.semantic_parent.get_children())
+        )
+    else:
+        return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())

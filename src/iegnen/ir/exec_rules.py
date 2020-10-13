@@ -1,5 +1,6 @@
 """
 """
+import os
 import types
 import clang.cindex as cli
 from iegnen import logging as logging
@@ -135,6 +136,12 @@ class Context(object):
     @property
     def parent_context(self):
         return self.runner.get_context(self.lang, self.node.parent.type_name)
+
+    @property
+    def prj_rel_file_name(self):
+        if not hasattr(self, '_prj_rel_file_name'):
+            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.config.out_prj_dir)
+        return self._prj_rel_file_name
 
     def find_by_type(self, search_type):
         return self.runner.get_context(self.lang, search_type)

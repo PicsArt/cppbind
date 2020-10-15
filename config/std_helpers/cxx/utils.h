@@ -40,13 +40,12 @@ inline void deleteRef(jlong id) {
 
 
 template <typename T>
-inline std::shared_ptr<T> RefFromLong(jlong id) {
+inline T* RefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
     validateID(id);
-    auto obj = reinterpret_cast<std::shared_ptr<T>*>(id);
-    auto t = std::dynamic_pointer_cast<T>(*obj);
+    auto obj = reinterpret_cast<T*>(id);
     //DCHECK(t.get() == obj->get(), "Invalid type");
-    return t;
+    return obj;
 }
 
 template <typename T>
@@ -62,7 +61,7 @@ template<typename T>
 inline jlong UnsafeRefAsLong(T* unsafe) {
     IsTypeValidForJNI<T>();
     //DCHECK_NE(unsafe, nullptr);
-    return reinterpret_cast<jlong>(static_cast<T*>(unsafe));
+    return reinterpret_cast<jlong>(unsafe);
 }
 
 template<typename T>

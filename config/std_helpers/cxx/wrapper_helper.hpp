@@ -10,7 +10,7 @@ typedef jobject jmapobject;
 typedef jlongArray jobjectidArray;
 
 inline std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p) {
-    jclass pairClass = env->FindClass("android/util/Pair");
+    jclass pairClass = env->FindClass("kotlin/Pair");
     jfieldID first = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
     jfieldID second = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
 

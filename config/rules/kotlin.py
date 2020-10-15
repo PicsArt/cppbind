@@ -53,13 +53,14 @@ def build_jni_func_cxx(ctx, builder):
     # todo for cxx to jni
     converter_code = result_type_converter.converter_code.from_cxx_to_jni
 
-    package = ctx.package.replace('.', '_')
+    package_prefix = ctx.config.package_prefix.replace("_", "_1").replace('.', '_')
+    package = ctx.package.replace("_", "_1").replace('.', '_')
     class_name = ctx.parent_context.name.replace("_", "_1")
     method_name = convert.jni_func_name(ctx).replace("_", "_1")
 
     result_cxx_name = result_type_converter.type_name.jni
 
-    jni_cxx_func = f'extern "C" JNIEXPORT {result_cxx_name} Java_{package}_{class_name}_{method_name}({args_str}){{'
+    jni_cxx_func = f'extern "C" JNIEXPORT {result_cxx_name} Java_{package_prefix}_{package}_{class_name}_{method_name}({args_str}){{'
 
     if result_cxx_name != 'void':
         body.append(f"auto result = this_object->{cxx_name}({', '.join(cxx_call_args)});")
@@ -93,6 +94,7 @@ def build_jni_func(ctx, builder):
 
     file_scope = get_file(ctx, builder)
     arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope.add('id: Long')
 
     for arg in ctx.args:
         # lookup type, create argument list and conversion code
@@ -144,12 +146,13 @@ def build_jni_constructor_cxx(ctx, builder):
 
     args_str = str(arg_scope)
 
-    package = ctx.package.replace('.', '_')
+    package_prefix = ctx.config.package_prefix.replace("_", "_1").replace('.', '_')
+    package = ctx.package.replace("_", "_1").replace('.', '_')
     class_name = ctx.parent_context.name.replace("_", "_1")
     method_name = 'jConstructor'
 
     jni_cxx_func = f'extern "C" JNIEXPORT {convert.OBJECT_CXX_ID_TYPE} \
-Java_{package}_{class_name}_{method_name}({args_str}){{'
+Java_{package_prefix}_{package}_{class_name}_{method_name}({args_str}){{'
 
     body.append(f"auto this_object = new {cxx_type_name}({', '.join(cxx_call_args)});")
     body.append("return UnsafeRefAsLong(this_object);")
@@ -338,10 +341,10 @@ def gen_class(ctx, builder):
     base_types = ctx.base_types
     base = convert.build_type_converter(
         ctx, base_types[0]
-    ).type_name.kotlin + '()' if base_types else "RNativeObject(0)"
+    ).type_name.kotlin + '(id)' if base_types else "RNativeObject(id)"
 
     file_scope["main_constructor"].add(
-        f"internal constructor(): {base}")
+        f"internal constructor(id: Long): {base}")
 
 
 def gen_constructor(ctx, builder):
@@ -371,7 +374,7 @@ def gen_constructor(ctx, builder):
     body.append(f"this.id = {create_object}({', '.join(jni_call_args)})")
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
 
-    header = f"constructor({args_str}): this() {{"
+    header = f"constructor({args_str}): this(0) {{"
 
     file_scope['head'].add(
         make_kotlin_comment(ctx.node.pure_comment),
@@ -389,7 +392,7 @@ def gen_method(ctx, builder):
     arg_scope = Scope(tab=1, parts_spliter=',\n')
 
     body = []
-    jni_call_args = []
+    jni_call_args = ['id']
 
     for arg in ctx.args:
         # lookup type, create argument list and conversion code
@@ -450,7 +453,6 @@ def gen_getter(ctx, builder):
 
     if setter_ctx:
         assert len(setter_ctx.args) == 1, "Setter should have one argument."
-        jni_call_arg = []
 
         arg = setter_ctx.args[0]
         # lookup type, create argument list and conversion code
@@ -464,10 +466,10 @@ def gen_getter(ctx, builder):
         if snipped:
             setter_body.append(snipped)
 
-        setter_body.append(f"{convert.jni_func_name(setter_ctx)}({jni_call_arg})")
+        setter_body.append(f"{convert.jni_func_name(setter_ctx)}(id, {jni_call_arg})")
 
     converter_code = result_type_converter.converter_code.from_native_to_kotlin
-    getter_body.append(f"val result = {convert.jni_func_name(ctx)}()")
+    getter_body.append(f"val result = {convert.jni_func_name(ctx)}(id)")
     res_snipped = converter_code.conversion_snipped('result')
     if res_snipped:
         getter_body.append(res_snipped)

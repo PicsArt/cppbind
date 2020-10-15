@@ -350,9 +350,9 @@ class ArrayKotlinConvertor(ArrayConvertor):
         array_arg_converter = self.template_args[0]
         return f"""val {self.converted_name(name)}: \
 MutableList<{array_arg_converter.target_type_name}> = mutableListOf()
-for (data in {name}) {{
-{indent(array_arg_converter.conversion_snipped('data'), 4)}
-    {self.converted_name(name)}.add({array_arg_converter.converted_name('data')})
+for (value in {name}) {{
+{indent(array_arg_converter.conversion_snipped('value'), 4)}
+    {self.converted_name(name)}.add({array_arg_converter.converted_name('value')})
 }}"""
 
     def converted_name(self, name):
@@ -383,9 +383,9 @@ class ArrayCxxToJniConvertor(ArrayConvertor):
         return f"""{self.target_type_name} {self.converted_name(name)} \
 = env->New{self.jni_type_prefix}Array({name}.size());
 std::vector<{arg_type_name}> temp;
-for (auto& data : {name}) {{
-{indent(array_arg_converter.conversion_snipped('data'), 4)}
-    temp.emplace_back({array_arg_converter.converted_name('data')});
+for (auto& value : {name}) {{
+{indent(array_arg_converter.conversion_snipped('value'), 4)}
+    temp.emplace_back({array_arg_converter.converted_name('value')});
 }}
 env->{self.jni_array_set}({self.converted_name(name)}, 0, \
 static_cast<jsize>({name}.size()), &temp[0]);"""
@@ -406,9 +406,9 @@ class ArrayJniToCxxConvertor(ArrayConvertor):
         return f"""
 {self.target_type_name} {self.converted_name(name)};
 auto {temp_name} = {self.jni_array_get}(env, {name});
-for (auto& data : {temp_name}) {{
-{indent(array_arg_converter.conversion_snipped('data'), 4)}
-    {self.converted_name(name)}.emplace_back({array_arg_converter.converted_name('data')});
+for (auto& value : {temp_name}) {{
+{indent(array_arg_converter.conversion_snipped('value'), 4)}
+    {self.converted_name(name)}.emplace_back({array_arg_converter.converted_name('value')});
 }}
    """
 
@@ -494,9 +494,9 @@ class MapCxxToJniConvertor(MapConvertor):
 {key_converter.target_type_name} key_{self.converted_name(name)} = env->New{self.jni_type_prefix_k}Array({name}.size());
 {val_converter.target_type_name} val_{self.converted_name(name)} = env->New{self.jni_type_prefix_v}Array({name}.size());
 size_t index = 0;
-for (auto& data : {name}) {{
-    key = data.first
-    val = data.second
+for (auto& value : {name}) {{
+    key = value.first
+    val = value.second
 {indent(key_converter.conversion_snipped('key'), 4)}
     key_{self.converted_name(name)}[index] = {key_converter.converted_name('key')};
 {indent(val_converter.conversion_snipped('val'), 4)}

@@ -8,7 +8,7 @@ import clang.cindex as cli
 PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegnen_config.cfg")
 
-DEFAULT_CONFIG_DIRS = ['', './', PROJECT_CONFIG_DIR]
+DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
 clang_lib = find_library('clang-9')
 
@@ -23,7 +23,7 @@ cli.Config.set_library_file(clang_lib)
 
 
 def load_json_file(x):
-    for p in DEFAULT_CONFIG_DIRS:
+    for p in DEFAULT_DIRS:
         file_name = os.path.join(p, x)
         if os.path.isfile(file_name):
             with open(file_name, 'r') as json_file:
@@ -81,7 +81,7 @@ class IEG_Config(object):
         # self.cnfg = cnfg
         self.defaults = cnfg.defaults()
 
-        self.default_config_dirs = DEFAULT_CONFIG_DIRS
+        self.default_config_dirs = DEFAULT_DIRS
 
         # load language parameters
         self.languages = {}

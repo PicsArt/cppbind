@@ -54,15 +54,14 @@ def build_jni_func_cxx(ctx, builder):
     # todo for cxx to jni
     converter_code = result_type_converter.cxx_to_jni
 
-    package_prefix = ctx.config.package_prefix.replace("_", "_1").replace('.', '_')
-    package = ctx.package.replace("_", "_1").replace('.', '_')
-    class_name = ctx.parent_context.name.replace("_", "_1")
-    method_name = convert.jni_func_name(ctx).replace("_", "_1")
+    package = f'{ctx.config.package_prefix}.{ctx.package}'
+    class_name = ctx.parent_context.name
+    method_name = convert.jni_func_name(ctx) + ctx.overloading_prefix
 
     result_cxx_name = result_type_converter.jni.target_type_name
 
     jni_cxx_func = f'extern "C" JNIEXPORT {result_cxx_name} \
-Java_{package_prefix}_{package}_{class_name}_{method_name}({args_str}){{'
+{convert.get_jni_func_name(package, class_name, method_name)}({args_str}){{'
 
     if result_cxx_name != 'void':
         body.append(f"auto result = this_object->{cxx_name}({', '.join(cxx_call_args)});")
@@ -137,8 +136,8 @@ def build_jni_constructor_cxx(ctx, builder):
         # lookup type, create argument list and conversion code
         type_ctx = arg['type']
         type_converter = convert.build_type_converter(ctx, type_ctx)
-
-        arg_scope.add(convert.cxx_jni_arg_str(type_name=type_converter.jni.target_type_name, **arg))
+        type_name = type_converter.jni.target_type_name
+        arg_scope.add(convert.cxx_jni_arg_str(type_name=type_name, **arg))
         converter_code = type_converter.jni_to_cxx
         cxx_call_args.append(converter_code.converted_name(arg['name']))
         # now add conversion code into body if needed
@@ -148,13 +147,12 @@ def build_jni_constructor_cxx(ctx, builder):
 
     args_str = str(arg_scope)
 
-    package_prefix = ctx.config.package_prefix.replace("_", "_1").replace('.', '_')
-    package = ctx.package.replace("_", "_1").replace('.', '_')
-    class_name = ctx.parent_context.name.replace("_", "_1")
-    method_name = 'jConstructor'
+    package = f'{ctx.config.package_prefix}.{ctx.package}'
+    class_name = ctx.parent_context.name
+    method_name = 'jConstructor' + ctx.overloading_prefix
 
     jni_cxx_func = f'extern "C" JNIEXPORT {convert.OBJECT_CXX_ID_TYPE} \
-Java_{package_prefix}_{package}_{class_name}_{method_name}({args_str}){{'
+{convert.get_jni_func_name(package, class_name, method_name)}({args_str}){{'
 
     body.append(f"auto this_object = new {cxx_type_name}({', '.join(cxx_call_args)});")
     body.append("return UnsafeRefAsLong(this_object);")
@@ -193,7 +191,7 @@ def build_jni_constructor(ctx, builder):
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
 
     # TODO for complex type use id for builtin use directly
-    create_object = 'jConstructor'
+    create_object = 'jConstructor' + ctx.overloading_prefix
     jni_func = f"{create_object}({args_str}): Long"
 
     file_scope['private_external'].add(
@@ -332,10 +330,15 @@ def gen_class(ctx, builder):
     if not cutil.is_final_cursor(ctx.cursor):
         o_classification += "open "
 
+    base_types = ctx.base_types
+    base = convert.build_type_converter(
+        ctx, base_types[0]
+    ).kotlin.target_type_name + '(id)' if base_types else "RNativeObject(id)"
+
     file_scope['body'].add(
         make_kotlin_comment(ctx.node.pure_comment),
         f"{o_classification}class {ctx.name}",
-        Scope(name="main_constructor", tab=1),
+        Scope(f"internal constructor(id: Long): {base}", tab=1),
         "{",
         Scope(name="head", tab=1),
         Scope(name="properties", tab=1),
@@ -345,13 +348,6 @@ def gen_class(ctx, builder):
         "}",
         "\n",
     )
-    base_types = ctx.base_types
-    base = convert.build_type_converter(
-        ctx, base_types[0]
-    ).kotlin.target_type_name + '(id)' if base_types else "RNativeObject(id)"
-
-    file_scope["main_constructor"].add(
-        f"internal constructor(id: Long): {base}")
 
 
 def gen_constructor(ctx, builder):
@@ -377,7 +373,7 @@ def gen_constructor(ctx, builder):
             body.append(snippet)
 
     # create object
-    create_object = 'jConstructor'
+    create_object = 'jConstructor' + ctx.overloading_prefix
     body.append(f"this.id = {create_object}({', '.join(jni_call_args)})")
     args_str = '\n' + str(arg_scope) + '\n' if arg_scope else ''
 

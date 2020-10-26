@@ -65,6 +65,24 @@ class Context(object):
         return self.node.clang_cursor.result_type
 
     @property
+    def overloading_prefix(self):
+        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL,
+                                               cli.CursorKind.CONSTRUCTOR]:
+            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+
+        if not hasattr(self, '_overloading_prefix'):
+            search_api = self.node.api
+            name = self.name
+            search_names = {name}
+            oveloads = self.find_adjacents(search_names, search_api)
+            for i, ctx in enumerate(oveloads):
+                if ctx == self:
+                    self._overloading_prefix = f'_{i}' if i != 0 else ''
+                    break
+
+        return self._overloading_prefix
+
+    @property
     def setter(self):
         if self.node.api != 'getter':
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")

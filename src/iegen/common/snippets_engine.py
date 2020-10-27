@@ -1,13 +1,16 @@
 import types
+import os
 import yaml
-from jinja2 import Template, StrictUndefined
-# from iegnen import logging as logging
+from jinja2 import Environment, BaseLoader, StrictUndefined
+# from iegen import logging as logging
 import clang.cindex as cli
-import iegnen.utils.clang as cutil
+import iegen.utils.clang as cutil
 
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
+TYPE_SECTION = 'types'
+CODE_SECTION = 'codes'
 
 
 class Converter:
@@ -35,7 +38,7 @@ class Converter:
         return self.type_converter.target_type_name(self.context)
 
     def _make_context(self):
-        # is_type_converter = isinstance(self.type_converter, TypeConvertor)
+        # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
             args = self.template_args
@@ -114,35 +117,54 @@ class TypeInfoCollector:
         return Adapter(clang_type=clang_type, ctx=ref_ctx, type_info_colector=self)
 
 
-class TargetType:
+class TargetTypeInof:
 
     def __init__(self, name, target_type_info):
         self.target_type_info = target_type_info
-        self.target_type_info_template = Template(target_type_info, undefined=StrictUndefined)
         self.name = name
 
     def target_type_name(self, context):
-        return self.target_type_info_template.render(context)
+        return self.target_type_info.render(context)
 
 
-class TypeConvertor(TargetType):
+class TypeConvertorInfo(TargetTypeInof):
 
-    def __init__(self, snippet, *args, **kwargs):
+    def __init__(self, snippet_tmpl, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.snippet_text = snippet
-        self.snippet_template = snippet and Template(snippet, undefined=StrictUndefined)
+        self.snippet_tmpl = snippet_tmpl
 
     def snippet(self, name,  context):
-        if self.snippet_template:
-            return self.snippet_template.render(name=name,
-                                                target_name=self.converted_name(name),
-                                                target_type_name=self.target_type_name(context),
-                                                **context)
+        if self.snippet_tmpl:
+            return self.snippet_tmpl.render(name=name,
+                                            target_name=self.converted_name(name),
+                                            target_type_name=self.target_type_name(context),
+                                            **context)
         else:
             return ""
 
     def converted_name(self, name):
-        return f'{self.name}_{name}' if self.snippet_template else name
+        return f'{self.name}_{name}' if self.snippet_tmpl else name
+
+
+class ScopeInfo:
+
+    def __init__(self, name, scope_path, snippet_tmpl):
+        self.name = name
+        self.scope_path = scope_path
+        self.snippet_tmpl = snippet_tmpl
+
+    def snippet(self, context):
+        return ""
+
+
+class FileScopeInfo(ScopeInfo):
+
+    def __init__(self, file_path, scope_path, snippet_tmpl):
+        super().__init__('file', scope_path, snippet_tmpl)
+        self.file_path = file_path
+
+    def get_file_name(self, context):
+        return ""
 
 
 class SnippetsEngine:
@@ -151,6 +173,9 @@ class SnippetsEngine:
         self.path = path
         self.main_target = main_target
         self.type_infos = {}
+        self.file_infos = {}
+        self.code_infos = {}
+        self._init_jinja_env()
 
     def load(self):
 
@@ -158,11 +183,71 @@ class SnippetsEngine:
         with open(self.path) as f:
             dataMap = yaml.safe_load(f)
 
+        self._load_code_info(dataMap[CODE_SECTION])
+        self._load_type_info(dataMap[TYPE_SECTION])
+
+    def build_type_converter(self, ctx, clang_type):
+
+        res = self._build_type_converter(ctx, clang_type)
+        if res is None:
+            raise KeyError(f"Can not find type for {clang_type.spelling}")
+        # else
+        # TODO handle target type
+        res.set_target_type(clang_type)
+        return res
+
+    def get_type_info(self, type_name):
+        return self.type_infos.get(type_name, None)
+
+    def _load_code_info(self, codeInfoDict):
         # load into structures
-        for type_name, info_map in dataMap.items():
+        self._load_file_info(codeInfoDict['file'])
+        del codeInfoDict['file']
+
+        for code_name, info_map in codeInfoDict.items():
             if isinstance(info_map, str):
                 # redirection
-                info_map = dataMap[info_map]
+                info_map = codeInfoDict[info_map]
+
+            if not isinstance(info_map, dict):
+                raise Exception("Missing scopes section.")
+
+            self.code_infos[code_name] = self._load_code_structure_info(code_name, info_map)
+
+    def _load_code_structure_info(self, code_name, codeInfoDict):
+        def scope_walk(info_map, scopes=None):
+            scopes = scopes or tuple()
+            if not isinstance(info_map, dict):
+                # leaf node
+                yield (scopes, info_map)
+            else:
+                for scope, child_info_map in info_map.items():
+                    for d in scope_walk(child_info_map, scopes + tuple(scope)):
+                        yield d
+
+        for scopes, info in scope_walk(codeInfoDict):
+            try:
+                snippet = self.jinja2_env.from_string(info)
+            except Exception as e:
+                raise Exception(f"Error in code snippets {code_name}, in scope {':'.join(scopes)}. Error {str(e)}")
+            self.code_infos[scopes] = ScopeInfo(code_name, scopes, snippet)
+
+    def _load_file_info(self, codeInfoDict):
+        # load into structures
+        for file_name, info_map in codeInfoDict.items():
+            try:
+                file_path = self.jinja2_env.from_string(info_map['file_path'])
+                content = self.jinja2_env.from_string(info_map['content'])
+            except Exception as e:
+                raise Exception(f"Error in code file {file_name} snippets. Error {str(e)}")
+            self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], content)
+
+    def _load_type_info(self, typeInfoDict):
+        # load into structures
+        for type_name, info_map in typeInfoDict.items():
+            if isinstance(info_map, str):
+                # redirection
+                info_map = typeInfoDict[info_map]
 
             if not isinstance(info_map, dict):
                 raise Exception("Missing type information")
@@ -178,26 +263,29 @@ class SnippetsEngine:
                     target_lang = name[index+4:]
                     target_lang_info = info_map.get(target_lang, {'type_info': '{{target_pointee_unqualified_name}}'})
                     try:
-                        target_info = TypeConvertor(snippet=info, name=name,
-                                                    target_type_info=target_lang_info['type_info'])
+                        target_type_info = self.jinja2_env.from_string(target_lang_info['type_info'])
+                        snippet_tmpl = info and self.jinja2_env.from_string(info)
                     except Exception as e:
                         raise Exception(f"Error in code snippets for {type_name}, in converter {name}. Error {str(e)}")
+                    target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl, name=name,
+                                                    target_type_info=target_type_info)
                     type_converters[name] = target_info
                 elif name == 'custom':
                     # primitive type info
                     custom = info
                 else:
                     # type info
-                    target_info = TargetType(name=name, target_type_info=info['type_info'])
+                    try:
+                        target_type_info = self.jinja2_env.from_string(info['type_info'])
+                    except Exception as e:
+                        raise Exception(f"Error in type info {type_name}, in converter {name}. Error {str(e)}")
+                    target_info = TargetTypeInof(name=name, target_type_info=target_type_info)
                     target_types[name] = target_info
 
             self.type_infos[type_name] = TypeInfoCollector(name=type_name, target_type_infos=target_types,
                                                            converters=type_converters, custom=custom)
 
-    def get_type_info(self, type_name):
-        return self.type_infos.get(type_name, None)
-
-    def create_type_info(self, ctx, search_name, clang_type, template_args=None, **kwargs):
+    def _create_type_info(self, ctx, search_name, clang_type, template_args=None, **kwargs):
         ref_ctx = ctx.find_by_type(search_name)
         if ref_ctx is not None:
             if clang_type.kind == cli.TypeKind.ENUM:
@@ -222,7 +310,7 @@ class SnippetsEngine:
 
         lookup_type = lookup_type or clang_type
         search_name = cutil.get_unqualified_type_name(lookup_type)
-        type_info = self.create_type_info(ctx, search_name, clang_type=clang_type)
+        type_info = self._create_type_info(ctx, search_name, clang_type=clang_type)
 
         if type_info is None:
             pointee_type = cutil.get_pointee_type(lookup_type)
@@ -236,19 +324,43 @@ class SnippetsEngine:
                 tmpl_args = [self._build_type_converter(ctx, arg_type)
                              for arg_type in cutil.template_argument_types(lookup_type)]
 
-                type_info = self.create_type_info(ctx, cutil.template_type_name(lookup_type),
-                                                  clang_type=clang_type,
-                                                  template_args=tmpl_args)
+                type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
+                                                   clang_type=clang_type,
+                                                   template_args=tmpl_args)
                 return type_info
 
         return type_info
 
-    def build_type_converter(self, ctx, clang_type):
+    def make_unique_scope(input_):
+        return ""
 
-        res = self._build_type_converter(ctx, clang_type)
-        if res is None:
-            raise KeyError(f"Can not find type for {clang_type.spelling}")
-        # else
-        # TODO handle target type
-        res.set_target_type(clang_type)
-        return res
+    def make_scope(input_):
+        return ""
+
+    def _init_jinja_env(self):
+        env = Environment(loader=BaseLoader(), undefined=StrictUndefined)
+
+        def path_join(inputs_):
+            return os.path.join(inputs_)
+
+        env.filters['path_join'] = path_join
+
+        def format_list(inputs_, format_string, arg_name=None):
+            if arg_name:
+                return [format_string.format(**{arg_name: data}) for data in inputs_]
+            else:
+                return [format_string.format(data) for data in inputs_]
+
+        env.filters['format_list'] = format_list
+
+        def make_unique_scope(input_):
+            return self.make_unique_scope(input_)
+
+        env.filters['make_unique_scope'] = make_unique_scope
+
+        def make_scope(input_):
+            return self.make_scope(input_)
+
+        env.filters['make_scope'] = make_scope
+
+        self.jinja2_env = env

@@ -2,9 +2,9 @@ import types
 import pytest
 import hashlib
 
-from iegnen.parser.ieg_parser import CXXParser
-from iegnen.parser.ieg_api_parser import APIParser
-from iegnen.builder.ir_builder import CXXPrintProcsessor
+from iegen.parser.ieg_parser import CXXParser
+from iegen.parser.ieg_api_parser import APIParser
+from iegen.builder.ir_builder import CXXPrintProcsessor
 
 
 def test_parser(parser_config):

@@ -1,284 +1,469 @@
-void:
-  kotlin:
-    type_info: Void
-  jni:
-    type_info: void
-  native:
-    type_info: Void
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+codes:
 
-int:
-  custom:
-    pname: Int
-  kotlin:
-    type_info: Int
-  jni:
-    type_info: jint
-  native:
-    type_info: Int
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+  file:
+    kotlin: 
+      file_path: |
+        {{[out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
+      content: |
+        packages {{config.package_prefix}}.{{package}}
 
-short:
-  custom:
-    pname: Short
-  kotlin:
-    type_info: Short
-  jni:
-    type_info: jshort
-  native:
-    type_info: Short
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+        {{helper_includes|format_list('import "{}"')|join('\n')}}
+        {{include|make_unique_scope}}
 
-long:
-  custom:
-    pname: Long
-  kotlin:
-    type_info: Long
-  jni:
-    type_info: jlong
-  native:
-    type_info: Long
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+        typealias StringArray = Array<String>
+        typealias ObjectArray = Array<Any>
 
-long long:
-  long
+        {{body|make_scope}}
+    cxx:
+      file_path: |
+        {{[out_dir, file]|path_join}}.cpp
+      content: |
+        {{helper_includes|format_list('#include "{}"')|join('\n')}}
+        {{include|make_unique_scope}}
 
-unsigned long:
-  long
+        {{body|make_scope}}
 
-float:
-  custom:
-    pname: Float
-  kotlin:
-    type_info: Float
-  jni:
-    type_info: jfloat
-  native:
-    type_info: Float
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+  class: 
+    kotlin: 
+      include: |
+        {{includes|format_list("import {}")|join('\n')}}
+      body: |
+        {{comment}}
+        {{'open' if is_open}} class {{name}}
+          internal constructor(id: Long): {{base_type|default("RNativeObject")}}(id){
+        {{head|make_scope}}
+        {{properties|make_scope}}
+        {{body|make_scope}}
+        ///// External wrapper functions ////////////
+        {{private_external|make_scope}}
+        }
+    cxx: 
+      include: |
+        #include "{{prj_rel_file_name}}"
 
-double:
-  custom:
-    pname: Double
-  kotlin:
-    type_info: Double
-  jni:
-    type_info: jdouble
-  native:
-    type_info: Double
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+  constructor:
+    kotlin:
+      head: |
+        {{comment}}
+        constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", arg)|join(', ')}}): this(0) {
+          {% set call_args = [] %}
+          {% for arg in args %}
+          {% set converter = arg.converter.kotlin_to_jdk %}
+          {{converter.snippet(arg.name)}}
+          {{call_args.append(converter.converted_name(arg.name))}}
+          {% endfor %}
+          this.id = jConstructor({{call_args|join(', ')}})
+        }
+      private_external: |
+        private external fun jConstructor({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", arg)|join(', ')}}): Long
+    cxx:
+      body: |
+        extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix, args)}}({{args|format_list("{arg.converter.cxx.target_type_name} {arg.name}", arg)|join(', ')}}){
+          return jni::handleNativeCrash(env, [&] {
+              {% set call_args = [] %}
+              {% for arg in args %}
+              {% set converter = arg.converter.jni_to_cxx %}
+              {{converter.snippet(arg.name)}}
+              {{ call_args.append(converter.converted_name(arg.name))}}
+              {% endfor %}
+              auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
+              return UnsafeRefAsLong(this_object);
+              }
+          );
+        }
 
-char:
-  std::__cxx11::basic_string
+  function:
+    kotlin:
+      body: |
+        {{comment}}
+        {{'open ' if is_open}}{{'override ' if is_override}}fun {name}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", arg)|join(', ')}}): {result_type.converter.kotlin.target_type_name} {
+          {% set call_args = ['id'] %}
+          {% set result_converter = result_type.converter.jdk_to_kotlin %}
+          {% for arg in args %}
+          {% set converter = arg.converter.kotlin_to_jdk %}
+          {{converter.snippet(arg.name)}}
+          {{call_args.append(converter.converted_name(arg.name))}}
+          {% endfor %}
+          val result = j{{name|capitalize}}({{call_args|join(', ')}})
+          {{result_converter.snippet('result')}}
+          return {{result_converter.converted_name('result')}}
+        }
+      private_external: |
+        private external fun j{{name|capitalize}}(id: Long, {{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", arg)|join(', ')}}): {result_type.converter.jdk.target_type_name}
+    cxx:
+      body: |
+        {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
+        extern "C" JNIEXPORT {{result_type.converter.jni.target_type_name}} {{get_jni_name(func_name, args)}}(JNIEnv* env, jobject obj, jobjectid id, {{args|format_list("{arg.converter.cxx.target_type_name} {arg.name}", arg)|join(', ')}}){
+          return jni::handleNativeCrash(env, [&] {
+              validateID(id);
+              auto this_object = RefFromLong<{{full_class_name}}>(id);
+              {% set call_args = [] %}
+              {% for arg in args %}
+              {% set converter = arg.converter.jni_to_cxx %}
+              {{converter.snippet(arg.name)}}
+              {{ call_args.append(converter.converted_name(arg.name))}}
+              {% endfor %}
+              {% if result_type.converter.jni.target_name != 'void' %}
+              auto result = this_object->{{name}}({{call_args|join(', ')}});
+              {{result_type.converter.cxx_to_jni.snippet('result')}}
+              return {{result_type.converter.cxx_to_jni.converted_name('result')}}
+              {% else %}
+              this_object->{{name}}({{call_args|join(', ')}});
+              {% endif %}
+              }
+          );
+        }
 
-$Object:
-  custom:
-    pname: Long
-  kotlin:
-    type_info: "{{type_name}}"
-  jni:
-    type_info: jobjectid
-  native:
-    type_info: Long
-  jni_to_cxx: |
-    {% set dereferencer = '*' if is_pointer else '' %}
-    {% set pointee = target_pointee_unqualified_name %}
-    {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>(id);
-  cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = UnsafeRefAsLong({{name}});
-  kotlin_to_native:
-    val {{target_name}} = {{name}}.id
-  native_to_kotlin:
-    val {{target_name}} = {{target_type_name}}({{name}})
+  getter:
+    kotlin:
+      properties: |
+        {% set result_converter = result_type.converter.jdk_to_kotlin %}
+        {{comment}}
+        {{'var' if setter_ctx else 'val'}} {{name}}: {{result_converter.target_type_name}}
+            get() {
+              val result = j{{name|capitalize}}(id)
+              {{result_converter.snippet('result')}}
+              return {{result_converter.converted_name('result')}}
+            }
+            {% if setter_ctx %}
+            {% set converter = setter_ctx.arg.converter.kotlin_to_jdk %}
+            set(value) {
+              {{converter.snippet('value')}}
+              j{{setter_ctx.name|capitalize}}(id, {{converter.converted_name('value')}})
 
-$Enum:
-  custom:
-    pname: Int
-  kotlin:
-    type_info: "{{type_name}}"
-  jni:
-    type_info: jint
-  native:
-    type_info: Int
-  jni_to_cxx: |
-    auto {{target_name}} = ({{target_type_name}}){{name}};
-  cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
-  kotlin_to_native:
-    val {{target_name}} = {{name}}.value
-  native_to_kotlin:
-    val {{target_name}} = {{target_type_name}}.getByValue({{name}})!!
+            }
+            {% endif %}
+      private_external: |
+        private external fun j{{name|capitalize}}(id: Long): {result_type.converter.jdk.target_type_name}
 
-std::__cxx11::basic_string:
-  custom:
-    pname: "Object"
-  kotlin:
-    type_info: String
-  jni:
-    type_info: jstring
-  native:
-    type_info: String
-  jni_to_cxx:
-    "{{target_type_name}} {{target_name}} = jni_to_string(env, {{name}});"
-  cxx_to_jni:
-    "{{target_type_name}} {{target_name}} = string_to_jni(env, {{name}});"
-  kotlin_to_native:
-  native_to_kotlin:
-
-
-std::vector:
-  custom: 
-    pname: "Object"
-  kotlin:
-    type_info: "List<{{args_t[0]}}>"
-  jni:
-    type_info: "{{args_t[0]}}Array"
-  native:
-    type_info: "{{args_t[0]}}Array"
-  jni_to_cxx: |
-          {% set tmp_name = '_' + target_name %}
-          {% set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
-
-          {{target_type_name}} {{target_name}};
-
-          auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
-
-          for (auto& value : {{tmp_name}}) {
-             {{args[0].snippet('value')}}
-             {{target_name}}.emplace_back({{args[0].converted_name('value')}});
+        {% if setter_ctx %}
+        private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.arg.converter.jdk.target_type_name}}): Void
+        {% endif %}
+      cxx:
+        body: |
+          {% set func_name="j%s"|format(name|capitalize) %}
+          extern "C" JNIEXPORT {{result_type.converter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id){
+            return jni::handleNativeCrash(env, [&] {
+                validateID(id);
+                auto this_object = RefFromLong<{{full_class_name}}>(id);
+                auto result = this_object->{{name}}();
+                {{result_type.converter.cxx_to_jni.snippet('result')}}
+                return {{result_type.converter.cxx_to_jni.converted_name('result')}}
+                }
+            );
           }
+          {% if setter_ctx %}
+            {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
+            extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.arg.converter.cxx.target_type_name}} {{setter_ctx.arg.name}}"){
+              return jni::handleNativeCrash(env, [&] {
+                  validateID(id);
+                  auto this_object = RefFromLong<{{full_class_name}}>(id);
+                  {% set converter = setter_ctx.arg.converter.jni_to_cxx %}
+                  {{converter.snippet(setter_ctx.arg.name)}}
+                  this_object->{{name}}(converter.converted_name(setter_ctx.arg.name));
+                  }
+              );
+            }
+          {% endif %}
 
-  cxx_to_jni: |
-          {% set jni_type_prefix = args[0].custom.pname %}
-          {% set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
+  enum:
+    kotlin: |
+      enum class {{name}}(val value: Int){
+        {% set comma = joiner(",") %}
+        {% for case in enum_cases %}
+        {{comma()}}
+        {{case.name}}({{case.value}})
+        {% endfor %}
 
-          {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
+        companion object {
+          private val values = values();
+          fun getByValue(value: Int) = values.firstOrNull { it.value == value }
+        }
+      }
 
-          std::vector<{{args[0].target_type_name}}> temp;
 
-          for (auto& value : {{name}}) {
+types:
+  void:
+    kotlin:
+      type_info: Void
+    jni:
+      type_info: void
+    jdk:
+      type_info: Void
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  int:
+    custom:
+      pname: Int
+    kotlin:
+      type_info: Int
+    jni:
+      type_info: jint
+    jdk:
+      type_info: Int
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  short:
+    custom:
+      pname: Short
+    kotlin:
+      type_info: Short
+    jni:
+      type_info: jshort
+    jdk:
+      type_info: Short
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  long:
+    custom:
+      pname: Long
+    kotlin:
+      type_info: Long
+    jni:
+      type_info: jlong
+    jdk:
+      type_info: Long
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  long long:
+    long
+
+  unsigned long:
+    long
+
+  float:
+    custom:
+      pname: Float
+    kotlin:
+      type_info: Float
+    jni:
+      type_info: jfloat
+    jdk:
+      type_info: Float
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  double:
+    custom:
+      pname: Double
+    kotlin:
+      type_info: Double
+    jni:
+      type_info: jdouble
+    jdk:
+      type_info: Double
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+  char:
+    std::__cxx11::basic_string
+
+  $Object:
+    custom:
+      pname: Long
+    kotlin:
+      type_info: "{{type_name}}"
+    jni:
+      type_info: jobjectid
+    jdk:
+      type_info: Long
+    jni_to_cxx: |
+      {% set dereferencer = '*' if is_pointer else '' %}
+      {% set pointee = target_pointee_unqualified_name %}
+      {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>(id);
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = UnsafeRefAsLong({{name}});
+    kotlin_to_jdk:
+      val {{target_name}} = {{name}}.id
+    jdk_to_kotlin:
+      val {{target_name}} = {{target_type_name}}({{name}})
+
+  $Enum:
+    custom:
+      pname: Int
+    kotlin:
+      type_info: "{{type_name}}"
+    jni:
+      type_info: jint
+    jdk:
+      type_info: Int
+    jni_to_cxx: |
+      auto {{target_name}} = ({{target_type_name}}){{name}};
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
+    kotlin_to_jdk:
+      val {{target_name}} = {{name}}.value
+    jdk_to_kotlin:
+      val {{target_name}} = {{target_type_name}}.getByValue({{name}})!!
+
+  std::__cxx11::basic_string:
+    custom:
+      pname: "Object"
+    kotlin:
+      type_info: String
+    jni:
+      type_info: jstring
+    jdk:
+      type_info: String
+    jni_to_cxx:
+      "{{target_type_name}} {{target_name}} = jni_to_string(env, {{name}});"
+    cxx_to_jni:
+      "{{target_type_name}} {{target_name}} = string_to_jni(env, {{name}});"
+    kotlin_to_jdk:
+    jdk_to_kotlin:
+
+
+  std::vector:
+    custom: 
+      pname: "Object"
+    kotlin:
+      type_info: "List<{{args_t[0]}}>"
+    jni:
+      type_info: "{{args_t[0]}}Array"
+    jdk:
+      type_info: "{{args_t[0]}}Array"
+    jni_to_cxx: |
+            {% set tmp_name = '_' + target_name %}
+            {% set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
+
+            {{target_type_name}} {{target_name}};
+
+            auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
+
+            for (auto& value : {{tmp_name}}) {
               {{args[0].snippet('value')}}
-              temp.emplace_back({{args[0].converted_name('value')}});
-          }
-          env->{{jni_array_set}}({{target_name}}, 0, static_cast<jsize>({{name}}.size()), temp.data());
+              {{target_name}}.emplace_back({{args[0].converted_name('value')}});
+            }
 
-  kotlin_to_native: |
-          val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
+    cxx_to_jni: |
+            {% set jni_type_prefix = args[0].custom.pname %}
+            {% set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
 
-          for (value in {{name}}) {
-            {{args[0].snippet('value')}}
-            {{target_name}}.add({{args[0].converted_name('value')}})
-          }
-  native_to_kotlin: |
-          val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-          for (value in {{name}}) {
-            {{args[0].snippet('value')}}
-            {{target_name}}.add({{args[0].converted_name('value')}})
-          }
+            {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
 
-std::map:
-  custom:
-    pname: "Object"
-  kotlin:
-    type_info: "Map<{{args_t[0]}}, {{args_t[1]}}>"
-  jni:
-    type_info: "jmapobject"
-  native:
-    type_info: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
-  jni_to_cxx: |
-          {% set tmp_name = '_' + target_name %}
-          {% set tmp_key_name = 'tmp_key_' + target_name %}
-          {% set tmp_val_name = 'tmp_val_' + target_name %}
-          {% set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
-          {% set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
-          {{target_type_name}} {{target_name}};
-          auto {{tmp_name}} = extract_jni_pair(env, {{name}});
-          auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
-          auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
-          for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
-              auto ktmp = {{tmp_key_name}}[i];
-              auto vtmp = {{tmp_val_name}}[i];
-              {{args[0].snippet('ktmp')}}
-              {{args[1].snippet('vtmp')}}
-              {{target_name}}.insert({ {{args[0].converted_name('ktmp')}}, {{args[1].converted_name('vtmp')}} });
-          }
+            std::vector<{{args[0].target_type_name}}> temp;
 
-  cxx_to_jni: |
-          {% set key_name = 'tmp_key_' + target_name %}
-          {% set val_name = 'tmp_val_' + target_name %}
-          {{args[0].target_type_name}} {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
-          {{args[1].target_type_name}} {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size());
-          size_t index = 0;
-          for (auto& value : {{name}}) {
-              key = value.first
-              val = value.second
-              {{args[0].snippet('key')}}
-              {{key_name}}[index] = {{args[0].converted_name('key')}};
-              {{args[1].snippet('val')}}
-              {{val_name}}[index] = {{args[1].converted_name('val')}};
-              ++index
-          }
-          {{target_type_name}} {{target_name}} pair = make_jni_pair(env, {{key_name}}, {{val_name}});
+            for (auto& value : {{name}}) {
+                {{args[0].snippet('value')}}
+                temp.emplace_back({{args[0].converted_name('value')}});
+            }
+            env->{{jni_array_set}}({{target_name}}, 0, static_cast<jsize>({{name}}.size()), temp.data());
 
-  kotlin_to_native: |
-          {% set tmp_key_name = 'tmp_key_' + target_name %}
-          {% set tmp_val_name = 'tmp_val_' + target_name %}
-          {% set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-          {% set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
-          val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size){{karray_init}}
-          val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size){{varray_init}}
-          val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
-          var index = 0
-          for ((key, value) in {{name}}) {
-              {{args[0].snippet('key')}}
-              {{args[1].snippet('value')}}
-              {{tmp_key_name}}[index] = {{args[0].converted_name('key')}}
-              {{tmp_val_name}}[index] = {{args[1].converted_name('value')}}
-              ++index
-          }
+    kotlin_to_jdk: |
+            val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
 
-  native_to_kotlin: |
-          val {{target_name}} = {{target_type_name}}()
-          for ((key, value) in {{name}}.first zip {{name}}.second) {
-              {{args[0].snippet('key')}}
-              {{args[1].snippet('value')}}
-              {{target_name}}[{{args[0].converted_name('key')}}] = {{args[1].converted_name('value')}}
-          }
+            for (value in {{name}}) {
+              {{args[0].snippet('value')}}
+              {{target_name}}.add({{args[0].converted_name('value')}})
+            }
+    jdk_to_kotlin: |
+            val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
+            for (value in {{name}}) {
+              {{args[0].snippet('value')}}
+              {{target_name}}.add({{args[0].converted_name('value')}})
+            }
+
+  std::map:
+    custom:
+      pname: "Object"
+    kotlin:
+      type_info: "Map<{{args_t[0]}}, {{args_t[1]}}>"
+    jni:
+      type_info: "jmapobject"
+    jdk:
+      type_info: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
+    jni_to_cxx: |
+            {% set tmp_name = '_' + target_name %}
+            {% set tmp_key_name = 'tmp_key_' + target_name %}
+            {% set tmp_val_name = 'tmp_val_' + target_name %}
+            {% set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
+            {% set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
+            {{target_type_name}} {{target_name}};
+            auto {{tmp_name}} = extract_jni_pair(env, {{name}});
+            auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
+            auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
+            for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
+                auto ktmp = {{tmp_key_name}}[i];
+                auto vtmp = {{tmp_val_name}}[i];
+                {{args[0].snippet('ktmp')}}
+                {{args[1].snippet('vtmp')}}
+                {{target_name}}.insert({ {{args[0].converted_name('ktmp')}}, {{args[1].converted_name('vtmp')}} });
+            }
+
+    cxx_to_jni: |
+            {% set key_name = 'tmp_key_' + target_name %}
+            {% set val_name = 'tmp_val_' + target_name %}
+            {{args[0].target_type_name}} {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
+            {{args[1].target_type_name}} {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size());
+            size_t index = 0;
+            for (auto& value : {{name}}) {
+                key = value.first
+                val = value.second
+                {{args[0].snippet('key')}}
+                {{key_name}}[index] = {{args[0].converted_name('key')}};
+                {{args[1].snippet('val')}}
+                {{val_name}}[index] = {{args[1].converted_name('val')}};
+                ++index
+            }
+            {{target_type_name}} {{target_name}} pair = make_jni_pair(env, {{key_name}}, {{val_name}});
+
+    kotlin_to_jdk: |
+            {% set tmp_key_name = 'tmp_key_' + target_name %}
+            {% set tmp_val_name = 'tmp_val_' + target_name %}
+            {% set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
+            {% set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
+            val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size){{karray_init}}
+            val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size){{varray_init}}
+            val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
+            var index = 0
+            for ((key, value) in {{name}}) {
+                {{args[0].snippet('key')}}
+                {{args[1].snippet('value')}}
+                {{tmp_key_name}}[index] = {{args[0].converted_name('key')}}
+                {{tmp_val_name}}[index] = {{args[1].converted_name('value')}}
+                ++index
+            }
+
+    jdk_to_kotlin: |
+            val {{target_name}} = {{target_type_name}}()
+            for ((key, value) in {{name}}.first zip {{name}}.second) {
+                {{args[0].snippet('key')}}
+                {{args[1].snippet('value')}}
+                {{target_name}}[{{args[0].converted_name('key')}}] = {{args[1].converted_name('value')}}
+            }
 
 
-std::unordered_map:
-  std::map
+  std::unordered_map:
+    std::map
 
 
-std::shared_ptr:
-  custom: 
-    pname: Long
-  kotlin:
-    type_info: "{{args_t[0]}}"
-  jni:
-    type_info: jobjectid
-  native:
-    type_info: Long
-  jni_to_cxx: 
-  cxx_to_jni: 
-  kotlin_to_native:
-  native_to_kotlin:
+  std::shared_ptr:
+    custom: 
+      pname: Long
+    kotlin:
+      type_info: "{{args_t[0]}}"
+    jni:
+      type_info: jobjectid
+    jdk:
+      type_info: Long
+    jni_to_cxx: 
+    cxx_to_jni: 
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 

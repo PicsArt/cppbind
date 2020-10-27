@@ -1,9 +1,9 @@
 import os
 import hashlib
 
-from iegnen.builder.out_builder import Builder, Scope
-from iegnen.builder.ir_builder import CXXIEGIRBuilder
-from iegnen.parser.ieg_parser import CXXParser
+from iegen.builder.out_builder import Builder, Scope
+from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.parser.ieg_parser import CXXParser
 
 
 def test_builder(out_dir):

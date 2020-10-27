@@ -6,7 +6,7 @@ from ctypes.util import find_library
 import clang.cindex as cli
 
 PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
-PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegnen_config.cfg")
+PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
@@ -91,9 +91,6 @@ class IEG_Config(object):
         self.attributes = cnfg.getjson_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
 
-        self.parser = types.SimpleNamespace()
-        self.parser.__dict__.update(cnfg.items("PARSER"))
-
         self.logging = types.SimpleNamespace()
         self.logging.__dict__.update(cnfg.items("LOG"))
 
@@ -102,7 +99,8 @@ class IEG_Config(object):
 
     def __load_language(self, cnfg, lang):
         lang_section = cnfg.items(lang.upper())
-        return {k: v for k, v in lang_section}
+        lang_config = types.SimpleNamespace(**{k: v for k, v in lang_section})
+        return lang_config
 
 
-config = IEG_Config(["~/iegnen_config.cfg", "iegnen_config.cfg"])
+config = IEG_Config(["~/iegen_config.cfg", "iegen_config.cfg"])

@@ -1,4 +1,4 @@
-# iegnen
+# iegen
 C++ public API Java, Obj-C binding generator
 
 
@@ -142,11 +142,11 @@ def gen_method(context, builder):
 # System requirements
  Operating system: Linux, Mac, Windows
 
-# iegnen installation for developers
+# iegen installation for developers
 
-1. Clone iegnen master branch into current directory.
+1. Clone iegen master branch into current directory.
  ```bash
- git clone  https://github.com/PicsArt/iegnen.git
+ git clone  https://github.com/PicsArt/iegen.git
  ```
 2. If the project is already cloned, pull the latest version:
 

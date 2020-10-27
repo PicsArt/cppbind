@@ -5,9 +5,9 @@ Processor module provides various processor for ieg parser
 import copy
 import os
 from collections import OrderedDict
-from iegnen import default_config as default_config
-from iegnen.parser.ieg_api_parser import APIParser
-from iegnen.ir.ast import IEG_Ast, Node
+from iegen import default_config as default_config
+from iegen.parser.ieg_api_parser import APIParser
+from iegen.ir.ast import IEG_Ast, Node
 
 ALL_LANGUAGES = list(default_config.languages)
 ALL_LANGUAGES = sorted(ALL_LANGUAGES)

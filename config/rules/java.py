@@ -1,5 +1,5 @@
-from iegnen.builder.out_builder import Scope
-# from iegnen import context_of_type
+from iegen.builder.out_builder import Scope
+# from iegen import context_of_type
 
 
 def gen_class(ctx, builder):

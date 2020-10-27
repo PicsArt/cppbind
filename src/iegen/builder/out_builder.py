@@ -5,7 +5,7 @@ to generated output.
 
 import os
 import copy
-from iegnen import logging as logging
+from iegen import logging as logging
 
 TAB_STR = '    '
 

@@ -1,7 +1,7 @@
 """
 Helper codes for kotlin conversion
 """
-from iegnen.common.snippets_engine import SnippetsEngine
+from iegen.common.snippets_engine import SnippetsEngine
 
 OBJECT_CXX_ID_TYPE = 'jobjectid'
 OBJECT_CXX_TYPE = 'jobject'
@@ -52,7 +52,7 @@ def cxx_jni_arg_str(type_name, name, **kwargs):
 
 
 def format_args_str(args):
-    from iegnen.builder.out_builder import Scope
+    from iegen.builder.out_builder import Scope
     if args:
         args = '\n' + str(Scope(*args, tab=1, parts_spliter=',\n')) + '\n'
     else:

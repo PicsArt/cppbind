@@ -1,7 +1,7 @@
 """
 """
 from collections import OrderedDict
-import iegnen.utils.clang as cutil
+import iegen.utils.clang as cutil
 
 
 class Node(object):

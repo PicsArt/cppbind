@@ -1,10 +1,10 @@
 """
-Module contains common fixtures used in iegnen related tests
+Module contains common fixtures used in iegen related tests
 """
 import copy
 
 import pytest
-from iegnen.common.config import config as default_config
+from iegen.common.config import config as default_config
 from . import TEST_CXX_DIR, TEST_OUT_DIR
 
 

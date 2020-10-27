@@ -4,11 +4,11 @@ Parser module based on clang
 import os
 import glob
 import clang.cindex as cli
-from iegnen import (
+from iegen import (
     default_config as default_config,
     logging as logging
 )
-from iegnen.parser.filter import cxx_ieg_filter
+from iegen.parser.filter import cxx_ieg_filter
 
 
 class CXXParser(object):

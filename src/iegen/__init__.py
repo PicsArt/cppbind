@@ -2,7 +2,7 @@ import os
 import sys
 import logging as logging
 from logging import getLevelName
-from iegnen.common.config import config as default_config
+from iegen.common.config import config as default_config
 
 logging_format = '%(asctime)s:(%(levelname)s) %(message)s'
 

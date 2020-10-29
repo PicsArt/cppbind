@@ -1,6 +1,7 @@
 """
 """
 import os
+import types
 import clang.cindex as cli
 from iegen import logging as logging
 
@@ -46,11 +47,12 @@ class Context(object):
             return val
 
         for arg_c in self.node.clang_cursor.get_arguments():
-            arg_params = dict(name=arg_c.spelling,  type=arg_c.type, cursor=arg_c)
-
             def_val = get_default(arg_c)
-            if def_val:
-                arg_params['default'] = def_val
+            arg_params = types.SimpleNamespace(name=arg_c.spelling,
+                                               type=arg_c.type,
+                                               cursor=arg_c,
+                                               default=def_val
+                                               )
             _args.append(arg_params)
 
         return _args
@@ -143,8 +145,8 @@ class Context(object):
             if enum_value_c.kind != cli.CursorKind.ENUM_CONSTANT_DECL:
                 continue
             type_name = enum_value_c.kind.name.lower().replace("_decl", "")
-            enum_val_params = dict(name=enum_value_c.spelling, type=type_name,
-                                   value=enum_value_c.enum_value)
+            enum_val_params = types.SimpleNamespace(name=enum_value_c.spelling, type=type_name,
+                                                    value=enum_value_c.enum_value)
 
             _vals.append(enum_val_params)
         return _vals

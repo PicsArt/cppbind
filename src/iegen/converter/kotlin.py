@@ -8,6 +8,8 @@ OBJECT_CXX_TYPE = 'jobject'
 
 CXX_INCLUDE_NAMES = ["jni.h"]
 
+KOTLIN_IMPORTS = []
+
 
 CXX_HELPERS = ""
 
@@ -94,3 +96,11 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
 
 def build_type_converter(ctx, clang_type):
     return SNIPPETS_ENGINE.build_type_converter(ctx, clang_type)
+
+
+def get_code_info(code_name):
+    return SNIPPETS_ENGINE.get_code_info(code_name)
+
+
+def get_file_info(file_name):
+    return SNIPPETS_ENGINE.get_file_info(file_name)

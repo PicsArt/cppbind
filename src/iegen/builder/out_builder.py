@@ -43,23 +43,32 @@ class Scope(object):
         # register scopes
         self._register_scopes(*parts)
 
-    def get_scope(self, scope_name, create=False, init_func=None):
+    def get_scope(self, scope_name, create=False, init_func=None, add_as_part=True):
         scope = self.file_scope.lookup_scope(scope_name)
 
         if scope is None and create:
             logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
             scope = Scope(name=scope_name, file_scope=self.file_scope)
-            self.add(scope)
+            if add_as_part:
+                self.add(scope)
+            else:
+                self._register_scopes(scope)
             if init_func:
                 init_func(scope)
 
+        return scope
+
+    def create_scope(self, scope_name):
+        logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
+        scope = Scope(name=scope_name, file_scope=self.file_scope)
+        self._register_scopes(scope)
         return scope
 
     def _register_scopes(self, *parts):
         if len(parts) == 0:
             return
         # register scopes
-        if self.file_scope:
+        if self.file_scope is not None:
             if self is not self.file_scope:
                 dept = self.file_scope._lookup_scope_dept(self)
                 assert dept is not None, f"current {repr(self)} scope is not register"
@@ -75,7 +84,8 @@ class Scope(object):
                     data.file_scope = self.file_scope
                     # also if name is not empty add to file_scope for lookup
                     if data.name:
-                        assert self.file_scope, "to be able to add name scope file_scope should be specified."
+                        assert self.file_scope is not None,\
+                            "to be able to add name scope file_scope should be specified."
                         self.file_scope.register_scope(data, dept)
 
     def __getitem__(self, scope_name):

@@ -3,72 +3,101 @@ codes:
   file:
     kotlin: 
       file_path: |
-        {{[out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
+        {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
+      scopes: 
+        - body
+        - include
       content: |
-        packages {{config.package_prefix}}.{{package}}
+        package {{config.package_prefix}}.{{package}}
 
-        {{helper_includes|format_list('import "{}"')|join('\n')}}
-        {{include|make_unique_scope}}
-
+        {{helper_includes|format_list('import {}')|join('\n')}}
+        {{include}}
         typealias StringArray = Array<String>
         typealias ObjectArray = Array<Any>
-
-        {{body|make_scope}}
+        {{body}}
     cxx:
       file_path: |
-        {{[out_dir, file]|path_join}}.cpp
+        {{[config.out_dir, file]|path_join}}.cpp
+      scopes: 
+        - body
+        - include
       content: |
         {{helper_includes|format_list('#include "{}"')|join('\n')}}
-        {{include|make_unique_scope}}
+        {{include}}
 
-        {{body|make_scope}}
+        {{body}}
+
+  enum:
+    kotlin: 
+      body: |
+
+        enum class {{name}}(val value: Int){
+          {%- set comma = joiner(",") -%}
+          {%- for case in enum_cases -%}
+          {{comma()}}
+          {{case.name}}({{case.value}})
+          {%- endfor %};
+
+          companion object {
+            private val values = values();
+            fun getByValue(value: Int) = values.firstOrNull { it.value == value }
+          }
+        }
 
   class: 
     kotlin: 
-      include: |
-        {{includes|format_list("import {}")|join('\n')}}
-      body: |
-        {{comment}}
-        {{'open' if is_open}} class {{name}}
-          internal constructor(id: Long): {{base_type|default("RNativeObject")}}(id){
-        {{head|make_scope}}
-        {{properties|make_scope}}
-        {{body|make_scope}}
-        ///// External wrapper functions ////////////
-        {{private_external|make_scope}}
-        }
+      include: 
+        unique_content: |
+          {{includes|format_list("import {}")|join('\n')}}
+      body:
+        scopes: 
+          - head
+          - properties
+          - body
+          - private_external
+        content: |
+          {{comment}}
+          {{'open ' if is_open}}class {{name}}
+            internal constructor(id: Long): {{base_type.kotlin.target_type_name if base_type is defined else "RNativeObject"}}(id){
+              {{head|string|indent}}
+              {{properties|string|indent}}
+              {{body|string|indent}}
+              ///// External wrapper functions ////////////
+              {{private_external|string|indent}}
+          }
     cxx: 
-      include: |
-        #include "{{prj_rel_file_name}}"
+      include: 
+        unique_content: |
+          #include "{{prj_rel_file_name}}"
 
   constructor:
     kotlin:
       head: |
         {{comment}}
-        constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", arg)|join(', ')}}): this(0) {
-          {% set call_args = [] %}
-          {% for arg in args %}
-          {% set converter = arg.converter.kotlin_to_jdk %}
-          {{converter.snippet(arg.name)}}
-          {{call_args.append(converter.converted_name(arg.name))}}
-          {% endfor %}
-          this.id = jConstructor({{call_args|join(', ')}})
+        constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(0) {
+            {%- set call_args = [] %}
+            {% for arg in args -%}
+            {%- set converter = arg.converter.kotlin_to_jdk -%}
+            {{converter.snippet(arg.name)|indent}}
+            {%- do call_args.append(converter.converted_name(arg.name)) %}
+            {% endfor %}
+            this.id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
         }
       private_external: |
-        private external fun jConstructor({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", arg)|join(', ')}}): Long
+        private external fun jConstructor{{overloading_prefix}}({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join(', ')}}): Long
     cxx:
       body: |
-        extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix, args)}}({{args|format_list("{arg.converter.cxx.target_type_name} {arg.name}", arg)|join(', ')}}){
+        extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}({{args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg')|join(', ')}}){
           return jni::handleNativeCrash(env, [&] {
-              {% set call_args = [] %}
-              {% for arg in args %}
-              {% set converter = arg.converter.jni_to_cxx %}
-              {{converter.snippet(arg.name)}}
-              {{ call_args.append(converter.converted_name(arg.name))}}
-              {% endfor %}
-              auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
-              return UnsafeRefAsLong(this_object);
-              }
+                {%- set call_args = [] -%}
+                {%- for arg in args -%}
+                {% set converter = arg.converter.jni_to_cxx %}
+                {{converter.snippet(arg.name)|indent}}
+                {%- do call_args.append(converter.converted_name(arg.name)) -%}
+                {% endfor %}
+                auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
+                return UnsafeRefAsLong(this_object);
+                }
           );
         }
 
@@ -76,110 +105,95 @@ codes:
     kotlin:
       body: |
         {{comment}}
-        {{'open ' if is_open}}{{'override ' if is_override}}fun {name}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", arg)|join(', ')}}): {result_type.converter.kotlin.target_type_name} {
-          {% set call_args = ['id'] %}
-          {% set result_converter = result_type.converter.jdk_to_kotlin %}
-          {% for arg in args %}
-          {% set converter = arg.converter.kotlin_to_jdk %}
-          {{converter.snippet(arg.name)}}
-          {{call_args.append(converter.converted_name(arg.name))}}
-          {% endfor %}
-          val result = j{{name|capitalize}}({{call_args|join(', ')}})
-          {{result_converter.snippet('result')}}
-          return {{result_converter.converted_name('result')}}
+        {{'open ' if is_open}}{{'override ' if is_override}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+            {% set call_args = ['id'] %}
+            {% set result_converter = rconverter.jdk_to_kotlin %}
+            {% for arg in args %}
+            {% set converter = arg.converter.kotlin_to_jdk %}
+            {{converter.snippet(arg.name)|indent}}
+            {% do call_args.append(converter.converted_name(arg.name)) %}
+            {% endfor %}
+            val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+            {{result_converter.snippet('result')|indent}}
+            return {{result_converter.converted_name('result')}}
         }
       private_external: |
-        private external fun j{{name|capitalize}}(id: Long, {{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", arg)|join(', ')}}): {result_type.converter.jdk.target_type_name}
+        private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{args|format_list(", {arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join}}): {{rconverter.jdk.target_type_name}}
     cxx:
       body: |
         {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
-        extern "C" JNIEXPORT {{result_type.converter.jni.target_type_name}} {{get_jni_name(func_name, args)}}(JNIEnv* env, jobject obj, jobjectid id, {{args|format_list("{arg.converter.cxx.target_type_name} {arg.name}", arg)|join(', ')}}){
-          return jni::handleNativeCrash(env, [&] {
-              validateID(id);
-              auto this_object = RefFromLong<{{full_class_name}}>(id);
-              {% set call_args = [] %}
-              {% for arg in args %}
-              {% set converter = arg.converter.jni_to_cxx %}
-              {{converter.snippet(arg.name)}}
-              {{ call_args.append(converter.converted_name(arg.name))}}
-              {% endfor %}
-              {% if result_type.converter.jni.target_name != 'void' %}
-              auto result = this_object->{{name}}({{call_args|join(', ')}});
-              {{result_type.converter.cxx_to_jni.snippet('result')}}
-              return {{result_type.converter.cxx_to_jni.converted_name('result')}}
-              {% else %}
-              this_object->{{name}}({{call_args|join(', ')}});
-              {% endif %}
-              }
+        extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
+            return jni::handleNativeCrash(env, [&] {
+                validateID(id);
+                auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+                {% set call_args = [] %}
+                {% for arg in args %}
+                {% set converter = arg.converter.jni_to_cxx %}
+                {{converter.snippet(arg.name)|indent}}
+                {% do call_args.append(converter.converted_name(arg.name))%}
+                {% endfor %}
+                {% if rconverter.jni.target_type_name != 'void' %}
+                auto result = this_object->{{name}}({{call_args|join(', ')}});
+                {{rconverter.cxx_to_jni.snippet('result')|indent}}
+                return {{rconverter.cxx_to_jni.converted_name('result')}}
+                {% else %}
+                this_object->{{name}}({{call_args|join(', ')}});
+                {% endif %}
+                }
           );
         }
 
   getter:
     kotlin:
       properties: |
-        {% set result_converter = result_type.converter.jdk_to_kotlin %}
+        {% set result_converter = rconverter.jdk_to_kotlin %}
         {{comment}}
-        {{'var' if setter_ctx else 'val'}} {{name}}: {{result_converter.target_type_name}}
-            get() {
-              val result = j{{name|capitalize}}(id)
-              {{result_converter.snippet('result')}}
-              return {{result_converter.converted_name('result')}}
-            }
-            {% if setter_ctx %}
-            {% set converter = setter_ctx.arg.converter.kotlin_to_jdk %}
-            set(value) {
-              {{converter.snippet('value')}}
-              j{{setter_ctx.name|capitalize}}(id, {{converter.converted_name('value')}})
+        {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
+              get() {
+                val result = j{{name|capitalize}}(id)
+                {{result_converter.snippet('result')|indent}}
+                return {{result_converter.converted_name('result')}}
+              }
+              {% if setter_ctx is defined %}
+              {% set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
+              set(value) {
+                {{converter.snippet('value')|indent}}
+                j{{setter_ctx.name|capitalize}}(id, {{converter.converted_name('value')}})
 
-            }
-            {% endif %}
+              }
+              {% endif %}
       private_external: |
-        private external fun j{{name|capitalize}}(id: Long): {result_type.converter.jdk.target_type_name}
+        private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
 
-        {% if setter_ctx %}
-        private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.arg.converter.jdk.target_type_name}}): Void
+        {% if setter_ctx is defined %}
+        private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
         {% endif %}
-      cxx:
-        body: |
-          {% set func_name="j%s"|format(name|capitalize) %}
-          extern "C" JNIEXPORT {{result_type.converter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id){
+    cxx:
+      body: |
+        {% set func_name="j%s"|format(name|capitalize) %}
+        extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id){
             return jni::handleNativeCrash(env, [&] {
                 validateID(id);
-                auto this_object = RefFromLong<{{full_class_name}}>(id);
+                auto this_object = RefFromLong<{{cxx_type_name}}>(id);
                 auto result = this_object->{{name}}();
-                {{result_type.converter.cxx_to_jni.snippet('result')}}
-                return {{result_type.converter.cxx_to_jni.converted_name('result')}}
+                {{rconverter.cxx_to_jni.snippet('result')|indent}}
+                return {{rconverter.cxx_to_jni.converted_name('result')}}
                 }
             );
-          }
-          {% if setter_ctx %}
-            {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
-            extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.arg.converter.cxx.target_type_name}} {{setter_ctx.arg.name}}"){
+        }
+        {% if setter_ctx is defined %}
+          {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
+          extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}"){
               return jni::handleNativeCrash(env, [&] {
                   validateID(id);
-                  auto this_object = RefFromLong<{{full_class_name}}>(id);
-                  {% set converter = setter_ctx.arg.converter.jni_to_cxx %}
-                  {{converter.snippet(setter_ctx.arg.name)}}
-                  this_object->{{name}}(converter.converted_name(setter_ctx.arg.name));
+                  auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+                  {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
+                  {{converter.snippet(setter_ctx.args[0].name)|indent}}
+                  this_object->{{name}}(converter.converted_name(setter_ctx.args[0].name));
                   }
               );
-            }
-          {% endif %}
-
-  enum:
-    kotlin: |
-      enum class {{name}}(val value: Int){
-        {% set comma = joiner(",") %}
-        {% for case in enum_cases %}
-        {{comma()}}
-        {{case.name}}({{case.value}})
-        {% endfor %}
-
-        companion object {
-          private val values = values();
-          fun getByValue(value: Int) = values.firstOrNull { it.value == value }
-        }
-      }
+          }
+        {% endif %}
 
 
 types:
@@ -339,45 +353,45 @@ types:
     jdk:
       type_info: "{{args_t[0]}}Array"
     jni_to_cxx: |
-            {% set tmp_name = '_' + target_name %}
-            {% set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
+          {% set tmp_name = '_' + target_name %}
+          {% set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
 
-            {{target_type_name}} {{target_name}};
+          {{target_type_name}} {{target_name}};
 
-            auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
+          auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
 
-            for (auto& value : {{tmp_name}}) {
-              {{args[0].snippet('value')}}
+          for (auto& value : {{tmp_name}}) {
+              {{args[0].snippet('value')|indent}}
               {{target_name}}.emplace_back({{args[0].converted_name('value')}});
-            }
+          }
 
     cxx_to_jni: |
-            {% set jni_type_prefix = args[0].custom.pname %}
-            {% set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
+          {% set jni_type_prefix = args[0].custom.pname %}
+          {% set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
 
-            {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
+          {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
 
-            std::vector<{{args[0].target_type_name}}> temp;
+          std::vector<{{args[0].target_type_name}}> temp;
 
-            for (auto& value : {{name}}) {
-                {{args[0].snippet('value')}}
-                temp.emplace_back({{args[0].converted_name('value')}});
-            }
-            env->{{jni_array_set}}({{target_name}}, 0, static_cast<jsize>({{name}}.size()), temp.data());
+          for (auto& value : {{name}}) {
+              {{args[0].snippet('value')|indent}}
+              temp.emplace_back({{args[0].converted_name('value')}});
+          }
+          env->{{jni_array_set}}({{target_name}}, 0, static_cast<jsize>({{name}}.size()), temp.data());
 
     kotlin_to_jdk: |
-            val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
+          val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
 
-            for (value in {{name}}) {
-              {{args[0].snippet('value')}}
+          for (value in {{name}}) {
+              {{args[0].snippet('value')|indent}}
               {{target_name}}.add({{args[0].converted_name('value')}})
-            }
+          }
     jdk_to_kotlin: |
-            val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-            for (value in {{name}}) {
-              {{args[0].snippet('value')}}
+          val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
+          for (value in {{name}}) {
+              {{args[0].snippet('value')|indent}}
               {{target_name}}.add({{args[0].converted_name('value')}})
-            }
+          }
 
   std::map:
     custom:
@@ -401,8 +415,8 @@ types:
             for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
                 auto ktmp = {{tmp_key_name}}[i];
                 auto vtmp = {{tmp_val_name}}[i];
-                {{args[0].snippet('ktmp')}}
-                {{args[1].snippet('vtmp')}}
+                {{args[0].snippet('ktmp')|indent}}
+                {{args[1].snippet('vtmp')|indent}}
                 {{target_name}}.insert({ {{args[0].converted_name('ktmp')}}, {{args[1].converted_name('vtmp')}} });
             }
 
@@ -415,9 +429,9 @@ types:
             for (auto& value : {{name}}) {
                 key = value.first
                 val = value.second
-                {{args[0].snippet('key')}}
+                {{args[0].snippet('key')|indent}}
                 {{key_name}}[index] = {{args[0].converted_name('key')}};
-                {{args[1].snippet('val')}}
+                {{args[1].snippet('val')|indent}}
                 {{val_name}}[index] = {{args[1].converted_name('val')}};
                 ++index
             }
@@ -433,8 +447,8 @@ types:
             val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
             var index = 0
             for ((key, value) in {{name}}) {
-                {{args[0].snippet('key')}}
-                {{args[1].snippet('value')}}
+                {{args[0].snippet('key')|indent}}
+                {{args[1].snippet('value')|indent}}
                 {{tmp_key_name}}[index] = {{args[0].converted_name('key')}}
                 {{tmp_val_name}}[index] = {{args[1].converted_name('value')}}
                 ++index
@@ -443,8 +457,8 @@ types:
     jdk_to_kotlin: |
             val {{target_name}} = {{target_type_name}}()
             for ((key, value) in {{name}}.first zip {{name}}.second) {
-                {{args[0].snippet('key')}}
-                {{args[1].snippet('value')}}
+                {{args[0].snippet('key')|indent}}
+                {{args[1].snippet('value')|indent}}
                 {{target_name}}[{{args[0].converted_name('key')}}] = {{args[1].converted_name('value')}}
             }
 

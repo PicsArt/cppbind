@@ -13,6 +13,16 @@ TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
 
 
+class Snippet:
+
+    def __init__(self, context, template):
+        self.context = context
+        self.template = template
+
+    def __str__(self):
+        return self.template.render(self.context)
+
+
 class Converter:
 
     def __init__(self, clang_type, target_clang_type,
@@ -148,23 +158,30 @@ class TypeConvertorInfo(TargetTypeInof):
 
 class ScopeInfo:
 
-    def __init__(self, name, scope_path, snippet_tmpl):
+    def __init__(self, name, parent_scopes, scopes, snippet_tmpl, unique_snippet_tmpl):
         self.name = name
-        self.scope_path = scope_path
+        self.parent_scopes = parent_scopes
+        self.scopes = scopes
         self.snippet_tmpl = snippet_tmpl
+        self.unique_snippet_tmpl = unique_snippet_tmpl
 
-    def snippet(self, context):
-        return ""
+    def make_snippet(self, context):
+        return Snippet(context=context, template=self.snippet_tmpl)
+
+    def unique_make_snippet(self, context):
+        return Snippet(context=context, template=self.unique_snippet_tmpl)
 
 
 class FileScopeInfo(ScopeInfo):
 
-    def __init__(self, file_path, scope_path, snippet_tmpl):
-        super().__init__('file', scope_path, snippet_tmpl)
-        self.file_path = file_path
+    def __init__(self, file_path_tmpl, parent_scopes, scopes, snippet_tmpl, unique_snippet_tmpl):
+        super().__init__(name='file', parent_scopes=parent_scopes,
+                         scopes=scopes, snippet_tmpl=snippet_tmpl,
+                         unique_snippet_tmpl=unique_snippet_tmpl)
+        self.file_path_tmpl = file_path_tmpl
 
     def get_file_name(self, context):
-        return ""
+        return self.file_path_tmpl.render(context)
 
 
 class SnippetsEngine:
@@ -199,6 +216,12 @@ class SnippetsEngine:
     def get_type_info(self, type_name):
         return self.type_infos.get(type_name, None)
 
+    def get_code_info(self, code_name):
+        return self.code_infos.get(code_name, None)
+
+    def get_file_info(self, file_name):
+        return self.file_infos[file_name]
+
     def _load_code_info(self, codeInfoDict):
         # load into structures
         self._load_file_info(codeInfoDict['file'])
@@ -219,28 +242,48 @@ class SnippetsEngine:
             scopes = scopes or tuple()
             if not isinstance(info_map, dict):
                 # leaf node
-                yield (scopes, info_map)
+                yield (scopes, dict(content=info_map, unique_content=None, scopes=[]))
+            elif 'content' in info_map or 'unique_content' in info_map:
+                yield (scopes, dict(content=info_map.get('content', None),
+                                    unique_content=info_map.get('unique_content', None),
+                                    scopes=info_map.get('scopes', [])))
             else:
                 for scope, child_info_map in info_map.items():
-                    for d in scope_walk(child_info_map, scopes + tuple(scope)):
+                    for d in scope_walk(child_info_map, scopes + tuple([scope])):
                         yield d
+
+        scope_infos = {}
 
         for scopes, info in scope_walk(codeInfoDict):
             try:
-                snippet = self.jinja2_env.from_string(info)
+                snippet = info['content']
+                snippet = snippet and self.jinja2_env.from_string(snippet)
+                unique_snippet = info['unique_content']
+                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet)
             except Exception as e:
                 raise Exception(f"Error in code snippets {code_name}, in scope {':'.join(scopes)}. Error {str(e)}")
-            self.code_infos[scopes] = ScopeInfo(code_name, scopes, snippet)
+            scope_infos[scopes] = ScopeInfo(name=code_name,
+                                            parent_scopes=scopes,
+                                            scopes=info['scopes'],
+                                            snippet_tmpl=snippet,
+                                            unique_snippet_tmpl=unique_snippet,
+                                            )
+
+        return scope_infos
 
     def _load_file_info(self, codeInfoDict):
         # load into structures
         for file_name, info_map in codeInfoDict.items():
             try:
                 file_path = self.jinja2_env.from_string(info_map['file_path'])
-                content = self.jinja2_env.from_string(info_map['content'])
+                snippet = info_map.get('content', None)
+                snippet = snippet and self.jinja2_env.from_string(snippet)
+                unique_snippet = info_map.get('unique_content', None)
+                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet)
             except Exception as e:
                 raise Exception(f"Error in code file {file_name} snippets. Error {str(e)}")
-            self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], content)
+            self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], info_map.get('scopes', []),
+                                                       snippet, unique_snippet)
 
     def _load_type_info(self, typeInfoDict):
         # load into structures
@@ -331,36 +374,21 @@ class SnippetsEngine:
 
         return type_info
 
-    def make_unique_scope(input_):
-        return ""
-
-    def make_scope(input_):
-        return ""
-
     def _init_jinja_env(self):
-        env = Environment(loader=BaseLoader(), undefined=StrictUndefined)
+        env = Environment(loader=BaseLoader(), undefined=StrictUndefined,
+                          extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
 
         def path_join(inputs_):
-            return os.path.join(inputs_)
+            return os.path.join(*inputs_)
 
         env.filters['path_join'] = path_join
 
         def format_list(inputs_, format_string, arg_name=None):
-            if arg_name:
+            if arg_name is not None:
                 return [format_string.format(**{arg_name: data}) for data in inputs_]
             else:
                 return [format_string.format(data) for data in inputs_]
 
         env.filters['format_list'] = format_list
-
-        def make_unique_scope(input_):
-            return self.make_unique_scope(input_)
-
-        env.filters['make_unique_scope'] = make_unique_scope
-
-        def make_scope(input_):
-            return self.make_scope(input_)
-
-        env.filters['make_scope'] = make_scope
 
         self.jinja2_env = env

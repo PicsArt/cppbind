@@ -5,7 +5,7 @@ import json
 from ctypes.util import find_library
 import clang.cindex as cli
 
-PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../../../config/")
+PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]

@@ -54,7 +54,7 @@ class WrapperGenerator(object):
         builder.dump_outputs()
 
 
-if __name__ == "__main__":
+def run_package():
     # run Wrapper Generator
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
     parser.add_argument('languages', type=str, nargs='+',
@@ -64,3 +64,7 @@ if __name__ == "__main__":
     gen = WrapperGenerator()
 
     gen.run(set(args.languages))
+
+
+if __name__ == "__main__":
+    run_package()

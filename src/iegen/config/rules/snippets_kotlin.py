@@ -7,59 +7,40 @@ from functools import partial
 import iegen.utils.clang as cutil
 from iegen.utils import load_from_paths
 from iegen.common.config import PROJECT_CONFIG_DIR, DEFAULT_DIRS
+from iegen.common.snippets_engine import SnippetsEngine
 import iegen.converter.kotlin as convert
-from iegen import logging
+
+SNIPPETS_ENGINE = None
+GLOBAL_VARIABLES = {}
 
 
-def make_kotlin_comment(pure_comment):
-    nl = '\n * '
-    if not pure_comment:
-        return ""
-    return f"""/**{nl.join(pure_comment)}
- */"""
+def load_snipppets_engine(path, main_target):
+    global SNIPPETS_ENGINE
+    SNIPPETS_ENGINE = SnippetsEngine(path, main_target)
+    SNIPPETS_ENGINE.load()
 
 
 def gen_init(config, *args, **kwargs):
+    global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
+    def make_context(config):
+        # helper variables
+        cxx_helpers_dir = config.cxx_helpers_dir
+        if not os.path.isabs(cxx_helpers_dir):
+            if not os.path.isdir(cxx_helpers_dir):
+                cxx_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, cxx_helpers_dir))
+        helpers_dir = config.helpers_dir
+        if not os.path.isabs(helpers_dir):
+            if not os.path.isdir(helpers_dir):
+                helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, helpers_dir))
+        return locals()
 
-    load_from_paths(lambda path: convert.load_snipppets_engine(path, 'kotlin'),
+    context = make_context(config)
+
+    load_from_paths(lambda path: load_snipppets_engine(path, 'kotlin'),
                     config.snippets, DEFAULT_DIRS)
 
-    # handle cxx helper files
-    prj_rel = os.path.relpath(config.cxx_out_dir, config.out_prj_dir)
-    cxx_helpers_dir = config.cxx_helpers_dir
-    if not os.path.isabs(cxx_helpers_dir):
-        if not os.path.isdir(cxx_helpers_dir):
-            cxx_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, cxx_helpers_dir))
-    cxx_helpers_files = os.path.join(cxx_helpers_dir, '**/*.h*')
-    for file_name in glob.glob(cxx_helpers_files, recursive=True):
-        logging.info(f"Using helper file {file_name}")
-        file_rel_name = os.path.relpath(file_name, cxx_helpers_dir)
-        incude_name = os.path.join(prj_rel, file_rel_name)
-        logging.info(f"Helper include name {incude_name}")
-        convert.CXX_INCLUDE_NAMES.append(incude_name)
-        target_file = os.path.join(config.cxx_out_dir, file_rel_name)
-        os.makedirs(os.path.dirname(target_file), exist_ok=True)
-        shutil.copyfile(file_name, target_file)
-
-    # now handle kotlin helper files
-    prj_rel = os.path.relpath(config.out_dir, config.out_prj_dir)
-    kotlin_helpers_dir = config.kotlin_helpers_dir
-    if not os.path.isabs(kotlin_helpers_dir):
-        if not os.path.isdir(kotlin_helpers_dir):
-            kotlin_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, kotlin_helpers_dir))
-    kotlin_helpers_files = os.path.join(kotlin_helpers_dir, '**/*.kt')
-    java_helpers_files = os.path.join(kotlin_helpers_dir, '**/*.java')
-    for file_name in glob.glob(java_helpers_files, recursive=True) +\
-            glob.glob(kotlin_helpers_files, recursive=True):
-        logging.info(f"Using helper file {file_name}")
-        file_rel_name = os.path.relpath(file_name, kotlin_helpers_dir)
-        import_name = os.path.splitext(file_rel_name)[0].replace(os.sep, '.')
-        logging.info(f"Helper import name {import_name}")
-        convert.KOTLIN_IMPORTS.append(import_name)
-        target_file = os.path.join(config.out_dir, file_rel_name)
-        os.makedirs(os.path.dirname(target_file), exist_ok=True)
-        shutil.copyfile(file_name, target_file)
+    GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 
 
 def make_def_context(ctx):
@@ -71,15 +52,16 @@ def make_def_context(ctx):
         pat_sep = os.sep
 
         name = ctx.name
+        cxx_name = ctx.cursor.spelling
 
         includes = ctx.include
         prj_rel_file_name = ctx.prj_rel_file_name
-        helper_includes = convert.KOTLIN_IMPORTS
-        comment = make_kotlin_comment(ctx.node.pure_comment)
+        comment = convert.make_comment(ctx.node.pure_comment)
 
         return locals()
 
     context = make()
+    context.update(GLOBAL_VARIABLES)
     return context
 
 
@@ -88,7 +70,7 @@ def make_func_context(ctx):
         # helper variables
         args = [
             types.SimpleNamespace(
-                converter=convert.build_type_converter(ctx, arg.type),
+                converter=SNIPPETS_ENGINE.build_type_converter(ctx, arg.type),
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
@@ -97,7 +79,7 @@ def make_func_context(ctx):
         ]
 
         if hasattr(ctx, 'result_type'):
-            rconverter = convert.build_type_converter(ctx, ctx.result_type)
+            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type)
 
         overloading_prefix = ctx.overloading_prefix
         get_jni_name = partial(convert.get_jni_func_name,
@@ -128,7 +110,7 @@ def preprocess_scope(context, scope, info):
 
 
 def preprocess_entry(context, builder, code_name):
-    code_info = convert.get_code_info(code_name)
+    code_info = SNIPPETS_ENGINE.get_code_info(code_name)
     for fs, info in code_info.items():
         fscope_name, scope_name = fs
         file_scope = get_file(context, builder, fscope_name)
@@ -137,7 +119,7 @@ def preprocess_entry(context, builder, code_name):
 
 
 def get_file(context, builder, fscope_name):
-    file_info = convert.get_file_info(fscope_name)
+    file_info = SNIPPETS_ENGINE.get_file_info(fscope_name)
     file_name = file_info.get_file_name(context)
 
     return builder.get_file(file_name, init_func=lambda s: preprocess_scope(context, s, file_info))
@@ -164,7 +146,7 @@ def gen_class(ctx, builder):
             # helper variables
             is_open = not cutil.is_final_cursor(ctx.cursor)
             if ctx.base_types:
-                base_type = convert.build_type_converter(
+                base_type = SNIPPETS_ENGINE.build_type_converter(
                     ctx, ctx.base_types[0]
                 )
             return locals()

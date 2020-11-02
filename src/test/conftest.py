@@ -22,13 +22,21 @@ def local_setup():
     pass
 
 
+def get_parser_config(config):
+    """
+    Fixture returns ieg parser config for test.
+    """
+    return config.languages['kotlin']
+
+
 @pytest.fixture(scope="session")
 def config():
     """
     Fixture returns ieg config for test.
     """
     cnfg = copy.deepcopy(default_config)
-    cnfg.parser.source_dir = TEST_CXX_DIR
+    get_parser_config(cnfg).source_dir = TEST_CXX_DIR
+    get_parser_config(cnfg).src_glob = '*.h'
 
     return cnfg
 
@@ -38,7 +46,7 @@ def parser_config(config):
     """
     Fixture returns ieg parser config for test.
     """
-    return config.parser
+    return get_parser_config(config)
 
 
 @pytest.fixture(scope="session")

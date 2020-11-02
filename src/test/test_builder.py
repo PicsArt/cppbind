@@ -9,17 +9,19 @@ from iegen.parser.ieg_parser import CXXParser
 def test_builder(out_dir):
     builder = Builder()
 
+    builder.add_scope_stack()
+
     file_scope = builder.get_file("test_file", os.path.join(out_dir, "test.txt"))
 
     file_scope.add("class a {", Scope(name="class_body", tab=1), "}")
 
-    builder.get_scope("class_body").add("testing text")
+    file_scope.get_scope("class_body").add("testing text")
 
-    class_scope = builder.get_scope("class_body")
+    class_scope = file_scope.get_scope("class_body")
     class_scope.add("#adding more start")
     class_scope.add(None, Scope(name="new_method"))
 
-    builder.get_scope("new_method").add("function a", Scope("return something", tab=1))
+    file_scope.get_scope("new_method").add("function a", Scope("return something", tab=1))
     result = str(file_scope)
     print(f"output=\n{result}")
     assert hashlib.md5(result.encode()).hexdigest() == '0179f22c51279fdc282a779455aa8a1f',\

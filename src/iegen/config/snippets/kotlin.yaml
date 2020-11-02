@@ -1,3 +1,32 @@
+
+init:
+  actions:
+    - file:
+        files_glob: 
+          "{{[cxx_helpers_dir, '**/*.h*'] | path_join}}"
+        copy_to: |
+          {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
+          {{path.join(config.cxx_out_dir, file_rel_name)}}
+
+        variables:
+          cxx_helper_includes: |
+            {%- set prj_rel = path.relpath(config.cxx_out_dir, config.out_prj_dir) -%}
+            {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
+            {{[prj_rel, file_rel_name]| path_join}}
+
+    - file:
+        files_glob: 
+          - "{{[helpers_dir, '**/*.kt'] | path_join}}"
+          - "{{[helpers_dir, '**/*.java'] | path_join}}"
+        copy_to: |
+          {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
+          {{path.join(config.out_dir, file_rel_name)}}
+
+        variables:
+          helper_includes: |
+            {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
+            {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
+
 codes:
 
   file:
@@ -17,12 +46,13 @@ codes:
         {{body}}
     cxx:
       file_path: |
-        {{[config.out_dir, file]|path_join}}.cpp
+        {{[config.cxx_out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
       scopes: 
         - body
         - include
       content: |
-        {{helper_includes|format_list('#include "{}"')|join('\n')}}
+        #include "jni.h"
+        {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
         {{include}}
 
         {{body}}
@@ -87,12 +117,12 @@ codes:
         private external fun jConstructor{{overloading_prefix}}({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join(', ')}}): Long
     cxx:
       body: |
-        extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}({{args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg')|join(', ')}}){
+        extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           return jni::handleNativeCrash(env, [&] {
                 {%- set call_args = [] -%}
                 {%- for arg in args -%}
                 {% set converter = arg.converter.jni_to_cxx %}
-                {{converter.snippet(arg.name)|indent}}
+                {{converter.snippet(arg.name)|indent(8)}}
                 {%- do call_args.append(converter.converted_name(arg.name)) -%}
                 {% endfor %}
                 auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
@@ -126,19 +156,19 @@ codes:
             return jni::handleNativeCrash(env, [&] {
                 validateID(id);
                 auto this_object = RefFromLong<{{cxx_type_name}}>(id);
-                {% set call_args = [] %}
-                {% for arg in args %}
-                {% set converter = arg.converter.jni_to_cxx %}
-                {{converter.snippet(arg.name)|indent}}
-                {% do call_args.append(converter.converted_name(arg.name))%}
+                {%- set call_args = [] %}
+                {%- for arg in args %}
+                {%- set converter = arg.converter.jni_to_cxx %}
+                {{converter.snippet(arg.name)|indent(8)}}
+                {%- do call_args.append(converter.converted_name(arg.name))%}
                 {% endfor %}
-                {% if rconverter.jni.target_type_name != 'void' %}
-                auto result = this_object->{{name}}({{call_args|join(', ')}});
-                {{rconverter.cxx_to_jni.snippet('result')|indent}}
-                return {{rconverter.cxx_to_jni.converted_name('result')}}
-                {% else %}
-                this_object->{{name}}({{call_args|join(', ')}});
-                {% endif %}
+                {%- if rconverter.jni.target_type_name != 'void' %}
+                auto result = this_object->{{cxx_name}}({{call_args|join(', ')}});
+                {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
+                return {{rconverter.cxx_to_jni.converted_name('result')}};
+                {%- else %}
+                this_object->{{cxx_name}}({{call_args|join(', ')}});
+                {%- endif %}
                 }
           );
         }
@@ -151,13 +181,13 @@ codes:
         {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
               get() {
                 val result = j{{name|capitalize}}(id)
-                {{result_converter.snippet('result')|indent}}
+                {{result_converter.snippet('result')|indent(8)}}
                 return {{result_converter.converted_name('result')}}
               }
               {% if setter_ctx is defined %}
               {% set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
               set(value) {
-                {{converter.snippet('value')|indent}}
+                {{converter.snippet('value')|indent(8)}}
                 j{{setter_ctx.name|capitalize}}(id, {{converter.converted_name('value')}})
 
               }
@@ -175,24 +205,24 @@ codes:
             return jni::handleNativeCrash(env, [&] {
                 validateID(id);
                 auto this_object = RefFromLong<{{cxx_type_name}}>(id);
-                auto result = this_object->{{name}}();
-                {{rconverter.cxx_to_jni.snippet('result')|indent}}
-                return {{rconverter.cxx_to_jni.converted_name('result')}}
+                auto result = this_object->{{cxx_name}}();
+                {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
+                return {{rconverter.cxx_to_jni.converted_name('result')}};
                 }
             );
         }
         {% if setter_ctx is defined %}
-          {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
-          extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}"){
-              return jni::handleNativeCrash(env, [&] {
-                  validateID(id);
-                  auto this_object = RefFromLong<{{cxx_type_name}}>(id);
-                  {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
-                  {{converter.snippet(setter_ctx.args[0].name)|indent}}
-                  this_object->{{name}}(converter.converted_name(setter_ctx.args[0].name));
-                  }
-              );
-          }
+        {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
+        extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
+            return jni::handleNativeCrash(env, [&] {
+                validateID(id);
+                auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+                {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
+                {{converter.snippet(setter_ctx.args[0].name)|indent(8)}}
+                this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+                }
+            );
+        }
         {% endif %}
 
 
@@ -298,8 +328,8 @@ types:
     jdk:
       type_info: Long
     jni_to_cxx: |
-      {% set dereferencer = '*' if is_pointer else '' %}
-      {% set pointee = target_pointee_unqualified_name %}
+      {%- set dereferencer = '*' if is_pointer else '' %}
+      {%- set pointee = target_pointee_unqualified_name %}
       {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>(id);
     cxx_to_jni: |
       {{target_type_name}} {{target_name}} = UnsafeRefAsLong({{name}});
@@ -353,8 +383,8 @@ types:
     jdk:
       type_info: "{{args_t[0]}}Array"
     jni_to_cxx: |
-          {% set tmp_name = '_' + target_name %}
-          {% set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
+          {%- set tmp_name = '_' + target_name %}
+          {%- set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
 
           {{target_type_name}} {{target_name}};
 
@@ -366,8 +396,8 @@ types:
           }
 
     cxx_to_jni: |
-          {% set jni_type_prefix = args[0].custom.pname %}
-          {% set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
+          {%- set jni_type_prefix = args[0].custom.pname %}
+          {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
 
           {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
 
@@ -403,11 +433,11 @@ types:
     jdk:
       type_info: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
     jni_to_cxx: |
-            {% set tmp_name = '_' + target_name %}
-            {% set tmp_key_name = 'tmp_key_' + target_name %}
-            {% set tmp_val_name = 'tmp_val_' + target_name %}
-            {% set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
-            {% set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
+            {%- set tmp_name = '_' + target_name %}
+            {%- set tmp_key_name = 'tmp_key_' + target_name %}
+            {%- set tmp_val_name = 'tmp_val_' + target_name %}
+            {%- set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
+            {%- set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
             {{target_type_name}} {{target_name}};
             auto {{tmp_name}} = extract_jni_pair(env, {{name}});
             auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
@@ -421,8 +451,8 @@ types:
             }
 
     cxx_to_jni: |
-            {% set key_name = 'tmp_key_' + target_name %}
-            {% set val_name = 'tmp_val_' + target_name %}
+            {%- set key_name = 'tmp_key_' + target_name %}
+            {%- set val_name = 'tmp_val_' + target_name %}
             {{args[0].target_type_name}} {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
             {{args[1].target_type_name}} {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size());
             size_t index = 0;
@@ -438,10 +468,10 @@ types:
             {{target_type_name}} {{target_name}} pair = make_jni_pair(env, {{key_name}}, {{val_name}});
 
     kotlin_to_jdk: |
-            {% set tmp_key_name = 'tmp_key_' + target_name %}
-            {% set tmp_val_name = 'tmp_val_' + target_name %}
-            {% set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-            {% set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
+            {%- set tmp_key_name = 'tmp_key_' + target_name %}
+            {%- set tmp_val_name = 'tmp_val_' + target_name %}
+            {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
+            {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
             val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size){{karray_init}}
             val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size){{varray_init}}
             val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})

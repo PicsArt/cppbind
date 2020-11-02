@@ -1,6 +1,9 @@
 import types
 import os
+import glob
 import yaml
+import shutil
+import copy
 from jinja2 import Environment, BaseLoader, StrictUndefined
 # from iegen import logging as logging
 import clang.cindex as cli
@@ -11,6 +14,8 @@ OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
 TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
+INIT_SECTION = 'init'
+ACTIONS_SECTION = 'actions'
 
 
 class Snippet:
@@ -21,6 +26,56 @@ class Snippet:
 
     def __str__(self):
         return self.template.render(self.context)
+
+
+class Action:
+
+    def __init__(self, kind_name):
+        self.kind_name = kind_name
+
+    def do(self, context):
+        return {}
+
+
+class FileAction(Action):
+
+    def __init__(self, glob_tmpls, copy_to_tmpl, variables_tmpl):
+        super().__init__('file_action')
+        self.glob_tmpls = glob_tmpls
+        self.copy_to_tmpl = copy_to_tmpl
+        self.variables_tmpl = variables_tmpl
+
+    def do(self, ctx):
+        variables = {name:[] for name in self.variables_tmpl}
+        globs = [tmpl.render(ctx) for tmpl in self.glob_tmpls]
+        def _make_context(ctx):
+            def make():
+                # helper variables
+                path = os.path
+                pat_sep = os.sep
+                file_name = None
+                return locals()
+
+            context = copy.copy(ctx)
+            context.update(make())
+            return context
+
+        context = _make_context(ctx)
+        for file_name in [fl for gl in globs for fl in glob.glob(gl, recursive=True)]:
+
+            context['file_name'] = file_name
+            # take copy action
+            if self.copy_to_tmpl:
+                target_file = self.copy_to_tmpl.render(context)
+                os.makedirs(os.path.dirname(target_file), exist_ok=True)
+                shutil.copyfile(file_name, target_file)
+
+            # update variables
+            for var_name, tmpl in self.variables_tmpl.items():
+                variables[var_name].append(tmpl.render(context))
+
+
+        return variables
 
 
 class Converter:
@@ -192,6 +247,7 @@ class SnippetsEngine:
         self.type_infos = {}
         self.file_infos = {}
         self.code_infos = {}
+        self.action_infos = []
         self._init_jinja_env()
 
     def load(self):
@@ -200,8 +256,16 @@ class SnippetsEngine:
         with open(self.path) as f:
             dataMap = yaml.safe_load(f)
 
+        self._load_actions(dataMap[INIT_SECTION][ACTIONS_SECTION])
         self._load_code_info(dataMap[CODE_SECTION])
         self._load_type_info(dataMap[TYPE_SECTION])
+
+    def do_actions(self, context):
+        variables = {}
+        for act in self.action_infos:
+            vars_ = act.do(context)
+            variables.update(vars_)
+        return variables
 
     def build_type_converter(self, ctx, clang_type):
 
@@ -221,6 +285,38 @@ class SnippetsEngine:
 
     def get_file_info(self, file_name):
         return self.file_infos[file_name]
+
+    def _load_actions(self, actionsInfo):
+        def handle_file_action(infoDict):
+            glob_tmpls = infoDict['files_glob']
+            if not isinstance(glob_tmpls, list):
+                glob_tmpls = [glob_tmpls]
+            glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in glob_tmpls]
+
+            copy_to_tmpl = infoDict.get('copy_to', None)
+            copy_to_tmpl = copy_to_tmpl and self.jinja2_env.from_string(copy_to_tmpl)
+
+            variables = infoDict.get('variables', {})
+            variables_tmpl = {}
+            for var_name, var_tmpl in variables.items():
+                var_tmpl = self.jinja2_env.from_string(var_tmpl)
+                variables_tmpl[var_name] = var_tmpl
+
+            self.action_infos.append(FileAction(glob_tmpls, copy_to_tmpl, variables_tmpl))
+
+        def handle_default(infoDict):
+            raise Exception("undefined actions.")
+
+        actions_map = {
+            'file': handle_file_action
+        }
+        # load into structures
+        for action_info in actionsInfo:
+            for action_name, action_data in action_info.items():
+                try:
+                    actions_map.get(action_name, handle_default)(action_data)
+                except Exception as e:
+                    raise Exception(f"Error in action {action_name}. Error {str(e)}")
 
     def _load_code_info(self, codeInfoDict):
         # load into structures

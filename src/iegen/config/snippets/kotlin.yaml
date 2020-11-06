@@ -84,11 +84,15 @@ codes:
           - head
           - properties
           - body
+          - companion
           - private_external
         content: |
           {{comment}}
           {{'open ' if is_open}}class {{name}}
             internal constructor(id: Long): {{base_type.kotlin.target_type_name if base_type is defined else "RNativeObject"}}(id){
+              companion object {
+                  {{companion|string|indent(8)}}
+              } 
               {{head|string|indent}}
               {{properties|string|indent}}
               {{body|string|indent}}
@@ -104,16 +108,21 @@ codes:
     kotlin:
       head: |
         {{comment}}
-        constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(0) {
+        constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(construct_helper({{args|join(', ', attribute='name')}})) {
+        }
+      companion: |
+        {{comment}}
+        protected fun construct_helper({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): Long {
             {%- set call_args = [] %}
             {% for arg in args -%}
             {%- set converter = arg.converter.kotlin_to_jdk -%}
             {{converter.snippet(arg.name)|indent}}
             {%- do call_args.append(converter.converted_name(arg.name)) %}
             {% endfor %}
-            this.id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
+            val id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
+            return id
         }
-      private_external: |
+        @JvmStatic
         private external fun jConstructor{{overloading_prefix}}({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join(', ')}}): Long
     cxx:
       body: |
@@ -134,43 +143,80 @@ codes:
   function:
     kotlin:
       body: |
+        {%- if not is_static %}
         {{comment}}
         {{'open ' if is_open}}{{'override ' if is_override}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
-            {% set call_args = ['id'] %}
-            {% set result_converter = rconverter.jdk_to_kotlin %}
-            {% for arg in args %}
-            {% set converter = arg.converter.kotlin_to_jdk %}
+            {%- set call_args = ['id'] %}
+            {%- set result_converter = rconverter.jdk_to_kotlin %}
+            {% for arg in args -%}
+            {%- set converter = arg.converter.kotlin_to_jdk %}
             {{converter.snippet(arg.name)|indent}}
-            {% do call_args.append(converter.converted_name(arg.name)) %}
-            {% endfor %}
+            {%- do call_args.append(converter.converted_name(arg.name)) %}
+            {%- endfor %}
             val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
             {{result_converter.snippet('result')|indent}}
             return {{result_converter.converted_name('result')}}
         }
+        {% endif %}
+      companion: |
+        {%- if is_static %}
+        {{comment}}
+        fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+            {%- set call_args = [] %}
+            {%- set result_converter = rconverter.jdk_to_kotlin %}
+            {% for arg in args -%}
+            {%- set converter = arg.converter.kotlin_to_jdk %}
+            {{converter.snippet(arg.name)|indent}}
+            {%- do call_args.append(converter.converted_name(arg.name)) %}
+            {%- endfor %}
+            val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+            {{result_converter.snippet('result')|indent}}
+            return {{result_converter.converted_name('result')}}
+        }
+        {%- set jdk_args=args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') %}
+        @JvmStatic
+        private external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
+        {% endif %}
       private_external: |
-        private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{args|format_list(", {arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join}}): {{rconverter.jdk.target_type_name}}
+        {%- if not is_static -%}
+        {%- set jdk_args=["id: Long"] + args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') -%}
+        private external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
+        {%- endif %}
     cxx:
       body: |
         {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
-        extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
+        {%- set objid_args=["jobjectid id"]if not is_static else [] -%} 
+        {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args 
+          + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
+        {%- macro args_snippet(args, call_args) %}
+        {%- for arg in args -%}
+        {%- set converter = arg.converter.jni_to_cxx %}
+        {{converter.snippet(arg.name)}}
+        {%- do call_args.append(converter.converted_name(arg.name))%}
+        {% endfor %}
+        {%- endmacro %}
+        {% macro call_code(prefix, call_args) -%}
+        {%- if rconverter.jni.target_type_name != 'void' %}
+        auto result = {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
+        {{rconverter.cxx_to_jni.snippet('result')}}
+        return {{rconverter.cxx_to_jni.converted_name('result')}};
+        {%- else %}
+        this_object->{{cxx_name}}({{call_args|join(', ')}});
+        {%- endif %}
+        {%- endmacro %}
+        extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}({{jni_args|join(', ')}}){
             return jni::handleNativeCrash(env, [&] {
+                {%- set call_args = [] %}
+                {{args_snippet(args, call_args)|indent(8)}}
+                {%- if not is_static %}
                 validateID(id);
                 auto this_object = RefFromLong<{{cxx_type_name}}>(id);
-                {%- set call_args = [] %}
-                {%- for arg in args %}
-                {%- set converter = arg.converter.jni_to_cxx %}
-                {{converter.snippet(arg.name)|indent(8)}}
-                {%- do call_args.append(converter.converted_name(arg.name))%}
-                {% endfor %}
-                {%- if rconverter.jni.target_type_name != 'void' %}
-                auto result = this_object->{{cxx_name}}({{call_args|join(', ')}});
-                {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
-                return {{rconverter.cxx_to_jni.converted_name('result')}};
+                {{call_code("this_object->", call_args)|indent(8)}}
                 {%- else %}
-                this_object->{{cxx_name}}({{call_args|join(', ')}});
+                {{call_code(cxx_type_name + "::", call_args)|indent(8)}}
                 {%- endif %}
-                }
-          );
+              }
+            );
         }
 
   getter:
@@ -195,12 +241,12 @@ codes:
       private_external: |
         private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
 
-        {% if setter_ctx is defined %}
+        {%- if setter_ctx is defined %}
         private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
-        {% endif %}
+        {%- endif %}
     cxx:
       body: |
-        {% set func_name="j%s"|format(name|capitalize) %}
+        {%- set func_name="j%s"|format(name|capitalize) %}
         extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id){
             return jni::handleNativeCrash(env, [&] {
                 validateID(id);
@@ -211,7 +257,7 @@ codes:
                 }
             );
         }
-        {% if setter_ctx is defined %}
+        {%- if setter_ctx is defined %}
         {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
         extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
             return jni::handleNativeCrash(env, [&] {
@@ -328,9 +374,9 @@ types:
     jdk:
       type_info: Long
     jni_to_cxx: |
-      {%- set dereferencer = '*' if is_pointer else '' %}
+      {%- set dereferencer = '*' if not is_pointer else '' %}
       {%- set pointee = target_pointee_unqualified_name %}
-      {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>(id);
+      {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>({{name}});
     cxx_to_jni: |
       {{target_type_name}} {{target_name}} = UnsafeRefAsLong({{name}});
     kotlin_to_jdk:
@@ -438,7 +484,7 @@ types:
             {%- set tmp_val_name = 'tmp_val_' + target_name %}
             {%- set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
             {%- set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
-            {{target_type_name}} {{target_name}};
+            {{target_pointee_unqualified_name}} {{target_name}};
             auto {{tmp_name}} = extract_jni_pair(env, {{name}});
             auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
             auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);

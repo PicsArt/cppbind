@@ -113,13 +113,13 @@ class Converter:
             if self.ctx:
                 type_name = self.ctx.name
 
-            cxx_type_name = self.target_clang_type.spelling
             clang_type = self.target_clang_type
+            cxx_type_name = self.target_clang_type.spelling
             target_pointee = cutil.get_pointee_type(self.target_clang_type)
             target_pointee_name = target_pointee.spelling
             is_pointer = target_pointee != self.target_clang_type
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
-                cutil.get_pointee_type(self.target_clang_type)
+                target_pointee
             )
 
             # helper name spaces
@@ -400,7 +400,7 @@ class SnippetsEngine:
                     # converter
                     index = name.rfind('_to_')
                     target_lang = name[index+4:]
-                    target_lang_info = info_map.get(target_lang, {'type_info': '{{target_pointee_unqualified_name}}'})
+                    target_lang_info = info_map.get(target_lang, {'type_info': '{{cxx_type_name}}'})
                     try:
                         target_type_info = self.jinja2_env.from_string(target_lang_info['type_info'])
                         snippet_tmpl = info and self.jinja2_env.from_string(info)

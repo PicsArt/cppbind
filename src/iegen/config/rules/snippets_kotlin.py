@@ -89,6 +89,9 @@ def make_func_context(ctx):
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
+            is_override = bool(ctx.cursor.get_overriden_cursors())
+            is_static = bool(ctx.cursor.is_static_method())
+            is_virtual = bool(ctx.cursor.is_virtual_method())
         is_open = not cutil.is_final_cursor(ctx.cursor)
 
         return locals()

@@ -1,7 +1,5 @@
 import os
 import types
-import shutil
-import glob
 import copy
 from functools import partial
 import iegen.utils.clang as cutil
@@ -23,6 +21,7 @@ def load_snipppets_engine(path, main_target):
 def gen_init(config, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
+
     def make_context(config):
         # helper variables
         cxx_helpers_dir = config.cxx_helpers_dir
@@ -89,10 +88,13 @@ def make_func_context(ctx):
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
-            is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_open = not cutil.is_final_cursor(ctx.cursor)
+        is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
+        is_protected = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PROTECTED
+        is_private = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PRIVATE
+        access_specifier = ctx.cursor.access_specifier.name.lower()
 
         return locals()
 

@@ -1,13 +1,13 @@
 import types
 import os
 import glob
-import yaml
 import shutil
 import copy
 from jinja2 import Environment, BaseLoader, StrictUndefined
 # from iegen import logging as logging
 import clang.cindex as cli
 import iegen.utils.clang as cutil
+from iegen.common.yaml_process import load_yaml
 
 
 OBJECT_INFO_TYPE = '$Object'
@@ -46,8 +46,9 @@ class FileAction(Action):
         self.variables_tmpl = variables_tmpl
 
     def do(self, ctx):
-        variables = {name:[] for name in self.variables_tmpl}
+        variables = {name: [] for name in self.variables_tmpl}
         globs = [tmpl.render(ctx) for tmpl in self.glob_tmpls]
+
         def _make_context(ctx):
             def make():
                 # helper variables
@@ -73,7 +74,6 @@ class FileAction(Action):
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():
                 variables[var_name].append(tmpl.render(context))
-
 
         return variables
 
@@ -252,9 +252,7 @@ class SnippetsEngine:
 
     def load(self):
 
-        dataMap = {}
-        with open(self.path) as f:
-            dataMap = yaml.safe_load(f)
+        dataMap = load_yaml(self.path)
 
         self._load_actions(dataMap[INIT_SECTION][ACTIONS_SECTION])
         self._load_code_info(dataMap[CODE_SECTION])

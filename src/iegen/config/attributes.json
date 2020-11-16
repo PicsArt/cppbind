@@ -40,7 +40,7 @@
     },
     "shared_ref":
     {
-        "inheritable": false,
+        "inheritable": true,
         "default": false,
         "allowed_on": ["class", "struct"]
     }

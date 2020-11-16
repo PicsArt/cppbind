@@ -119,6 +119,23 @@ class Context(object):
         ]
 
     @property
+    def ancestors(self):
+
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+            raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
+
+        def walk(base_types):
+            for base in base_types:
+                base = self.find_by_type(base.spelling)
+                yield base
+                for base in walk(base.base_types):
+                    yield base
+
+        _ancestors = [b for b in walk(self.base_types)]
+
+        return _ancestors
+
+    @property
     def base_types_specifier_cursor(self):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
@@ -160,6 +177,12 @@ class Context(object):
         if not hasattr(self, '_prj_rel_file_name'):
             self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.runner.config.out_prj_dir)
         return self._prj_rel_file_name
+
+    @property
+    def api_args(self):
+        if not hasattr(self, '_api_args'):
+            self._api_args = {name: values[self.runner.language] for name, values in self.node.args.items()}
+        return self._api_args
 
     def find_by_type(self, search_type):
         return self.runner.get_context(search_type)

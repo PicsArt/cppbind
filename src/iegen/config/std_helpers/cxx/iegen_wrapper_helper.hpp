@@ -4,106 +4,122 @@
 #include "jni.h"
 #include<utility>
 #include<string>
+#include <vector>
+#include <type_traits>
+#include <memory>
+
 
 typedef jlong jobjectid;
 typedef jobject jmapobject;
 typedef jlongArray jobjectidArray;
 
-inline std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p) {
-    jclass pairClass = env->FindClass("kotlin/Pair");
-    jfieldID first = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID second = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
 
-    return std::make_pair(env->GetObjectField(p, first), env->GetObjectField(p, second));
+#define validateID(id) //DCHECK(id != 0, "ID can not be 0")
+
+namespace iegen{
+
+template <typename T>
+struct remove_cvref {
+    typedef std::remove_cv_t<std::remove_reference_t<T>> type;
+};
+
+template <typename T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+template <typename T>
+using strip_t = std::remove_pointer_t<remove_cvref_t<T>>;
+
+template <typename T>
+constexpr void IsTypeValidForJNI() {
+    //static_assert(std::is_convertible_v<strip_t<T>*, pi::Object*>);
 }
 
 
-inline jobject make_jni_pair(JNIEnv *env, jobject first, jobject second) {
-    // Get the pair class that we wish to return an instance of
-    jclass pairClass = env->FindClass("android/util/Pair");
+template<typename T, typename... Args>
+inline std::shared_ptr<T> allocateRef(Args&&... args) {
+    auto obj = new T(std::forward<Args>(args)...);
+    return std::shared_ptr<T>(obj);
+}
 
-    // Get the method id of an empty constructor in class
-    jmethodID constructor = env->GetMethodID(pairClass, "<init>", "()V");
 
-    // Create an instance of class
-    jobject obj = env->NewObject(pairClass, constructor);
+template<typename T>
+inline void deleteRef(jlong id) {
+    validateID(id);
+    auto obj = reinterpret_cast<std::shared_ptr<T>*>(id);
+    delete obj;
+}
 
-    // Get Field references
-    jfieldID first_field = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID second_field = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
 
-    // Set fields for object
-    env->SetObjectField(obj, first_field, first);
-    env->SetObjectField(obj, second_field, second);
+template <typename T>
+inline jlong AllocRefPtrAsLong(const std::shared_ptr<T>& ref) {
+    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
+}
+
+template <typename T>
+inline jlong AllocRefPtrAsLong(T* ref) {
+    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
+}
+
+template <typename T>
+inline std::shared_ptr<T> RefFromLong(jlong id) {
+    IsTypeValidForJNI<T>();
+    validateID(id);
+    auto obj = *reinterpret_cast<std::shared_ptr<T>*>(id);
     return obj;
 }
 
-
-inline std::string jni_to_string(JNIEnv* env, jobject jobj) {
-    jstring jStr = (jstring)jobj;
-    auto cstr = env->GetStringUTFChars(jStr, 0);
-    std::string str = cstr;
-    env->ReleaseStringUTFChars(jStr, cstr);
-    return str;
-}
-
-
-inline jstring string_to_jni(JNIEnv* env, const std::string& str) {
-    return env->NewStringUTF(str.c_str());
-}
-
-inline std::vector<std::string> getStringVector(JNIEnv* env, jobjectArray stringArray) {
-    int len = env->GetArrayLength(stringArray);
-    std::vector<std::string> ret(len);
-    for (int i = 0; i < len; ++i) {
-        jstring ref = static_cast<jstring>(env->GetObjectArrayElement(stringArray, i));
-        ret[i] = jni_to_string(env, ref);
+template <typename T>
+inline std::shared_ptr<T> NullableRefFromLong(jlong id) {
+    IsTypeValidForJNI<T>();
+    if (id == 0) {
+        return std::shared_ptr<T>{};
     }
-    return ret;
+    return RefFromLong<T>(id);
 }
 
-inline std::vector<jobject> getObjectArray(JNIEnv* env, jobject obj) {
-    jobjectArray objArray = (jobjectArray)obj;
-    int len = env->GetArrayLength(objArray);
-    std::vector<jobject> ret(len);
-    for (int i = 0; i < len; ++i) {
-        jobject ref = env->GetObjectArrayElement(objArray, i);
-        ret[i] = ref;
-    }
-    return ret;
+template<typename T>
+inline jlong UnsafeRefAsLong(T* unsafe) {
+    IsTypeValidForJNI<T>();
+    //DCHECK_NE(unsafe, nullptr);
+    return reinterpret_cast<jlong>(unsafe);
 }
 
-inline std::vector<jlong> getLongArray(JNIEnv* env, jobject obj) {
-    jlongArray jlongArray1 = (jlongArray)obj;
-    int len = env->GetArrayLength(jlongArray1);
-    std::vector<jlong> ret;
-    ret.reserve(len);
-    jlong* arr = env->GetLongArrayElements(jlongArray1, nullptr);
-    std::copy(arr, arr + len, std::back_inserter(ret));
-    env->ReleaseLongArrayElements(jlongArray1, arr, 0);
-    return ret;
+template<typename T>
+inline T* NullableUnsafeRefFromLong(jlong id) {
+    IsTypeValidForJNI<T>();
+    T* obj = reinterpret_cast<T*>(id);
+    return obj;
 }
 
-inline std::vector<jint> getIntArray(JNIEnv* env, jobject obj) {
-    jintArray jintArray1 = (jintArray)obj;
-    int len = env->GetArrayLength(jintArray1);
-    std::vector<jint> ret;
-    ret.reserve(len);
-    jint* arr = env->GetIntArrayElements(jintArray1, nullptr);
-    std::copy(arr, arr + len, std::back_inserter(ret));
-    env->ReleaseIntArrayElements(jintArray1, arr, 0);
-    return ret;
+template<typename T>
+inline T* UnsafeRefFromLong(jlong id) {
+    IsTypeValidForJNI<T>();
+    validateID(id);
+    return NullableUnsafeRefFromLong<T>(id);
 }
 
-inline std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
-    jfloatArray jfloatArray1 = (jfloatArray)obj;
-    int len = env->GetArrayLength(jfloatArray1);
-    std::vector<jfloat> ret;
-    ret.reserve(len);
-    jfloat* arr = env->GetFloatArrayElements(jfloatArray1, nullptr);
-    std::copy(arr, arr + len, std::back_inserter(ret));
-    env->ReleaseFloatArrayElements(jfloatArray1, arr, 0);
-    return ret;
+template <class Callable>
+auto handleNativeCrash(JNIEnv* env, Callable f) -> decltype(f()) {
+        return f();
 }
 
+std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p);
+
+jobject make_jni_pair(JNIEnv *env, jobject first, jobject second);
+
+std::string jni_to_string(JNIEnv* env, jobject jobj);
+
+jstring string_to_jni(JNIEnv* env, const std::string& str);
+
+std::vector<std::string> getStringVector(JNIEnv* env, jobjectArray stringArray);
+
+std::vector<jobject> getObjectArray(JNIEnv* env, jobject obj);
+
+std::vector<jlong> getLongArray(JNIEnv* env, jobject obj);
+
+std::vector<jint> getIntArray(JNIEnv* env, jobject obj);
+
+std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj);
+
+} // end of iegenn
 #endif //__WRAPPER_HELPER_HPP__

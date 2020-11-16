@@ -36,9 +36,9 @@ class Scope(object):
         Adds text or scope to corresponding partition
         """
         if add_front:
-            self.parts = list(parts) + self.parts
+            self.parts = [p for p in parts if p] + self.parts
         else:
-            self.parts = self.parts + list(parts)
+            self.parts = self.parts + [p for p in parts if p]
 
         # register scopes
         self._register_scopes(*parts)

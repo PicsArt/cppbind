@@ -47,7 +47,7 @@ class:
   kotlin: 
     include: 
       unique_content: |
-        {{includes|format_list("import {}")|join('\n')}}
+        {{include|format_list("import {}")|join('\n')}}
     body:
       scopes: 
         - head
@@ -58,7 +58,7 @@ class:
       content: |
         {{comment}}
         {{'open ' if is_open}}class {{name}}
-          internal constructor(id: Long): {{base_type.kotlin.target_type_name if base_type is defined else "RNativeObject"}}(id){
+          internal constructor(id: Long): {{base_type_converter.kotlin.target_type_name if base_type_converter is defined else "RNativeObject"}}(id){
             companion object {
                 {{companion|string|indent(8)}}
             } 
@@ -96,15 +96,21 @@ constructor:
   cxx:
     body: |
       extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
-        return jni::handleNativeCrash(env, [&] {
+        return iegen::handleNativeCrash(env, [&] {
               {%- set call_args = [] -%}
               {%- for arg in args -%}
               {% set converter = arg.converter.jni_to_cxx %}
               {{converter.snippet(arg.name)|indent(8)}}
               {%- do call_args.append(converter.converted_name(arg.name)) -%}
               {% endfor %}
+              {%- if not (shared_ref or owner_class.ancestors|any('shared_ref')) %}
               auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
-              return UnsafeRefAsLong(this_object);
+              return iegen::UnsafeRefAsLong(this_object);
+              {%- else %}
+              auto this_object = iegen::allocateRef<{{cxx_type_name}}>({{call_args|join(', ')}});
+              return iegen::AllocRefPtrAsLong(this_object);
+
+              {%- endif %}
               }
         );
       }
@@ -114,7 +120,7 @@ function:
     body: |
       {%- if not is_static %}
       {{comment}}
-      {{'open ' if is_open}}{{'override ' if is_override}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+      {{'open ' if is_open}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
           {%- set call_args = ['id'] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}
@@ -145,7 +151,7 @@ function:
       {%- set jdk_args=args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') %}
       @JvmStatic
       private external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
-      {% endif %}
+      {%- endif %}
     private_external: |
       {%- if not is_static -%}
       {%- set jdk_args=["id: Long"] + args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') -%}
@@ -174,12 +180,12 @@ function:
       {%- endif %}
       {%- endmacro %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}({{jni_args|join(', ')}}){
-          return jni::handleNativeCrash(env, [&] {
+          return iegen::handleNativeCrash(env, [&] {
               {%- set call_args = [] %}
               {{args_snippet(args, call_args)|indent(8)}}
               {%- if not is_static %}
               validateID(id);
-              auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
               {{call_code("this_object->", call_args)|indent(8)}}
               {%- else %}
               {{call_code(cxx_type_name + "::", call_args)|indent(8)}}
@@ -217,9 +223,9 @@ getter:
     body: |
       {%- set func_name="j%s"|format(name|capitalize) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id){
-          return jni::handleNativeCrash(env, [&] {
+          return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
               auto result = this_object->{{cxx_name}}();
               {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
@@ -229,9 +235,9 @@ getter:
       {%- if setter_ctx is defined %}
       {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
       extern "C" JNIEXPORT void {{get_jni_name(func_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
-          return jni::handleNativeCrash(env, [&] {
+          return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = RefFromLong<{{cxx_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
               {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
               {{converter.snippet(setter_ctx.args[0].name)|indent(8)}}
               this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});

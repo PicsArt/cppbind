@@ -13,9 +13,9 @@ $Object:
   jni_to_cxx: |
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = target_pointee_unqualified_name %}
-    {{target_type_name}} {{target_name}} = {{dereferencer}}RefFromLong<{{pointee}}>({{name}});
+    auto {{target_name}} = {{dereferencer}}{% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref')%} iegen::RefFromLong<{{pointee}}> {% else %} reinterpret_cast<{{pointee}}*>{% endif %}({{name}});
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = UnsafeRefAsLong({{name}});
+    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.id
   jdk_to_kotlin:
@@ -49,9 +49,9 @@ std::__cxx11::basic_string:
   jdk:
     type_info: String
   jni_to_cxx:
-    "{{target_type_name}} {{target_name}} = jni_to_string(env, {{name}});"
+    "{{target_type_name}} {{target_name}} = iegen::jni_to_string(env, {{name}});"
   cxx_to_jni:
-    "{{target_type_name}} {{target_name}} = string_to_jni(env, {{name}});"
+    "{{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}});"
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -119,10 +119,10 @@ std::map:
           {%- set tmp_name = '_' + target_name %}
           {%- set tmp_key_name = 'tmp_key_' + target_name %}
           {%- set tmp_val_name = 'tmp_val_' + target_name %}
-          {%- set jni_array_get_k = 'get{}Array'.format(args[0].custom.pname) %}
-          {%- set jni_array_get_v = 'get{}Array'.format(args[1].custom.pname) %}
+          {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
+          {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
           {{target_pointee_unqualified_name}} {{target_name}};
-          auto {{tmp_name}} = extract_jni_pair(env, {{name}});
+          auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
           auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
           auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
           for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
@@ -148,7 +148,7 @@ std::map:
               {{val_name}}[index] = {{args[1].converted_name('val')}};
               ++index
           }
-          {{target_type_name}} {{target_name}} pair = make_jni_pair(env, {{key_name}}, {{val_name}});
+          {{target_type_name}} {{target_name}} pair = iegen::make_jni_pair(env, {{key_name}}, {{val_name}});
 
   kotlin_to_jdk: |
           {%- set tmp_key_name = 'tmp_key_' + target_name %}
@@ -189,8 +189,13 @@ std::shared_ptr:
     type_info: jobjectid
   jdk:
     type_info: Long
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx: |
+    {%- set pointee = args_t[0] %}
+    auto {{target_name}} = iegen::RefFromLong<{{pointee}}>({{name}});
+  cxx_to_jni: |
+    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong({{name}});
   kotlin_to_jdk:
+    val {{target_name}} = {{name}}.id
   jdk_to_kotlin:
+    val {{target_name}} = {{target_type_name}}({{name}})
 

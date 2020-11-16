@@ -3,6 +3,7 @@ import types
 import copy
 from functools import partial
 import iegen.utils.clang as cutil
+from iegen import find_prj_dir
 from iegen.utils import load_from_paths
 from iegen.common.config import PROJECT_CONFIG_DIR, DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine
@@ -24,14 +25,8 @@ def gen_init(config, *args, **kwargs):
 
     def make_context(config):
         # helper variables
-        cxx_helpers_dir = config.cxx_helpers_dir
-        if not os.path.isabs(cxx_helpers_dir):
-            if not os.path.isdir(cxx_helpers_dir):
-                cxx_helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, cxx_helpers_dir))
-        helpers_dir = config.helpers_dir
-        if not os.path.isabs(helpers_dir):
-            if not os.path.isdir(helpers_dir):
-                helpers_dir = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, helpers_dir))
+        cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
+        helpers_dir = find_prj_dir(config.helpers_dir)
         return locals()
 
     context = make_context(config)
@@ -46,14 +41,11 @@ def make_def_context(ctx):
     def make():
         # helper variables
         config = ctx.config
-        package = ctx.package
-        file = ctx.file
         pat_sep = os.sep
 
-        name = ctx.name
+        cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling
 
-        includes = ctx.include
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
 
@@ -61,6 +53,7 @@ def make_def_context(ctx):
 
     context = make()
     context.update(GLOBAL_VARIABLES)
+    context.update(ctx.api_args)
     return context
 
 
@@ -79,6 +72,8 @@ def make_func_context(ctx):
 
         if hasattr(ctx, 'result_type'):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type)
+
+        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         overloading_prefix = ctx.overloading_prefix
         get_jni_name = partial(convert.get_jni_func_name,
@@ -103,6 +98,62 @@ def make_func_context(ctx):
     return context
 
 
+def make_enum_context(ctx):
+    def make():
+        # helper variables
+        enum_cases = ctx.enum_values
+        return locals()
+
+    context = make_def_context(ctx)
+    context.update(make())
+    return context
+
+
+def make_class_context(ctx):
+    def _make(ctx):
+        def make():
+            # helper variables
+            is_open = not cutil.is_final_cursor(ctx.cursor)
+            if ctx.base_types:
+                base_type_converter = SNIPPETS_ENGINE.build_type_converter(
+                    ctx, ctx.base_types[0]
+                )
+            return locals()
+
+        context = make_def_context(ctx)
+        context.update(make())
+        return context
+
+    context = _make(ctx)
+    ancestors = [types.SimpleNamespace(**_make(ancesstor)) for ancesstor in ctx.ancestors]
+    context.update(dict(ancestors=ancestors))
+    return context
+
+
+def make_constructor_context(ctx):
+    def make():
+        # helper variables
+
+        return locals()
+
+    context = make_func_context(ctx)
+    context.update(make())
+    return context
+
+
+def make_getter_context(ctx):
+    def make():
+        # helper variables
+        if ctx.setter:
+            setter_ctx = make_func_context(ctx.setter)
+
+        return locals()
+
+    context = make_func_context(ctx)
+    context.update(make())
+    return context
+
+
 def preprocess_scope(context, scope, info):
     context_scope = copy.copy(context)
     for sname in info.scopes:
@@ -115,7 +166,11 @@ def preprocess_scope(context, scope, info):
 
 
 def preprocess_entry(context, builder, code_name):
-    code_info = SNIPPETS_ENGINE.get_code_info(code_name)
+    code_info = None
+    if 'name' in context:
+        code_info = SNIPPETS_ENGINE.get_code_info(f"{code_name}_{context['name']}")
+
+    code_info = code_info or SNIPPETS_ENGINE.get_code_info(code_name)
     for fs, info in code_info.items():
         fscope_name, scope_name = fs
         file_scope = get_file(context, builder, fscope_name)
@@ -131,88 +186,33 @@ def get_file(context, builder, fscope_name):
 
 
 def gen_enum(ctx, builder):
-    def _make_context(ctx):
-        def make():
-            # helper variables
-            enum_cases = ctx.enum_values
-            return locals()
-
-        context = make_def_context(ctx)
-        context.update(make())
-        return context
-
-    context = _make_context(ctx)
+    context = make_enum_context(ctx)
     preprocess_entry(context, builder, 'enum')
 
 
 def gen_class(ctx, builder):
-    def _make_context(ctx):
-        def make():
-            # helper variables
-            is_open = not cutil.is_final_cursor(ctx.cursor)
-            if ctx.base_types:
-                base_type = SNIPPETS_ENGINE.build_type_converter(
-                    ctx, ctx.base_types[0]
-                )
-            return locals()
-
-        context = make_def_context(ctx)
-        context.update(make())
-        return context
-
-    context = _make_context(ctx)
+    context = make_class_context(ctx)
     preprocess_entry(context, builder, 'class')
 
 
 def gen_constructor(ctx, builder):
-    def _make_context(ctx):
-        def make():
-            # helper variables
-
-            return locals()
-
-        context = make_func_context(ctx)
-        context.update(make())
-        return context
-
-    context = _make_context(ctx)
+    context = make_constructor_context(ctx)
     preprocess_entry(context, builder, 'constructor')
 
 
 def gen_method(ctx, builder):
-    def _make_context(ctx):
-        def make():
-            # helper variables
-
-            return locals()
-
-        context = make_func_context(ctx)
-        context.update(make())
-        return context
-
-    context = _make_context(ctx)
+    context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
     return
 
 
 def gen_getter(ctx, builder):
-    def _make_context(ctx):
-        def make():
-            # helper variables
-            if ctx.setter:
-                setter_ctx = make_func_context(ctx.setter)
-
-            return locals()
-
-        context = make_func_context(ctx)
-        context.update(make())
-        return context
 
     assert not ctx.args, "getter should not have arguments"
     if ctx.setter:
         assert len(ctx.setter.args) == 1, "Setter should have one argument."
 
-    context = _make_context(ctx)
+    context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
     return
 

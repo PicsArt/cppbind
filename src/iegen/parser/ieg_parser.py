@@ -8,6 +8,7 @@ from iegen import (
     default_config as default_config,
     logging as logging
 )
+from iegen import find_prj_dir
 from iegen.parser.filter import cxx_ieg_filter
 
 
@@ -40,10 +41,12 @@ class CXXParser(object):
                                                  for includeDir in self.config.include_dirs.split(',')]
         glob_filter = self.config.src_glob or "*"
         files = os.path.join(self.config.source_dir, glob_filter)
+        helper_files = os.path.join(find_prj_dir(self.config.cxx_helpers_dir), '**/*.h*')
 
         logging.info(f"parsing files: {files}")
+        logging.info(f"parsing files: {helper_files}")
 
-        all_files = glob.glob(files, recursive=True)
+        all_files = glob.glob(files, recursive=True) + glob.glob(helper_files, recursive=True)
         all_files = [os.path.abspath(fp) for fp in all_files]
         logging.debug(f"parsing found files: {all_files}")
         logging.debug(f"Clang args: {args}")

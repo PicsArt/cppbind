@@ -112,6 +112,7 @@ class Converter:
 
             if self.ctx:
                 type_name = self.ctx.name
+                type_ctx = self.ctx
 
             clang_type = self.target_clang_type
             cxx_type_name = self.target_clang_type.spelling
@@ -484,5 +485,10 @@ class SnippetsEngine:
                 return [format_string.format(data) for data in inputs_]
 
         env.filters['format_list'] = format_list
+
+        def _any(inputs_, attribute=None):
+            return any([d for d in inputs_]) if attribute is None else any([getattr(d, attribute) for d in inputs_])
+
+        env.filters['any'] = _any
 
         self.jinja2_env = env

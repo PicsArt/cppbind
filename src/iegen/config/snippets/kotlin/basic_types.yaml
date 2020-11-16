@@ -10,6 +10,20 @@ void:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
+bool:
+  custom:
+    pname: Bool
+  kotlin:
+    type_info: Boolean
+  jni:
+    type_info: jboolean
+  jdk:
+    type_info: Boolean
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
 int:
   custom:
     pname: Int

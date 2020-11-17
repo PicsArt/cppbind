@@ -17,7 +17,7 @@ $Object:
   cxx_to_jni: |
     {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}({{name}});
   kotlin_to_jdk:
-    val {{target_name}} = {{name}}.id
+    val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}({{name}})
 
@@ -195,7 +195,7 @@ std::shared_ptr:
   cxx_to_jni: |
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong({{name}});
   kotlin_to_jdk:
-    val {{target_name}} = {{name}}.id
+    val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}({{name}})
 

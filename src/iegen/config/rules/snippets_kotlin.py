@@ -5,7 +5,7 @@ from functools import partial
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
-from iegen.common.config import PROJECT_CONFIG_DIR, DEFAULT_DIRS
+from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine
 import iegen.converter.kotlin as convert
 
@@ -114,6 +114,10 @@ def make_class_context(ctx):
         def make():
             # helper variables
             is_open = not cutil.is_final_cursor(ctx.cursor)
+            get_jni_name = partial(convert.get_jni_func_name,
+                                   f'{ctx.config.package_prefix}.{ctx.package}',
+                                   ctx.name)
+            cxx_type_name = ctx.cursor.type.spelling
             if ctx.base_types:
                 base_type_converter = SNIPPETS_ENGINE.build_type_converter(
                     ctx, ctx.base_types[0]

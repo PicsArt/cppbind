@@ -21,6 +21,7 @@ file:
       - include
     content: |
       #include "jni.h"
+      #include <iostream>
       {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
       {{include}}
 
@@ -58,26 +59,51 @@ class:
       content: |
         {{comment}}
         {{'open ' if is_open}}class {{name}}
-          internal constructor(id: Long): {{base_type_converter.kotlin.target_type_name if base_type_converter is defined else "RNativeObject"}}(id){
+            internal constructor(_id: Long) {% if base_type_converter is defined %} :{{base_type_converter.kotlin.target_type_name}}(_id) {% endif %}{
             companion object {
+                {%- if base_type_converter is not defined %}
+                init {
+                  System.loadLibrary("wrapper_jni");
+                }
+                {%- endif %}
                 {{companion|string|indent(8)}}
             } 
+            {%- if base_type_converter is not defined %}
+            protected val id = _id
+            
+            public fun getObjId(): Long {
+                if(id == 0L){
+                  throw RuntimeException("Object is not allocated")
+                }
+                return id;
+            }
+            {%- endif %}
             {{head|string|indent}}
             {{properties|string|indent}}
             {{body|string|indent}}
             ///// External wrapper functions ////////////
             {{private_external|string|indent}}
+            private external fun jSet_this(id: Long, self: Any): Void
         }
   cxx: 
     include: 
       unique_content: |
         #include "{{prj_rel_file_name}}"
+    body:
+      content: |
+        extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+          return iegen::handleNativeCrash(env, [&] {
+            std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
+        }
+        );
+        }
 
 constructor:
   kotlin:
     head: |
       {{comment}}
       constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(construct_helper({{args|join(', ', attribute='name')}})) {
+        jSet_this(id, this)
       }
     companion: |
       {{comment}}
@@ -185,6 +211,7 @@ function:
               {{args_snippet(args, call_args)|indent(8)}}
               {%- if not is_static %}
               validateID(id);
+
               auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
               {{call_code("this_object->", call_args)|indent(8)}}
               {%- else %}

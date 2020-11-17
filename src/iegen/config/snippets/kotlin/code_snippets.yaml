@@ -81,9 +81,21 @@ class:
             {{head|string|indent}}
             {{properties|string|indent}}
             {{body|string|indent}}
+            {%- if base_type_converter is not defined %}
+            /**
+            * Finalize and deletes the object
+            */
+            protected fun finalize() {
+                
+                jFinalize(id)
+            }
+            {%- endif %}
             ///// External wrapper functions ////////////
             {{private_external|string|indent}}
+            {%- if base_type_converter is not defined %}
             private external fun jSet_this(id: Long, self: Any): Void
+            private external fun jFinalize(id: Long): Void
+            {%- endif %}
         }
   cxx: 
     include: 
@@ -91,19 +103,28 @@ class:
         #include "{{prj_rel_file_name}}"
     body:
       content: |
+        {%- if base_type_converter is not defined %}
         extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
           return iegen::handleNativeCrash(env, [&] {
             std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
+            }
+          );
         }
-        );
+        extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
+          iegen::handleNativeCrash(env, [&] {
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
+              delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
+            }
+          );
         }
+        {%- endif %}
 
 constructor:
   kotlin:
     head: |
       {{comment}}
       constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(construct_helper({{args|join(', ', attribute='name')}})) {
-        jSet_this(id, this)
+        //jSet_this(id, this)
       }
     companion: |
       {{comment}}

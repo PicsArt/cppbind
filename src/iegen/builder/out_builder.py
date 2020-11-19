@@ -119,8 +119,12 @@ class File(Scope):
     def dump_output(self):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-        with open(self.file_path, 'wt') as f:
-            f.write(str(self))
+        with open(self.file_path, 'r+t') as f:
+            content = str(self)
+            if f.read() != content:
+                f.seek(0)
+                f.truncate()
+                f.write(content)
 
     def register_scope(self, scope, dept=-1):
         assert self.scope_stack and scope.name

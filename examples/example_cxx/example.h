@@ -1,3 +1,5 @@
+#include<string>
+
 /**
  * comments
  * 
@@ -7,7 +9,7 @@
  */
 namespace pi::utils {
     /**
-     * commants
+     * comments
      * 
      * __API__
      * gen: class
@@ -17,7 +19,7 @@ namespace pi::utils {
     struct Example
     {
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: enum
@@ -28,7 +30,7 @@ namespace pi::utils {
 
 
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: constructor
@@ -37,7 +39,7 @@ namespace pi::utils {
         Example(int& x, std::string name = "XXX");
 
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: method
@@ -45,7 +47,7 @@ namespace pi::utils {
         Type f(Type t, int i =10, char* test = "XXX");
 
         /**
-         * commants
+         * comments
          * 
          * __API__
          * gen: method
@@ -53,7 +55,7 @@ namespace pi::utils {
         int get_attribute(char* test = "XXX");
     };
     /**
-     * commants
+     * comments
      * 
      * __API__
      * gen: enum

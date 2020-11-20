@@ -119,7 +119,7 @@ class File(Scope):
     def dump_output(self):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-        with open(self.file_path, 'r+t') as f:
+        with open(self.file_path, 'w+t') as f:
             content = str(self)
             if f.read() != content:
                 f.seek(0)

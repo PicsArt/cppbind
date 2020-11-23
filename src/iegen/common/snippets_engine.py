@@ -68,8 +68,9 @@ class FileAction(Action):
             # take copy action
             if self.copy_to_tmpl:
                 target_file = self.copy_to_tmpl.render(context)
-                os.makedirs(os.path.dirname(target_file), exist_ok=True)
-                shutil.copyfile(file_name, target_file)
+                if target_file:
+                    os.makedirs(os.path.dirname(target_file), exist_ok=True)
+                    shutil.copyfile(file_name, target_file)
 
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():

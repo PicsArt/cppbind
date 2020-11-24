@@ -27,6 +27,8 @@ def gen_init(config, *args, **kwargs):
         # helper variables
         cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
         helpers_dir = find_prj_dir(config.helpers_dir)
+        # base variables
+        cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
 
     context = make_context(config)

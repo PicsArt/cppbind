@@ -1,9 +1,12 @@
-import os
-import types
 import configparser
 import json
+import os
+import types
+import yaml
 from ctypes.util import find_library
+
 import clang.cindex as cli
+from iegen.common.yaml_process import MyLoader, load_yaml
 
 PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
@@ -16,27 +19,25 @@ if clang_lib is None:
     print("clang dev is not installed. Please read README.md")
     exit(1)
 
-
 # setting clang library file.
 # in feature we might  consider to have path optionally defined in config
 cli.Config.set_library_file(clang_lib)
 
 
-def load_json_file(x):
+def load_yaml_file(x):
     for p in DEFAULT_DIRS:
         file_name = os.path.join(p, x)
         if os.path.isfile(file_name):
-            with open(file_name, 'r') as json_file:
-                return json.load(json_file)
+            return load_yaml(file_name)
+    with open(x, 'x') as yml_file:
+        load_yaml(yml_file)
 
-    return json.load(open(x, 'r'))
 
-
-def load_json_or_file(x):
+def load_yaml_or_file(x):
     try:
-        return load_json_file(x)
+        return load_yaml_file(x)
     except Exception:
-        return json.loads(x)
+        return yaml.load(x, MyLoader)
 
 
 def read_config(config_file=None):
@@ -50,9 +51,9 @@ def read_config(config_file=None):
     config = configparser.ConfigParser(
         converters={
             'list': lambda x: [i.strip() for i in x.split(',')],
-            'json_file': load_json_file,
-            'json': lambda x: json.loads(x),
-            'json_or_file': load_json_or_file,
+            'yaml': lambda x: json.loads(x, MyLoader),
+            'yaml_or_file': load_yaml_or_file,
+            'yaml_file': load_yaml_file,
         }
     )
     config.read_file(open(config_file))
@@ -88,7 +89,7 @@ class IEG_Config(object):
         for lang in cnfg.getlist("LANGUAGE", "all_languages"):
             self.languages[lang] = self.__load_language(cnfg, lang)
 
-        self.attributes = cnfg.getjson_or_file("API", "attributes")
+        self.attributes = cnfg.getyaml_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
 
         self.logging = types.SimpleNamespace()

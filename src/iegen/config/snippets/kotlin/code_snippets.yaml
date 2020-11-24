@@ -59,7 +59,7 @@ class:
       content: |
         {{comment}}
         {{'open ' if is_open}}class {{name}}
-            internal constructor(_id: Long) {% if base_type_converter is defined %} :{{base_type_converter.kotlin.target_type_name}}(_id) {% endif %}{
+            internal constructor(_id: Long) : {% if base_type_converter is defined %}{{base_type_converter.kotlin.target_type_name}}(_id) {%- else -%}AutoCloseable{% endif %} {
             companion object {
                 {%- if base_type_converter is not defined %}
                 init {
@@ -82,12 +82,16 @@ class:
             {{properties|string|indent}}
             {{body|string|indent}}
             {%- if base_type_converter is not defined %}
+            override fun close() {
+                if (id != 0L) {
+                    jFinalize(id)
+                }
+            }
             /**
             * Finalize and deletes the object
             */
             protected fun finalize() {
-                
-                jFinalize(id)
+                close()
             }
             {%- endif %}
             ///// External wrapper functions ////////////

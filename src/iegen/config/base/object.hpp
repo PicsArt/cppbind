@@ -1,9 +1,5 @@
-//
-// Created by Serob Hovsepyan on 4/6/17.
-//
-
-#ifndef PICORETESTUI_PIOBJECT_HPP
-#define PICORETESTUI_PIOBJECT_HPP
+#ifndef IEGENCORETESTUI_IEGENOBJECT_HPP
+#define IEGENCORETESTUI_IEGENOBJECT_HPP
 
 #include <memory>
 #include<string>

@@ -1,9 +1,11 @@
+#include<string>
+
 /**
  * comments
- * 
+ *
  * __API__
- * kotlin.file: utils
- * kotlin.prefix: PI
+ * file_full_name: /home/test
+ * package: utils
  */
 namespace pi::utils {
     /**
@@ -12,7 +14,6 @@ namespace pi::utils {
      * __API__
      * gen: class
      * shared_ref: False
-     * kotlin.module: pi.xxx.Example
      */
     struct Example
     {
@@ -42,7 +43,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, char* test = "XXX");
+        Type f(Type t, int i =10, const char* test = "XXX");
 
         /**
          * commants
@@ -50,7 +51,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        int get_attribute(char* test = "XXX");
+        int get_attribute(const char* test = "XXX");
     };
     /**
      * commants

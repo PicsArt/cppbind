@@ -57,11 +57,12 @@ class CXXParser(object):
             self.current_file = file_name
             tu = index.parse(path=file_name, args=args, options=CXXParser.CLANG_DEF_OPTIONS)
 
-            hass_error = False
+            has_error = False
             for diagnostic in tu.diagnostics:
                 logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
                 logging.debug(diagnostic)
-            if not hass_error:
+                has_error = True
+            if not has_error:
                 yield tu
 
     def parss_x(self):

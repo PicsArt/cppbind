@@ -1,6 +1,9 @@
 char:
   std::__cxx11::basic_string
 
+std::string:
+  std::__cxx11::basic_string
+
 $Object:
   custom:
     pname: Long

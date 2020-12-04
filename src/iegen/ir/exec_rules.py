@@ -141,10 +141,18 @@ class Context(object):
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
 
-        return [base_specifier
-                for base_specifier in self.node.clang_cursor.get_children()
-                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER
-                ]
+        bases_types = []
+        non_abstract_bases = 0
+        for base_specifier in self.node.clang_cursor.get_children():
+            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+                bases_types.append(base_specifier)
+                if base_specifier.is_abstract_record():
+                    non_abstract_bases += 1
+
+        if non_abstract_bases > 1:
+            raise AttributeError(f"{self.__class__.__name__} has more than 1 non abstract bases.")
+
+        return bases_types
 
     @property
     def cursor(self):

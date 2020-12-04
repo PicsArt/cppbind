@@ -146,6 +146,7 @@ class Adapter:
         self.ctx = ctx
         self.target_clang_type = clang_type
         self.template_args = []
+        self.is_abstract = ctx.cursor.is_abstract_record() if ctx else False
 
     def set_template_args(self, args):
         self.template_args = args

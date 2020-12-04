@@ -79,14 +79,15 @@ def make_func_context(ctx):
 
         overloading_prefix = ctx.overloading_prefix
         get_jni_name = partial(convert.get_jni_func_name,
-                               f'{ctx.config.package_prefix}.{ctx.package}',
-                               ctx.parent_context.name)
+                               f'{ctx.config.package_prefix}.{ctx.package}')
         cxx_type_name = ctx.cursor.semantic_parent.type.spelling
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
+        owner_class_is_abstract = owner_class.cursor.is_abstract_record()
+        is_abstract = ctx.cursor.is_abstract_record()
         is_open = not cutil.is_final_cursor(ctx.cursor)
         is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
         is_protected = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PROTECTED
@@ -116,14 +117,16 @@ def make_class_context(ctx):
         def make():
             # helper variables
             is_open = not cutil.is_final_cursor(ctx.cursor)
+            is_abstract = ctx.cursor.is_abstract_record()
             get_jni_name = partial(convert.get_jni_func_name,
                                    f'{ctx.config.package_prefix}.{ctx.package}',
                                    ctx.name)
+            has_non_abstract_base_class = False
             cxx_type_name = ctx.cursor.type.spelling
             if ctx.base_types:
-                base_type_converter = SNIPPETS_ENGINE.build_type_converter(
-                    ctx, ctx.base_types[0]
-                )
+                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
+                                         for base_type in ctx.base_types]
+                has_non_abstract_base_class = not all([b.is_abstract for b in base_types_converters])
             return locals()
 
         context = make_def_context(ctx)
@@ -213,7 +216,6 @@ def gen_method(ctx, builder):
 
 
 def gen_getter(ctx, builder):
-
     assert not ctx.args, "getter should not have arguments"
     if ctx.setter:
         assert len(ctx.setter.args) == 1, "Setter should have one argument."

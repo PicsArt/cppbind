@@ -85,6 +85,7 @@ class:
             override fun close() {
                 if (id != 0L) {
                     jFinalize(id)
+                    id = 0L
                 }
             }
             /**

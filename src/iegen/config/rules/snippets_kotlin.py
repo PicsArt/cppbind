@@ -90,11 +90,11 @@ def make_func_context(ctx):
         cxx_type_name = ctx.cursor.semantic_parent.type.spelling
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
-            is_override = bool(ctx.cursor.get_overriden_cursors()) and not owner_class_is_abstract
+            is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
-        is_open = not cutil.is_final_cursor(ctx.cursor) and not owner_class_is_abstract
+        is_open = not cutil.is_final_cursor(ctx.cursor)
         is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
         is_protected = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PROTECTED
         is_private = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PRIVATE

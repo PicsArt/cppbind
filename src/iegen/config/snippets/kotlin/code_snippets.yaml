@@ -62,7 +62,8 @@ class:
         {%- if kotlin.is_valid_class(name, bases) %}
         {{comment}}
         {% if is_abstract %}
-        interface I{{name}} {% if base_types_converters is defined %}: {{base_types_converters|join(', ', attribute='kotlin.target_type_name')}} {% endif %}{
+        interface I{{name}} {% if base_types_converters is defined -%}
+              : {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}} {% endif %}{
             {%- if base_types_converters is not defined %}
             fun getObjId(): Long
             {%- endif %}

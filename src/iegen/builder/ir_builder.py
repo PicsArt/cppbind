@@ -23,6 +23,9 @@ class CXXPrintProcsessor(object):
 
 
 class CXXIEGIRBuilder(object):
+    """
+    Class to build intermediate representation.
+    """
 
     def __init__(self, attributes=None, api_start_kw=None):
 

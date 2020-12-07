@@ -3,6 +3,7 @@
 #include <iostream>
 #include "cxxabi.h"
 #include "object.hpp"
+#include <functional>
 
 #ifdef __ANDROID__
 

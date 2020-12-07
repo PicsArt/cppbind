@@ -48,3 +48,15 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
     else:
         return f'Java_{package_name}_{class_name}_{method_name}__\
 {"".join([args_type_signature[arg] for arg in args_type_name])}'
+
+
+def is_valid_class(class_name, base_types_converters, *args, **kwargs):
+    non_abstract_bases = 0
+    for base_type in base_types_converters:
+        if not base_type.is_abstract:
+            non_abstract_bases += 1
+
+    if non_abstract_bases > 1:
+        raise AttributeError(f'{class_name} has more than 1 non abstract bases.')
+
+    return True

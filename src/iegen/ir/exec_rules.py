@@ -4,6 +4,7 @@ import os
 import types
 import clang.cindex as cli
 from iegen import logging as logging
+from iegen.utils.clang import extract_pure_comment
 
 
 class Context(object):
@@ -158,12 +159,17 @@ class Context(object):
 
         _vals = []
 
+        last_case_line = None
         for enum_value_c in self.node.clang_cursor.walk_preorder():
             if enum_value_c.kind != cli.CursorKind.ENUM_CONSTANT_DECL:
                 continue
             type_name = enum_value_c.kind.name.lower().replace("_decl", "")
+            comment = None
+            if enum_value_c.raw_comment and (enum_value_c.enum_value == 0 or enum_value_c.location.line - last_case_line >= 4):
+                comment = extract_pure_comment(enum_value_c.raw_comment)
+            last_case_line = enum_value_c.location.line
             enum_val_params = types.SimpleNamespace(name=enum_value_c.spelling, type=type_name,
-                                                    value=enum_value_c.enum_value)
+                                                    value=enum_value_c.enum_value, comment=comment)
 
             _vals.append(enum_val_params)
         return _vals

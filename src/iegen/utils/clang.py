@@ -82,3 +82,8 @@ def is_final_cursor(cursor):
         )
     else:
         return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
+
+
+def extract_pure_comment(raw_comment, end_index=None):
+    end_index = end_index or len(raw_comment) - 1
+    return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]

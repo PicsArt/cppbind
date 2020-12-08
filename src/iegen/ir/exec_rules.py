@@ -159,15 +159,18 @@ class Context(object):
 
         _vals = []
 
-        last_case_line = None
+        last_case_comment = None
         for enum_value_c in self.node.clang_cursor.walk_preorder():
             if enum_value_c.kind != cli.CursorKind.ENUM_CONSTANT_DECL:
                 continue
             type_name = enum_value_c.kind.name.lower().replace("_decl", "")
-            comment = None
-            if enum_value_c.raw_comment and (enum_value_c.enum_value == 0 or enum_value_c.location.line - last_case_line >= 4):
+            if enum_value_c.raw_comment != last_case_comment:
                 comment = extract_pure_comment(enum_value_c.raw_comment)
-            last_case_line = enum_value_c.location.line
+            elif last_case_comment:
+                comment = ['', 'The Same as previous case comment.', '']
+            else:
+                comment = None
+            last_case_comment = enum_value_c.raw_comment
             enum_val_params = types.SimpleNamespace(name=enum_value_c.spelling, type=type_name,
                                                     value=enum_value_c.enum_value, comment=comment)
 

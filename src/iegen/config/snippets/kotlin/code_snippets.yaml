@@ -44,9 +44,9 @@ enum:
         }
       }
 
-class: 
-  kotlin: 
-    include: 
+class:
+  kotlin:
+    include:
       unique_content: |
         {{include|format_list("import {}")|join('\n')}}
     body:
@@ -56,37 +56,17 @@ class:
         - body
         - companion
         - private_external
-        - interface_external
       content: |
         {% set bases = base_types_converters if base_types_converters is defined else [] %}
         {%- if kotlin.is_valid_class(name, bases) %}
         {{comment}}
-        {% if is_abstract %}
-        interface I{{name}} {% if base_types_converters is defined -%}
-              : {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}} {% endif %}{
-            {%- if base_types_converters is not defined %}
-            fun getObjId(): Long
-            {%- endif %}
-            {{properties|string|indent}}
-            {{body|string|indent}}
-        }
-
-        class {{name}}Helper {
-            companion object {
-                {{interface_external|string|indent(8)}}
-          }
-        }
-        {% endif -%}
         {{'open ' if is_open}}class {{name}}
             internal constructor(_id: Long) {% if base_types_converters is defined -%}
                                               {%- set comma = joiner(', ') -%}
                                               : {% for base_type_converter in base_types_converters -%}
-                                                {{comma()}}{{'I' if base_type_converter.is_abstract}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.is_abstract}}
+                                                {{comma()}}{{'I' if base_type_converter.is_interface}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.is_interface}}
                                                 {%- endfor -%}
-                                                {{', I' + name + ' ' if is_abstract}}
-                                              {%- else -%}
-                                              {{': I' + name + ' ' if is_abstract}}
-                                              {%- endif %}{
+                                            {%- endif %}{
             companion object {
                 {%- if not has_non_abstract_base_class %}
                 init {
@@ -98,7 +78,7 @@ class:
             {% if not has_non_abstract_base_class %}
             protected val id = _id
             {%- endif %}
-            {% if base_types_converters is defined or is_abstract -%}
+            {% if base_types_converters is defined -%}
             {{'override '}}
             {%- else %}
             {{'open '}}
@@ -111,23 +91,19 @@ class:
             }
 
             {{head|string|indent}}
-            {%- if not is_abstract %}
             {{properties|string|indent}}
             {{body|string|indent}}
-            {%- endif %}
-            {%- if not has_non_abstract_base_class and not is_abstract %}
+            {%- if not has_non_abstract_base_class %}
             /**
             * Finalize and deletes the object
             */
             protected fun finalize() {
-                
+
                 jFinalize(id)
             }
             {%- endif %}
             ///// External wrapper functions ////////////
-            {%- if not is_abstract %}
             {{private_external|string|indent}}
-            {%- endif %}
             {%- if not has_non_abstract_base_class %}
             private external fun jSet_this(id: Long, self: Any): Void
             private external fun jFinalize(id: Long): Void
@@ -135,12 +111,12 @@ class:
         }
         {%- endif %}
   cxx:
-    include: 
+    include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
     body:
       content: |
-        {%- if not has_non_abstract_base_class and not is_abstract %}
+        {%- if not has_non_abstract_base_class %}
         extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
           return iegen::handleNativeCrash(env, [&] {
             std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
@@ -155,6 +131,86 @@ class:
           );
         }
         {%- endif %}
+
+
+interface:
+  kotlin:
+    include:
+      unique_content: |
+        {{include|format_list("import {}")|join('\n')}}
+    body:
+      scopes:
+        - head
+        - properties
+        - body
+        - companion
+        - interface_external
+      content: |
+        {{comment}}
+        interface I{{name}} {% if base_types_converters is defined -%}
+              : {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}} {% endif %}{
+            {%- if base_types_converters is not defined %}
+            fun getObjId(): Long
+            {%- endif %}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        }
+
+        class {{name}}Helper {
+            companion object {
+                {{interface_external|string|indent(8)}}
+          }
+        }
+        {{'open ' if is_open}}class {{name}}
+            internal constructor(_id: Long) : I{{name}} {% if base_types_converters is defined -%}
+                                              , {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}}
+                                              {%- endif %}{
+            companion object {
+                init {
+                  System.loadLibrary("wrapper_jni");
+                }
+                {{companion|string|indent(8)}}
+            }
+            protected val id = _id
+            override fun getObjId(): Long {
+                if(id == 0L) {
+                    throw RuntimeException("Object is not allocated")
+                }
+                return id;
+            }
+
+            {{head|string|indent}}
+            /**
+            * Finalize and deletes the object
+            */
+            protected fun finalize() {
+
+                jFinalize(id)
+            }
+            ///// External wrapper functions ////////////
+            private external fun jSet_this(id: Long, self: Any): Void
+            private external fun jFinalize(id: Long): Void
+        }
+  cxx:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+    body:
+      content: |
+        extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+          return iegen::handleNativeCrash(env, [&] {
+            std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
+            }
+          );
+        }
+        extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
+          iegen::handleNativeCrash(env, [&] {
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
+              delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
+            }
+          );
+        }
+
 
 constructor:
   kotlin:
@@ -212,7 +268,7 @@ function:
           {{converter.snippet(arg.name)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {%- if owner_class_is_abstract and not is_abstract %}
+          {%- if ctx.parent_context.node.is_interface %}
           val result = {{owner_class.name}}Helper.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
@@ -232,7 +288,7 @@ function:
           {{converter.snippet(arg.name)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {% if owner_class_is_abstract and not is_abstract -%}
+          {% if ctx.parent_context.node.is_interface -%}
           val result = {{owner_class.name}}Helper.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
@@ -278,7 +334,7 @@ function:
       {%- endif %}
       {%- endmacro %}
       {%- set class_name = owner_class.name %}
-      {%- if owner_class_is_abstract and not is_abstract %}
+      {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}({{jni_args|join(', ')}}){
@@ -304,7 +360,7 @@ getter:
       {{comment}}
       {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
             get() {
-              {%- if owner_class_is_abstract and not is_abstract %}
+              {%- if ctx.parent_context.node.is_interface %}
               val result = {{owner_class.name}}Helper.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
@@ -316,7 +372,7 @@ getter:
             {% set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
             set(value) {
               {{converter.snippet('value')|indent(8)}}
-              {%- if owner_class_is_abstract and not is_abstract %}
+              {%- if ctx.parent_context.node.is_interface %}
               {{owner_class.name}}Helper.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
               j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
@@ -339,7 +395,7 @@ getter:
     body: |
       {%- set func_name="j%s"|format(name|capitalize) %}
       {%- set class_name = owner_class.name %}
-      {%- if owner_class_is_abstract and not is_abstract %}
+      {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){

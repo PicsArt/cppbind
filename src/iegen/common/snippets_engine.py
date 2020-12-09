@@ -146,13 +146,16 @@ class Adapter:
         self.ctx = ctx
         self.target_clang_type = clang_type
         self.template_args = []
-        self.is_abstract = ctx.cursor.is_abstract_record() if ctx else False
 
     def set_template_args(self, args):
         self.template_args = args
 
     def set_target_type(self, clang_type):
         self.target_clang_type = clang_type
+
+    @property
+    def is_interface(self):
+        return self.ctx.node.is_interface if self.ctx else False
 
     def __getattr__(self, name):
         type_info = None

@@ -87,6 +87,10 @@ class Node(object):
         file_name = self.clang_cursor.extent.start.file.name
         return file_name
 
+    @property
+    def is_interface(self):
+        return self.api == 'interface'
+
     def walk_preorder(self):
         """
         """

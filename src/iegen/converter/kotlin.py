@@ -53,7 +53,7 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
 def is_valid_class(class_name, base_types_converters, *args, **kwargs):
     non_abstract_bases = 0
     for base_type in base_types_converters:
-        if not base_type.is_abstract:
+        if not base_type.is_interface:
             non_abstract_bases += 1
 
     if non_abstract_bases > 1:

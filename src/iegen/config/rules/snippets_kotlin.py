@@ -77,7 +77,6 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        owner_class_is_abstract = owner_class.cursor.is_abstract_record()
 
         overloading_prefix = ctx.overloading_prefix
 
@@ -125,7 +124,6 @@ def make_class_context(ctx):
             import iegen.converter.kotlin as kotlin
             # helper variables
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            is_abstract = ctx.cursor.is_abstract_record()
             get_jni_name = partial(convert.get_jni_func_name,
                                    f'{ctx.config.package_prefix}.{ctx.package}',
                                    ctx.name)
@@ -134,7 +132,7 @@ def make_class_context(ctx):
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
                                          for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all([b.is_abstract for b in base_types_converters])
+                has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
             return locals()
 
         context = make_def_context(ctx)
@@ -210,6 +208,11 @@ def gen_enum(ctx, builder):
 def gen_class(ctx, builder):
     context = make_class_context(ctx)
     preprocess_entry(context, builder, 'class')
+
+
+def gen_interface(ctx, builder):
+    context = make_class_context(ctx)
+    preprocess_entry(context, builder, 'interface')
 
 
 def gen_constructor(ctx, builder):

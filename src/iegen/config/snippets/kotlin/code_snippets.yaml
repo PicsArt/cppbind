@@ -66,7 +66,10 @@ class:
                                               : {% for base_type_converter in base_types_converters -%}
                                                 {{comma()}}{{'I' if base_type_converter.is_interface}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.is_interface}}
                                                 {%- endfor -%}
-                                            {%- endif %}{
+                                                {%- if not has_non_abstract_base_class %}, AutoCloseable{% endif %}
+                                            {%- else %}
+                                            {%- if not has_non_abstract_base_class %}: AutoCloseable{% endif %}
+                                            {%- endif %} {
             companion object {
                 {%- if not has_non_abstract_base_class %}
                 init {
@@ -76,7 +79,7 @@ class:
                 {{companion|string|indent(8)}}
             }
             {% if not has_non_abstract_base_class %}
-            protected val id = _id
+            protected var id = _id
             {%- endif %}
             {% if base_types_converters is defined -%}
             {{'override '}}
@@ -94,12 +97,17 @@ class:
             {{properties|string|indent}}
             {{body|string|indent}}
             {%- if not has_non_abstract_base_class %}
+            override fun close() {
+            	if (id != 0L) {
+            		jFinalize(id)
+            		id = 0L
+            	}
+            }
             /**
             * Finalize and deletes the object
             */
             protected fun finalize() {
-
-                jFinalize(id)
+            	close()
             }
             {%- endif %}
             ///// External wrapper functions ////////////
@@ -162,7 +170,7 @@ interface:
           }
         }
         {{'open ' if is_open}}class {{name}}
-            internal constructor(_id: Long) : I{{name}} {% if base_types_converters is defined -%}
+            internal constructor(_id: Long) : I{{name}}, AutoCloseable {% if base_types_converters is defined -%}
                                               , {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}}
                                               {%- endif %}{
             companion object {
@@ -171,7 +179,7 @@ interface:
                 }
                 {{companion|string|indent(8)}}
             }
-            protected val id = _id
+            protected var id = _id
             override fun getObjId(): Long {
                 if(id == 0L) {
                     throw RuntimeException("Object is not allocated")
@@ -180,12 +188,18 @@ interface:
             }
 
             {{head|string|indent}}
+            {# todo think of abstract #}
+            override fun close() {
+            	if (id != 0L) {
+            		jFinalize(id)
+            		id = 0L
+            	}
+            }
             /**
             * Finalize and deletes the object
             */
             protected fun finalize() {
-
-                jFinalize(id)
+            	close()
             }
             ///// External wrapper functions ////////////
             private external fun jSet_this(id: Long, self: Any): Void

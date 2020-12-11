@@ -202,3 +202,70 @@ std::shared_ptr:
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}({{name}})
 
+
+nlohmann::json:
+  custom:
+    pname: json
+  kotlin:
+    type_info: JsonObject
+  jni:
+    type_info: jstring
+  jdk:
+    type_info: String
+  jni_to_cxx: |
+    auto {{target_name}} = json::parse(iegen::jni_to_string(env, {{name}}))
+  cxx_to_jni: |
+    {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
+  kotlin_to_jdk:
+    val {{target_name}} = {{name}}.toString()
+  jdk_to_kotlin: |
+    val {{target_name}}: {{target_type_name}} = JsonParser.parseString({{name}}).asJsonObject()
+
+
+std::pair:
+  custom:
+    pname: Pair
+  kotlin:
+    type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+  jni:
+    type_info: jobject
+  jdk:
+    type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+  jni_to_cxx: |
+    jclass pairClass = env->FindClass("kotlin/Pair");
+
+    jfieldID firstID = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
+    jfieldID secondID = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
+
+    auto firstObject = env->GetObjectField({{name}}, firstID);
+    auto secondObject = env->GetObjectField({{name}}, secondID);
+    {%- set tmp_first = '_' + target_name %}
+    {%- set extract_first = 'iegen::extract{}'.format(args[0].custom.pname) %}
+    {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
+    {%- if args[0].custom.pname != 'Object' %}
+    auto first = {{extract_first}}(env, firstObject);
+    {%- else %}
+    auto first = firstObject;
+    {%- endif %}
+    {%- if args[1].custom.pname != 'Object' %}
+    auto second = {{extract_second}}(env, secondObject);
+    {%- else %}
+    auto second = secondObject;
+    {%- endif %}
+    {{args[0].snippet('first')|indent}}
+    {{args[1].snippet('second')|indent}}
+    {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+  cxx_to_jni: |
+    {{target_type_name}} {{target_name}} = std::make_pair(f, s);
+  kotlin_to_jdk: |
+    val first = {{name}}.first
+    val second = {{name}}.second
+    {{args[0].snippet('first')|indent}}
+    {{args[1].snippet('second')|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+  jdk_to_kotlin: |
+    val first  = {{name}}.first
+    val second  = {{name}}.second
+    {{args[0].snippet('first')|indent}}
+    {{args[1].snippet('second')|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})

@@ -69,7 +69,7 @@ class:
                 {{companion|string|indent(8)}}
             } 
             {%- if base_type_converter is not defined %}
-            protected val id = _id
+            protected var id = _id
             
             public fun getObjId(): Long {
                 if(id == 0L){

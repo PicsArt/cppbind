@@ -6,7 +6,7 @@ import yaml
 from ctypes.util import find_library
 
 import clang.cindex as cli
-from iegen.common.yaml_process import MyLoader, load_yaml
+import iegen.common.yaml_process as iegyaml
 
 PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
@@ -14,7 +14,6 @@ PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
 clang_lib = find_library('clang') or find_library('clang-9') or find_library('clang-6')
-
 
 if clang_lib is None:
     print("clang dev is not installed. Please read README.md")
@@ -29,16 +28,16 @@ def load_yaml_file(x):
     for p in DEFAULT_DIRS:
         file_name = os.path.join(p, x)
         if os.path.isfile(file_name):
-            return load_yaml(file_name)
+            return iegyaml.load_yaml(file_name)
     with open(x, 'x') as yml_file:
-        load_yaml(yml_file)
+        iegyaml.load_yaml(yml_file)
 
 
 def load_yaml_or_file(x):
     try:
         return load_yaml_file(x)
     except Exception:
-        return yaml.load(x, MyLoader)
+        return yaml.load(x, iegyaml.MyLoader)
 
 
 def read_config(config_file=None):
@@ -52,7 +51,7 @@ def read_config(config_file=None):
     config = configparser.ConfigParser(
         converters={
             'list': lambda x: [i.strip() for i in x.split(',')],
-            'yaml': lambda x: json.loads(x, MyLoader),
+            'yaml': lambda x: yaml.load(x, iegyaml.MyLoader),
             'yaml_or_file': load_yaml_or_file,
             'yaml_file': load_yaml_file,
         }

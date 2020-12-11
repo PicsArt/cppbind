@@ -5,6 +5,7 @@ import os
 import copy
 import yaml
 import glob
+import iegen.common.config as iegconfig
 
 
 class MyLoader(yaml.SafeLoader):
@@ -39,33 +40,41 @@ def construct_include(loader, node):
     except Exception:
         entries = [loader.construct_scalar(node)]
 
+    search_dirs = [loader._root, iegconfig.PROJECT_CONFIG_DIR]
+    if 'custom_config_dir' in iegconfig.config.defaults:
+        search_dirs.append(iegconfig.config.defaults['custom_config_dir'])
+
     def load_entry(entry):
         filename = entry
         sub_index = entry.rfind('&')
         sub_node = None
         if sub_index != -1:
-            sub_node = entry[sub_index+1::]
+            sub_node = entry[sub_index + 1::]
             sub_node = sub_node.split('.')
             filename = entry[:sub_index]
 
-        filename = os.path.abspath(os.path.join(loader._root, filename))
+        if os.path.isabs(filename):
+            filenames = [filename]
+        else:
+            filenames = [os.path.abspath(os.path.join(f"{path}/**/", filename)) for path in search_dirs]
         extension = os.path.splitext(filename)[1].lstrip('.')
 
         rdata = None
 
-        for fn in glob.glob(filename):
-            sub_yaml = None
-            with open(fn, 'r') as f:
-                if extension in ('yaml', 'yml'):
-                    sub_yaml = yaml.load(f, MyLoader)
-                    if sub_node is not None:
-                        for nselect in sub_node:
-                            if isinstance(sub_yaml, list):
-                                nselect = int(nselect)
-                            sub_yaml = sub_yaml[nselect]
-                else:
-                    raise Exception('can only include yaml file')
-            rdata = join_nodes(rdata, sub_yaml)
+        for filename in filenames:
+            for fn in glob.glob(filename, recursive=True):
+                sub_yaml = None
+                with open(fn, 'r') as f:
+                    if extension in ('yaml', 'yml'):
+                        sub_yaml = yaml.load(f, MyLoader)
+                        if sub_node is not None:
+                            for nselect in sub_node:
+                                if isinstance(sub_yaml, list):
+                                    nselect = int(nselect)
+                                sub_yaml = sub_yaml[nselect]
+                    else:
+                        raise Exception('can only include yaml file')
+                rdata = join_nodes(rdata, sub_yaml)
 
         return rdata
 

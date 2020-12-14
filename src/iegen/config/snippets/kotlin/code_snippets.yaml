@@ -35,6 +35,9 @@ enum:
         {%- set comma = joiner(",") -%}
         {%- for case in enum_cases -%}
         {{comma()}}
+        {%- if case.comment %}
+        {{case.comment|string|indent(2)}}
+        {%- endif %}
         {{case.name}}({{case.value}})
         {%- endfor %};
 

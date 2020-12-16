@@ -129,5 +129,6 @@ jint extractInt(JNIEnv* env, jobject obj);
 
 jlong extractLong(JNIEnv* env, jobject obj);
 
+jobject extractObject(JNIEnv* env, jobject obj);
 } // end of iegenn
 #endif //__WRAPPER_HELPER_HPP__

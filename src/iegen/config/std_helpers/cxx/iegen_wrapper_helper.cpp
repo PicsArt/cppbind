@@ -100,6 +100,11 @@ std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
+jobject extractObject(JNIEnv* env, jobject obj)  {
+    // to not have redundant checks
+    return obj;
+}
+
 std::string extractString(JNIEnv* env, jobject obj)  {
     return iegen::jni_to_string(env, obj);
 }

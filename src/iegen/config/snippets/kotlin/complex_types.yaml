@@ -242,16 +242,8 @@ std::pair:
     {%- set tmp_first = '_' + target_name %}
     {%- set extract_first = 'iegen::extract{}'.format(args[0].custom.pname) %}
     {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
-    {%- if args[0].custom.pname != 'Object' %}
     auto first = {{extract_first}}(env, firstObject);
-    {%- else %}
-    auto first = firstObject;
-    {%- endif %}
-    {%- if args[1].custom.pname != 'Object' %}
     auto second = {{extract_second}}(env, secondObject);
-    {%- else %}
-    auto second = secondObject;
-    {%- endif %}
     {{args[0].snippet('first')|indent}}
     {{args[1].snippet('second')|indent}}
     {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})

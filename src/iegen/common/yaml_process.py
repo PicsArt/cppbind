@@ -5,11 +5,12 @@ import os
 import copy
 import yaml
 import glob
-import iegen.common.config as iegconfig
+import iegen.common as PROJECT_CONFIG_DIR
 
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
+    custom_dirs = []
 
     def __init__(self, stream):
         """Initialise MyLoader."""
@@ -18,6 +19,8 @@ class MyLoader(yaml.SafeLoader):
             self._root = os.path.split(stream.name)[0]
         except AttributeError:
             self._root = os.path.curdir
+
+        self.dirs = [self._root, PROJECT_CONFIG_DIR]
 
         super().__init__(stream)
 
@@ -40,9 +43,7 @@ def construct_include(loader, node):
     except Exception:
         entries = [loader.construct_scalar(node)]
 
-    search_dirs = [loader._root, iegconfig.PROJECT_CONFIG_DIR]
-    if 'custom_config_dir' in iegconfig.config.defaults:
-        search_dirs.append(iegconfig.config.defaults['custom_config_dir'])
+    search_dirs = loader.dirs + loader.custom_dirs
 
     def load_entry(entry):
         filename = entry
@@ -113,6 +114,7 @@ yaml.add_constructor('!include', construct_include, MyLoader)
 yaml.add_constructor('!join', construct_join, MyLoader)
 
 
-def load_yaml(file_path):
+def load_yaml(file_path, dirs=None):
+    MyLoader.custom_dirs = dirs or []
     with open(file_path) as f:
         return yaml.load(f, MyLoader)

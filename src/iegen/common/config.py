@@ -1,14 +1,13 @@
 import configparser
-import json
 import os
 import types
 import yaml
 from ctypes.util import find_library
 
 import clang.cindex as cli
-import iegen.common.yaml_process as iegyaml
+from iegen.common.yaml_process import MyLoader, load_yaml
+from iegen.common import PROJECT_CONFIG_DIR
 
-PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
@@ -28,16 +27,16 @@ def load_yaml_file(x):
     for p in DEFAULT_DIRS:
         file_name = os.path.join(p, x)
         if os.path.isfile(file_name):
-            return iegyaml.load_yaml(file_name)
+            return load_yaml(file_name)
     with open(x, 'x') as yml_file:
-        iegyaml.load_yaml(yml_file)
+        load_yaml(yml_file)
 
 
 def load_yaml_or_file(x):
     try:
         return load_yaml_file(x)
     except Exception:
-        return yaml.load(x, iegyaml.MyLoader)
+        return yaml.load(x, MyLoader)
 
 
 def read_config(config_file=None):
@@ -51,7 +50,7 @@ def read_config(config_file=None):
     config = configparser.ConfigParser(
         converters={
             'list': lambda x: [i.strip() for i in x.split(',')],
-            'yaml': lambda x: yaml.load(x, iegyaml.MyLoader),
+            'yaml': lambda x: yaml.load(x, MyLoader),
             'yaml_or_file': load_yaml_or_file,
             'yaml_file': load_yaml_file,
         }
@@ -60,7 +59,7 @@ def read_config(config_file=None):
     return config
 
 
-class IEG_Config(object):
+class IEGConfig(object):
     """
     Loads IEG config file into structure
     """
@@ -104,4 +103,4 @@ class IEG_Config(object):
         return lang_config
 
 
-config = IEG_Config(["~/iegen_config.cfg", "iegen_config.cfg"])
+config = IEGConfig(["~/iegen_config.cfg", "iegen_config.cfg"])

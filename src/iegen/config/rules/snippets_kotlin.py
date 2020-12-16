@@ -2,6 +2,8 @@ import os
 import types
 import copy
 from functools import partial
+
+import iegen
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
@@ -45,6 +47,7 @@ def make_def_context(ctx):
         # helper variables
         config = ctx.config
         pat_sep = os.sep
+        helper = iegen.converter
 
         cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling
@@ -120,8 +123,6 @@ def make_enum_context(ctx):
 def make_class_context(ctx):
     def _make(ctx):
         def make():
-            # helper modules
-            import iegen.converter.kotlin as kotlin
             # helper variables
             is_open = not cutil.is_final_cursor(ctx.cursor)
             get_jni_name = partial(convert.get_jni_func_name,

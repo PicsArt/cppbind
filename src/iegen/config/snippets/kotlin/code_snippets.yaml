@@ -44,6 +44,25 @@ enum:
         }
       }
 
+var_class_cxx: &var_class_cxx
+  include:
+    unique_content: |
+      #include "{{prj_rel_file_name}}"
+  body:
+    content: |
+      {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
+      extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+        return iegen::handleNativeCrash(env, [&] {});
+      }
+      extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
+        iegen::handleNativeCrash(env, [&] {
+          auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
+          delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
+        });
+      }
+      {%- endif %}
+
+
 class:
   kotlin:
     include:
@@ -58,7 +77,7 @@ class:
         - private_external
       content: |
         {% set bases = base_types_converters if base_types_converters is defined else [] %}
-        {%- if kotlin.is_valid_class(name, bases) %}
+        {%- if helper.kotlin.is_valid_class(name, bases) and helper.kotlin.has_valid_ancestors(ancestors) %}
         {{comment}}
         {{'open ' if is_open}}class {{name}}
             internal constructor(_id: Long) {% if base_types_converters is defined -%}
@@ -118,28 +137,7 @@ class:
             {%- endif %}
         }
         {%- endif %}
-  cxx:
-    include:
-      unique_content: |
-        #include "{{prj_rel_file_name}}"
-    body:
-      content: |
-        {%- if not has_non_abstract_base_class %}
-        extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-          return iegen::handleNativeCrash(env, [&] {
-            std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
-            }
-          );
-        }
-        extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
-          iegen::handleNativeCrash(env, [&] {
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
-              delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
-            }
-          );
-        }
-        {%- endif %}
-
+  cxx: *var_class_cxx
 
 interface:
   kotlin:
@@ -169,6 +167,7 @@ interface:
                 {{interface_external|string|indent(8)}}
           }
         }
+        {%- if helper.kotlin.has_valid_ancestors(ancestors) %}
         {{'open ' if is_open}}class {{name}}
             internal constructor(_id: Long) : I{{name}}, AutoCloseable {% if base_types_converters is defined -%}
                                               , {{'I' + base_types_converters|join(', I',attribute='kotlin.target_type_name')}}
@@ -205,25 +204,8 @@ interface:
             private external fun jSet_this(id: Long, self: Any): Void
             private external fun jFinalize(id: Long): Void
         }
-  cxx:
-    include:
-      unique_content: |
-        #include "{{prj_rel_file_name}}"
-    body:
-      content: |
-        extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-          return iegen::handleNativeCrash(env, [&] {
-            std::cout<<"{{cxx_type_name}} object value:"<<self<<" object id :"<<id<<std::endl;
-            }
-          );
-        }
-        extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
-          iegen::handleNativeCrash(env, [&] {
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
-              delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
-            }
-          );
-        }
+        {%- endif %}
+  cxx: *var_class_cxx
 
 
 constructor:
@@ -351,7 +333,7 @@ function:
       {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}({{jni_args|join(', ')}}){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name=class_name)}}({{jni_args|join(', ')}}){
           return iegen::handleNativeCrash(env, [&] {
               {%- set call_args = [] %}
               {{args_snippet(args, call_args)|indent(8)}}
@@ -412,7 +394,7 @@ getter:
       {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name=class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
               auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);
@@ -424,7 +406,7 @@ getter:
       }
       {%- if setter_ctx is defined %}
       {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
-      extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
+      extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name=class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
               auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}>(id);

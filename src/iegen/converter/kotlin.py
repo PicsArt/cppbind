@@ -50,13 +50,19 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
 {"".join([args_type_signature[arg] for arg in args_type_name])}'
 
 
-def is_valid_class(class_name, base_types_converters, *args, **kwargs):
+def is_valid_class(class_name, base_types_converters):
     non_abstract_bases = 0
     for base_type in base_types_converters:
         if not base_type.is_interface:
             non_abstract_bases += 1
 
     if non_abstract_bases > 1:
-        raise AttributeError(f'{class_name} has more than 1 non abstract bases.')
+        raise TypeError(f'{class_name} has more than 1 non abstract bases.')
 
+    return True
+
+
+def has_valid_ancestors(ancestors):
+    if ancestors and not all(item.shared_ref == ancestors[0].shared_ref for item in ancestors[1:]):
+        raise TypeError('All ancestors must have the same value for shared_ref.')
     return True

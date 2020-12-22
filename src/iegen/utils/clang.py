@@ -82,3 +82,20 @@ def is_final_cursor(cursor):
         )
     else:
         return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
+
+
+def get_base_cursor(cursor):
+    """
+    Returns the base class cursor for the given cursor.
+    If there are multiple branches(inheritance) then the left(first) base is taken.
+    Args:
+        cursor (clang.cindex.Cursor):
+    Returns:
+        clang.cindex.Cursor: The base class cursor.
+    """
+    bases = [base_specifier for base_specifier in cursor.get_children() if
+             base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER]
+    if bases:
+        return get_base_cursor(bases[0])
+    else:
+        return cursor

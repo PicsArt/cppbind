@@ -42,30 +42,39 @@ inline std::shared_ptr<T> allocateRef(Args&&... args) {
 }
 
 
-template<typename T>
+template<typename T, typename BaseT>
 inline void deleteRef(jlong id) {
     validateID(id);
-    auto obj = reinterpret_cast<std::shared_ptr<T>*>(id);
+    auto obj = reinterpret_cast<std::shared_ptr<BaseT>*>(id);
+
     delete obj;
 }
 
-
-template <typename T>
+template <typename T, typename BaseT>
 inline jlong AllocRefPtrAsLong(const std::shared_ptr<T>& ref) {
+    if (!std::is_same<T, BaseT>::value) {
+        std::shared_ptr<BaseT> baseptr = std::static_pointer_cast<BaseT>(ref);
+        return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
+    }
+
     return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
 }
 
-template <typename T>
+template <typename T, typename BaseT>
 inline jlong AllocRefPtrAsLong(T* ref) {
-    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
+    BaseT* baseptr = ref;
+    return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
 }
 
-template <typename T>
+template <typename T, typename BaseT>
 inline std::shared_ptr<T> RefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
     validateID(id);
-    auto obj = *reinterpret_cast<std::shared_ptr<T>*>(id);
-    return obj;
+    if (!std::is_same<T, BaseT>::value) {
+        auto baseptr = *reinterpret_cast<std::shared_ptr<BaseT>*>(id);
+        return std::dynamic_pointer_cast<T>(baseptr);
+    }
+    return *reinterpret_cast<std::shared_ptr<T>*>(id);;
 }
 
 template <typename T>
@@ -77,25 +86,29 @@ inline std::shared_ptr<T> NullableRefFromLong(jlong id) {
     return RefFromLong<T>(id);
 }
 
-template<typename T>
+template<typename T, typename BaseT>
 inline jlong UnsafeRefAsLong(T* unsafe) {
     IsTypeValidForJNI<T>();
+    BaseT* baseptr = unsafe;
     //DCHECK_NE(unsafe, nullptr);
-    return reinterpret_cast<jlong>(unsafe);
+    return reinterpret_cast<jlong>(baseptr);
 }
 
-template<typename T>
+template<typename T, typename BaseT>
 inline T* NullableUnsafeRefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
-    T* obj = reinterpret_cast<T*>(id);
-    return obj;
+    if (!std::is_same<T, BaseT>::value) {
+        BaseT* baseobj = reinterpret_cast<BaseT*>(id);
+        return dynamic_cast<T*>(baseobj);
+    }
+    return reinterpret_cast<T*>(id);
 }
 
-template<typename T>
+template<typename T, typename BaseT>
 inline T* UnsafeRefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
     validateID(id);
-    return NullableUnsafeRefFromLong<T>(id);
+    return NullableUnsafeRefFromLong<T, BaseT>(id);
 }
 
 template <class Callable>

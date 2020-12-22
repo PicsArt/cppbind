@@ -80,6 +80,7 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+        cxx_base_type_name = cutil.get_base_cursor(ctx.node.parent.clang_cursor).type.spelling
 
         overloading_prefix = ctx.overloading_prefix
 
@@ -134,6 +135,8 @@ def make_class_context(ctx):
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
                                          for base_type in ctx.base_types]
                 has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
+
+            cxx_base_type_name = cutil.get_base_cursor(ctx.cursor).type.spelling
             return locals()
 
         context = make_def_context(ctx)
@@ -181,6 +184,7 @@ def make_member_context(ctx):
                                f'{ctx.config.package_prefix}.{ctx.package}',
                                ctx.parent_context.name)
         cxx_type_name = ctx.cursor.semantic_parent.type.spelling
+        cxx_base_type_name = cutil.get_base_cursor(ctx.node.parent.clang_cursor).type.spelling
 
         gen_member_setter = ctx.node.api == 'member_setter'
 
@@ -189,6 +193,7 @@ def make_member_context(ctx):
     context = make_def_context(ctx)
     context.update(make())
     return context
+
 
 def preprocess_scope(context, scope, info):
     context_scope = copy.copy(context)

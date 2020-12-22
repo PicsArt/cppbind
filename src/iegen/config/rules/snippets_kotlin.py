@@ -186,7 +186,7 @@ def make_member_context(ctx):
         cxx_type_name = ctx.cursor.semantic_parent.type.spelling
         cxx_base_type_name = cutil.get_base_cursor(ctx.node.parent.clang_cursor).type.spelling
 
-        gen_member_setter = ctx.node.api == 'member_setter'
+        gen_property_setter = ctx.node.api == 'property_setter'
 
         return locals()
 
@@ -262,14 +262,14 @@ def gen_getter(ctx, builder):
     return
 
 
-def gen_member_getter(ctx, builder):
+def gen_property_getter(ctx, builder):
     context = make_member_context(ctx)
-    preprocess_entry(context, builder, 'member_getter')
+    preprocess_entry(context, builder, 'property_getter')
     return
 
 
-def gen_member_setter(ctx, builder):
-    gen_member_getter(ctx, builder)
+def gen_property_setter(ctx, builder):
+    gen_property_getter(ctx, builder)
 
 
 def gen_setter(ctx, builder):

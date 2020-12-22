@@ -113,12 +113,10 @@ class Converter:
                             arg in self.template_args]
             custom = types.SimpleNamespace(**self.custom)
             cxx_base_type = self.target_clang_type
-            cxx_base_type_name = cxx_base_type.spelling
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
                 cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
-                cxx_base_type_name = cxx_base_type.spelling
 
             clang_type = self.target_clang_type
             cxx_type_name = self.target_clang_type.spelling

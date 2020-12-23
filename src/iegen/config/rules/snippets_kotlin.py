@@ -137,6 +137,7 @@ def make_class_context(ctx):
                 has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
 
             cxx_base_type_name = cutil.get_base_cursor(ctx.cursor).type.spelling
+            is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
         context = make_def_context(ctx)

@@ -17,7 +17,7 @@ $Object:
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = target_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong{{'Dynamic' if type_ctx.ancestors|any('is_abstract')}}<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
     {%- else %}
     {%- if target_base_pointee_unqualified_name == pointee %}
     auto {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
@@ -205,7 +205,7 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
+    auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
   kotlin_to_jdk:

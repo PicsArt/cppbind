@@ -72,6 +72,17 @@ inline std::shared_ptr<T> RefFromLong(jlong id) {
     validateID(id);
     if (!std::is_same<T, BaseT>::value) {
         auto baseptr = *reinterpret_cast<std::shared_ptr<BaseT>*>(id);
+        return std::static_pointer_cast<T>(baseptr);
+    }
+    return *reinterpret_cast<std::shared_ptr<T>*>(id);;
+}
+
+template <typename T, typename BaseT>
+inline std::shared_ptr<T> RefFromLongDynamic(jlong id) {
+    IsTypeValidForJNI<T>();
+    validateID(id);
+    if (!std::is_same<T, BaseT>::value) {
+        auto baseptr = *reinterpret_cast<std::shared_ptr<BaseT>*>(id);
         return std::dynamic_pointer_cast<T>(baseptr);
     }
     return *reinterpret_cast<std::shared_ptr<T>*>(id);;
@@ -99,6 +110,16 @@ inline T* NullableUnsafeRefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
     if (!std::is_same<T, BaseT>::value) {
         BaseT* baseobj = reinterpret_cast<BaseT*>(id);
+        return static_cast<T*>(baseobj);
+    }
+    return reinterpret_cast<T*>(id);
+}
+
+template<typename T, typename BaseT>
+inline T* NullableUnsafeRefFromLongDynamic(jlong id) {
+    IsTypeValidForJNI<T>();
+    if (!std::is_same<T, BaseT>::value) {
+        BaseT* baseobj = reinterpret_cast<BaseT*>(id);
         return dynamic_cast<T*>(baseobj);
     }
     return reinterpret_cast<T*>(id);
@@ -110,6 +131,14 @@ inline T* UnsafeRefFromLong(jlong id) {
     validateID(id);
     return NullableUnsafeRefFromLong<T, BaseT>(id);
 }
+
+template<typename T, typename BaseT>
+inline T* UnsafeRefFromLongDynamic(jlong id) {
+    IsTypeValidForJNI<T>();
+    validateID(id);
+    return NullableUnsafeRefFromLongDynamic<T, BaseT>(id);
+}
+
 
 template <class Callable>
 auto handleNativeCrash(JNIEnv* env, Callable f) -> decltype(f()) {

@@ -18,7 +18,7 @@ namespace iegen {
  * 
  * __API__
  * gen: class
- * shared_ref: True
+ * shared_ref: False
  */
 class Object {
 public:

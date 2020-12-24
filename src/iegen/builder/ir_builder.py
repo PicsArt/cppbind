@@ -88,9 +88,10 @@ class CXXIEGIRBuilder(object):
                             node_kind = current_node.kind_name
                             if node_kind not in properties["allowed_on"]:
                                 raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
-                    # if the default is bool then cast to bool
-                    if isinstance(properties['default'], bool) and not isinstance(new_att_val, bool):
-                        new_att_val = ast.literal_eval(new_att_val)
+                    # if the default is bool then cast to bool(might be bool from parent)
+                    if isinstance(properties['default'], bool) and isinstance(new_att_val, str):
+                        new_att_val = new_att_val.lower() == 'true'
+
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):

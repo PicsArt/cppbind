@@ -79,7 +79,7 @@ class:
         {% set bases = base_types_converters if base_types_converters is defined else [] %}
         {%- if helper.kotlin.is_valid_class(name, bases) and helper.kotlin.has_valid_ancestors(ancestors) %}
         {{comment}}
-        {{'open ' if is_open}}class {{name}}
+        {{'open ' if is_open}}class {{name}}{{template_suffix}}
             internal constructor(_id: Long) {% if base_types_converters is defined -%}
                                               {%- set comma = joiner(', ') -%}
                                               : {% for base_type_converter in base_types_converters -%}
@@ -153,7 +153,7 @@ interface:
         - interface_external
       content: |
         {{comment}}
-        interface I{{name}} {% if base_types_converters is defined -%}
+        interface I{{name}}{{template_suffix}} {% if base_types_converters is defined -%}
               : {{base_types_converters|join(',', attribute='kotlin.target_type_name')}} {% endif %}{
             {%- if base_types_converters is not defined %}
             fun getObjId(): Long
@@ -162,14 +162,14 @@ interface:
             {{body|string|indent}}
         }
 
-        class {{name}}Helper {
+        class {{name}}Helper{{template_suffix}} {
             companion object {
                 {{interface_external|string|indent(8)}}
           }
         }
         {%- if helper.kotlin.has_valid_ancestors(ancestors) %}
-        {{'open ' if is_open}}class {{name}}
-            internal constructor(_id: Long) : I{{name}}, AutoCloseable {% if base_types_converters is defined -%}
+        {{'open ' if is_open}}class {{name}}{{template_suffix}}
+            internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {% if base_types_converters is defined -%}
                                               , {{base_types_converters|join(',',attribute='kotlin.target_type_name')}}
                                               {%- endif %}{
             companion object {
@@ -265,14 +265,14 @@ function:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if ctx.parent_context.node.is_interface %}
-          val result = {{owner_class.name}}Helper.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result')|indent}}
           return {{result_converter.converted_name('result')}}
       }
-      {% endif %}
+      {%- endif %}
     companion: |
       {%- if is_static %}
       {{comment}}
@@ -285,7 +285,7 @@ function:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {% if ctx.parent_context.node.is_interface -%}
-          val result = {{owner_class.name}}Helper.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- endif %}
@@ -310,8 +310,8 @@ function:
   cxx:
     body: |
       {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
-      {%- set objid_args=["jobjectid id"]if not is_static else [] -%} 
-      {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args 
+      {%- set objid_args=["jobjectid id"]if not is_static else [] -%}
+      {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- macro args_snippet(args, call_args) %}
       {%- for arg in args -%}
@@ -357,7 +357,7 @@ property_getter:
       {{'var' if gen_property_setter else 'val'}} {{name}}: {{result_converter.target_type_name}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
-              val result = {{owner_class.name}}Helper.j{{name|capitalize}}(getObjId())
+              val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
               {%- endif %}
@@ -369,7 +369,7 @@ property_getter:
             set(value) {
               {{converter.snippet('value')|indent(8)}}
               {%- if ctx.parent_context.node.is_interface %}
-              {{owner_class.name}}Helper.jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
+              {{owner_class.name}}Helper{{owner_class.template_suffix}}.jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
               jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
@@ -426,7 +426,7 @@ getter:
       {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
-              val result = {{owner_class.name}}Helper.j{{name|capitalize}}(getObjId())
+              val result = {{owner_class.name}}{{owner_class.template_suffix}}Helper.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
               {%- endif %}
@@ -438,7 +438,7 @@ getter:
             set(value) {
               {{converter.snippet('value')|indent(8)}}
               {%- if ctx.parent_context.node.is_interface %}
-              {{owner_class.name}}Helper.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
+              {{owner_class.name}}{{owner_class.template_suffix}}Helper.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
               j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}

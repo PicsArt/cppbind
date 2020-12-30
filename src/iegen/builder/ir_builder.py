@@ -3,8 +3,11 @@ Processor module provides various processor for ieg parser
 """
 import ast
 import copy
+import json
 import os
 from collections import OrderedDict
+import clang.cindex as cli
+
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import IEG_Ast, Node
@@ -88,13 +91,26 @@ class CXXIEGIRBuilder(object):
                             node_kind = current_node.kind_name
                             if node_kind not in properties["allowed_on"]:
                                 raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
-                    # if the default is bool then cast to bool
-                    if isinstance(properties['default'], bool) and not isinstance(new_att_val, bool):
-                        new_att_val = ast.literal_eval(new_att_val)
                     # now we need to process variables of value and set value
+                    array = properties.get('array', False)
                     if new_att_val is not None:
-                        if isinstance(new_att_val, str):
-                            new_att_val = new_att_val.format(**self.get_sys_vars(lang))
+                        attr_type = properties["type"]
+                        if attr_type == "string":
+                            if array:
+                                new_att_val = [val.format(**self.get_sys_vars(lang)) for val in new_att_val]
+                            else:
+                                new_att_val = new_att_val.format(**self.get_sys_vars(lang))
+                        elif attr_type == "bool":
+                            if isinstance(new_att_val, str):
+                                new_att_val = new_att_val.lower() == 'true'
+                        elif attr_type == "dict":
+                            if isinstance(new_att_val, str):
+                                new_att_val = json.loads(new_att_val)
+                            elif att_val and isinstance(new_att_val, dict):
+                                new_att_val.update(json.loads(att_val))
+                        else:
+                            TypeError(f"Unsupported type for attribute: {attr_type}."
+                                      f" Only dict, string and bool are allowed.")
                         args.setdefault(att_name,
                                         OrderedDict())[lang] = new_att_val
 

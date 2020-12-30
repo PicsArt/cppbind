@@ -1,8 +1,9 @@
 """
 """
+import itertools
 from collections import OrderedDict
 import iegen.utils.clang as cutil
-
+import clang.cindex as cli
 
 class Node(object):
 
@@ -90,6 +91,14 @@ class Node(object):
     @property
     def is_interface(self):
         return self.api == 'interface'
+
+    @property
+    def is_template(self):
+        return self.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE] or (self.parent and self.parent.is_template)
+
+    @property
+    def is_function_template(self):
+        return self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE
 
     def walk_preorder(self):
         """

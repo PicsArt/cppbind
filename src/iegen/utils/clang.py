@@ -1,6 +1,9 @@
 """
 Helper functions working with clang
 """
+import itertools
+import re
+
 import clang.cindex as cli
 from itertools import chain
 
@@ -53,7 +56,7 @@ def get_semantic_ancestors(cursor):
     ancestors = []
     _cursor = cursor.semantic_parent
 
-    while(_cursor):
+    while (_cursor):
         ancestors.append(_cursor)
         _cursor = _cursor.semantic_parent
 
@@ -68,8 +71,13 @@ def get_full_name(cursor):
 
 def get_full_displayname(cursor):
     ancestors = get_semantic_ancestors(cursor)
-    ancestors = ancestors[1::] + [cursor]
-    return '::'.join([c.displayname for c in ancestors])
+    ancestors = ancestors[1::]
+
+    full_display_name = '::'.join([c.displayname for c in ancestors])
+    if cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+        return f'{full_display_name}::{cursor.spelling}'
+    else:
+        return f'{full_display_name}::{cursor.displayname}'
 
 
 def is_final_cursor(cursor):
@@ -99,3 +107,16 @@ def get_base_cursor(cursor):
         return get_base_cursor(bases[0])
     else:
         return cursor
+
+
+def template_class_suffix(type_spellings):
+    """
+    Returns the base class cursor for the given cursor.
+    If there are multiple branches(inheritance) then the left(first) base is taken.
+    Args:
+        type_spellings (list(str)):
+    Returns:
+        string:
+    """
+    return ''.join(itertools.chain.from_iterable([[part.capitalize() for part in re.split('::|>|<|_', type_spelling)]
+                                                  for type_spelling in type_spellings]))

@@ -8,7 +8,7 @@ from jinja2 import Environment, BaseLoader, StrictUndefined
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
-
+from iegen.ir.exec_rules import Context
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -84,13 +84,16 @@ class Converter:
     def __init__(self, clang_type, target_clang_type,
                  template_args,
                  custom,
-                 ctx, type_converter):
+                 ctx,
+                 type_converter,
+                 template_choice):
         self.clang_type = clang_type
         self.type_converter = type_converter
         self.template_args = template_args
         self.custom = custom
         self.ctx = ctx
         self.target_clang_type = target_clang_type
+        self.template_choice = template_choice
         self.context = self._make_context()
 
     def snippet(self, name):
@@ -108,6 +111,8 @@ class Converter:
         def make():
             # helper variables
             args = self.template_args
+            template_suffix = ''
+
             args_t = [arg.target_type_name for arg in self.template_args]
             args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
                             arg in self.template_args]
@@ -116,18 +121,35 @@ class Converter:
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
-                cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
+                if args:
+                    def get_arg_spelling(arg):
+                        if arg.clang_type.kind == cli.TypeKind.UNEXPOSED:
+                            arg_type_spelling = self.template_choice[arg.clang_type.spelling]
+                        else:
+                            arg_type_spelling = arg.clang_type.spelling
+                        return arg_type_spelling
 
-            clang_type = self.target_clang_type
+                    template_suffix = cutil.template_class_suffix([get_arg_spelling(arg) for arg in args])
+            # find base type somehow todo
             cxx_type_name = self.target_clang_type.spelling
+            if self.template_choice:
+                for typename, value in self.template_choice.items():
+                    cxx_type_name = cxx_type_name.replace(typename, value)
             target_pointee = cutil.get_pointee_type(self.target_clang_type)
             target_pointee_name = target_pointee.spelling
-            is_pointer = target_pointee != self.target_clang_type
+            is_pointer = self.target_clang_type.kind == cli.TypeKind.POINTER
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )
             target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 cutil.get_pointee_type(cxx_base_type))
+
+            if self.template_choice:
+                for typename, value in self.template_choice.items():
+                    cxx_type_name = cxx_type_name.replace(typename, value)
+                    target_pointee_name = target_pointee_name.replace(typename, value)
+                    target_pointee_unqualified_name = target_pointee_unqualified_name.replace(typename, value)
+                    target_base_pointee_unqualified_name = target_base_pointee_unqualified_name.replace(typename, value)
 
             # helper name spaces
             clang_utils = cutil
@@ -145,12 +167,14 @@ class Converter:
 
 class Adapter:
 
-    def __init__(self, clang_type, ctx, type_info_colector):
+    def __init__(self, clang_type, ctx, type_info_colector, template_choice=None):
         self.type_info_colector = type_info_colector
         self.clang_type = clang_type
         self.ctx = ctx
         self.target_clang_type = clang_type
         self.template_args = []
+        # todo update converter to accept kwargs and pass to converter
+        self.template_choice = template_choice
 
     def set_template_args(self, args):
         self.template_args = args
@@ -176,7 +200,9 @@ class Adapter:
                          target_clang_type=self.target_clang_type,
                          template_args=[getattr(arg, name) for arg in self.template_args],
                          custom=self.type_info_colector.custom,
-                         ctx=self.ctx, type_converter=type_info)
+                         ctx=self.ctx,
+                         type_converter=type_info,
+                         template_choice=self.template_choice)
 
     __getitem__ = __getattr__
 
@@ -189,8 +215,8 @@ class TypeInfoCollector:
         self.target_type_infos = target_type_infos
         self.custom = custom
 
-    def make_converter(self, clang_type, ref_ctx):
-        return Adapter(clang_type=clang_type, ctx=ref_ctx, type_info_colector=self)
+    def make_converter(self, clang_type, ref_ctx, template_choice=None):
+        return Adapter(clang_type=clang_type, ctx=ref_ctx, type_info_colector=self, template_choice=template_choice)
 
 
 class TargetTypeInof:
@@ -231,10 +257,10 @@ class ScopeInfo:
         self.snippet_tmpl = snippet_tmpl
         self.unique_snippet_tmpl = unique_snippet_tmpl
 
-    def make_snippet(self, context):
+    def make_snippet(self, context, template_choice=None):
         return Snippet(context=context, template=self.snippet_tmpl)
 
-    def unique_make_snippet(self, context):
+    def unique_make_snippet(self, context, template_choice=None):
         return Snippet(context=context, template=self.unique_snippet_tmpl)
 
 
@@ -276,9 +302,9 @@ class SnippetsEngine:
             variables.update(vars_)
         return variables
 
-    def build_type_converter(self, ctx, clang_type):
+    def build_type_converter(self, ctx, clang_type, template_choice=None):
 
-        res = self._build_type_converter(ctx, clang_type)
+        res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
         if res is None:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
         # else
@@ -437,7 +463,7 @@ class SnippetsEngine:
             self.type_infos[type_name] = TypeInfoCollector(name=type_name, target_type_infos=target_types,
                                                            converters=type_converters, custom=custom)
 
-    def _create_type_info(self, ctx, search_name, clang_type, template_args=None, **kwargs):
+    def _create_type_info(self, ctx, search_name, clang_type, template_args=None, template_choice=None, **kwargs):
         ref_ctx = ctx.find_by_type(search_name)
         if ref_ctx is not None:
             if clang_type.kind == cli.TypeKind.ENUM:
@@ -451,35 +477,41 @@ class SnippetsEngine:
             # type info for given type is not available
             return None
 
-        type_converter = type_converter.make_converter(clang_type, ref_ctx)
+        type_converter = type_converter.make_converter(clang_type, ref_ctx, template_choice=template_choice)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])
 
         return type_converter
 
-    def _build_type_converter(self, ctx, clang_type, lookup_type=None):
+    def _build_type_converter(self, ctx, clang_type, lookup_type=None, template_choice=None):
+        template_choice = template_choice or {}
 
         lookup_type = lookup_type or clang_type
-        search_name = cutil.get_unqualified_type_name(lookup_type)
-        type_info = self._create_type_info(ctx, search_name, clang_type=clang_type)
+        search_name = cutil._get_unqualified_type_name(lookup_type.spelling)
+        if ctx.cursor.kind in [cli.CursorKind.FUNCTION_TEMPLATE] or ctx.node.parent.is_template:
+            if search_name in template_choice:
+                search_name = template_choice[search_name]
+        type_info = self._create_type_info(ctx, search_name, clang_type=clang_type, template_choice=template_choice)
 
         if type_info is None:
             pointee_type = cutil.get_pointee_type(lookup_type)
             if pointee_type != lookup_type:
-                return self._build_type_converter(ctx, clang_type, pointee_type)
+                return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
-                canonical_type = cutil.get_canonical_type(lookup_type)
-                if canonical_type != lookup_type:
-                    return self._build_type_converter(ctx, clang_type, canonical_type)
-            if cutil.is_template(lookup_type):
-                tmpl_args = [self._build_type_converter(ctx, arg_type)
-                             for arg_type in cutil.template_argument_types(lookup_type)]
+                if cutil.is_template(lookup_type):
+                    tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
+                                 for arg_type in cutil.template_argument_types(lookup_type)]
 
-                type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
-                                                   clang_type=clang_type,
-                                                   template_args=tmpl_args)
-                return type_info
+                    type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
+                                                       clang_type=clang_type,
+                                                       template_args=tmpl_args,
+                                                       template_choice=template_choice)
+                    return type_info
+                else:
+                    canonical_type = cutil.get_canonical_type(lookup_type)
+                    if canonical_type != lookup_type:
+                        return self._build_type_converter(ctx, clang_type, canonical_type, template_choice=template_choice)
 
         return type_info
 

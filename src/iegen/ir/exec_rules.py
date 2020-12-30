@@ -1,18 +1,21 @@
 """
 """
+import itertools
 import os
 import types
 import clang.cindex as cli
 from iegen import logging as logging
+import iegen.utils.clang as cutil
 
 
 class Context(object):
 
-    def __init__(self, runner, node):
+    def __init__(self, runner, node, template_choice=None):
         assert node.clang_cursor, "cursor is not provided"
         self.runner = runner
         self.config = runner.config
         self.node = node
+        self.template_choice = template_choice
 
     @property
     def kind_name(self):
@@ -46,28 +49,37 @@ class Context(object):
                             val = val.spelling
             return val
 
-        for arg_c in self.node.clang_cursor.get_arguments():
-            def_val = get_default(arg_c)
-            arg_params = types.SimpleNamespace(name=arg_c.spelling,
-                                               type=arg_c.type,
-                                               cursor=arg_c,
-                                               default=def_val
-                                               )
-            _args.append(arg_params)
+        if self.node.is_template:
+            for i, arg_type in enumerate(self.node.clang_cursor.type.argument_types()):
+                arg_params = types.SimpleNamespace(name=f'arg{i}',
+                                                   type=arg_type,
+                                                   cursor=None,
+                                                   default=None)
+                _args.append(arg_params)
+        else:
+            for arg_c in self.node.clang_cursor.get_arguments():
+                def_val = get_default(arg_c)
+                arg_params = types.SimpleNamespace(name=arg_c.spelling,
+                                                   type=arg_c.type,
+                                                   cursor=arg_c,
+                                                   default=def_val
+                                                   )
+                _args.append(arg_params)
 
         return _args
 
     @property
     def result_type(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL]:
+        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL,
+                                               cli.CursorKind.FUNCTION_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.returns is invalid.")
         return self.node.clang_cursor.result_type
 
     @property
     def overloading_prefix(self):
         if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL,
-                                               cli.CursorKind.CONSTRUCTOR]:
+                                               cli.CursorKind.CONSTRUCTOR, cli.CursorKind.FUNCTION_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         if not hasattr(self, '_overloading_prefix'):
@@ -110,7 +122,8 @@ class Context(object):
     @property
     def base_types(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
 
         return [
@@ -121,7 +134,8 @@ class Context(object):
     @property
     def ancestors(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
 
         def walk(base_types):
@@ -138,7 +152,8 @@ class Context(object):
     @property
     def base_types_specifier_cursor(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL]:
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
 
         return [base_specifier
@@ -170,7 +185,8 @@ class Context(object):
 
     @property
     def parent_context(self):
-        return self.runner.get_context(self.node.parent.type_name)
+        return self.runner.get_context(self.node.parent.full_displayname)
+        # return self.runner.get_context(self.node.parent.type_name)
 
     @property
     def prj_rel_file_name(self):
@@ -195,6 +211,15 @@ class Context(object):
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
+    def set_template_choice(self, template_choice):
+        self.template_choice = template_choice
+
+    @property
+    def template_suffix(self):
+        if not self.template_choice:
+            return ''
+        return cutil.template_class_suffix(self.template_choice.values())
+
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
         if val is None:
@@ -215,11 +240,11 @@ class RunRule(object):
         self.config = config
         # calling order should be such as that parent node processes first
         self.api_call_order = [
-            {'class', 'interface', 'enum'},
-            {'constructor'},
-            {'method'},
-            {'getter'},
-            {'setter'},
+            # {'class', 'interface', 'enum'},
+            # {'constructor'},
+            # {'method'},
+            # {'getter'},
+            # {'setter'},
             {}
         ]
 
@@ -243,9 +268,10 @@ class RunRule(object):
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
 
-            def _run_recursive(node):
+            def _run_recursive(node, template_choice=None):
                 stack_added = False
-                if node.api and (not calling_api or node.api in calling_api) and node not in processed:
+                if node.api and (not calling_api or node.api in calling_api) and (
+                        template_choice or node not in processed):
                     ancesstor = node.ancestor_with_api
                     if ancesstor in processed:
                         # for already called api resume builders scope stack
@@ -259,7 +285,7 @@ class RunRule(object):
                     builder.add_scope_stack()
 
                     # call api
-                    self.call_api(rule, node, builder)
+                    self.call_api(rule, node, builder, template_choice)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node] = builder.capture_stacks()
                     logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
@@ -267,7 +293,14 @@ class RunRule(object):
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
                     for child in node.children:
-                        _run_recursive(child)
+                        if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
+                            all_possible_args = list(itertools.product(*child.args['template'][self.language].values()))
+                            template_keys = child.args['template'][self.language].keys()
+                            for i, choice in enumerate(all_possible_args):
+                                _template_choice = dict(zip(template_keys, choice))
+                                _run_recursive(child, _template_choice)
+                        else:
+                            _run_recursive(child, template_choice)
                     logging.debug(f"End processing children for {node.displayname}.")
 
                 if stack_added:
@@ -284,12 +317,15 @@ class RunRule(object):
 
             builder.pop_scope_stack()
 
-    def call_api(self, rule, node, builder):
+    def call_api(self, rule, node, builder, template_choice=None):
         api = node.api
         att_name = "gen_" + api
         logging.debug(f"Call API: {api} on {node.displayname}")
         func = getattr(rule, att_name)
-        func(self.get_context(node.full_displayname), builder)
+        context = self.get_context(node.full_displayname)
+        # set current template choice to generate correct context
+        context.set_template_choice(template_choice)
+        func(context, builder)
 
     def create_context(self, node):
         assert node is not None

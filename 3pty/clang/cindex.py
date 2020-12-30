@@ -1553,6 +1553,12 @@ class Cursor(Structure):
 
         return updcursors
 
+    def get_specialized_cursor(self):
+        return conf.lib.clang_getSpecializedCursorTemplate(self)
+
+    def get_template_cursor_kind(self):
+        return conf.lib.clang_getTemplateCursorKind(self)
+
     @property
     def kind(self):
         """Return the kind of this cursor."""

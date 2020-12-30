@@ -1,39 +1,53 @@
 prefix:
   inheritable: true
   default: null
+  type: string
   allowed_on: [ class, struct, namespace, enum ]
 
 file:
   inheritable: true
   default: '{file_name}'
+  type: string
   allowed_on: [ class, struct, namespace, enum ]
 
 file_full_name:
   inheritable: true
   default: '{file_full_name}'
+  type: string
   allowed_on: [ class, struct, namespace, enum ]
 
 module:
   inheritable: false
   default: '{module_name}'
+  type: string
   allowed_on: [ class, struct, namespace, enum ]
 
 package:
   inheritable: true
   default: 'undefined'
+  type: string
   allowed_on: [ class, struct, namespace, enum ]
 
 name:
   inheritable: false
+  type: string
   default: '{object_name}'
 
 include:
   inheritable: true
   array: true
   default: [ ]
+  type: string
   allowed_on: [ namespace ]
 
 shared_ref:
   inheritable: true
   default: false
+  type: bool
   allowed_on: [ class, struct ]
+
+template:
+  inheritable: true
+  default: null
+  type: dict
+  allowed_on: [ class_template, struct_template, function_template ]

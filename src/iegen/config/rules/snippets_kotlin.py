@@ -2,6 +2,8 @@ import os
 import types
 import copy
 from functools import partial
+
+import iegen
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
@@ -21,6 +23,7 @@ def load_snipppets_engine(path, main_target):
 
 def gen_init(config, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
+
     # load snippets
 
     def make_context(config):
@@ -44,6 +47,7 @@ def make_def_context(ctx):
         # helper variables
         config = ctx.config
         pat_sep = os.sep
+        helper = iegen.converter
 
         cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling
@@ -78,15 +82,20 @@ def make_func_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         overloading_prefix = ctx.overloading_prefix
-        get_jni_name = partial(convert.get_jni_func_name,
-                               f'{ctx.config.package_prefix}.{ctx.package}',
-                               ctx.parent_context.name)
+
+        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
+            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+                                             class_name,
+                                             method_name,
+                                             args_type_name)
+
         cxx_type_name = ctx.cursor.semantic_parent.type.spelling
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
+        is_abstract = ctx.cursor.is_abstract_record()
         is_open = not cutil.is_final_cursor(ctx.cursor)
         is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
         is_protected = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PROTECTED
@@ -122,11 +131,12 @@ def make_class_context(ctx):
             get_jni_name = partial(convert.get_jni_func_name,
                                    f'{ctx.config.package_prefix}.{ctx.package}',
                                    ctx.name)
+            has_non_abstract_base_class = False
             cxx_type_name = ctx.cursor.type.spelling
             if ctx.base_types:
-                base_type_converter = SNIPPETS_ENGINE.build_type_converter(
-                    ctx, ctx.base_types[0]
-                )
+                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
+                                         for base_type in ctx.base_types]
+                has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
             return locals()
 
         context = make_def_context(ctx)
@@ -204,6 +214,11 @@ def gen_class(ctx, builder):
     preprocess_entry(context, builder, 'class')
 
 
+def gen_interface(ctx, builder):
+    context = make_class_context(ctx)
+    preprocess_entry(context, builder, 'interface')
+
+
 def gen_constructor(ctx, builder):
     context = make_constructor_context(ctx)
     preprocess_entry(context, builder, 'constructor')
@@ -216,7 +231,6 @@ def gen_method(ctx, builder):
 
 
 def gen_getter(ctx, builder):
-
     assert not ctx.args, "getter should not have arguments"
     if ctx.setter:
         assert len(ctx.setter.args) == 1, "Setter should have one argument."

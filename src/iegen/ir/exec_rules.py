@@ -224,7 +224,7 @@ class RunRule(object):
         self.config = config
         # calling order should be such as that parent node processes first
         self.api_call_order = [
-            {'class', 'enum'},
+            {'class', 'interface', 'enum'},
             {'constructor'},
             {'method'},
             {'getter'},

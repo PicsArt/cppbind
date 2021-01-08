@@ -173,6 +173,26 @@ def make_getter_context(ctx):
     return context
 
 
+def make_member_context(ctx):
+    def make():
+        # helper variables
+        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type)
+
+        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+
+        get_jni_name = partial(convert.get_jni_func_name,
+                               f'{ctx.config.package_prefix}.{ctx.package}',
+                               ctx.parent_context.name)
+        cxx_type_name = ctx.cursor.semantic_parent.type.spelling
+
+        gen_member_setter = ctx.node.api == 'member_setter'
+
+        return locals()
+
+    context = make_def_context(ctx)
+    context.update(make())
+    return context
+
 def preprocess_scope(context, scope, info):
     context_scope = copy.copy(context)
     for sname in info.scopes:
@@ -238,6 +258,16 @@ def gen_getter(ctx, builder):
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
     return
+
+
+def gen_member_getter(ctx, builder):
+    context = make_member_context(ctx)
+    preprocess_entry(context, builder, 'member_getter')
+    return
+
+
+def gen_member_setter(ctx, builder):
+    gen_member_getter(ctx, builder)
 
 
 def gen_setter(ctx, builder):

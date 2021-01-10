@@ -112,11 +112,12 @@ class Converter:
             args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
                             arg in self.template_args]
             custom = types.SimpleNamespace(**self.custom)
-            cxx_base_type = self.target_clang_type
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
                 cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
+                target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
+                    cutil.get_pointee_type(cxx_base_type))
 
             clang_type = self.target_clang_type
             cxx_type_name = self.target_clang_type.spelling
@@ -126,8 +127,7 @@ class Converter:
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )
-            target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
-                cutil.get_pointee_type(cxx_base_type))
+
 
             # helper name spaces
             clang_utils = cutil

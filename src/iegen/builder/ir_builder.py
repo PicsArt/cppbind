@@ -3,6 +3,7 @@ Processor module provides various processor for ieg parser
 """
 import ast
 import copy
+import distutils.util
 import os
 from collections import OrderedDict
 from iegen import default_config as default_config
@@ -88,9 +89,6 @@ class CXXIEGIRBuilder(object):
                             node_kind = current_node.kind_name
                             if node_kind not in properties["allowed_on"]:
                                 raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
-                    # if the default is bool then cast to bool(might be bool from parent)
-                    if isinstance(properties['default'], bool) and isinstance(new_att_val, str):
-                        new_att_val = new_att_val.lower() == 'true'
 
                     # now we need to process variables of value and set value
                     if new_att_val is not None:

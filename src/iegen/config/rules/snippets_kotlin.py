@@ -80,7 +80,6 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        cxx_base_type_name = cutil.get_base_cursor(ctx.node.parent.clang_cursor).type.spelling
 
         overloading_prefix = ctx.overloading_prefix
 
@@ -89,8 +88,6 @@ def make_func_context(ctx):
                                              class_name,
                                              method_name,
                                              args_type_name)
-
-        cxx_type_name = ctx.cursor.semantic_parent.type.spelling
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -184,8 +181,6 @@ def make_member_context(ctx):
         get_jni_name = partial(convert.get_jni_func_name,
                                f'{ctx.config.package_prefix}.{ctx.package}',
                                ctx.parent_context.name)
-        cxx_type_name = ctx.cursor.semantic_parent.type.spelling
-        cxx_base_type_name = cutil.get_base_cursor(ctx.node.parent.clang_cursor).type.spelling
 
         gen_property_setter = ctx.node.api == 'property_setter'
 

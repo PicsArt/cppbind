@@ -1,6 +1,7 @@
 """
 Implements ieg api parser on cxx comment
 """
+import distutils.util
 import re
 from collections import OrderedDict
 
@@ -62,6 +63,9 @@ class APIParser(object):
                 if attr in attr_dict and not array:
                     # redefinition or array
                     raise Exception(f"Attribute {attr} is defined in multiple places.")
+
+                if isinstance(self.attributes[attr]['default'], bool):
+                    value = distutils.util.strtobool(value)
 
                 for lang in language:
                     att_lang_ditct = attr_dict.setdefault(attr, OrderedDict())

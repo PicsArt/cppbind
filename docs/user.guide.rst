@@ -12,10 +12,10 @@ Here is an example of configuration file\ :
 
     [DEFAULT]
       out_prj_dir=/path/to/output/
-      cxx_base_out_dir=%(source_dir)s/out/
-      source_dir = ./source/
-      src_glob = *.h*
+      cxx_base_out_dir=./source/out
+      src_glob = ./source/*.h*
       run_dir = package_name
+      custom_config_dir = /home/iegen_config
       include_dirs = /path/to/some/sources/, /path/to/jni
 
     [KOTLIN]
@@ -31,10 +31,12 @@ Here is an example of configuration file\ :
 **DEFAULT**
   * **out_prj_dir** - Root directory where output files will be saved.
   * **cxx_base_out_dir** - Base classes will be copied into this directory, they can be used by source classes. An example of base class is the Object class.
-  * **source_dir** - Directory containing source files which are going to be processed.
-  * **src_glob** - File pattern used to find files from source_dir.
-  * **include_dirs** - Directories which contain sources that are used by the files to be processed.
+  * **src_glob** - File pattern used to find source files.
   * **run_dir** - This can be used in out_dir.
+  * **custom_config_dir** - Directory containing custom configuration files. An example is custom types files which will be used for parsing different types from cxx to the target language.
+  Check the example :ref:`Custom types`
+
+  * **include_dirs** - Directories which contain sources that are used by the files to be processed.
 
 **KOTLIN**
   * **package_prefix** - Package name for generated kotlin files.
@@ -45,6 +47,74 @@ Here is an example of configuration file\ :
 **LOG**
   * **log_file** - If no file specified then the logs will be redirected to stdout.
   * **log_level** - INFO, DEBUG, etc.
+
+Custom types
+^^^^^^^^^^^^
+
+Type conversions are described in yaml config files. There are predefined basic and complex types. User can also have custom types configuration.
+The files containing this configuration must be of pattern **\*_types.yaml**  and placed under **custom_config_dir** directory.
+Following is an example of converter for std::pair and nlohmann::json from cxx to kotlin and vice versa.
+
+  .. code-block::
+
+    std::pair:
+      custom:
+        pname: Pair
+      kotlin:
+        type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+      jni:
+        type_info: jobject
+      jdk:
+        type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+      jni_to_cxx: |
+        jclass pairClass = env->FindClass("kotlin/Pair");
+
+        jfieldID firstID = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
+        jfieldID secondID = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
+
+        auto firstObject = env->GetObjectField({{name}}, firstID);
+        auto secondObject = env->GetObjectField({{name}}, secondID);
+        {%- set tmp_first = '_' + target_name %}
+        {%- set extract_first = 'iegen::extract{}'.format(args[0].custom.pname) %}
+        {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
+        auto first = {{extract_first}}(env, firstObject);
+        auto second = {{extract_second}}(env, secondObject);
+        {{args[0].snippet('first')|indent}}
+        {{args[1].snippet('second')|indent}}
+        {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+      cxx_to_jni: |
+        {{target_type_name}} {{target_name}} = std::make_pair(f, s);
+      kotlin_to_jdk: |
+        val first = {{name}}.first
+        val second = {{name}}.second
+        {{args[0].snippet('first')|indent}}
+        {{args[1].snippet('second')|indent}}
+        val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+      jdk_to_kotlin: |
+        val first  = {{name}}.first
+        val second  = {{name}}.second
+        {{args[0].snippet('first')|indent}}
+        {{args[1].snippet('second')|indent}}
+        val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+
+    nlohmann::json:
+      custom:
+        pname: json
+      kotlin:
+        type_info: JsonObject
+      jni:
+        type_info: jstring
+      jdk:
+        type_info: String
+      jni_to_cxx: |
+        auto {{target_name}} = json::parse(iegen::jni_to_string(env, {{name}}))
+      cxx_to_jni: |
+        {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
+      kotlin_to_jdk:
+        val {{target_name}} = {{name}}.toString()
+      jdk_to_kotlin: |
+        val {{target_name}}: {{target_type_name}} = JsonParser.parseString({{name}}).asJsonObject()
+
 
 Usage
 ^^^^^

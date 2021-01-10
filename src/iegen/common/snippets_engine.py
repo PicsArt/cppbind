@@ -154,6 +154,10 @@ class Adapter:
     def set_target_type(self, clang_type):
         self.target_clang_type = clang_type
 
+    @property
+    def is_interface(self):
+        return self.ctx.node.is_interface if self.ctx else False
+
     def __getattr__(self, name):
         type_info = None
 
@@ -326,6 +330,10 @@ class SnippetsEngine:
         # load into structures
         self._load_file_info(codeInfoDict['file'])
         del codeInfoDict['file']
+        # remove variables since they are used for placeholders
+        variables = [key for key in codeInfoDict if key.startswith('var')]
+        for key in variables:
+            del codeInfoDict[key]
 
         for code_name, info_map in codeInfoDict.items():
             if isinstance(info_map, str):

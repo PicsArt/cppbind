@@ -4,6 +4,8 @@ Implements ieg api parser on cxx comment
 import re
 from collections import OrderedDict
 
+from iegen.utils.clang import extract_pure_comment
+
 
 class APIParser(object):
 
@@ -21,12 +23,11 @@ class APIParser(object):
         """
         api = None
         attr_dict = OrderedDict()
-        pure_comment = []
 
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
             return api, attr_dict
-        pure_comment.extend(comment_line.lstrip('/* ') for comment_line in raw_comment[:index].splitlines()[:-1])
+        pure_comment = extract_pure_comment(raw_comment, index)
         # else
         ATTR_REGEXPR =\
             rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*:\s*(.+)$"

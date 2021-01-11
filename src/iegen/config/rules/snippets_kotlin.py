@@ -111,6 +111,9 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
+        for case in enum_cases:
+            if case.comment:
+                case.comment = convert.make_comment(case.comment)
         return locals()
 
     context = make_def_context(ctx)

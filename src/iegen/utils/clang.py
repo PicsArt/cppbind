@@ -99,3 +99,8 @@ def get_base_cursor(cursor):
         return get_base_cursor(bases[0])
     else:
         return cursor
+
+
+def extract_pure_comment(raw_comment, end_index=None):
+    end_index = end_index or len(raw_comment) - 1
+    return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]

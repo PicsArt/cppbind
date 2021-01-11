@@ -108,12 +108,16 @@ class Converter:
         def make():
             # helper variables
             args = self.template_args
-            args_t = [args.target_type_name for args in self.template_args]
+            args_t = [arg.target_type_name for arg in self.template_args]
+            args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
+                            arg in self.template_args]
             custom = types.SimpleNamespace(**self.custom)
-
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
+                cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
+                target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
+                    cutil.get_pointee_type(cxx_base_type))
 
             clang_type = self.target_clang_type
             cxx_type_name = self.target_clang_type.spelling
@@ -123,6 +127,7 @@ class Converter:
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )
+
 
             # helper name spaces
             clang_utils = cutil
@@ -204,7 +209,7 @@ class TypeConvertorInfo(TargetTypeInof):
         super().__init__(*args, **kwargs)
         self.snippet_tmpl = snippet_tmpl
 
-    def snippet(self, name,  context):
+    def snippet(self, name, context):
         if self.snippet_tmpl:
             return self.snippet_tmpl.render(name=name,
                                             target_name=self.converted_name(name),
@@ -407,7 +412,7 @@ class SnippetsEngine:
                 if '_to_' in name:
                     # converter
                     index = name.rfind('_to_')
-                    target_lang = name[index+4:]
+                    target_lang = name[index + 4:]
                     target_lang_info = info_map.get(target_lang, {'type_info': '{{cxx_type_name}}'})
                     try:
                         target_type_info = self.jinja2_env.from_string(target_lang_info['type_info'])

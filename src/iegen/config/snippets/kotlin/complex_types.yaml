@@ -8,7 +8,7 @@ $Object:
   custom:
     pname: Long
   kotlin:
-    type_info: "{{type_name}}"
+    type_info: "{{'I' if type_ctx.node.is_interface}}{{type_name}}"
   jni:
     type_info: jobjectid
   jdk:
@@ -16,13 +16,23 @@ $Object:
   jni_to_cxx: |
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = target_pointee_unqualified_name %}
-    auto {{target_name}} = {{dereferencer}}{% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref')%} iegen::RefFromLong<{{pointee}}> {% else %} reinterpret_cast<{{pointee}}*>{% endif %}({{name}});
+    {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong{{'Dynamic' if type_ctx.ancestors|any('is_abstract')}}<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
+    {%- else %}
+    {%- if target_base_pointee_unqualified_name == pointee %}
+    auto {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
+    {%- else %}
+    auto base = {{dereferencer}} reinterpret_cast<{{target_base_pointee_unqualified_name}}*>({{name}});
+    auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
+    {%- endif %}
+    {%- endif %}
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}({{name}});
+    {%- set pointee = target_pointee_unqualified_name %}
+    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
-    val {{target_name}} = {{target_type_name}}({{name}})
+    val {{target_name}} = {{target_type_name[1:] if type_ctx.node.is_interface else target_type_name}}({{name}})
 
 $Enum:
   custom:
@@ -194,29 +204,11 @@ std::shared_ptr:
     type_info: Long
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
-    auto {{target_name}} = iegen::RefFromLong<{{pointee}}>({{name}});
+    {%- set pointee_base = args_t_bases[0] %}
+    auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong({{name}});
+    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}({{name}})
-
-
-nlohmann::json:
-  custom:
-    pname: json
-  kotlin:
-    type_info: JsonObject
-  jni:
-    type_info: jstring
-  jdk:
-    type_info: String
-  jni_to_cxx: |
-    auto {{target_name}} = json::parse(iegen::jni_to_string(env, {{name}}))
-  cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
-  kotlin_to_jdk:
-    val {{target_name}} = {{name}}.toString()
-  jdk_to_kotlin: |
-    val {{target_name}}: {{target_type_name}} = JsonParser.parseString({{name}}).asJsonObject()

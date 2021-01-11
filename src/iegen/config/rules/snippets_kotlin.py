@@ -89,8 +89,6 @@ def make_func_context(ctx):
                                              method_name,
                                              args_type_name)
 
-        cxx_type_name = ctx.cursor.semantic_parent.type.spelling
-
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
@@ -137,6 +135,9 @@ def make_class_context(ctx):
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
                                          for base_type in ctx.base_types]
                 has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
+
+            cxx_base_type_name = cutil.get_base_cursor(ctx.cursor).type.spelling
+            is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
         context = make_def_context(ctx)
@@ -183,15 +184,15 @@ def make_member_context(ctx):
         get_jni_name = partial(convert.get_jni_func_name,
                                f'{ctx.config.package_prefix}.{ctx.package}',
                                ctx.parent_context.name)
-        cxx_type_name = ctx.cursor.semantic_parent.type.spelling
 
-        gen_member_setter = ctx.node.api == 'member_setter'
+        gen_property_setter = ctx.node.api == 'property_setter'
 
         return locals()
 
     context = make_def_context(ctx)
     context.update(make())
     return context
+
 
 def preprocess_scope(context, scope, info):
     context_scope = copy.copy(context)
@@ -260,14 +261,14 @@ def gen_getter(ctx, builder):
     return
 
 
-def gen_member_getter(ctx, builder):
+def gen_property_getter(ctx, builder):
     context = make_member_context(ctx)
-    preprocess_entry(context, builder, 'member_getter')
+    preprocess_entry(context, builder, 'property_getter')
     return
 
 
-def gen_member_setter(ctx, builder):
-    gen_member_getter(ctx, builder)
+def gen_property_setter(ctx, builder):
+    gen_property_getter(ctx, builder)
 
 
 def gen_setter(ctx, builder):

@@ -100,4 +100,29 @@ std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
+jobject extractObject(JNIEnv* env, jobject obj)  {
+    // to not have redundant checks
+    return obj;
+}
+
+std::string extractString(JNIEnv* env, jobject obj)  {
+    return iegen::jni_to_string(env, obj);
+}
+
+jfloat extractFloat(JNIEnv* env, jobject obj)  {
+    return env->CallFloatMethod(obj,
+        env->GetMethodID(env->FindClass("java/lang/Float"), "floatValue", "()F"));
+}
+
+jint extractInt(JNIEnv* env, jobject obj)  {
+    return env->CallIntMethod(obj,
+        env->GetMethodID(env->FindClass("java/lang/Integer"), "intValue", "()I"));
+}
+
+
+jlong extractLong(JNIEnv* env, jobject obj)  {
+    return env->CallLongMethod(obj,
+        env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()L"));
+}
+
 }

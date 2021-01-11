@@ -15,7 +15,7 @@ SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
 
 
-def load_snipppets_engine(path, main_target):
+def load_snippets_engine(path, main_target):
     global SNIPPETS_ENGINE
     SNIPPETS_ENGINE = SnippetsEngine(path, main_target)
     SNIPPETS_ENGINE.load()
@@ -36,7 +36,7 @@ def gen_init(config, *args, **kwargs):
 
     context = make_context(config)
 
-    load_from_paths(lambda path: load_snipppets_engine(path, 'kotlin'),
+    load_from_paths(lambda path: load_snippets_engine(path, 'kotlin'),
                     config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)

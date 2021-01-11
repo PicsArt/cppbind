@@ -8,6 +8,7 @@ from jinja2 import Environment, BaseLoader, StrictUndefined
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
+from iegen.common.config import config
 
 
 OBJECT_INFO_TYPE = '$Object'
@@ -262,8 +263,11 @@ class SnippetsEngine:
         self._init_jinja_env()
 
     def load(self):
+        dirs = []
+        if 'custom_config_dir' in config.defaults:
+            dirs.append(config.defaults['custom_config_dir'])
 
-        dataMap = load_yaml(self.path)
+        dataMap = load_yaml(self.path, dirs)
 
         self._load_actions(dataMap[INIT_SECTION][ACTIONS_SECTION])
         self._load_code_info(dataMap[CODE_SECTION])

@@ -30,11 +30,11 @@ class WrapperGenerator(object):
         default_config_dirs = default_config.default_config_dirs
         logging.info(f"Start running wrapper generator for {language} language.")
         lang_config = default_config.languages[language]
-        parsser = CXXParser(parser_config=lang_config)
+        parser = CXXParser(parser_config=lang_config)
         ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                      api_start_kw=default_config.api_start_kw)
         logging.debug("Start parsing and building IR.")
-        parsser.parse(ir_builder)
+        parser.parse(ir_builder)
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")

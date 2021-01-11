@@ -5,10 +5,12 @@ import os
 import copy
 import yaml
 import glob
+import iegen.common as PROJECT_CONFIG_DIR
 
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
+    custom_dirs = []
 
     def __init__(self, stream):
         """Initialise MyLoader."""
@@ -17,6 +19,8 @@ class MyLoader(yaml.SafeLoader):
             self._root = os.path.split(stream.name)[0]
         except AttributeError:
             self._root = os.path.curdir
+
+        self.dirs = [self._root, PROJECT_CONFIG_DIR]
 
         super().__init__(stream)
 
@@ -39,33 +43,39 @@ def construct_include(loader, node):
     except Exception:
         entries = [loader.construct_scalar(node)]
 
+    search_dirs = loader.dirs + loader.custom_dirs
+
     def load_entry(entry):
         filename = entry
         sub_index = entry.rfind('&')
         sub_node = None
         if sub_index != -1:
-            sub_node = entry[sub_index+1::]
+            sub_node = entry[sub_index + 1::]
             sub_node = sub_node.split('.')
             filename = entry[:sub_index]
 
-        filename = os.path.abspath(os.path.join(loader._root, filename))
+        if os.path.isabs(filename):
+            filenames = [filename]
+        else:
+            filenames = [os.path.abspath(os.path.join(f"{path}/**/", filename)) for path in search_dirs]
         extension = os.path.splitext(filename)[1].lstrip('.')
 
         rdata = None
 
-        for fn in glob.glob(filename):
-            sub_yaml = None
-            with open(fn, 'r') as f:
-                if extension in ('yaml', 'yml'):
-                    sub_yaml = yaml.load(f, MyLoader)
-                    if sub_node is not None:
-                        for nselect in sub_node:
-                            if isinstance(sub_yaml, list):
-                                nselect = int(nselect)
-                            sub_yaml = sub_yaml[nselect]
-                else:
-                    raise Exception('can only include yaml file')
-            rdata = join_nodes(rdata, sub_yaml)
+        for filename in filenames:
+            for fn in glob.glob(filename, recursive=True):
+                sub_yaml = None
+                with open(fn, 'r') as f:
+                    if extension in ('yaml', 'yml'):
+                        sub_yaml = yaml.load(f, MyLoader)
+                        if sub_node is not None:
+                            for nselect in sub_node:
+                                if isinstance(sub_yaml, list):
+                                    nselect = int(nselect)
+                                sub_yaml = sub_yaml[nselect]
+                    else:
+                        raise Exception('can only include yaml file')
+                rdata = join_nodes(rdata, sub_yaml)
 
         return rdata
 
@@ -104,6 +114,7 @@ yaml.add_constructor('!include', construct_include, MyLoader)
 yaml.add_constructor('!join', construct_join, MyLoader)
 
 
-def load_yaml(file_path):
+def load_yaml(file_path, dirs=None):
+    MyLoader.custom_dirs = dirs or []
     with open(file_path) as f:
         return yaml.load(f, MyLoader)

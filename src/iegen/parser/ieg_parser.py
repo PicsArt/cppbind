@@ -39,8 +39,7 @@ class CXXParser(object):
         args = ['-x', 'c++', '--std=c++17'] +\
             self.config.clang_args.split(',') + ['-I' + includeDir.strip()
                                                  for includeDir in self.config.include_dirs.split(',')]
-        glob_filter = self.config.src_glob or "*"
-        files = os.path.join(self.config.source_dir, glob_filter)
+        files = self.config.src_glob
         # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')
         # base_files = glob.glob(base_files, recursive=True)
 

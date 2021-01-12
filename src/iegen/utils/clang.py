@@ -56,7 +56,7 @@ def get_semantic_ancestors(cursor):
     ancestors = []
     _cursor = cursor.semantic_parent
 
-    while (_cursor):
+    while(_cursor):
         ancestors.append(_cursor)
         _cursor = _cursor.semantic_parent
 
@@ -107,6 +107,11 @@ def get_base_cursor(cursor):
         return get_base_cursor(bases[0])
     else:
         return cursor
+
+
+def extract_pure_comment(raw_comment, end_index=None):
+    end_index = end_index or len(raw_comment) - 1
+    return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
 
 
 def template_class_suffix(type_spellings):

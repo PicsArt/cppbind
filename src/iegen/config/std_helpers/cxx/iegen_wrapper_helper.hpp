@@ -163,5 +163,14 @@ std::vector<jint> getIntArray(JNIEnv* env, jobject obj);
 
 std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj);
 
+std::string extractString(JNIEnv* env, jobject obj);
+
+jfloat extractFloat(JNIEnv* env, jobject obj);
+
+jint extractInt(JNIEnv* env, jobject obj);
+
+jlong extractLong(JNIEnv* env, jobject obj);
+
+jobject extractObject(JNIEnv* env, jobject obj);
 } // end of iegenn
 #endif //__WRAPPER_HELPER_HPP__

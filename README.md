@@ -118,9 +118,8 @@ Installation is complete to test run the following command
  ```
     [DEFAULT]
         out_prj_dir=/path/to/output/
-        cxx_base_out_dir=%(source_dir)s/core/
-        source_dir = ./source/
-        src_glob = *.h*
+        cxx_base_out_dir=./source/core/
+        src_glob = ./source/*.h*
         run_dir = package_name
         include_dirs = /path/to/somae/sources/, /usr/lib/jvm/java-11-openjdk-amd64/include
                     , /usr/lib/jvm/java-11-openjdk-amd64/include/linux
@@ -141,8 +140,7 @@ Installation is complete to test run the following command
   
    - **_out_prj_dir_** - Root directory where output files will be saved.  
    - **_cxx_base_out_dir_** - Base classes will be copied into this directory, they can be used by source classes. An example of base class is the Object class.  
-   - **_source_dir_** - Directory containing source files which are going to be processed.  
-   - **_src_glob_** - File pattern used to find files from source_dir.  
+   - **_src_glob_** - File pattern used to find source files.  
    - **_include_dirs_** - Directories which contain sources that are used by the files to be processed.  
    - **_run_dir_** - This can be used in out_dir.
   

@@ -8,6 +8,7 @@ from jinja2 import Environment, BaseLoader, StrictUndefined
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
+from iegen.common.config import config
 from iegen.ir.exec_rules import Context
 
 OBJECT_INFO_TYPE = '$Object'
@@ -117,10 +118,13 @@ class Converter:
             args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
                             arg in self.template_args]
             custom = types.SimpleNamespace(**self.custom)
-            cxx_base_type = self.target_clang_type
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
+                cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
+                target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
+                    cutil.get_pointee_type(cxx_base_type))
+                target_base_pointee_unqualified_name = cutil.replace_template_choice(target_base_pointee_unqualified_name, self.template_choice)
                 if args:
                     def get_arg_spelling(arg):
                         if arg.clang_type.kind == cli.TypeKind.UNEXPOSED:
@@ -140,14 +144,11 @@ class Converter:
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )
-            target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
-                cutil.get_pointee_type(cxx_base_type))
 
             if self.template_choice:
                 cxx_type_name = cutil.replace_template_choice(cxx_type_name, self.template_choice)
                 target_pointee_name = cutil.replace_template_choice(target_pointee_name, self.template_choice)
                 target_pointee_unqualified_name = cutil.replace_template_choice(target_pointee_unqualified_name, self.template_choice)
-                target_base_pointee_unqualified_name = cutil.replace_template_choice(target_base_pointee_unqualified_name, self.template_choice)
 
             # helper name spaces
             clang_utils = cutil
@@ -286,8 +287,11 @@ class SnippetsEngine:
         self._init_jinja_env()
 
     def load(self):
+        dirs = []
+        if 'custom_config_dir' in config.defaults:
+            dirs.append(config.defaults['custom_config_dir'])
 
-        dataMap = load_yaml(self.path)
+        dataMap = load_yaml(self.path, dirs)
 
         self._load_actions(dataMap[INIT_SECTION][ACTIONS_SECTION])
         self._load_code_info(dataMap[CODE_SECTION])

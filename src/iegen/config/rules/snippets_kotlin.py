@@ -15,7 +15,7 @@ SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
 
 
-def load_snipppets_engine(path, main_target):
+def load_snippets_engine(path, main_target):
     global SNIPPETS_ENGINE
     SNIPPETS_ENGINE = SnippetsEngine(path, main_target)
     SNIPPETS_ENGINE.load()
@@ -36,7 +36,7 @@ def gen_init(config, *args, **kwargs):
 
     context = make_context(config)
 
-    load_from_paths(lambda path: load_snipppets_engine(path, 'kotlin'),
+    load_from_paths(lambda path: load_snippets_engine(path, 'kotlin'),
                     config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
@@ -80,7 +80,6 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        cxx_base_type_name = owner_class.cxx_base_type_name
 
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
@@ -95,8 +94,6 @@ def make_func_context(ctx):
                                              _suffix,
                                              method_name,
                                              args_type_name)
-
-        cxx_type_name = owner_class.cxx_type_name
 
         if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -124,6 +121,9 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
+        for case in enum_cases:
+            if case.comment:
+                case.comment = convert.make_comment(case.comment)
         return locals()
 
     context = make_def_context(ctx)
@@ -218,9 +218,6 @@ def make_member_context(ctx):
                                f'{ctx.config.package_prefix}.{ctx.package}',
                                ctx.parent_context.name,
                                ctx.template_suffix)
-
-        cxx_type_name = owner_class.cxx_type_name
-        cxx_base_type_name = owner_class.cxx_base_type_name
 
         gen_property_setter = ctx.node.api == 'property_setter'
 

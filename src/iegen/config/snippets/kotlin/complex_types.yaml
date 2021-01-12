@@ -212,4 +212,3 @@ std::shared_ptr:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}({{name}})
-

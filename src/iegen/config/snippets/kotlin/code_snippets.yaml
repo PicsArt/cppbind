@@ -34,6 +34,9 @@ enum:
         {%- set comma = joiner(",") -%}
         {%- for case in enum_cases -%}
         {{comma()}}
+        {%- if case.comment %}
+        {{case.comment|string|indent(2)}}
+        {%- endif %}
         {{case.name}}({{case.value}})
         {%- endfor %};
 
@@ -242,11 +245,11 @@ constructor:
               {%- do call_args.append(converter.converted_name(arg.name)) -%}
               {% endfor %}
               {%- if not (shared_ref or owner_class.ancestors|any('shared_ref')) %}
-              auto this_object = new {{cxx_type_name}}({{call_args|join(', ')}});
-              return iegen::UnsafeRefAsLong<{{cxx_type_name}}, {{cxx_base_type_name}}>(this_object);
+              auto this_object = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
+              return iegen::UnsafeRefAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(this_object);
               {%- else %}
-              auto this_object = iegen::allocateRef<{{cxx_type_name}}>({{call_args|join(', ')}});
-              return iegen::AllocRefPtrAsLong<{{cxx_type_name}}, {{cxx_base_type_name}}>(this_object);
+              auto this_object = iegen::allocateRef<{{owner_class.cxx_type_name}}>({{call_args|join(', ')}});
+              return iegen::AllocRefPtrAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(this_object);
 
               {%- endif %}
               }
@@ -342,10 +345,10 @@ function:
               {%- if not is_static %}
               validateID(id);
 
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_base_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(id);
               {{call_code("this_object->", call_args)|indent(8)}}
               {%- else %}
-              {{call_code(cxx_type_name + "::", call_args)|indent(8)}}
+              {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(8)}}
               {%- endif %}
             }
           );
@@ -399,7 +402,7 @@ property_getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_base_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(id);
               auto result = this_object->{{cxx_name}};
               {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
@@ -411,7 +414,7 @@ property_getter:
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_base_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(id);
               {% set converter = rconverter.jni_to_cxx %}
               {{converter.snippet('value')|indent(8)}}
               this_object->{{name}} = {{converter.converted_name('value')}};
@@ -468,7 +471,7 @@ getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_base_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(id);
               auto result = this_object->{{cxx_name}}();
               {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
@@ -480,7 +483,7 @@ getter:
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_base_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_base_type_name}}>(id);
               {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
               {{converter.snippet(setter_ctx.args[0].name)|indent(8)}}
               this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});

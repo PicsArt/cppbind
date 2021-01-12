@@ -1,5 +1,4 @@
 import configparser
-import json
 import os
 import types
 import yaml
@@ -7,14 +6,13 @@ from ctypes.util import find_library
 
 import clang.cindex as cli
 from iegen.common.yaml_process import MyLoader, load_yaml
+from iegen.common import PROJECT_CONFIG_DIR
 
-PROJECT_CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../config/")
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
 clang_lib = find_library('clang') or find_library('clang-9') or find_library('clang-6')
-
 
 if clang_lib is None:
     print("clang dev is not installed. Please read README.md")
@@ -52,7 +50,7 @@ def read_config(config_file=None):
     config = configparser.ConfigParser(
         converters={
             'list': lambda x: [i.strip() for i in x.split(',')],
-            'yaml': lambda x: json.loads(x, MyLoader),
+            'yaml': lambda x: yaml.load(x, MyLoader),
             'yaml_or_file': load_yaml_or_file,
             'yaml_file': load_yaml_file,
         }
@@ -61,7 +59,7 @@ def read_config(config_file=None):
     return config
 
 
-class IEG_Config(object):
+class IEGConfig(object):
     """
     Loads IEG config file into structure
     """
@@ -105,4 +103,4 @@ class IEG_Config(object):
         return lang_config
 
 
-config = IEG_Config(["~/iegen_config.cfg", "iegen_config.cfg"])
+config = IEGConfig(["~/iegen_config.cfg", "iegen_config.cfg"])

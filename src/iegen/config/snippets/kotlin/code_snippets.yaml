@@ -8,10 +8,9 @@ file:
     content: |
       package {{config.package_prefix}}.{{package}}
 
-      {{helper_includes|format_list('import {}')|join('\n')}}
+      {{helper_includes|format_list('import {}.*')|join('\n')}}
       {{include}}
-      typealias StringArray = Array<String>
-      typealias ObjectArray = Array<Any>
+
       {{body}}
   cxx:
     file_path: |
@@ -48,6 +47,9 @@ var_class_cxx: &var_class_cxx
   include:
     unique_content: |
       #include "{{prj_rel_file_name}}"
+      {%- if template_includes %}
+      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {%- endif %}
   body:
     content: |
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}

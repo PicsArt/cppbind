@@ -200,6 +200,25 @@ class Context(object):
             self._api_args = {name: values[self.runner.language] for name, values in self.node.args.items()}
         return self._api_args
 
+    @property
+    def template_includes(self):
+        types = self.node.args.get('template', None)
+        includes = set()
+        if types:
+            types = itertools.chain(*types[self.runner.language].values())
+            for t in types:
+                ctx = self.find_by_type(t)
+                if ctx:
+                    includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
+                                                 self.runner.config.out_prj_dir))
+        return includes
+
+    @property
+    def template_suffix(self):
+        if not self.template_choice:
+            return ''
+        return cutil.template_class_suffix(self.template_choice.values())
+
     def find_by_type(self, search_type):
         return self.runner.get_context(search_type)
 
@@ -213,12 +232,6 @@ class Context(object):
 
     def set_template_choice(self, template_choice):
         self.template_choice = template_choice
-
-    @property
-    def template_suffix(self):
-        if not self.template_choice:
-            return ''
-        return cutil.template_class_suffix(self.template_choice.values())
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
@@ -331,9 +344,14 @@ class RunRule(object):
         assert node is not None
         cntx = self.all_contexts.setdefault(node.full_displayname,
                                             Context(self, node))
+        # temporary until will find a good solution
+        if node.is_template:
+            cntx = self.all_contexts.setdefault(node.spelling,
+                                                Context(self, node))
         return cntx
 
     def get_context(self, type_name):
+
         cntx = self.all_contexts.get(type_name, None)
         return cntx
 

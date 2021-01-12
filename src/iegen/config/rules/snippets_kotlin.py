@@ -53,6 +53,7 @@ def make_def_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
+        template_includes = ctx.template_includes
         comment = convert.make_comment(ctx.node.pure_comment)
 
         return locals()
@@ -145,8 +146,7 @@ def make_class_context(ctx):
             if ctx.node.is_template:
                 # todo changed this after full_displayname change for template class(for keeping context)
                 cxx_type_name = ctx.node.full_displayname.replace(ctx.node.spelling, ctx.node.displayname)
-                for typename, value in ctx.template_choice.items():
-                    cxx_type_name = cxx_type_name.replace(typename, value)
+                cxx_type_name = cutil.replace_template_choice(cxx_type_name, ctx.template_choice)
 
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
@@ -159,8 +159,8 @@ def make_class_context(ctx):
             if ctx.node.is_template:
                 if ctx.node.clang_cursor == _base_cursor:
                     cxx_base_type_name = ctx.node.full_displayname.replace(ctx.node.spelling, ctx.node.displayname)
-                    for typename, value in ctx.template_choice.items():
-                        cxx_base_type_name = cxx_base_type_name.replace(typename, value)
+                    cxx_base_type_name = cutil.replace_template_choice(cxx_base_type_name, ctx.template_choice)
+
                 # todo handle template base case
                 # elif not cxx_base_type_name:
                 #     cutil.get_full_displayname(_base_cursor)

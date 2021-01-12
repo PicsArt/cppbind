@@ -120,3 +120,14 @@ def template_class_suffix(type_spellings):
     """
     return ''.join(itertools.chain.from_iterable([[part.capitalize() for part in re.split('::|>|<|_', type_spelling)]
                                                   for type_spelling in type_spellings]))
+
+
+def replace_template_choice(type_name, template_choice):
+    replaced = type_name
+    if template_choice:
+        if replaced in template_choice:
+            return template_choice[replaced]
+        for typename, value in template_choice.items():
+            replaced = replaced.replace(typename, value)
+            # replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
+    return replaced

@@ -132,9 +132,8 @@ class Converter:
                     template_suffix = cutil.template_class_suffix([get_arg_spelling(arg) for arg in args])
             # find base type somehow todo
             cxx_type_name = self.target_clang_type.spelling
-            if self.template_choice:
-                for typename, value in self.template_choice.items():
-                    cxx_type_name = cxx_type_name.replace(typename, value)
+            cxx_type_name = cutil.replace_template_choice(cutil.replace_template_choice(cxx_type_name, self.template_choice), self.template_choice)
+
             target_pointee = cutil.get_pointee_type(self.target_clang_type)
             target_pointee_name = target_pointee.spelling
             is_pointer = self.target_clang_type.kind == cli.TypeKind.POINTER
@@ -145,11 +144,10 @@ class Converter:
                 cutil.get_pointee_type(cxx_base_type))
 
             if self.template_choice:
-                for typename, value in self.template_choice.items():
-                    cxx_type_name = cxx_type_name.replace(typename, value)
-                    target_pointee_name = target_pointee_name.replace(typename, value)
-                    target_pointee_unqualified_name = target_pointee_unqualified_name.replace(typename, value)
-                    target_base_pointee_unqualified_name = target_base_pointee_unqualified_name.replace(typename, value)
+                cxx_type_name = cutil.replace_template_choice(cxx_type_name, self.template_choice)
+                target_pointee_name = cutil.replace_template_choice(target_pointee_name, self.template_choice)
+                target_pointee_unqualified_name = cutil.replace_template_choice(target_pointee_unqualified_name, self.template_choice)
+                target_base_pointee_unqualified_name = cutil.replace_template_choice(target_base_pointee_unqualified_name, self.template_choice)
 
             # helper name spaces
             clang_utils = cutil
@@ -309,7 +307,7 @@ class SnippetsEngine:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
         # else
         # TODO handle target type
-        res.set_target_type(clang_type)
+        # res.set_target_type(clang_type)
         return res
 
     def get_type_info(self, type_name):
@@ -499,9 +497,14 @@ class SnippetsEngine:
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
+
                 if cutil.is_template(lookup_type):
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]
+
+                    canonical = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                    if canonical:
+                        clang_type = cutil.get_canonical_type(clang_type)
 
                     type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
                                                        clang_type=clang_type,
@@ -511,7 +514,8 @@ class SnippetsEngine:
                 else:
                     canonical_type = cutil.get_canonical_type(lookup_type)
                     if canonical_type != lookup_type:
-                        return self._build_type_converter(ctx, clang_type, canonical_type, template_choice=template_choice)
+                        return self._build_type_converter(ctx, clang_type, canonical_type,
+                                                          template_choice=template_choice)
 
         return type_info
 

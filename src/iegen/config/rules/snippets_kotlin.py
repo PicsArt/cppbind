@@ -143,13 +143,13 @@ def make_class_context(ctx):
                                    ctx.template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.cursor.type.spelling
+            # in case of a template class - cursor type is TypeKind.INVALID
             if ctx.node.is_template:
-                # todo changed this after full_displayname change for template class(for keeping context)
                 cxx_type_name = ctx.node.full_displayname.replace(ctx.node.spelling, ctx.node.displayname)
                 cxx_type_name = cutil.replace_template_choice(cxx_type_name, ctx.template_choice)
 
             if ctx.base_types:
-                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type)
+                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
                 has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
 
@@ -158,14 +158,8 @@ def make_class_context(ctx):
 
             if ctx.node.is_template:
                 if ctx.node.clang_cursor == _base_cursor:
-                    cxx_base_type_name = ctx.node.full_displayname.replace(ctx.node.spelling, ctx.node.displayname)
-                    cxx_base_type_name = cutil.replace_template_choice(cxx_base_type_name, ctx.template_choice)
-
-                # todo handle template base case
-                # elif not cxx_base_type_name:
-                #     cutil.get_full_displayname(_base_cursor)
-                #     for typename, value in ctx.template_choice.items():
-                #         cxx_base_type_name = cxx_base_type_name.replace(typename, value)
+                    cxx_base_type_name = cxx_type_name
+                # todo template base case is not considered
 
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()

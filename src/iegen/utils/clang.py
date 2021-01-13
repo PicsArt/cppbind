@@ -27,7 +27,7 @@ def template_argument_types(clang_type):
 
 def template_type_name(clang_type):
     name = get_unqualified_type_name(clang_type)
-    end_indx = name.index('<')
+    end_indx = name.find('<')
     if end_indx != -1:
         return name[:end_indx].strip()
     return name
@@ -114,17 +114,8 @@ def extract_pure_comment(raw_comment, end_index=None):
     return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
 
 
-def template_class_suffix(type_spellings):
-    """
-    Returns the base class cursor for the given cursor.
-    If there are multiple branches(inheritance) then the left(first) base is taken.
-    Args:
-        type_spellings (list(str)):
-    Returns:
-        string:
-    """
-    return ''.join(itertools.chain.from_iterable([[part.capitalize() for part in re.split('::|>|<|_', type_spelling)]
-                                                  for type_spelling in type_spellings]))
+def template_arg_name(type_name):
+    return ''.join([part.capitalize() for part in re.split('::|>|<|_', type_name)])
 
 
 def replace_template_choice(type_name, template_choice):
@@ -133,6 +124,5 @@ def replace_template_choice(type_name, template_choice):
         if replaced in template_choice:
             return template_choice[replaced]
         for typename, value in template_choice.items():
-            replaced = replaced.replace(typename, value)
-            # replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
+            replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
     return replaced

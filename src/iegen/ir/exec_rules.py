@@ -224,9 +224,16 @@ class Context(object):
 
     @property
     def template_suffix(self):
-        if not self.template_choice:
+        if not self.node.is_template:
             return ''
-        return cutil.template_class_suffix(self.template_choice.values())
+        args_names = []
+        for val in self.template_choice.values():
+            ctx = self.find_by_type(val)
+            if ctx:
+                args_names.append(ctx.name)
+            else:
+                args_names.append(cutil.template_arg_name(val))
+        return ''.join(args_names)
 
     def find_by_type(self, search_type):
         return self.runner.get_context(search_type)

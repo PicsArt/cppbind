@@ -110,15 +110,39 @@ def get_base_cursor(cursor):
 
 
 def extract_pure_comment(raw_comment, end_index=None):
+    """
+    Returns pure comment(without API part).
+    Args:
+        raw_comment(str): Doxygen comment.
+        end_index(int): Index to where to consider, if not specified then will consider the whole string.
+    Returns:
+        str: Characters removed type_name.
+    """
     end_index = end_index or len(raw_comment) - 1
     return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
 
 
-def template_arg_name(type_name):
+def get_type_name_without_special_characters(type_name):
+    """
+    Returns special characters(::,<,>,_) removed type_name. For int will return Int,
+    for std::string will return StdString.
+    Args:
+        type_name(str):
+    Returns:
+        str: Characters removed type_name.
+    """
     return ''.join([part.capitalize() for part in re.split('::|>|<|_', type_name)])
 
 
 def replace_template_choice(type_name, template_choice):
+    """
+    Return type name with replaced template arguments e.g. for a::Foo<T,V> will return a::Foo<Project,int>.
+    Args:
+        type_name(str): Type name. e.g. a::Foo<T,V>
+        template_choice (dict): Containing template current value, e.g. {"T": "a::Project", "V": "int"}
+    Returns:
+        str: Replaced type_name.
+    """
     replaced = type_name
     if template_choice:
         if replaced in template_choice:

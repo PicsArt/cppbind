@@ -95,14 +95,10 @@ def make_func_context(ctx):
                                              method_name,
                                              args_type_name)
 
-        if ctx.cursor.kind == cutil.cli.CursorKind.CXX_METHOD:
+        if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             is_override = bool(ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
-        if ctx.cursor.kind == cutil.cli.CursorKind.FUNCTION_TEMPLATE:
-            is_static = bool(ctx.cursor.is_static_method())
-            is_override = False
-            is_virtual = False
         is_abstract = ctx.cursor.is_abstract_record()
         is_open = not cutil.is_final_cursor(ctx.cursor)
         is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
@@ -142,25 +138,14 @@ def make_class_context(ctx):
                                    ctx.name,
                                    ctx.template_suffix)
             has_non_abstract_base_class = False
-            cxx_type_name = ctx.cursor.type.spelling
-            # in case of a template class - cursor type is TypeKind.INVALID
-            if ctx.node.is_template:
-                cxx_type_name = ctx.node.full_displayname.replace(ctx.node.spelling, ctx.node.displayname)
-                cxx_type_name = cutil.replace_template_choice(cxx_type_name, ctx.template_choice)
+            cxx_type_name = ctx.node.type_name(ctx.template_choice)
 
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
                 has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
 
-            _base_cursor = cutil.get_base_cursor(ctx.node.clang_cursor)
-            cxx_base_type_name = _base_cursor.type.spelling
-
-            if ctx.node.is_template:
-                if ctx.node.clang_cursor == _base_cursor:
-                    cxx_base_type_name = cxx_type_name
-                # todo template base case is not considered
-
+            cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 

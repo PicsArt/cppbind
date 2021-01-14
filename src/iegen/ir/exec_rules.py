@@ -49,7 +49,7 @@ class Context(object):
                         if val:
                             val = val.spelling
             return val
-
+        # for template types get_arguments return an empty array, using Type.argument_types instead
         if self.node.is_template:
             for i, arg_type in enumerate(self.node.clang_cursor.type.argument_types()):
                 arg_params = types.SimpleNamespace(name=f'arg{i}',
@@ -195,7 +195,6 @@ class Context(object):
     @property
     def parent_context(self):
         return self.runner.get_context(self.node.parent.full_displayname)
-        # return self.runner.get_context(self.node.parent.type_name)
 
     @property
     def prj_rel_file_name(self):
@@ -211,11 +210,17 @@ class Context(object):
 
     @property
     def template_includes(self):
-        types = self.node.args.get('template', None)
+        """
+        Returns list of generated cxx imports based on template arguments values.
+
+        Returns:
+            list(str): List containing includes.
+        """
+        template_arg = self.node.args.get('template', None)
         includes = set()
-        if types:
-            types = itertools.chain(*types[self.runner.language].values())
-            for t in types:
+        if template_arg:
+            template_arg = itertools.chain(*template_arg[self.runner.language].values())
+            for t in template_arg:
                 ctx = self.find_by_type(t)
                 if ctx:
                     includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
@@ -224,6 +229,13 @@ class Context(object):
 
     @property
     def template_suffix(self):
+        """
+        Returns template type suffix based on concatenated template argument names(for custom type argument it takes
+        the name, for the other types it takes special characters(::,<,>) removed spelling).
+
+        Returns:
+            str: Generated suffix.
+        """
         if not self.node.is_template:
             return ''
         args_names = []
@@ -232,7 +244,7 @@ class Context(object):
             if ctx:
                 args_names.append(ctx.name)
             else:
-                args_names.append(cutil.template_arg_name(val))
+                args_names.append(cutil.get_type_name_without_special_characters(val))
         return ''.join(args_names)
 
     def find_by_type(self, search_type):
@@ -322,8 +334,15 @@ class RunRule(object):
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
                     for child in node.children:
+                        # check if the node is template and generate code for each combination of template args
                         if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
-                            all_possible_args = list(itertools.product(*child.args['template'][self.language].values()))
+                            parent_template = node.args.get('template', None)
+                            template_arg = {}
+                            # if parent also has a template argument join with child´s
+                            if parent_template:
+                                template_arg = template_arg.update(parent_template[self.language])
+                            template_arg.update(child.args['template'][self.language])
+                            all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
                             for i, choice in enumerate(all_possible_args):
                                 _template_choice = dict(zip(template_keys, choice))
@@ -352,7 +371,7 @@ class RunRule(object):
         logging.debug(f"Call API: {api} on {node.displayname}")
         func = getattr(rule, att_name)
         context = self.get_context(node.full_displayname)
-        # set current template choice to generate correct context
+        # set current template choice to generate code based on correct template choice
         context.set_template_choice(template_choice)
         func(context, builder)
 
@@ -360,10 +379,6 @@ class RunRule(object):
         assert node is not None
         cntx = self.all_contexts.setdefault(node.full_displayname,
                                             Context(self, node))
-        # temporary until will find a good solution
-        if node.is_template:
-            cntx = self.all_contexts.setdefault(node.spelling,
-                                                Context(self, node))
         return cntx
 
     def get_context(self, type_name):

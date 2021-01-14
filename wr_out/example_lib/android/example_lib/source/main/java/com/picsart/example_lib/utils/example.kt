@@ -1,9 +1,8 @@
 package com.picsart.example_lib.utils
 
+import alias.*
 
 
-typealias StringArray = Array<String>
-typealias ObjectArray = Array<Any>
 
 /**
  * comments

@@ -66,18 +66,19 @@ class APIParser(object):
                     # redefinition or array
                     raise Exception(f"Attribute {attr} is defined in multiple places.")
 
-                if isinstance(self.attributes[attr]['default'], bool) or self.attributes[attr]['type'] == 'bool':
+                attr_type = self.attributes[attr].get('type', None)
+                if isinstance(self.attributes[attr]['default'], bool) or attr_type == 'bool':
                     value = distutils.util.strtobool(value)
 
-                if self.attributes[attr]['type'] == 'dict':
+                if attr_type == 'json':
                     value = json.loads(value)
 
                 for lang in language:
-                    att_lang_ditct = attr_dict.setdefault(attr, OrderedDict())
+                    att_lang_dict = attr_dict.setdefault(attr, OrderedDict())
                     if array:
-                        att_lang_ditct.setdefault(lang, []).append(value)
+                        att_lang_dict.setdefault(lang, []).append(value)
                     else:
-                        att_lang_ditct[lang] = value
+                        att_lang_dict[lang] = value
 
         return api, attr_dict, pure_comment
 

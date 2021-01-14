@@ -5,7 +5,6 @@ import ast
 import copy
 import os
 from collections import OrderedDict
-import clang.cindex as cli
 
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser

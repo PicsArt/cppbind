@@ -131,22 +131,22 @@ class Converter:
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
-                cxx_base_type = cutil.get_base_cursor(self.ctx.cursor).type
-                target_base_pointee_unqualified_name = cutil.get_unqualified_type_name(
-                    cutil.get_pointee_type(cxx_base_type))
+                cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type
+                target_root_pointee_unqualified_name = cutil.get_unqualified_type_name(
+                    cutil.get_pointee_type(cxx_root_type))
                 if self.ctx.node.is_template:
                     _base_cursor = cutil.get_base_cursor(self.ctx.cursor)
                     if _base_cursor == self.ctx.cursor:
-                        cxx_base_type = self.target_clang_type
-                        target_base_pointee_unqualified_name = target_pointee_unqualified_name
-                target_base_pointee_unqualified_name = cutil.replace_template_choice(
-                    target_base_pointee_unqualified_name, self.template_choice)
+                        cxx_root_type = self.target_clang_type
+                        target_root_pointee_unqualified_name = target_pointee_unqualified_name
+                target_root_pointee_unqualified_name = cutil.replace_template_choice(
+                    target_root_pointee_unqualified_name, self.template_choice)
                 if args:
                     def get_arg_spelling(arg):
                         if arg.ctx:
                             return arg.ctx.name
                         else:
-                            return cutil.template_arg_name(arg.clang_type.spelling)
+                            return cutil.get_type_name_without_special_characters(arg.clang_type.spelling)
 
                     template_suffix = ''.join([get_arg_spelling(arg) for arg in args])
 
@@ -312,9 +312,6 @@ class SnippetsEngine:
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
         if res is None:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
-        # else
-        # TODO handle target type
-        # res.set_target_type(clang_type)
         return res
 
     def get_type_info(self, type_name):
@@ -494,9 +491,7 @@ class SnippetsEngine:
 
         lookup_type = lookup_type or clang_type
         search_name = cutil._get_unqualified_type_name(lookup_type.spelling)
-        if ctx.cursor.kind in [cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CLASS_TEMPLATE] or ctx.node.parent.is_template:
-            if search_name in template_choice:
-                search_name = template_choice[search_name]
+        search_name = template_choice.get(search_name, search_name)
         type_info = self._create_type_info(ctx, search_name, clang_type=clang_type, template_choice=template_choice)
 
         if type_info is None:
@@ -504,13 +499,19 @@ class SnippetsEngine:
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
-
+                # covers template argument and specialized(partial also) template argument cases,
+                # e.g. a::Stack<T> and a::Stack<Project>
                 if cutil.is_template(lookup_type):
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]
 
-                    canonical = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
-                    if canonical:
+                    # for the case when all arguments are exposed for example a::Stack<Project> then the canonical will
+                    # return type with spelling equal to a::Stack<b::Project>
+                    # this won´t work if theres an unexposed argument e.g.T,
+                    # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
+                    # type with spelling equal to 'Stack<type-parameter-0-0>'
+                    canonical_clang_type = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                    if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
 
                     type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),

@@ -1,31 +1,26 @@
 prefix:
   inheritable: true
   default: null
-  type: string
   allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
 
 file:
   inheritable: false
   default: '{file_name}'
-  type: string
   allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
 
 file_full_name:
   inheritable: true
   default: '{file_full_name}'
-  type: string
   allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
 
 module:
   inheritable: false
   default: '{module_name}'
-  type: string
   allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
 
 package:
   inheritable: true
   default: 'undefined'
-  type: string
   allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
 
 name:
@@ -37,7 +32,6 @@ include:
   inheritable: true
   array: true
   default: [ ]
-  type: string
   allowed_on: [ namespace ]
 
 shared_ref:
@@ -49,5 +43,5 @@ shared_ref:
 template:
   inheritable: true
   default: null
-  type: dict
+  type: json
   allowed_on: [ class_template, struct_template, function_template ]

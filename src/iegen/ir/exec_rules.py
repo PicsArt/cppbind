@@ -228,7 +228,11 @@ class Context(object):
         return includes
 
     @property
-    def template_suffix(self):
+    def template_type_parameters(self):
+        return [child.type.spelling for child in self.cursor.get_children() if
+                child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]
+
+    def template_suffix(self, template_choice=None):
         """
         Returns template type suffix based on concatenated template argument names(for custom type argument it takes
         the name, for the other types it takes special characters(::,<,>) removed spelling).
@@ -238,13 +242,20 @@ class Context(object):
         """
         if not self.node.is_template:
             return ''
+        template_choice = template_choice or self.template_choice
         args_names = []
-        for val in self.template_choice.values():
-            ctx = self.find_by_type(val)
-            if ctx:
-                args_names.append(ctx.name)
-            else:
-                args_names.append(cutil.get_type_name_without_special_characters(val))
+        # using template_type_parameters to have correct template parameters order since user can specify them in
+        # different order in api comment
+        template_types = self.template_type_parameters
+        if template_choice:
+            for t in template_types:
+                type_name = template_choice[t]
+                # template_type = cutil.template_type_name(type_name)
+                ctx = self.find_by_type(type_name)
+                if ctx:
+                    args_names.append(ctx.name)
+                else:
+                    args_names.append(cutil.get_type_name_without_special_characters(type_name))
         return ''.join(args_names)
 
     def find_by_type(self, search_type):

@@ -142,13 +142,15 @@ class Converter:
                 target_root_pointee_unqualified_name = cutil.replace_template_choice(
                     target_root_pointee_unqualified_name, self.template_choice)
                 if args:
-                    def get_arg_spelling(arg):
-                        if arg.ctx:
-                            return arg.ctx.name
-                        else:
-                            return cutil.get_type_name_without_special_characters(arg.clang_type.spelling)
+                    template_types = self.ctx.template_type_parameters
+                    # generate template choice based on template arguments to get template suffix
+                    template_choice = {}
+                    for ii, t in enumerate(template_types):
+                        arg = args[ii]
+                        arg_type = arg.ctx.node.full_displayname if arg.ctx else arg.clang_type.spelling
+                        template_choice[t] = arg_type
 
-                    template_suffix = ''.join([get_arg_spelling(arg) for arg in args])
+                    template_suffix = self.ctx.template_suffix(template_choice)
 
             cxx_type_name = cutil.replace_template_choice(cxx_type_name, self.template_choice)
             target_pointee_name = cutil.replace_template_choice(target_pointee_name, self.template_choice)
@@ -499,7 +501,7 @@ class SnippetsEngine:
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
-                # covers template argument and specialized(partial also) template argument cases,
+                # covers template parameter and template argument cases,
                 # e.g. a::Stack<T> and a::Stack<Project>
                 if cutil.is_template(lookup_type):
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)

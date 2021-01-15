@@ -83,9 +83,9 @@ def make_func_context(ctx):
 
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
-        _suffix = ctx.template_suffix
+        _suffix = ctx.parent_context.template_suffix()
         if ctx.node.is_function_template:
-            overloading_prefix = ctx.template_suffix
+            overloading_prefix = ctx.template_suffix()
             _suffix = None
 
         def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
@@ -131,12 +131,12 @@ def make_class_context(ctx):
     def _make(ctx):
         def make():
             # helper variables
-            template_suffix = ctx.template_suffix
+            template_suffix = ctx.template_suffix()
             is_open = not cutil.is_final_cursor(ctx.cursor)
             get_jni_name = partial(convert.get_jni_func_name,
                                    f'{ctx.config.package_prefix}.{ctx.package}',
                                    ctx.name,
-                                   ctx.template_suffix)
+                                   ctx.template_suffix())
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
 
@@ -196,7 +196,7 @@ def make_member_context(ctx):
         get_jni_name = partial(convert.get_jni_func_name,
                                f'{ctx.config.package_prefix}.{ctx.package}',
                                ctx.parent_context.name,
-                               ctx.template_suffix)
+                               ctx.parent_context.template_suffix())
 
         gen_property_setter = ctx.node.api == 'property_setter'
 

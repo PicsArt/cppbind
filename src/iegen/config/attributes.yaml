@@ -1,27 +1,27 @@
 prefix:
   inheritable: true
   default: null
-  allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 file:
   inheritable: false
   default: '{file_name}'
-  allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 file_full_name:
   inheritable: true
   default: '{file_full_name}'
-  allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 module:
   inheritable: false
   default: '{module_name}'
-  allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ class, class_template, struct, struct_template, namespace, enum ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 name:
   inheritable: false
@@ -32,7 +32,7 @@ include:
   inheritable: true
   array: true
   default: [ ]
-  allowed_on: [ namespace ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 shared_ref:
   inheritable: true

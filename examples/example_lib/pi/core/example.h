@@ -5,16 +5,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-/**
- * comments
- * 
- * __API__
- * kotlin.file: utils
- * kotlin.package: utils
- * kotlin.include: android.os.Parcel
- * kotlin.include: android.os.Test
- * kotlin.prefix: PI
- */
+
 namespace pi::utils {
     using namespace std;
     /**
@@ -22,6 +13,11 @@ namespace pi::utils {
      * 
      * __API__
      * gen: class
+     * kotlin.file: utils
+     * kotlin.package: utils
+     * kotlin.include: android.os.Parcel
+     * kotlin.include: android.os.Test
+     * kotlin.prefix: PI
      * shared_ref: False
      * kotlin.module: pi.xxx.Example
      */
@@ -77,6 +73,11 @@ namespace pi::utils {
      * __API__
      * gen: enum
      * swift.name: ExampleType
+     * kotlin.file: utils
+     * kotlin.package: utils
+     * kotlin.include: android.os.Parcel
+     * kotlin.include: android.os.Test
+     * kotlin.prefix: PI
      */
     enum class Type2 { A2, B2=10, C2 };
 }

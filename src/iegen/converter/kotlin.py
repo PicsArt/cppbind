@@ -22,7 +22,7 @@ def arg_str(type_name, name, default=None, **kwargs):
     return arg_str
 
 
-def get_jni_func_name(package_name, class_name, method_name, args_type_name=None):
+def get_jni_func_name(package_name, class_name, template_suffix, method_name, args_type_name=None):
     def fix_name(name):
         for s, r in [('_', '_1'), ('.', '_'), (';', '_2'), ('[', '_3')]:
             name = name.replace(s, r)
@@ -43,6 +43,8 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
     package_name = fix_name(package_name)
     class_name = fix_name(class_name)
     method_name = fix_name(method_name)
+    if template_suffix:
+        class_name += fix_name(template_suffix)
     if args_type_name is None or any([a not in args_type_signature for a in args_type_name]):
         return f'Java_{package_name}_{class_name}_{method_name}'
     else:

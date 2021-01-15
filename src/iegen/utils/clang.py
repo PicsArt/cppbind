@@ -1,6 +1,9 @@
 """
 Helper functions working with clang
 """
+import itertools
+import re
+
 import clang.cindex as cli
 from itertools import chain
 
@@ -24,7 +27,7 @@ def template_argument_types(clang_type):
 
 def template_type_name(clang_type):
     name = get_unqualified_type_name(clang_type)
-    end_indx = name.index('<')
+    end_indx = name.find('<')
     if end_indx != -1:
         return name[:end_indx].strip()
     return name
@@ -68,8 +71,13 @@ def get_full_name(cursor):
 
 def get_full_displayname(cursor):
     ancestors = get_semantic_ancestors(cursor)
-    ancestors = ancestors[1::] + [cursor]
-    return '::'.join([c.displayname for c in ancestors])
+    ancestors = ancestors[1::]
+
+    full_display_name = '::'.join([c.displayname for c in ancestors])
+    if cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+        return f'{full_display_name}::{cursor.spelling}'
+    else:
+        return f'{full_display_name}::{cursor.displayname}'
 
 
 def is_final_cursor(cursor):
@@ -102,5 +110,43 @@ def get_base_cursor(cursor):
 
 
 def extract_pure_comment(raw_comment, end_index=None):
+    """
+    Returns pure comment(without API part).
+    Args:
+        raw_comment(str): Doxygen comment.
+        end_index(int): Index to where to consider, if not specified then will consider the whole string.
+    Returns:
+        str: Characters removed type_name.
+    """
     end_index = end_index or len(raw_comment) - 1
     return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
+
+
+def get_type_name_without_special_characters(type_name):
+    """
+    Returns special characters(::,<,>,_) removed type_name. For int will return Int,
+    for std::string will return StdString.
+    Args:
+        type_name(str):
+    Returns:
+        str: Characters removed type_name.
+    """
+    return ''.join([part.capitalize() for part in re.split('::|>|<|_', type_name)])
+
+
+def replace_template_choice(type_name, template_choice):
+    """
+    Return type name with replaced template arguments e.g. for a::Foo<T,V> will return a::Foo<Project,int>.
+    Args:
+        type_name(str): Type name. e.g. a::Foo<T,V>
+        template_choice (dict): Containing template current value, e.g. {"T": "a::Project", "V": "int"}
+    Returns:
+        str: Replaced type_name.
+    """
+    replaced = type_name
+    if template_choice:
+        if replaced in template_choice:
+            return template_choice[replaced]
+        for typename, value in template_choice.items():
+            replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
+    return replaced

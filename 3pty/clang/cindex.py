@@ -1537,7 +1537,10 @@ class Cursor(Structure):
 
     def get_overriden_cursors(self):
         """ Determine the set of methods that are overridden by the given method."""
-        assert self.kind == CursorKind.CXX_METHOD
+        is_template_method = (self.kind == CursorKind.FUNCTION_TEMPLATE and self._semantic_parent.kind in [
+            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE, CursorKind.STRUCT_DECL,
+            CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION])
+        assert self.kind == CursorKind.CXX_METHOD or is_template_method
 
         cursors = POINTER(Cursor)()
         num = c_uint()

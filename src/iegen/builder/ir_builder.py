@@ -3,9 +3,9 @@ Processor module provides various processor for ieg parser
 """
 import ast
 import copy
-import distutils.util
 import os
 from collections import OrderedDict
+
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import IEG_Ast, Node

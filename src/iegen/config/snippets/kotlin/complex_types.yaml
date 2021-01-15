@@ -8,7 +8,7 @@ $Object:
   custom:
     pname: Long
   kotlin:
-    type_info: "{{'I' if type_ctx.node.is_interface}}{{type_name}}"
+    type_info: "{{'I' if type_ctx.node.is_interface}}{{type_name}}{{template_suffix}}"
   jni:
     type_info: jobjectid
   jdk:
@@ -17,18 +17,18 @@ $Object:
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = target_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong{{'Dynamic' if type_ctx.ancestors|any('is_abstract')}}<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLongDynamic<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
     {%- else %}
-    {%- if target_base_pointee_unqualified_name == pointee %}
-    auto {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
+    {%- if target_root_pointee_unqualified_name == pointee %}
+    auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
-    auto base = {{dereferencer}} reinterpret_cast<{{target_base_pointee_unqualified_name}}*>({{name}});
+    auto base = {{dereferencer}} reinterpret_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
     auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
     {%- endif %}
     {%- endif %}
   cxx_to_jni: |
     {%- set pointee = target_pointee_unqualified_name %}
-    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
+    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{'&' if not is_pointer}}{{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
@@ -207,7 +207,7 @@ std::shared_ptr:
     {%- set pointee_base = args_t_bases[0] %}
     auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{target_base_pointee_unqualified_name}}>({{name}});
+    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:

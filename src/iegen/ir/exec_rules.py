@@ -141,7 +141,7 @@ class Context(object):
 
         def walk(base_types):
             for base in base_types:
-                base = self.find_by_type(base.spelling)
+                base = self.find_by_type(cutil.template_type_name(base))
                 yield base
                 for base in walk(base.base_types):
                     yield base

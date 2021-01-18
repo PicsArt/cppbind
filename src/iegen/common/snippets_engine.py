@@ -468,6 +468,7 @@ class SnippetsEngine:
                                                            converters=type_converters, custom=custom)
 
     def _create_type_info(self, ctx, search_name, clang_type, template_args=None, template_choice=None, **kwargs):
+        print(f"Finding with search name {search_name}")
         ref_ctx = ctx.find_by_type(search_name)
         if ref_ctx is not None:
             if clang_type.kind == cli.TypeKind.ENUM:
@@ -492,6 +493,7 @@ class SnippetsEngine:
         template_choice = template_choice or {}
 
         lookup_type = lookup_type or clang_type
+        print(f"Finding with search name {lookup_type.spelling} and template choice {template_choice}")
         search_name = cutil._get_unqualified_type_name(lookup_type.spelling)
         search_name = template_choice.get(search_name, search_name)
         type_info = self._create_type_info(ctx, search_name, clang_type=clang_type, template_choice=template_choice)
@@ -503,7 +505,7 @@ class SnippetsEngine:
             else:
                 # covers template parameter and template argument cases,
                 # e.g. a::Stack<T> and a::Stack<Project>
-                if cutil.is_template(lookup_type):
+                if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]
 

@@ -1,3 +1,4 @@
+import re
 import types
 import os
 import glob
@@ -10,6 +11,7 @@ import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
 from iegen.ir.exec_rules import Context
+from iegen import logging as logging
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -127,7 +129,6 @@ class Converter:
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )
-
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
@@ -141,20 +142,13 @@ class Converter:
                         target_root_pointee_unqualified_name = target_pointee_unqualified_name
                 target_root_pointee_unqualified_name = cutil.replace_template_choice(
                     target_root_pointee_unqualified_name, self.template_choice)
-                if args:
-                    template_types = self.ctx.template_type_parameters
-                    # generate template choice based on template arguments to get template suffix
-                    template_choice = {}
-                    for ii, t in enumerate(template_types):
-                        arg = args[ii]
-                        arg_type = arg.ctx.node.full_displayname if arg.ctx else arg.clang_type.spelling
-                        template_choice[t] = arg_type
-
-                    template_suffix = self.ctx.template_suffix(template_choice)
+            if args:
+                template_suffix = ''.join([arg.target_type_name for arg in args])
 
             cxx_type_name = cutil.replace_template_choice(cxx_type_name, self.template_choice)
             target_pointee_name = cutil.replace_template_choice(target_pointee_name, self.template_choice)
-            target_pointee_unqualified_name = cutil.replace_template_choice(target_pointee_unqualified_name, self.template_choice)
+            target_pointee_unqualified_name = cutil.replace_template_choice(target_pointee_unqualified_name,
+                                                                            self.template_choice)
 
             # helper name spaces
             clang_utils = cutil
@@ -468,8 +462,8 @@ class SnippetsEngine:
                                                            converters=type_converters, custom=custom)
 
     def _create_type_info(self, ctx, search_name, clang_type, template_args=None, template_choice=None, **kwargs):
-        print(f"Finding with search name {search_name}")
-        ref_ctx = ctx.find_by_type(search_name)
+        logging.debug(f"Finding type for {search_name}")
+        ref_ctx = ctx.find_by_type_spelling(search_name)
         if ref_ctx is not None:
             if clang_type.kind == cli.TypeKind.ENUM:
                 search_name = ENUM_INFO_TYPE
@@ -489,13 +483,38 @@ class SnippetsEngine:
 
         return type_converter
 
+    def get_template_suffix(self, ctx, target_language):
+
+        template_choice = ctx.template_choice
+        template_types = ctx.template_type_parameters
+        args_names = []
+        if template_choice:
+            for t in template_types:
+                search_name = template_choice[t]
+
+                ref_ctx = ctx.find_by_type_spelling(search_name)
+                if ref_ctx is not None:
+                    if ctx.cursor.type.kind == cli.TypeKind.ENUM:
+                        search_name = ENUM_INFO_TYPE
+                    else:
+                        search_name = OBJECT_INFO_TYPE
+
+                type_converter = self.get_type_info(search_name)
+                if not type_converter:
+                    raise KeyError(f"Can not find type for {search_name}")
+                type_converter = type_converter.make_converter(ctx.cursor.type, ref_ctx, template_choice=template_choice)
+
+                args_names.append(getattr(type_converter, target_language).target_type_name)
+
+        return ''.join(args_names)
+
     def _build_type_converter(self, ctx, clang_type, lookup_type=None, template_choice=None):
         template_choice = template_choice or {}
 
         lookup_type = lookup_type or clang_type
-        print(f"Finding with search name {lookup_type.spelling} and template choice {template_choice}")
         search_name = cutil._get_unqualified_type_name(lookup_type.spelling)
         search_name = template_choice.get(search_name, search_name)
+        logging.debug(f"Creating type converter for {search_name} and template choice {template_choice}")
         type_info = self._create_type_info(ctx, search_name, clang_type=clang_type, template_choice=template_choice)
 
         if type_info is None:
@@ -517,6 +536,7 @@ class SnippetsEngine:
                     canonical_clang_type = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
                     if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
+                        lookup_type = cutil.get_canonical_type(lookup_type)
 
                     type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
                                                        clang_type=clang_type,

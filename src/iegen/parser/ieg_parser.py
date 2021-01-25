@@ -107,6 +107,10 @@ class CXXParser(object):
             logging.debug(f"Filtering cursor: {cursor}")
             return
 
+        if cursor.is_declaration():
+            logging.debug(f"Filtering forward declaration cursor: {cursor}")
+            return
+
         # process current cursor
         if hasattr(processor, 'start_cursor'):
             processor.start_cursor(cursor)

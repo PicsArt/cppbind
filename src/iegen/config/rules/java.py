@@ -69,7 +69,7 @@ def gen_constructor(ctx, builder):
 def gen_method(ctx, builder):
     # get or create logical file
 
-    result_context = ctx.find_by_type(ctx.result_type)
+    result_context = ctx.find_by_type_spelling(ctx.result_type)
     builder.get_scope("class_body").add(
         f"module={ctx.module}",
         f"{result_context and result_context.cursor.type.spelling} {ctx.name}({ctx.args}) ",

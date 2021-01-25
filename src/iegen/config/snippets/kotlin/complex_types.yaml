@@ -207,7 +207,9 @@ std::shared_ptr:
     {%- set pointee_base = args_t_bases[0] %}
     auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
+    {%- set pointee = args_t[0] %}
+    {%- set pointee_base = args_t_bases[0] %}
+    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:

@@ -49,8 +49,9 @@ class Context(object):
                         if val:
                             val = val.spelling
             return val
-        # for template types get_arguments return an empty array, using Type.argument_types instead
-        if self.node.is_template:
+
+        # for function templates Cursor.get_arguments returns an empty array, using Type.argument_types instead
+        if self.node.is_function_template:
             for i, arg_type in enumerate(self.node.clang_cursor.type.argument_types()):
                 arg_params = types.SimpleNamespace(name=f'arg{i}',
                                                    type=arg_type,
@@ -63,8 +64,7 @@ class Context(object):
                 arg_params = types.SimpleNamespace(name=arg_c.spelling,
                                                    type=arg_c.type,
                                                    cursor=arg_c,
-                                                   default=def_val
-                                                   )
+                                                   default=def_val)
                 _args.append(arg_params)
 
         return _args
@@ -141,7 +141,8 @@ class Context(object):
 
         def walk(base_types):
             for base in base_types:
-                base = self.find_by_type(cutil.template_type_name(base))
+                base = self.find_by_type_spelling(cutil.template_type_name(base)) or \
+                       self.find_by_type_spelling(cutil.template_type_name(base.get_canonical()))
                 yield base
                 for base in walk(base.base_types):
                     yield base
@@ -156,11 +157,13 @@ class Context(object):
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
+        base_types_cursor = []
 
-        return [base_specifier
-                for base_specifier in self.node.clang_cursor.get_children()
-                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER
-                ]
+        for base_specifier in self.node.clang_cursor.get_children():
+            # check if base type also has a context
+            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER and self.find_by_type(base_specifier.type):
+                base_types_cursor.append(base_specifier)
+        return base_types_cursor
 
     @property
     def cursor(self):
@@ -221,7 +224,7 @@ class Context(object):
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
-                ctx = self.find_by_type(t)
+                ctx = self.find_by_type_spelling(t)
                 if ctx:
                     includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                  self.runner.config.out_prj_dir))
@@ -232,40 +235,19 @@ class Context(object):
         return [child.type.spelling for child in self.cursor.get_children() if
                 child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]
 
-    def template_suffix(self, template_choice=None):
-        """
-        Returns template type suffix based on concatenated template argument names(for custom type argument it takes
-        the name, for the other types it takes special characters(::,<,>) removed spelling).
-
-        Returns:
-            str: Generated suffix.
-        """
-        if not self.node.is_template:
-            return ''
-        template_choice = template_choice or self.template_choice
-        args_names = []
-        # using template_type_parameters to have correct template parameters order since user can specify them in
-        # different order in api comment
-        template_types = self.template_type_parameters
-        if template_choice:
-            for t in template_types:
-                type_name = template_choice[t]
-                # template_type = cutil.template_type_name(type_name)
-                ctx = self.find_by_type(type_name)
-                if ctx:
-                    args_names.append(ctx.name)
-                else:
-                    args_names.append(cutil.get_type_name_without_special_characters(type_name))
-        return ''.join(args_names)
-
-    def find_by_type(self, search_type):
+    def find_by_type_spelling(self, search_type):
         return self.runner.get_context(search_type)
+
+    def find_by_type(self, clang_type):
+        # getting canonical for the types that are template specialization and do not have full name specified
+        return self.find_by_type_spelling(cutil.template_type_name(clang_type)) or \
+               self.find_by_type_spelling(cutil.template_type_name(clang_type.get_canonical()))
 
     def find_adjacent(self, search_names, search_api=None):
         return next(self.find_adjacents(search_names, search_api), None)
 
     def find_adjacents(self, search_names, search_api=None):
-        return (self.find_by_type(node.full_displayname) for node in self.node.parent.children
+        return (self.find_by_type_spelling(node.full_displayname) for node in self.node.parent.children
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
@@ -320,17 +302,16 @@ class RunRule(object):
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
 
-            def _run_recursive(node, template_choice=None):
+            def _run_recursive(node, template_choice=None, add_to_processed=True):
                 stack_added = False
-                if node.api and (not calling_api or node.api in calling_api) and (
-                        template_choice or node not in processed):
-                    ancesstor = node.ancestor_with_api
-                    if ancesstor in processed:
+                if node.api and (not calling_api or node.api in calling_api) and node not in processed:
+                    ancestor = node.ancestor_with_api
+                    if ancestor in processed:
                         # for already called api resume builders scope stack
-                        logging.debug(f"Restoring stack for {ancesstor.displayname}.")
-                        builder.restore_stacks(processed[ancesstor])
+                        logging.debug(f"Restoring stack for {ancestor.displayname}.")
+                        builder.restore_stacks(processed[ancestor])
                         logging.debug(
-                            f"Restored stack {self.__str_stacks(processed[ancesstor])}."
+                            f"Restored stack {self.__str_stacks(processed[ancestor])}."
                         )
                     # allocate scope
                     stack_added = True
@@ -338,9 +319,10 @@ class RunRule(object):
 
                     # call api
                     self.call_api(rule, node, builder, template_choice)
-                    logging.debug(f"Capturing stack for {node.displayname}.")
-                    processed[node] = builder.capture_stacks()
-                    logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
+                    if add_to_processed:
+                        logging.debug(f"Capturing stack for {node.displayname}.")
+                        processed[node] = builder.capture_stacks()
+                        logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
 
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
@@ -355,9 +337,11 @@ class RunRule(object):
                             template_arg.update(child.args['template'][self.language])
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
+                            # for templates generate all classes then add to processed
+                            templates_last_index = len(all_possible_args) - 1
                             for i, choice in enumerate(all_possible_args):
                                 _template_choice = dict(zip(template_keys, choice))
-                                _run_recursive(child, _template_choice)
+                                _run_recursive(child, _template_choice, add_to_processed=(i == templates_last_index))
                         else:
                             _run_recursive(child, template_choice)
                     logging.debug(f"End processing children for {node.displayname}.")

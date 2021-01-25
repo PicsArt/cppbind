@@ -5,12 +5,6 @@
 #include<string>
 #include<jni.h>
 
-/**
- * comments
- * 
- * __API__
- * package: extra
- */
 namespace iegen {
 
 /**
@@ -18,6 +12,7 @@ namespace iegen {
  * 
  * __API__
  * gen: class
+ * package: extra
  * shared_ref: True
  */
 class Object {

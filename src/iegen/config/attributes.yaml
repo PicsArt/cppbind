@@ -32,7 +32,7 @@ include:
   inheritable: true
   array: true
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 shared_ref:
   inheritable: true

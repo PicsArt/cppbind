@@ -103,14 +103,3 @@ open class Example
     private external fun jSet_this(id: Long, self: Any): Void
     private external fun jFinalize(id: Long): Void
 }
-
-enum class Type2(val value: Int){
-  A2(0),
-  B2(1),
-  C2(2);
-
-  companion object {
-    private val values = values();
-    fun getByValue(value: Int) = values.firstOrNull { it.value == value }
-  }
-}

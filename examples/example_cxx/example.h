@@ -1,18 +1,12 @@
 #include<string>
 
-/**
- * comments
- *
- * __API__
- * file_full_name: /home/test
- * package: utils
- */
 namespace pi::utils {
     /**
      * comments
      * 
      * __API__
      * gen: class
+     * package: utils
      * shared_ref: False
      */
     struct Example

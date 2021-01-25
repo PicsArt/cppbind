@@ -14,6 +14,7 @@ namespace iegen {
  * gen: class
  * package: extra
  * shared_ref: True
+ * package: extra
  */
 class Object {
 public:

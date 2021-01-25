@@ -2,16 +2,7 @@
 #define __EXAMPLE2_H__
 
 #include "example.h"
-/**
- * comments
- * 
- * __API__
- * kotlin.file: utils
- * kotlin.package: utils
- * kotlin.include: android.os.Parcel
- * kotlin.include: android.os.Test
- * kotlin.prefix: PI
- */
+
 namespace pi::utils {
     using namespace std;
     /**
@@ -20,6 +11,11 @@ namespace pi::utils {
      * __API__
      * gen: class
      * shared_ref: False
+     * kotlin.file: utils
+     * kotlin.package: utils
+     * kotlin.include: android.os.Parcel
+     * kotlin.include: android.os.Test
+     * kotlin.prefix: PI
      * kotlin.module: pi.xxx.Example
      */
     class Example2 : public Example

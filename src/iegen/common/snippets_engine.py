@@ -255,10 +255,10 @@ class ScopeInfo:
         self.snippet_tmpl = snippet_tmpl
         self.unique_snippet_tmpl = unique_snippet_tmpl
 
-    def make_snippet(self, context, template_choice=None):
+    def make_snippet(self, context):
         return Snippet(context=context, template=self.snippet_tmpl)
 
-    def unique_make_snippet(self, context, template_choice=None):
+    def unique_make_snippet(self, context):
         return Snippet(context=context, template=self.unique_snippet_tmpl)
 
 

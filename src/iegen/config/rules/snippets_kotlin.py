@@ -217,7 +217,7 @@ def preprocess_scope(context, scope, info):
     if info.snippet_tmpl:
         scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
-        scope.add_unique(str(info.unique_make_snippet(context_scope)))
+        scope.add_unique(*str(info.unique_make_snippet(context_scope)).splitlines())
 
 
 def preprocess_entry(context, builder, code_name):

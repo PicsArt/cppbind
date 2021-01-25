@@ -1,9 +1,8 @@
 /**
  * comments
- * 
+ *
  * __API__
- * kotlin.file: utils
- * kotlin.module: pi.xxx 
+ * kotlin.module: pi.xxx
  * swift.prefix: PI
  */
 namespace pi::utils {
@@ -12,6 +11,8 @@ namespace pi::utils {
      * 
      * __API__
      * gen: class
+     * swift.prefix: PI
+
      * shared_ref: False
      */
     class Example

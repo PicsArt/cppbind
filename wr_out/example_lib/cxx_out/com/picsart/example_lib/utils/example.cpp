@@ -3,7 +3,6 @@
 #include "example_lib/cxx_out/iegen_wrapper_helper.hpp"
 #include "../examples/example_cxx/example.h"
 
-
 extern "C" JNIEXPORT void Java_com_picsart_example_1lib_utils_Example_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
   return iegen::handleNativeCrash(env, [&] {});
 }

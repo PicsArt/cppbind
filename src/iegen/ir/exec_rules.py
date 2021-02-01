@@ -141,8 +141,8 @@ class Context(object):
 
         def walk(base_types):
             for base in base_types:
-                base = self.find_by_type_spelling(cutil.template_type_name(base)) or \
-                       self.find_by_type_spelling(cutil.template_type_name(base.get_canonical()))
+                base = self.find_by_type(cutil.template_type_name(base)) or \
+                       self.find_by_type(cutil.template_type_name(base.get_canonical()))
                 yield base
                 for base in walk(base.base_types):
                     yield base
@@ -161,7 +161,7 @@ class Context(object):
 
         for base_specifier in self.node.clang_cursor.get_children():
             # check if base type also has a context
-            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER and self.find_by_type(base_specifier.type):
+            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER and self.find_by_type_(base_specifier.type):
                 base_types_cursor.append(base_specifier)
         return base_types_cursor
 
@@ -224,7 +224,7 @@ class Context(object):
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
-                ctx = self.find_by_type_spelling(t)
+                ctx = self.find_by_type(t)
                 if ctx:
                     includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                  self.runner.config.out_prj_dir))
@@ -235,19 +235,23 @@ class Context(object):
         return [child.type.spelling for child in self.cursor.get_children() if
                 child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]
 
-    def find_by_type_spelling(self, search_type):
-        return self.runner.get_context(search_type)
+    def find_by_type(self, search_type):
+        search_name = search_type
+        if isinstance(search_type, cli.Type):
+            search_name = self.find_by_type(cutil.template_type_name(search_type)) or \
+                          self.find_by_type(cutil.template_type_name(search_type.get_canonical()))
+        return self.runner.get_context(search_name)
 
-    def find_by_type(self, clang_type):
+    def find_by_type_(self, clang_type):
         # getting canonical for the types that are template specialization and do not have full name specified
-        return self.find_by_type_spelling(cutil.template_type_name(clang_type)) or \
-               self.find_by_type_spelling(cutil.template_type_name(clang_type.get_canonical()))
+        return self.find_by_type(cutil.template_type_name(clang_type)) or \
+               self.find_by_type(cutil.template_type_name(clang_type.get_canonical()))
 
     def find_adjacent(self, search_names, search_api=None):
         return next(self.find_adjacents(search_names, search_api), None)
 
     def find_adjacents(self, search_names, search_api=None):
-        return (self.find_by_type_spelling(node.full_displayname) for node in self.node.parent.children
+        return (self.find_by_type(node.full_displayname) for node in self.node.parent.children
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
@@ -337,7 +341,7 @@ class RunRule(object):
                             template_arg.update(child.args['template'][self.language])
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
-                            # for templates generate all classes then add to processed
+                            # for templates generate all classes then add the node to processed
                             templates_last_index = len(all_possible_args) - 1
                             for i, choice in enumerate(all_possible_args):
                                 _template_choice = dict(zip(template_keys, choice))

@@ -1556,10 +1556,6 @@ class Cursor(Structure):
 
         return updcursors
 
-    def is_declaration(self):
-        return self.kind in [CursorKind.CLASS_DECL, CursorKind.ENUM_DECL, CursorKind.STRUCT_DECL,
-                             CursorKind.CLASS_TEMPLATE] and not self.is_definition()
-
     @property
     def kind(self):
         """Return the kind of this cursor."""

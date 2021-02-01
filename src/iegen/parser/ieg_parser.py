@@ -107,7 +107,7 @@ class CXXParser(object):
             logging.debug(f"Filtering cursor: {cursor}")
             return
 
-        if cursor.is_declaration():
+        if self._is_declaration(cursor):
             logging.debug(f"Filtering forward declaration cursor: {cursor}")
             return
 
@@ -125,3 +125,7 @@ class CXXParser(object):
 
         if hasattr(processor, 'end_cursor'):
             processor.end_cursor(cursor)
+
+    def _is_declaration(self, cursor):
+        return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
+                               cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()

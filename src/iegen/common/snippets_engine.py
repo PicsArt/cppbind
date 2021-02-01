@@ -463,7 +463,7 @@ class SnippetsEngine:
 
     def _create_type_info(self, ctx, search_name, clang_type, template_args=None, template_choice=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
-        ref_ctx = ctx.find_by_type_spelling(search_name)
+        ref_ctx = ctx.find_by_type(search_name)
         if ref_ctx is not None:
             if clang_type.kind == cli.TypeKind.ENUM:
                 search_name = ENUM_INFO_TYPE
@@ -483,30 +483,7 @@ class SnippetsEngine:
 
         return type_converter
 
-    def get_template_suffix(self, ctx, target_language):
 
-        template_choice = ctx.template_choice
-        template_types = ctx.template_type_parameters
-        args_names = []
-        if template_choice:
-            for t in template_types:
-                search_name = template_choice[t]
-
-                ref_ctx = ctx.find_by_type_spelling(search_name)
-                if ref_ctx is not None:
-                    if ctx.cursor.type.kind == cli.TypeKind.ENUM:
-                        search_name = ENUM_INFO_TYPE
-                    else:
-                        search_name = OBJECT_INFO_TYPE
-
-                type_converter = self.get_type_info(search_name)
-                if not type_converter:
-                    raise KeyError(f"Can not find type for {search_name}")
-                type_converter = type_converter.make_converter(ctx.cursor.type, ref_ctx, template_choice=template_choice)
-
-                args_names.append(getattr(type_converter, target_language).target_type_name)
-
-        return ''.join(args_names)
 
     def _build_type_converter(self, ctx, clang_type, lookup_type=None, template_choice=None):
         template_choice = template_choice or {}
@@ -524,6 +501,7 @@ class SnippetsEngine:
             else:
                 # covers template parameter and template argument cases,
                 # e.g. a::Stack<T> and a::Stack<Project>
+                # might be a template typedef so get the canonical type and then proceed
                 if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]

@@ -1,6 +1,7 @@
 """
 """
 import itertools
+import json
 import os
 import types
 import clang.cindex as cli
@@ -161,7 +162,7 @@ class Context(object):
 
         for base_specifier in self.node.clang_cursor.get_children():
             # check if base type also has a context
-            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER and self.find_by_type_(base_specifier.type):
+            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER and self.find_by_type(base_specifier.type):
                 base_types_cursor.append(base_specifier)
         return base_types_cursor
 
@@ -238,14 +239,10 @@ class Context(object):
     def find_by_type(self, search_type):
         search_name = search_type
         if isinstance(search_type, cli.Type):
-            search_name = self.find_by_type(cutil.template_type_name(search_type)) or \
-                          self.find_by_type(cutil.template_type_name(search_type.get_canonical()))
+            # getting canonical for template base types
+            search_name = cutil.template_type_name(search_type) or \
+                          cutil.template_type_name(search_type.get_canonical())
         return self.runner.get_context(search_name)
-
-    def find_by_type_(self, clang_type):
-        # getting canonical for the types that are template specialization and do not have full name specified
-        return self.find_by_type(cutil.template_type_name(clang_type)) or \
-               self.find_by_type(cutil.template_type_name(clang_type.get_canonical()))
 
     def find_adjacent(self, search_names, search_api=None):
         return next(self.find_adjacents(search_names, search_api), None)
@@ -306,16 +303,18 @@ class RunRule(object):
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
 
-            def _run_recursive(node, template_choice=None, add_to_processed=True):
+            def _run_recursive(node, template_choice=None):
                 stack_added = False
-                if node.api and (not calling_api or node.api in calling_api) and node not in processed:
+                node_key = (node, json.dumps(template_choice))
+                if node.api and (not calling_api or node.api in calling_api) and node_key not in processed:
                     ancestor = node.ancestor_with_api
-                    if ancestor in processed:
+                    ancestor_key = (ancestor, json.dumps(template_choice))
+                    if ancestor_key in processed:
                         # for already called api resume builders scope stack
                         logging.debug(f"Restoring stack for {ancestor.displayname}.")
-                        builder.restore_stacks(processed[ancestor])
+                        builder.restore_stacks(processed[ancestor_key])
                         logging.debug(
-                            f"Restored stack {self.__str_stacks(processed[ancestor])}."
+                            f"Restored stack {self.__str_stacks(processed[ancestor_key])}."
                         )
                     # allocate scope
                     stack_added = True
@@ -323,10 +322,9 @@ class RunRule(object):
 
                     # call api
                     self.call_api(rule, node, builder, template_choice)
-                    if add_to_processed:
-                        logging.debug(f"Capturing stack for {node.displayname}.")
-                        processed[node] = builder.capture_stacks()
-                        logging.debug(f"Captured stack {self.__str_stacks(processed[node])}.")
+                    logging.debug(f"Capturing stack for {node.displayname}.")
+                    processed[node_key] = builder.capture_stacks()
+                    logging.debug(f"Captured stack {self.__str_stacks(processed[node_key])}.")
 
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
@@ -341,11 +339,9 @@ class RunRule(object):
                             template_arg.update(child.args['template'][self.language])
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
-                            # for templates generate all classes then add the node to processed
-                            templates_last_index = len(all_possible_args) - 1
                             for i, choice in enumerate(all_possible_args):
                                 _template_choice = dict(zip(template_keys, choice))
-                                _run_recursive(child, _template_choice, add_to_processed=(i == templates_last_index))
+                                _run_recursive(child, _template_choice)
                         else:
                             _run_recursive(child, template_choice)
                     logging.debug(f"End processing children for {node.displayname}.")

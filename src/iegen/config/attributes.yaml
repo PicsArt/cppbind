@@ -21,7 +21,7 @@ module:
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ class, class_template, struct, struct_template, enum, function_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 name:
   inheritable: false
@@ -45,3 +45,8 @@ template:
   default: null
   type: json
   allowed_on: [ class_template, struct_template, function_template ]
+
+is_operator:
+  inheritable: false
+  default: false
+  allowed_on: [ cxx_method ]

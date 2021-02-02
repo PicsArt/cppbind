@@ -68,7 +68,7 @@ class APIParser(object):
 
                 attr_type = self.attributes[attr].get('type', None)
                 if isinstance(self.attributes[attr]['default'], bool) or attr_type == 'bool':
-                    value = distutils.util.strtobool(value)
+                    value = bool(distutils.util.strtobool(value))
 
                 if attr_type == 'json':
                     value = json.loads(value)

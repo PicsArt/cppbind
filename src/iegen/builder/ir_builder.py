@@ -89,7 +89,9 @@ class CXXIEGIRBuilder(object):
                             node_kind = current_node.kind_name
                             if node_kind not in properties["allowed_on"]:
                                 raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
-
+                    # check for the cases that is_operator is not specified but cursor is operator
+                    if att_name == "is_operator" and not new_att_val:
+                        new_att_val = cursor.displayname.startswith("operator")
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):

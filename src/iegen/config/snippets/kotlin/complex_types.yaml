@@ -28,7 +28,18 @@ $Object:
     {%- endif %}
   cxx_to_jni: |
     {%- set pointee = target_pointee_unqualified_name %}
-    {{target_type_name}} {{target_name}} = {% if type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{'&' if not is_pointer}}{{name}});
+    {%- set shared = type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+    {%- if is_value_type -%}
+    {%- set tmp_name = '_' + name %}
+    {%- if shared %}
+    std::shared_ptr<{{pointee}}> {{tmp_name}} = iegen::CopyAsSharedPtr<{{pointee}}>({{name}});
+    {%- else %}
+    {{pointee}}* {{tmp_name}} = iegen::CopyAsPtr<{{pointee}}>({{name}});
+    {%- endif %}
+    {%- else %}
+    {%- set tmp_name = name %}
+    {%- endif %}
+    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{tmp_name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:

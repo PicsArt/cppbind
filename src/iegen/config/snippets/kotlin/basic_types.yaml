@@ -38,6 +38,20 @@ int:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
+unsigned int:
+  custom:
+    pname: UInt
+  kotlin:
+    type_info: Long
+  jni:
+    type_info: jlong
+  jdk:
+    type_info: Long
+  jni_to_cxx:
+  cxx_to_jni:
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
 short:
   custom:
     pname: Short

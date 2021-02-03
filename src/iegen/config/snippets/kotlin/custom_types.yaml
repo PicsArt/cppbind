@@ -43,7 +43,11 @@ std::pair:
     {{args[1].snippet('second')|indent}}
     {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = std::make_pair(f, s);
+    auto first = {{name}}.first
+    auto second = {{name}}.second
+    {{args[0].snippet('first')|indent}}
+    {{args[0].snippet('second')|indent}}
+    {{target_type_name}} {{target_name}} = iegen::make_jni_pair(args[0].converted_name('first'), args[0].converted_name('second'));
   kotlin_to_jdk: |
     val first = {{name}}.first
     val second = {{name}}.second

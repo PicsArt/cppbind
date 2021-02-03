@@ -74,7 +74,7 @@ inline std::shared_ptr<T> RefFromLong(jlong id) {
         auto baseptr = *reinterpret_cast<std::shared_ptr<BaseT>*>(id);
         return std::static_pointer_cast<T>(baseptr);
     }
-    return *reinterpret_cast<std::shared_ptr<T>*>(id);;
+    return *reinterpret_cast<std::shared_ptr<T>*>(id);
 }
 
 template <typename T, typename BaseT>

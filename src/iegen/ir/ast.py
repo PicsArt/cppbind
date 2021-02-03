@@ -125,7 +125,9 @@ class Node(object):
         """
         template_choice = template_choice or {}
         _root_cursor = cutil.get_base_cursor(self.clang_cursor)
-        cxx_root_type_name = _root_cursor.type.spelling
+        # might not work for typedefs need a check
+        # getting canonical to get full name(with namespace) in case of template bases
+        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
 
         # in case of a template class - cursor type is TypeKind.INVALID, that´s why cant get type spelling from the
         if self.is_template:

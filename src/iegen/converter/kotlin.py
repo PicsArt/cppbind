@@ -52,7 +52,7 @@ def get_jni_func_name(package_name, class_name, template_suffix, method_name, ar
 {"".join([args_type_signature[arg] for arg in args_type_name])}'
 
 
-def is_valid_class(class_name, base_types_converters):
+def check_class_bases(class_name, base_types_converters):
     non_abstract_bases = 0
     for base_type in base_types_converters:
         if not base_type.is_interface:

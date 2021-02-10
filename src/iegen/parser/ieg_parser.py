@@ -4,11 +4,11 @@ Parser module based on clang
 import os
 import glob
 import clang.cindex as cli
+import iegen.utils.clang as cutil
 from iegen import (
     default_config as default_config,
     logging as logging
 )
-from iegen import find_prj_dir
 from iegen.parser.filter import cxx_ieg_filter
 
 
@@ -109,7 +109,7 @@ class CXXParser(object):
             logging.debug(f"Filtering cursor: {cursor}")
             return
 
-        if self._is_declaration(cursor):
+        if cutil.is_declaration(cursor):
             logging.debug(f"Filtering forward declaration cursor: {cursor}")
             return
 
@@ -131,6 +131,7 @@ class CXXParser(object):
 
         if hasattr(processor, 'end_cursor'):
             processor.end_cursor(cursor)
+<<<<<<< HEAD
 
     def _is_declaration(self, cursor):
         return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
@@ -140,3 +141,5 @@ class CXXParser(object):
         if cursor.lexical_parent and cursor.semantic_parent:
             return cursor.lexical_parent != cursor.semantic_parent
         return False
+=======
+>>>>>>> IEG-81 - Initial python wrappers support for basic cases.

@@ -1,0 +1,184 @@
+file:
+  python:
+    file_path: |
+      {{[config.out_dir, package, file]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+    scopes:
+      - body
+      - include
+    content: |
+      import {{'pybind_' + file}} as pybind
+      {{helper_includes|format_list('from {} import *')|join('\n')}}
+      {{include}}
+
+
+      {{body}}
+  cxx:
+    file_path: |
+      {{[config.cxx_out_dir, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes:
+      - body
+      - include
+    content: |
+      #include <pybind11/pybind11.h>
+      #include <pybind11/stl.h>
+      #include <iostream>
+      {{include}}
+
+      namespace py = pybind11;
+
+      PYBIND11_MODULE({{'pybind_' + file}}, m) {
+          {{body|string|indent}}
+      }
+
+enum:
+  python:
+    body: |
+      class {{name}}(pybind.{{name}}):
+        {%- for case in enum_cases -%}
+        {%- if case.comment %}
+        {{case.comment|string|indent(2)}}
+        {%- endif %}
+        {{case.name}} = pybind.{{name}}.{{case.name}}
+        {%- endfor %}
+      {{'\n'}}
+  cxx:
+    body: |
+      py::enum_<{{cxx_type_name}}>(m, "{{name}}")
+          {%- for case in enum_cases %}
+          .value("{{case.name}}", {{cxx_type_name}}::{{case.name}})
+          {%- endfor %}
+          .export_values();
+
+var_class: &var_class
+  python:
+    include:
+      unique_content: |
+        {{include|format_list("import {}")|join('\n')}}
+    body:
+      scopes:
+        - head
+        - properties
+        - body
+      content: |
+        {%- set comma = joiner(', ') -%}
+        class {{name}}({%- if base_types_converters is defined -%}
+                       {% for base_type_converter in base_types_converters -%}
+                       {{comma()}}{{base_type_converter.name}}
+                       {%- endfor -%}
+                       {%- endif -%}
+                       {{comma()}}metaclass=OriginalMethodsMetaclass):
+            {{comment|string|indent}}
+            {{head|string|indent}}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        {{'\n'}}
+  cxx:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+        {%- if template_includes %}
+        {{template_includes|format_list('#include "{}"')|join('\n')}}
+        {%- endif %}
+        {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
+    body:
+      content: |
+        {%- set comma = joiner(', ') -%}
+        {%- set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
+        {%- if base_types_converters is defined -%}
+        {%- for base_type_converter in base_types_converters %}
+        py::module_::import("{{'pybind_' + base_types_converters[0].node.args['file']['python']}}").attr("{{base_type_converter.name}}");
+        {%- endfor -%}
+        {%- endif %}
+        py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
+                                      , std::shared_ptr<{{cxx_type_name}}>
+                                     {%- endif %}
+                                     {%- if base_types_converters is defined -%},
+                                     {%- for base_type_converter in base_types_converters -%}
+                                     {{comma()}}{{base_type_converter.cursor.type.spelling}}
+                                     {%- endfor -%}
+                                     {%- endif %}> {{name|lower}}(m, "{{name}}"{{', py::is_final()' if not is_open}});
+
+class: *var_class
+
+interface: *var_class
+
+constructor:
+  python:
+    head: |
+      def __new__(cls, *args, **kwargs):
+          {{comment|string|indent}}
+          return pybind.{{owner_class.name}}(*args, **kwargs)
+
+      def __init__(self{{', ' if args}}{{args|format_list("{arg.name}", 'arg')|join(', ')}}):
+          {{comment|string|indent}}
+          pass
+  cxx:
+    body: |
+      {{owner_class.name|lower}}.def(py::init<{{args|format_list("{arg.type.spelling}", 'arg')|join(', ')}}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+
+
+function:
+  python:
+    body: |
+      {%- if is_static %}
+      @staticmethod
+      {%- endif %}
+      def {{name}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}}):
+          {{comment|string|indent}}
+          return {{owner_class.name}}.originals['{{name}}']({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
+  cxx:
+    body: |
+      {%- set comma = joiner(', ') -%}
+      {{owner_class.name|lower}}.def{{'_static' if is_static }}("{{name}}"{%- if helper.python.get_overload_cursors(ctx) -%}
+      , py::overload_cast<
+      {%- for arg in args -%}
+      {{arg.type.get_canonical().spelling}}{{comma()}}
+      {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
+      {%- else -%}
+      , &{{owner_class.cxx_type_name}}::{{cxx_name}}
+      {%- endif -%}
+      {{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+
+property_getter:
+  python:
+    properties: |
+      @property
+      def {{name}}(self):
+          {{comment|string|indent}}
+          return {{owner_class.name}}.originals['{{name}}'].fget(self)
+
+      {%- if gen_property_setter %}
+      @{{name}}.setter
+      def {{name}}(self, value):
+          {{comment|string|indent}}
+          {{owner_class.name}}.originals['{{name}}'].fset(self, value)
+      {%- endif %}
+  cxx:
+    body: |
+      {%- if gen_property_setter %}
+      {{owner_class.name|lower}}.def_readwrite("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- else %}
+      {{owner_class.name|lower}}.def_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- endif %}
+
+getter:
+  python:
+    properties: |
+      @property
+      def {{name}}(self):
+          {{comment|string|indent}}
+          return {{owner_class.name}}.originals['{{name}}'].fget(self)
+
+      {% if setter_ctx is defined %}
+      @{{name}}.setter
+      def {{name}}(self, value):
+          {{comment|string|indent}}
+          {{owner_class.name}}.originals['{{name}}'].fset(self, value)
+      {%- endif %}
+  cxx:
+    body: |
+      {% if setter_ctx is defined %}
+      {{owner_class.name|lower}}.def_property("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {%- else %}
+      {{owner_class.name|lower}}.def_property_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- endif %}

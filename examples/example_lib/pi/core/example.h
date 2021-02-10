@@ -14,7 +14,7 @@ namespace pi::utils {
      * __API__
      * gen: class
      * kotlin.file: utils
-     * kotlin.package: utils
+     * package: utils
      * kotlin.include: android.os.Parcel
      * kotlin.include: android.os.Test
      * kotlin.prefix: PI
@@ -74,7 +74,7 @@ namespace pi::utils {
      * gen: enum
      * swift.name: ExampleType
      * kotlin.file: utils
-     * kotlin.package: utils
+     * package: utils
      * kotlin.include: android.os.Parcel
      * kotlin.include: android.os.Test
      * kotlin.prefix: PI

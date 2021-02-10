@@ -42,10 +42,8 @@ public:
      * __API__
      * gen: method
      */
-    bool equals(std::shared_ptr<Object> other) const
-    {
-        return this->equals(other.get());
-    }
+    bool equals(std::shared_ptr<Object> other) const;
+
     virtual bool equals(const Object* other) const;
 
     /**

@@ -150,3 +150,9 @@ def replace_template_choice(type_name, template_choice):
         for typename, value in template_choice.items():
             replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
     return replaced
+
+
+def is_declaration(cursor):
+    # todo check also function
+    return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
+                       cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()

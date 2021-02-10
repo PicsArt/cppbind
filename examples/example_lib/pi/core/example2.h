@@ -12,7 +12,7 @@ namespace pi::utils {
      * gen: class
      * shared_ref: False
      * kotlin.file: utils
-     * kotlin.package: utils
+     * package: utils
      * kotlin.include: android.os.Parcel
      * kotlin.include: android.os.Test
      * kotlin.prefix: PI

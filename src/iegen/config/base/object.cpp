@@ -35,6 +35,10 @@ std::string Object::className() const {
     return demangleCPPName(typeid(*this).name());
 }
 
+bool Object::equals(std::shared_ptr<Object> other) const {
+    return this->equals(other.get());
+}
+
 bool Object::equals(const Object* p) const {
     return this == p;
 }

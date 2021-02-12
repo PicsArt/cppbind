@@ -1,4 +1,3 @@
-import re
 import types
 import os
 import glob
@@ -10,7 +9,6 @@ import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
-from iegen.ir.exec_rules import Context
 from iegen import logging as logging
 
 OBJECT_INFO_TYPE = '$Object'
@@ -86,6 +84,7 @@ class Converter:
 
     def __init__(self, clang_type, target_clang_type,
                  template_args,
+                 target_lang,
                  custom,
                  ctx,
                  type_converter,
@@ -93,6 +92,7 @@ class Converter:
         self.clang_type = clang_type
         self.type_converter = type_converter
         self.template_args = template_args
+        self.target_lang = target_lang
         self.custom = custom
         self.ctx = ctx
         self.target_clang_type = target_clang_type
@@ -113,12 +113,13 @@ class Converter:
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
-            args = self.template_args
+            args = [getattr(arg, self.target_lang) for arg in self.template_args]
+            args_converters = self.template_args
             template_suffix = ''
 
-            args_t = [arg.target_type_name for arg in self.template_args]
+            args_t = [arg.target_type_name for arg in args]
             args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
-                            arg in self.template_args]
+                            arg in args]
             custom = types.SimpleNamespace(**self.custom)
 
             cxx_type_name = self.target_clang_type.spelling
@@ -196,7 +197,8 @@ class Adapter:
 
         return Converter(clang_type=self.clang_type,
                          target_clang_type=self.target_clang_type,
-                         template_args=[getattr(arg, name) for arg in self.template_args],
+                         template_args=self.template_args,
+                         target_lang=name,
                          custom=self.type_info_colector.custom,
                          ctx=self.ctx,
                          type_converter=type_info,
@@ -307,6 +309,7 @@ class SnippetsEngine:
 
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
         if res is None:
+            import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             raise KeyError(f"Can not find type for {clang_type.spelling}")
         return res
 
@@ -483,8 +486,6 @@ class SnippetsEngine:
 
         return type_converter
 
-
-
     def _build_type_converter(self, ctx, clang_type, lookup_type=None, template_choice=None):
         template_choice = template_choice or {}
 
@@ -511,7 +512,9 @@ class SnippetsEngine:
                     # this won´t work if theres an unexposed argument e.g.T,
                     # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
                     # type with spelling equal to 'Stack<type-parameter-0-0>'
-                    canonical_clang_type = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                    canonical_clang_type = all(
+                        (arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args)
+                    )
                     if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
                         lookup_type = cutil.get_canonical_type(lookup_type)

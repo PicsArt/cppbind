@@ -78,7 +78,7 @@ class:
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
                                 {% endif %} {
-            {% if not base_types_converters is defined %}
+            {% if not has_non_abstract_base_class %}
             public let cself : {{converter.c.target_type_name}}
 
             // internal main initializer
@@ -111,8 +111,43 @@ class:
 interface:
   swift:
     body:
-  cc: 
+      scopes:
+        - interface_head
+        - interface_properties
+        - interface_body
+        - head
+        - properties
+        - body
+      content: |
+        {{comment}}
+        public protocol {{name}} {% if base_types_converters is defined -%}
+                              {%- set comma = joiner(', ') -%}
+                              : {% for base_type_converter in base_types_converters -%}
+                                {{comma()}}{{base_type_converter.swift.target_type_name}}
+                                {%- endfor -%}
+                                {% endif %} {
+
+            {% if not base_types_converters is defined %}
+            var cself : {{converter.c.target_type_name}} { get }
+            {% endif %}
+            {{interface_head|string|indent}}
+            {{interface_properties|string|indent}}
+            {{interface_body|string|indent}}
+        }
+        extension {{name}} {
+            {{head|string|indent}}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        }
+  cc:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+  ch:
     body:
+      content: |
+        typedef void* _Nonnull {{converter.c.target_type_name}};
+
 
 
 constructor:
@@ -165,6 +200,9 @@ function:
           _func_{{owner_class.name}}_{{name}}({{call_args|join(', ')}});
         {%- endif %}
       }
+    interface_body: |
+      {{comment}}
+      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} 
   cc:
     body: |
       {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}){
@@ -190,13 +228,95 @@ function:
 
 property_getter:
   swift:
-    properties:
+    properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      public var {{name}}: {{result_converter.target_type_name}} {
+            get {
+              let result = _prop_get_{{owner_class.name}}_{{name}}(cself);
+              {{result_converter.snippet('result')|indent(8)}}
+              return {{result_converter.converted_name('result')}}
+            }
+            {% if gen_property_setter is defined %}
+            {% set converter = rconverter.swift_to_sc %}
+            set(value) {
+              {{converter.snippet('value')|indent(8)}}
+              _prop_set_{{owner_class.name}}_{{name}}(cself, {{converter.converted_name('value')}})
+            }
+            {% endif %}
+      }
+    interface_properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      var {{name}}: {{result_converter.target_type_name}} { get {% if gen_property_setter is defined %}set{% endif %} }
   cc:
+    body: |
+      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
+          {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          auto result = {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}};
+          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          return {{rconverter.cxx_to_c.converted_name('result')}};
+      }
+      {%- if gen_property_setter is defined %}
+      void _prop_set_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
+          {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          {{rconverter.c_to_cxx.snippet(name)|indent}}
+          {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
+      }
+      {% endif %}
+  ch:
     body:
+      content: |
+        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself);
+        {%- if gen_property_setter is defined %}
+        void _prop_set_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}});
+        {% endif %}
 
 getter:
   swift:
-    properties:
+    properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      public var {{name}}: {{result_converter.target_type_name}} {
+            get {
+              let result = _prop_get_{{owner_class.name}}_{{name}}{{overloading_prefix}}(cself);
+              {{result_converter.snippet('result')|indent(8)}}
+              return {{result_converter.converted_name('result')}}
+            }
+            {% if setter_ctx is defined %}
+            {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
+            set(value) {
+              {{converter.snippet('value')|indent(8)}}
+              _prop_set_{{owner_class.name}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}(cself, {{converter.converted_name('value')}})
+            }
+            {% endif %}
+      }
+    interface_properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set(value){% endif %}
+      }
   cc:
+    body: |
+      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
+          {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          auto result = {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}}();
+          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          return {{rconverter.cxx_to_c.converted_name('result')}};
+      }
+      {%- if setter_ctx is defined %}
+      {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
+      void _prop_set_{{owner_class.name}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
+          {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          {{converter.snippet(setter_ctx.args[0].name)|indent}}
+          {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+      }
+      {% endif %}
+  ch:
     body:
-
+      content: |
+        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself);
+        {%- if setter_ctx is defined %}
+        {% set converter = setter_ctx.args[0].converter.c %}
+        void _prop_set_{{owner_class.name}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}} {{setter_ctx.args[0].name}});
+        {% endif %}

@@ -116,7 +116,6 @@ class:
                 }
                 return id;
             }
-
             {{head|string|indent}}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -174,9 +173,7 @@ interface:
         }
         {%- if helper.kotlin.has_valid_ancestors(ancestors) %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
-            internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {% if base_types_converters is defined -%}
-                                              , {{base_types_converters|join(',',attribute='kotlin.target_type_name')}}
-                                              {%- endif %}{
+            internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {
                   System.loadLibrary("wrapper_jni");
@@ -190,9 +187,8 @@ interface:
                 }
                 return id;
             }
-
             {{head|string|indent}}
-            {# todo think of abstract #}
+            {%- if not has_non_abstract_base_class %}
             override fun close() {
             	if (id != 0L) {
             		jFinalize(id)
@@ -205,6 +201,7 @@ interface:
             protected fun finalize() {
             	close()
             }
+            {%- endif -%}
             ///// External wrapper functions ////////////
             private external fun jSet_this(id: Long, self: Any): Void
             private external fun jFinalize(id: Long): Void
@@ -250,7 +247,6 @@ constructor:
               {%- else %}
               auto this_object = iegen::allocateRef<{{owner_class.cxx_type_name}}>({{call_args|join(', ')}});
               return iegen::AllocRefPtrAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(this_object);
-
               {%- endif %}
               }
         );
@@ -428,7 +424,7 @@ getter:
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {{comment}}
-      {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
+      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined or is_override else 'val'}} {{name}}: {{result_converter.target_type_name}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
@@ -448,7 +444,13 @@ getter:
               j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
             }
-            {% endif %}
+            {%- else %}
+            {%- if is_override %}
+            set(value) {
+                super.{{name}} = value
+            }
+            {%- endif %}
+            {%- endif %}
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}

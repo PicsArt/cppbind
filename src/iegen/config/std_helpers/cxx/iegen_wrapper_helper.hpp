@@ -61,6 +61,16 @@ inline jlong AllocRefPtrAsLong(const std::shared_ptr<T>& ref) {
 }
 
 template <typename T, typename BaseT>
+inline jlong AllocRefPtrAsLong(const std::shared_ptr<const T>& ref) {
+    if (!std::is_same<T, BaseT>::value) {
+        std::shared_ptr<BaseT> baseptr = std::const_pointer_cast<BaseT>(ref);
+        return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
+    }
+
+    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
+}
+
+template <typename T, typename BaseT>
 inline jlong AllocRefPtrAsLong(T* ref) {
     BaseT* baseptr = ref;
     return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
@@ -147,7 +157,7 @@ auto handleNativeCrash(JNIEnv* env, Callable f) -> decltype(f()) {
 
 std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p);
 
-jobject make_jni_pair(JNIEnv *env, jobject first, jobject second);
+jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second);
 
 std::string jni_to_string(JNIEnv* env, jobject jobj);
 

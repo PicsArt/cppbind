@@ -48,5 +48,6 @@ template:
 
 is_operator:
   inheritable: false
-  default: false
+  default: '{is_operator}'
+  type: bool
   allowed_on: [ cxx_method ]

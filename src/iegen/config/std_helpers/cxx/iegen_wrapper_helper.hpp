@@ -89,14 +89,14 @@ inline std::shared_ptr<T> RefFromLongDynamic(jlong id) {
 }
 
 template <typename T>
-inline std::shared_ptr<T> CopyAsSharedPtr(T obj) {
+inline std::shared_ptr<T> CopyAsSharedPtr(const T& obj) {
     IsTypeValidForJNI<T>();
     std::shared_ptr<T> obj_ptr = std::make_shared<T>(obj);
     return obj_ptr;
 }
 
 template <typename T>
-inline T* CopyAsPtr(T obj) {
+inline T* CopyAsPtr(const T& obj) {
     IsTypeValidForJNI<T>();
     return new T(obj);
 }

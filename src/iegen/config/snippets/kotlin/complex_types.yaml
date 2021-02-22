@@ -39,7 +39,7 @@ $Object:
     {%- else %}
     {%- set tmp_name = name %}
     {%- endif %}
-    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{tmp_name}});
+    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:

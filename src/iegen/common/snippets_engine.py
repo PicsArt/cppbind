@@ -132,7 +132,7 @@ class Converter:
             )
             if self.ctx:
                 type_name = self.ctx.name
-                type_ctx = self.ctx
+                type_ctx = self.ctx  # todo should we just import all attributes
                 cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type
                 target_root_pointee_unqualified_name = cutil.get_unqualified_type_name(
                     cutil.get_pointee_type(cxx_root_type))
@@ -309,7 +309,6 @@ class SnippetsEngine:
 
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
         if res is None:
-            import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
             raise KeyError(f"Can not find type for {clang_type.spelling}")
         return res
 

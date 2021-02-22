@@ -265,6 +265,10 @@ class Context(object):
                                     attribute for language {self.runner.language}.")
         return val
 
+    def __dir__(self):
+        import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
+        return super().__dir__() + [at for at in dir(self.node) if at not in dir(self.node)]
+
 
 class RunRule(object):
 

@@ -10,9 +10,21 @@ $Object:
   sc:
     type_info: "{{type_name|lower}}_t"
   c_to_cxx: |
-    auto {{target_name}} = static_cast<{{target_pointee_name}}*>({{name}});
+    {%- set pointee = target_pointee_unqualified_name %}
+    {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+        auto {{target_name}} = std::dynamic_pointer_cast<{{target_type_name}}>(
+                  *static_cast<std::shared_ptr<{{target_root_pointee_unqualified_name}}>*>({{name}})
+                  );
+    {%- else %}
+        // we might need to avoid dynamic_cast if there is no multiple inheritance
+        auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{target_root_pointee_unqualified_name}}*>({{name}}));
+    {%- endif %}
   cxx_to_c: |
-    auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});
+    {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+        auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>({{name}});
+    {%- else %}
+        auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
+    {%- endif %}
   swift_to_sc:
     let {{target_name}} = {{name}}.cself
   sc_to_swift:

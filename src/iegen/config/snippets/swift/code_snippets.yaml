@@ -19,6 +19,7 @@ file:
       - include
     content: |
       #include <string.h>
+      #include <memory>
       #include "{{path.relpath([config.cxx_out_dir, config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
       {{include}}
 
@@ -98,8 +99,8 @@ class:
       content: |
         void release_{{name}}({{converter.c.target_type_name}} cself){
 
-          auto this_object = static_cast<{{cxx_type_name}}*>(cself);
-          delete this_object;
+            {{converter.c_to_cxx.snippet('cself')}}
+            delete &{{converter.c_to_cxx.converted_name('cself')}};
         }
   ch:
     body:
@@ -213,12 +214,14 @@ function:
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {% endfor %}
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          auto _cself = {{'&' if not (shared_ref or owner_class.ancestors|any('shared_ref')) }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
+
         {%- if rconverter.c.target_type_name != 'void' %}
-          auto result = {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}}({{call_args|join(', ')}});
+          auto result = _cself->{{cxx_name}}({{call_args|join(', ')}});
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
         {%- else %}
-          {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}}({{call_args|join(', ')}});
+          _cself->{{cxx_name}}({{call_args|join(', ')}});
         {%- endif %}
       }
   ch:
@@ -253,15 +256,17 @@ property_getter:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
-          auto result = {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}};
+          auto _cself = {{'&' if not (shared_ref or owner_class.ancestors|any('shared_ref')) }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
+          auto result = _cself->{{cxx_name}};
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if gen_property_setter is defined %}
       void _prop_set_{{owner_class.name}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          auto _cself = {{'&' if not (shared_ref or owner_class.ancestors|any('shared_ref')) }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
           {{rconverter.c_to_cxx.snippet(name)|indent}}
-          {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
+          _cself->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
       }
       {% endif %}
   ch:
@@ -300,7 +305,8 @@ getter:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
-          auto result = {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{cxx_name}}();
+          auto _cself = {{'&' if not (shared_ref or owner_class.ancestors|any('shared_ref')) }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
+          auto result = _cself->{{cxx_name}}();
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
@@ -308,8 +314,9 @@ getter:
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
       void _prop_set_{{owner_class.name}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
+          auto _cself = {{'&' if not (shared_ref or owner_class.ancestors|any('shared_ref')) }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
           {{converter.snippet(setter_ctx.args[0].name)|indent}}
-          {{owner_class.converter.c_to_cxx.converted_name('cself')}}->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+          _cself->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}
   ch:

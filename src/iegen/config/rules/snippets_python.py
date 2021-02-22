@@ -1,15 +1,15 @@
 import os
 import types
 import copy
-from functools import partial
-
+# from functools import partial
+#
 import clang.cindex as cli
 import iegen
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine
+from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE
 import iegen.converter.python as convert
 
 SNIPPETS_ENGINE = None
@@ -38,7 +38,7 @@ def gen_init(config, *args, **kwargs):
 
     context = make_context(config)
 
-    load_from_paths(lambda path: load_snippets_engine(path, 'python'),
+    load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
                     config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
@@ -74,7 +74,8 @@ def make_func_context(ctx):
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type
+                type=arg.type,
+                spelling=cutil.replace_template_choice(arg.type.spelling, ctx.template_choice)
             ) for arg in ctx.args
         ]
 
@@ -82,6 +83,20 @@ def make_func_context(ctx):
         #     rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+
+        # overloading_prefix = ctx.overloading_prefix
+        # # capturing suffix since we use single context with different template choice
+        # _suffix = owner_class.template_suffix
+        template_choice = ctx.template_choice
+        if ctx.node.is_function_template:
+            overloading_prefix = get_template_suffix(ctx, LANGUAGE)
+        #
+        # def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
+        #     return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+        #                                      class_name,
+        #                                      _suffix,
+        #                                      method_name,
+        #                                      args_type_name)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -120,17 +135,21 @@ def make_class_context(ctx):
     def _make(ctx):
         def make():
             # helper variables
+            template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-
+            # get_jni_name = partial(convert.get_jni_func_name,
+            #                        f'{ctx.config.package_prefix}.{ctx.package}',
+            #                        ctx.name,
+            #                        template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
 
             if ctx.base_types:
-                # base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
-                #                          for base_type in ctx.base_types]
-                base_types_converters = [ctx.find_by_type(base_type)
+                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
+                # has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
 
+            # cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
@@ -161,6 +180,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
+            # setter_ctx.set_template_choice(ctx.template_choice)
             setter_ctx = make_func_context(setter_ctx)
 
         return locals()
@@ -176,6 +196,13 @@ def make_member_context(ctx):
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
+        # def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
+        #     return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+        #                                      class_name,
+        #                                      owner_class.template_suffix,
+        #                                      method_name,
+        #                                      args_type_name)
+
         gen_property_setter = ctx.node.api == 'property_setter'
 
         return locals()
@@ -183,6 +210,32 @@ def make_member_context(ctx):
     context = make_def_context(ctx)
     context.update(make())
     return context
+
+
+def get_template_suffix(ctx, target_language):
+    template_choice = ctx.template_choice
+    template_types = ctx.template_type_parameters
+    args_names = []
+    if template_choice:
+        for t in template_types:
+            search_name = template_choice[t]
+
+            ref_ctx = ctx.find_by_type(search_name)
+            if ref_ctx is not None:
+                if ctx.cursor.type.kind == cli.TypeKind.ENUM:
+                    search_name = ENUM_INFO_TYPE
+                else:
+                    search_name = OBJECT_INFO_TYPE
+
+            type_converter = SNIPPETS_ENGINE.get_type_info(search_name)
+            if not type_converter:
+                raise KeyError(f"Can not find type for {search_name}")
+            type_converter = type_converter.make_converter(ctx.cursor.type, ref_ctx,
+                                                           template_choice=template_choice)
+
+            args_names.append(getattr(type_converter, target_language).target_type_name)
+
+    return ''.join(args_names)
 
 
 def preprocess_scope(context, scope, info):

@@ -1,81 +1,81 @@
-#char:
-#  std::__cxx11::basic_string
-#
-#std::string:
-#  std::__cxx11::basic_string
-#
-#$Object:
-#  custom:
-#    pname: Long
-#  python:
-#    type_info:
-#  pybind:
-#    type_info:
-#  pybind_to_cxx:
-#  python_to_pybind:
-#  pybind_to_python:
-#
-#$Enum:
-#  custom:
-#    pname: Int
-#  python:
-#    type_info: Enum
-#  pybind:
-#    type_info: Enum
-#  pybind_to_cxx:
-#  cxx_to_pybind:
-#  python_to_pybind:
-#  pybind_to_python:
-#
-#std::__cxx11::basic_string:
-#  custom:
-#    pname: "Object"
-#  python:
-#    type_info: str
-#  pybind:
-#    type_info: str
-#  pybind_to_cxx:
-#  cxx_to_pybind:
-#  python_to_pybind:
-#  pybind_to_python:
-#
-#
-#std::vector:
-#  custom:
-#    pname: "Object"
-#  python:
-#    type_info:
-#  pybind:
-#    type_info:
-#  pybind_to_cxx:
-#  cxx_to_pybind:
-#  python_to_pybind:
-#  pybind_to_python:
-#
-#std::map:
-#  custom:
-#    pname: "Object"
-#  python:
-#    type_info: dict
-#  pybind:
-#    type_info: dict
-#  pybind_to_cxx:
-#  cxx_to_pybind:
-#  python_to_pybind:
-#  pybind_to_python:
-#
-#std::unordered_map:
-#  std::map
-#
-#
-#std::shared_ptr:
-#  custom:
-#    pname: Long
-#  python:
-#    type_info:
-#  pybind:
-#    type_info:
-#  pybind_to_cxx:
-#  cxx_to_pybind:
-#  python_to_pybind:
-#  pybind_to_python:
+char:
+  std::__cxx11::basic_string
+
+std::string:
+  std::__cxx11::basic_string
+
+$Object:
+  custom:
+    pname: Long
+  python:
+    type_info: "{{type_name}}{{template_suffix}}"
+  pybind:
+    type_info: "{{type_name}}{{template_suffix}}"
+  pybind_to_cxx:
+  python_to_pybind:
+  pybind_to_python:
+
+$Enum:
+  custom:
+    pname: Int
+  python:
+    type_info: "{{type_name}}"
+  pybind:
+    type_info: "{{type_name}}"
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+std::__cxx11::basic_string:
+  custom:
+    pname: "Object"
+  python:
+    type_info: str
+  pybind:
+    type_info: str
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+
+std::vector:
+  custom:
+    pname: "Object"
+  python:
+    type_info: list
+  pybind:
+    type_info: list
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+std::map:
+  custom:
+    pname: "Object"
+  python:
+    type_info: dict
+  pybind:
+    type_info: dict
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+std::unordered_map:
+  std::map
+
+
+std::shared_ptr:
+  custom:
+    pname: Long
+  python:
+    type_info: "{{args_t[0]}}"
+  pybind:
+    type_info: "{{args_t[0]}}"
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:

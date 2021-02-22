@@ -4,6 +4,51 @@ Helper codes for python conversion
 import clang.cindex as cli
 import os
 import iegen.utils.clang as cutil
+from iegen import logging
+
+OPERATOR_MAPPING = {
+    '*': '__mul__',
+    '*=': '__imul__',
+    '-': '__sub__',
+    '-=': '__isub__',
+    '+': '__add__',
+    '+=': '__iadd__',
+    '/': '__truediv__',
+    '/=': '__itruediv__',
+    '<': '__lt__',
+    '<=': '__le__',
+    '>': '__gt__',
+    '>=': '__ge__',
+    '==': '__eq__',
+    '!=': '__ne__',
+    '%': '__mod__',
+    '&': '__and__',
+    '|': '__or__',
+    '|=': '__ior__',
+    '^': '__xor__',
+    '^=': '__ixor__',
+    '~': '__invert__',
+    '~=': '__iinvert__',
+    '<<': '__lshift__',
+    '>>': '__rshift__',
+    '[]': '__getitem__',
+}
+
+
+def get_constructors_comment(class_cursor):
+    constructors = ['']
+    for c in class_cursor.get_children():
+        if c.kind == cli.CursorKind.CONSTRUCTOR:
+            args = ', '.join([f'{arg.type.spelling} {arg.spelling}' for arg in c.get_arguments()])
+            constructors.append(f'{args}')
+    if len(constructors) > 1:
+        constructors.append('')
+    return constructors
+
+
+def get_operator_name(spelling):
+    operator = spelling.replace('operator', '').strip()
+    return OPERATOR_MAPPING.get(operator, spelling)
 
 
 def make_comment(pure_comment):
@@ -27,7 +72,7 @@ def get_declaration_includes(ctx, config):
     includes = []
     _get_declaration_includes(ctx, ctx.cursor, config, includes)
     if includes:
-        print(includes)
+        logging.debug(f"Including forward declaration headers {includes} for {ctx.name}")
     return includes
 
 

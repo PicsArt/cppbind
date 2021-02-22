@@ -118,6 +118,7 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
+        cxx_type_name = ctx.node.type_name()
         for case in enum_cases:
             if case.comment:
                 case.comment = convert.make_comment(case.comment)

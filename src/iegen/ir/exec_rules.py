@@ -106,7 +106,8 @@ class Context(object):
         name = self.name
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
-        search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:]}
+        search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
+                        'set' + ''.join(map(lambda n: n.capitalize(), name.split('_')))}
         return self.find_adjacent(search_names, search_api)
 
     @property

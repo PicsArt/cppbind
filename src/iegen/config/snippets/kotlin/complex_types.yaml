@@ -32,13 +32,17 @@ $Object:
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = target_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLongDynamic<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
     {%- else %}
     {%- if target_root_pointee_unqualified_name == pointee %}
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
     auto base = {{dereferencer}} reinterpret_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
-    auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
+    if (std::is_polymorphic<{{pointee}}>::value) {
+        auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
+    } else {
+        auto {{target_name}} = static_cast<{{pointee}}*>(base);
+    }
     {%- endif %}
     {%- endif %}
   cxx_to_jni: |
@@ -245,7 +249,7 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_bases[0] %}
-    auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
+    auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
     {%- set pointee = args[0].target_clang_type.spelling %}
     {%- set pointee_base = args_bases[0] %}

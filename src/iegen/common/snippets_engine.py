@@ -126,6 +126,7 @@ class Converter:
             target_pointee = cutil.get_pointee_type(self.target_clang_type)
             target_pointee_name = target_pointee.spelling
             is_pointer = self.target_clang_type.kind == cli.TypeKind.POINTER
+            is_value_type = self.target_clang_type.kind == cli.TypeKind.RECORD
             target_pointee_unqualified_name = cutil.get_unqualified_type_name(
                 target_pointee
             )

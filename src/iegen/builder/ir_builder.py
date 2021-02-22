@@ -94,6 +94,9 @@ class CXXIEGIRBuilder(object):
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
                             new_att_val = new_att_val.format(**self.get_sys_vars(lang))
+                            # sys vars can have different types than string parse to get correct type
+                            new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
+
                         args.setdefault(att_name,
                                         OrderedDict())[lang] = new_att_val
 
@@ -103,6 +106,7 @@ class CXXIEGIRBuilder(object):
             current_node.args = args
 
     def __update_internal_vars(self, node):
+        is_operator = node.clang_cursor.displayname.startswith("operator")
         file_full_name = node.file_name
         file_name = os.path.splitext(os.path.basename(file_full_name))[0]
         object_name = node.clang_cursor.spelling
@@ -112,6 +116,7 @@ class CXXIEGIRBuilder(object):
             module_name=module_name,
             file_name=file_name,
             file_full_name=file_full_name,
+            is_operator=is_operator,
         ))
 
     def get_sys_vars(self, lang):

@@ -11,7 +11,7 @@ $Object:
     type_info: "{{type_name|lower}}_t"
   c_to_cxx: |
     {%- set pointee = target_pointee_unqualified_name %}
-    {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+    {%- if  type_ctx.root.shared_ref %}
         auto {{target_name}} = std::dynamic_pointer_cast<{{target_type_name}}>(
                   *static_cast<std::shared_ptr<{{target_root_pointee_unqualified_name}}>*>({{name}})
                   );
@@ -20,7 +20,7 @@ $Object:
         auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{target_root_pointee_unqualified_name}}*>({{name}}));
     {%- endif %}
   cxx_to_c: |
-    {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
+    {%- if type_ctx.root.shared_ref %}
         auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>({{name}});
     {%- else %}
         auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>({{name}});

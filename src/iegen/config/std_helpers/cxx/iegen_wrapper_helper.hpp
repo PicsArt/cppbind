@@ -67,12 +67,8 @@ inline jlong AllocRefPtrAsLong(const std::shared_ptr<T>& ref) {
 
 template <typename T, typename BaseT>
 inline jlong AllocRefPtrAsLong(const std::shared_ptr<const T>& ref) {
-    if (!std::is_same<T, BaseT>::value) {
-        std::shared_ptr<BaseT> baseptr = std::const_pointer_cast<BaseT>(ref);
-        return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
-    }
-
-    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
+    std::shared_ptr<T> refptr = std::const_pointer_cast<T>(ref);
+    return iegen::AllocRefPtrAsLong<T, BaseT>(refptr);
 }
 
 template <typename T, typename BaseT>

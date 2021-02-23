@@ -164,11 +164,11 @@ constructor:
       public convenience init({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {
       {%- set call_args = [] %}
       {% for arg in args -%}
-      {%- set converter = arg.converter.swift_to_sc -%}
-        {{converter.snippet(arg.name)|indent}}
+      {%- set converter = arg.converter.swift_to_sc %}
+          {{converter.snippet(arg.name)|indent}}
       {%- do call_args.append(converter.converted_name(arg.name)) %}
-      {% endfor %}
-        self.init(create_{{owner_class.name}}{{overloading_prefix}}({{call_args|join(', ')}}))
+      {%- endfor %}
+          self.init(create_{{owner_class.name}}{{overloading_prefix}}({{call_args|join(', ')}}))
       }
   cc:
     body: |
@@ -192,13 +192,13 @@ function:
   swift:
     body: |
       {{comment}}
-      public func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} {
-        {%- set call_args = ['cself'] %}
-        {%- for arg in args -%}
+      public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} {
+        {%- set call_args = ['cself'] if not is_static else [] %}
+        {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
           {{converter.snippet(arg.name)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
-        {% endfor %}
+        {%- endfor %}
         {%- if rconverter.c.target_type_name != 'void' %}
           let result = _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{call_args|join(', ')}});
           {{rconverter.sc_to_swift.snippet('result')|indent}}
@@ -212,28 +212,40 @@ function:
       func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} 
   cc:
     body: |
-      {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}){
+      {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}(
+      {%- if not is_static -%}
+      {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+      {%- else -%}
+      {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+      {%- endif %}){
         {%- set call_args = [] %}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
           {{converter.snippet(arg.name)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {% endfor %}
+        {%- if not is_static %}
           {{owner_class.converter.c_to_cxx.snippet('cself')}}
           auto _cself = {{'&' if not owner_class.root.shared_ref }}{{owner_class.converter.c_to_cxx.converted_name('cself')}};
+        {%- endif %}
 
         {%- if rconverter.c.target_type_name != 'void' %}
-          auto result = _cself->{{cxx_name}}({{call_args|join(', ')}});
+        auto result = {%if not is_static %}_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
         {%- else %}
-          _cself->{{cxx_name}}({{call_args|join(', ')}});
+        {%if not is_static %}_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
         {%- endif %}
       }
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}});
+        {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}(
+        {%- if not is_static -%}
+        {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+        {%- else -%}
+        {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+        {%- endif %});
 
 property_getter:
   swift:

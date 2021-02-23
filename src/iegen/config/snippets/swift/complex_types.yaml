@@ -21,9 +21,9 @@ $Object:
     {%- endif %}
   cxx_to_c: |
     {%- if type_ctx.root.shared_ref %}
-        auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>({{name}});
     {%- else %}
-        auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
+    auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
     {%- endif %}
   swift_to_sc:
     let {{target_name}} = {{name}}.cself

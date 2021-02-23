@@ -38,7 +38,7 @@ def gen_init(config, *args, **kwargs):
 
     context = make_context(config)
 
-    load_from_paths(lambda path: load_snippets_engine(path, 'kotlin'),
+    load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
                     config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)

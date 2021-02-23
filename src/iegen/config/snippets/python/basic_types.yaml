@@ -33,24 +33,19 @@ unsigned int:
 
 short:
   python:
-    type_info: short
+    type_info: int
   pybind:
-    type_info: short
+    type_info: int
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
   python_to_pybind:
-
 
 long:
   python:
-    type_info: long
+    type_info: int
   pybind:
-    type_info: long
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind:
+    type_info: int
 
 long long:
   long
@@ -60,9 +55,9 @@ unsigned long:
 
 float:
   python:
-    type_info: double
+    type_info: float
   pybind:
-    type_info: double
+    type_info: float
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
@@ -70,11 +65,10 @@ float:
 
 double:
   python:
-    type_info: double
+    type_info: float
   pybind:
-    type_info: double
+    type_info: float
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
   python_to_pybind:
-

@@ -117,7 +117,8 @@ class Converter:
             template_suffix = ''
             # NOTE template(not specialized) base is not considered
             args_bases = [
-                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
+                cutil.get_base_cursor(
+                    arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
                 arg in self.template_args]
 
             args_t = [arg.target_type_name for arg in self.template_args]

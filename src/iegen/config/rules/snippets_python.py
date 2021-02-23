@@ -1,8 +1,6 @@
 import os
 import types
 import copy
-# from functools import partial
-#
 import clang.cindex as cli
 import iegen
 import iegen.utils.clang as cutil
@@ -70,33 +68,25 @@ def make_func_context(ctx):
     def make():
         args = [
             types.SimpleNamespace(
-                # converter=SNIPPETS_ENGINE.build_type_converter(ctx, arg.type, template_choice=ctx.template_choice),
+                converter=SNIPPETS_ENGINE.build_type_converter(ctx, arg.type, template_choice=ctx.template_choice),
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type,
-                spelling=cutil.replace_template_choice(arg.type.spelling, ctx.template_choice)
+                type=arg.type
             ) for arg in ctx.args
         ]
 
-        # if hasattr(ctx, 'result_type'):
-        #     rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type, template_choice=ctx.template_choice)
+        if hasattr(ctx, 'result_type'):
+            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
-        # overloading_prefix = ctx.overloading_prefix
-        # # capturing suffix since we use single context with different template choice
-        # _suffix = owner_class.template_suffix
+        overloading_prefix = ctx.overloading_prefix
+        # capturing suffix since we use single context with different template choice
+        _suffix = owner_class.template_suffix
         template_choice = ctx.template_choice
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
-        #
-        # def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-        #     return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-        #                                      class_name,
-        #                                      _suffix,
-        #                                      method_name,
-        #                                      args_type_name)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -137,19 +127,15 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            # get_jni_name = partial(convert.get_jni_func_name,
-            #                        f'{ctx.config.package_prefix}.{ctx.package}',
-            #                        ctx.name,
-            #                        template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
 
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
-                # has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
+                has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
 
-            # cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
+            cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
@@ -180,7 +166,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
-            # setter_ctx.set_template_choice(ctx.template_choice)
+            setter_ctx.set_template_choice(ctx.template_choice)
             setter_ctx = make_func_context(setter_ctx)
 
         return locals()
@@ -192,16 +178,9 @@ def make_getter_context(ctx):
 
 def make_member_context(ctx):
     def make():
-        # rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
+        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-
-        # def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-        #     return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-        #                                      class_name,
-        #                                      owner_class.template_suffix,
-        #                                      method_name,
-        #                                      args_type_name)
 
         gen_property_setter = ctx.node.api == 'property_setter'
 

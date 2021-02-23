@@ -1,19 +1,3 @@
-my_types: &my_types
-    std::mapdd:
-      custom:
-        pname: Intd
-      kotlin:
-        type_info: Intd
-      jni:
-        type_info: jintd
-      jdk:
-        type_info: Intd
-      jni_to_cxx: 
-      cxx_to_jni: 
-      kotlin_to_jdk:
-      jdk_to_kotlin:
-
-
 init:
   actions: !include actions.yaml
 
@@ -21,18 +5,4 @@ codes: !include code_snippets.yaml
 
 types:
   !join
-    - !include "*_types.yaml"
-    - *my_types
-    - std::mapd:
-        custom:
-          pname: Intd
-        kotlin:
-          type_info: Intd
-        jni:
-          type_info: jintd
-        jdk:
-          type_info: Intd
-        jni_to_cxx: 
-        cxx_to_jni: 
-        kotlin_to_jdk:
-        jdk_to_kotlin:
+  - !include "*_types.yaml"

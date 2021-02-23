@@ -4,20 +4,36 @@ char:
 std::string:
   std::__cxx11::basic_string
 
+std::__ndk1::shared_ptr:
+  std::shared_ptr
+
+std::__ndk1::vector:
+  std::vector
+
+std::__ndk1::map:
+  std::map
+
+std::__ndk1::unordered_map:
+  std::map
+
+std::__ndk1::basic_string:
+  std::__cxx11::basic_string
+
 $Object:
   custom:
-    pname: Long
+    pname: object
   python:
     type_info: "{{type_name}}{{template_suffix}}"
   pybind:
     type_info: "{{type_name}}{{template_suffix}}"
   pybind_to_cxx:
+  cxx_to_pybind:
   python_to_pybind:
   pybind_to_python:
 
 $Enum:
   custom:
-    pname: Int
+    pname: int
   python:
     type_info: "{{type_name}}"
   pybind:
@@ -29,7 +45,7 @@ $Enum:
 
 std::__cxx11::basic_string:
   custom:
-    pname: "Object"
+    pname: str
   python:
     type_info: str
   pybind:
@@ -42,7 +58,7 @@ std::__cxx11::basic_string:
 
 std::vector:
   custom:
-    pname: "Object"
+    pname: list
   python:
     type_info: list
   pybind:
@@ -54,7 +70,7 @@ std::vector:
 
 std::map:
   custom:
-    pname: "Object"
+    pname: dict
   python:
     type_info: dict
   pybind:
@@ -70,7 +86,7 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    pname: Long
+    pname: object
   python:
     type_info: "{{args_t[0]}}"
   pybind:

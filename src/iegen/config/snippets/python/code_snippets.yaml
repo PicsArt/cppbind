@@ -57,7 +57,7 @@ var_class: &var_class
         {{include|format_list("from {} import *")|join('\n')}}
     body:
       scopes:
-        - head
+        - constructor_comment
         - properties
         - body
       content: |
@@ -72,13 +72,13 @@ var_class: &var_class
             {{comment|string|indent}}
             def __new__(cls, *args, **kwargs):
                 return {{m}}.{{name}}{{template_suffix}}(*args, **kwargs){{'\n'}}
-            {%- set constructor_comments = helper.python.get_constructors_comment(ctx.cursor) -%}
-            {%- if constructor_comments %}
+            {%- if constructor_comment %}
             def __init__(self, *args, **kwargs):
-                {{helper.python.make_comment(constructor_comments)|indent(8)}}
-                pass
+                """
+                The following constructors are supported:
+                    {{constructor_comment|string|indent(12)}}
+                """
             {%- endif %}
-            {{head|string|indent}}
             {{properties|string|indent}}
             {{body|string|indent}}
         {{'\n'}}
@@ -117,9 +117,15 @@ class: *var_class
 interface: *var_class
 
 constructor:
+  python:
+    constructor_comment: |
+      {{owner_class.name}}{{owner_class.template_suffix}}({{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}})
   cxx:
     body: |
-      {{owner_class.name|lower}}.def(py::init<{{args|format_list("{arg.spelling}", 'arg')|join(', ')}}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+      {%- set comma = joiner(', ') -%}
+      {{owner_class.name|lower}}.def(py::init<{%- for arg in args -%}
+                                              {{comma()}}{{helper.python.replace_template_choice(arg.type.spelling, template_choice)}}
+                                              {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
 
 
 function:

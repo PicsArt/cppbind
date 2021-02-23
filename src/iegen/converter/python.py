@@ -35,17 +35,6 @@ OPERATOR_MAPPING = {
 }
 
 
-def get_constructors_comment(class_cursor):
-    constructors = ['']
-    for c in class_cursor.get_children():
-        if c.kind == cli.CursorKind.CONSTRUCTOR:
-            args = ', '.join([f'{arg.type.spelling} {arg.spelling}' for arg in c.get_arguments()])
-            constructors.append(f'{args}')
-    if len(constructors) > 1:
-        constructors.append('')
-    return constructors
-
-
 def get_operator_name(spelling):
     operator = spelling.replace('operator', '').strip()
     return OPERATOR_MAPPING.get(operator, spelling)
@@ -74,6 +63,10 @@ def get_declaration_includes(ctx, config):
     if includes:
         logging.debug(f"Including forward declaration headers {includes} for {ctx.name}")
     return includes
+
+
+def replace_template_choice(type_name, template_choice):
+    return cutil.replace_template_choice(type_name, template_choice)
 
 
 def _get_declaration_includes(ctx, cursor, config, includes):

@@ -261,7 +261,7 @@ function:
     body: |
       {%- if not is_static %}
       {{comment}}
-      {{'open ' if is_open}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
           {%- set call_args = ['getObjId()'] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}

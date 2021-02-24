@@ -89,6 +89,7 @@ class Context(object):
             name = self.name
             search_names = {name}
             oveloads = self.find_adjacents(search_names, search_api)
+            self._overloading_prefix = ''
             for i, ctx in enumerate(oveloads):
                 if ctx == self:
                     self._overloading_prefix = f'_{i}' if i != 0 else ''

@@ -4,7 +4,7 @@ prefix:
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 file:
-  inheritable: false
+  inheritable: true
   default: '{file_name}'
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 

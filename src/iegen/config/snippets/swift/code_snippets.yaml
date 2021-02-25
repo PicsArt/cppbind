@@ -81,13 +81,17 @@ class:
                                 {% endif %} {
             {% if not has_non_abstract_base_class %}
             public let cself : {{converter.c.target_type_name}}
+            public let owner : Bool
 
             // internal main initializer
-            internal required init(_ _cself: {{converter.c.target_type_name}}) {
+            internal required init(_ _cself: {{converter.c.target_type_name}} , _ _owner: Bool = false) {
               self.cself = _cself
+              self.owner = _owner
             }
             deinit {
-              release_{{name}}(cself)
+              if owner {
+                release_{{name}}(cself)
+              }
             }
             {%endif%}
             {{head|string|indent}}
@@ -146,6 +150,14 @@ interface:
             {{properties|string|indent}}
             {{body|string|indent}}
         }
+        public class {{name}}_impl : {{name}} {
+            public let cself : {{converter.c.target_type_name}}
+
+            // internal main initializer
+            internal required init(_ _cself: {{converter.c.target_type_name}}) {
+              self.cself = _cself
+            }
+        }
   cc:
     include:
       unique_content: |
@@ -168,7 +180,7 @@ constructor:
           {{converter.snippet(arg.name)|indent}}
       {%- do call_args.append(converter.converted_name(arg.name)) %}
       {%- endfor %}
-          self.init(create_{{owner_class.name}}{{overloading_prefix}}({{call_args|join(', ')}}))
+          self.init(create_{{owner_class.name}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
       }
   cc:
     body: |
@@ -180,8 +192,11 @@ constructor:
         {%- do call_args.append(converter.converted_name(arg.name)) -%}
         {% endfor %}
           auto this_object = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
-          {{owner_class.converter.cxx_to_c.snippet('this_object')|indent}}
-          return {{owner_class.converter.cxx_to_c.converted_name('this_object')}};
+          {%- if owner_class.root.shared_ref %}
+          return new std::shared_ptr<{{owner_class.root.cxx_type_name}}>(this_object);
+          {%- else %}
+          return static_cast<{{owner_class.root.cxx_type_name}}*>(this_object);
+          {%- endif %}
       }
   ch:
     body:
@@ -230,7 +245,7 @@ function:
         {%- endif %}
 
         {%- if rconverter.c.target_type_name != 'void' %}
-        auto result = {%if not is_static %}_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+          const auto& result = {%if not is_static %}_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
         {%- else %}

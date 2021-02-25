@@ -20,15 +20,16 @@ $Object:
         auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{target_root_pointee_unqualified_name}}*>({{name}}));
     {%- endif %}
   cxx_to_c: |
+    auto value_ptr_{{name}} = const_cast<{{target_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{target_pointee_unqualified_name}}({{name}}) {%endif%});
     {%- if type_ctx.root.shared_ref %}
-    auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = new std::shared_ptr<{{target_root_pointee_unqualified_name}}>(value_ptr_{{name}});
     {%- else %}
-    auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
+    auto {{target_name}} = static_cast<{{target_root_pointee_unqualified_name}}*>(value_ptr_{{name}});
     {%- endif %}
   swift_to_sc:
     let {{target_name}} = {{name}}.cself
   sc_to_swift:
-    let {{target_name}} = {{target_type_name}}({{name}})
+    let {{target_name}} = {{target_type_name}}{{'_impl' if type_ctx.node.is_interface}}({{name}}{% if is_value_type%}, true{%endif%})
 
 $Enum:
   swift:

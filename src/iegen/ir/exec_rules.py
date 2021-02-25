@@ -240,8 +240,8 @@ class Context(object):
         search_name = search_type
         if isinstance(search_type, cli.Type):
             # getting canonical for template base types
-            search_name = cutil.template_type_name(search_type) or \
-                          cutil.template_type_name(search_type.get_canonical())
+            return self.find_by_type(cutil.template_type_name(search_type)) or \
+                   self.find_by_type(cutil.template_type_name(search_type.get_canonical()))
         return self.runner.get_context(search_name)
 
     def find_adjacent(self, search_names, search_api=None):

@@ -115,10 +115,13 @@ class Converter:
             # helper variables
             args = self.template_args
             template_suffix = ''
+            # NOTE template(not specialized) base is not considered
+            args_bases = [
+                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
+                arg in self.template_args]
 
             args_t = [arg.target_type_name for arg in self.template_args]
-            args_t_bases = [cutil.get_base_cursor(arg.ctx.cursor).type.spelling if arg.ctx else arg.target_type_name for
-                            arg in self.template_args]
+
             custom = types.SimpleNamespace(**self.custom)
 
             cxx_type_name = self.target_clang_type.spelling
@@ -133,7 +136,7 @@ class Converter:
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx
-                cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type
+                cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type.get_canonical()
                 target_root_pointee_unqualified_name = cutil.get_unqualified_type_name(
                     cutil.get_pointee_type(cxx_root_type))
                 if self.ctx.node.is_template:
@@ -484,8 +487,6 @@ class SnippetsEngine:
 
         return type_converter
 
-
-
     def _build_type_converter(self, ctx, clang_type, lookup_type=None, template_choice=None):
         template_choice = template_choice or {}
 
@@ -512,7 +513,8 @@ class SnippetsEngine:
                     # this won´t work if theres an unexposed argument e.g.T,
                     # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
                     # type with spelling equal to 'Stack<type-parameter-0-0>'
-                    canonical_clang_type = all((arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                    canonical_clang_type = all(
+                        (arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
                     if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
                         lookup_type = cutil.get_canonical_type(lookup_type)

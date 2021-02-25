@@ -58,9 +58,11 @@ class CXXParser(object):
 
             has_error = False
             for diagnostic in tu.diagnostics:
-                logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
-                logging.debug(diagnostic)
-                has_error = True
+                if diagnostic.severity in (cli.Diagnostic.Error, cli.Diagnostic.Fatal):
+                    logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
+                    has_error = True
+                else:
+                    logging.warning(f"Warning while parsing {file_name}: {diagnostic.spelling}")
             if not has_error:
                 yield tu
 
@@ -111,6 +113,10 @@ class CXXParser(object):
             logging.debug(f"Filtering forward declaration cursor: {cursor}")
             return
 
+        if self.is_implementation(cursor):
+            logging.debug(f"Filtering implementation cursor: {cursor}")
+            return
+
         # process current cursor
         if hasattr(processor, 'start_cursor'):
             processor.start_cursor(cursor)
@@ -129,3 +135,8 @@ class CXXParser(object):
     def _is_declaration(self, cursor):
         return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
                                cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
+
+    def is_implementation(self, cursor):
+        if cursor.lexical_parent and cursor.semantic_parent:
+            return cursor.lexical_parent != cursor.semantic_parent
+        return False

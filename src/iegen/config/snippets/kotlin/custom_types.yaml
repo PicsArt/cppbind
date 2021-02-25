@@ -1,21 +1,24 @@
+std::__ndk1::pair:
+  std::pair
+
 nlohmann::json:
   custom:
     pname: json
   kotlin:
-    type_info: JsonObject
+    type_info: String
   jni:
     type_info: jstring
   jdk:
     type_info: String
   jni_to_cxx: |
-    auto {{target_name}} = json::parse(iegen::jni_to_string(env, {{name}}))
+    auto {{target_name}} = nlohmann::json::parse(iegen::jni_to_string(env, {{name}}))
   cxx_to_jni: |
     {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
   kotlin_to_jdk:
-    val {{target_name}} = {{name}}.toString()
-  jdk_to_kotlin: |
-    val {{target_name}}: {{target_type_name}} = JsonParser.parseString({{name}}).asJsonObject()
+  jdk_to_kotlin:
 
+json:
+  nlohmann::json
 
 std::pair:
   custom:
@@ -43,11 +46,11 @@ std::pair:
     {{args[1].snippet('second')|indent}}
     {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
   cxx_to_jni: |
-    auto first = {{name}}.first
-    auto second = {{name}}.second
-    {{args[0].snippet('first')|indent}}
-    {{args[0].snippet('second')|indent}}
-    {{target_type_name}} {{target_name}} = iegen::make_jni_pair(args[0].converted_name('first'), args[0].converted_name('second'));
+    auto first = {{name}}.first;
+    auto second = {{name}}.second;
+    {{args[0].snippet('first')|indent}};
+    {{args[0].snippet('second')|indent}};
+    {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{args[0].converted_name('first')}}, {{args[0].converted_name('second')}});
   kotlin_to_jdk: |
     val first = {{name}}.first
     val second = {{name}}.second

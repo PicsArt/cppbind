@@ -61,7 +61,7 @@ var_class_cxx: &var_class_cxx
       }
       extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
         iegen::handleNativeCrash(env, [&] {
-          auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if ancestors|any('is_abstract')}}<{{cxx_type_name}}, {{cxx_root_type_name}}>(id);
+          auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}, {{cxx_root_type_name}}>(id);
           delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
         });
       }
@@ -116,7 +116,6 @@ class:
                 }
                 return id;
             }
-
             {{head|string|indent}}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -174,9 +173,7 @@ interface:
         }
         {%- if helper.kotlin.has_valid_ancestors(ancestors) %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
-            internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {% if base_types_converters is defined -%}
-                                              , {{base_types_converters|join(',',attribute='kotlin.target_type_name')}}
-                                              {%- endif %}{
+            internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {
                   System.loadLibrary("wrapper_jni");
@@ -190,9 +187,8 @@ interface:
                 }
                 return id;
             }
-
             {{head|string|indent}}
-            {# todo think of abstract #}
+            {%- if not has_non_abstract_base_class %}
             override fun close() {
             	if (id != 0L) {
             		jFinalize(id)
@@ -205,6 +201,7 @@ interface:
             protected fun finalize() {
             	close()
             }
+            {%- endif -%}
             ///// External wrapper functions ////////////
             private external fun jSet_this(id: Long, self: Any): Void
             private external fun jFinalize(id: Long): Void
@@ -250,7 +247,6 @@ constructor:
               {%- else %}
               auto this_object = iegen::allocateRef<{{owner_class.cxx_type_name}}>({{call_args|join(', ')}});
               return iegen::AllocRefPtrAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(this_object);
-
               {%- endif %}
               }
         );
@@ -345,7 +341,7 @@ function:
               {%- if not is_static %}
               validateID(id);
 
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
               {{call_code("this_object->", call_args)|indent(8)}}
               {%- else %}
               {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(8)}}
@@ -402,7 +398,7 @@ property_getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
               auto result = this_object->{{cxx_name}};
               {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
@@ -414,7 +410,7 @@ property_getter:
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
               {% set converter = rconverter.jni_to_cxx %}
               {{converter.snippet('value')|indent(8)}}
               this_object->{{name}} = {{converter.converted_name('value')}};
@@ -428,7 +424,7 @@ getter:
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {{comment}}
-      {{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}
+      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined or is_override else 'val'}} {{name}}: {{result_converter.target_type_name}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
@@ -448,7 +444,13 @@ getter:
               j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
             }
-            {% endif %}
+            {%- else %}
+            {%- if is_override %}
+            set(value) {
+                super.{{name}} = value
+            }
+            {%- endif %}
+            {%- endif %}
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
@@ -471,7 +473,7 @@ getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
               auto result = this_object->{{cxx_name}}();
               {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
@@ -483,7 +485,7 @@ getter:
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           return iegen::handleNativeCrash(env, [&] {
               validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong{{"Dynamic" if owner_class.ancestors|any('is_abstract')}}<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
+              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
               {% set converter = setter_ctx.args[0].converter.jni_to_cxx %}
               {{converter.snippet(setter_ctx.args[0].name)|indent(8)}}
               this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});

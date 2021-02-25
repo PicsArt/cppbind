@@ -12,24 +12,18 @@ std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p) {
 }
 
 
-jobject make_jni_pair(JNIEnv *env, jobject first, jobject second) {
+jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second) {
     // Get the pair class that we wish to return an instance of
-    jclass pairClass = env->FindClass("android/util/Pair");
-
+    jclass pairClass = env->FindClass("kotlin/Pair");
     // Get the method id of an empty constructor in class
-    jmethodID constructor = env->GetMethodID(pairClass, "<init>", "()V");
+
+    jmethodID constructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
 
     // Create an instance of class
-    jobject obj = env->NewObject(pairClass, constructor);
+    jobject obj = env->NewObject(pairClass, constructor, first, second);
 
-    // Get Field references
-    jfieldID first_field = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID second_field = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
-
-    // Set fields for object
-    env->SetObjectField(obj, first_field, first);
-    env->SetObjectField(obj, second_field, second);
     return obj;
+
 }
 
 

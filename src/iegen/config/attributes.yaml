@@ -51,3 +51,16 @@ is_operator:
   default: '{is_operator}'
   type: bool
   allowed_on: [ cxx_method ]
+
+nullable_return:
+  inheritable: false
+  default: false
+  type: bool
+  allowed_on: [ cxx_method, function, function_template ]
+
+nullable_arg:
+  inheritable: false
+  default: [ ]
+  array: true
+  allowed_on: [ cxx_method, constructor, function, function_template ]
+

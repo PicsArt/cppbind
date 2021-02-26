@@ -207,19 +207,24 @@ function:
   swift:
     body: |
       {{comment}}
+      {%- if is_operator %}
+      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) -> {{rconverter.swift.target_type_name}} {
+        {%- set call_args = ['cself.cself']%}
+      {%- else%}
       public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
+      {%endif%}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
           {{converter.snippet(arg.name)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {%- endfor %}
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}({{call_args|join(', ')}});
+          let result = {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}({{call_args|join(', ')}});
           {{rconverter.sc_to_swift.snippet('result')|indent}}
           return {{rconverter.sc_to_swift.converted_name('result')}};
         {%- else %}
-          _func_{{owner_class.name}}_{{name}}({{call_args|join(', ')}});
+          {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}({{call_args|join(', ')}});
         {%- endif %}
       }
     interface_body: |
@@ -227,7 +232,7 @@ function:
       func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} 
   cc:
     body: |
-      {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}(
+      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}(
       {%- if not is_static -%}
       {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
       {%- else -%}
@@ -255,7 +260,7 @@ function:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} _func_{{owner_class.name}}_{{name}}{{overloading_prefix}}(
+        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}(
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
         {%- else -%}

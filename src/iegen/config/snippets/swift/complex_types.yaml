@@ -114,7 +114,7 @@ std::vector:
     var {{target_name}} = {{target_type_name}}()
     {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
     {{target_name}}.size = Int64({{name}}.count)
-    for _i in 0...{{name}}.count-1 {
+    for _i in 0..<{{name}}.count {
       let value  = {{name}}[_i];
       {{args[0].snippet('value')|indent}}
       _data_{{target_name}}[_i] = {{args[0].converted_name('value')}};
@@ -127,7 +127,7 @@ std::vector:
     defer {
       _tmp_{{name}}_data.deallocate()
     } 
-    for _i  in 0...Int({{name}}.size-1) {
+    for _i  in 0..<Int({{name}}.size) {
       let value  = _tmp_{{name}}_data[_i];
       {{args[0].snippet('value')|indent}}
       {{target_name}}.append({{args[0].converted_name('value')}});
@@ -195,7 +195,7 @@ std::map:
       _tmp_k_{{name}}_data.deallocate()
       _tmp_v_{{name}}_data.deallocate()
     } 
-    for _i in 0...Int({{name}}.size-1) {
+    for _i in 0..<Int({{name}}.size) {
       let key  = _tmp_k_{{name}}_data[_i];
       let value  = _tmp_v_{{name}}_data[_i];
       {{args[0].snippet('key')|indent}}

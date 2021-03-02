@@ -128,7 +128,11 @@ def make_class_context(ctx):
             is_open = not cutil.is_final_cursor(ctx.cursor)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
+                                                             template_choice=ctx.template_choice,
+                                                             search_name=ctx.node.full_displayname
+                                                             if ctx.cursor.type.kind == cli.TypeKind.INVALID
+                                                             else None)
 
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)

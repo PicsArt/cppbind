@@ -73,7 +73,7 @@ class:
         - private_external
       content: |
         {{comment}}
-        public class {{name}} {% if base_types_converters is defined -%}
+        public class {{name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
@@ -90,7 +90,7 @@ class:
             }
             deinit {
               if owner {
-                release_{{name}}(cself)
+                release_{{name}}{{template_suffix}}(cself)
               }
             }
             {%endif%}
@@ -104,7 +104,7 @@ class:
         #include "{{prj_rel_file_name}}"
     body:
       content: |
-        void release_{{name}}({{converter.c.target_type_name}} cself){
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
 
             {%- if  root.shared_ref %}
                 delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -116,7 +116,7 @@ class:
     body:
       content: |
         typedef void* _Nonnull {{converter.c.target_type_name}};
-        void release_{{name}}({{converter.c.target_type_name}} cself);
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
 
 
 interface:
@@ -180,11 +180,11 @@ constructor:
           {{converter.snippet(arg.name)|indent}}
       {%- do call_args.append(converter.converted_name(arg.name)) %}
       {%- endfor %}
-          self.init(create_{{owner_class.name}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
+          self.init(create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
       }
   cc:
     body: |
-      {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}){
+      {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}){
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {% set converter = arg.converter.c_to_cxx %}
@@ -201,7 +201,7 @@ constructor:
   ch:
     body:
       content: |
-        {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}});
+        {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}});
 
 function:
   swift:

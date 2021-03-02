@@ -41,7 +41,7 @@ std::pair:
     auto second = {{extract_second}}(env, secondObject);
     {{args[0].snippet('first')|indent}}
     {{args[1].snippet('second')|indent}}
-    {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
   cxx_to_jni: |
     auto first = {{name}}.first
     auto second = {{name}}.second

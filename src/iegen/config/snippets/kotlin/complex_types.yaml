@@ -15,19 +15,19 @@ $Object:
     type_info: Long
   jni_to_cxx: |
     {%- set dereferencer = '*' if not is_pointer else '' %}
-    {%- set pointee = target_pointee_unqualified_name %}
+    {%- set pointee = cxx_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLongDynamic<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{name}});
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLongDynamic<{{pointee}}, {{cxx_root_type_name}}>({{name}});
     {%- else %}
-    {%- if target_root_pointee_unqualified_name == pointee %}
+    {%- if cxx_root_type_name == pointee %}
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
-    auto base = {{dereferencer}} reinterpret_cast<{{target_root_pointee_unqualified_name}}*>({{name}});
+    auto base = {{dereferencer}} reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
     auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
     {%- endif %}
     {%- endif %}
   cxx_to_jni: |
-    {%- set pointee = target_pointee_unqualified_name %}
+    {%- set pointee = cxx_pointee_unqualified_name %}
     {%- set shared = type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
     {%- if is_value_type -%}
     {%- set tmp_name = '_' + name %}
@@ -39,7 +39,7 @@ $Object:
     {%- else %}
     {%- set tmp_name = name %}
     {%- endif %}
-    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{target_root_pointee_unqualified_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
+    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{cxx_root_type_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
   jdk_to_kotlin:
@@ -145,7 +145,7 @@ std::map:
           {%- set tmp_val_name = 'tmp_val_' + target_name %}
           {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
           {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
-          {{target_pointee_unqualified_name}} {{target_name}};
+          {{cxx_pointee_unqualified_name}} {{target_name}};
           auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
           auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
           auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);

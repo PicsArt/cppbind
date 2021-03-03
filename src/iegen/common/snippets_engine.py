@@ -311,6 +311,9 @@ class SnippetsEngine:
     def build_type_converter(self, ctx, clang_type, template_choice=None):
 
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
+        if not res.ctx:
+            # if not our type(does not have a context) then set the original
+            res.set_target_type(clang_type)
         if res is None:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
         return res

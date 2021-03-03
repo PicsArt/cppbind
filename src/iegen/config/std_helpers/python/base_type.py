@@ -16,10 +16,10 @@ class OriginalMethodsMetaclass(type):
                 setattr(pybind_type, attr, future_class_attrs[attr])
         type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
 
-    def __instancecheck__(cls, instance):
+    def __instancecheck__(self, instance):
         # todo handle super
-        pybind_module = importlib.import_module(_find_module(cls))
-        return isinstance(instance, getattr(pybind_module, cls.__name__))
+        pybind_module = importlib.import_module(_find_module(self))
+        return isinstance(instance, getattr(pybind_module, self.__name__))
 
 
 def _find_module(cls):

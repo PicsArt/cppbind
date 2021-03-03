@@ -22,8 +22,9 @@ file:
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <iostream>
+      #define concat concat_pi_call
       {{include}}
-
+      #undef concat
       namespace py = pybind11;
 
       PYBIND11_MODULE({{'pybind_' + file}}, m) {
@@ -55,6 +56,9 @@ var_class: &var_class
     include:
       unique_content: |
         {{include|format_list("from {} import *")|join('\n')}}
+        {%- if is_abstract %}
+        from abc import abstractmethod
+        {%- endif %}
     body:
       scopes:
         - constructor_comment
@@ -70,6 +74,7 @@ var_class: &var_class
                                   {%- endif -%}
                        {{comma()}}metaclass=OriginalMethodsMetaclass):
             {{comment|string|indent}}
+            {%- if not is_abstract %}
             def __new__(cls, *args, **kwargs):
                 return {{m}}.{{name}}{{template_suffix}}(*args, **kwargs){{'\n'}}
             {%- if constructor_comment %}
@@ -78,6 +83,11 @@ var_class: &var_class
                 The following constructors are supported:
                     {{constructor_comment|string|indent(12)}}
                 """
+            {%- endif %}
+            {%- else %}
+            @abstractmethod
+            def __init__(self, *args, **kwargs):
+               pass
             {%- endif %}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -92,6 +102,7 @@ var_class: &var_class
         {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
     body:
       content: |
+        using namespace {{ctx.namespace}};
         {%- set comma = joiner(', ') -%}
         {%- set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
         {%- set base_types = ctx.base_types -%}
@@ -110,7 +121,7 @@ var_class: &var_class
                                      {%- for base_type in base_types -%}
                                      {{comma()}}{{base_type.get_canonical().spelling}}
                                      {%- endfor -%}
-                                     {%- endif %}> {{name|lower}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
+                                     {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
 
 class: *var_class
 
@@ -123,9 +134,9 @@ constructor:
   cxx:
     body: |
       {%- set comma = joiner(', ') -%}
-      {{owner_class.name|lower}}.def(py::init<{%- for arg in args -%}
-                                              {{comma()}}{{helper.python.replace_template_choice(arg.type.spelling, template_choice)}}
-                                              {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
+                                                                                   {{comma()}}{{helper.python.replace_template_choice(arg.type.spelling, template_choice)}}
+                                                                                   {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
 
 
 function:
@@ -139,9 +150,9 @@ function:
       {%- else -%}
       {%- set _name = name -%}
       {%- endif %}
-      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}}):
+      def {{_name}}{{overloading_prefix if not ctx.node.is_template}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}}):
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}{{overloading_prefix if not ctx.node.is_template}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
   cxx:
     body: |
       {%- if is_operator %}
@@ -150,10 +161,10 @@ function:
       {%- set _name = name -%}
       {%- endif %}
       {%- set comma = joiner(', ') -%}
-      {{owner_class.name|lower}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.python.get_overload_cursors(ctx) -%}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}{{overloading_prefix if not ctx.node.is_template}}"{%- if helper.python.is_overloaded_cursor(ctx) -%}
       , py::overload_cast<
       {%- for arg in args -%}
-      {{arg.type.get_canonical().spelling}}{{comma()}}
+      {{comma()}}{%- if arg.converter.ctx -%}{{arg.type.get_canonical().spelling}}{%- else -%}{{arg.type.spelling}}{%- endif -%}
       {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
       {%- else -%}
       , &{{owner_class.cxx_type_name}}::{{cxx_name}}
@@ -179,9 +190,9 @@ property_getter:
   cxx:
     body: |
       {%- if gen_property_setter %}
-      {{owner_class.name|lower}}.def_readwrite("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- else %}
-      {{owner_class.name|lower}}.def_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- endif %}
 
 getter:
@@ -200,7 +211,7 @@ getter:
   cxx:
     body: |
       {% if setter_ctx is defined %}
-      {{owner_class.name|lower}}.def_property("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
       {%- else %}
-      {{owner_class.name|lower}}.def_property_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- endif %}

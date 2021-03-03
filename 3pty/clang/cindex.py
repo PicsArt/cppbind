@@ -1556,6 +1556,14 @@ class Cursor(Structure):
 
         return updcursors
 
+    def is_virtual_base(self):
+        """Returns 1 if the base class specified by the cursor with kind CX_CXXBaseSpecifier is virtual."""
+        return conf.lib.clang_isVirtualBase(self)
+
+    def get_num_overloaded_decls(self):
+        """Determine the number of overloaded declarations referenced by a CXCursor_OverloadedDeclRef cursor."""
+        return conf.lib.clang_getNumOverloadedDecls(self)
+
     @property
     def kind(self):
         """Return the kind of this cursor."""

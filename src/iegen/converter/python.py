@@ -47,9 +47,10 @@ def make_comment(pure_comment):
     return f'"""{nl.join(pure_comment)}"""'
 
 
-def get_overload_cursors(ctx):
+def is_overloaded_cursor(ctx):
+    # return ctx.cursor.get_num_overloaded_decls() != 0
     return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
-            item.spelling == ctx.name and item != ctx.cursor]
+            item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
 def get_include(cursor, config):

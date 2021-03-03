@@ -1,4 +1,4 @@
-"""
+"""nnn
 """
 import itertools
 import json
@@ -200,6 +200,16 @@ class Context(object):
     @property
     def parent_context(self):
         return self.runner.get_context(self.node.parent.full_displayname)
+    
+    @property
+    def namespace(self):
+        namespaces = []
+        parent = self.node.parent
+        while cli.CursorKind.NAMESPACE == parent.clang_cursor.kind:
+            namespaces.append(parent.spelling)
+            parent = parent.parent
+        return '::'.join(reversed(namespaces))
+
 
     @property
     def prj_rel_file_name(self):

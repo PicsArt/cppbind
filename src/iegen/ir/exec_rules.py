@@ -1,4 +1,4 @@
-"""nnn
+"""
 """
 import itertools
 import json

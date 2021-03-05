@@ -47,8 +47,14 @@ def make_comment(pure_comment):
     return f'"""{nl.join(pure_comment)}"""'
 
 
+def make_hashtag_comment(pure_comment):
+    nl = '\n# '
+    if not pure_comment:
+        return ""
+    return f'# {nl.join([c for c in pure_comment if c])}'
+
+
 def is_overloaded_cursor(ctx):
-    # return ctx.cursor.get_num_overloaded_decls() != 0
     return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 

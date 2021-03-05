@@ -155,4 +155,16 @@ def replace_template_choice(type_name, template_choice):
 def is_declaration(cursor):
     # todo check also function
     return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
-                       cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
+                           cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
+
+
+def is_unexposed(clang_type):
+    clang_type = get_canonical_type(clang_type)
+    if clang_type.kind == cli.TypeKind.UNEXPOSED:
+        return True
+    elif is_template(clang_type):
+        for arg_type in template_argument_types(clang_type):
+            _is_unexposed = is_unexposed(arg_type)
+            if _is_unexposed:
+                return _is_unexposed
+    return False

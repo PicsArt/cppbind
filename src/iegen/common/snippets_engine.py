@@ -15,6 +15,7 @@ from iegen import logging as logging
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
+FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
 TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
 INIT_SECTION = 'init'
@@ -108,6 +109,10 @@ class Converter:
     @property
     def target_type_name(self):
         return self.type_converter.target_type_name(self.context)
+
+    @property
+    def original_type_name(self):
+        return cutil.replace_template_choice(self.target_clang_type.spelling, self.template_choice)
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
@@ -311,7 +316,7 @@ class SnippetsEngine:
     def build_type_converter(self, ctx, clang_type, template_choice=None):
 
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
-        if not res.ctx:
+        if res and not res.ctx:
             # if not our type(does not have a context) then set the original
             res.set_target_type(clang_type)
         if res is None:
@@ -505,10 +510,22 @@ class SnippetsEngine:
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
+                if lookup_type.kind == cli.TypeKind.FUNCTIONPROTO:
+                    tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
+                                 for arg_type in lookup_type.argument_types()]
+                    tmpl_args.append(
+                        self._build_type_converter(ctx, lookup_type.get_result(), template_choice=template_choice))
+
+                    type_info = self._create_type_info(ctx, FUNCTION_PROTO_INFO_TYPE,
+                                                       clang_type=clang_type,
+                                                       template_args=tmpl_args,
+                                                       template_choice=template_choice)
+                    return type_info
+
                 # covers template parameter and template argument cases,
                 # e.g. a::Stack<T> and a::Stack<Project>
                 # might be a template typedef so get the canonical type and then proceed
-                if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
+                elif cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]
 
@@ -518,7 +535,7 @@ class SnippetsEngine:
                     # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
                     # type with spelling equal to 'Stack<type-parameter-0-0>'
                     canonical_clang_type = all(
-                        (arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                        (not cutil.is_unexposed(arg.target_clang_type) for arg in tmpl_args))
                     if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
                         lookup_type = cutil.get_canonical_type(lookup_type)

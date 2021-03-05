@@ -113,7 +113,7 @@ def make_enum_context(ctx):
         cxx_type_name = ctx.node.type_name()
         for case in enum_cases:
             if case.comment:
-                case.comment = convert.make_comment(case.comment)
+                case.comment = convert.make_hashtag_comment(case.comment)
         return locals()
 
     context = make_def_context(ctx)

@@ -1,47 +1,47 @@
 file:
   python:
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+      {{[config.out_dir, config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
     scopes:
       - body
       - include
     content: |
-      import {{'pybind_' + file}}
+      import {{'pybind_' + file + config.file_postfix}}
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {{include}}
-
 
       {{body}}
   cxx:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{[config.cxx_out_dir, config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
     content: |
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
+      #include <pybind11/functional.h>
       #include <iostream>
       #define concat concat_pi_call
       {{include}}
       #undef concat
       namespace py = pybind11;
 
-      PYBIND11_MODULE({{'pybind_' + file}}, m) {
+      PYBIND11_MODULE({{'pybind_' + file + config.file_postfix}}, m) {
           {{body|string|indent}}
       }
 
 enum:
   python:
     body: |
-      {%- set m = 'pybind_' + file -%}
+      {%- set m = 'pybind_' + file + config['file_postfix']-%}
       class {{name}}({{m}}.{{name}}):
-        {%- for case in enum_cases -%}
-        {%- if case.comment %}
-        {{case.comment|string|indent(2)}}
-        {%- endif %}
-        {{case.name}} = {{m}}.{{name}}.{{case.name}}
-        {%- endfor %}
+          {%- for case in enum_cases -%}
+          {%- if case.comment %}
+          {{case.comment|string|indent(4)}}
+          {%- endif %}
+          {{case.name}} = {{m}}.{{name}}.{{case.name}}
+          {%- endfor %}
       {{'\n'}}
   cxx:
     body: |
@@ -66,7 +66,7 @@ var_class: &var_class
         - body
       content: |
         {%- set comma = joiner(', ') -%}
-        {%- set m = 'pybind_' + file -%}
+        {%- set m = 'pybind_' + file + config['file_postfix'] -%}
         class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
                                   {% for base_type_converter in base_types_converters -%}
                                   {{comma()}}{{base_type_converter.python.target_type_name}}
@@ -77,18 +77,18 @@ var_class: &var_class
             {%- if not is_abstract %}
             def __new__(cls, *args, **kwargs):
                 return {{m}}.{{name}}{{template_suffix}}(*args, **kwargs){{'\n'}}
-            {%- if constructor_comment %}
+            {% if constructor_comment -%}
             def __init__(self, *args, **kwargs):
                 """
                 The following constructors are supported:
                     {{constructor_comment|string|indent(12)}}
                 """
-            {%- endif %}
+            {% endif -%}
             {%- else %}
             @abstractmethod
             def __init__(self, *args, **kwargs):
                pass
-            {%- endif %}
+            {% endif -%}
             {{properties|string|indent}}
             {{body|string|indent}}
         {{'\n'}}
@@ -105,21 +105,19 @@ var_class: &var_class
         using namespace {{ctx.namespace}};
         {%- set comma = joiner(', ') -%}
         {%- set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
-        {%- set base_types = ctx.base_types -%}
-        {%- if base_types -%}
-        {%- for base_type in base_types %}
-        {%- set base_type_ctx = ctx.find_by_type(base_type) -%}
-        {%- if base_type_ctx  and base_type_ctx.node.args['file']['python'] != file%}
-        py::module_::import("{{'pybind_' + base_type_ctx.node.args['file']['python']}}").attr("{{base_type_ctx.name}}");
+        {%- if base_types_converters is defined -%}
+        {%- for base_type in base_types_converters -%}
+        {%- if base_type.ctx and base_type.ctx.node.args['file']['python'] != file%}
+        py::module_::import("{{'pybind_' + base_type.ctx.node.args['file']['python'] + config['file_postfix']}}").attr("{{base_type.ctx.name}}");
         {%- endif %}
         {%- endfor -%}
         {%- endif %}
         py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
                                       , std::shared_ptr<{{cxx_type_name}}>
                                      {%- endif %}
-                                     {%- if base_types -%},
-                                     {%- for base_type in base_types -%}
-                                     {{comma()}}{{base_type.get_canonical().spelling}}
+                                     {%- if base_types_converters is defined -%},
+                                     {%- for base_type in base_types_converters -%}
+                                     {{comma()}}{{base_type.python.original_type_name}}
                                      {%- endfor -%}
                                      {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
 
@@ -135,24 +133,33 @@ constructor:
     body: |
       {%- set comma = joiner(', ') -%}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
-                                                                                   {{comma()}}{{helper.python.replace_template_choice(arg.type.spelling, template_choice)}}
+                                                                                   {{comma()}}{{arg.converter.python.original_type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
 
 
 function:
   python:
     body: |
-      {%- if is_static %}
+      {%- macro func() -%}
+      {%- if is_static -%}
       @staticmethod
-      {%- endif -%}
-      {%- if is_operator %}
+      {% endif -%}
+      {%- if is_operator -%}
       {%- set _name = helper.python.get_operator_name(name) -%}
       {%- else -%}
       {%- set _name = name -%}
-      {%- endif %}
+      {%- endif -%}
       def {{_name}}{{overloading_prefix if not ctx.node.is_template}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}}):
           {{comment|string|indent}}
           return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}{{overloading_prefix if not ctx.node.is_template}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
+      {%- endmacro -%}
+      {%- if ctx.node.is_function_template -%}
+      {%- if template_choice == ctx.template_choice %}
+      {{func()}}
+      {%- endif -%}
+      {%- else %}
+      {{func()}}
+      {%- endif -%}
   cxx:
     body: |
       {%- if is_operator %}
@@ -164,7 +171,11 @@ function:
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}{{overloading_prefix if not ctx.node.is_template}}"{%- if helper.python.is_overloaded_cursor(ctx) -%}
       , py::overload_cast<
       {%- for arg in args -%}
-      {{comma()}}{%- if arg.converter.ctx -%}{{arg.type.get_canonical().spelling}}{%- else -%}{{arg.type.spelling}}{%- endif -%}
+      {{comma()}}{%- if arg.converter.ctx -%}
+      {{arg.converter.python.original_type_name}}
+      {%- else -%}
+      {{arg.type.spelling}}
+      {%- endif -%}
       {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
       {%- else -%}
       , &{{owner_class.cxx_type_name}}::{{cxx_name}}
@@ -181,7 +192,7 @@ property_getter:
       def {{name}}(self):
           {{comment|string|indent}}
           return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
-      {%- if gen_property_setter %}
+      {% if gen_property_setter %}
       @{{name}}.setter
       def {{name}}(self, value):
           {{comment|string|indent}}
@@ -199,19 +210,37 @@ getter:
   python:
     properties: |
       @property
-      def {{name}}(self):
+      def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self):
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fget(self)
+
       {% if setter_ctx is defined %}
-      @{{name}}.setter
-      def {{name}}(self, value):
+      @{{name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fset(self, value)
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
       {%- endif %}
   cxx:
     body: |
       {% if setter_ctx is defined %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {% set arg = setter_ctx.args[0] %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{name}}{{overloading_prefix if ctx.node.is_function_template}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}
+                                                    {%- if ctx.node.is_function_template -%}
+                                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                    {%- endif -%},
+                                                    {%- if helper.python.is_overloaded_cursor(setter_ctx['ctx']) %} py::overload_cast<
+                                                    {%- if arg.converter.ctx -%}
+                                                    {{arg.converter.python.original_type_name}}
+                                                    {%- else -%}
+                                                    {{arg.type.spelling}}
+                                                    {%- endif -%}>(&{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}})
+                                                    {%- else %} &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}}
+                                                    {%- endif -%}
+                                                    {%- if ctx.node.is_function_template -%}
+                                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                    {%- endif -%});
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{name}}{{overloading_prefix if ctx.node.is_function_template}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                                                                                                                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                                                                                                                          {%- endif -%});
       {%- endif %}

@@ -55,7 +55,6 @@ def make_def_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        template_includes = ctx.template_includes
         comment = convert.make_comment(ctx.node.pure_comment)
 
         return locals()

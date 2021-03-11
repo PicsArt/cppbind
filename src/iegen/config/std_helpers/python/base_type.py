@@ -8,7 +8,8 @@ __all__ = ['OriginalMethodsMetaclass']
 class OriginalMethodsMetaclass(type):
 
     def __init__(cls, future_class_name, future_class_parents, future_class_attrs):
-        pybind_module = importlib.import_module(_find_module(cls))
+        module = importlib.import_module(future_class_attrs['__module__'])
+        pybind_module = getattr(module, 'pybind_' + _find_module(cls))
         pybind_type = getattr(pybind_module, future_class_name)
         cls.originals = pybind_type.__dict__.copy()
         for attr in pybind_type.__dict__:
@@ -17,7 +18,7 @@ class OriginalMethodsMetaclass(type):
         type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
 
     def __instancecheck__(self, instance):
-        # todo handle super
+        # todo super
         pybind_module = importlib.import_module(_find_module(self))
         return isinstance(instance, getattr(pybind_module, self.__name__))
 
@@ -27,4 +28,4 @@ def _find_module(cls):
     if cls_module == '__main__':
         filename = sys.modules[cls_module].__file__
         cls_module = os.path.splitext(os.path.basename(filename))[0]
-    return 'pybind_' + cls_module.split('.')[-1]
+    return cls_module.split('.')[-1]

@@ -16,6 +16,9 @@ std::__ndk1::map:
 std::__ndk1::unordered_map:
   std::map
 
+std::__ndk1::function:
+  std::function
+
 std::__ndk1::basic_string:
   std::__cxx11::basic_string
 
@@ -51,7 +54,7 @@ $FunctionProto:
       {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
   pybind:
     type_info: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args|last}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
   pybind_to_cxx:
   cxx_to_pybind:
   python_to_pybind:

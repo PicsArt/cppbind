@@ -50,6 +50,7 @@ var_class_cxx: &var_class_cxx
   include:
     unique_content: |
       #include "{{prj_rel_file_name}}"
+      {%- set template_includes = ctx.template_includes %}
       {%- if template_includes %}
       {{template_includes|format_list('#include "{}"')|join('\n')}}
       {%- endif %}
@@ -209,6 +210,12 @@ interface:
         {%- endif %}
   cxx: *var_class_cxx
 
+var_template_method_include: &var_template_method_include
+    unique_content: |
+      {%- set template_includes = ctx.template_includes %}
+      {%- if template_includes %}
+      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {%- endif %}
 
 constructor:
   kotlin:
@@ -251,6 +258,7 @@ constructor:
               }
         );
       }
+    include: *var_template_method_include
 
 function:
   kotlin:
@@ -349,6 +357,7 @@ function:
             }
           );
       }
+    include: *var_template_method_include
 
 property_getter:
   kotlin:

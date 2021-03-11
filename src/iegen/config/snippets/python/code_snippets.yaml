@@ -21,10 +21,12 @@ file:
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
+
       #include <iostream>
       #define concat concat_pi_call
       {{include}}
       #undef concat
+
       namespace py = pybind11;
 
       {{body|string}}
@@ -34,10 +36,17 @@ file:
     scopes:
       - body
     content: |
-      #pragma once
+      {%- set filename = [config['package_prefix'], package, file]|map('replace', '.', '_')|join('_') -%}
+      #ifndef {{filename}}_hpp
+      #define {{filename}}_hpp
+
       #include <pybind11/pybind11.h>
+
       namespace py = pybind11;
+
       {{body|string}}
+
+      #endif
   pybind_package:
     file_path: |
       {{[config.pybind_module_dir, config.package_prefix + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
@@ -46,7 +55,9 @@ file:
       - body
     content: |
       #include <pybind11/pybind11.h>
+
       {{include}}
+
       namespace py = pybind11;
 
       PYBIND11_MODULE({{'pybind_' + config.package_prefix}}, m) {
@@ -59,7 +70,7 @@ var_pybind_package: &var_pybind_package
       #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
   body:
     unique_content: |
-      {%- set package_name = [config['package_prefix'], package]|map('replace', '.', '_')|join('_') -%}
+      {% set package_name = [config['package_prefix'], package]|map('replace', '.', '_')|join('_') %}
       py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
@@ -183,7 +194,7 @@ constructor:
       {{owner_class.name}}{{owner_class.template_suffix}}({{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}})
   cxx:
     body: |
-      {%- set comma = joiner(', ') -%}
+      {%- set comma = joiner(', ') %}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
                                                                                    {{comma()}}{{arg.converter.python.original_type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});

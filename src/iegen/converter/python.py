@@ -34,11 +34,8 @@ OPERATOR_MAPPING = {
     '[]': '__getitem__',
 }
 
-
-def is_first_overload(ctx):
-    adjacents = ctx.find_adjacents([ctx.name], ctx.node.api)
-    is_first = next(adjacents).cursor == ctx.cursor
-    return is_first
+def overloaded_method_options(ctx):
+    pass
 
 
 def cxx_rel_path(filepath, cxx_filepath):

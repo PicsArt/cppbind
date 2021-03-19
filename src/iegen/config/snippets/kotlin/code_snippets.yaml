@@ -215,13 +215,13 @@ constructor:
     head: |
       {{comment}}
       {%- set comma = joiner(', ') %}
-      constructor({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in nullable_arg}}{%- endfor-%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
+      constructor({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
         //jSet_this(id, this)
       }
     companion: |
       {{comment}}
       {%- set comma = joiner(', ') %}
-      protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in nullable_arg}}{%- endfor-%}): Long {
+      protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): Long {
           {%- set call_args = [] -%}
           {%- for arg in args -%}
           {%- set converter = arg.converter.kotlin_to_jdk %}
@@ -261,7 +261,7 @@ function:
       {%- set comma = joiner(', ') -%}
       {%- if not is_static %}
       {{comment}}
-      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in nullable_arg}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
+      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = ['getObjId()'] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}
@@ -282,7 +282,7 @@ function:
       {%- if is_static %}
       {%- set comma = joiner(', ') -%}
       {{comment}}
-      fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in nullable_arg}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
+      fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = [] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}

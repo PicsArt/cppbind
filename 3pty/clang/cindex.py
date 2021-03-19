@@ -1556,10 +1556,6 @@ class Cursor(Structure):
 
         return updcursors
 
-    def is_virtual_base(self):
-        """Returns 1 if the base class specified by the cursor with kind CX_CXXBaseSpecifier is virtual."""
-        return conf.lib.clang_isVirtualBase(self)
-
     @property
     def kind(self):
         """Return the kind of this cursor."""

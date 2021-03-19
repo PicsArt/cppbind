@@ -122,18 +122,6 @@ def extract_pure_comment(raw_comment, end_index=None):
     return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
 
 
-def get_type_name_without_special_characters(type_name):
-    """
-    Returns special characters(::,<,>,_) removed type_name. For int will return Int,
-    for std::string will return StdString.
-    Args:
-        type_name(str):
-    Returns:
-        str: Characters removed type_name.
-    """
-    return ''.join([part.capitalize() for part in re.split('::|>|<|_', type_name)])
-
-
 def replace_template_choice(type_name, template_choice):
     """
     Return type name with replaced template arguments e.g. for a::Foo<T,V> will return a::Foo<Project,int>.
@@ -153,12 +141,27 @@ def replace_template_choice(type_name, template_choice):
 
 
 def is_declaration(cursor):
+    """
+    Checks if the cursor is forward declaration or not.
+    Args:
+        cursor(Cursor): Clang Cursor.
+    Returns:
+        bool: True if the cursor is forward declaration and False otherwise.
+    """
     # todo check also function
     return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
                            cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
 
 
 def is_unexposed(clang_type):
+    """
+    Recursively checks if the type has an unexposed template argument.
+    E.g. std::vector<std::shred_ptr<T>> is unexposed.
+    Args:
+        clang_type(Type): Clang Type.
+    Returns:
+        bool: True if the has an unexposed template argument and False otherwise.
+    """
     clang_type = get_canonical_type(clang_type)
     if clang_type.kind == cli.TypeKind.UNEXPOSED:
         return True

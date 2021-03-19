@@ -111,7 +111,7 @@ class Converter:
         return self.type_converter.target_type_name(self.context)
 
     @property
-    def original_type_name(self):
+    def cxx_type_name(self):
         return cutil.replace_template_choice(self.target_clang_type.spelling, self.template_choice)
 
     def _make_context(self):
@@ -316,11 +316,11 @@ class SnippetsEngine:
     def build_type_converter(self, ctx, clang_type, template_choice=None):
 
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
-        if res and not res.ctx:
-            # if not our type(does not have a context) then set the original
-            res.set_target_type(clang_type)
         if res is None:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
+        if res.ctx:
+            # if not our type(does not have a context) then set the original
+            res.set_target_type(clang_type)
         return res
 
     def get_type_info(self, type_name):

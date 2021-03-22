@@ -64,7 +64,9 @@ class APIParser(object):
 
                 if attr in attr_dict and not array:
                     # redefinition or array
-                    raise Exception(f"Attribute {attr} is defined in multiple places.")
+                    if len(language) != 1 and '__all__' in attr_dict[attr]:
+                        # redefinition for all
+                        raise Exception(f"Attribute {attr} is defined multiple times.")
 
                 value = self.parse_attr(attr, value)
 
@@ -73,7 +75,8 @@ class APIParser(object):
                     if array:
                         att_lang_dict.setdefault(lang, []).append(value)
                     else:
-                        att_lang_dict[lang] = value
+                        if len(language) == 1 or lang not in att_lang_dict:
+                            att_lang_dict[lang] = value
 
         return api, attr_dict, pure_comment
 

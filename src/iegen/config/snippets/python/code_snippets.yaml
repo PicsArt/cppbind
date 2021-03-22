@@ -49,7 +49,7 @@ file:
       {{body|string}}
 
       #endif
-  pybind_package:
+  pybind_module:
     file_path: |
       {{[config.cxx_out_dir,  config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
@@ -73,7 +73,7 @@ file:
           {{body|string|indent}}
       }
 
-var_pybind_package: &var_pybind_package
+var_pybind_module: &var_pybind_module
   include:
     unique_content: |
       #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
@@ -108,7 +108,7 @@ enum:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
-  pybind_package: *var_pybind_package
+  pybind_module: *var_pybind_module
   hpp:
     body: |
       void {{'bind' + name}}(py::module& m);
@@ -172,7 +172,7 @@ var_class: &var_class
                                          {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
         {{body|string|indent}}
         }
-  pybind_package: *var_pybind_package
+  pybind_module: *var_pybind_module
   hpp:
     body: |
       void {{'bind' + name + template_suffix}}(py::module& m);

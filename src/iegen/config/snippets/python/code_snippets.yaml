@@ -20,14 +20,15 @@ file:
       - body
       - include
     content: |
+      {{include}}
+
+      #ifdef concat
+      #undef concat
+      #endif
+
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
-
-      #include <iostream>
-      #define concat concat_pi_call
-      {{include}}
-      #undef concat
 
       namespace py = pybind11;
 

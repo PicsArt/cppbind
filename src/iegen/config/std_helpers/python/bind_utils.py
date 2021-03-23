@@ -121,8 +121,8 @@ class bind:
         overloads = namespace.overloads_signature(fn)
         # for properties setting in constructor to not show overloads
         if overloads:
-            # for instance methods
             setattr(self.fn.function, '__doc__', f'{self.fn.function.__doc__}\nOverloads:\n\t{overloads}')
+        # for instance methods
         functools.update_wrapper(self, self.fn.function)
 
         self.cls = None

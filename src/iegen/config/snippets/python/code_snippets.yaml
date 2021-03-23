@@ -50,21 +50,20 @@ file:
       {{body|string}}
 
       #endif
-  pybind_module:
+  pybind_module_cxx:
     file_path: |
       {{[config.cxx_out_dir,  config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
-      - include
       - body
     content: |
-      #include <pybind11/pybind11.h>
-
-      {{include}}
-
-      namespace py = pybind11;
       {%- set packages = config.package_prefix.split('.') %}
       {%- set package = packages[0] %}
-      PYBIND11_MODULE({{'pybind_' + package}}, m) {
+      #include <pybind11/pybind11.h>
+      #include "{{package + config.file_postfix}}.hpp"
+
+      namespace py = pybind11;
+
+      void bind{{package}}(py::module& m) {
           py::module_ parent = m;
           {%- for p in packages[1:] %}
           {%- set parent_module = packages[loop.index - 1] %}
@@ -73,17 +72,39 @@ file:
           {%- endfor %}
           {{body|string|indent}}
       }
+  pybind_module_hpp:
+    file_path: |
+      {{[config.cxx_out_dir,  config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+    scopes:
+      - include
+    content: |
+      {%- set packages = config.package_prefix.split('.') %}
+      {%- set package = packages[0] %}
+      {%- set filename = package + config.file_postfix -%}
+      #ifndef {{filename}}_hpp
+      #define {{filename}}_hpp
 
-var_pybind_module: &var_pybind_module
-  include:
-    unique_content: |
-      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
+      {{include}}
+      #include <pybind11/pybind11.h>
+
+      namespace py = pybind11;
+
+      void bind{{package}}(py::module& m);
+
+      #endif
+
+var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
       {% set package_name = [config['package_prefix'], package]|map('replace', '.', '_')|join('_') %}
       py::module_ {{package_name}} = parent.def_submodule("{{package}}", "{{package}}");
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
+
+var_pybind_module_hpp: &var_pybind_module_hpp
+  include:
+    unique_content: |
+      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
 
 enum:
   python:
@@ -109,10 +130,11 @@ enum:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
-  pybind_module: *var_pybind_module
   hpp:
     body: |
       void {{'bind' + name}}(py::module& m);
+  pybind_module_cxx: *var_pybind_module
+  pybind_module_hpp: *var_pybind_module_hpp
 
 var_class: &var_class
   python:
@@ -173,10 +195,12 @@ var_class: &var_class
                                          {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
         {{body|string|indent}}
         }
-  pybind_module: *var_pybind_module
   hpp:
     body: |
       void {{'bind' + name + template_suffix}}(py::module& m);
+  pybind_module_cxx: *var_pybind_module
+  pybind_module_hpp: *var_pybind_module_hpp
+
 
 class: *var_class
 

@@ -52,7 +52,7 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{[config.cxx_out_dir,  config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{[config.pybind_module_dir, config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -74,7 +74,7 @@ file:
       }
   pybind_module_hpp:
     file_path: |
-      {{[config.cxx_out_dir,  config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{[config.pybind_module_dir, config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - include
     content: |

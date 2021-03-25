@@ -262,14 +262,16 @@ property_getter:
   python:
     properties: |
       @property
+      @bind
       def {{name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
+          pass
       {% if gen_property_setter %}
       @{{name}}.setter
+      @bind
       def {{name}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fset(self, value)
+          pass
       {%- endif %}
   cxx:
     body: |
@@ -283,15 +285,17 @@ getter:
   python:
     properties: |
       @property
+      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fget(self)
+          pass
 
       {% if setter_ctx is defined %}
       @{{name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
+          pass
       {%- endif %}
       {{'\n'}}
   cxx:

@@ -25,7 +25,8 @@ class OriginalMethodsMetaclass(type):
         pybind_module = getattr(module, 'pybind_' + _find_module(cls))
         pybind_class = getattr(pybind_module, future_class_name)
         cls.originals = {}
-        for parent in cls.mro():
+        # exclude itself and type
+        for parent in reversed(cls.mro()[1:-1]):
             # add also parent´s originals
             if isinstance(parent, OriginalMethodsMetaclass):
                 cls.originals.update(parent.originals)

@@ -1,14 +1,14 @@
 file:
   python:
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+      {{[config.out_dir, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
     scopes:
       - body
       - include
     content: |
       from __future__ import annotations
       from typing import *
-      import {{['pybind_' + config.package_prefix, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
+      import {{['pybind_' + config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {{include}}
 
@@ -20,15 +20,13 @@ file:
       - body
       - include
     content: |
-      {{include}}
-
-      #ifdef concat
-      #undef concat
-      #endif
-
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
+
+      #define concat concat_pi_call
+      {{include}}
+      #undef concat
 
       namespace py = pybind11;
 
@@ -39,7 +37,7 @@ file:
     scopes:
       - body
     content: |
-      {%- set filename = [config['package_prefix'], package, file]|map('replace', '.', '_')|join('_') -%}
+      {%- set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -52,35 +50,25 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{[config.pybind_module_dir, config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{[config.cxx_out_dir, config.pybind_module + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
-      {%- set packages = config.package_prefix.split('.') %}
-      {%- set package = packages[0] %}
       #include <pybind11/pybind11.h>
-      #include "{{package + config.file_postfix}}.hpp"
+      #include "{{config.pybind_module + config.file_postfix}}.hpp"
 
       namespace py = pybind11;
 
-      void bind{{package}}(py::module& m) {
-          py::module_ parent = m;
-          {%- for p in packages[1:] %}
-          {%- set parent_module = packages[loop.index - 1] %}
-          py::module_ {{parent_module}} = parent.def_submodule("{{p}}", "{{p}}");
-          parent = {{parent_module}};
-          {%- endfor %}
+      void bind{{config.pybind_module}}(py::module& m) {
           {{body|string|indent}}
       }
   pybind_module_hpp:
     file_path: |
-      {{[config.pybind_module_dir, config.package_prefix.split('.')[0] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{[config.cxx_out_dir, config.pybind_module + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - include
     content: |
-      {%- set packages = config.package_prefix.split('.') %}
-      {%- set package = packages[0] %}
-      {%- set filename = package + config.file_postfix -%}
+      {%- set filename = config.pybind_module + config.file_postfix -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -89,7 +77,7 @@ file:
 
       namespace py = pybind11;
 
-      void bind{{package}}(py::module& m);
+      void bind{{config.pybind_module}}(py::module& m);
 
       #endif
 
@@ -97,7 +85,7 @@ var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
       {% set package_name = [config['package_prefix'], package]|map('replace', '.', '_')|join('_') %}
-      py::module_ {{package_name}} = parent.def_submodule("{{package}}", "{{package}}");
+      py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
 
@@ -274,16 +262,14 @@ property_getter:
   python:
     properties: |
       @property
-      @bind
       def {{name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
       {% if gen_property_setter %}
       @{{name}}.setter
-      @bind
       def {{name}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          pass
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fset(self, value)
       {%- endif %}
   cxx:
     body: |
@@ -297,17 +283,15 @@ getter:
   python:
     properties: |
       @property
-      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fget(self)
 
       {% if setter_ctx is defined %}
       @{{name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
-      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          pass
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
       {%- endif %}
       {{'\n'}}
   cxx:

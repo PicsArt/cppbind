@@ -132,6 +132,8 @@ class bind:
 
         @functools.wraps(self.fn.function)
         def _decorator(*args, **kwargs):
+            if inspect.isclass(instance):
+                return instance.originals[self.fn.name].__get__(self.fn.name)(*args, **kwargs)
             return self.cls.originals[self.fn.name](instance, *args, **kwargs)
 
         return _decorator
@@ -146,18 +148,9 @@ class bind:
         This is called when the decorator is decorated with other decorators.
         Particularly in case of properties and static methods.
         """
-        if isinstance(args[0], OriginalMethodsMetaclass):
+        if inspect.isclass(args[0]):
             # case of static method, e.g decorated with @classmethod
             # update self docstring to add overload docstring
             functools.update_wrapper(self, self.fn.function)
             # the first argument is cls
             return args[0].originals[self.fn.name].__get__(self.fn.name)(*args[1:], **kwargs)
-        # get the non pybind class
-        cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
-        prop = cls.originals[self.fn.name]
-        if len(args) == 2:
-            # setter
-            return prop.fset(*args)
-        else:
-            # getter
-            return prop.fget(*args)

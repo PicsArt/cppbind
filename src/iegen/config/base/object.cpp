@@ -5,11 +5,6 @@
 #include "object.hpp"
 #include <functional>
 
-#ifdef __ANDROID__
-
-#include "jni.h"
-
-#endif
 namespace iegen {
 
 std::string demangleCPPName(const char* symbol) {

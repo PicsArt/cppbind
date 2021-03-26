@@ -8,7 +8,7 @@ file:
     content: |
       from __future__ import annotations
       from typing import *
-      import {{['pybind_' + config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
+      import {{[config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {{include}}
 
@@ -50,25 +50,24 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{[config.cxx_out_dir, config.pybind_module + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
       #include <pybind11/pybind11.h>
-      #include "{{config.pybind_module + config.file_postfix}}.hpp"
+      #include "{{config.pybind_module.split('.')[-1] + config.file_postfix}}.hpp"
 
       namespace py = pybind11;
-
-      void bind{{config.pybind_module}}(py::module& m) {
+      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m) {
           {{body|string|indent}}
       }
   pybind_module_hpp:
     file_path: |
-      {{[config.cxx_out_dir, config.pybind_module + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - include
     content: |
-      {%- set filename = config.pybind_module + config.file_postfix -%}
+      {%- set filename = config.pybind_module.split('.')[-1] + config.file_postfix -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -76,15 +75,14 @@ file:
       #include <pybind11/pybind11.h>
 
       namespace py = pybind11;
-
-      void bind{{config.pybind_module}}(py::module& m);
+      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m);
 
       #endif
 
 var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
-      {% set package_name = [config['package_prefix'], package]|map('replace', '.', '_')|join('_') %}
+      {% set package_name = package|replace('.', '_') %}
       py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
@@ -204,7 +202,6 @@ var_template_method_include: &var_template_method_include
 constructor:
   python:
     constructor_body: |
-      @bind
       def __init__(self{{', ' if args}}{{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}}):
           pass
       {{'\n'}}
@@ -219,18 +216,34 @@ constructor:
 function:
   python:
     body: |
+      {%- macro func() -%}
       {%- if is_static -%}
-      @classmethod
+      @staticmethod
       {% endif -%}
       {%- if is_operator -%}
       {%- set _name = helper.python.get_operator_name(name) -%}
       {%- else -%}
       {%- set _name = name -%}
       {%- endif -%}
-      @bind
-      def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}{{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.python.target_type_name}}:
+      {% if helper.python.is_overloaded_cursor(ctx) -%}
+      {% if helper.python.is_first_overload(ctx) -%}
+      def {{_name}}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs)
+      {%- endif -%}
+      {%- else -%}
+      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.python.target_type_name}}:
+          {{comment|string|indent}}
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- if ctx.node.is_function_template -%}
+      {%- if template_choice == ctx.template_choice %}
+      {{func()}}
+      {%- endif -%}
+      {%- else %}
+      {{func()}}
+      {%- endif -%}
   cxx:
     body: |
       {%- if is_operator %}
@@ -262,16 +275,14 @@ property_getter:
   python:
     properties: |
       @property
-      @bind
       def {{name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
       {% if gen_property_setter %}
       @{{name}}.setter
-      @bind
       def {{name}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          pass
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fset(self, value)
       {%- endif %}
   cxx:
     body: |
@@ -285,17 +296,15 @@ getter:
   python:
     properties: |
       @property
-      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fget(self)
 
       {% if setter_ctx is defined %}
       @{{name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
-      @bind
       def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          pass
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
       {%- endif %}
       {{'\n'}}
   cxx:

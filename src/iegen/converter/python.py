@@ -1,6 +1,8 @@
 """
 Helper codes for python conversion
 """
+import re
+
 import clang.cindex as cli
 import os
 import iegen.utils.clang as cutil
@@ -33,6 +35,16 @@ OPERATOR_MAPPING = {
     '>>': '__rshift__',
     '[]': '__getitem__',
 }
+
+
+def is_first_overload(ctx):
+    adjacents = ctx.find_adjacents([ctx.name], ctx.node.api)
+    is_first = next(adjacents).cursor == ctx.cursor
+    return is_first
+
+
+def module_name_to_func_name(pybind_module):
+    return ''.join([part.capitalize() for part in re.split('[_.]', pybind_module)])
 
 
 def cxx_rel_path(filepath, cxx_filepath):

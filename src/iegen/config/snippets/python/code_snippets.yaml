@@ -202,7 +202,10 @@ var_template_method_include: &var_template_method_include
 constructor:
   python:
     constructor_body: |
-      def __init__(self{{', ' if args}}{{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}}):
+      {%- set comma = joiner(', ') -%}
+      def __init__(self{{', ' if args}}{%- for arg in args -%}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                       {%- endfor %}):
           pass
       {{'\n'}}
   cxx:
@@ -223,7 +226,7 @@ function:
       {%- if is_operator -%}
       {%- set _name = helper.python.get_operator_name(name) -%}
       {%- else -%}
-      {%- set _name = name -%}
+      {%- set _name = name|to_snake_case -%}
       {%- endif -%}
       {% if helper.python.is_overloaded_cursor(ctx) -%}
       {% if helper.python.is_first_overload(ctx) -%}
@@ -232,9 +235,13 @@ function:
           return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs)
       {%- endif -%}
       {%- else -%}
-      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}: {arg.converter.python.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.python.target_type_name}}:
+      {%- set comma = joiner(', ') -%}
+      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}
+                                                {%- for arg in args -%}
+                                                {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                                {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')}})
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')|to_snake_case}})
       {%- endif -%}
       {%- endmacro -%}
       {%- if ctx.node.is_function_template -%}
@@ -249,7 +256,7 @@ function:
       {%- if is_operator %}
       {%- set _name = helper.python.get_operator_name(name) -%}
       {%- else -%}
-      {%- set _name = name -%}
+      {%- set _name = name|to_snake_case -%}
       {%- endif %}
       {%- set comma = joiner(', ') -%}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.python.is_overloaded_cursor(ctx) -%}
@@ -274,43 +281,62 @@ function:
 property_getter:
   python:
     properties: |
+      {%- set _name = name|to_snake_case -%}
       @property
-      def {{name}}(self) -> {{rconverter.python.target_type_name}}:
+      def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fget(self)
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
       {% if gen_property_setter %}
-      @{{name}}.setter
-      def {{name}}(self, value: {{rconverter.python.target_type_name}}):
+      @{{_name}}.setter
+      def {{_name}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}'].fset(self, value)
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fset(self, value)
       {%- endif %}
   cxx:
     body: |
+      {%- set _name = name|to_snake_case -%}
       {%- if gen_property_setter %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- endif %}
 
 getter:
   python:
     properties: |
       @property
-      def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self) -> {{rconverter.python.target_type_name}}:
+      {%- if ctx.node.is_function_template %}
+      {%- set _name = overloading_prefix|to_snake_case %}
+      {%- if template_names %}
+      {%- set _name = template_names|join|to_snake_case %}
+      {%- endif %}
+      {%- else %}
+      {%- set _name = name|to_snake_case %}
+      {%- endif %}
+      def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fget(self)
-
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
       {% if setter_ctx is defined %}
-      @{{name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
-      def {{name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
+      @{{_name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      def {{_name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
       {%- endif %}
       {{'\n'}}
   cxx:
     body: |
-      {% if setter_ctx is defined %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {%- if ctx.node.is_function_template %}
+      {%- set _name = overloading_prefix|to_snake_case  %}
+      {%- if template_names %}
+      {%- set _name = template_names|join|to_snake_case %}
+      {% endif %}
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- set _name = name|to_snake_case %}
+      {%- endif %}
+      {% if setter_ctx is defined %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {%- else %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                                                                                                                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                                                                                                                          {%- endif %});
       {%- endif %}

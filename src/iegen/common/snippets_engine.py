@@ -575,4 +575,13 @@ class SnippetsEngine:
 
         env.filters['any'] = _any
 
+        def to_snake_case(inputs_):
+            regexp = r'(?<!^)(?=[A-Z])'
+            delim = '_'
+            if isinstance(inputs_, str):
+                return re.sub(regexp, delim, inputs_).lower()
+            return [re.sub(regexp, delim, data).lower() for data in inputs_]
+
+        env.filters['to_snake_case'] = to_snake_case
+
         self.jinja2_env = env

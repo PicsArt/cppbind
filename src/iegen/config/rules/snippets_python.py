@@ -87,6 +87,7 @@ def make_func_context(ctx):
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
         template_choice = ctx.template_choice
+        template_names = ctx.template_names
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
@@ -168,7 +169,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
-            setter_ctx.set_template_choice(ctx.template_choice)
+            setter_ctx.set_template_ctx(ctx.template_ctx)
             setter_ctx = make_func_context(setter_ctx)
 
         return locals()

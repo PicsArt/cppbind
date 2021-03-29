@@ -12,12 +12,12 @@ import iegen.utils.clang as cutil
 
 class Context(object):
 
-    def __init__(self, runner, node, template_choice=None):
+    def __init__(self, runner, node, template_ctx=None):
         assert node.clang_cursor, "cursor is not provided"
         self.runner = runner
         self.config = runner.config
         self.node = node
-        self.template_choice = template_choice
+        self.template_ctx = template_ctx
 
     @property
     def kind_name(self):
@@ -236,7 +236,7 @@ class Context(object):
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
-                ctx = self.find_by_type(t)
+                ctx = self.find_by_type(t["type"])
                 if ctx:
                     includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                  self.runner.config.out_prj_dir))
@@ -263,8 +263,16 @@ class Context(object):
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
-    def set_template_choice(self, template_choice):
-        self.template_choice = template_choice
+    def set_template_ctx(self, template_ctx):
+        self.template_ctx = template_ctx
+        
+    @property
+    def template_choice(self):
+        return self.template_ctx['choice'] if self.template_ctx else None
+
+    @property
+    def template_names(self):
+        return self.template_ctx['names'] if self.template_ctx else None
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
@@ -314,12 +322,12 @@ class RunRule(object):
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
 
-            def _run_recursive(node, template_choice=None):
+            def _run_recursive(node, template_ctx=None):
                 stack_added = False
-                node_key = (node, json.dumps(template_choice))
+                node_key = (node, json.dumps(template_ctx))
                 if node.api and (not calling_api or node.api in calling_api) and node_key not in processed:
                     ancestor = node.ancestor_with_api
-                    ancestor_key = (ancestor, json.dumps(template_choice))
+                    ancestor_key = (ancestor, json.dumps(template_ctx))
                     if ancestor_key in processed:
                         # for already called api resume builders scope stack
                         logging.debug(f"Restoring stack for {ancestor.displayname}.")
@@ -332,7 +340,7 @@ class RunRule(object):
                     builder.add_scope_stack()
 
                     # call api
-                    self.call_api(rule, node, builder, template_choice)
+                    self.call_api(rule, node, builder, template_ctx)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node_key] = builder.capture_stacks()
                     logging.debug(f"Captured stack {self.__str_stacks(processed[node_key])}.")
@@ -350,11 +358,14 @@ class RunRule(object):
                             template_arg.update(child.args['template'][self.language])
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
-                            for i, choice in enumerate(all_possible_args):
+                            for i, template_dict in enumerate(all_possible_args):
+                                choice = [item['type'] for item in template_dict]
+                                choice_names = [item['name'] for item in template_dict if 'name' in item]
                                 _template_choice = dict(zip(template_keys, choice))
-                                _run_recursive(child, _template_choice)
+                                _template_ctx = {'choice': _template_choice, 'names': choice_names}
+                                _run_recursive(child, _template_ctx)
                         else:
-                            _run_recursive(child, template_choice)
+                            _run_recursive(child, template_ctx)
                     logging.debug(f"End processing children for {node.displayname}.")
 
                 if stack_added:
@@ -371,14 +382,14 @@ class RunRule(object):
 
             builder.pop_scope_stack()
 
-    def call_api(self, rule, node, builder, template_choice=None):
+    def call_api(self, rule, node, builder, template_ctx=None):
         api = node.api
         att_name = "gen_" + api
         logging.debug(f"Call API: {api} on {node.displayname}")
         func = getattr(rule, att_name)
         context = self.get_context(node.full_displayname)
-        # set current template choice to generate code based on correct template choice
-        context.set_template_choice(template_choice)
+        # set current template context to generate code based on correct template choice
+        context.set_template_ctx(template_ctx)
         func(context, builder)
 
     def create_context(self, node):

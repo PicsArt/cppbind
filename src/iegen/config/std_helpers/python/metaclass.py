@@ -35,7 +35,7 @@ class OriginalMethodsMetaclass(type):
             if attr in future_class_attrs and attr not in ('__new__', '__init__'):
                 # replace pybind method with wrapper method
                 setattr(pybind_class, attr, future_class_attrs[attr])
-        # set __new__  to return pybind instance
+        # set __new__ to return pybind instance
         setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
         type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
 

@@ -56,7 +56,7 @@ file:
       #include "{{config.pybind_module.split('.')[-1] + config.file_postfix}}.hpp"
 
       namespace py = pybind11;
-      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m) {
+      void bind{{config.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
           {{body|string|indent}}
       }
   pybind_module_hpp:
@@ -73,7 +73,7 @@ file:
       #include <pybind11/pybind11.h>
 
       namespace py = pybind11;
-      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m);
+      void bind{{config.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m);
 
       #endif
 

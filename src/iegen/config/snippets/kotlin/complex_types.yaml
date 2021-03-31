@@ -4,6 +4,21 @@ char:
 std::string:
   std::__cxx11::basic_string
 
+std::__ndk1::shared_ptr:
+  std::shared_ptr
+
+std::__ndk1::vector:
+  std::vector
+
+std::__ndk1::map:
+  std::map
+
+std::__ndk1::unordered_map:
+  std::map
+
+std::__ndk1::basic_string:
+  std::__cxx11::basic_string
+
 $Object:
   custom:
     pname: Long
@@ -17,7 +32,7 @@ $Object:
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = cxx_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLongDynamic<{{pointee}}, {{cxx_root_type_name}}>({{name}});
+    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong<{{pointee}}, {{cxx_root_type_name}}>({{name}});
     {%- else %}
     {%- if cxx_root_type_name == pointee %}
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
@@ -81,54 +96,59 @@ std::__cxx11::basic_string:
 
 
 std::vector:
-  custom: 
+  custom:
     pname: "Object"
   kotlin:
     type_info: "List<{{args_t[0]}}>"
   jni:
-    type_info: "{{args_t[0]}}Array"
+    type_info: "{{args_t[0] if args[0].custom.pname != 'Object' else 'jobject'}}Array"
   jdk:
     type_info: "{{args_t[0]}}Array"
   jni_to_cxx: |
-        {%- set tmp_name = '_' + target_name %}
-        {%- set jni_array_get = 'get{}Array'.format(args[0].custom.pname) %}
-
-        {{target_type_name}} {{target_name}};
-
-        auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
-
-        for (auto& value : {{tmp_name}}) {
-            {{args[0].snippet('value')|indent}}
-            {{target_name}}.emplace_back({{args[0].converted_name('value')}});
-        }
+    {%- set tmp_name = '_' + target_name %}
+    {%- set jni_array_get = 'iegen::get{}Array'.format(args[0].custom.pname) %}
+    {{cxx_pointee_unqualified_name}} {{target_name}};
+    auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
+    for (auto& value : {{tmp_name}}) {
+        {{args[0].snippet('value')|indent}}
+        {{target_name}}.emplace_back({{args[0].converted_name('value')}});
+    }
 
   cxx_to_jni: |
-        {%- set jni_type_prefix = args[0].custom.pname %}
-        {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' %}
+    {%- set jni_type_prefix = args[0].custom.pname %}
+    {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' -%}
 
-        {{target_type_name}} {{target_name}} = env->New{{jni_type_prefix}}Array({{name}}.size());
-
-        std::vector<{{args[0].target_type_name}}> temp;
-
-        for (auto& value : {{name}}) {
-            {{args[0].snippet('value')|indent}}
-            temp.emplace_back({{args[0].converted_name('value')}});
-        }
-        env->{{jni_array_set}}({{target_name}}, 0, static_cast<jsize>({{name}}.size()), temp.data());
+    {%- if jni_type_prefix != 'Object' %}
+    {{target_type_name}} {{target_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
+    {%- else %}
+    {{target_type_name}} {{target_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+    {%- endif %}
+    size_t index = 0;
+    for (auto& value : {{name}}) {
+        {{args[0].snippet('value')|indent}}
+        {%- if jni_type_prefix != 'Object' %}
+        env->{{jni_array_set}}({{target_name}}, index, 1, &{{args[0].converted_name('value')}});
+        {%- else %}
+        env->{{jni_array_set}}({{target_name}}, index, {{args[0].converted_name('value')}});
+        {%- endif %}
+        ++index;
+    }
 
   kotlin_to_jdk: |
-        val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-
-        for (value in {{name}}) {
-            {{args[0].snippet('value')|indent}}
-            {{target_name}}.add({{args[0].converted_name('value')}})
-        }
+    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
+    val {{target_name}} = {{target_type_name}}({{name}}.size){{array_init}}
+    var index = 0
+    for (value in {{name}}) {
+        {{args[0].snippet('value')|indent}}
+        {{target_name}}[index] = {{args[0].converted_name('value')}}
+        ++index
+    }
   jdk_to_kotlin: |
-        val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-        for (value in {{name}}) {
-            {{args[0].snippet('value')|indent}}
-            {{target_name}}.add({{args[0].converted_name('value')}})
-        }
+    val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
+    for (value in {{name}}) {
+        {{args[0].snippet('value')|indent}}
+        {{target_name}}.add({{args[0].converted_name('value')}})
+    }
 
 std::map:
   custom:
@@ -138,66 +158,86 @@ std::map:
   jni:
     type_info: "jmapobject"
   jdk:
-    type_info: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
+    type_info: "Pair<{{args_t[0]}}Array, {{args_t[1]}}Array>"
   jni_to_cxx: |
-          {%- set tmp_name = '_' + target_name %}
-          {%- set tmp_key_name = 'tmp_key_' + target_name %}
-          {%- set tmp_val_name = 'tmp_val_' + target_name %}
-          {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
-          {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
-          {{cxx_pointee_unqualified_name}} {{target_name}};
-          auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
-          auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
-          auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
-          for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
-              auto ktmp = {{tmp_key_name}}[i];
-              auto vtmp = {{tmp_val_name}}[i];
-              {{args[0].snippet('ktmp')|indent}}
-              {{args[1].snippet('vtmp')|indent}}
-              {{target_name}}.insert({ {{args[0].converted_name('ktmp')}}, {{args[1].converted_name('vtmp')}} });
-          }
+    {%- set tmp_name = '_' + target_name %}
+    {%- set tmp_key_name = 'tmp_key_' + target_name %}
+    {%- set tmp_val_name = 'tmp_val_' + target_name %}
+    {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
+    {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
+    {{cxx_pointee_unqualified_name}} {{target_name}};
+    auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
+    auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
+    auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
+    for (size_t i = 0; i < {{tmp_key_name}}.size(); ++i) {
+        auto ktmp = {{tmp_key_name}}[i];
+        auto vtmp = {{tmp_val_name}}[i];
+        {{args[0].snippet('ktmp')|indent}}
+        {{args[1].snippet('vtmp')|indent}}
+        {{target_name}}.insert({ {{args[0].converted_name('ktmp')}}, {{args[1].converted_name('vtmp')}} });
+    }
 
   cxx_to_jni: |
-          {%- set key_name = 'tmp_key_' + target_name %}
-          {%- set val_name = 'tmp_val_' + target_name %}
-          {{args[0].target_type_name}} {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
-          {{args[1].target_type_name}} {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size());
-          size_t index = 0;
-          for (auto& value : {{name}}) {
-              key = value.first
-              val = value.second
-              {{args[0].snippet('key')|indent}}
-              {{key_name}}[index] = {{args[0].converted_name('key')}};
-              {{args[1].snippet('val')|indent}}
-              {{val_name}}[index] = {{args[1].converted_name('val')}};
-              ++index
-          }
-          {{target_type_name}} {{target_name}} pair = iegen::make_jni_pair(env, {{key_name}}, {{val_name}});
+    {%- set key_name = 'tmp_key_' + target_name %}
+    {%- set val_name = 'tmp_val_' + target_name %}
+    {%- set key_array_set = 'Set{}ArrayRegion'.format(args[0].custom.pname) if args[0].custom.pname != 'Object' %}
+    {%- set val_array_set = 'Set{}ArrayRegion'.format(args[1].custom.pname) if args[1].custom.pname != 'Object' %}
+    {%- if args[0].custom.pname != 'Object' %}
+    auto {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
+    {%- else %}
+    jobjectArray {{key_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+    {%- endif %}
+    {%- if args[1].custom.pname != 'Object' %}
+    auto {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size());
+    {%- else %}
+    jobjectArray {{val_name}} = env->New{{args[1].custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+    {%- endif %}
+    size_t index = 0;
+    for (auto& value : {{name}}) {
+        auto key = value.first;
+        auto val = value.second;
+        {{args[0].snippet('key')|indent}}
+        {%- if args[0].custom.pname != 'Object' %}
+        env->{{key_array_set}}({{key_name}}, index, 1, &{{args[0].converted_name('key')}});
+        {%- else %}
+        env->SetObjectArrayElement({{key_name}}, index, {{args[0].converted_name('key')}});
+        {%- endif %}
+        {{args[1].snippet('val')|indent}}
+        {%- if args[1].custom.pname != 'Object' %}
+        env->{{val_array_set}}({{val_name}}, index, 1, &{{args[1].converted_name('val')}});
+        {%- else %}
+        env->SetObjectArrayElement({{val_name}}, index, {{args[1].converted_name('val')}});
+        {%- endif %}
+        ++index;
+    }
+    {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{key_name}}, {{val_name}});
 
   kotlin_to_jdk: |
-          {%- set tmp_key_name = 'tmp_key_' + target_name %}
-          {%- set tmp_val_name = 'tmp_val_' + target_name %}
-          {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-          {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
-          val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size){{karray_init}}
-          val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size){{varray_init}}
-          val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
-          var index = 0
-          for ((key, value) in {{name}}) {
-              {{args[0].snippet('key')|indent}}
-              {{args[1].snippet('value')|indent}}
-              {{tmp_key_name}}[index] = {{args[0].converted_name('key')}}
-              {{tmp_val_name}}[index] = {{args[1].converted_name('value')}}
-              ++index
-          }
+    {%- set tmp_key_name = 'tmp_key_' + target_name %}
+    {%- set tmp_val_name = 'tmp_val_' + target_name %}
+    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
+    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
+    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size){{karray_init}}
+    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size){{varray_init}}
+    val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
+    var index = 0
+    for ((key, value) in {{name}}) {
+        {{args[0].snippet('key')|indent}}
+        {{args[1].snippet('value')|indent}}
+        {{tmp_key_name}}[index] = {{args[0].converted_name('key')}}
+        {{tmp_val_name}}[index] = {{args[1].converted_name('value')}}
+        ++index
+    }
 
   jdk_to_kotlin: |
-          val {{target_name}} = {{target_type_name}}()
-          for ((key, value) in {{name}}.first zip {{name}}.second) {
-              {{args[0].snippet('key')|indent}}
-              {{args[1].snippet('value')|indent}}
-              {{target_name}}[{{args[0].converted_name('key')}}] = {{args[1].converted_name('value')}}
-          }
+    val {{target_name}} = HashMap<{{args_t[0]}}, {{args_t[1]}}>()
+    for (i in 0..{{name}}.first.size - 1) {
+        val elem1 = {{name}}.first.get(i)
+        val elem2 = {{name}}.second.get(i)
+        {{args[0].snippet('elem1')|indent}}
+        {{args[1].snippet('elem2')|indent}}
+        jdk_to_kotlin_result.put({{args[0].converted_name('elem1')}}, {{args[1].converted_name('elem2')}})
+    }
 
 
 std::unordered_map:
@@ -205,7 +245,7 @@ std::unordered_map:
 
 
 std::shared_ptr:
-  custom: 
+  custom:
     pname: Long
   kotlin:
     type_info: "{{args_t[0]}}"
@@ -216,12 +256,12 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    auto {{target_name}} = iegen::RefFromLongDynamic<{{pointee}}, {{pointee_base}}>({{name}});
+    auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {%- set pointee = args_t[0] %}
+    {%- set pointee = args[0].original_clang_type.spelling %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
-  jdk_to_kotlin:
-    val {{target_name}} = {{target_type_name}}({{name}})
+  jdk_to_kotlin: |
+    {{args[0].snippet(name)|indent}}

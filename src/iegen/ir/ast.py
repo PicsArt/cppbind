@@ -49,6 +49,11 @@ class Node(object):
         return cl_kind
 
     @property
+    def kind(self):
+        assert self.clang_cursor, "cursor is not provided"
+        return self.clang_cursor.kind
+
+    @property
     def displayname(self):
         assert self.clang_cursor, "cursor is not provided"
         return self.clang_cursor.displayname
@@ -134,7 +139,9 @@ class Node(object):
             # if has no base get its type name with current choice
             if self.clang_cursor == _root_cursor:
                 cxx_root_type_name = self.type_name(template_choice)
-        # todo template root case is not considered
+            else:
+                cxx_root_type_name = cutil.replace_template_choice(
+                    _root_cursor.type.spelling, template_choice)
         return cxx_root_type_name
 
     def walk_preorder(self):

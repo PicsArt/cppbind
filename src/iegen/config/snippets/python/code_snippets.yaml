@@ -1,0 +1,342 @@
+file:
+  python:
+    file_path: |
+      {{[config.out_dir, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+    scopes:
+      - body
+      - include
+    content: |
+      from __future__ import annotations
+      from typing import *
+      import {{[config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
+      {{helper_includes|format_list('from {} import *')|join('\n')}}
+      {{include}}
+
+      {{body}}
+  cxx:
+    file_path: |
+      {{cxx_output_filepath}}.cpp
+    scopes:
+      - body
+      - include
+    content: |
+      #include <pybind11/pybind11.h>
+      #include <pybind11/stl.h>
+      #include <pybind11/functional.h>
+
+      #define concat concat_pi_call
+      {{include}}
+      #undef concat
+
+      namespace py = pybind11;
+
+      {{body|string}}
+  hpp:
+    file_path: |
+      {{cxx_output_filepath}}.hpp
+    scopes:
+      - body
+    content: |
+      {%- set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
+      #ifndef {{filename}}_hpp
+      #define {{filename}}_hpp
+
+      #include <pybind11/pybind11.h>
+
+      namespace py = pybind11;
+
+      {{body|string}}
+
+      #endif
+  pybind_module_cxx:
+    file_path: |
+      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes:
+      - body
+    content: |
+      #include <pybind11/pybind11.h>
+      #include "{{config.pybind_module.split('.')[-1] + config.file_postfix}}.hpp"
+
+      namespace py = pybind11;
+      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m) {
+          {{body|string|indent}}
+      }
+  pybind_module_hpp:
+    file_path: |
+      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+    scopes:
+      - include
+    content: |
+      {%- set filename = config.pybind_module.split('.')[-1] + config.file_postfix -%}
+      #ifndef {{filename}}_hpp
+      #define {{filename}}_hpp
+
+      {{include}}
+      #include <pybind11/pybind11.h>
+
+      namespace py = pybind11;
+      void bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(py::module& m);
+
+      #endif
+
+var_pybind_module_cxx: &var_pybind_module
+  body:
+    unique_content: |
+      {% set package_name = package|replace('.', '_') %}
+      py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
+      py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
+      bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
+
+var_pybind_module_hpp: &var_pybind_module_hpp
+  include:
+    unique_content: |
+      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
+
+enum:
+  python:
+    body: |
+      {%- set m = 'pybind_' + file + config['file_postfix']-%}
+      class {{name}}({{m}}.{{name}}):
+          {%- for case in enum_cases -%}
+          {%- if case.comment %}
+          {{case.comment|string|indent(4)}}
+          {%- endif %}
+          {{case.name}} = {{m}}.{{name}}.{{case.name}}
+          {%- endfor %}
+      {{'\n'}}
+  cxx:
+    body: |
+      void {{'bind' + name}}(py::module& m) {
+          py::enum_<{{cxx_type_name}}>(m, "{{name}}")
+              {%- for case in enum_cases %}
+              .value("{{case.name}}", {{cxx_type_name}}::{{case.name}})
+              {%- endfor %}
+              .export_values();
+      }
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+  hpp:
+    body: |
+      void {{'bind' + name}}(py::module& m);
+  pybind_module_cxx: *var_pybind_module
+  pybind_module_hpp: *var_pybind_module_hpp
+
+var_class: &var_class
+  python:
+    include:
+      unique_content: |
+        {{include|format_list("from {} import *")|join('\n')}}
+        {%- if is_abstract %}
+        from abc import abstractmethod
+        {%- endif %}
+    body:
+      scopes:
+        - constructor_body
+        - properties
+        - body
+      content: |
+        {%- set comma = joiner(', ') -%}
+        class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
+                                  {% for base_type_converter in base_types_converters -%}
+                                  {{comma()}}{{base_type_converter.python.target_type_name}}
+                                  {%- endfor -%}
+                                  {%- endif -%}
+                       {{comma()}}metaclass=OriginalMethodsMetaclass):
+            {{comment|string|indent}}
+            {%- if not is_abstract %}
+            {{constructor_body|string|indent}}
+            {%- else %}
+            @abstractmethod
+            def __init__(self, *args, **kwargs):
+               pass
+            {%- endif %}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        {{'\n'}}
+  cxx:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+        {%- set template_includes = ctx.template_includes %}
+        {%- if template_includes %}
+        {{template_includes|format_list('#include "{}"')|join('\n')}}
+        {%- endif %}
+        {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
+    body:
+      scopes:
+        - body
+      content: |
+        void {{'bind' + name + template_suffix}}(py::module& m) {
+            using namespace {{ctx.namespace}};
+            {% set comma = joiner(', ') -%}
+            {% set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
+            py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
+                                          , std::shared_ptr<{{cxx_type_name}}>
+                                         {%- endif %}
+                                         {%- if base_types_converters is defined -%},
+                                         {%- for base_type in base_types_converters -%}
+                                         {{comma()}}{{base_type.python.cxx_type_name}}
+                                         {%- endfor -%}
+                                         {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
+        {{body|string|indent}}
+        }
+  hpp:
+    body: |
+      void {{'bind' + name + template_suffix}}(py::module& m);
+  pybind_module_cxx: *var_pybind_module
+  pybind_module_hpp: *var_pybind_module_hpp
+
+
+class: *var_class
+
+interface: *var_class
+
+var_template_method_include: &var_template_method_include
+    unique_content: |
+      {%- set template_includes = ctx.template_includes %}
+      {%- if template_includes %}
+      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {%- endif %}
+
+constructor:
+  python:
+    constructor_body: |
+      {%- set comma = joiner(', ') -%}
+      def __init__(self{{', ' if args}}{%- for arg in args -%}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                       {%- endfor %}):
+          pass
+      {{'\n'}}
+  cxx:
+    body: |
+      {%- set comma = joiner(', ') %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
+                                                                                   {{comma()}}{{arg.converter.python.cxx_type_name}}
+                                                                                   {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+    include: *var_template_method_include
+
+function:
+  python:
+    body: |
+      {%- macro func() -%}
+      {%- if is_static -%}
+      @staticmethod
+      {% endif -%}
+      {%- if is_operator -%}
+      {%- set _name = helper.python.get_operator_name(name) -%}
+      {%- else -%}
+      {%- set _name = name|to_snake_case -%}
+      {%- endif -%}
+      {% if helper.python.is_overloaded_cursor(ctx) -%}
+      {% if helper.python.is_first_overload(ctx) -%}
+      def {{_name}}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs) -> {{rconverter.python.target_type_name}}:
+          {{comment|string|indent}}
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs)
+      {%- endif -%}
+      {%- else -%}
+      {%- set comma = joiner(', ') -%}
+      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}
+                                                {%- for arg in args -%}
+                                                {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                                {%- endfor %}) -> {{rconverter.python.target_type_name}}:
+          {{comment|string|indent}}
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')|to_snake_case}})
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- if ctx.node.is_function_template -%}
+      {%- if template_choice == ctx.template_choice %}
+      {{func()}}
+      {%- endif -%}
+      {%- else %}
+      {{func()}}
+      {%- endif -%}
+  cxx:
+    body: |
+      {%- if is_operator %}
+      {%- set _name = helper.python.get_operator_name(name) -%}
+      {%- else -%}
+      {%- set _name = name|to_snake_case -%}
+      {%- endif %}
+      {%- set comma = joiner(', ') -%}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.python.is_overloaded_cursor(ctx) -%}
+      , py::overload_cast<
+      {%- for arg in args -%}
+      {{comma()}}{%- if arg.converter.ctx -%}
+      {{arg.converter.python.cxx_type_name}}
+      {%- else -%}
+      {{arg.type.spelling}}
+      {%- endif -%}
+      {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
+      {%- else -%}
+      , &{{owner_class.cxx_type_name}}::{{cxx_name}}
+      {%- endif -%}
+      {%- if ctx.node.is_function_template -%}
+      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+      {%- endif -%}
+      {{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+    include: *var_template_method_include
+
+
+property_getter:
+  python:
+    properties: |
+      {%- set _name = name|to_snake_case -%}
+      @property
+      def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
+          {{comment|string|indent}}
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
+      {% if gen_property_setter %}
+      @{{_name}}.setter
+      def {{_name}}(self, value: {{rconverter.python.target_type_name}}):
+          {{comment|string|indent}}
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fset(self, value)
+      {%- endif %}
+  cxx:
+    body: |
+      {%- set _name = name|to_snake_case -%}
+      {%- if gen_property_setter %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- else %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- endif %}
+
+getter:
+  python:
+    properties: |
+      @property
+      {%- if ctx.node.is_function_template %}
+      {%- set _name = overloading_prefix|to_snake_case %}
+      {%- if template_names %}
+      {%- set _name = template_names|join|to_snake_case %}
+      {%- endif %}
+      {%- else %}
+      {%- set _name = name|to_snake_case %}
+      {%- endif %}
+      def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
+          {{comment|string|indent}}
+          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
+      {% if setter_ctx is defined %}
+      @{{_name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      def {{_name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
+          {{comment|string|indent}}
+          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
+      {%- endif %}
+      {{'\n'}}
+  cxx:
+    body: |
+      {%- if ctx.node.is_function_template %}
+      {%- set _name = overloading_prefix|to_snake_case  %}
+      {%- if template_names %}
+      {%- set _name = template_names|join|to_snake_case %}
+      {% endif %}
+      {%- else %}
+      {%- set _name = name|to_snake_case %}
+      {%- endif %}
+      {% if setter_ctx is defined %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {%- else %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                                                                                                                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                                                                                                                          {%- endif %});
+      {%- endif %}

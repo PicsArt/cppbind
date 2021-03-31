@@ -24,9 +24,7 @@ file:
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
 
-      #define concat concat_pi_call
       {{include}}
-      #undef concat
 
       namespace py = pybind11;
 
@@ -67,9 +65,9 @@ file:
     scopes:
       - include
     content: |
-      {%- set filename = config.pybind_module.split('.')[-1] + config.file_postfix -%}
-      #ifndef {{filename}}_hpp
-      #define {{filename}}_hpp
+      {%- set package = config.pybind_module.split('.')[-1] -%}
+      #ifndef {{package + config.file_postfix}}_hpp
+      #define {{package + config.file_postfix}}_hpp
 
       {{include}}
       #include <pybind11/pybind11.h>
@@ -203,6 +201,7 @@ constructor:
   python:
     constructor_body: |
       {%- set comma = joiner(', ') -%}
+      @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
                                        {%- endfor %}):
@@ -219,38 +218,22 @@ constructor:
 function:
   python:
     body: |
-      {%- macro func() -%}
+      {%- set comma = joiner(', ') -%}
       {%- if is_static -%}
-      @staticmethod
+      @classmethod
       {% endif -%}
       {%- if is_operator -%}
       {%- set _name = helper.python.get_operator_name(name) -%}
       {%- else -%}
       {%- set _name = name|to_snake_case -%}
       {%- endif -%}
-      {% if helper.python.is_overloaded_cursor(ctx) -%}
-      {% if helper.python.is_first_overload(ctx) -%}
-      def {{_name}}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs) -> {{rconverter.python.target_type_name}}:
+      @bind
+      def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
+                                                          {%- for arg in args -%}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                                          {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if not is_static}}*args, **kwargs)
-      {%- endif -%}
-      {%- else -%}
-      {%- set comma = joiner(', ') -%}
-      def {{_name}}({{'self' if not is_static}}{{', ' if args and not is_static}}
-                                                {%- for arg in args -%}
-                                                {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
-                                                {%- endfor %}) -> {{rconverter.python.target_type_name}}:
-          {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}']{%- if is_static -%}.__get__('{{_name}}'){%- endif -%}({{'self' if not is_static}}{{', ' if args and not is_static}}{{args|format_list("{arg.name}", 'arg')|join(', ')|to_snake_case}})
-      {%- endif -%}
-      {%- endmacro -%}
-      {%- if ctx.node.is_function_template -%}
-      {%- if template_choice == ctx.template_choice %}
-      {{func()}}
-      {%- endif -%}
-      {%- else %}
-      {{func()}}
-      {%- endif -%}
+          pass
   cxx:
     body: |
       {%- if is_operator %}
@@ -283,14 +266,16 @@ property_getter:
     properties: |
       {%- set _name = name|to_snake_case -%}
       @property
+      @bind
       def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
+          pass
       {% if gen_property_setter %}
       @{{_name}}.setter
+      @bind
       def {{_name}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fset(self, value)
+          pass
       {%- endif %}
   cxx:
     body: |
@@ -305,6 +290,7 @@ getter:
   python:
     properties: |
       @property
+      @bind
       {%- if ctx.node.is_function_template %}
       {%- set _name = overloading_prefix|to_snake_case %}
       {%- if template_names %}
@@ -315,12 +301,13 @@ getter:
       {%- endif %}
       def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          return {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}'].fget(self)
+          pass
       {% if setter_ctx is defined %}
       @{{_name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      @bind
       def {{_name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
-          {{owner_class.name}}{{owner_class.template_suffix}}.originals['{{_name}}{{overloading_prefix if ctx.node.is_function_template}}'].fset(self, value)
+          pass
       {%- endif %}
       {{'\n'}}
   cxx:

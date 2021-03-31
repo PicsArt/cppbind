@@ -200,7 +200,7 @@ class Context(object):
     @property
     def parent_context(self):
         return self.runner.get_context(self.node.parent.full_displayname)
-    
+
     @property
     def namespace(self):
         namespaces = []
@@ -209,7 +209,6 @@ class Context(object):
             namespaces.append(parent.spelling)
             parent = parent.parent
         return '::'.join(reversed(namespaces))
-
 
     @property
     def prj_rel_file_name(self):
@@ -236,7 +235,7 @@ class Context(object):
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
-                ctx = self.find_by_type(t["type"])
+                ctx = self.find_by_type(t['type'] if isinstance(t, dict) else t)
                 if ctx:
                     includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                  self.runner.config.out_prj_dir))
@@ -265,7 +264,7 @@ class Context(object):
 
     def set_template_ctx(self, template_ctx):
         self.template_ctx = template_ctx
-        
+
     @property
     def template_choice(self):
         return self.template_ctx['choice'] if self.template_ctx else None
@@ -358,10 +357,14 @@ class RunRule(object):
                             template_arg.update(child.args['template'][self.language])
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
-                            for i, template_dict in enumerate(all_possible_args):
-                                choice = [item['type'] for item in template_dict]
-                                choice_names = [item['name'] for item in template_dict if 'name' in item]
-                                _template_choice = dict(zip(template_keys, choice))
+                            for i, combination in enumerate(all_possible_args):
+                                if isinstance(combination[0], dict):
+                                    choice = [item['type'] for item in combination]
+                                    choice_names = [item['name'] for item in combination if 'name' in item]
+                                    _template_choice = dict(zip(template_keys, choice))
+                                else:
+                                    _template_choice = dict(zip(template_keys, combination))
+                                    choice_names = []
                                 _template_ctx = {'choice': _template_choice, 'names': choice_names}
                                 _run_recursive(child, _template_ctx)
                         else:

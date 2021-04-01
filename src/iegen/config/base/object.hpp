@@ -3,7 +3,6 @@
 
 #include <memory>
 #include<string>
-#include<jni.h>
 
 namespace iegen {
 
@@ -42,10 +41,8 @@ public:
      * __API__
      * gen: method
      */
-    bool equals(std::shared_ptr<Object> other) const
-    {
-        return this->equals(other.get());
-    }
+    bool equals(std::shared_ptr<Object> other) const;
+
     virtual bool equals(const Object* other) const;
 
     /**
@@ -72,30 +69,6 @@ public:
      */
     virtual size_t bytesCount() const;
 
-#ifdef __ANDROID__
-    /**
-     * Returns associated java object if the object exists
-     * @return associated java object
-     */
-    const std::pair<jlong, jobject>& javaObject();
-
-    /**
-     * Set associated java object
-     * @param env JNIEnv
-     * @param _id shared pointer's ref which was created in heap
-     * @param javaObject the wrapper object
-     */
-    void registerJavaObject(JNIEnv* env, jlong _id, jobject javaObject);
-
-    /**
-     * Unset associated java object
-     * @param env JNIEnv
-     */
-    void unregisterJavaObject(JNIEnv* env);
-
-private:
-    std::pair<jlong, jweak> _jobject {0, nullptr};
-#endif
 };
 
 } // namespace iegen

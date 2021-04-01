@@ -49,6 +49,11 @@ class Node(object):
         return cl_kind
 
     @property
+    def kind(self):
+        assert self.clang_cursor, "cursor is not provided"
+        return self.clang_cursor.kind
+
+    @property
     def displayname(self):
         assert self.clang_cursor, "cursor is not provided"
         return self.clang_cursor.displayname

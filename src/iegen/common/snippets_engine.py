@@ -15,6 +15,7 @@ from iegen import logging as logging
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
+FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
 TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
 INIT_SECTION = 'init'
@@ -109,6 +110,10 @@ class Converter:
     def target_type_name(self):
         return self.type_converter.target_type_name(self.context)
 
+    @property
+    def cxx_type_name(self):
+        return cutil.replace_template_choice(self.target_clang_type.spelling, self.template_choice)
+
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
@@ -117,7 +122,8 @@ class Converter:
             template_suffix = ''
             # NOTE template(not specialized) base is not considered
             args_bases = [
-                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
+                cutil.get_base_cursor(
+                    arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
                 arg in self.template_args]
 
             args_t = [arg.target_type_name for arg in self.template_args]
@@ -312,6 +318,9 @@ class SnippetsEngine:
         res = self._build_type_converter(ctx, clang_type, template_choice=template_choice)
         if res is None:
             raise KeyError(f"Can not find type for {clang_type.spelling}")
+        if not res.ctx:
+            # if not our type(does not have a context) then set the original
+            res.set_target_type(clang_type)
         return res
 
     def get_type_info(self, type_name):
@@ -501,10 +510,22 @@ class SnippetsEngine:
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
             else:
+                if lookup_type.kind == cli.TypeKind.FUNCTIONPROTO:
+                    tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
+                                 for arg_type in lookup_type.argument_types()]
+                    tmpl_args.append(
+                        self._build_type_converter(ctx, lookup_type.get_result(), template_choice=template_choice))
+
+                    type_info = self._create_type_info(ctx, FUNCTION_PROTO_INFO_TYPE,
+                                                       clang_type=clang_type,
+                                                       template_args=tmpl_args,
+                                                       template_choice=template_choice)
+                    return type_info
+
                 # covers template parameter and template argument cases,
                 # e.g. a::Stack<T> and a::Stack<Project>
                 # might be a template typedef so get the canonical type and then proceed
-                if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
+                elif cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
                     tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
                                  for arg_type in cutil.template_argument_types(lookup_type)]
 
@@ -514,7 +535,7 @@ class SnippetsEngine:
                     # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
                     # type with spelling equal to 'Stack<type-parameter-0-0>'
                     canonical_clang_type = all(
-                        (arg.target_clang_type.kind != cli.TypeKind.UNEXPOSED for arg in tmpl_args))
+                        (not cutil.is_unexposed(arg.target_clang_type) for arg in tmpl_args))
                     if canonical_clang_type:
                         clang_type = cutil.get_canonical_type(clang_type)
                         lookup_type = cutil.get_canonical_type(lookup_type)
@@ -553,5 +574,16 @@ class SnippetsEngine:
             return any([d for d in inputs_]) if attribute is None else any([getattr(d, attribute) for d in inputs_])
 
         env.filters['any'] = _any
+
+        def to_snake_case(string):
+            return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
+
+        env.filters['to_snake_case'] = to_snake_case
+
+        def to_camel_case(string):
+            init, *temp = string.split('_')
+            return ''.join([init, *map(str.title, temp)])
+
+        env.filters['to_camel_case'] = to_camel_case
 
         self.jinja2_env = env

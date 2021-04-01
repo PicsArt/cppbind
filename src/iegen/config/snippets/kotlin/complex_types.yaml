@@ -100,7 +100,7 @@ std::__cxx11::basic_string:
 
 
 std::vector:
-  custom: 
+  custom:
     pname: "Object"
   kotlin:
     type_info: "List<{{args_t[0]}}>"
@@ -249,7 +249,7 @@ std::unordered_map:
 
 
 std::shared_ptr:
-  custom: 
+  custom:
     pname: Long
   kotlin:
     type_info: "{{args_t[0]}}"

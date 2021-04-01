@@ -1,20 +1,18 @@
 import os
 import types
 import copy
-from functools import partial
-
 import clang.cindex as cli
 import iegen
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE
-import iegen.converter.kotlin as convert
+from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE
+import iegen.converter.python as convert
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
-LANGUAGE = 'kotlin'
+LANGUAGE = 'python'
 
 
 def load_snippets_engine(path, main_target):
@@ -57,6 +55,9 @@ def make_def_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
 
+        cxx_output_filepath = f'{pat_sep}'.join([item.replace('.', pat_sep) for item in (
+            config.cxx_out_dir, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
+
         return locals()
 
     context = make()
@@ -85,15 +86,10 @@ def make_func_context(ctx):
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
+        template_choice = ctx.template_choice
+        template_names = ctx.template_names
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
-
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             _suffix,
-                                             method_name,
-                                             args_type_name)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -120,7 +116,7 @@ def make_enum_context(ctx):
         cxx_type_name = ctx.node.type_name()
         for case in enum_cases:
             if case.comment:
-                case.comment = convert.make_comment(case.comment)
+                case.comment = convert.make_hashtag_comment(case.comment)
         return locals()
 
     context = make_def_context(ctx)
@@ -134,10 +130,6 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            get_jni_name = partial(convert.get_jni_func_name,
-                                   f'{ctx.config.package_prefix}.{ctx.package}',
-                                   ctx.name,
-                                   template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
 
@@ -193,13 +185,6 @@ def make_member_context(ctx):
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             owner_class.template_suffix,
-                                             method_name,
-                                             args_type_name)
-
         gen_property_setter = ctx.node.api == 'property_setter'
 
         return locals()
@@ -207,6 +192,7 @@ def make_member_context(ctx):
     context = make_def_context(ctx)
     context.update(make())
     return context
+
 
 def get_template_suffix(ctx, target_language):
     template_choice = ctx.template_choice

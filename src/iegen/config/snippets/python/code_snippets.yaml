@@ -1,7 +1,7 @@
 file:
   python:
     file_path: |
-      {{[config.out_dir, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+      {{config.out_dir + pat_sep + [package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
     scopes:
       - body
       - include
@@ -48,7 +48,7 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -61,7 +61,7 @@ file:
       }
   pybind_module_hpp:
     file_path: |
-      {{[config.cxx_out_dir, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{config.cxx_out_dir + pat_sep + [config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - include
     content: |

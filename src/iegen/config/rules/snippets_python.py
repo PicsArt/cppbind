@@ -55,8 +55,8 @@ def make_def_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
 
-        cxx_output_filepath = f'{pat_sep}'.join([item.replace('.', pat_sep) for item in (
-            config.cxx_out_dir, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
+        cxx_output_filepath = f'{pat_sep}'.join([config.cxx_out_dir] + [item.replace('.', pat_sep) for item in (
+            ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
 
         return locals()
 

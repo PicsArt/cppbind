@@ -1,6 +1,6 @@
 import os
 
-from iegnen.utils import load_module_from_path
+from iegen.utils import load_module_from_path
 from . import TEST_RULES_DIR
 
 

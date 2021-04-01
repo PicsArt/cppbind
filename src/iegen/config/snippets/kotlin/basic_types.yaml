@@ -1,0 +1,116 @@
+void:
+  kotlin:
+    type_info: Void
+  jni:
+    type_info: void
+  jdk:
+    type_info: Void
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+bool:
+  custom:
+    pname: Bool
+  kotlin:
+    type_info: Boolean
+  jni:
+    type_info: jboolean
+  jdk:
+    type_info: Boolean
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+int:
+  custom:
+    pname: Int
+  kotlin:
+    type_info: Int
+  jni:
+    type_info: jint
+  jdk:
+    type_info: Int
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+unsigned int:
+  custom:
+    pname: UInt
+  kotlin:
+    type_info: Long
+  jni:
+    type_info: jlong
+  jdk:
+    type_info: Long
+  jni_to_cxx:
+  cxx_to_jni:
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+short:
+  custom:
+    pname: Short
+  kotlin:
+    type_info: Short
+  jni:
+    type_info: jshort
+  jdk:
+    type_info: Short
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+long:
+  custom:
+    pname: Long
+  kotlin:
+    type_info: Long
+  jni:
+    type_info: jlong
+  jdk:
+    type_info: Long
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+long long:
+  long
+
+unsigned long:
+  long
+
+float:
+  custom:
+    pname: Float
+  kotlin:
+    type_info: Float
+  jni:
+    type_info: jfloat
+  jdk:
+    type_info: Float
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+
+double:
+  custom:
+    pname: Double
+  kotlin:
+    type_info: Double
+  jni:
+    type_info: jdouble
+  jdk:
+    type_info: Double
+  jni_to_cxx: 
+  cxx_to_jni: 
+  kotlin_to_jdk:
+  jdk_to_kotlin:
+

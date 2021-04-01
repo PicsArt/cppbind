@@ -1535,6 +1535,27 @@ class Cursor(Structure):
 
         return conf.lib.clang_getIncludedFile(self)
 
+    def get_overriden_cursors(self):
+        """ Determine the set of methods that are overridden by the given method."""
+        is_template_method = (self.kind == CursorKind.FUNCTION_TEMPLATE and self._semantic_parent.kind in [
+            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE, CursorKind.STRUCT_DECL,
+            CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION])
+        assert self.kind == CursorKind.CXX_METHOD or is_template_method
+
+        cursors = POINTER(Cursor)()
+        num = c_uint()
+        conf.lib.clang_getOverriddenCursors(self, byref(cursors), byref(num))
+
+        updcursors = []
+        for i in range(int(num.value)):
+            c = cursors[i]
+            updcursor = Cursor.from_location(self._tu, c.location)
+            updcursors.append( updcursor )
+
+        conf.lib.clang_disposeOverriddenCursors(cursors)
+
+        return updcursors
+
     @property
     def kind(self):
         """Return the kind of this cursor."""
@@ -4051,6 +4072,16 @@ functionList = [
   ("clang_Type_visitFields",
    [Type, callbacks['fields_visit'], py_object],
    c_uint),
+
+  # extra added
+
+  ("clang_getOverriddenCursors",
+   [Cursor, POINTER(POINTER(Cursor)), POINTER(c_uint)],
+   None),
+
+  ("clang_disposeOverriddenCursors",
+   [POINTER(Cursor)],
+   None),
 ]
 
 class LibclangError(Exception):

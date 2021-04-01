@@ -1,13 +1,25 @@
-#include<string>
+#ifndef __EXAMPLE_H__
+#define __EXAMPLE_H__
+
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
 
 namespace pi::utils {
+    using namespace std;
     /**
      * comments
      * 
      * __API__
      * gen: class
+     * kotlin.file: utils
      * package: utils
+     * kotlin.include: android.os.Parcel
+     * kotlin.include: android.os.Test
+     * kotlin.prefix: PI
      * shared_ref: False
+     * kotlin.module: pi.xxx.Example
      */
     struct Example
     {
@@ -19,7 +31,7 @@ namespace pi::utils {
          * swift.name: ExampleType
          */
         enum class Type { A, B, C };
-
+        typedef Type type_t;
 
 
         /**
@@ -37,7 +49,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, const char* test = "XXX");
+        Type f(Type* t, const char* t2 = nullptr, size_t i = 10, const string& test = "XXX");
 
         /**
          * comments
@@ -45,7 +57,15 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        int get_attribute(const char* test = "XXX");
+        int set_attribute(type_t* test = NULL);
+
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        int get_attribute();
     };
     /**
      * comments
@@ -53,6 +73,13 @@ namespace pi::utils {
      * __API__
      * gen: enum
      * swift.name: ExampleType
+     * kotlin.file: utils
+     * package: utils
+     * kotlin.include: android.os.Parcel
+     * kotlin.include: android.os.Test
+     * kotlin.prefix: PI
      */
-    enum class Type2 { A2, B2, C2 };
+    enum class Type2 { A2, B2=10, C2 };
 }
+
+#endif

@@ -1,34 +1,35 @@
 import os
-import pytest
 import hashlib
 
-from iegnen.builder.out_builder import Builder, Scope
-from iegnen.builder.ir_builder import CXXIEGIRBuilder
-from iegnen.parser.ieg_parser import CXXParser
+from iegen.builder.out_builder import Builder, Scope
+from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.parser.ieg_parser import CXXParser
 
 
 def test_builder(out_dir):
     builder = Builder()
 
+    builder.add_scope_stack()
+
     file_scope = builder.get_file("test_file", os.path.join(out_dir, "test.txt"))
 
     file_scope.add("class a {", Scope(name="class_body", tab=1), "}")
 
-    builder.get_scope("class_body").add("testing text")
+    file_scope.get_scope("class_body").add("testing text")
 
-    class_scope = builder.get_scope("class_body")
+    class_scope = file_scope.get_scope("class_body")
     class_scope.add("#adding more start")
     class_scope.add(None, Scope(name="new_method"))
 
-    builder.get_scope("new_method").add("function a", Scope("return something", tab=1))
+    file_scope.get_scope("new_method").add("function a", Scope("return something", tab=1))
     result = str(file_scope)
     print(f"output=\n{result}")
-    assert hashlib.md5(result.encode()).hexdigest() == '7069d55149d357558aee93c65be23b71',\
+    assert hashlib.md5(result.encode()).hexdigest() == '48fba040b7f3c229b23a31b329d33b4f',\
         "Builder output has bean changed"
 
 
 # @pytest.mark.skip(reason="Due to dict test is not stable")
-def test__build_ir(parser_config, attributes, api_start_kw):
+def test_build_ir(parser_config, attributes, api_start_kw):
     parsser = CXXParser(parser_config=parser_config)
     # print(config)
 
@@ -39,5 +40,5 @@ def test__build_ir(parser_config, attributes, api_start_kw):
     ir = ir_builder.ir
 
     print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '4581f6efe8d7f1e658a4f813f75f255b',\
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == 'fa67cbca9bad59401e4e4930c4caeb34',\
         "ir representation string has bean changed."

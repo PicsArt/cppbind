@@ -48,6 +48,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+bazel-*
 develop-eggs/
 dist/
 downloads/
@@ -138,3 +139,4 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+/iegen_config.cfg

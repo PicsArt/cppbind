@@ -1,0 +1,8 @@
+init:
+  actions: !include actions.yaml
+
+codes: !include code_snippets.yaml
+
+types:
+  !join
+  - !include "*_types.yaml"

@@ -1,15 +1,21 @@
-#include<string>
-
+/**
+ * comments
+ *
+ * __API__
+ * kotlin.module: pi.xxx
+ * swift.prefix: PI
+ */
 namespace pi::utils {
     /**
      * comments
      * 
      * __API__
      * gen: class
-     * package: utils
+     * swift.prefix: PI
+
      * shared_ref: False
      */
-    struct Example
+    class Example
     {
         /**
          * comments
@@ -29,7 +35,7 @@ namespace pi::utils {
          * gen: constructor
          * 
          */
-        Example(int& x, std::string name = "XXX");
+        Example(int& x, std::shared_ptr<Type> t, std::string name = "XXX");
 
         /**
          * comments
@@ -37,22 +43,6 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, const char* test = "XXX");
-
-        /**
-         * comments
-         * 
-         * __API__
-         * gen: method
-         */
-        int get_attribute(const char* test = "XXX");
+        Type f(Type* t);
     };
-    /**
-     * comments
-     * 
-     * __API__
-     * gen: enum
-     * swift.name: ExampleType
-     */
-    enum class Type2 { A2, B2, C2 };
 }

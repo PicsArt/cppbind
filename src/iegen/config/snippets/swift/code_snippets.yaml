@@ -36,6 +36,7 @@ file:
 
       {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
       {{include}}
+      #include <stdbool.h>
 
       #if __cplusplus
       extern "C" {

@@ -171,7 +171,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
-            setter_ctx.set_template_choice(ctx.template_choice)
+            setter_ctx.set_template_ctx(ctx.template_choice)
             setter_ctx = make_func_context(setter_ctx)
 
         return locals()

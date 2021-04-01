@@ -1,5 +1,5 @@
 """
-Helper codes for kotlin conversion
+Helper codes for swift conversion
 """
 
 
@@ -42,8 +42,9 @@ def get_c_func_name(hint_name):
             '[]': '_getitem_',
         }
         # we need to consider to use regular expression to avoid multiple passes thought string
-        for old, n in not_allowed.items():
-            new_name = new_name.replace(old, n)
+        operator = new_name[new_name.rfind("operator") + 8:]
+        if operator in not_allowed:
+            new_name = new_name.replace(operator, not_allowed[operator])
     return "_func_" + new_name
 
 

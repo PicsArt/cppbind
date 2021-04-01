@@ -297,8 +297,9 @@ class SnippetsEngine:
 
     def load(self):
         dirs = []
-        if 'custom_config_dir' in config.defaults:
-            dirs.append(config.defaults['custom_config_dir'])
+        lang_config = config.languages[self.main_target]
+        if hasattr(lang_config, 'custom_config_dir'):
+            dirs.append(lang_config.custom_config_dir)
 
         dataMap = load_yaml(self.path, dirs)
 

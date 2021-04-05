@@ -14,7 +14,7 @@ bool:
   swift:
     type_info: Bool
   c:
-    type_info: _Bool
+    type_info: bool
   sc:
     type_info: CBool
   c_to_cxx: 
@@ -66,7 +66,7 @@ long:
     type_info: Long
   c:
     type_info: long
-  cs:
+  sc:
     type_info: CLong
   c_to_cxx: 
   cxx_to_c: 

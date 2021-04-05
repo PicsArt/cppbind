@@ -7,6 +7,11 @@ typedef struct _CDataArray{
     long long size;
 } CDataArray;
 
+typedef struct _CDataPair{
+    void* first;
+    void* second;
+} CDataPair;
+
 typedef struct _CDataMap{
     void* keys;
     void* values;

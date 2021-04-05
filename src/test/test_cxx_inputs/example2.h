@@ -4,7 +4,6 @@
  * __API__
  * gen: module
  * name: test
- * file: src/test.py
  */
 namespace test_api{
 

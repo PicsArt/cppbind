@@ -40,5 +40,5 @@ def test_build_ir(parser_config, attributes, api_start_kw):
     ir = ir_builder.ir
 
     print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == 'fa67cbca9bad59401e4e4930c4caeb34',\
+    assert hashlib.md5(repr(ir).encode()).hexdigest() == '19bbafbac23454676a1fbfaee8effdf4',\
         "ir representation string has bean changed."

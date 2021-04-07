@@ -60,7 +60,7 @@ std::__cxx11::basic_string:
   cxx_to_c: |
     auto {{target_name}} = strdup({{name}}.c_str()); 
   swift_to_sc: |
-        let {{target_name}} = strdup({{name}})!
+    let {{target_name}} = strdup({{name}})!
   sc_to_swift: |
     let {{target_name}} = String(cString: {{name}})
     defer{

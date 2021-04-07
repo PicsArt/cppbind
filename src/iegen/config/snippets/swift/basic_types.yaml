@@ -1,0 +1,123 @@
+void:
+  swift:
+    type_info: Void
+  c:
+    type_info: void
+  sc:
+    type_info: Void
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+bool:
+  swift:
+    type_info: Bool
+  c:
+    type_info: bool
+  sc:
+    type_info: CBool
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+int:
+  swift:
+    type_info: Int
+  c:
+    type_info: int
+  sc:
+    type_info: CInt
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+    let {{target_name}} = CInt({{name}})
+  sc_to_swift:
+    let {{target_name}} = Int({{name}})
+
+unsigned int:
+  swift:
+    type_info: UInt
+  c:
+    type_info: unsigned int
+  sc:
+    type_info: CUnsignedInt 
+  c_to_cxx:
+  cxx_to_c:
+  swift_to_sc:
+    let {{target_name}} = CUnsignedInt({{name}})
+  sc_to_swift:
+
+short:
+  swift:
+    type_info: Short
+  c:
+    type_info: short
+  sc:
+    type_info: CShort
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+long:
+  swift:
+    type_info: Long
+  c:
+    type_info: long
+  sc:
+    type_info: CLong
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+long long:
+  swift:
+    type_info: Long
+  c:
+    type_info: long long
+  sc:
+    type_info: CLongLong
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+unsigned long:
+  swift:
+    type_info: CUnsignedLong
+  c:
+    type_info: unsigned long
+  sc:
+    type_info: CUnsignedLong
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+float:
+  swift:
+    type_info: Float
+  c:
+    type_info: float
+  sc:
+    type_info: CFloat
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+
+double:
+  swift:
+    type_info: Double
+  c:
+    type_info: double
+  sc:
+    type_info: CDouble
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc:
+  sc_to_swift:
+

@@ -1,7 +1,6 @@
 """
 Helper functions working with clang
 """
-import itertools
 import re
 
 import clang.cindex as cli
@@ -104,7 +103,7 @@ def get_base_cursor(cursor):
     bases = [base_specifier for base_specifier in cursor.get_children() if
              base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER]
     if bases:
-        return get_base_cursor(bases[0])
+        return get_base_cursor(bases[0].get_definition())
     else:
         return cursor
 
@@ -136,7 +135,7 @@ def replace_template_choice(type_name, template_choice):
         if replaced in template_choice:
             return template_choice[replaced]
         for typename, value in template_choice.items():
-            replaced = re.sub(f'([,<\s]?)\s*{typename}([\s,>&*]\s*)', f'\g<1>{value}\g<2>', replaced)
+            replaced = re.sub(rf'([,<\s]?)\s*{typename}([\s,>&*]\s*)', rf'\g<1>{value}\g<2>', replaced)
     return replaced
 
 

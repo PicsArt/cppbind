@@ -1,0 +1,278 @@
+
+std::string:
+  std::__cxx11::basic_string
+
+$Object:
+  swift:
+    type_info: "{{type_name}}"
+  c:
+    type_info: "{{type_name|lower}}{{template_suffix}}_t"
+  sc:
+    type_info: "{{type_name|lower}}{{template_suffix}}_t"
+  c_to_cxx: |
+    {%- set pointee = cxx_pointee_unqualified_name %}
+    {%- if  type_ctx.root.shared_ref %}
+        auto {{target_name}} = std::dynamic_pointer_cast<{{target_type_name}}>(
+                  *static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>({{name}})
+                  );
+    {%- else %}
+        // we might need to avoid dynamic_cast if there is no multiple inheritance
+        auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx_root_type_name}}*>({{name}}));
+    {%- endif %}
+  cxx_to_c: |
+    auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
+    {%- if type_ctx.root.shared_ref %}
+    auto {{target_name}} = new std::shared_ptr<{{cxx_root_type_name}}>(value_ptr_{{name}});
+    {%- else %}
+    auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
+    {%- endif %}
+  swift_to_sc:
+    let {{target_name}} = {{name}}.cself
+  sc_to_swift:
+    let {{target_name}} = {{target_type_name}}{{'_impl' if type_ctx.node.is_interface}}({{name}}{% if is_value_type%}, true{%endif%})
+
+$Enum:
+  swift:
+    type_info: "{{type_name}}"
+  c:
+    type_info: unsigned int
+  sc:
+    type_info: CUnsignedInt
+  c_to_cxx: |
+    auto {{target_name}} = ({{target_type_name}}){{name}};
+  cxx_to_c: |
+    {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
+  swift_to_sc: |
+    let {{target_name}} = {{name}}.rawValue
+  sc_to_swift: |
+    let {{target_name}} = {{target_type_name}}(rawValue: {{name}})
+
+std::__cxx11::basic_string:
+  swift:
+    type_info: String
+  c:
+    type_info: char* _Nonnull
+  sc:
+    type_info: UnsafeMutablePointer<CChar>
+  c_to_cxx: |
+    auto {{target_name}} = std::string({{name}});
+    free({{name}});
+  cxx_to_c: |
+    auto {{target_name}} = strdup({{name}}.c_str()); 
+  swift_to_sc: |
+    let {{target_name}} = strdup({{name}})!
+  sc_to_swift: |
+    let {{target_name}} = String(cString: {{name}})
+    defer{
+      {{name}}.deallocate()
+    }
+
+char *:
+  swift:
+    type_info: String
+  c:
+    type_info: const char * _Nullable
+  sc:
+    type_info: UnsafePointer<CChar>?
+  c_to_cxx: 
+  cxx_to_c: 
+  swift_to_sc: |
+    let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8)
+  sc_to_swift: |
+    let {{target_name}} = String(cString: {{name}}!)
+
+std::vector:
+  swift:
+    type_info: "Array<{{args_t[0]}}>"
+  c:
+    type_info: "CDataArray"
+  sc:
+    type_info: "CDataArray"
+  c_to_cxx: |
+    {{cxx_pointee_unqualified_name}} {{target_name}};
+
+    auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
+
+    for (size_t _i = 0; _i < {{name}}.size; ++_i) {
+        auto& value_{{name}} = data_{{name}}[_i];
+        {{args[0].snippet('value_{}'.format(name))|indent}}
+        {{target_name}}.emplace_back({{args[0].converted_name('value_{}'.format(name))}});
+    }
+  cxx_to_c: |
+    auto _data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
+    {{target_type_name}} {{target_name}} = { _data_{{target_name}}, (long long){{name}}.size() };
+    for (int _i = 0; _i < {{name}}.size(); ++_i) {
+      auto& value_{{name}} = {{name}}[_i];
+      {{args[0].snippet('value_{}'.format(name))|indent}}
+      _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}};
+    }
+  swift_to_sc: |
+    let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+    defer {
+      _data_{{target_name}}.deallocate()
+    }
+    var {{target_name}} = {{target_type_name}}()
+    {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
+    {{target_name}}.size = Int64({{name}}.count)
+    for _i in 0..<{{name}}.count {
+      let value = {{name}}[_i];
+      {{args[0].snippet('value')|indent}}
+      _data_{{target_name}}[_i] = {{args[0].converted_name('value')}};
+    }
+  sc_to_swift: |
+    let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
+    var {{target_name}}: [{{args[0].target_type_name}}] = [] 
+    defer {
+      _tmp_{{name}}_data.deallocate()
+    }
+    for _i in 0..<Int({{name}}.size) {
+      let value_{{name}} = _tmp_{{name}}_data[_i];
+      {{args[0].snippet('value_{}'.format(name))|indent}}
+      {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}});
+    }
+
+
+std::map:
+  swift:
+    type_info: "Dictionary<{{args_t[0]}}, {{args_t[1]}}>"
+  c:
+    type_info: "CDataMap"
+  sc:
+    type_info: "CDataMap"
+  c_to_cxx: |
+    {{cxx_pointee_unqualified_name}} {{target_name}};
+
+    for (size_t _i = 0; _i < {{name}}.size; ++_i) {
+        auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i];
+        auto vtmp_{{name}} = reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.values)[_i];
+        {{args[0].snippet('ktmp_{}'.format(name))|indent}}
+        {{args[1].snippet('vtmp_{}'.format(name))|indent}}
+        {{target_name}}.insert({ {{args[0].converted_name('ktmp_{}'.format(name))}}, {{args[1].converted_name('vtmp_{}'.format(name))}} });
+    }
+
+  cxx_to_c: |
+    auto _k_data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
+    auto _v_data_{{target_name}} = new {{args_converters[1].c.target_type_name}} [{{name}}.size()];
+    {{target_type_name}} {{target_name}} = { _k_data_{{target_name}}, _v_data_{{target_name}}, (long long){{name}}.size() };
+    size_t _i_{{name}} = 0;
+    for (auto& value : {{name}}) {
+        const auto& key = value.first;
+        const auto& val = value.second;
+        {
+          {{args[0].snippet('key')|indent}}
+          {{args[1].snippet('val')|indent}}
+          _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key')}};
+          _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val')}};
+          _i_{{name}} += 1;
+        }
+    }
+
+  swift_to_sc: |
+    let _key_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+    let _val_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+    defer {
+      _key_{{target_name}}.deallocate()
+      _val_{{target_name}}.deallocate()
+    } 
+    var {{target_name}} = {{target_type_name}}()
+    {{target_name}}.keys = UnsafeMutableRawPointer(_key_{{target_name}})
+    {{target_name}}.values = UnsafeMutableRawPointer(_val_{{target_name}})
+    {{target_name}}.size = Int64({{name}}.count)
+    var _i_{{name}} = 0
+    for (key, val) in {{name}} {
+        {{args[0].snippet('key')|indent}}
+        {{args[1].snippet('val')|indent}}
+        _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key')}}
+        _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val')}}
+        _i_{{name}} += 1
+    }
+  sc_to_swift: |
+    let _tmp_k_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
+    let _tmp_v_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: Int({{name}}.size))
+    var {{target_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:] 
+    defer {
+      _tmp_k_{{name}}_data.deallocate()
+      _tmp_v_{{name}}_data.deallocate()
+    } 
+    for _i in 0..<Int({{name}}.size) {
+      let key_{{name}} = _tmp_k_{{name}}_data[_i];
+      let value_{{name}} = _tmp_v_{{name}}_data[_i];
+      do {
+        {{args[0].snippet('key_{}'.format(name))|indent}}
+        {{args[1].snippet('value_{}'.format(name))|indent}}
+        {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
+      }
+    }
+
+
+std::unordered_map:
+  std::map
+
+
+std::shared_ptr:
+  swift:
+    type_info: "{{args_t[0]}}"
+  c:
+    type_info: "{{args_t[0]}}"
+  sc:
+    type_info: "{{args_t[0]}}"
+  c_to_cxx: 
+
+  cxx_to_c: 
+
+  swift_to_sc: 
+
+  sc_to_swift:
+
+
+std::pair:
+  swift:
+    type_info: "({{args_t[0]}}, {{args_t[1]}})"
+  c:
+    type_info: "CDataPair"
+  sc:
+    type_info: "CDataPair"
+  c_to_cxx: |
+    auto first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
+    auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
+    {{args[0].snippet('first_tmp_{}'.format(name))|indent}}
+    {{args[1].snippet('second_tmp_{}'.format(name))|indent}}
+    {{cxx_pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
+  cxx_to_c: |
+    auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
+    auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};
+    const auto& first_{{name}} = {{name}}.first;
+    const auto& second_{{name}} = {{name}}.second;
+    {{args[0].snippet('first_{}'.format(name))|indent}}
+    {{args[1].snippet('second_{}'.format(name))|indent}}
+    *_first_data_{{target_name}} = {{args[0].converted_name('first_{}'.format(name))}};
+    *_second_data_{{target_name}} = {{args[1].converted_name('second_{}'.format(name))}};
+    {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
+  swift_to_sc: |
+    let _first_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
+    let _second_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
+    defer {
+      _first_{{target_name}}.deallocate()
+      _second_{{target_name}}.deallocate()
+    }
+    var {{target_name}} = {{target_type_name}}()
+    {{target_name}}.first = UnsafeMutableRawPointer(_first_{{target_name}})
+    {{target_name}}.second = UnsafeMutableRawPointer(_second_{{target_name}})
+    let first_{{name}} = {{name}}.0
+    let second_{{name}} = {{name}}.1
+    {{args[0].snippet('first_{}'.format(name))|indent}}
+    {{args[1].snippet('second_{}'.format(name))|indent}}
+    _first_{{target_name}}[0] = {{args[0].converted_name('first_{}'.format(name))}}
+    _second_{{target_name}}[0] = {{args[1].converted_name('second_{}'.format(name))}}
+  sc_to_swift: |
+    let _tmp_pair_first_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: 1)
+    let _tmp_pair_second_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: 1)
+    defer {
+      _tmp_pair_first_{{name}}_data.deallocate()
+      _tmp_pair_second_{{name}}_data.deallocate()
+    }
+    let first_{{name}} = _tmp_pair_first_{{name}}_data[0];
+    let second_{{name}} = _tmp_pair_second_{{name}}_data[0];
+    {{args[0].snippet('first_{}'.format(name))|indent}}
+    {{args[1].snippet('second_{}'.format(name))|indent}}
+    let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ( {{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}} )

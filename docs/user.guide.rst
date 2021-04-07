@@ -81,7 +81,7 @@ Following is an example of converter for std::pair and nlohmann::json from cxx t
         auto second = {{extract_second}}(env, secondObject);
         {{args[0].snippet('first')|indent}}
         {{args[1].snippet('second')|indent}}
-        {{target_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+        {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
       cxx_to_jni: |
         {{target_type_name}} {{target_name}} = std::make_pair(f, s);
       kotlin_to_jdk: |

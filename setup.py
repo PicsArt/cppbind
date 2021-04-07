@@ -7,7 +7,7 @@ entry_point = (
 )
 
 
-with open("src/requirements.txt", "r") as f:
+with open("requirements.txt", "r") as f:
     requires = []
     for line in f:
         req = line.split("#", 1)[0].strip()

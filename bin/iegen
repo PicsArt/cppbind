@@ -1,5 +1,0 @@
-#!/bin/bash
-
-PRJ_DIR=`dirname $BASH_SOURCE`/..
-
-python $PRJ_DIR/src/iegen/runner.py $@

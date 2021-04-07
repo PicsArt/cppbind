@@ -68,15 +68,10 @@ Each attribute has the following properties.
 
 Binding classes
 ^^^^^^^^^^^^^^^
-Binding a simple class:
+For binding a simple class :code:`gen: class` API should be used.
 
-.. literalinclude:: ../examples/cxx/classes/room.hpp
-   :language: c
 
-Generated API for python:
 
-.. literalinclude:: ../examples/python/classes/room_pygen.py
-   :language: python
 
 Binding enumerations
 ^^^^^^^^^^^^^^^^^^^^
@@ -85,31 +80,3 @@ For binding an enumeration :code:`gen: enum` API should be used.
 
 .. literalinclude:: ../examples/cxx/enums/color.hpp
    :language: c
-
-
-Generated API for python:
-
-.. literalinclude:: ../examples/python/enums/color_pygen.py
-   :language: python
-
-Binding Getters/Setters
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [getter]
-   :end-before: [getter]
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [setter]
-   :end-before: [setter]
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [file-doc]
-   :end-before: [file-doc]
-
-.. doxygennamespace:: iegen::example::getters
-    :content-only:
-

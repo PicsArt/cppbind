@@ -30,6 +30,7 @@ def gen_init(config, *args, **kwargs):
         # helper variables
         cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
         helpers_dir = find_prj_dir(config.helpers_dir)
+        helpers_out_dir = os.path.join(config.out_dir + config.helpers_package_prefix.replace('.', os.sep))
         # base variables
         cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
@@ -55,8 +56,8 @@ def make_def_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
 
-        cxx_output_filepath = f'{pat_sep}'.join([item.replace('.', pat_sep) for item in (
-            config.cxx_out_dir, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
+        cxx_output_filepath = f'{pat_sep}'.join([config.cxx_out_dir] + [item.replace('.', pat_sep) for item in (
+            config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
 
         return locals()
 

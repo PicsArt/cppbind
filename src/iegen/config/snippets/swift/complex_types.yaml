@@ -6,9 +6,9 @@ $Object:
   swift:
     type_info: "{{type_name}}"
   c:
-    type_info: "{{type_name|lower}}{{template_suffix}}_t"
+    type_info: "void* _Nonnull"
   sc:
-    type_info: "{{type_name|lower}}{{template_suffix}}_t"
+    type_info: "UnsafeMutableRawPointer"
   c_to_cxx: |
     {%- set pointee = cxx_pointee_unqualified_name %}
     {%- if  type_ctx.root.shared_ref %}

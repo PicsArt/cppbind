@@ -11,11 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-import subprocess
 import sys
-
-
-subprocess.call('doxygen Doxyfile.in', shell=True)
 
 
 sys.path.insert(0, os.path.abspath('../src/'))
@@ -38,7 +34,6 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
-    'breathe'
 ]
 
 # Make sure the target is unique
@@ -63,11 +58,3 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
-# doxygen parameters.
-breathe_projects = {
-    "IEGEN C++ examples": "_build/xml/"
-}
-
-breathe_default_project = "IEGEN C++ examples"
-breathe_default_members = ('members', 'undoc-members')

@@ -109,7 +109,3 @@ Binding Getters/Setters
    :language: c
    :start-after: [file-doc]
    :end-before: [file-doc]
-
-.. doxygennamespace:: iegen::example::getters
-    :content-only:
-

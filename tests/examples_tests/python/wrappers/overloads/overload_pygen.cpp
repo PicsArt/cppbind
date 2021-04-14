@@ -6,11 +6,11 @@
 
 namespace py = pybind11;
 
-void bindOverload(py::module& m) {
+void bindOverloadedFunctions(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::Overload, std::shared_ptr<iegen::example::Overload>> overload(m, "Overload");
+    py::class_<iegen::example::OverloadedFunctions, std::shared_ptr<iegen::example::OverloadedFunctions>> overloadedfunctions(m, "OverloadedFunctions");
 
-    overload.def(py::init<>());
-    overload.def("concatenate", py::overload_cast<std::string, std::string>(&iegen::example::Overload::concatenate), py::arg("first"), py::arg("second"));
-    overload.def("concatenate", py::overload_cast<std::string, std::string, std::string>(&iegen::example::Overload::concatenate), py::arg("first"), py::arg("second"), py::arg("third"));
+    overloadedfunctions.def(py::init<>());
+    overloadedfunctions.def("concatenate", py::overload_cast<std::string, std::string>(&iegen::example::OverloadedFunctions::concatenate), py::arg("first"), py::arg("second"));
+    overloadedfunctions.def("concatenate", py::overload_cast<std::string, std::string, std::string>(&iegen::example::OverloadedFunctions::concatenate), py::arg("first"), py::arg("second"), py::arg("third"));
 }

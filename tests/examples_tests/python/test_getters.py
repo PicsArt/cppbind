@@ -1,22 +1,16 @@
 import unittest
-from getters.getter_pygen import GetterSetter, GetterSetterExtended
+from getters.person_pygen import Person
 
 
-class TestContainersMap(unittest.TestCase):
+class TestPerson(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.gs = GetterSetter()
-        self.gse = GetterSetterExtended()
+        self.person = Person("John Doe")
 
-    def test_value(self):
-        self.assertEqual(self.gs.value, "default value")
-        self.gs.value = "updated value"
-        self.assertEqual(self.gs.value, "updated value")
-
-    def test_inherited_value(self):
-        self.assertEqual(self.gse.value, "default value")
-        self.gse.value = "updated value"
-        self.assertEqual(self.gse.value, "updated value")
+    def test_fullname(self):
+        self.assertEqual(self.person.full_name, "John Doe")
+        self.person.full_name = "Jane Doe"
+        self.assertEqual(self.person.full_name, "Jane Doe")
 
 
 if __name__ == '__main__':

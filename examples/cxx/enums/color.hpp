@@ -18,8 +18,8 @@ enum class Color {
      */
     Green = 2,
     /**
-     * Blue = 3
+     * Blue = 20
      */
-    Blue = 3
+    Blue = 20
 };
 }

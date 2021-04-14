@@ -9,7 +9,7 @@ namespace iegen::example {
  * shared_ref: true
  * package: overloads
  */
-struct Overload {
+struct OverloadedFunctions {
 
     /**
      * Overload constructor
@@ -17,7 +17,7 @@ struct Overload {
      * __API__
      * gen: constructor
      */
-    Overload() {}
+    OverloadedFunctions() {}
 
     /**
      * Concatenate with two strings.

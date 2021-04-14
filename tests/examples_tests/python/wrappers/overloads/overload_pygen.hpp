@@ -5,6 +5,6 @@
 
 namespace py = pybind11;
 
-void bindOverload(py::module& m);
+void bindOverloadedFunctions(py::module& m);
 
 #endif

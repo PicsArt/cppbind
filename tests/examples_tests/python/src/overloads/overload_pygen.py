@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import *
-import iegen.examples.overloads.overload as pybind_overload_pygen
+import examples.overloads.overload as pybind_overload_pygen
 from bind_utils import *
 from metaclass import *
 
 
-class Overload(metaclass=OriginalMethodsMetaclass):
+class OverloadedFunctions(metaclass=OriginalMethodsMetaclass):
     """
     An example for with overloaded methods."""
     @bind

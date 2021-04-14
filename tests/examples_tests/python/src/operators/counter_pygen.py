@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-import iegen.examples.operators.counter as pybind_counter_pygen
+import examples.operators.counter as pybind_counter_pygen
 from bind_utils import *
 from metaclass import *
 

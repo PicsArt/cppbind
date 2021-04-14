@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-import iegen.examples.containers.containers as pybind_containers_pygen
+import examples.containers.containers as pybind_containers_pygen
 from bind_utils import *
 from metaclass import *
 

@@ -2,10 +2,14 @@
 #include "examples_pygen.hpp"
 
 namespace py = pybind11;
-void bindIegenExamples(py::module& m) {
+void bindExamples(py::module& m) {
     py::module_ classes = m.def_submodule("classes", "classes");
-    py::module_ classes_room = classes.def_submodule("room", "room");
-    bindRoom(classes_room);
+    py::module_ classes_task = classes.def_submodule("task", "task");
+    bindTask(classes_task);
+    py::module_ classes_project = classes.def_submodule("project", "project");
+    bindProject(classes_project);
+    py::module_ classes_root = classes.def_submodule("root", "root");
+    bindRoot(classes_root);
     py::module_ containers = m.def_submodule("containers", "containers");
     py::module_ containers_containers = containers.def_submodule("containers", "containers");
     bindItem(containers_containers);
@@ -14,13 +18,24 @@ void bindIegenExamples(py::module& m) {
     py::module_ enums_color = enums.def_submodule("color", "color");
     bindColor(enums_color);
     py::module_ getters = m.def_submodule("getters", "getters");
-    py::module_ getters_getter = getters.def_submodule("getter", "getter");
-    bindGetterSetter(getters_getter);
-    bindGetterSetterExtended(getters_getter);
+    py::module_ getters_person = getters.def_submodule("person", "person");
+    bindPerson(getters_person);
     py::module_ operators = m.def_submodule("operators", "operators");
     py::module_ operators_counter = operators.def_submodule("counter", "counter");
     bindCounter(operators_counter);
     py::module_ overloads = m.def_submodule("overloads", "overloads");
     py::module_ overloads_overload = overloads.def_submodule("overload", "overload");
-    bindOverload(overloads_overload);
+    bindOverloadedFunctions(overloads_overload);
+    py::module_ templates = m.def_submodule("templates", "templates");
+    py::module_ templates_addressable = templates.def_submodule("addressable", "addressable");
+    bindAddressableRoot(templates_addressable);
+    py::module_ templates_component = templates.def_submodule("component", "component");
+    bindComponent(templates_component);
+    py::module_ templates_stack = templates.def_submodule("stack", "stack");
+    bindStackProject(templates_stack);
+    bindStackTask(templates_stack);
+    py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
+    bindStackUsage(templates_stack_usage);
+    py::module_ templates_template_functions = templates.def_submodule("template_functions", "template_functions");
+    bindTemplateFunctions(templates_template_functions);
 }

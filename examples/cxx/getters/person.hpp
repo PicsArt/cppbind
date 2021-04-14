@@ -1,13 +1,8 @@
-//[file-doc]
-
- @file getter.h
- @brief This is an example pf simple getter/setter.
-
-//[file-doc]
+#ifndef person_hpp
+#define person_hpp
 #include <string>
 
-namespace iegen::example::getters {
-
+namespace iegen::example {
 
 
 /**
@@ -17,7 +12,7 @@ namespace iegen::example::getters {
  * shared_ref: true
  * package: getters
  */
-class GetterSetter {
+class Person {
 public:
     /**
      * comments
@@ -25,31 +20,31 @@ public:
      * __API__
      * gen: constructor
      */
-    GetterSetter() :_value("default value") {}
+    Person(const std::string& name) : _fullname(name) {}
 
     //[getter]
     /**
-     * value setter
+     * fullname setter
      *__API__
      * gen: setter
      */
-    void setValue(const std::string& val) {
-        _value = val;
+    void setFullName(const std::string& val) {
+        _fullname = val;
     }
     //[getter]
     //[setter]
     /**
-     * value getter
+     * fullname getter
      * __API__
      * gen: getter
      */
-    const std::string& value() {
-        return _value;
+    const std::string& fullName() {
+        return _fullname;
     }
     //[setter]
 
     private:
-        std::string _value;
+        std::string _fullname;
 
 };
 

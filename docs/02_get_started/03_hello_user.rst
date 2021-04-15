@@ -17,7 +17,7 @@ Ok here is a your C++ code.
    #include<string.h>
 
    /**
-    * Structure do describe user.
+    * Structure to describe user.
     */
    struct UserInfo{
         /**
@@ -45,25 +45,29 @@ Ok here is a your C++ code.
             return (age > 21 ? "Hello ": "Hi ") + name;
         }
         /**
-         * Greeting function.
+         * Welcome function.
          */
         std::string welcome(const UserInfo& user){
-            return (age > 21 ? "Hello ": "Hi ") + name;
+            if(!user.want_a_drink)
+                return "Welcome " + name + "! Let me know if you want something";
+            //else
+            return "Welcome " + name + "! Do you want cap of " + (age > 21 ? "beer?": "juice?");
         }
    };
 
-To be able to use it from other languages you need to create binding from that language to you C++ library. IEGEN is a tool which will help you to achieve that just by adding some extra marks to you C++ codes.
+To be able to use it from other languages you need to create binding from your C++ library to that language. IEGEN is a tool which will help you to achieve that just by adding some extra marks to you C++ codes.
 
 In a code above you need to export **UserInfo** structure with *age* and *name* properties and **Host** class with its methods. Do do that you just change your Doxygen comments to include IEGEN instructions and parameters.
 
 .. _Basic example C++ with IEGEN:
 
 .. code-block:: cpp
+   :emphasize-lines: 5 - 6, 13 - 14, 20-21, 33-34, 54-55  
 
    #include<string.h>
 
    /**
-    * Structure do describe user.
+    * Structure to describe user.
     * __API__
     * gen: class
     */
@@ -113,13 +117,15 @@ In a code above you need to export **UserInfo** structure with *age* and *name* 
         Host() = default;
         /**
          * Greeting function.
+         * __API__
          * gen: method
          */
         std::string hello(const UserInfo& user){
             return (age > 21 ? "Hello ": "Hi ") + name;
         }
         /**
-         * Greeting function.
+         * Welcome function.
+         * __API__
          * gen: method
          */
         std::string welcome(const UserInfo& user){
@@ -154,8 +160,8 @@ That is it. Now you should be able to use it on your codes written in supported 
     assert(host.welcome(user)  == "abc")
     assert(host.welcome(young_user)  == "abc")
 
-To find out how to configure IEGEN and run on you code and how to create binding library for your target language please read following topics.
+To find out how to configure IEGEN and run on your code and how to create binding library for your target language please read following topics.
 
-* :doc:`Configuration </02_get_started/03_configuration>`
-* :doc:`Creating  binding library.</02_get_started/03_configuration>`
+* :doc:`Configuring IEGEN for "Hello user" </02_get_started/hello_user_configuration>`
+* :doc:`Creating  binding library for "Hello user" </02_get_started/hello_user_configuration>`
 

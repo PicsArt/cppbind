@@ -1,6 +1,9 @@
 
 # from iegnen import context_of_type
 
+def gen_init(config, *args, **kwargs):
+    pass
+
 def gen_class(ctx, builder):
     pass
     # print(ctx.type) # class
@@ -35,6 +38,8 @@ def gen_constructor(ctx, builder):
     #  {'name': 'name', 'type': 'std::string', 'default': 'XXX', 'ptr': None}]
     # print(ctx.parent.shared_ref)  # False
 
+def gen_interface(ctx, builder):
+    pass
 
 def gen_method(ctx, builder):
     pass
@@ -44,3 +49,17 @@ def gen_method(ctx, builder):
     # print(ctx.returns) # {'type': 'Type', 'ptr': 'None'}
 
     # print(context_of_type(ctx.returns['type']).type) # enum
+
+def gen_property_getter(ctx, builder):
+    pass
+
+
+def gen_property_setter(ctx, builder):
+    pass
+
+
+def gen_setter(ctx, builder):
+    pass
+
+def gen_getter(ctx, builder):
+    pass

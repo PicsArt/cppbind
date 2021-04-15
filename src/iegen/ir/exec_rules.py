@@ -145,13 +145,20 @@ class Context(object):
         def walk(base_types):
             for base in base_types:
                 base = self.find_by_type(base)
-                yield base
                 for base in walk(base.base_types):
                     yield base
+                yield base
 
         _ancestors = [b for b in walk(self.base_types)]
 
         return _ancestors
+
+    @property
+    def root(self):
+
+        _ancestors = self.ancestors + [self]
+
+        return _ancestors[0]
 
     @property
     def base_types_specifier_cursor(self):

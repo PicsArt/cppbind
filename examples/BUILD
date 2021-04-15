@@ -7,9 +7,3 @@ cc_library(
     ]),
     visibility = ["//visibility:public"],
 )
-
-py_library(
-    name = "examples_py_library",
-    srcs = glob(["**/*.py"]),
-    visibility = ["//visibility:public"],
-)

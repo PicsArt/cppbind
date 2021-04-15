@@ -5,15 +5,14 @@ from bind_utils import *
 from metaclass import *
 from classes.task_pygen import *
 
-
 class Project(metaclass=OriginalMethodsMetaclass):
     """
     comments
     """
-
     @bind
     def __init__(self, title: str):
         pass
+
 
     @property
     @bind
@@ -23,16 +22,18 @@ class Project(metaclass=OriginalMethodsMetaclass):
         """
         pass
 
+
+
     @bind
     def add_task(self, task: Task) -> None:
         """
         comments
         """
         pass
-
     @bind
     def tasks(self) -> list:
         """
         comments
         """
         pass
+

@@ -8,23 +8,23 @@ import pytest
     'golden_file, new_gen_file',
     [
         (
-                'examples/python/operators/counter_pygen.py',
+                'examples/python/src/operators/counter_pygen.py',
                 'tests/examples_tests/python/src/operators/counter_pygen.py',
         ),
         (
-                'examples/python/overloads/overload_pygen.py',
+                'examples/python/src/overloads/overload_pygen.py',
                 'tests/examples_tests/python/src/overloads/overload_pygen.py',
         ),
         (
-                'examples/python/templates/stack_pygen.py',
+                'examples/python/src/templates/stack_pygen.py',
                 'tests/examples_tests/python/src/templates/stack_pygen.py',
         ),
         (
-                'examples/python/templates/stack_usage_pygen.py',
+                'examples/python/src/templates/stack_usage_pygen.py',
                 'tests/examples_tests/python/src/templates/stack_usage_pygen.py',
         ),
         (
-                'examples/python/getters/person_pygen.py',
+                'examples/python/src/getters/person_pygen.py',
                 'tests/examples_tests/python/src/getters/person_pygen.py',
         ),
 

@@ -61,104 +61,19 @@ In a code above you need to export **UserInfo** structure with *age* and *name* 
 
 .. _Basic example C++ with IEGEN:
 
-.. code-block:: cpp
+
+.. literalinclude:: /../examples/hello_user/cxx/hello_user.hpp
+   :language: cpp 
    :emphasize-lines: 5 - 6, 13 - 14, 20-21, 33-34, 54-55  
-
-   #include<string.h>
-
-   /**
-    * Structure to describe user.
-    * __API__
-    * gen: class
-    */
-   struct UserInfo{
-
-        /**
-         * Creates user
-         *
-         * __API__
-         * gen: constructor
-         */
-        UserInfo(const std::string& user_name, unsigned int user_age):name(user_name), age(user_age){}
-        /**
-         * Age of user.
-         *
-         * __API__
-         * gen: property_getter
-         */
-        unsigned int age = 0;
-        /**
-         * Name of user.
-         *
-         * __API__
-         * gen: property_getter
-         */
-        std::string name;
-        /**
-         * Some wishes of the user.
-         * __API__
-         * gen: property_setter
-         */
-        bool want_a_drink = false;
-   };
-
-   /**
-    * Host class.
-    * __API__
-    * gen: class
-    */
-   class Host{
-        /**
-         * Creates host
-         *
-         * __API__
-         * gen: constructor
-         */
-        Host() = default;
-        /**
-         * Greeting function.
-         * __API__
-         * gen: method
-         */
-        std::string hello(const UserInfo& user){
-            return (age > 21 ? "Hello ": "Hi ") + name;
-        }
-        /**
-         * Welcome function.
-         * __API__
-         * gen: method
-         */
-        std::string welcome(const UserInfo& user){
-            if(!user.want_a_drink)
-                return "Welcome " + name + "! Let me know if you want something";
-            //else
-            return "Welcome " + name + "! Do you want cap of " + (age > 21 ? "beer?": "juice?");
-        }
-   };
 
 That is it. Now you should be able to use it on your codes written in supported languages. Here is a usage example of Swift.
  
 .. _Basic example usage with swift:
 
-.. code-block:: swift 
+.. literalinclude:: /../examples/hello_user/swift/hello_user_usage.swift
+   :language: swift 
 
-    import Wrapper
-    let user = UserInfo(name: "Jhon", age: 22)
-    let young_user = UserInfo(name: "Kate", age: 18)
-
-    let host = Host()
-
-    assert(host.hello(user)  == "abc")
-    assert(host.hello(young_user)  == "abc")
-
-    assert(host.welcome(user)  == "abc")
-    assert(host.welcome(young_user)  == "abc")
-
-    user.want_a_drink = true
-    young_user.want_a_drink = true
-
-    assert(host.welcome(user)  == "abc")
-    assert(host.welcome(young_user)  == "abc")
+Basically what we have done here we have added *__API__* tag to let IEGEN know that structure needs to be processed and added the instruction for example *gen: method* which tells that method needs to be generated.
 
 To find out how to configure IEGEN and run on your code and how to create binding library for your target language please read following topics.
 

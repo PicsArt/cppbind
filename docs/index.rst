@@ -43,7 +43,7 @@ Are you writing C++ libraries and want to be able to use it in various platforms
 
    /features
 
-Let's start with :ref:`Basic example <Basic example>`.
+Let's start with :ref:`Basic example`.
 
 .. toctree::
    :maxdepth: 2

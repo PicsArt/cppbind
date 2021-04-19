@@ -14,8 +14,9 @@ Ok here is a your C++ code.
 
 .. code-block:: cpp
 
-   #include<string.h>
+   #include<string>
 
+   namespace hello_user{
    /**
     * Structure to describe user.
     */
@@ -54,6 +55,7 @@ Ok here is a your C++ code.
             return "Welcome " + name + "! Do you want cap of " + (age > 21 ? "beer?": "juice?");
         }
    };
+   }
 
 To be able to use it from other languages you need to create binding from your C++ library to that language. IEGEN is a tool which will help you to achieve that just by adding some extra marks to you C++ codes.
 
@@ -62,15 +64,15 @@ In a code above you need to export **UserInfo** structure with *age* and *name* 
 .. _Basic example C++ with IEGEN:
 
 
-.. literalinclude:: /../examples/hello_user/cxx/hello_user.hpp
+.. literalinclude:: /../examples/tutorials/hello_user/cxx/hello_user.hpp
    :language: cpp 
-   :emphasize-lines: 5 - 6, 13 - 14, 20-21, 33-34, 54-55  
+   :emphasize-lines: 6 - 7, 14 - 15, 21-22, 34-35, 55-56  
 
 That is it. Now you should be able to use it on your codes written in supported languages. Here is a usage example of Swift.
  
 .. _Basic example usage with swift:
 
-.. literalinclude:: /../examples/hello_user/swift/hello_user_usage.swift
+.. literalinclude:: /../examples/tutorials/hello_user/usage/swift/hello_user_usage.swift
    :language: swift 
 
 Basically what we have done here we have added *__API__* tag to let IEGEN know that structure needs to be processed and added the instruction for example *gen: method* which tells that method needs to be generated.

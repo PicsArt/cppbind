@@ -1,6 +1,6 @@
+#include<string>
 
-#include<string.h>
-
+namespace hello_user{
 /**
  * Structure to describe user.
  * __API__
@@ -70,3 +70,5 @@ class Host{
         return "Welcome " + name + "! Do you want cap of " + (age > 21 ? "beer?": "juice?");
     }
 };
+
+}

@@ -66,46 +66,8 @@ Each attribute has the following properties.
 * **array** indicates if attribute can be used for multiple times or no
 
 
-Binding classes
-^^^^^^^^^^^^^^^
-Binding a simple class:
 
-.. literalinclude:: ../examples/cxx/classes/room.hpp
-   :language: c
 
-Generated API for python:
-
-.. literalinclude:: ../examples/python/classes/room_pygen.py
+.. literalinclude:: /examples/python/src/enums/color_pygen.py
    :language: python
 
-Binding enumerations
-^^^^^^^^^^^^^^^^^^^^
-
-For binding an enumeration :code:`gen: enum` API should be used.
-
-.. literalinclude:: ../examples/cxx/enums/color.hpp
-   :language: c
-
-
-Generated API for python:
-
-.. literalinclude:: ../examples/python/enums/color_pygen.py
-   :language: python
-
-Binding Getters/Setters
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [getter]
-   :end-before: [getter]
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [setter]
-   :end-before: [setter]
-
-.. literalinclude:: ../examples/cxx/getters/getter.hpp
-   :language: c
-   :start-after: [file-doc]
-   :end-before: [file-doc]

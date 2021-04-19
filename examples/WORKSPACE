@@ -1,5 +1,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# ----------------------------------------------python---------------------------------------------------
+
 http_archive(
     name = "rules_python",
     sha256 = "778197e26c5fbeb07ac2a2c5ae405b30f6cb7ad1f5510ea6fdac03bded96cc6f",
@@ -47,28 +49,6 @@ kotlin_repositories()  # if you want the default. Otherwise see custom kotlinc d
 
 kt_register_toolchains()  # to use the default toolchain, otherwise see toolchains below
 
-http_archive(
-    name = "rules_jvm_external",
-    sha256 = "62133c125bf4109dfd9d2af64830208356ce4ef8b165a6ef15bbff7460b35c3a",
-    strip_prefix = "rules_jvm_external-3.0",
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/3.0.zip",
-)
-
-load("@rules_jvm_external//:defs.bzl", "maven_install")
-
-maven_install(
-    artifacts = [
-        "junit:junit:4.12",
-    ],
-    fetch_sources = True,
-    repositories = [
-        "https://maven.google.com",
-        "https://repo1.maven.org/maven2",
-        "https://jcenter.bintray.com/",
-    ],
-    strict_visibility = True,
-)
-
 # ----------------------------------------------swift---------------------------------------------------
 
 http_archive(
@@ -90,13 +70,3 @@ load(
 )
 
 swift_rules_extra_dependencies()
-
-# iegen requirements
-load("@rules_python//python:pip.bzl", "pip_install")
-
-# Create a central repo that knows about the dependencies needed for
-# requirements.txt.
-pip_install(
-    name = "reqs",
-    requirements = "//:requirements.txt",
-)

@@ -12,6 +12,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: classes
+ * swift.include: CWrapper
  */
 struct Root {
 public:

@@ -2,8 +2,8 @@
 #define component_hpp
 
 #include <string>
-#include "examples/cxx/templates/addressable.hpp"
-#include "examples/cxx/classes/root.hpp"
+#include "cxx/templates/addressable.hpp"
+#include "cxx/classes/root.hpp"
 
 namespace iegen::example {
 

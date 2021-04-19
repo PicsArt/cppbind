@@ -1,9 +1,8 @@
-cc_library(
-    name = "examples_cc_library",
-    srcs = glob(["**/*.cpp"]),
-    hdrs = glob([
-        "**/*.hpp",
-        "**/*.h",
-    ]),
-    visibility = ["//visibility:public"],
+filegroup(
+    name = "build_all",
+    srcs = [
+        "//python:py_examples_library",
+        #        "//python:BUILD",
+        #        "//swift:BUILD",
+    ],
 )

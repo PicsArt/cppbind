@@ -6,8 +6,8 @@
 #include <memory>
 #include <string>
 
-#include "examples/cxx/templates/stack.hpp"
-#include "examples/cxx/classes/project.hpp"
+#include "cxx/templates/stack.hpp"
+#include "cxx/classes/project.hpp"
 
 namespace iegen::example {
 

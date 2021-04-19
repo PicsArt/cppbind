@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-#include "examples/cxx/classes/task.hpp"
+#include "cxx/classes/task.hpp"
 
 namespace iegen::example {
 
@@ -16,6 +16,7 @@ namespace iegen::example {
  * shared_ref: False
  * package: classes
  * python.include: classes.task_pygen
+ * swift.include: CWrapper
  */
 class Project {
 public:

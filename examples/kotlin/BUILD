@@ -1,7 +1,9 @@
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
-kt_jvm_library(
-    name = "examples_usage_library",
+kt_jvm_test(
+    name = "classes",
     srcs = glob(["src/**/*.kt"]),
-    visibility = ["//visibility:public"],
+    data = ["//kotlin/wrappers:libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin/wrappers"],
+    main_class = "com.examples.classes.ClassesApp",
 )

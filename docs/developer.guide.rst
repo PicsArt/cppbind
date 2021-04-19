@@ -64,10 +64,3 @@ Each attribute has the following properties.
 * **default** indicates the default value,
 * **allowed_on** indicates on which units the attribute is allowed to be used,
 * **array** indicates if attribute can be used for multiple times or no
-
-
-
-
-.. literalinclude:: /examples/python/src/enums/color_pygen.py
-   :language: python
-

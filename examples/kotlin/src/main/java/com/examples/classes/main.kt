@@ -9,7 +9,7 @@ class ClassesApp {
         @JvmStatic
         fun main(args: Array<String>) {
 
-            // [[project-usage]]
+            // [project-usage]
             // create a new project
             val title = "My Project"
             val prj = Project(title)
@@ -18,7 +18,7 @@ class ClassesApp {
             val task1 = Task("My Task")
             prj.addTask(task1)
             assert(prj.tasks()[0].getObjId() == task1.getObjId())
-            // [[project-usage]]
+            // [project-usage]
 
         }
 

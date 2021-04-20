@@ -161,6 +161,7 @@ var_class: &var_class
         {{template_includes|format_list('#include "{}"')|join('\n')}}
         {%- endif %}
         {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
+        {{include_cxx|format_list('#include "{}"')|join('\n')}}
     body:
       scopes:
         - body

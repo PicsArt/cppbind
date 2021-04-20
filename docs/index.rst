@@ -26,7 +26,7 @@ First Steps
 Are you writing C++ libraries and want to be able to use it in various platforms using various languages then iegen can be very handy tool for you.
 
 :doc:`Installation </02_get_started/02_installation>` | 
-:doc:`Configuration </02_get_started/03_configuration>`
+:doc:`Configuration </configuration>`
 
 .. toctree::
    :maxdepth: 1
@@ -43,7 +43,7 @@ Are you writing C++ libraries and want to be able to use it in various platforms
 
    /features
 
-Let's start with :ref:`Basic example <Basic example>`.
+Let's start with :ref:`Basic example`.
 
 .. toctree::
    :maxdepth: 2

@@ -1,28 +1,26 @@
 from __future__ import annotations
 from typing import *
-import examples.classes.task as pybind_task_pygen
-from bind_utils import *
+import examples.classes.root as pybind_root_pygen
 from metaclass import *
+from bind_utils import *
 
 
-class Task(metaclass=OriginalMethodsMetaclass):
+class Root(metaclass=OriginalMethodsMetaclass):
     """
     comments
     """
     @bind
-    def __init__(self, title: str):
+    def __init__(self, _path: str):
         pass
 
 
     @property
     @bind
-    def title(self) -> str:
+    def path(self) -> str:
         """
         comments
         """
         pass
-
-
 
     
 

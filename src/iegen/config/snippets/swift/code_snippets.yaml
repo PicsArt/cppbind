@@ -77,7 +77,7 @@ class:
         public class {{name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
-                                {{comma()}}{{base_type_converter.swift.target_type_name}}
+                                {{comma()}}{{'I' if base_type_converter.ctx.node.is_interface}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
                                 {% endif %} {
             {% if not has_non_abstract_base_class %}
@@ -107,8 +107,8 @@ class:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
 
-            {%- if  root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+            {%- if root.shared_ref %}
+                delete static_cast<std::shared_ptr<{{cxx_type_name}}>*>(cself);
             {%- else %}
                 delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
@@ -134,10 +134,10 @@ interface:
         - body
       content: |
         {{comment}}
-        public protocol {{name}} {% if base_types_converters is defined -%}
+        public protocol I{{name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
-                                {{comma()}}{{base_type_converter.swift.target_type_name}}
+                                {{comma()}}{{'I' if base_type_converter.ctx.node.is_interface}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
                                 {% endif %} {
 
@@ -148,23 +148,44 @@ interface:
             {{interface_properties|string|indent}}
             {{interface_body|string|indent}}
         }
-        extension {{name}} {
-            {{head|string|indent}}
+        extension I{{name}}{{template_suffix}} {
             {{properties|string|indent}}
             {{body|string|indent}}
         }
-        public class {{name}}_impl : {{name}} {
+        public class {{name}}{{template_suffix}} : I{{name}}{{template_suffix}} {
             public let cself : {{converter.sc.target_type_name}}
+            public let owner : Bool
 
             // internal main initializer
-            internal required init(_ _cself: {{converter.sc.target_type_name}}) {
+            internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
               self.cself = _cself
+              self.owner = _owner
             }
+            deinit {
+              if owner {
+                release_{{name}}{{template_suffix}}(cself)
+              }
+            }
+
+            {{head|string|indent}}
         }
   cc:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
+            {%- if root.shared_ref %}
+                delete static_cast<std::shared_ptr<{{cxx_type_name}}>*>(cself);
+            {%- else %}
+                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            {%- endif %}
+        }
+  ch:
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
 
 constructor:
   swift:
@@ -221,7 +242,7 @@ function:
           {{rconverter.sc_to_swift.snippet('result')|indent}}
           return {{rconverter.sc_to_swift.converted_name('result')}};
         {%- else %}
-          {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}({{call_args|join(', ')}});
+          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}});
         {%- endif %}
       }
     interface_body: |
@@ -349,7 +370,7 @@ getter:
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{comment}}
-      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set(value){% endif %}
+      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:
     body: |

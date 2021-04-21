@@ -4,7 +4,7 @@ std::string:
 
 $Object:
   swift:
-    type_info: "{{type_name}}{{template_suffix}}"
+    type_info: "{{type_interface_name}}{{template_suffix}}"
   c:
     type_info: "void* _Nonnull"
   sc:
@@ -21,7 +21,7 @@ $Object:
   swift_to_sc:
     let {{target_name}} = {{name}}.cself
   sc_to_swift:
-    let {{target_name}} = {{target_type_name}}({{name}}{% if is_value_type%}, true{%endif%})
+    let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
 
 $Enum:
   swift:

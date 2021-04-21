@@ -149,6 +149,7 @@ class Converter:
             )
             if self.ctx:
                 type_name = self.ctx.name
+                type_interface_name = self.ctx.interface_name if self.ctx.node.is_interface else type_name
                 type_ctx = self.ctx  # todo should we just import all attributes
                 cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type.get_canonical()
                 cxx_root_type_name = cutil.get_unqualified_type_name(

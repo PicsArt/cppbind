@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import *
 import examples.classes.root as pybind_root_pygen
-from metaclass import *
 from bind_utils import *
+from metaclass import *
 
 
 class Root(metaclass=OriginalMethodsMetaclass):

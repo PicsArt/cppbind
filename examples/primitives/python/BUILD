@@ -38,7 +38,7 @@ py_test(
 )
 
 filegroup(
-    name = "examples_filess",
+    name = "examples_files",
     srcs = glob([
         "src/**/*.py",
         "wrappers/**/*.cpp",

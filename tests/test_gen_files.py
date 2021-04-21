@@ -13,6 +13,7 @@ class TestFilesIdentical(unittest.TestCase):
         self.languages = ['python', 'swift', 'kotlin']
 
     def test_files_are_identical(self):
+        diff_per_language = {}
         for language in self.languages:
             print(language.upper())
             diff_files = []
@@ -27,12 +28,16 @@ class TestFilesIdentical(unittest.TestCase):
                     identical = filecmp.cmp(gen_file, examples_file)
                     if not identical:
                         diff_files.append((gen_file, examples_file))
-            # log first 3 files diff for each language
-            for diff_pair in diff_files[:3]:
-                with open(diff_pair[0], 'r') as gf:
-                    with open(diff_pair[1], 'r') as ef:
-                        sys.stderr.write(f'Diff for {diff_pair[0]} - {diff_pair[1]}')
-                        sys.stderr.writelines(difflib.unified_diff(gf.readlines(), ef.readlines()))
+            if diff_files:
+                diff_per_language[language] = diff_files
+                # log first 3 files diff for each language
+                for diff_pair in diff_files[:3]:
+                    with open(diff_pair[0], 'r') as gf:
+                        with open(diff_pair[1], 'r') as ef:
+                            sys.stderr.write(f'Diff for {diff_pair[0]} - {diff_pair[1]}')
+                            sys.stderr.writelines(difflib.unified_diff(gf.readlines(), ef.readlines()))
+        if diff_per_language:
+            raise AssertionError
 
 
 if __name__ == '__main__':

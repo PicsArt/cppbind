@@ -145,7 +145,7 @@ kt_register_toolchains()  # to use the default toolchain, otherwise see toolchai
 # examples
 local_repository(
     name = "examples",
-    path = "./examples/",
+    path = "./examples/primitives",
 )
 
 # iegen requirements

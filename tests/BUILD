@@ -39,7 +39,7 @@ py_test(
         ":iegen_out",
         ":runner",
         "@examples//kotlin:examples_files",
-        "@examples//python:examples_filess",
+        "@examples//python:examples_files",
         "@examples//swift:examples_files",
     ],
     python_version = "PY3",

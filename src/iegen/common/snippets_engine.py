@@ -11,7 +11,7 @@ import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
 from iegen import logging as logging
-from iegen.converter.common import Validator
+from iegen.converter.common import TypeConverterHelper
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -149,7 +149,6 @@ class Converter:
             )
             if self.ctx:
                 type_name = self.ctx.name
-                type_interface_name = self.ctx.interface_name if self.ctx.node.is_interface else type_name
                 type_ctx = self.ctx  # todo should we just import all attributes
                 cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type.get_canonical()
                 cxx_root_type_name = cutil.get_unqualified_type_name(
@@ -171,7 +170,7 @@ class Converter:
             # helper name spaces
 
             # helper functions
-            validator = Validator
+            type_converter_helper = TypeConverterHelper
 
             return locals()
 

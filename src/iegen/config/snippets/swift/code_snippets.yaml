@@ -105,12 +105,11 @@ class:
         #include "{{prj_rel_file_name}}"
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
-
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
             {%- if root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
-                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
         }
   ch:
@@ -177,7 +176,7 @@ interface:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
             {%- if root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_type_name}}>*>(cself);
+                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
                 delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
@@ -264,9 +263,9 @@ function:
         {% endfor %}
         {%- if not is_static %}
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -317,9 +316,9 @@ property_getter:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -330,9 +329,9 @@ property_getter:
       {%- if gen_property_setter is defined %}
       void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -376,9 +375,9 @@ getter:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -390,9 +389,9 @@ getter:
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
       void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}

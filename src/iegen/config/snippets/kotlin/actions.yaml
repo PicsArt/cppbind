@@ -1,6 +1,6 @@
 
 - file:
-    files_glob: 
+    files_glob:
       "{{[cxx_helpers_dir, '**/*.h*'] | path_join}}"
     copy_to: |
       {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
@@ -13,14 +13,14 @@
         {{[prj_rel, file_rel_name]| path_join}}
 
 - file:
-    files_glob: 
+    files_glob:
       "{{[cxx_helpers_dir, '**/*.c*'] | path_join}}"
     copy_to: |
       {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
       {{path.join(config.cxx_out_dir, file_rel_name)}}
 
 - file:
-    files_glob: 
+    files_glob:
       - "{{[helpers_dir, '**/*.kt'] | path_join}}"
       - "{{[helpers_dir, '**/*.java'] | path_join}}"
     copy_to: |

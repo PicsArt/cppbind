@@ -7,3 +7,12 @@ cc_library(
     ]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "cc_examples_files",
+    srcs = glob([
+        "**/*.cpp",
+        "**/*.h*",
+    ]),
+    visibility = ["//visibility:public"],
+)

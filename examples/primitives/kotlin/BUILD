@@ -51,6 +51,22 @@ kt_jvm_test(
     main_class = "com.examples.classes.ClassesApp",
 )
 
+kt_jvm_test(
+    name = "operators",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.operators.OperatorsApp",
+)
+
+kt_jvm_test(
+    name = "containers",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.containers.ContainersApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

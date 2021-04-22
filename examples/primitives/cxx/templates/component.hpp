@@ -14,6 +14,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: templates
+ * kotlin.include: com.examples.classes.Root
  * python.include: templates.addressable_pygen
  */
 class Component : public Addressable<Root> {

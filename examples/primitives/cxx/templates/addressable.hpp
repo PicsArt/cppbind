@@ -16,6 +16,7 @@ namespace iegen::example {
  * template: {"T": [{"type": "iegen::example::Root"}]}
  * shared_ref: true
  * package: templates
+ * kotlin.include: com.examples.classes.Root
  * python.include: classes.root_pygen
  */
 template <typename T>

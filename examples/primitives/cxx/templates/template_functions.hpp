@@ -15,6 +15,7 @@ namespace iegen::example {
  * __API__
  * gen: class
  * package: templates
+ * kotlin.include: com.examples.classes.*
  * python.include: classes.project_pygen
  * python.include: classes.task_pygen
  */

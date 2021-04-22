@@ -19,7 +19,7 @@ namespace iegen::example {
  * package: templates
  * python.include: templates.stack_pygen
  * python.include: classes.project_pygen
- * kotlin.include: com.example.classes.Project
+ * kotlin.include: com.examples.classes.*
  */
 class StackUsage  {
     public:

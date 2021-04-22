@@ -2,6 +2,7 @@ package com.examples.classes
 
 import com.examples.classes.Project
 import com.examples.classes.Task
+import com.examples.classes.Root
 
 class ClassesApp {
 
@@ -19,6 +20,13 @@ class ClassesApp {
             prj.addTask(task1)
             assert(prj.tasks()[0].getObjId() == task1.getObjId())
             // [project-usage]
+
+            // [root-usage]
+            // create a new project
+            val path = "/path/to/root"
+            val root = Root(path)
+            assert(root.path == path)
+            // [root-usage]
 
         }
 

@@ -26,6 +26,20 @@ jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second) {
 
 }
 
+jobject make_jni_long_pair(JNIEnv *env, jlong first, jlong second) {
+    // Get the pair class that we wish to return an instance of
+    jclass pairClass = env->FindClass("kotlin/Pair");
+    // Get the method id of an empty constructor in class
+
+    jmethodID constructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;)V");
+
+    // Create an instance of class
+    jobject obj = env->NewObject(pairClass, constructor, first, second);
+
+    return obj;
+
+}
+
 
 std::string jni_to_string(JNIEnv* env, jobject jobj) {
     jstring jStr = (jstring)jobj;

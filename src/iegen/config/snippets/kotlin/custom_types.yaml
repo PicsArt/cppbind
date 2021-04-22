@@ -42,15 +42,19 @@ std::pair:
     {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
     auto first = {{extract_first}}(env, firstObject);
     auto second = {{extract_second}}(env, secondObject);
-    {{args[0].snippet('first')|indent}}
-    {{args[1].snippet('second')|indent}}
-    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}});
+    {{args[0].snippet('first')}}
+    {{args[1].snippet('second')}}
+    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[1].converted_name('second')}});
   cxx_to_jni: |
     auto first = {{name}}.first;
     auto second = {{name}}.second;
-    {{args[0].snippet('first')|indent}};
-    {{args[0].snippet('second')|indent}};
+    {{args[0].snippet('first')}};
+    {{args[1].snippet('second')}};
+    {%- if args[0].custom.pname == 'Long' %}
+    {{target_type_name}} {{target_name}} = iegen::make_jni_long_pair(env, {{args[0].converted_name('first')}}, {{args[0].converted_name('second')}});
+    {%- else %}
     {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{args[0].converted_name('first')}}, {{args[0].converted_name('second')}});
+    {%- endif %}
   kotlin_to_jdk: |
     val first = {{name}}.first
     val second = {{name}}.second

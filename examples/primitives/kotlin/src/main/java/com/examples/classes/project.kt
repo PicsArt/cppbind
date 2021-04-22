@@ -62,7 +62,7 @@ open class Project
      * comments
      * 
      */
-    fun addTask(task: Task): Void {
+    fun addTask(task: Task): Unit {
         
         val kotlin_to_jdk_task = task.getObjId()
         val result = jAddtask(getObjId(), kotlin_to_jdk_task)
@@ -98,7 +98,7 @@ open class Project
     }
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
-    private external fun jAddtask(id: Long, task: Long): Void
+    private external fun jAddtask(id: Long, task: Long): Unit
     private external fun jTasks(id: Long): LongArray
     private external fun jSet_this(id: Long, self: Any): Void
     private external fun jFinalize(id: Long): Void

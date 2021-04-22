@@ -3,8 +3,8 @@
 #include <pybind11/functional.h>
 
 #include "cxx/templates/template_functions.hpp"
-#include "cxx/classes/task.hpp"
 #include "cxx/classes/project.hpp"
+#include "cxx/classes/task.hpp"
 
 namespace py = pybind11;
 

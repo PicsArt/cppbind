@@ -15,8 +15,7 @@ namespace iegen::example {
  * gen: class
  * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
  * package: templates
- * kotlin.include: com.example.classes.Project
- * kotlin.include: com.example.classes.Task
+ * kotlin.include: com.examples.classes.*
  * python.include: classes.project_pygen
  * python.include: classes.task_pygen
  */

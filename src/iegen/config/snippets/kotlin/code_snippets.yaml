@@ -331,7 +331,9 @@ function:
       {%- endmacro %}
       {% macro call_code(prefix, call_args) -%}
       {%- if rconverter.jni.target_type_name != 'void' %}
-      auto result = {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
+      auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                          {%- endif -%}({{call_args|join(', ')}});
       {{rconverter.cxx_to_jni.snippet('result')}}
       return {{rconverter.cxx_to_jni.converted_name('result')}};
       {%- else %}

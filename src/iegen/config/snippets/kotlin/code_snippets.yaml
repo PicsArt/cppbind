@@ -1,7 +1,7 @@
 file:
   kotlin: 
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
+      {{config.out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
     scopes: 
       - body
       - include
@@ -14,7 +14,7 @@ file:
       {{body}}
   cxx:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes: 
       - body
       - include
@@ -50,6 +50,7 @@ var_class_cxx: &var_class_cxx
   include:
     unique_content: |
       #include "{{prj_rel_file_name}}"
+      {%- set template_includes = ctx.template_includes %}
       {%- if template_includes %}
       {{template_includes|format_list('#include "{}"')|join('\n')}}
       {%- endif %}
@@ -209,6 +210,12 @@ interface:
         {%- endif %}
   cxx: *var_class_cxx
 
+var_template_method_include: &var_template_method_include
+    unique_content: |
+      {%- set template_includes = ctx.template_includes %}
+      {%- if template_includes %}
+      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {%- endif %}
 
 constructor:
   kotlin:
@@ -254,6 +261,7 @@ constructor:
               }
         );
       }
+    include: *var_template_method_include
 
 function:
   kotlin:
@@ -354,6 +362,7 @@ function:
             }
           );
       }
+    include: *var_template_method_include
 
 property_getter:
   kotlin:

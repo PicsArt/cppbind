@@ -35,7 +35,7 @@ def config():
     Fixture returns ieg config for test.
     """
     cnfg = copy.deepcopy(default_config)
-    get_parser_config(cnfg).src_glob = '*.h'
+    get_parser_config(cnfg).src_glob = TEST_CXX_DIR + '/*.h'
 
     return cnfg
 

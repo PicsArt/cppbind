@@ -16,6 +16,9 @@ std::__ndk1::map:
 std::__ndk1::unordered_map:
   std::map
 
+std::__ndk1::function:
+  std::function
+
 std::__ndk1::basic_string:
   std::__cxx11::basic_string
 
@@ -43,6 +46,20 @@ $Enum:
   python_to_pybind:
   pybind_to_python:
 
+$FunctionProto:
+  custom:
+    pname: int
+  python:
+    type_info: |
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+  pybind:
+    type_info: |
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
 std::__cxx11::basic_string:
   custom:
     pname: str
@@ -63,6 +80,18 @@ std::vector:
     type_info: list
   pybind:
     type_info: list
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+std::function:
+  custom:
+    pname: function
+  python:
+    type_info: "{{args_t[0]}}"
+  pybind:
+    type_info: "{{args_t[0]}}"
   pybind_to_cxx:
   cxx_to_pybind:
   python_to_pybind:

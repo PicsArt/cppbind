@@ -47,8 +47,8 @@ def test_parser_processor_cr_counter(parser_config):
     count_processor.end_cursor = decr_dept
     parsser.parse(count_processor)
 
-    assert count == 34, "number of cursors has bean changed"
-    assert max_dept == 7, "max depth has bean changed"
+    assert count == 20, "number of cursors has bean changed"
+    assert max_dept == 6, "max depth has bean changed"
 
 
 @pytest.mark.parametrize(
@@ -81,7 +81,7 @@ def test_parser_processor_cr_counter(parser_config):
             * shared_ref: False
             */
             """,
-            "bf66e71fa403183f677c476c82d61ddc"
+            "9874a230226c0e7c4f16a56ced234a75"
         )
     ],
     indirect=['attributes', 'api_start_kw']

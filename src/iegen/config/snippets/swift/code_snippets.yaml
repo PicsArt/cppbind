@@ -1,0 +1,389 @@
+file:
+  swift: 
+    file_path: |
+      {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+    scopes: 
+      - include
+      - body
+    content: |
+      import Foundation
+      {{helper_includes|format_list('import {}')|join('\n')}}
+      {{include}}
+
+      {{body}}
+  cc:
+    file_path: |
+      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes: 
+      - body
+      - include
+    content: |
+      #include <string.h>
+      #include <memory>
+      #include "{{path.relpath([config.cxx_out_dir, config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
+      {{include}}
+
+      {{body}}
+  ch:
+    file_path: |
+      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+    scopes: 
+      - body
+      - include
+    content: |
+      #ifndef _C_{{file}}_WRAPPER_
+      #define _C_{{file}}_WRAPPER_ 
+
+      {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
+      {{include}}
+      #include <stdbool.h>
+
+      #if __cplusplus
+      extern "C" {
+      #endif
+          {{body | string | indent}}
+      #if __cplusplus
+      }
+      #endif
+      #endif /* ifndef _C_{{file}}_WRAPPER_ */
+
+enum:
+  swift: 
+    body: |
+
+     public enum {{name}}: CUnsignedInt{
+        {%- for case in enum_cases -%}
+        {%- if case.comment %}
+        {{case.comment|string|indent(2)}}
+        {%- endif %}
+        case {{case.name}} = {{case.value}}
+        {%- endfor %}
+      }
+
+
+class:
+  swift:
+    include:
+      unique_content: |
+        {{include|format_list("import {}")|join('\n')}}
+    body:
+      scopes:
+        - head
+        - properties
+        - body
+        - private_external
+      content: |
+        {{comment}}
+        public class {{name}}{{template_suffix}} {% if base_types_converters is defined -%}
+                              {%- set comma = joiner(', ') -%}
+                              : {% for base_type_converter in base_types_converters -%}
+                                {{comma()}}{{base_type_converter.swift.target_type_name}}
+                                {%- endfor -%}
+                                {% endif %} {
+            {% if not has_non_abstract_base_class %}
+            public let cself : {{converter.sc.target_type_name}}
+            public let owner : Bool
+
+            // internal main initializer
+            internal required init(_ _cself: {{converter.sc.target_type_name}} , _ _owner: Bool = false) {
+              self.cself = _cself
+              self.owner = _owner
+            }
+            deinit {
+              if owner {
+                release_{{name}}{{template_suffix}}(cself)
+              }
+            }
+            {%endif%}
+            {{head|string|indent}}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        }
+  cc:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
+
+            {%- if  root.shared_ref %}
+                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+            {%- else %}
+                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            {%- endif %}
+        }
+  ch:
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
+
+
+interface:
+  swift:
+    include:
+      unique_content: |
+        {{include|format_list("import {}")|join('\n')}}
+    body:
+      scopes:
+        - interface_head
+        - interface_properties
+        - interface_body
+        - head
+        - properties
+        - body
+      content: |
+        {{comment}}
+        public protocol {{name}} {% if base_types_converters is defined -%}
+                              {%- set comma = joiner(', ') -%}
+                              : {% for base_type_converter in base_types_converters -%}
+                                {{comma()}}{{base_type_converter.swift.target_type_name}}
+                                {%- endfor -%}
+                                {% endif %} {
+
+            {% if not base_types_converters is defined %}
+            var cself : {{converter.sc.target_type_name}} { get }
+            {% endif %}
+            {{interface_head|string|indent}}
+            {{interface_properties|string|indent}}
+            {{interface_body|string|indent}}
+        }
+        extension {{name}} {
+            {{head|string|indent}}
+            {{properties|string|indent}}
+            {{body|string|indent}}
+        }
+        public class {{name}}_impl : {{name}} {
+            public let cself : {{converter.sc.target_type_name}}
+
+            // internal main initializer
+            internal required init(_ _cself: {{converter.sc.target_type_name}}) {
+              self.cself = _cself
+            }
+        }
+  cc:
+    include:
+      unique_content: |
+        #include "{{prj_rel_file_name}}"
+
+constructor:
+  swift:
+    head: |
+      {{comment}}
+      public convenience init({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {
+      {%- set call_args = [] %}
+      {% for arg in args -%}
+      {%- set converter = arg.converter.swift_to_sc %}
+          {{converter.snippet(arg.name)|indent}}
+      {%- do call_args.append(converter.converted_name(arg.name)) %}
+      {%- endfor %}
+          self.init(create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
+      }
+  cc:
+    body: |
+      {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}){
+        {%- set call_args = [] -%}
+        {%- for arg in args -%}
+        {% set converter = arg.converter.c_to_cxx %}
+          {{converter.snippet(arg.name)|indent}}
+        {%- do call_args.append(converter.converted_name(arg.name)) -%}
+        {% endfor %}
+          auto this_object = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
+          {%- if owner_class.root.shared_ref %}
+          return new std::shared_ptr<{{owner_class.root.cxx_type_name}}>(this_object);
+          {%- else %}
+          return static_cast<{{owner_class.root.cxx_type_name}}*>(this_object);
+          {%- endif %}
+      }
+  ch:
+    body:
+      content: |
+        {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}});
+
+function:
+  swift:
+    body: |
+      {{comment}}
+      {%- if is_operator %}
+      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) -> {{rconverter.swift.target_type_name}} {
+        {%- set call_args = ['cself.cself']%}
+      {%- else%}
+      public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} {
+        {%- set call_args = ['cself'] if not is_static else [] %}
+      {%endif%}
+        {%- for arg in args %}
+        {%- set converter = arg.converter.swift_to_sc %}
+          {{converter.snippet(arg.name)|indent}}
+        {%- do call_args.append(converter.converted_name(arg.name))%}
+        {%- endfor %}
+        {%- if rconverter.c.target_type_name != 'void' %}
+          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}});
+          {{rconverter.sc_to_swift.snippet('result')|indent}}
+          return {{rconverter.sc_to_swift.converted_name('result')}};
+        {%- else %}
+          {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}({{call_args|join(', ')}});
+        {%- endif %}
+      }
+    interface_body: |
+      {{comment}}
+      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} 
+  cc:
+    body: |
+      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {%- if not is_static -%}
+      {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+      {%- else -%}
+      {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+      {%- endif %}){
+        {%- set call_args = [] %}
+        {%- for arg in args -%}
+        {%- set converter = arg.converter.c_to_cxx %}
+          {{converter.snippet(arg.name)|indent}}
+        {%- do call_args.append(converter.converted_name(arg.name))%}
+        {% endfor %}
+        {%- if not is_static %}
+          {%- if owner_class.root.shared_ref %}
+              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                        );
+          {%- else %}
+          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {%- endif %}
+        {%- endif %}
+
+        {%- if rconverter.c.target_type_name != 'void' %}
+          const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          return {{rconverter.cxx_to_c.converted_name('result')}};
+        {%- else %}
+        {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+        {%- endif %}
+      }
+  ch:
+    body:
+      content: |
+        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {%- if not is_static -%}
+        {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+        {%- else -%}
+        {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+        {%- endif %});
+
+property_getter:
+  swift:
+    properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      public var {{name}}: {{result_converter.target_type_name}} {
+            get {
+              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
+              {{result_converter.snippet('result')|indent(8)}}
+              return {{result_converter.converted_name('result')}}
+            }
+            {% if gen_property_setter is defined %}
+            {% set converter = rconverter.swift_to_sc %}
+            set(value) {
+              {{converter.snippet('value')|indent(8)}}
+              _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself, {{converter.converted_name('value')}})
+            }
+            {% endif %}
+      }
+    interface_properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      var {{name}}: {{result_converter.target_type_name}} { get {% if gen_property_setter is defined %}set{% endif %} }
+  cc:
+    body: |
+      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
+          {%- if owner_class.root.shared_ref %}
+              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                        );
+          {%- else %}
+          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {%- endif %}
+          auto result = c_to_cxx_cself->{{cxx_name}};
+          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          return {{rconverter.cxx_to_c.converted_name('result')}};
+      }
+      {%- if gen_property_setter is defined %}
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
+          {%- if owner_class.root.shared_ref %}
+              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                        );
+          {%- else %}
+          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {%- endif %}
+          {{rconverter.c_to_cxx.snippet(name)|indent}}
+          c_to_cxx_cself->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
+      }
+      {% endif %}
+  ch:
+    body:
+      content: |
+        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself);
+        {%- if gen_property_setter is defined %}
+        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}});
+        {% endif %}
+
+getter:
+  swift:
+    properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      public var {{name}}: {{result_converter.target_type_name}} {
+            get {
+              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
+              {{result_converter.snippet('result')|indent(8)}}
+              return {{result_converter.converted_name('result')}}
+            }
+            {% if setter_ctx is defined %}
+            {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
+            set(value) {
+              {{converter.snippet('value')|indent(8)}}
+              _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}(cself, {{converter.converted_name('value')}})
+            }
+            {% endif %}
+      }
+    interface_properties: |
+      {% set result_converter = rconverter.sc_to_swift %}
+      {{comment}}
+      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set(value){% endif %}
+      }
+  cc:
+    body: |
+      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
+          {%- if owner_class.root.shared_ref %}
+              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                        );
+          {%- else %}
+          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {%- endif %}
+          auto result = c_to_cxx_cself->{{cxx_name}}();
+          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          return {{rconverter.cxx_to_c.converted_name('result')}};
+      }
+      {%- if setter_ctx is defined %}
+      {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
+          {%- if owner_class.root.shared_ref %}
+              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                        );
+          {%- else %}
+          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {%- endif %}
+          {{converter.snippet(setter_ctx.args[0].name)|indent}}
+          c_to_cxx_cself->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+      }
+      {% endif %}
+  ch:
+    body:
+      content: |
+        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself);
+        {%- if setter_ctx is defined %}
+        {% set converter = setter_ctx.args[0].converter.c %}
+        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}} {{setter_ctx.args[0].name}});
+        {% endif %}

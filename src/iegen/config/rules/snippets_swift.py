@@ -1,20 +1,18 @@
 import os
 import types
 import copy
-from functools import partial
 
 import clang.cindex as cli
-import iegen
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE
-import iegen.converter.kotlin as convert
+import iegen.converter.swift as convert
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
-LANGUAGE = 'kotlin'
+LANGUAGE = 'swift'
 
 
 def load_snippets_engine(path, main_target):
@@ -49,12 +47,14 @@ def make_def_context(ctx):
         # helper variables
         config = ctx.config
         pat_sep = os.sep
-        helper = iegen.converter
+        path = os.path
+        helper = convert
 
         cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
+        template_includes = ctx.template_includes
         comment = convert.make_comment(ctx.node.pure_comment)
 
         return locals()
@@ -73,8 +73,7 @@ def make_func_context(ctx):
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type,
-                nullable=arg.name in ctx.api_args['nullable_arg']
+                type=arg.type
             ) for arg in ctx.args
         ]
 
@@ -88,13 +87,6 @@ def make_func_context(ctx):
         _suffix = owner_class.template_suffix
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
-
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             _suffix,
-                                             method_name,
-                                             args_type_name)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             is_override = bool(ctx.cursor.get_overriden_cursors())
@@ -118,7 +110,6 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
-        cxx_type_name = ctx.node.type_name()
         for case in enum_cases:
             if case.comment:
                 case.comment = convert.make_comment(case.comment)
@@ -135,12 +126,13 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            get_jni_name = partial(convert.get_jni_func_name,
-                                   f'{ctx.config.package_prefix}.{ctx.package}',
-                                   ctx.name,
-                                   template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
+                                                             template_choice=ctx.template_choice,
+                                                             search_name=ctx.node.full_displayname
+                                                             if ctx.cursor.type.kind == cli.TypeKind.INVALID
+                                                             else None)
 
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
@@ -157,7 +149,8 @@ def make_class_context(ctx):
 
     context = _make(ctx)
     ancestors = [types.SimpleNamespace(**_make(ancesstor)) for ancesstor in ctx.ancestors]
-    context.update(dict(ancestors=ancestors))
+    root = types.SimpleNamespace(**_make(ctx.root))
+    context.update(dict(ancestors=ancestors, root=root))
     return context
 
 
@@ -190,16 +183,10 @@ def make_getter_context(ctx):
 
 def make_member_context(ctx):
     def make():
+        # helper variables
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             owner_class.template_suffix,
-                                             method_name,
-                                             args_type_name)
 
         gen_property_setter = ctx.node.api == 'property_setter'
 
@@ -208,6 +195,7 @@ def make_member_context(ctx):
     context = make_def_context(ctx)
     context.update(make())
     return context
+
 
 def get_template_suffix(ctx, target_language):
     template_choice = ctx.template_choice
@@ -289,7 +277,6 @@ def gen_constructor(ctx, builder):
 def gen_method(ctx, builder):
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
-    return
 
 
 def gen_getter(ctx, builder):
@@ -299,13 +286,11 @@ def gen_getter(ctx, builder):
 
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
-    return
 
 
 def gen_property_getter(ctx, builder):
     context = make_member_context(ctx)
     preprocess_entry(context, builder, 'property_getter')
-    return
 
 
 def gen_property_setter(ctx, builder):

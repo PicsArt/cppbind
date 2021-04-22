@@ -1,4 +1,6 @@
 #include<string>
+#include<vector>
+#include<map>
 
 namespace pi::utils {
     /**
@@ -29,7 +31,15 @@ namespace pi::utils {
          * gen: constructor
          * 
          */
-        Example(int& x, std::string name = "XXX");
+        Example(int x, std::string name = "XXX");
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: constructor
+         * 
+         */
+        Example(int x);
 
         /**
          * comments
@@ -37,7 +47,7 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        Type f(Type t, int i =10, const char* test = "XXX");
+        double f(float t, int i =10);
 
         /**
          * comments
@@ -45,7 +55,49 @@ namespace pi::utils {
          * __API__
          * gen: method
          */
-        int get_attribute(const char* test = "XXX");
+        std::string get_attribute(const char* test = "XXX");
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        std::vector<int> get_attribute(std::vector<Example*> test);
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        std::map<int, int> get_attribute(std::map<int, Example*> test);
+    };
+    /**
+     * comments
+     * 
+     * __API__
+     * gen: class
+     * package: utils
+     * shared_ref: False
+     */
+    class Example1 : public Example
+    {
+
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: constructor
+         * 
+         */
+        Example1(int x, std::string name = "XXX");
+
+        /**
+         * comments
+         * 
+         * __API__
+         * gen: method
+         */
+        std::map<int, int> get_attribute(std::map<int, Example*> test);
     };
     /**
      * comments

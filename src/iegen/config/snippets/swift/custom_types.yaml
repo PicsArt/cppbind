@@ -1,0 +1,20 @@
+nlohmann::json:
+  swift:
+    type_info: String
+  c:
+    type_info: char * _Nullable
+  sc:
+    type_info: UnsafeMutablePointer<CChar>
+  c_to_cxx: |
+    auto {{target_name}} = nlohmann::json::parse({{name}});
+    free({{name}});
+  cxx_to_c: |
+    auto {{name}}_str = {{name}}.dump();
+    auto {{target_name}} = strdup({{name}}_str.c_str());
+  swift_to_sc: |
+    let {{target_name}} = strdup({{name}})!
+  sc_to_swift: |
+    let {{target_name}} = String(cString: {{name}}!)
+    defer {
+      {{name}}!.deallocate()
+    }

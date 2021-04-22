@@ -3,7 +3,6 @@
 
 #include <memory>
 #include<string>
-#include<jni.h>
 
 namespace iegen {
 

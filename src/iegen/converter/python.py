@@ -1,6 +1,8 @@
 """
 Helper codes for python conversion
 """
+import re
+
 import clang.cindex as cli
 import os
 import iegen.utils.clang as cutil
@@ -34,8 +36,15 @@ OPERATOR_MAPPING = {
     '[]': '__getitem__',
 }
 
-def overloaded_method_options(ctx):
-    pass
+
+def is_first_overload(ctx):
+    adjacents = ctx.find_adjacents([ctx.name], ctx.node.api)
+    is_first = next(adjacents).cursor == ctx.cursor
+    return is_first
+
+
+def module_name_to_func_name(pybind_module):
+    return ''.join([part.capitalize() for part in re.split('[_.]', pybind_module)])
 
 
 def cxx_rel_path(filepath, cxx_filepath):
@@ -66,11 +75,6 @@ def is_overloaded_cursor(ctx):
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
-def get_include(cursor, config):
-    return os.path.relpath(cursor.location.file.name,
-                           config.out_prj_dir)
-
-
 def get_declaration_includes(ctx, config):
     includes = []
     _get_declaration_includes(ctx, ctx.cursor, config, includes)
@@ -79,16 +83,13 @@ def get_declaration_includes(ctx, config):
     return includes
 
 
-def replace_template_choice(type_name, template_choice):
-    return cutil.replace_template_choice(type_name, template_choice)
-
-
 def _get_declaration_includes(ctx, cursor, config, includes):
     if cursor.kind == cli.CursorKind.NAMESPACE:
         for child in cursor.get_children():
             if cutil.is_declaration(child):
                 ref_ctx = ctx.find_by_type(child.type)
                 if ref_ctx:
-                    includes.append(get_include(ref_ctx.cursor, config))
+                    includes.append(os.path.relpath(ref_ctx.cursor.location.file.name,
+                                                    config.out_prj_dir))
     if cursor.lexical_parent:
         _get_declaration_includes(ctx, cursor.lexical_parent, config, includes)

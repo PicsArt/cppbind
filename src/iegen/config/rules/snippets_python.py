@@ -30,6 +30,7 @@ def gen_init(config, *args, **kwargs):
         # helper variables
         cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
         helpers_dir = find_prj_dir(config.helpers_dir)
+        helpers_out_dir = os.path.join(config.out_dir + config.helpers_package_prefix.replace('.', os.sep))
         # base variables
         cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
@@ -55,9 +56,8 @@ def make_def_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
 
-        cxx_output_filepath = f'{pat_sep}'.join([item.replace('.', pat_sep) for item in (
-            config.cxx_out_dir, config.package_prefix, ctx.api_args['package'],
-            ctx.api_args['file'] + config.file_postfix)])
+        cxx_output_filepath = f'{pat_sep}'.join([config.cxx_out_dir] + [item.replace('.', pat_sep) for item in (
+            config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
 
         return locals()
 
@@ -88,6 +88,7 @@ def make_func_context(ctx):
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
         template_choice = ctx.template_choice
+        template_names = ctx.template_names
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
@@ -169,7 +170,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
-            setter_ctx.set_template_choice(ctx.template_choice)
+            setter_ctx.set_template_ctx(ctx.template_ctx)
             setter_ctx = make_func_context(setter_ctx)
 
         return locals()

@@ -4,8 +4,6 @@ import inspect
 
 __all__ = ['bind']
 
-from metaclass import OriginalMethodsMetaclass
-
 
 class Function:
     """
@@ -121,8 +119,8 @@ class bind:
         overloads = namespace.overloads_signature(fn)
         # for properties setting in constructor to not show overloads
         if overloads:
-            # for instance methods
             setattr(self.fn.function, '__doc__', f'{self.fn.function.__doc__}\nOverloads:\n\t{overloads}')
+        # for instance methods
         functools.update_wrapper(self, self.fn.function)
 
         self.cls = None
@@ -132,6 +130,10 @@ class bind:
 
         @functools.wraps(self.fn.function)
         def _decorator(*args, **kwargs):
+            if inspect.isclass(instance):
+                # for python 3.9
+                # case of static method, e.g decorated with @classmethod
+                return instance.originals[self.fn.name].__get__(self.fn.name)(*args, **kwargs)
             return self.cls.originals[self.fn.name](instance, *args, **kwargs)
 
         return _decorator
@@ -146,7 +148,8 @@ class bind:
         This is called when the decorator is decorated with other decorators.
         Particularly in case of properties and static methods.
         """
-        if isinstance(args[0], OriginalMethodsMetaclass):
+        if inspect.isclass(args[0]):
+            # for python <= 3.8
             # case of static method, e.g decorated with @classmethod
             # update self docstring to add overload docstring
             functools.update_wrapper(self, self.fn.function)

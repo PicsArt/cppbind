@@ -1,7 +1,7 @@
 file:
   kotlin: 
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
+      {{config.out_dir + pat_sep + [config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
     scopes: 
       - body
       - include
@@ -14,7 +14,7 @@ file:
       {{body}}
   cxx:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes: 
       - body
       - include

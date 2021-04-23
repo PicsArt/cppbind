@@ -10,8 +10,9 @@ file:
       from typing import *
       import {{[config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
       {{helper_includes|format_list('from {} import *')|join('\n')}}
+      {%- if include %}
       {{include}}
-
+      {%- endif %}{{'\n'}}
       {{body}}
   cxx:
     file_path: |
@@ -93,15 +94,14 @@ var_pybind_module_hpp: &var_pybind_module_hpp
 enum:
   python:
     body: |
-      {%- set m = 'pybind_' + file + config['file_postfix']-%}
+      {% set m = 'pybind_' + file + config['file_postfix'] %}
       class {{name}}({{m}}.{{name}}):
           {%- for case in enum_cases -%}
           {%- if case.comment %}
           {{case.comment|string|indent(4)}}
           {%- endif %}
           {{case.name}} = {{m}}.{{name}}.{{case.name}}
-          {%- endfor %}
-      {{'\n'}}
+          {%- endfor %}{{'\n'}}
   cxx:
     body: |
       void {{'bind' + name}}(py::module& m) {
@@ -134,24 +134,31 @@ var_class: &var_class
         - properties
         - body
       content: |
-        {%- set comma = joiner(', ') -%}
+        {% set comma = joiner(', ')  %}
         class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
                                   {% for base_type_converter in base_types_converters -%}
                                   {{comma()}}{{base_type_converter.python.target_type_name}}
                                   {%- endfor -%}
                                   {%- endif -%}
                        {{comma()}}metaclass=OriginalMethodsMetaclass):
+            {%- if comment %}
             {{comment|string|indent}}
+            {%- endif %}
             {%- if not is_abstract %}
+            {%- if constructor_body %}
             {{constructor_body|string|indent}}
+            {%- endif %}
             {%- else %}
             @abstractmethod
             def __init__(self, *args, **kwargs):
-               pass
+                pass
             {%- endif %}
+            {%- if properties %}
             {{properties|string|indent}}
+            {%- endif %}
+            {%- if body %}
             {{body|string|indent}}
-        {{'\n'}}
+            {%- endif %}{{'\n'}}
   cxx:
     include:
       unique_content: |
@@ -201,13 +208,12 @@ var_template_method_include: &var_template_method_include
 constructor:
   python:
     constructor_body: |
-      {%- set comma = joiner(', ') -%}
+      {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
                                        {%- endfor %}):
           pass
-      {{'\n'}}
   cxx:
     body: |
       {%- set comma = joiner(', ') %}
@@ -220,18 +226,18 @@ function:
   python:
     body: |
       {%- set comma = joiner(', ') -%}
-      {%- if is_static -%}
+      {%- if is_static %}
       @classmethod
-      {% endif -%}
-      {%- if is_operator -%}
-      {%- set _name = helper.python.get_operator_name(name) -%}
-      {%- else -%}
-      {%- set _name = name|to_snake_case -%}
-      {%- endif -%}
+      {%- endif %}
+      {%- if is_operator %}
+      {%- set _name = helper.python.get_operator_name(name) %}
+      {%- else %}
+      {%- set _name = name|to_snake_case %}
+      {%- endif %}
       @bind
       def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
                                                           {%- for arg in args -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
           pass
@@ -265,13 +271,13 @@ function:
 property_getter:
   python:
     properties: |
-      {%- set _name = name|to_snake_case -%}
+      {% set _name = name|to_snake_case %}
       @property
       @bind
       def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
-          pass
-      {% if gen_property_setter %}
+          pass{{'\n'}}
+      {%- if gen_property_setter %}
       @{{_name}}.setter
       @bind
       def {{_name}}(self, value: {{rconverter.python.target_type_name}}):
@@ -290,8 +296,6 @@ property_getter:
 getter:
   python:
     properties: |
-      @property
-      @bind
       {%- if ctx.node.is_function_template %}
       {%- set _name = overloading_prefix|to_snake_case %}
       {%- if template_names %}
@@ -300,17 +304,19 @@ getter:
       {%- else %}
       {%- set _name = name|to_snake_case %}
       {%- endif %}
+      @property
+      @bind
       def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
           pass
-      {% if setter_ctx is defined %}
+      {%- if setter_ctx is defined -%}
+      {{'\n'}}
       @{{_name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
       @bind
       def {{_name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{rconverter.python.target_type_name}}):
           {{comment|string|indent}}
           pass
-      {%- endif %}
-      {{'\n'}}
+      {%- endif -%}
   cxx:
     body: |
       {%- if ctx.node.is_function_template %}

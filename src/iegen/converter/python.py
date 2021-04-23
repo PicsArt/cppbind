@@ -93,3 +93,11 @@ def _get_declaration_includes(ctx, cursor, config, includes):
                                                     config.out_prj_dir))
     if cursor.lexical_parent:
         _get_declaration_includes(ctx, cursor.lexical_parent, config, includes)
+
+
+def get_default_value(arg):
+    if arg.default:
+        if arg.default in ('nullptr', 'NULL'):
+            return None
+        return arg.default
+    return ''

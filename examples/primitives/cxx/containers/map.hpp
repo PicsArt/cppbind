@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <map>
-#include <vector>
 #include <string>
 
 namespace iegen::example {
@@ -42,7 +41,7 @@ struct MapItem {
  * gen: class
  * package: containers
  */
-struct MapUsages {
+struct MapExamples {
 
     /**
      * comments
@@ -50,10 +49,7 @@ struct MapUsages {
      * __API__
      * gen: constructor
      */
-    MapUsages() {
-        mapMixedData.insert(std::make_pair("first", MapItem(1)));
-        mapMixedData.insert(std::make_pair("second", MapItem(2)));
-    };
+    MapExamples() {};
 
     /**
      * comments
@@ -125,7 +121,7 @@ struct MapUsages {
     std::unordered_map<std::string, MapItem> getMixedMap() {
         return mapMixedData;
     }
-//
+// TODO: commented as for now for kotlin we do not have nested containers support
 //    /**
 //     * comments
 //     *

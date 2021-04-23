@@ -85,7 +85,7 @@ open class MapItem
  * comments
  * 
  */
-open class MapUsages
+open class MapExamples
     internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {

@@ -3,7 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/containers/map.hpp"
 
-
+using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_MapItem_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
   return iegen::handleNativeCrash(env, [&] {});
 }
@@ -44,26 +44,26 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapItem_jConstructor
         }
   );
 }
-
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+using namespace iegen::example;
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
   return iegen::handleNativeCrash(env, [&] {});
 }
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
   iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+    auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
     delete this_object;
   });
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapUsages_jConstructor(JNIEnv* env, jobject obj){
+extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapExamples_jConstructor(JNIEnv* env, jobject obj){
   return iegen::handleNativeCrash(env, [&] {
-        auto this_object = new iegen::example::MapUsages();
-        return iegen::UnsafeRefAsLong<iegen::example::MapUsages, iegen::example::MapUsages>(this_object);
+        auto this_object = new iegen::example::MapExamples();
+        return iegen::UnsafeRefAsLong<iegen::example::MapExamples, iegen::example::MapExamples>(this_object);
         }
   );
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringpair(JNIEnv* env, jobject obj, jobjectid id, jobject info){
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jAddstringpair(JNIEnv* env, jobject obj, jobjectid id, jobject info){
     return iegen::handleNativeCrash(env, [&] {
         
         jclass pairClass = env->FindClass("kotlin/Pair");
@@ -81,7 +81,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringpair(
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         this_object->addStringPair(jni_to_cxx_info);
       }
@@ -89,7 +89,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringpair(
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddintmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jAddintmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -107,7 +107,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddintmap(JNIE
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         this_object->addIntMap(jni_to_cxx_info);
       }
@@ -115,7 +115,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddintmap(JNIE
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jAddstringmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -133,7 +133,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringmap(J
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         this_object->addStringMap(jni_to_cxx_info);
       }
@@ -141,12 +141,12 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddstringmap(J
 }
 
 
-extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapUsages_jGetstringmap(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapExamples_jGetstringmap(JNIEnv* env, jobject obj, jobjectid id){
     return iegen::handleNativeCrash(env, [&] {
         
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         auto result = this_object->getStringMap();
 
@@ -169,12 +169,12 @@ extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapUsages_jGetstrin
 }
 
 
-extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapUsages_jGetintmap(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapExamples_jGetintmap(JNIEnv* env, jobject obj, jobjectid id){
     return iegen::handleNativeCrash(env, [&] {
         
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         auto result = this_object->getIntMap();
 
@@ -197,7 +197,7 @@ extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapUsages_jGetintma
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddmixedmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
+extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jAddmixedmap(JNIEnv* env, jobject obj, jobjectid id, jmapobject info){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -216,7 +216,7 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddmixedmap(JN
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         this_object->addMixedMap(jni_to_cxx_info);
       }
@@ -224,12 +224,12 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapUsages_jAddmixedmap(JN
 }
 
 
-extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapUsages_jGetmixedmap(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jmapobject Java_com_examples_containers_MapExamples_jGetmixedmap(JNIEnv* env, jobject obj, jobjectid id){
     return iegen::handleNativeCrash(env, [&] {
         
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapUsages, iegen::example::MapUsages>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
         
         auto result = this_object->getMixedMap();
 

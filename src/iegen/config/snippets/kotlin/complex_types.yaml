@@ -256,11 +256,11 @@ std::shared_ptr:
     type_info: Long
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
-    {%- set pointee_base = args_bases[0] %}
+    {%- set pointee_base = args_t_bases[0] %}
     auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {%- set pointee = args[0].cxx_type_name %}
-    {%- set pointee_base = args_bases[0] %}
+    {%- set pointee = args_t[0] %}
+    {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()
@@ -295,13 +295,15 @@ std::pair:
   cxx_to_jni: |
     auto first = {{name}}.first;
     auto second = {{name}}.second;
-    {{args[0].snippet('first')}};
-    {{args[1].snippet('second')}};
-    {%- if args[0].custom.pname == 'Long' %}
-    {{target_type_name}} {{target_name}} = iegen::make_jni_long_pair(env, {{args[0].converted_name('first')}}, {{args[1].converted_name('second')}});
-    {%- else %}
-    {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{args[0].converted_name('first')}}, {{args[1].converted_name('second')}});
+    {{args[0].snippet('first')}}
+    {{args[1].snippet('second')}}
+    {%- if args[0].custom.pname != 'Object' %}
+    jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first')}});
     {%- endif %}
+    {%- if args[1].custom.pname != 'Object' %}
+    jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second')}});
+    {%- endif %}
+    {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{name}}_first, {{name}}_second);
   kotlin_to_jdk: |
     val first = {{name}}.first
     val second = {{name}}.second

@@ -3,7 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/overloads/overload.hpp"
 
-
+using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_overloads_OverloadedFunctions_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
   return iegen::handleNativeCrash(env, [&] {});
 }

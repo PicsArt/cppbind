@@ -5,7 +5,7 @@
 #include "cxx/classes/task.hpp"
 #include "cxx/classes/project.hpp"
 
-
+using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_TemplateFunctions_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
   return iegen::handleNativeCrash(env, [&] {});
 }
@@ -66,10 +66,10 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
     return iegen::handleNativeCrash(env, [&] {
         
 
-        auto& jni_to_cxx_arg0 = * reinterpret_cast<iegen::example::Project*>(arg0);
+        auto jni_to_cxx_arg0 =  reinterpret_cast<iegen::example::Project*>(arg0);
 
 
-        auto& jni_to_cxx_arg1 = * reinterpret_cast<iegen::example::Project*>(arg1);
+        auto jni_to_cxx_arg1 =  reinterpret_cast<iegen::example::Project*>(arg1);
 
         validateID(id);
 
@@ -79,10 +79,12 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
         auto first = result.first;
         auto second = result.second;
 
-        jobjectid cxx_to_jni_first =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(&first);;
+        jobjectid cxx_to_jni_first =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(first);
 
-        jobjectid cxx_to_jni_second =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(&second);;
-        jobject cxx_to_jni_result = iegen::make_jni_long_pair(env, cxx_to_jni_first, cxx_to_jni_second);
+        jobjectid cxx_to_jni_second =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(second);
+        jobject result_first = iegen::longToObject(env, cxx_to_jni_first);
+        jobject result_second = iegen::longToObject(env, cxx_to_jni_second);
+        jobject cxx_to_jni_result = iegen::make_jni_object_pair(env, result_first, result_second);
         return cxx_to_jni_result;
       }
     );
@@ -93,10 +95,10 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
     return iegen::handleNativeCrash(env, [&] {
         
 
-        auto& jni_to_cxx_arg0 = * reinterpret_cast<iegen::example::Task*>(arg0);
+        auto jni_to_cxx_arg0 =  reinterpret_cast<iegen::example::Task*>(arg0);
 
 
-        auto& jni_to_cxx_arg1 = * reinterpret_cast<iegen::example::Project*>(arg1);
+        auto jni_to_cxx_arg1 =  reinterpret_cast<iegen::example::Project*>(arg1);
 
         validateID(id);
 
@@ -106,10 +108,12 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
         auto first = result.first;
         auto second = result.second;
 
-        jobjectid cxx_to_jni_first =  iegen::UnsafeRefAsLong<iegen::example::Task, iegen::example::Task>(&first);;
+        jobjectid cxx_to_jni_first =  iegen::UnsafeRefAsLong<iegen::example::Task, iegen::example::Task>(first);
 
-        jobjectid cxx_to_jni_second =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(&second);;
-        jobject cxx_to_jni_result = iegen::make_jni_long_pair(env, cxx_to_jni_first, cxx_to_jni_second);
+        jobjectid cxx_to_jni_second =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(second);
+        jobject result_first = iegen::longToObject(env, cxx_to_jni_first);
+        jobject result_second = iegen::longToObject(env, cxx_to_jni_second);
+        jobject cxx_to_jni_result = iegen::make_jni_object_pair(env, result_first, result_second);
         return cxx_to_jni_result;
       }
     );

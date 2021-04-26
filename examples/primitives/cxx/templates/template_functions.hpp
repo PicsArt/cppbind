@@ -6,7 +6,6 @@
 #include <memory>
 #include <string>
 
-
 namespace iegen::example {
 
 /**
@@ -49,7 +48,7 @@ class TemplateFunctions  {
      * template: {"T": ["iegen::example::Project", "iegen::example::Task"], "V": ["iegen::example::Project"]}
      */
     template <typename T, typename V>
-    std::pair<T, V> makePair(T const& a, V const& b) {
+    std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
     }
 

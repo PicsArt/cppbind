@@ -133,4 +133,40 @@ jlong extractLong(JNIEnv* env, jobject obj)  {
         env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()L"));
 }
 
+jobject longToObject(JNIEnv* env, jlong val) {
+    jclass cls = env->FindClass("java/lang/Long");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(J)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject intToObject(JNIEnv* env, jint val) {
+    jclass cls = env->FindClass("java/lang/Integer");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(I)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject floatToObject(JNIEnv* env, jfloat val) {
+    jclass cls = env->FindClass("java/lang/Float");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(F)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject doubleToObject(JNIEnv* env, jdouble val) {
+    jclass cls = env->FindClass("java/lang/Double");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(D)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject shortToObject(JNIEnv* env, jshort val) {
+    jclass cls = env->FindClass("java/lang/Short");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(S)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject boolToObject(JNIEnv* env, jboolean val) {
+    jclass cls = env->FindClass("java/lang/Boolean");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(Z)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
 }

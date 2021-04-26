@@ -169,5 +169,18 @@ jint extractInt(JNIEnv* env, jobject obj);
 jlong extractLong(JNIEnv* env, jobject obj);
 
 jobject extractObject(JNIEnv* env, jobject obj);
-} // end of iegenn
+
+jobject longToObject(JNIEnv* env, jlong obj);
+
+jobject intToObject(JNIEnv* env, jint obj);
+
+jobject floatToObject(JNIEnv* env, jfloat val);
+
+jobject doubleToObject(JNIEnv* env, jdouble val) ;
+
+jobject shortToObject(JNIEnv* env, jshort val);
+
+jobject boolToObject(JNIEnv* env, jboolean val);
+
+} // end of iegen
 #endif //__WRAPPER_HELPER_HPP__

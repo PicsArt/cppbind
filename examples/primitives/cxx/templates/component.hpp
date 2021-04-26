@@ -12,7 +12,7 @@ namespace iegen::example {
  *
  * __API__
  * gen: class
- * shared_ref: False
+ * shared_ref: True
  * package: templates
  * kotlin.include: com.examples.classes.Root
  * python.include: templates.addressable_pygen

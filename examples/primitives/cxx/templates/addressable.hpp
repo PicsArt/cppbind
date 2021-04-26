@@ -4,7 +4,7 @@
 
 /**
  * This is a template class example that will be used as a base type for other types.
- * In this example also implementations are in the same file.
+ * In this example implementations are in the same file.
  */
 
 namespace iegen::example {

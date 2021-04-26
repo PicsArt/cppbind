@@ -10,12 +10,12 @@ $Object:
   sc:
     type_info: "UnsafeMutableRawPointer"
   c_to_cxx: |
-    {%- do type_converter_helper.validate_root_shared_ref_is_not_set(type_ctx) -%}
+    {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     {%- set pointee = cxx_pointee_unqualified_name %}
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx_root_type_name}}*>({{name}}));
   cxx_to_c: |
-    {%- do type_converter_helper.validate_root_shared_ref_is_not_set(type_ctx) -%}
+    {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
     auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
   swift_to_sc:
@@ -209,14 +209,14 @@ std::shared_ptr:
   sc:
     type_info: "{{args_t[0]}}"
   c_to_cxx: |
-    {%- do type_converter_helper.validate_root_shared_ref_is_set(args[0].context.type_ctx) -%}
+    {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
     std::shared_ptr<{{pointee}}> {{target_name}};
     auto baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
     {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(baseptr);
   cxx_to_c: |
-    {%- do type_converter_helper.validate_root_shared_ref_is_set(args[0].context.type_ctx) -%}
+    {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
     std::shared_ptr<{{pointee_base}}> baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});

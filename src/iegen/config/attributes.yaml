@@ -40,6 +40,12 @@ include:
   default: [ ]
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
+include_cxx:
+  inheritable: true
+  array: true
+  default: [ ]
+  allowed_on: [ class, class_template, struct, struct_template ]
+
 shared_ref:
   inheritable: true
   default: false

@@ -11,7 +11,7 @@ import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
 from iegen import logging as logging
-from iegen.converter.common import TypeConverterHelper
+from iegen.converter import common
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -170,7 +170,7 @@ class Converter:
             # helper name spaces
 
             # helper functions
-            type_converter_helper = TypeConverterHelper
+            helper = common
 
             return locals()
 

@@ -103,6 +103,7 @@ class:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
+        {{include_cxx|format_list('#include "{}"')|join('\n')}}
     body:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
@@ -172,6 +173,7 @@ interface:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
+        {{include_cxx|format_list('#include "{}"')|join('\n')}}
     body:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){

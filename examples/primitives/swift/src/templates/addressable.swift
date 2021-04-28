@@ -1,11 +1,11 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * Addressable is a base class for all the objects, that have abs path.
  */
-public protocol Addressable  {
+public protocol IAddressableRoot  {
 
     
     var cself : UnsafeMutableRawPointer { get }
@@ -19,16 +19,7 @@ public protocol Addressable  {
      */
     func absPath() -> String 
 }
-extension Addressable {
-    /**
-     * comments
-     */
-    public convenience init(parent: Root, name: String) {
-
-        let swift_to_sc_parent = parent.cself
-        let swift_to_sc_name = strdup(name)!
-        self.init(create_AddressableRoot(swift_to_sc_parent, swift_to_sc_name), true)
-    }
+extension IAddressableRoot {
     
     /**
      * comments
@@ -45,11 +36,28 @@ extension Addressable {
         return sc_to_swift_result;
     }
 }
-public class Addressable_impl : Addressable {
+public class AddressableRoot : IAddressableRoot {
     public let cself : UnsafeMutableRawPointer
+    public let owner : Bool
 
     // internal main initializer
-    internal required init(_ _cself: UnsafeMutableRawPointer) {
+    internal required init(_ _cself: UnsafeMutableRawPointer, _ _owner: Bool = false) {
       self.cself = _cself
+      self.owner = _owner
+    }
+    deinit {
+      if owner {
+        release_AddressableRoot(cself)
+      }
+    }
+
+    /**
+     * comments
+     */
+    public convenience init(parent: Root, name: String) {
+
+        let swift_to_sc_parent = parent.cself
+        let swift_to_sc_name = strdup(name)!
+        self.init(create_AddressableRoot(swift_to_sc_parent, swift_to_sc_name), true)
     }
 }

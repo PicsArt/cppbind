@@ -8,6 +8,7 @@
 #if __cplusplus
 extern "C" {
 #endif
+    void release_AddressableRoot(void* _Nonnull cself);
     void* _Nonnull create_AddressableRoot(void* _Nonnull parent, char* _Nonnull name);
     char* _Nonnull _func_AddressableRoot_absPath(void* _Nonnull cself );
 #if __cplusplus

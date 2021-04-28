@@ -1,12 +1,18 @@
+/**
+ * This is a simple enum example.
+ */
 
-namespace iegen::example{
+#ifndef color_hpp
+#define color_hpp
+
+namespace iegen::example {
 
 /**
- * comments
  *
  * __API__
  * gen: enum
  * package: enums
+ * swift.include: CWrapper
  */
 enum class Color {
     /**
@@ -22,4 +28,6 @@ enum class Color {
      */
     Blue = 20
 };
+
 }
+#endif

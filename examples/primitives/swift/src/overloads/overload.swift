@@ -1,6 +1,6 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * An example for with overloaded methods.

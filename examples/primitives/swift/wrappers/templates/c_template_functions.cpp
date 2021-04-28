@@ -2,9 +2,12 @@
 #include <memory>
 #include "swift/wrappers/templates/c_template_functions.h"
 #include "cxx/templates/template_functions.hpp"
+#include "cxx/classes/task.hpp"
+#include "cxx/classes/project.hpp"
 
-void release_TemplateFunctions(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::TemplateFunctions*>(static_cast<iegen::example::TemplateFunctions*>(cself));
+using namespace iegen::example;
+void release_TemplateFunctions(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::TemplateFunctions*>(static_cast<iegen::example::TemplateFunctions*>(cself));
 }
 void* _Nonnull create_TemplateFunctions(){
     auto this_object = new iegen::example::TemplateFunctions();
@@ -34,12 +37,12 @@ char* _Nonnull _func_TemplateFunctions_maxString(void* _Nonnull cself , char* _N
 }
 CDataPair _func_TemplateFunctions_makePairProjectProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_arg0 = *dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg0));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg0));
   
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_arg1 = *dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_arg1 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateFunctions*>(static_cast<iegen::example::TemplateFunctions*>(cself));
     const auto& result = c_to_cxx_cself->makePair(c_to_cxx_arg0, c_to_cxx_arg1);
@@ -47,9 +50,9 @@ CDataPair _func_TemplateFunctions_makePairProjectProject(void* _Nonnull cself , 
     auto _second_data_cxx_to_c_result = new void* _Nonnull;
     const auto& first_result = result.first;
     const auto& second_result = result.second;
-    auto value_ptr_first_result = const_cast<iegen::example::Project*>( new iegen::example::Project(first_result) );
+    auto value_ptr_first_result = const_cast<iegen::example::Project*>(first_result);
         auto cxx_to_c_first_result = static_cast<iegen::example::Project*>(value_ptr_first_result);
-    auto value_ptr_second_result = const_cast<iegen::example::Project*>( new iegen::example::Project(second_result) );
+    auto value_ptr_second_result = const_cast<iegen::example::Project*>(second_result);
         auto cxx_to_c_second_result = static_cast<iegen::example::Project*>(value_ptr_second_result);
     *_first_data_cxx_to_c_result = cxx_to_c_first_result;
     *_second_data_cxx_to_c_result = cxx_to_c_second_result;
@@ -58,12 +61,12 @@ CDataPair _func_TemplateFunctions_makePairProjectProject(void* _Nonnull cself , 
 }
 CDataPair _func_TemplateFunctions_makePairTaskProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_arg0 = *dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(arg0));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(arg0));
   
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_arg1 = *dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_arg1 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateFunctions*>(static_cast<iegen::example::TemplateFunctions*>(cself));
     const auto& result = c_to_cxx_cself->makePair(c_to_cxx_arg0, c_to_cxx_arg1);
@@ -71,9 +74,9 @@ CDataPair _func_TemplateFunctions_makePairTaskProject(void* _Nonnull cself , voi
     auto _second_data_cxx_to_c_result = new void* _Nonnull;
     const auto& first_result = result.first;
     const auto& second_result = result.second;
-    auto value_ptr_first_result = const_cast<iegen::example::Task*>( new iegen::example::Task(first_result) );
+    auto value_ptr_first_result = const_cast<iegen::example::Task*>(first_result);
         auto cxx_to_c_first_result = static_cast<iegen::example::Task*>(value_ptr_first_result);
-    auto value_ptr_second_result = const_cast<iegen::example::Project*>( new iegen::example::Project(second_result) );
+    auto value_ptr_second_result = const_cast<iegen::example::Project*>(second_result);
         auto cxx_to_c_second_result = static_cast<iegen::example::Project*>(value_ptr_second_result);
     *_first_data_cxx_to_c_result = cxx_to_c_first_result;
     *_second_data_cxx_to_c_result = cxx_to_c_second_result;

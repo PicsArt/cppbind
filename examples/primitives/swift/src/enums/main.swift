@@ -1,0 +1,11 @@
+import Wrapper
+
+// [color-usage]
+// create a new project
+assert(Color.Red.rawValue == 1)
+assert(Color.Blue.rawValue == 20)
+let frame = Frame()
+frame.backgroundColor = Color.Red
+assert(frame.backgroundColor == Color.Red)
+
+// [color-usage]

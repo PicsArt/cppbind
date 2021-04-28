@@ -3,8 +3,9 @@
 #include "swift/wrappers/operators/c_counter.h"
 #include "cxx/operators/counter.hpp"
 
-void release_Counter(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
+using namespace iegen::example;
+void release_Counter(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
 }
 void* _Nonnull create_Counter(int count){
     
@@ -19,8 +20,8 @@ int _prop_get_Counter_count(void* _Nonnull cself){
 }
 void* _Nonnull _func_Counter_operator_add_(void* _Nonnull cself , void* _Nonnull counter){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
     const auto& result = c_to_cxx_cself->operator+(c_to_cxx_counter);
@@ -30,8 +31,8 @@ void* _Nonnull _func_Counter_operator_add_(void* _Nonnull cself , void* _Nonnull
 }
 int _func_Counter_compareTo(void* _Nonnull cself , void* _Nonnull counter){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
     const auto& result = c_to_cxx_cself->compareTo(c_to_cxx_counter);
@@ -40,8 +41,8 @@ int _func_Counter_compareTo(void* _Nonnull cself , void* _Nonnull counter){
 }
 bool _func_Counter_operator_gt_(void* _Nonnull cself , void* _Nonnull counter){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
     const auto& result = c_to_cxx_cself->operator>(c_to_cxx_counter);
@@ -50,8 +51,8 @@ bool _func_Counter_operator_gt_(void* _Nonnull cself , void* _Nonnull counter){
 }
 void* _Nonnull _func_Counter_operator_iadd_(void* _Nonnull cself , void* _Nonnull counter){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto& c_to_cxx_counter = *dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(counter));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));
     const auto& result = c_to_cxx_cself->operator+=(c_to_cxx_counter);

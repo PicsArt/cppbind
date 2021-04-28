@@ -13,16 +13,9 @@ void bindExamples(py::module& m) {
     bindProject(classes_project);
     py::module_ classes_root = classes.def_submodule("root", "root");
     bindRoot(classes_root);
-    py::module_ containers = m.def_submodule("containers", "containers");
-    py::module_ containers_containers = containers.def_submodule("containers", "containers");
-    bindItem(containers_containers);
-    bindContainers(containers_containers);
     py::module_ enums = m.def_submodule("enums", "enums");
     py::module_ enums_color = enums.def_submodule("color", "color");
     bindColor(enums_color);
-    py::module_ getters = m.def_submodule("getters", "getters");
-    py::module_ getters_person = getters.def_submodule("person", "person");
-    bindPerson(getters_person);
     py::module_ operators = m.def_submodule("operators", "operators");
     py::module_ operators_counter = operators.def_submodule("counter", "counter");
     bindCounter(operators_counter);

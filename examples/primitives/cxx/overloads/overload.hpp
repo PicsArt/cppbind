@@ -8,6 +8,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: true
  * package: overloads
+ * swift.include: CWrapper
  */
 struct OverloadedFunctions {
 

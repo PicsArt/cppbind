@@ -2,23 +2,22 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/operators/counter.hpp"
-
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_operators_Counter_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_operators_Counter_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::Counter, iegen::example::Counter>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::Counter, iegen::example::Counter>(id);
+        delete this_object;
+    });
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_operators_Counter_jConstructor(JNIEnv* env, jobject obj, jint count){
   return iegen::handleNativeCrash(env, [&] {
-        
-        auto this_object = new iegen::example::Counter(count);
-        return iegen::UnsafeRefAsLong<iegen::example::Counter, iegen::example::Counter>(this_object);
-        }
+      
+      auto this_object = new iegen::example::Counter(count);
+      return iegen::UnsafeRefAsLong<iegen::example::Counter, iegen::example::Counter>(this_object);
+      }
   );
 }
 

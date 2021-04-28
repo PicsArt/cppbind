@@ -9,10 +9,10 @@ import com.examples.classes.*
  * 
  */
 open class StackProject
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -46,7 +46,7 @@ open class StackProject
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -55,15 +55,15 @@ open class StackProject
      * comments
      * 
      */
-    constructor(): this(construct_helper()) {
-      //jSet_this(id, this)
+    constructor() : this(construct_helper()) {
+        //jSet_this(id, this)
     }
     /**
      * comments
      * 
      */
-    constructor(st: Project): this(construct_helper(st)) {
-      //jSet_this(id, this)
+    constructor(st: Project) : this(construct_helper(st)) {
+        //jSet_this(id, this)
     }
     
     
@@ -112,16 +112,16 @@ open class StackProject
         return result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jPush(id: Long, item: Long): Unit
@@ -137,10 +137,10 @@ open class StackProject
  * 
  */
 open class StackTask
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -174,7 +174,7 @@ open class StackTask
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -183,15 +183,15 @@ open class StackTask
      * comments
      * 
      */
-    constructor(): this(construct_helper()) {
-      //jSet_this(id, this)
+    constructor() : this(construct_helper()) {
+        //jSet_this(id, this)
     }
     /**
      * comments
      * 
      */
-    constructor(st: Task): this(construct_helper(st)) {
-      //jSet_this(id, this)
+    constructor(st: Task) : this(construct_helper(st)) {
+        //jSet_this(id, this)
     }
     
     
@@ -240,16 +240,16 @@ open class StackTask
         return result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jPush(id: Long, item: Long): Unit

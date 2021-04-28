@@ -65,9 +65,12 @@ var_class_include: &var_class_include
       #include "{{prj_rel_file_name}}"
       {{include_cxx|format_list('#include "{}"')|join('\n')}}
       {%- set template_includes = ctx.template_includes %}
-      {%- if template_includes %}
       {{template_includes|format_list('#include "{}"')|join('\n')}}
-      {%- endif %}
+
+var_template_method_include: &var_template_method_include
+    unique_content: |
+      {%- set template_includes = ctx.template_includes %}
+      {{template_includes|format_list('#include "{}"')|join('\n')}}
 
 
 class:
@@ -112,6 +115,7 @@ class:
     include: *var_class_include
     body:
       content: |
+        using namespace {{ctx.namespace}};
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -179,6 +183,7 @@ interface:
     include: *var_class_include
     body:
       content: |
+        using namespace {{ctx.namespace}};
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
             {%- if root.shared_ref %}
                 delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -220,6 +225,7 @@ constructor:
           return static_cast<{{owner_class.root.cxx_type_name}}*>(this_object);
           {%- endif %}
       }
+    include: *var_template_method_include
   ch:
     body:
       content: |
@@ -284,6 +290,7 @@ function:
         {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
         {%- endif %}
       }
+    include: *var_template_method_include
   ch:
     body:
       content: |

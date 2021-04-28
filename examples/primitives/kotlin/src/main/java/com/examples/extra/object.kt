@@ -9,10 +9,10 @@ import alias.*
  * 
  */
 open class Object
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         
 
@@ -25,7 +25,7 @@ open class Object
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -101,16 +101,16 @@ open class Object
         return result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jTostring(id: Long): String

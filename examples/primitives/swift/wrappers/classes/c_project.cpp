@@ -3,8 +3,9 @@
 #include "swift/wrappers/classes/c_project.h"
 #include "cxx/classes/project.hpp"
 
-void release_Project(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
+using namespace iegen::example;
+void release_Project(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
 }
 void* _Nonnull create_Project(char* _Nonnull title){
     auto c_to_cxx_title = std::string(title);
@@ -20,8 +21,8 @@ char* _Nonnull _prop_get_Project_title(void* _Nonnull cself){
 }
 void _func_Project_addTask(void* _Nonnull cself , void* _Nonnull task){
     
-        // we might need to avoid dynamic_cast if there is no multiple inheritance
-        auto c_to_cxx_task = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(task));
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_task = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(task));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
   c_to_cxx_cself->addTask(c_to_cxx_task);

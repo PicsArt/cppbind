@@ -1,3 +1,10 @@
+/**
+ * This is a template class example.
+ * For templates user mush explicitly specify all possible types for each template parameter in the API using
+ * template attribute.
+ */
+
+
 #ifndef stack_hpp
 #define stack_hpp
 
@@ -18,6 +25,7 @@ namespace iegen::example {
  * kotlin.include: com.examples.classes.*
  * python.include: classes.project_pygen
  * python.include: classes.task_pygen
+ * swift.include: CWrapper
  */
 template <class T>
 class Stack {

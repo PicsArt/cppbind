@@ -8,6 +8,7 @@ namespace iegen::example {
  * __API__
  * gen: class
  * package: operators
+ * swift.include: CWrapper
  */
 class Counter {
 

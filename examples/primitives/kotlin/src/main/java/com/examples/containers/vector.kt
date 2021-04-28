@@ -9,10 +9,10 @@ import alias.*
  * 
  */
 open class VectorItem
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -31,7 +31,7 @@ open class VectorItem
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -40,8 +40,8 @@ open class VectorItem
      * comments
      * 
      */
-    constructor(_value: Int): this(construct_helper(_value)) {
-      //jSet_this(id, this)
+    constructor(_value: Int) : this(construct_helper(_value)) {
+        //jSet_this(id, this)
     }
     
     /**
@@ -49,30 +49,30 @@ open class VectorItem
      * 
      */
     var value: Int
-          get() {
+        get() {
             val result = jValue(getObjId())
             
             return result
-          }
-          
-          
-          set(value) {
+        }
+        
+        
+        set(value) {
             
             jSetvalue(getObjId(), value)
-          }
-          
+        }
+        
     
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jValue(id: Long): Int
@@ -86,10 +86,10 @@ open class VectorItem
  * 
  */
 open class VectorExamples
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -113,7 +113,7 @@ open class VectorExamples
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -122,8 +122,8 @@ open class VectorExamples
      * comments
      * 
      */
-    constructor(): this(construct_helper()) {
-      //jSet_this(id, this)
+    constructor() : this(construct_helper()) {
+        //jSet_this(id, this)
     }
     
     
@@ -229,16 +229,16 @@ open class VectorExamples
         return jdk_to_kotlin_result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jAddintvector(id: Long, v: IntArray): Unit

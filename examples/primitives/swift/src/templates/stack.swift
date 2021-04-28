@@ -1,6 +1,6 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * comments
@@ -47,7 +47,7 @@ public class StackProject  {
     public func push(item: Project) -> Void {
 
         let swift_to_sc_item = item.cself
-        _func_Stack_push(cself, swift_to_sc_item);
+        _func_StackProject_push(cself, swift_to_sc_item);
     }
     /**
      * comments
@@ -55,7 +55,7 @@ public class StackProject  {
      */
     public func pop() -> Void {
 
-        _func_Stack_pop(cself);
+        _func_StackProject_pop(cself);
     }
     /**
      * comments
@@ -123,7 +123,7 @@ public class StackTask  {
     public func push(item: Task) -> Void {
 
         let swift_to_sc_item = item.cself
-        _func_Stack_push(cself, swift_to_sc_item);
+        _func_StackTask_push(cself, swift_to_sc_item);
     }
     /**
      * comments
@@ -131,7 +131,7 @@ public class StackTask  {
      */
     public func pop() -> Void {
 
-        _func_Stack_pop(cself);
+        _func_StackTask_pop(cself);
     }
     /**
      * comments

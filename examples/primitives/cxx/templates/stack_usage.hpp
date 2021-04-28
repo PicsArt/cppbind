@@ -20,6 +20,7 @@ namespace iegen::example {
  * python.include: templates.stack_pygen
  * python.include: classes.project_pygen
  * kotlin.include: com.examples.classes.*
+ * swift.include: CWrapper
  */
 class StackUsage  {
     public:

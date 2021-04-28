@@ -2,16 +2,15 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/containers/vector.hpp"
-
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorItem_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorItem_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::VectorItem, iegen::example::VectorItem>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::VectorItem, iegen::example::VectorItem>(id);
+        delete this_object;
+    });
 }
 
 extern "C" JNIEXPORT jint Java_com_examples_containers_VectorItem_jValue(JNIEnv* env, jobject obj, jobjectid id){
@@ -38,27 +37,27 @@ extern "C" JNIEXPORT void Java_com_examples_containers_VectorItem_jSetvalue(JNIE
 
 extern "C" JNIEXPORT jobjectid Java_com_examples_containers_VectorItem_jConstructor(JNIEnv* env, jobject obj, jint _value){
   return iegen::handleNativeCrash(env, [&] {
-        
-        auto this_object = new iegen::example::VectorItem(_value);
-        return iegen::UnsafeRefAsLong<iegen::example::VectorItem, iegen::example::VectorItem>(this_object);
-        }
+      
+      auto this_object = new iegen::example::VectorItem(_value);
+      return iegen::UnsafeRefAsLong<iegen::example::VectorItem, iegen::example::VectorItem>(this_object);
+      }
   );
 }
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorExamples_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorExamples_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::VectorExamples, iegen::example::VectorExamples>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::VectorExamples, iegen::example::VectorExamples>(id);
+        delete this_object;
+    });
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_containers_VectorExamples_jConstructor(JNIEnv* env, jobject obj){
   return iegen::handleNativeCrash(env, [&] {
-        auto this_object = new iegen::example::VectorExamples();
-        return iegen::UnsafeRefAsLong<iegen::example::VectorExamples, iegen::example::VectorExamples>(this_object);
-        }
+      auto this_object = new iegen::example::VectorExamples();
+      return iegen::UnsafeRefAsLong<iegen::example::VectorExamples, iegen::example::VectorExamples>(this_object);
+      }
   );
 }
 

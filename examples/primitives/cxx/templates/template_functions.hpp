@@ -17,6 +17,7 @@ namespace iegen::example {
  * kotlin.include: com.examples.classes.*
  * python.include: classes.project_pygen
  * python.include: classes.task_pygen
+ * swift.include: CWrapper
  */
 class TemplateFunctions  {
     public:

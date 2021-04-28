@@ -1,6 +1,6 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * comments
@@ -35,7 +35,7 @@ public class StackUsage  {
      * comments
      * 
      */
-    public func firstItemOfSpecialized(p: Stack) -> Project {
+    public func firstItemOfSpecialized(p: StackProject) -> Project {
 
         let swift_to_sc_p = p.cself
         let result = _func_StackUsage_firstItemOfSpecialized(cself, swift_to_sc_p);
@@ -46,7 +46,7 @@ public class StackUsage  {
      * comments
      * 
      */
-    public func firstItemOfTemplate(arg0: Stack) -> Project {
+    public func firstItemOfTemplate(arg0: StackProject) -> Project {
 
         let swift_to_sc_arg0 = arg0.cself
         let result = _func_StackUsage_firstItemOfTemplateProject(cself, swift_to_sc_arg0);

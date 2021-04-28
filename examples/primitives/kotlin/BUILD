@@ -75,6 +75,30 @@ kt_jvm_test(
     main_class = "com.examples.templates.TemplatesApp",
 )
 
+kt_jvm_test(
+    name = "inheritance",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.inheritance.InheritanceApp",
+)
+
+kt_jvm_test(
+    name = "forward_decl",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.forward_decl.ForwardDeclsApp",
+)
+
+kt_jvm_test(
+    name = "enums",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.enums.EnumsApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

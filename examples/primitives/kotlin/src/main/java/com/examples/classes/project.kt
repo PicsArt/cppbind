@@ -9,10 +9,10 @@ import alias.*
  * 
  */
 open class Project
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -33,7 +33,7 @@ open class Project
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -42,8 +42,8 @@ open class Project
      * comments
      * 
      */
-    constructor(title: String): this(construct_helper(title)) {
-      //jSet_this(id, this)
+    constructor(title: String) : this(construct_helper(title)) {
+        //jSet_this(id, this)
     }
     
     /**
@@ -51,12 +51,12 @@ open class Project
      * 
      */
     val title: String
-          get() {
+        get() {
             val result = jTitle(getObjId())
             
             return result
-          }
-          
+        }
+        
     
     /**
      * comments
@@ -85,16 +85,16 @@ open class Project
         return jdk_to_kotlin_result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String

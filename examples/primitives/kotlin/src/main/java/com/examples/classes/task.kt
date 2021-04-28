@@ -9,10 +9,10 @@ import alias.*
  * 
  */
 open class Task
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -31,7 +31,7 @@ open class Task
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -40,8 +40,8 @@ open class Task
      * comments
      * 
      */
-    constructor(title: String): this(construct_helper(title)) {
-      //jSet_this(id, this)
+    constructor(title: String) : this(construct_helper(title)) {
+        //jSet_this(id, this)
     }
     
     /**
@@ -49,24 +49,24 @@ open class Task
      * 
      */
     val title: String
-          get() {
+        get() {
             val result = jTitle(getObjId())
             
             return result
-          }
-          
+        }
+        
     
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String

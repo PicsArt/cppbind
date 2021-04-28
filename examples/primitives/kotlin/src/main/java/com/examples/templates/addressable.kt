@@ -27,13 +27,13 @@ class AddressableHelperRoot {
     companion object {
         @JvmStatic
         external fun jAbspath(id: Long): String
-  }
+    }
 }
 open class AddressableRoot
-    internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
+internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -51,7 +51,7 @@ open class AddressableRoot
     }
     protected var id = _id
     override fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -59,21 +59,22 @@ open class AddressableRoot
     /**
      * comments
      */
-    constructor(parent: Root, name: String): this(construct_helper(parent, name)) {
-      //jSet_this(id, this)
+    constructor(parent: Root, name: String) : this(construct_helper(parent, name)) {
+        //jSet_this(id, this)
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+            jFinalize(id)
+            id = 0L
+        }
     }
     /**
     * Finalize and deletes the object
     */
     protected fun finalize() {
-    	close()
-    }///// External wrapper functions ////////////
+        close()
+    }
+    ///// External wrapper functions ////////////
     private external fun jSet_this(id: Long, self: Any): Void
     private external fun jFinalize(id: Long): Void
 }

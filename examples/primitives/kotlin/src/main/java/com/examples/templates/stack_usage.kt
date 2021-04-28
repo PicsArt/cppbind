@@ -9,10 +9,10 @@ import com.examples.classes.*
  * 
  */
 open class StackUsage
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * comments
@@ -32,7 +32,7 @@ open class StackUsage
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -41,8 +41,8 @@ open class StackUsage
      * comments
      * 
      */
-    constructor(): this(construct_helper()) {
-      //jSet_this(id, this)
+    constructor() : this(construct_helper()) {
+        //jSet_this(id, this)
     }
     
     
@@ -70,16 +70,16 @@ open class StackUsage
         return jdk_to_kotlin_result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jFirstitemofspecialized(id: Long, p: Long): Long

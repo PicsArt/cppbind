@@ -4,22 +4,21 @@
 #include "cxx/templates/template_functions.hpp"
 #include "cxx/classes/task.hpp"
 #include "cxx/classes/project.hpp"
-
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_TemplateFunctions_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_templates_TemplateFunctions_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        delete this_object;
+    });
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_templates_TemplateFunctions_jConstructor(JNIEnv* env, jobject obj){
   return iegen::handleNativeCrash(env, [&] {
-        auto this_object = new iegen::example::TemplateFunctions();
-        return iegen::UnsafeRefAsLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(this_object);
-        }
+      auto this_object = new iegen::example::TemplateFunctions();
+      return iegen::UnsafeRefAsLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(this_object);
+      }
   );
 }
 

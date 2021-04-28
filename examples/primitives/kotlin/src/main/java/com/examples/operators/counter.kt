@@ -9,10 +9,10 @@ import alias.*
  * 
  */
 open class Counter
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
         /**
          * Counter constructor.
@@ -34,7 +34,7 @@ open class Counter
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
@@ -42,20 +42,20 @@ open class Counter
     /**
      * Counter constructor.
      */
-    constructor(count: Int): this(construct_helper(count)) {
-      //jSet_this(id, this)
+    constructor(count: Int) : this(construct_helper(count)) {
+        //jSet_this(id, this)
     }
     
     /**
      * Getter for count.
      */
     val count: Int
-          get() {
+        get() {
             val result = jCount(getObjId())
             
             return result
-          }
-          
+        }
+        
     
     /**
      * Plus operator
@@ -101,16 +101,16 @@ open class Counter
         return jdk_to_kotlin_result
     }
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+    	    jFinalize(id)
+            id = 0L
+        }
     }
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
     ///// External wrapper functions ////////////
     private external fun jCount(id: Long): Int

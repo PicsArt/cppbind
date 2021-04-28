@@ -2,16 +2,15 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/base/object.hpp"
-
 using namespace iegen;
 extern "C" JNIEXPORT void Java_com_examples_extra_Object_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_extra_Object_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::RefFromLong<iegen::Object, iegen::Object>(id);
-    delete &this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::RefFromLong<iegen::Object, iegen::Object>(id);
+        delete &this_object;
+    });
 }
 
 

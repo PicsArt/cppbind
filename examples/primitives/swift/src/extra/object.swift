@@ -1,6 +1,5 @@
 import Foundation
-
-
+import CWrapper
 
 /**
  * comments
@@ -57,8 +56,8 @@ public class Object  {
      */
     public func equals(other: Object) -> Bool {
 
-        
-        let result = _func_Object_equals(cself, other);
+        let swift_to_sc_other = other.cself
+        let result = _func_Object_equals(cself, swift_to_sc_other);
         
         return result;
     }

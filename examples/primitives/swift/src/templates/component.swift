@@ -1,12 +1,12 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * comments
  * 
  */
-public class Component : Addressable {
+public class Component : IAddressableRoot {
     
     public let cself : UnsafeMutableRawPointer
     public let owner : Bool

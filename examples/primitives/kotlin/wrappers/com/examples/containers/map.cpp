@@ -2,16 +2,15 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/containers/map.hpp"
-
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_MapItem_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_containers_MapItem_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapItem, iegen::example::MapItem>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapItem, iegen::example::MapItem>(id);
+        delete this_object;
+    });
 }
 
 extern "C" JNIEXPORT jint Java_com_examples_containers_MapItem_jValue(JNIEnv* env, jobject obj, jobjectid id){
@@ -38,27 +37,27 @@ extern "C" JNIEXPORT void Java_com_examples_containers_MapItem_jSetvalue(JNIEnv*
 
 extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapItem_jConstructor(JNIEnv* env, jobject obj, jint _value){
   return iegen::handleNativeCrash(env, [&] {
-        
-        auto this_object = new iegen::example::MapItem(_value);
-        return iegen::UnsafeRefAsLong<iegen::example::MapItem, iegen::example::MapItem>(this_object);
-        }
+      
+      auto this_object = new iegen::example::MapItem(_value);
+      return iegen::UnsafeRefAsLong<iegen::example::MapItem, iegen::example::MapItem>(this_object);
+      }
   );
 }
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-  return iegen::handleNativeCrash(env, [&] {});
+    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-  iegen::handleNativeCrash(env, [&] {
-    auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
-    delete this_object;
-  });
+    iegen::handleNativeCrash(env, [&] {
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::MapExamples, iegen::example::MapExamples>(id);
+        delete this_object;
+    });
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapExamples_jConstructor(JNIEnv* env, jobject obj){
   return iegen::handleNativeCrash(env, [&] {
-        auto this_object = new iegen::example::MapExamples();
-        return iegen::UnsafeRefAsLong<iegen::example::MapExamples, iegen::example::MapExamples>(this_object);
-        }
+      auto this_object = new iegen::example::MapExamples();
+      return iegen::UnsafeRefAsLong<iegen::example::MapExamples, iegen::example::MapExamples>(this_object);
+      }
   );
 }
 

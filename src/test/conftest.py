@@ -5,7 +5,7 @@ import copy
 
 import pytest
 from iegen.common.config import config as default_config
-from . import TEST_OUT_DIR
+from . import TEST_CXX_DIR, TEST_OUT_DIR
 
 
 def test_dummy():

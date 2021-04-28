@@ -40,14 +40,25 @@ class CXXParser(object):
             self.config.clang_args.split(',') + ['-I' + includeDir.strip()
                                                  for includeDir in self.config.include_dirs.split(',')]
         files = self.config.src_glob
+        excluded_files = self.config.src_exclude_glob
         # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')
         # base_files = glob.glob(base_files, recursive=True)
 
-        logging.info(f"parsing files: {files}")
+        logging.info("parsing files: {}".format(files.replace("\n", " ")))
         # logging.info(f"parsing files: {base_files}")
 
-        all_files = glob.glob(files, recursive=True)
-        all_files = [os.path.abspath(fp) for fp in all_files]
+        all_files = set()
+        for file in files.split(','):
+            abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
+            all_files.update(abs_paths)
+
+        all_excluded_files = set()
+        for file in excluded_files.split(','):
+            abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
+            all_excluded_files.update(abs_paths)
+
+        all_files -= all_excluded_files
+
         logging.debug(f"parsing found files: {all_files}")
         logging.debug(f"Clang args: {args}")
 

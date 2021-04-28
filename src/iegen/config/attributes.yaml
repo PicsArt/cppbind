@@ -57,3 +57,9 @@ is_operator:
   default: '{is_operator}'
   type: bool
   allowed_on: [ cxx_method ]
+
+exception_type:
+  inheritable: false
+  array: true
+  allowed_on: [ function, function_template, cxx_method ]
+  forced_on: [ function, function_template, cxx_method ]

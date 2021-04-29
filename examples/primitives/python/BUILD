@@ -27,8 +27,33 @@ py_library(
 )
 
 py_test(
-    name = "main",
+    name = "classes",
     srcs = ["src/classes/main.py"],
+    main = "src/classes/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "getters",
+    srcs = ["src/getters/main.py"],
+    main = "src/getters/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "functionals",
+    srcs = ["src/functions/main.py"],
+    main = "src/functions/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

@@ -13,13 +13,13 @@ public class MapItem  {
 
     // internal main initializer
     internal required init(_ _cself: UnsafeMutableRawPointer , _ _owner: Bool = false) {
-      self.cself = _cself
-      self.owner = _owner
+        self.cself = _cself
+        self.owner = _owner
     }
     deinit {
-      if owner {
-        release_MapItem(cself)
-      }
+        if owner {
+            release_MapItem(cself)
+        }
     }
     
     /**

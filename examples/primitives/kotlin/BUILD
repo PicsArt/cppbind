@@ -99,6 +99,14 @@ kt_jvm_test(
     main_class = "com.examples.enums.EnumsApp",
 )
 
+kt_jvm_test(
+    name = "getters",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.getters.GettersApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

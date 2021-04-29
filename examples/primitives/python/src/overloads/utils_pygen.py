@@ -1,29 +1,26 @@
 from __future__ import annotations
 from typing import *
-import examples.overloads.overload as pybind_overload_pygen
+import examples.overloads.utils as pybind_utils_pygen
 from bind_utils import *
 from metaclass import *
 
 
-class OverloadedFunctions(metaclass=OriginalMethodsMetaclass):
+class Utils(metaclass=OriginalMethodsMetaclass):
     """
     An example for with overloaded methods."""
-    @bind
-    def __init__(self):
-        pass
-
-
     
+    @classmethod
     @bind
-    def concatenate(self, first: str, second: str) -> str:
+    def sum(cls, first: int, second: int) -> int:
         """
         Concatenate with two strings.
         """
         pass
+
+    @classmethod
     @bind
-    def concatenate(self, first: str, second: str, third: str) -> str:
+    def sum(cls, first: float, second: float) -> float:
         """
         Concatenate with three strings.
         """
         pass
-

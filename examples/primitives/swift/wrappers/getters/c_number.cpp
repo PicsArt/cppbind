@@ -3,6 +3,7 @@
 #include "swift/wrappers/getters/c_number.h"
 #include "cxx/getters/number.hpp"
 
+
 using namespace iegen::example;
 void release_NumberInt(void* _Nonnull cself) {
     delete static_cast<std::shared_ptr<iegen::example::Number<int>>*>(cself);
@@ -27,6 +28,7 @@ void _prop_set_NumberInt_num(void* _Nonnull cself, int num){
     
     c_to_cxx_cself->num = num;
 }
+
 
 using namespace iegen::example;
 void release_NumberDouble(void* _Nonnull cself) {

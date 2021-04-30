@@ -3,6 +3,7 @@
 #include "swift/wrappers/operators/c_counter.h"
 #include "cxx/operators/counter.hpp"
 
+
 using namespace iegen::example;
 void release_Counter(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Counter*>(static_cast<iegen::example::Counter*>(cself));

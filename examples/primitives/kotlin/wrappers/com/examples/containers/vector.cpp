@@ -2,6 +2,7 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/containers/vector.hpp"
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorItem_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});
@@ -43,6 +44,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_containers_VectorItem_jConstruc
       }
   );
 }
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_VectorExamples_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

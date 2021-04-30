@@ -113,7 +113,9 @@ class:
     include: *var_class_include
     body:
       content: |
+        {%- if ctx.namespace %}
         using namespace {{ctx.namespace}};
+        {%- endif %}
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);

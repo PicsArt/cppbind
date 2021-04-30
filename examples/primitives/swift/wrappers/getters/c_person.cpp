@@ -3,6 +3,7 @@
 #include "swift/wrappers/getters/c_person.h"
 #include "cxx/getters/person.hpp"
 
+
 using namespace iegen::example;
 void release_Person(void* _Nonnull cself) {
     delete static_cast<std::shared_ptr<iegen::example::Person>*>(cself);

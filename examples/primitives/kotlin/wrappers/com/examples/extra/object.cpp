@@ -2,6 +2,7 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/base/object.hpp"
+
 using namespace iegen;
 extern "C" JNIEXPORT void Java_com_examples_extra_Object_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

@@ -4,6 +4,7 @@
 #include "cxx/templates/stack_usage.hpp"
 #include "cxx/simple/project.hpp"
 
+
 using namespace iegen::example;
 void release_StackUsage(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::StackUsage*>(static_cast<iegen::example::StackUsage*>(cself));

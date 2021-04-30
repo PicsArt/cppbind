@@ -5,6 +5,7 @@
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
 
+
 using namespace iegen::example;
 void release_TemplateFunctions(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::TemplateFunctions*>(static_cast<iegen::example::TemplateFunctions*>(cself));

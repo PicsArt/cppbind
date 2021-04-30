@@ -4,6 +4,7 @@
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackProject_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});
@@ -90,6 +91,7 @@ extern "C" JNIEXPORT jboolean Java_com_examples_templates_StackProject_jEmpty(JN
       }
     );
 }
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

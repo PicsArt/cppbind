@@ -3,6 +3,7 @@
 #include "swift/wrappers/templates/c_component.h"
 #include "cxx/templates/component.hpp"
 
+
 using namespace iegen::example;
 void release_Component(void* _Nonnull cself) {
     delete static_cast<std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>*>(cself);

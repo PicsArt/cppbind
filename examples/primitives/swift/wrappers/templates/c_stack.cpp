@@ -5,6 +5,7 @@
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
 
+
 using namespace iegen::example;
 void release_StackProject(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Stack<iegen::example::Project>*>(static_cast<iegen::example::Stack<iegen::example::Project>*>(cself));
@@ -45,6 +46,7 @@ bool _func_StackProject_empty(void* _Nonnull cself ){
     
     return result;
 }
+
 using namespace iegen::example;
 void release_StackTask(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));

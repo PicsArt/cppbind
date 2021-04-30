@@ -54,7 +54,9 @@ var_class_cxx: &var_class_cxx
       {%- endif %}
   body:
     content: |
+      {%- if ctx.namespace %}
       using namespace {{ctx.namespace}};
+      {%- endif %}
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
       extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
           return iegen::handleNativeCrash(env, [&] {});

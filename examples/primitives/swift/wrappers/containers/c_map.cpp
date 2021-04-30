@@ -3,6 +3,7 @@
 #include "swift/wrappers/containers/c_map.h"
 #include "cxx/containers/map.hpp"
 
+
 using namespace iegen::example;
 void release_MapItem(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::MapItem*>(static_cast<iegen::example::MapItem*>(cself));
@@ -24,6 +25,7 @@ void* _Nonnull create_MapItem(int _value){
     auto this_object = new iegen::example::MapItem(_value);
     return static_cast<iegen::example::MapItem*>(this_object);
 }
+
 using namespace iegen::example;
 void release_MapExamples(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/inheritance/square.hpp"
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_inheritance_Square_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

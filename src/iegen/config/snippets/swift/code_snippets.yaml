@@ -1,13 +1,12 @@
 file:
-  swift: 
+  swift:
     file_path: |
       {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
-    scopes: 
+    scopes:
       - include
       - body
     content: |
       import Foundation
-      {{helper_includes|format_list('import {}')|join('\n')}}
       {{include}}
 
       {{body}}
@@ -46,6 +45,36 @@ file:
       }
       #endif
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
+  exceptions:
+    file_path: |
+      {{[config.out_dir, config.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+    scopes:
+      - body
+    content: |
+      public class ExceptionHandler {
+
+          static var uncaughtExceptionHandler = defaultHandler;
+
+          static func defaultHandler() {
+              print("Uncaught exception is found")
+          }
+
+          static func handleUncaughtException() {
+              uncaughtExceptionHandler()
+          }
+
+          public static func setUncaughtExceptionHandler(_ handler: @escaping () -> Void) {
+              uncaughtExceptionHandler = handler;
+          }
+
+          public static func unsetUncaughtExceptionHandler() {
+              uncaughtExceptionHandler = defaultHandler;
+          }
+      }
+
+      public enum CustomError : Error {
+          {{body}}
+      }
 
 enum:
   swift: 
@@ -227,10 +256,10 @@ function:
     body: |
       {{comment}}
       {%- if is_operator %}
-      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) -> {{rconverter.swift.target_type_name}} {
+      public static func {{helper.swift.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} {
+      public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -238,24 +267,43 @@ function:
           {{converter.snippet(arg.name)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {%- endfor %}
+          var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}});
+          let result = {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
           {{rconverter.sc_to_swift.snippet('result')|indent}}
-          return {{rconverter.sc_to_swift.converted_name('result')}};
         {%- else %}
-          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}});
+          {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
+        {%- endif %}
+          if (err.is_err) {
+              {%- if helper.Exceptions.can_throw(exception_types) %}
+              let err_type = Int(err.err_type)
+              let err_msg = String(cString: err.err_msg!)
+              switch(err_type) {
+              {%- for exc_type in exception_types %}
+                  case({{loop.index}}):
+                      throw CustomError.{{helper.swift.get_exception_name(exc_type)}}(err_msg)
+              {%- endfor %}
+                  default:
+                      ExceptionHandler.handleUncaughtException()
+              }
+              {%- else %}
+              ExceptionHandler.handleUncaughtException()
+              {%- endif %}
+          }
+        {%- if rconverter.c.target_type_name != 'void' %}
+          return {{rconverter.sc_to_swift.converted_name('result')}};
         {%- endif %}
       }
     interface_body: |
       {{comment}}
-      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) -> {{rconverter.swift.target_type_name}} 
+      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}}
   cc:
     body: |
-      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
-      {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+      {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
       {%- else -%}
-      {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+      {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}{{', ' if args|length > 0}}ErrorObj* _Nonnull err
       {%- endif %}){
         {%- set call_args = [] %}
         {%- for arg in args -%}
@@ -274,22 +322,52 @@ function:
         {%- endif %}
 
         {%- if rconverter.c.target_type_name != 'void' %}
-          const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_c.snippet('result')|indent}}
-          return {{rconverter.cxx_to_c.converted_name('result')}};
+          try {
+            const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+            {{rconverter.cxx_to_c.snippet('result')|indent}}
+            return {{rconverter.cxx_to_c.converted_name('result')}};
+          }
         {%- else %}
-        {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+          try {
+            {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+          }
         {%- endif %}
+        {%- if helper.Exceptions.can_throw(exception_types) %}
+          {%- for exc_type in exception_types -%}
+          catch ({{exc_type}} e) {
+              err->is_err = true;
+              err->err_msg = e.what();
+              err->err_type = {{loop.index}};
+          }
+          {%- endfor %}
+          {%- endif %}
+          catch (...) {
+              err->is_err = true;
+              err->err_msg = "Unknown Exception";
+          }
+
+          {%- if rconverter.c.target_type_name != 'void' %}
+          {{rconverter.c.target_type_name}} result;
+          return result;
+          {%- endif %}
       }
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
-        {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}} 
+        {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
         {%- else -%}
-        {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}} 
+        {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}{{', ' if args|length > 0}}ErrorObj* _Nonnull err
         {%- endif %});
+  exceptions:
+    body:
+      unique_content: |
+        {%- if helper.Exceptions.can_throw(exception_types) -%}
+        {% for exc_type in exception_types %}
+            case {{helper.swift.get_exception_name(exc_type)}}(_ err_msg: String)
+        {%- endfor %}
+        {%- endif %}
 
 property_getter:
   swift:
@@ -409,3 +487,4 @@ getter:
         {% set converter = setter_ctx.args[0].converter.c %}
         void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}} {{setter_ctx.args[0].name}});
         {% endif %}
+

@@ -11,3 +11,8 @@ class Validator:
     def shared_ref_unset(type_ctx):
         if type_ctx.root.shared_ref:
             raise Exception("Root has an invalid attribute \"shared_ref: True\"")
+
+class Exceptions:
+    @staticmethod
+    def can_throw(exception_types):
+        return "no_throw" not in exception_types

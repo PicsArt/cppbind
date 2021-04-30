@@ -64,8 +64,8 @@ is_operator:
   type: bool
   allowed_on: [ cxx_method ]
 
-exception_type:
+exception_types:
   inheritable: false
   array: true
   allowed_on: [ function, function_template, cxx_method ]
-  forced_on: [ function, function_template, cxx_method ]
+  required_on: [ function, function_template, cxx_method ]

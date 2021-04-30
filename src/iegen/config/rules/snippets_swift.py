@@ -9,6 +9,7 @@ from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE
 import iegen.converter.swift as convert
+import iegen.converter as converter
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -48,7 +49,7 @@ def make_def_context(ctx):
         config = ctx.config
         pat_sep = os.sep
         path = os.path
-        helper = convert
+        helper = converter
 
         cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling

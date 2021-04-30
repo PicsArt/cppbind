@@ -9,11 +9,11 @@ class Root(metaclass=OriginalMethodsMetaclass):
     """
     comments
     """
+    
     @bind
     def __init__(self, _path: str):
         pass
-
-
+    
     @property
     @bind
     def path(self) -> str:
@@ -21,6 +21,4 @@ class Root(metaclass=OriginalMethodsMetaclass):
         comments
         """
         pass
-
-    
 

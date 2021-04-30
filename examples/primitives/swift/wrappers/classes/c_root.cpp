@@ -3,8 +3,8 @@
 #include "swift/wrappers/classes/c_root.h"
 #include "cxx/classes/root.hpp"
 
-void release_Root(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(cself));
+void release_Root(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(cself));
 }
 void* _Nonnull create_Root(char* _Nonnull _path){
     auto c_to_cxx__path = std::string(_path);

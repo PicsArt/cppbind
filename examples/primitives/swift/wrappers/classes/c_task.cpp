@@ -3,8 +3,8 @@
 #include "swift/wrappers/classes/c_task.h"
 #include "cxx/classes/task.hpp"
 
-void release_Task(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(cself));
+void release_Task(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(cself));
 }
 void* _Nonnull create_Task(char* _Nonnull title){
     auto c_to_cxx_title = std::string(title);

@@ -1,8 +1,8 @@
 package com.examples.inheritance
 
 import com.examples.inheritance.*
-import com.examples.classes.Task
-import com.examples.classes.Root
+import com.examples.simple.Task
+import com.examples.simple.Root
 
 class InheritanceApp {
 

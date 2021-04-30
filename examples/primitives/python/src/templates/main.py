@@ -3,9 +3,9 @@ from templates.stack_usage_pygen import StackUsage
 from templates.template_functions_pygen import TemplateFunctions
 from templates.addressable_pygen import AddressableRoot
 from templates.component_pygen import Component
-from classes.project_pygen import Project
-from classes.root_pygen import Root
-from classes.task_pygen import Task
+from simple.project_pygen import Project
+from simple.root_pygen import Root
+from simple.task_pygen import Task
 
 # [stack-examples]
 stack_prj = StackProject()

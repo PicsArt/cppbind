@@ -76,6 +76,6 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
     ///// External wrapper functions ////////////
     private external fun jArea(id: Long): Double
     private external fun jPerimeter(id: Long): Double
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

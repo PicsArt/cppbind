@@ -1,7 +1,7 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/classes/c_task.h"
-#include "cxx/classes/task.hpp"
+#include "swift/wrappers/simple/c_task.h"
+#include "cxx/simple/task.hpp"
 
 using namespace iegen::example;
 void release_Task(void* _Nonnull cself) {

@@ -68,7 +68,7 @@ internal constructor(_id: Long) : AutoCloseable {
     }
     ///// External wrapper functions ////////////
     private external fun jBackgroundcolor(id: Long): Int
-    private external fun jSetbackgroundcolor(id: Long, value : Int): Void
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSetbackgroundcolor(id: Long, value : Int): Unit
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

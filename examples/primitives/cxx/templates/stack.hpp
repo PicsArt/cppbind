@@ -22,9 +22,9 @@ namespace iegen::example {
  * gen: class
  * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
  * package: templates
- * kotlin.include: com.examples.classes.*
- * python.include: classes.project_pygen
- * python.include: classes.task_pygen
+ * kotlin.include: com.examples.simple.*
+ * python.include: simple.project_pygen
+ * python.include: simple.task_pygen
  * swift.include: CWrapper
  */
 template <class T>

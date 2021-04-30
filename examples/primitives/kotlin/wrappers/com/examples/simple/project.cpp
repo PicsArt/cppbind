@@ -1,18 +1,18 @@
 #include "jni.h"
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
 using namespace iegen::example;
-extern "C" JNIEXPORT void Java_com_examples_classes_Project_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+extern "C" JNIEXPORT void Java_com_examples_simple_Project_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});
 }
-extern "C" JNIEXPORT void Java_com_examples_classes_Project_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT void Java_com_examples_simple_Project_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
     iegen::handleNativeCrash(env, [&] {
         auto this_object = iegen::UnsafeRefFromLong<iegen::example::Project, iegen::example::Project>(id);
         delete this_object;
     });
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_classes_Project_jConstructor(JNIEnv* env, jobject obj, jstring title){
+extern "C" JNIEXPORT jobjectid Java_com_examples_simple_Project_jConstructor(JNIEnv* env, jobject obj, jstring title){
   return iegen::handleNativeCrash(env, [&] {
       const std::string & jni_to_cxx_title = iegen::jni_to_string(env, title);
       auto this_object = new iegen::example::Project(jni_to_cxx_title);
@@ -21,7 +21,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_classes_Project_jConstructor(JN
   );
 }
 
-extern "C" JNIEXPORT jstring Java_com_examples_classes_Project_jTitle(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jstring Java_com_examples_simple_Project_jTitle(JNIEnv* env, jobject obj, jobjectid id){
     return iegen::handleNativeCrash(env, [&] {
         validateID(id);
         auto this_object = iegen::UnsafeRefFromLong<iegen::example::Project, iegen::example::Project>(id);
@@ -33,7 +33,7 @@ extern "C" JNIEXPORT jstring Java_com_examples_classes_Project_jTitle(JNIEnv* en
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_classes_Project_jAddtask(JNIEnv* env, jobject obj, jobjectid id, jobjectid task){
+extern "C" JNIEXPORT void Java_com_examples_simple_Project_jAddtask(JNIEnv* env, jobject obj, jobjectid id, jobjectid task){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -49,7 +49,7 @@ extern "C" JNIEXPORT void Java_com_examples_classes_Project_jAddtask(JNIEnv* env
 }
 
 
-extern "C" JNIEXPORT jobjectidArray Java_com_examples_classes_Project_jTasks(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jobjectidArray Java_com_examples_simple_Project_jTasks(JNIEnv* env, jobject obj, jobjectid id){
     return iegen::handleNativeCrash(env, [&] {
         
         validateID(id);

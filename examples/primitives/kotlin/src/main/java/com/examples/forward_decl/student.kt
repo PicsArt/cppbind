@@ -79,6 +79,6 @@ internal constructor(_id: Long) : AutoCloseable {
     ///// External wrapper functions ////////////
     private external fun jAddteacher(id: Long, t: Long): Unit
     private external fun jTeachers(id: Long): LongArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

@@ -3,8 +3,8 @@ from typing import *
 import examples.templates.stack as pybind_stack_pygen
 from bind_utils import *
 from metaclass import *
-from classes.project_pygen import *
-from classes.task_pygen import *
+from simple.project_pygen import *
+from simple.task_pygen import *
 
 
 class StackProject(metaclass=OriginalMethodsMetaclass):

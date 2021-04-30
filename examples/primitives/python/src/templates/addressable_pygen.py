@@ -3,7 +3,7 @@ from typing import *
 import examples.templates.addressable as pybind_addressable_pygen
 from bind_utils import *
 from metaclass import *
-from classes.root_pygen import *
+from simple.root_pygen import *
 
 
 class AddressableRoot(metaclass=OriginalMethodsMetaclass):

@@ -1,5 +1,5 @@
-#ifndef classes_root_hpp
-#define classes_root_hpp
+#ifndef simple_root_hpp
+#define simple_root_hpp
 
 #include <pybind11/pybind11.h>
 

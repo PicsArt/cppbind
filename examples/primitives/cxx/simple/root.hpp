@@ -1,5 +1,5 @@
-#ifndef task_hpp
-#define task_hpp
+#ifndef root_hpp
+#define root_hpp
 
 #include <string>
 
@@ -11,10 +11,10 @@ namespace iegen::example {
  * __API__
  * gen: class
  * shared_ref: False
- * package: classes
+ * package: simple
  * swift.include: CWrapper
  */
-class Task {
+struct Root {
 public:
     /**
      * comments
@@ -23,22 +23,16 @@ public:
      * gen: constructor
      *
      */
-    Task(const std::string& title) : _title(title) {};
+    Root(const std::string& _path) : path(_path) {};
 
     /**
      * comments
      *
      * __API__
-     * gen: getter
+     * gen: property_getter
      *
      */
-    std::string& title() {
-        return _title;
-    };
-
-
-protected:
-    std::string _title;
+     std::string path;
 };
 
 }

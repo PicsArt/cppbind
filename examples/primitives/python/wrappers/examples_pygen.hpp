@@ -2,9 +2,6 @@
 #define examples_pygen_hpp
 
 #include "python/wrappers/extra/object_pygen.hpp"
-#include "python/wrappers/classes/task_pygen.hpp"
-#include "python/wrappers/classes/project_pygen.hpp"
-#include "python/wrappers/classes/root_pygen.hpp"
 #include "python/wrappers/containers/map_pygen.hpp"
 #include "python/wrappers/containers/vector_pygen.hpp"
 #include "python/wrappers/enums/color_pygen.hpp"
@@ -22,6 +19,9 @@
 #include "python/wrappers/inheritance/square_pygen.hpp"
 #include "python/wrappers/operators/counter_pygen.hpp"
 #include "python/wrappers/overloads/utils_pygen.hpp"
+#include "python/wrappers/simple/task_pygen.hpp"
+#include "python/wrappers/simple/project_pygen.hpp"
+#include "python/wrappers/simple/root_pygen.hpp"
 #include "python/wrappers/templates/addressable_pygen.hpp"
 #include "python/wrappers/templates/component_pygen.hpp"
 #include "python/wrappers/templates/stack_pygen.hpp"

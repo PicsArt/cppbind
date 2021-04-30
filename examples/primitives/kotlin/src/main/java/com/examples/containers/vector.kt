@@ -76,9 +76,9 @@ internal constructor(_id: Long) : AutoCloseable {
     }
     ///// External wrapper functions ////////////
     private external fun jValue(id: Long): Int
-    private external fun jSetvalue(id: Long, value : Int): Void
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSetvalue(id: Long, value : Int): Unit
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }
 
 /**
@@ -247,6 +247,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jGetstringvector(id: Long): StringArray
     private external fun jGetobjvector(id: Long): LongArray
     private external fun jGetintvector(id: Long): IntArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

@@ -16,7 +16,7 @@ class CXXParser(object):
     """
     """
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
-        cli.TranslationUnit.PARSE_INCOMPLETE
+                        cli.TranslationUnit.PARSE_INCOMPLETE
 
     def __init__(self, filter=None, processor=None, parser_config=None):
         self.config = parser_config or default_config.parser
@@ -36,9 +36,9 @@ class CXXParser(object):
         index = cli.Index.create()
 
         # build parser arguments
-        args = ['-x', 'c++', '--std=c++17'] +\
-            self.config.clang_args.split(',') + ['-I' + includeDir.strip()
-                                                 for includeDir in self.config.include_dirs.split(',')]
+        args = ['-x', 'c++', '--std=c++17'] + self.config.clang_args.split(',') + ['-I' + includeDir.strip()
+                                                                                   for includeDir in
+                                                                                   self.config.include_dirs.split(',')]
         files = self.config.src_glob
         excluded_files = self.config.src_exclude_glob
         # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')
@@ -47,17 +47,19 @@ class CXXParser(object):
         logging.info("parsing files: {}".format(files.replace("\n", " ")))
         # logging.info(f"parsing files: {base_files}")
 
-        all_files = set()
-        for file in files.split(','):
-            abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
-            all_files.update(abs_paths)
-
         all_excluded_files = set()
         for file in excluded_files.split(','):
             abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
             all_excluded_files.update(abs_paths)
 
-        all_files -= all_excluded_files
+        # using list to keep files order constant
+        all_files = []
+        for file in files.split(','):
+            files_glob = glob.glob(file.strip(), recursive=True)
+            for fp in files_glob:
+                abs_fp = os.path.abspath(fp)
+                if abs_fp not in all_excluded_files:
+                    all_files.append(abs_fp)
 
         logging.debug(f"parsing found files: {all_files}")
         logging.debug(f"Clang args: {args}")

@@ -119,6 +119,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jHash(id: Long): Long
     private external fun jDebuginfo(id: Long): String
     private external fun jBytescount(id: Long): Long
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

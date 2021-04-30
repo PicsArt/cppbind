@@ -1,4 +1,4 @@
-package com.examples.classes
+package com.examples.simple
 
 import alias.*
 
@@ -8,7 +8,7 @@ import alias.*
  * comments
  * 
  */
-open class Project
+open class Task
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
@@ -26,8 +26,6 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         @JvmStatic
         private external fun jConstructor(title: String): Long
-
-
     }
     
     protected var id = _id
@@ -58,32 +56,6 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         
     
-    /**
-     * comments
-     * 
-     */
-    fun addTask(task: Task): Unit {
-        
-        val kotlin_to_jdk_task = task.getObjId()
-        val result = jAddtask(getObjId(), kotlin_to_jdk_task)
-        
-        return result
-    }
-
-    /**
-     * comments
-     * 
-     */
-    fun tasks(): List<Task> {
-        
-        val result = jTasks(getObjId())
-        val jdk_to_kotlin_result: MutableList<Task> = mutableListOf()
-        for (value in result) {
-            val jdk_to_kotlin_value = Task(value)
-            jdk_to_kotlin_result.add(jdk_to_kotlin_value)
-        }
-        return jdk_to_kotlin_result
-    }
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
@@ -98,8 +70,6 @@ internal constructor(_id: Long) : AutoCloseable {
     }
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
-    private external fun jAddtask(id: Long, task: Long): Unit
-    private external fun jTasks(id: Long): LongArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

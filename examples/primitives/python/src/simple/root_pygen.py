@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-import examples.classes.root as pybind_root_pygen
+import examples.simple.root as pybind_root_pygen
 from bind_utils import *
 from metaclass import *
 

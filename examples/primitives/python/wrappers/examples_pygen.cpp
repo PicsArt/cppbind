@@ -6,13 +6,6 @@ void bindExamples(py::module& m) {
     py::module_ extra = m.def_submodule("extra", "extra");
     py::module_ extra_object = extra.def_submodule("object", "object");
     bindObject(extra_object);
-    py::module_ classes = m.def_submodule("classes", "classes");
-    py::module_ classes_task = classes.def_submodule("task", "task");
-    bindTask(classes_task);
-    py::module_ classes_project = classes.def_submodule("project", "project");
-    bindProject(classes_project);
-    py::module_ classes_root = classes.def_submodule("root", "root");
-    bindRoot(classes_root);
     py::module_ containers = m.def_submodule("containers", "containers");
     py::module_ containers_map = containers.def_submodule("map", "map");
     bindMapItem(containers_map);
@@ -61,6 +54,13 @@ void bindExamples(py::module& m) {
     py::module_ overloads = m.def_submodule("overloads", "overloads");
     py::module_ overloads_utils = overloads.def_submodule("utils", "utils");
     bindUtils(overloads_utils);
+    py::module_ simple = m.def_submodule("simple", "simple");
+    py::module_ simple_task = simple.def_submodule("task", "task");
+    bindTask(simple_task);
+    py::module_ simple_project = simple.def_submodule("project", "project");
+    bindProject(simple_project);
+    py::module_ simple_root = simple.def_submodule("root", "root");
+    bindRoot(simple_root);
     py::module_ templates = m.def_submodule("templates", "templates");
     py::module_ templates_addressable = templates.def_submodule("addressable", "addressable");
     bindAddressableRoot(templates_addressable);

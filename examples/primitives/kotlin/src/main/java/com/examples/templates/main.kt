@@ -1,7 +1,7 @@
 package com.examples.templates
 
 import com.examples.templates.*
-import com.examples.classes.*
+import com.examples.simple.*
 
 class TemplatesApp {
 

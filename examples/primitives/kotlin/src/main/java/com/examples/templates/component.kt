@@ -1,7 +1,7 @@
 package com.examples.templates
 
 import alias.*
-import com.examples.classes.Root
+import com.examples.simple.Root
 
 
 /**
@@ -59,6 +59,6 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
     }
     ///// External wrapper functions ////////////
     
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

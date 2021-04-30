@@ -1,7 +1,7 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/classes/c_project.h"
-#include "cxx/classes/project.hpp"
+#include "swift/wrappers/simple/c_project.h"
+#include "cxx/simple/project.hpp"
 
 using namespace iegen::example;
 void release_Project(void* _Nonnull cself) {

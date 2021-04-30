@@ -1,7 +1,7 @@
 package com.examples.templates
 
 import alias.*
-import com.examples.classes.*
+import com.examples.simple.*
 
 
 /**
@@ -124,6 +124,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jMaxString(id: Long, arg0: String, arg1: String): String
     private external fun jMakepairProjectProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
     private external fun jMakepairTaskProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

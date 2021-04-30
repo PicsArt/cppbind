@@ -1,7 +1,7 @@
 package com.examples.templates
 
 import alias.*
-import com.examples.classes.*
+import com.examples.simple.*
 
 
 /**
@@ -128,8 +128,8 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jPop(id: Long): Unit
     private external fun jTop(id: Long): Long
     private external fun jEmpty(id: Long): Boolean
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }
 
 /**
@@ -256,6 +256,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jPop(id: Long): Unit
     private external fun jTop(id: Long): Long
     private external fun jEmpty(id: Long): Boolean
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

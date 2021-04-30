@@ -44,11 +44,11 @@ cc_binary(
 )
 
 kt_jvm_test(
-    name = "classes",
+    name = "simple",
     srcs = glob(["src/**/*.kt"]),
     data = [":libwrapper_jni.so"],
     jvm_flags = ["-Djava.library.path=kotlin"],
-    main_class = "com.examples.classes.ClassesApp",
+    main_class = "com.examples.simple.SimpleApp",
 )
 
 kt_jvm_test(

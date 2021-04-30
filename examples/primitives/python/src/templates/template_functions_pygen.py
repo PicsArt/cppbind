@@ -3,8 +3,8 @@ from typing import *
 import examples.templates.template_functions as pybind_template_functions_pygen
 from bind_utils import *
 from metaclass import *
-from classes.project_pygen import *
-from classes.task_pygen import *
+from simple.project_pygen import *
+from simple.task_pygen import *
 
 
 class TemplateFunctions(metaclass=OriginalMethodsMetaclass):

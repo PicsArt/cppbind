@@ -1,6 +1,6 @@
 from project_pygen import Project
 from task_pygen import Task
-from classes.root_pygen import Root
+from simple.root_pygen import Root
 
 # [project-usage]
 title = 'My Project'

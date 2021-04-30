@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-import examples.classes.task as pybind_task_pygen
+import examples.simple.task as pybind_task_pygen
 from bind_utils import *
 from metaclass import *
 

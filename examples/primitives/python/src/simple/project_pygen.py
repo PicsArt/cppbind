@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import *
-import examples.classes.project as pybind_project_pygen
+import examples.simple.project as pybind_project_pygen
 from bind_utils import *
 from metaclass import *
-from classes.task_pygen import *
+from simple.task_pygen import *
 
 
 class Project(metaclass=OriginalMethodsMetaclass):

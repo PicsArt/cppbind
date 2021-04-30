@@ -25,8 +25,8 @@ swift_library(
 )
 
 swift_test(
-    name = "classes",
-    srcs = ["src/classes/main.swift"],
+    name = "simple",
+    srcs = ["src/simple/main.swift"],
     deps = [":sw_examples_library"],
 )
 

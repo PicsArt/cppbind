@@ -2,7 +2,7 @@
 #include <memory>
 #include "swift/wrappers/templates/c_addressable.h"
 #include "cxx/templates/addressable.hpp"
-#include "cxx/classes/root.hpp"
+#include "cxx/simple/root.hpp"
 
 using namespace iegen::example;
 void release_AddressableRoot(void* _Nonnull cself){

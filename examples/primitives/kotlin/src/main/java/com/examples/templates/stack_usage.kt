@@ -1,7 +1,7 @@
 package com.examples.templates
 
 import alias.*
-import com.examples.classes.*
+import com.examples.simple.*
 
 
 /**
@@ -84,6 +84,6 @@ internal constructor(_id: Long) : AutoCloseable {
     ///// External wrapper functions ////////////
     private external fun jFirstitemofspecialized(id: Long, p: Long): Long
     private external fun jFirstitemoftemplateProject(id: Long, arg0: Long): Long
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

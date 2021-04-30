@@ -118,6 +118,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jCompareto(id: Long, counter: Long): Int
     private external fun jGt(id: Long, counter: Long): Boolean
     private external fun jAdd(id: Long, counter: Long): Long
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

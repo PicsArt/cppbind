@@ -27,9 +27,9 @@ py_library(
 )
 
 py_test(
-    name = "classes",
-    srcs = ["src/classes/main.py"],
-    main = "src/classes/main.py",
+    name = "simple",
+    srcs = ["src/simple/main.py"],
+    main = "src/simple/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

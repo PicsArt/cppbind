@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
 
 namespace py = pybind11;
 

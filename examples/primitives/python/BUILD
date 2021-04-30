@@ -86,6 +86,54 @@ py_test(
     ],
 )
 
+py_test(
+    name = "containers",
+    srcs = ["src/containers/main.py"],
+    main = "src/containers/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "forward_decl",
+    srcs = ["src/forward_decl/main.py"],
+    main = "src/forward_decl/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "operators",
+    srcs = ["src/operators/main.py"],
+    main = "src/operators/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "overloads",
+    srcs = ["src/operators/main.py"],
+    main = "src/operators/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

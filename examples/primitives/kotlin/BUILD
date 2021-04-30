@@ -107,6 +107,14 @@ kt_jvm_test(
     main_class = "com.examples.getters.GettersApp",
 )
 
+kt_jvm_test(
+    name = "overloads",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.getters.GettersApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

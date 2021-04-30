@@ -66,6 +66,18 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "operators",
+    srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "overloads",
+    srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

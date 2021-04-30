@@ -17,6 +17,8 @@ namespace iegen::example {
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
+ * python.include: inheritance.rhombus_pygen
+ * python.include: inheritance.rectangle_pygen
  */
 class Square final : public Rhombus, public Rectangle {
 public:

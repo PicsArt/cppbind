@@ -15,6 +15,7 @@ namespace iegen::example {
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
+ * python.include: inheritance.parallelogram_pygen
  */
 class Rectangle : public virtual Parallelogram {
 public:
@@ -46,7 +47,7 @@ public:
      *
      */
     double perimeter() const override {
-        return 2 * _length +  2 * _width;
+        return 2 * (_length + _width);
     }
 
     /**

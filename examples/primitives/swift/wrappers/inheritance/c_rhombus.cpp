@@ -5,7 +5,7 @@
 
 using namespace iegen::example;
 void release_Rhombus(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Rhombus*>(static_cast<iegen::example::Parallelogram*>(cself));
+    delete dynamic_cast<iegen::example::Rhombus*>(static_cast<iegen::example::Parallelogram*>(cself));
 }
 void* _Nonnull create_Rhombus(double diagonal1, double diagonal2){
     

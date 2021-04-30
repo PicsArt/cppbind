@@ -3,6 +3,7 @@ from typing import *
 import examples.inheritance.rectangle as pybind_rectangle_pygen
 from bind_utils import *
 from metaclass import *
+from inheritance.parallelogram_pygen import *
 
 
 class Rectangle(Parallelogram, metaclass=OriginalMethodsMetaclass):

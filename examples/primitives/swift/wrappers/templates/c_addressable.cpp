@@ -6,7 +6,7 @@
 
 using namespace iegen::example;
 void release_AddressableRoot(void* _Nonnull cself){
-        delete static_cast<std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>*>(cself);
+    delete static_cast<std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>*>(cself);
 }
 void* _Nonnull create_AddressableRoot(void* _Nonnull parent, char* _Nonnull name){
     

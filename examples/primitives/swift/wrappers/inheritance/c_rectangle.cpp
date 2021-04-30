@@ -5,7 +5,7 @@
 
 using namespace iegen::example;
 void release_Rectangle(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Rectangle*>(static_cast<iegen::example::Parallelogram*>(cself));
+    delete dynamic_cast<iegen::example::Rectangle*>(static_cast<iegen::example::Parallelogram*>(cself));
 }
 void* _Nonnull create_Rectangle(double length, double width){
     

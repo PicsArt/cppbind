@@ -3,6 +3,8 @@ from typing import *
 import examples.inheritance.square as pybind_square_pygen
 from bind_utils import *
 from metaclass import *
+from inheritance.rhombus_pygen import *
+from inheritance.rectangle_pygen import *
 
 
 class Square(Rhombus, Rectangle, metaclass=OriginalMethodsMetaclass):

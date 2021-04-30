@@ -62,6 +62,30 @@ py_test(
     ],
 )
 
+py_test(
+    name = "inheritance",
+    srcs = ["src/inheritance/main.py"],
+    main = "src/inheritance/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "templates",
+    srcs = ["src/templates/main.py"],
+    main = "src/templates/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

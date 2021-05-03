@@ -40,4 +40,4 @@ jobs:
    
     - name: Run bazel tests
       run: |
-        bazel test //...
+        bazel test //... --test_output=streamed

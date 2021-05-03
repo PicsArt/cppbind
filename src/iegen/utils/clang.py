@@ -55,7 +55,7 @@ def get_semantic_ancestors(cursor):
     ancestors = []
     _cursor = cursor.semantic_parent
 
-    while(_cursor):
+    while (_cursor):
         ancestors.append(_cursor)
         _cursor = _cursor.semantic_parent
 
@@ -77,6 +77,11 @@ def get_full_displayname(cursor):
         return f'{full_display_name}::{cursor.spelling}'
     else:
         return f'{full_display_name}::{cursor.displayname}'
+
+    # ancestors = get_semantic_ancestors(cursor)
+    # spellings = [a.displayname for a in ancestors[1::]]
+    # spellings.append(cursor.displayname if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
+    # return '::'.join(spellings)
 
 
 def is_final_cursor(cursor):

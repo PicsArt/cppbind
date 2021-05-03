@@ -38,3 +38,6 @@ jobs:
       run: |
         pytest ./src/test/
    
+    - name: Run bazel tests
+      run: |
+        bazel test //... --test_output=streamed

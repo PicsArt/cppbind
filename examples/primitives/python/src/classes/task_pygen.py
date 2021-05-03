@@ -9,11 +9,11 @@ class Task(metaclass=OriginalMethodsMetaclass):
     """
     comments
     """
+    
     @bind
     def __init__(self, title: str):
         pass
-
-
+    
     @property
     @bind
     def title(self) -> str:
@@ -21,8 +21,3 @@ class Task(metaclass=OriginalMethodsMetaclass):
         comments
         """
         pass
-
-
-
-    
-

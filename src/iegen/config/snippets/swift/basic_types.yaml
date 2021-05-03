@@ -63,7 +63,7 @@ short:
 
 long:
   swift:
-    type_info: Long
+    type_info: CLong
   c:
     type_info: long
   sc:
@@ -75,7 +75,7 @@ long:
 
 long long:
   swift:
-    type_info: Long
+    type_info: CLongLong
   c:
     type_info: long long
   sc:

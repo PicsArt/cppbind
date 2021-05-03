@@ -66,7 +66,7 @@ class FileAction(Action):
             return context
 
         context = _make_context(ctx)
-        for file_name in [fl for gl in globs for fl in glob.glob(gl, recursive=True)]:
+        for file_name in [fl for gl in globs for fl in sorted(glob.glob(gl, recursive=True))]:
 
             context['file_name'] = file_name
             # take copy action

@@ -2,8 +2,8 @@
 #include <memory>
 #include "swift/wrappers/templates/c_stack.h"
 #include "cxx/templates/stack.hpp"
-#include "cxx/classes/task.hpp"
 #include "cxx/classes/project.hpp"
+#include "cxx/classes/task.hpp"
 
 using namespace iegen::example;
 void release_StackProject(void* _Nonnull cself) {

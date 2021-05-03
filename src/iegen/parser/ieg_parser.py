@@ -55,7 +55,7 @@ class CXXParser(object):
         # using list to keep files order constant
         all_files = []
         for file in files.split(','):
-            files_glob = glob.glob(file.strip(), recursive=True)
+            files_glob = sorted(glob.glob(file.strip(), recursive=True))
             for fp in files_glob:
                 abs_fp = os.path.abspath(fp)
                 if abs_fp not in all_excluded_files:

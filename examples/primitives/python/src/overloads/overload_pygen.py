@@ -8,11 +8,10 @@ from metaclass import *
 class OverloadedFunctions(metaclass=OriginalMethodsMetaclass):
     """
     An example for with overloaded methods."""
+    
     @bind
     def __init__(self):
         pass
-
-
     
     @bind
     def concatenate(self, first: str, second: str) -> str:
@@ -20,10 +19,10 @@ class OverloadedFunctions(metaclass=OriginalMethodsMetaclass):
         Concatenate with two strings.
         """
         pass
+
     @bind
     def concatenate(self, first: str, second: str, third: str) -> str:
         """
         Concatenate with three strings.
         """
         pass
-

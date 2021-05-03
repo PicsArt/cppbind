@@ -2,8 +2,8 @@
 #include <memory>
 #include "swift/wrappers/templates/c_template_functions.h"
 #include "cxx/templates/template_functions.hpp"
-#include "cxx/classes/task.hpp"
 #include "cxx/classes/project.hpp"
+#include "cxx/classes/task.hpp"
 
 using namespace iegen::example;
 void release_TemplateFunctions(void* _Nonnull cself) {

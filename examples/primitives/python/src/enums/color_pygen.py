@@ -12,4 +12,3 @@ class Color(pybind_color_pygen.Color):
     Green = pybind_color_pygen.Color.Green
     # Blue = 20
     Blue = pybind_color_pygen.Color.Blue
-

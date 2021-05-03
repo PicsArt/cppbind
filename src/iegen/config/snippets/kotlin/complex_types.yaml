@@ -38,6 +38,7 @@ $Object:
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
     auto base = {{dereferencer}} reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
+    // TODO: check for dynamic cast here
     auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
     {%- endif %}
     {%- endif %}
@@ -255,11 +256,11 @@ std::shared_ptr:
     type_info: Long
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
-    {%- set pointee_base = args_t_bases[0] %}
+    {%- set pointee_base = args_bases[0] %}
     auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {%- set pointee = args[0].original_clang_type.spelling %}
-    {%- set pointee_base = args_t_bases[0] %}
+    {%- set pointee = args[0].cxx_type_name %}
+    {%- set pointee_base = args_bases[0] %}
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
   kotlin_to_jdk:
     val {{target_name}} = {{name}}.getObjId()

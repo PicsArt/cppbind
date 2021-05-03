@@ -1,7 +1,7 @@
 file:
   kotlin: 
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.kt
+      {{config.out_dir + pat_sep + [config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
     scopes: 
       - body
       - include
@@ -14,7 +14,7 @@ file:
       {{body}}
   cxx:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes: 
       - body
       - include
@@ -56,6 +56,7 @@ var_class_cxx: &var_class_cxx
       {%- endif %}
   body:
     content: |
+      using namespace {{ctx.namespace}};
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
       extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
         return iegen::handleNativeCrash(env, [&] {});
@@ -331,7 +332,9 @@ function:
       {%- endmacro %}
       {% macro call_code(prefix, call_args) -%}
       {%- if rconverter.jni.target_type_name != 'void' %}
-      auto result = {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
+      auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                          {%- endif -%}({{call_args|join(', ')}});
       {{rconverter.cxx_to_jni.snippet('result')}}
       return {{rconverter.cxx_to_jni.converted_name('result')}};
       {%- else %}

@@ -87,7 +87,7 @@ class:
         {%- if comment %}
         {{comment}}
         {%- endif %}
-        {{'open ' if is_open}}{{'abstract ' if is_abstract}}class {{name}}{{template_suffix}}
+        {{'open ' if is_open}}class {{name}}{{template_suffix}}
         internal constructor(_id: Long) {% if base_types_converters is defined -%}
                                               {%- set comma = joiner(', ') -%}
                                               : {% for base_type_converter in base_types_converters -%}
@@ -189,7 +189,7 @@ interface:
         }
         {%-endif %}
         {% if helper.kotlin.has_valid_ancestors(ancestors) %}
-        {{'open ' if is_open}}{{'abstract ' if is_abstract}}class {{name}}{{template_suffix}}
+        {{'open ' if is_open}}class {{name}}{{template_suffix}}
         internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {

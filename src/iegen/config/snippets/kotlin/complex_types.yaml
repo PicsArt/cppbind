@@ -259,7 +259,7 @@ std::shared_ptr:
     {%- set pointee_base = args_t_bases[0] %}
     auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
   cxx_to_jni: |
-    {%- set pointee = args_t[0] %}
+    {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
   kotlin_to_jdk:
@@ -299,9 +299,13 @@ std::pair:
     {{args[1].snippet('second')}}
     {%- if args[0].custom.pname != 'Object' %}
     jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first')}});
+    {%- else %}
+    jobject {{name}}_first = {{args[0].converted_name('first')}};
     {%- endif %}
     {%- if args[1].custom.pname != 'Object' %}
     jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second')}});
+    {%- else %}
+    jobject {{name}}_second = {{args[1].converted_name('second')}};
     {%- endif %}
     {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{name}}_first, {{name}}_second);
   kotlin_to_jdk: |

@@ -136,8 +136,8 @@ std::vector:
     }
 
   kotlin_to_jdk: |
-    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    val {{target_name}} = {{target_type_name}}({{name}}.size){{array_init}}
+    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
     var index = 0
     for (value in {{name}}) {
         {{args[0].snippet('value')|indent}}
@@ -216,10 +216,10 @@ std::map:
   kotlin_to_jdk: |
     {%- set tmp_key_name = 'tmp_key_' + target_name %}
     {%- set tmp_val_name = 'tmp_val_' + target_name %}
-    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
-    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size){{karray_init}}
-    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size){{varray_init}}
+    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{ {}() }}'.format(args[1].target_type_name) %}
+    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size) {{karray_init}}
+    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size) {{varray_init}}
     val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
     var index = 0
     for ((key, value) in {{name}}) {

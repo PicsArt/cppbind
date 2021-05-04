@@ -14,16 +14,16 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
         protected fun construct_helper(_path: String): Long {
-            
-            
             val id = jConstructor(_path)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(_path: String): Long
     }
@@ -36,6 +36,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -54,20 +55,21 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-        
-    
+
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jPath(id: Long): String
     private external fun jSet_this(id: Long, self: Any): Unit

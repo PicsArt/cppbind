@@ -5,7 +5,7 @@ Helper codes for kotlin conversion
 
 def make_comment(pure_comment):
     nl = '\n * '
-    if not pure_comment:
+    if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
         return ""
     return f"""/**{nl.join(pure_comment)}
  */"""

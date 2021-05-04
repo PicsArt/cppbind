@@ -3,7 +3,7 @@ import Foundation
 import CWrapper
 
 /**
- * 
+ * Class Frame.
  */
 public class Frame  {
     

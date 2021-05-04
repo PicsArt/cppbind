@@ -50,7 +50,7 @@ Let's start with :ref:`Basic example`.
    :caption: Getting started with
    :glob:
 
-   /02_get_started/languages/*_getting-started-with-iegen-*
+   /02_get_started/languages/**/*_getting-started-with-*
 
 
 Tutorials
@@ -62,7 +62,7 @@ Advance Topics
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Advaced Features
+   :caption: Advanced Features
 
    /user.guide
    /01_introduction/configuration

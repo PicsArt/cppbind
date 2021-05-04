@@ -9,8 +9,7 @@
 namespace iegen::example {
 
 /**
- * comments
- *
+ * Class holding project information.
  * __API__
  * gen: class
  * shared_ref: False
@@ -21,20 +20,16 @@ namespace iegen::example {
 class Project {
 public:
     /**
-     * comments
-     *
+     * Project constructor.
      * __API__
      * gen: constructor
-     *
      */
     Project(const std::string& title) : _title(title) {};
 
     /**
-     * comments
-     *
+     * Get project´s title.
      * __API__
      * gen: getter
-     *
      */
     std::string& title() {
         return _title;
@@ -42,22 +37,18 @@ public:
 
 
     /**
-     * comments
-     *
+     * Add a task to project.
      * __API__
      * gen: method
-     *
      */
     void addTask(Task* task) {
         _tasks.push_back(task);
     }
 
     /**
-     * comments
-     *
+     * Get project´s tasks.
      * __API__
      * gen: method
-     *
      */
     const std::vector<Task*>& tasks() const {
         return _tasks;

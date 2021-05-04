@@ -9,18 +9,32 @@ class Utils(metaclass=OriginalMethodsMetaclass):
     """
     An example for with overloaded methods."""
     
+    @bind
+    def __init__(self):
+        pass
+    
     @classmethod
     @bind
     def sum(cls, first: int, second: int) -> int:
         """
-        Concatenate with two strings.
-        """
+        Sum two ints."""
         pass
 
     @classmethod
     @bind
     def sum(cls, first: float, second: float) -> float:
         """
-        Concatenate with three strings.
+        Sum two floats."""
+        pass
+
+    @bind
+    def concatenate(self, first: str, second: str) -> str:
         """
+        Concatenate with two strings."""
+        pass
+
+    @bind
+    def concatenate(self, first: str, second: str, third: str) -> str:
+        """
+        Concatenate with three strings."""
         pass

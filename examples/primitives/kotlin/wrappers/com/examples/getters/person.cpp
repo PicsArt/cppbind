@@ -38,9 +38,7 @@ extern "C" JNIEXPORT jstring Java_com_examples_getters_Person_jFullname(JNIEnv* 
 extern "C" JNIEXPORT void Java_com_examples_getters_Person_jSetfullname(JNIEnv* env, jobject obj, jobjectid id, jstring val){
     return iegen::handleNativeCrash(env, [&] {
         validateID(id);
-        auto this_object = iegen::RefFromLong<iegen::example::Person, iegen::example::Person>(id);
-        
-        const std::string & jni_to_cxx_val = iegen::jni_to_string(env, val);
+        auto this_object = iegen::RefFromLong<iegen::example::Person, iegen::example::Person>(id);const std::string & jni_to_cxx_val = iegen::jni_to_string(env, val);
         this_object->setFullName(jni_to_cxx_val);
         }
     );

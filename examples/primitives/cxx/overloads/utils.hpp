@@ -1,7 +1,3 @@
-/**
- * This is a simple example of overloaded sum function.
- */
-
 #ifndef overload_hpp
 #define overload_hpp
 #include <string>
@@ -16,11 +12,14 @@ namespace iegen::example {
  * swift.include: CWrapper
  */
 struct Utils {
-
+    /**
+     * __API__
+     * gen: constructor
+     */
+    Utils() {};
 
     /**
-     * Concatenate with two strings.
-     *
+     * Sum two ints.
      * __API__
      * gen: method
      */
@@ -29,13 +28,30 @@ struct Utils {
     }
 
     /**
-     * Concatenate with three strings.
-     *
+     * Sum two floats.
      * __API__
      * gen: method
      */
     static float sum(float first, float second) {
         return first + second;
+    }
+
+    /**
+     * Concatenate with two strings.
+     * __API__
+     * gen: method
+     */
+    std::string concatenate(std::string first, std::string second) {
+        return first + second;
+    }
+
+    /**
+     * Concatenate with three strings.
+     * __API__
+     * gen: method
+     */
+    std::string concatenate(std::string first, std::string second, std::string third) {
+        return first + second + third;
     }
 };
 }

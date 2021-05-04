@@ -1,6 +1,3 @@
-/**
- * This is a color enum usage example.
- */
 #ifndef frame_hpp
 #define frame_hpp
 
@@ -8,7 +5,7 @@
 
 namespace iegen::example {
 /**
- *
+ * Class Frame.
  * __API__
  * gen: class
  * package: enums

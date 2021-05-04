@@ -3,7 +3,6 @@ package com.examples.containers
 import alias.*
 
 
-
 /**
  * comments
  * 
@@ -14,16 +13,16 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
         protected fun construct_helper(_value: Int): Long {
-            
-            
             val id = jConstructor(_value)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(_value: Int): Long
     }
@@ -36,6 +35,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -54,29 +54,29 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-        
-        
         set(value) {
             
             jSetvalue(getObjId(), value)
         }
         
-    
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jValue(id: Long): Int
-    private external fun jSetvalue(id: Long, value : Int): Unit
+    private external fun jSetvalue(id: Long, value: Int): Unit
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }
@@ -91,15 +91,16 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(): Long
 
@@ -119,6 +120,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -127,13 +129,11 @@ internal constructor(_id: Long) : AutoCloseable {
         //jSet_this(id, this)
     }
     
-    
     /**
      * comments
      * 
      */
     fun addStringPair(info: Pair<String, String>): Unit {
-        
         val first = info.first
         val second = info.second
 
@@ -150,9 +150,8 @@ internal constructor(_id: Long) : AutoCloseable {
      */
     fun addIntMap(info: Map<Int, Int>): Unit {
         
-        
-        val tmp_key_kotlin_to_jdk_info = IntArray(info.size)
-        val tmp_val_kotlin_to_jdk_info = IntArray(info.size)
+        val tmp_key_kotlin_to_jdk_info = IntArray(info.size) 
+        val tmp_val_kotlin_to_jdk_info = IntArray(info.size) 
         val kotlin_to_jdk_info = Pair<IntArray, IntArray>(tmp_key_kotlin_to_jdk_info, tmp_val_kotlin_to_jdk_info)
         var index = 0
         for ((key, value) in info) {
@@ -173,9 +172,8 @@ internal constructor(_id: Long) : AutoCloseable {
      */
     fun addStringMap(info: Map<String, String>): Unit {
         
-        
-        val tmp_key_kotlin_to_jdk_info = StringArray(info.size){String()}
-        val tmp_val_kotlin_to_jdk_info = StringArray(info.size){String()}
+        val tmp_key_kotlin_to_jdk_info = StringArray(info.size) { String() }
+        val tmp_val_kotlin_to_jdk_info = StringArray(info.size) { String() }
         val kotlin_to_jdk_info = Pair<StringArray, StringArray>(tmp_key_kotlin_to_jdk_info, tmp_val_kotlin_to_jdk_info)
         var index = 0
         for ((key, value) in info) {
@@ -195,7 +193,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * 
      */
     fun getStringMap(): Map<String, String> {
-        
         val result = jGetstringmap(getObjId())
         val jdk_to_kotlin_result = HashMap<String, String>()
         for (i in 0..result.first.size - 1) {
@@ -213,7 +210,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * 
      */
     fun getIntMap(): Map<Int, Int> {
-        
         val result = jGetintmap(getObjId())
         val jdk_to_kotlin_result = HashMap<Int, Int>()
         for (i in 0..result.first.size - 1) {
@@ -232,9 +228,8 @@ internal constructor(_id: Long) : AutoCloseable {
      */
     fun addMixedMap(info: Map<String, MapItem>): Unit {
         
-        
-        val tmp_key_kotlin_to_jdk_info = StringArray(info.size){String()}
-        val tmp_val_kotlin_to_jdk_info = LongArray(info.size)
+        val tmp_key_kotlin_to_jdk_info = StringArray(info.size) { String() }
+        val tmp_val_kotlin_to_jdk_info = LongArray(info.size) 
         val kotlin_to_jdk_info = Pair<StringArray, LongArray>(tmp_key_kotlin_to_jdk_info, tmp_val_kotlin_to_jdk_info)
         var index = 0
         for ((key, value) in info) {
@@ -254,7 +249,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * 
      */
     fun getMixedMap(): Map<String, MapItem> {
-        
         val result = jGetmixedmap(getObjId())
         val jdk_to_kotlin_result = HashMap<String, MapItem>()
         for (i in 0..result.first.size - 1) {
@@ -266,18 +260,21 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jAddstringpair(id: Long, info: Pair<String, String>): Unit
     private external fun jAddintmap(id: Long, info: Pair<IntArray, IntArray>): Unit

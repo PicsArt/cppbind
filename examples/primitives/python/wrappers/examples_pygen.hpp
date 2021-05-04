@@ -13,6 +13,8 @@
 #include "python/wrappers/getters/number_pygen.hpp"
 #include "python/wrappers/getters/one_type_template_getter_pygen.hpp"
 #include "python/wrappers/getters/person_pygen.hpp"
+#include "python/wrappers/inheritance/vehicle_pygen.hpp"
+#include "python/wrappers/inheritance/bicycle_pygen.hpp"
 #include "python/wrappers/inheritance/parallelogram_pygen.hpp"
 #include "python/wrappers/inheritance/rectangle_pygen.hpp"
 #include "python/wrappers/inheritance/rhombus_pygen.hpp"

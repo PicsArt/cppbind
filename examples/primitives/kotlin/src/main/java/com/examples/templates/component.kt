@@ -14,17 +14,16 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
-        protected fun construct_helper(parent: Root, name: String): Long {
-            val kotlin_to_jdk_parent = parent.getObjId()
-            
-            
+        protected fun construct_helper(parent: Root, name: String): Long {val kotlin_to_jdk_parent = parent.getObjId()
             val id = jConstructor(kotlin_to_jdk_parent, name)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(parent: Long, name: String): Long
     }
@@ -36,6 +35,7 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -43,22 +43,20 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
     constructor(parent: Root, name: String) : this(construct_helper(parent, name)) {
         //jSet_this(id, this)
     }
-    
-    
+
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
-    ///// External wrapper functions ////////////
-    
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

@@ -3,7 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * 
  */
 public class Square : IRhombus, IRectangle {
     
@@ -22,7 +21,6 @@ public class Square : IRhombus, IRectangle {
     }
     
     /**
-     * 
      */
     public convenience init(side: Double) {
 
@@ -31,7 +29,6 @@ public class Square : IRhombus, IRectangle {
     }
     
     /**
-     * 
      */
     public var area: Double {
           get {
@@ -42,7 +39,6 @@ public class Square : IRhombus, IRectangle {
           
     }
     /**
-     * 
      */
     public func perimeter() -> Double {
 

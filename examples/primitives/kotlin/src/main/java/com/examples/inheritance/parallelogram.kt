@@ -3,27 +3,18 @@ package com.examples.inheritance
 import alias.*
 
 
-/**
- * comments
- * 
- */
+
 interface IParallelogram {
     fun getObjId(): Long
     
-    /**
-     */
     open val area: Double
         get() {
             val result = ParallelogramHelper.jArea(getObjId())
             
             return result
         }
-        
     
-    /**
-     */
     open fun perimeter(): Double {
-        
         val result = ParallelogramHelper.jPerimeter(getObjId())
         
         return result
@@ -32,13 +23,16 @@ interface IParallelogram {
 
 class ParallelogramHelper {
     companion object {
+        
         @JvmStatic
         external fun jArea(id: Long): Double
+
         @JvmStatic
         external fun jPerimeter(id: Long): Double
     }
 }
-open class Parallelogram
+
+open abstract class Parallelogram
 internal constructor(_id: Long) : IParallelogram, AutoCloseable {
     companion object {
         init {
@@ -46,6 +40,7 @@ internal constructor(_id: Long) : IParallelogram, AutoCloseable {
         }
         
     }
+
     protected var id = _id
     override fun getObjId(): Long {
         if (id == 0L) {
@@ -53,19 +48,21 @@ internal constructor(_id: Long) : IParallelogram, AutoCloseable {
         }
         return id;
     }
-    
+
     override fun close() {
         if (id != 0L) {
             jFinalize(id)
             id = 0L
         }
     }
+
     /**
     * Finalize and deletes the object
     */
     protected fun finalize() {
         close()
     }
+    
     ///// External wrapper functions ////////////
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit

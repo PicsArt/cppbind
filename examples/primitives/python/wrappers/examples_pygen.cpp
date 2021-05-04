@@ -40,6 +40,10 @@ void bindExamples(py::module& m) {
     py::module_ getters_person = getters.def_submodule("person", "person");
     bindPerson(getters_person);
     py::module_ inheritance = m.def_submodule("inheritance", "inheritance");
+    py::module_ inheritance_vehicle = inheritance.def_submodule("vehicle", "vehicle");
+    bindVehicle(inheritance_vehicle);
+    py::module_ inheritance_bicycle = inheritance.def_submodule("bicycle", "bicycle");
+    bindBicycle(inheritance_bicycle);
     py::module_ inheritance_parallelogram = inheritance.def_submodule("parallelogram", "parallelogram");
     bindParallelogram(inheritance_parallelogram);
     py::module_ inheritance_rectangle = inheritance.def_submodule("rectangle", "rectangle");

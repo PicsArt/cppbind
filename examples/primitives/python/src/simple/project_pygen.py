@@ -8,8 +8,7 @@ from simple.task_pygen import *
 
 class Project(metaclass=OriginalMethodsMetaclass):
     """
-    comments
-    """
+    Class holding project information."""
     
     @bind
     def __init__(self, title: str):
@@ -19,20 +18,17 @@ class Project(metaclass=OriginalMethodsMetaclass):
     @bind
     def title(self) -> str:
         """
-        comments
-        """
+        Get project´s title."""
         pass
     
     @bind
     def add_task(self, task: Task) -> None:
         """
-        comments
-        """
+        Add a task to project."""
         pass
 
     @bind
     def tasks(self) -> list:
         """
-        comments
-        """
+        Get project´s tasks."""
         pass

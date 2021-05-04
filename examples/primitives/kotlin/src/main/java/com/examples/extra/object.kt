@@ -31,14 +31,11 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    
-    
     /**
      * String representation for mainly debug porpoises
      * @return class name and object address
      */
     open override fun toString(): String {
-        
         val result = jTostring(getObjId())
         
         return result
@@ -49,7 +46,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * @return class name
      */
     open fun className(): String {
-        
         val result = jClassname(getObjId())
         
         return result
@@ -61,7 +57,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * @return is equals two objects
      */
     fun equals(other: Object): Boolean {
-        
         val kotlin_to_jdk_other = other.getObjId()
         val result = jEquals(getObjId(), kotlin_to_jdk_other)
         
@@ -73,7 +68,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * @return hash of the object
      */
     open fun hash(): Long {
-        
         val result = jHash(getObjId())
         
         return result
@@ -84,7 +78,6 @@ internal constructor(_id: Long) : AutoCloseable {
      * @return object state as string
      */
     open fun debugInfo(): String {
-        
         val result = jDebuginfo(getObjId())
         
         return result
@@ -95,23 +88,25 @@ internal constructor(_id: Long) : AutoCloseable {
      * @return bytes count
      */
     open fun bytesCount(): Long {
-        
         val result = jBytescount(getObjId())
         
         return result
     }
+
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jTostring(id: Long): String
     private external fun jClassname(id: Long): String

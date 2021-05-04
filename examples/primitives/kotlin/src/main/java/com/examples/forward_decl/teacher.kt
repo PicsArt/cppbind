@@ -14,13 +14,12 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
-        /**
-         */
+        
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(): Long
 
@@ -35,27 +34,19 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
-    /**
-     */
+    
     constructor() : this(construct_helper()) {
         //jSet_this(id, this)
     }
     
-    
-    /**
-     */
     fun addStudent(s: Student): Unit {
-        
         val kotlin_to_jdk_s = s.getObjId()
         val result = jAddstudent(getObjId(), kotlin_to_jdk_s)
         
         return result
     }
 
-    /**
-     */
     fun students(): List<Student> {
-        
         val result = jStudents(getObjId())
         val jdk_to_kotlin_result: MutableList<Student> = mutableListOf()
         for (value in result) {
@@ -64,18 +55,21 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jAddstudent(id: Long, s: Long): Unit
     private external fun jStudents(id: Long): LongArray

@@ -1,7 +1,7 @@
 file:
   swift: 
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{config.out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
     scopes: 
       - include
       - body
@@ -13,20 +13,20 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes: 
       - body
       - include
     content: |
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath([config.cxx_out_dir, config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
+      #include "{{path.relpath(config.cxx_out_dir + pat_sep + [config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
       {{include}}
 
       {{body}}
   ch:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
     scopes: 
       - body
       - include
@@ -103,14 +103,14 @@ class:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
+        {{include_cxx|format_list('#include "{}"')|join('\n')}}
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
-
-            {%- if  root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
+            {%- if root.shared_ref %}
+            delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
-                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
         }
   ch:
@@ -134,7 +134,7 @@ interface:
         - body
       content: |
         {{comment}}
-        public protocol {{name}} {% if base_types_converters is defined -%}
+        public protocol {{interface_name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
@@ -148,23 +148,45 @@ interface:
             {{interface_properties|string|indent}}
             {{interface_body|string|indent}}
         }
-        extension {{name}} {
-            {{head|string|indent}}
+        extension {{interface_name}}{{template_suffix}} {
             {{properties|string|indent}}
             {{body|string|indent}}
         }
-        public class {{name}}_impl : {{name}} {
+        public class {{name}}{{template_suffix}} : {{interface_name}}{{template_suffix}} {
             public let cself : {{converter.sc.target_type_name}}
+            public let owner : Bool
 
             // internal main initializer
-            internal required init(_ _cself: {{converter.sc.target_type_name}}) {
+            internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
               self.cself = _cself
+              self.owner = _owner
             }
+            deinit {
+              if owner {
+                release_{{name}}{{template_suffix}}(cself)
+              }
+            }
+
+            {{head|string|indent}}
         }
   cc:
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
+        {{include_cxx|format_list('#include "{}"')|join('\n')}}
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
+            {%- if root.shared_ref %}
+                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+            {%- else %}
+                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            {%- endif %}
+        }
+  ch:
+    body:
+      content: |
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
 
 constructor:
   swift:
@@ -221,7 +243,7 @@ function:
           {{rconverter.sc_to_swift.snippet('result')|indent}}
           return {{rconverter.sc_to_swift.converted_name('result')}};
         {%- else %}
-          {{helper.get_c_func_name("{}_{}{}".format(owner_class.name, name, overloading_prefix))}}({{call_args|join(', ')}});
+          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}});
         {%- endif %}
       }
     interface_body: |
@@ -243,9 +265,9 @@ function:
         {% endfor %}
         {%- if not is_static %}
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -296,9 +318,9 @@ property_getter:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -309,9 +331,9 @@ property_getter:
       {%- if gen_property_setter is defined %}
       void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -349,15 +371,15 @@ getter:
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{comment}}
-      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set(value){% endif %}
+      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
@@ -369,9 +391,9 @@ getter:
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
       void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
           {%- if owner_class.root.shared_ref %}
-              auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                        *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                        );
+          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
+                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
+                    );
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}

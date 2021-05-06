@@ -8,9 +8,7 @@ iegen.builder.ir\_builder module
 --------------------------------
 
 .. automodule:: iegen.builder.ir_builder
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   :content-only:
 
 iegen.builder.out\_builder module
 ---------------------------------

@@ -11,6 +11,7 @@ import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
 from iegen import logging as logging
+from iegen import converter
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -65,7 +66,7 @@ class FileAction(Action):
             return context
 
         context = _make_context(ctx)
-        for file_name in [fl for gl in globs for fl in glob.glob(gl, recursive=True)]:
+        for file_name in [fl for gl in globs for fl in sorted(glob.glob(gl, recursive=True))]:
 
             context['file_name'] = file_name
             # take copy action
@@ -169,6 +170,7 @@ class Converter:
             # helper name spaces
 
             # helper functions
+            helper = converter
 
             return locals()
 

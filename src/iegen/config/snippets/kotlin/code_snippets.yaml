@@ -554,7 +554,7 @@ getter:
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
 
@@ -563,7 +563,7 @@ getter:
       {%- if setter_ctx is defined %}
 
       @JvmStatic
-      external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      external fun j{{setter_ctx.name|capitalize}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     body: |

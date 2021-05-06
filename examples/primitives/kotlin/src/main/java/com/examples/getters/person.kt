@@ -89,7 +89,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     ///// External wrapper functions ////////////
     private external fun jFullname(id: Long): String
-    private external fun jSetfullname(id: Long, value : String): Unit
+    private external fun jSetfullname(id: Long, value: String): Unit
     private external fun jEmail(id: Long): String
     private external fun jAge(id: Long): Int
     private external fun jSetage(id: Long, value: Int): Unit

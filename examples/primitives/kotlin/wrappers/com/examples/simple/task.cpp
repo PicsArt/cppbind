@@ -5,30 +5,24 @@
 
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_simple_Task_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_simple_Task_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-    iegen::handleNativeCrash(env, [&] {
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::Task, iegen::example::Task>(id);
-        delete this_object;
-    });
+    iegen::example::Task* this_object = reinterpret_cast<iegen::example::Task*>(id);
+    delete this_object;
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_simple_Task_jConstructor(JNIEnv* env, jobject obj, jstring title){
-  return iegen::handleNativeCrash(env, [&] {
-      const std::string & jni_to_cxx_title = iegen::jni_to_string(env, title);
-      auto this_object = new iegen::example::Task(jni_to_cxx_title);
-      return iegen::UnsafeRefAsLong<iegen::example::Task, iegen::example::Task>(this_object);
-      }
-  );
+    jstring jjni_to_cxx_titleStr = (jstring)title;
+    auto jni_to_cxx_title_cstr = env->GetStringUTFChars(jjni_to_cxx_titleStr, 0);
+    const std::string & jni_to_cxx_title = jni_to_cxx_title_cstr;
+    env->ReleaseStringUTFChars(jjni_to_cxx_titleStr, jni_to_cxx_title_cstr);
+    iegen::example::Task* baseptr = new iegen::example::Task(jni_to_cxx_title);
+    return reinterpret_cast<jlong>(baseptr);
 }
 
 extern "C" JNIEXPORT jstring Java_com_examples_simple_Task_jTitle(JNIEnv* env, jobject obj, jobjectid id){
-    return iegen::handleNativeCrash(env, [&] {
-        validateID(id);
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::Task, iegen::example::Task>(id);
-        auto result = this_object->title();
-        jstring cxx_to_jni_result = iegen::string_to_jni(env, result);
-        return cxx_to_jni_result;
-        }
-    );
+    validateID(id);
+    iegen::example::Task* this_object = reinterpret_cast<iegen::example::Task*>(id);
+    auto result = this_object->title();
+    jstring cxx_to_jni_result = env->NewStringUTF(result.c_str());
+    return cxx_to_jni_result;
 }

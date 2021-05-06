@@ -8,9 +8,7 @@ from simple.task_pygen import *
 
 
 class StackProject(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @bind
     def __init__(self):
@@ -22,37 +20,27 @@ class StackProject(metaclass=OriginalMethodsMetaclass):
     
     @bind
     def push(self, item: Project) -> None:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def pop(self) -> None:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def top(self) -> Project:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def empty(self) -> bool:
-        """
-        comments
-        """
+        """"""
         pass
 
 
 class StackTask(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @bind
     def __init__(self):
@@ -64,28 +52,20 @@ class StackTask(metaclass=OriginalMethodsMetaclass):
     
     @bind
     def push(self, item: Task) -> None:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def pop(self) -> None:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def top(self) -> Task:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def empty(self) -> bool:
-        """
-        comments
-        """
+        """"""
         pass

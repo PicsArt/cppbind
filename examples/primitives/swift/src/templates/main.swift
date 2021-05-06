@@ -24,21 +24,21 @@ assert(res.cself == prj.cself)
 // [stack-usage-examples]
 
 // [template-funcs-examples]
-let tf = TemplateFunctions()
-let maxInt = tf.max(arg0: 2, arg1: 5)
+let tm = TemplateMethods()
+let maxInt = tm.max(arg0: 2, arg1: 5)
 assert(maxInt == 5)
-let maxString = tf.max(arg0: "d", arg1: "a")
+let maxString = tm.max(arg0: "d", arg1: "a")
 assert(maxString == "d")
 
 let prj1 = Project(title: "My first project")
 let prj2 = Project(title: "My second project")
-let pairPrjPrj = tf.makePair(arg0: prj1, arg1: prj2)
+let pairPrjPrj = tm.makePair(arg0: prj1, arg1: prj2)
 assert(Mirror(reflecting: pairPrjPrj).children.count == 2)
 assert(pairPrjPrj.0.title == prj1.title)
 assert(pairPrjPrj.1.title == prj2.title)
 
 let task1 = Task(title: "My Task")
-let pairTaskPrj = tf.makePair(arg0: task1, arg1: prj1)
+let pairTaskPrj = tm.makePair(arg0: task1, arg1: prj1)
 assert(Mirror(reflecting: pairTaskPrj).children.count == 2)
 assert(pairTaskPrj.0.title == task1.title)
 assert(pairTaskPrj.1.title == prj1.title)

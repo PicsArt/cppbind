@@ -156,8 +156,9 @@ def make_class_context(ctx):
         return context
 
     context = _make(ctx)
-    ancestors = [types.SimpleNamespace(**_make(ancesstor)) for ancesstor in ctx.ancestors]
-    context.update(dict(ancestors=ancestors))
+    ancestors = [types.SimpleNamespace(**_make(ancestor)) for ancestor in ctx.ancestors]
+    root = types.SimpleNamespace(**_make(ctx.root))
+    context.update(dict(ancestors=ancestors, root=root))
     return context
 
 

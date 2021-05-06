@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 interface IRhombus : IParallelogram {
     
     

@@ -5,6 +5,6 @@
 
 namespace py = pybind11;
 
-void bindTemplateFunctions(py::module& m);
+void bindTemplateMethods(py::module& m);
 
 #endif

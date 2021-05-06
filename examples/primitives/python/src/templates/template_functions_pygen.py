@@ -7,10 +7,8 @@ from simple.project_pygen import *
 from simple.task_pygen import *
 
 
-class TemplateFunctions(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+class TemplateMethods(metaclass=OriginalMethodsMetaclass):
+    """"""
     
     @bind
     def __init__(self):
@@ -18,28 +16,20 @@ class TemplateFunctions(metaclass=OriginalMethodsMetaclass):
     
     @bind
     def max(self, arg0: int, arg1: int) -> int:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def max(self, arg0: str, arg1: str) -> str:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def make_pair(self, arg0: Project, arg1: Project) -> tuple:
-        """
-        comments
-        """
+        """"""
         pass
 
     @bind
     def make_pair(self, arg0: Task, arg1: Project) -> tuple:
-        """
-        comments
-        """
+        """"""
         pass

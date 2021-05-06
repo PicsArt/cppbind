@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 open class Bicycle
 internal constructor(_id: Long) : Vehicle(_id) {
     companion object {

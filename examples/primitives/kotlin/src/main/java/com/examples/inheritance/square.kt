@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 class Square
 internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
     companion object {
@@ -48,7 +47,7 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

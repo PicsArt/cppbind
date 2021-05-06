@@ -8,13 +8,13 @@
 
 namespace py = pybind11;
 
-void bindTemplateFunctions(py::module& m) {
+void bindTemplateMethods(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::TemplateFunctions> templatefunctions(m, "TemplateFunctions");
+    py::class_<iegen::example::TemplateMethods> templatemethods(m, "TemplateMethods");
 
-    templatefunctions.def(py::init<>());
-    templatefunctions.def("max", &iegen::example::TemplateFunctions::max<int>, py::arg("arg0"), py::arg("arg1"));
-    templatefunctions.def("max", &iegen::example::TemplateFunctions::max<std::string>, py::arg("arg0"), py::arg("arg1"));
-    templatefunctions.def("make_pair", &iegen::example::TemplateFunctions::makePair<iegen::example::Project, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
-    templatefunctions.def("make_pair", &iegen::example::TemplateFunctions::makePair<iegen::example::Task, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
+    templatemethods.def(py::init<>());
+    templatemethods.def("max", &iegen::example::TemplateMethods::max<int>, py::arg("arg0"), py::arg("arg1"));
+    templatemethods.def("max", &iegen::example::TemplateMethods::max<std::string>, py::arg("arg0"), py::arg("arg1"));
+    templatemethods.def("make_pair", &iegen::example::TemplateMethods::makePair<iegen::example::Project, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
+    templatemethods.def("make_pair", &iegen::example::TemplateMethods::makePair<iegen::example::Task, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
 }

@@ -3,8 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
  */
 public class StackProject  {
     
@@ -23,16 +21,12 @@ public class StackProject  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init() {
 
         self.init(create_StackProject(), true)
     }
     /**
-     * comments
-     * 
      */
     public convenience init(st: Project) {
 
@@ -41,8 +35,6 @@ public class StackProject  {
     }
     
     /**
-     * comments
-     * 
      */
     public func push(item: Project) -> Void {
 
@@ -50,16 +42,12 @@ public class StackProject  {
         _func_StackProject_push(cself, swift_to_sc_item);
     }
     /**
-     * comments
-     * 
      */
     public func pop() -> Void {
 
         _func_StackProject_pop(cself);
     }
     /**
-     * comments
-     * 
      */
     public func top() -> Project {
 
@@ -68,8 +56,6 @@ public class StackProject  {
         return sc_to_swift_result;
     }
     /**
-     * comments
-     * 
      */
     public func empty() -> Bool {
 
@@ -79,8 +65,6 @@ public class StackProject  {
     }
 }
 /**
- * comments
- * 
  */
 public class StackTask  {
     
@@ -99,16 +83,12 @@ public class StackTask  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init() {
 
         self.init(create_StackTask(), true)
     }
     /**
-     * comments
-     * 
      */
     public convenience init(st: Task) {
 
@@ -117,8 +97,6 @@ public class StackTask  {
     }
     
     /**
-     * comments
-     * 
      */
     public func push(item: Task) -> Void {
 
@@ -126,16 +104,12 @@ public class StackTask  {
         _func_StackTask_push(cself, swift_to_sc_item);
     }
     /**
-     * comments
-     * 
      */
     public func pop() -> Void {
 
         _func_StackTask_pop(cself);
     }
     /**
-     * comments
-     * 
      */
     public func top() -> Task {
 
@@ -144,8 +118,6 @@ public class StackTask  {
         return sc_to_swift_result;
     }
     /**
-     * comments
-     * 
      */
     public func empty() -> Bool {
 

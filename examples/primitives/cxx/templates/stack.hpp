@@ -16,8 +16,6 @@
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * gen: class
  * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
@@ -32,24 +30,18 @@ class Stack {
 
     public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
     Stack() {};
 
-       /**
-     * comments
-     *
+    /**
      * __API__
      * gen: constructor
      */
     Stack(T& st) {};
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      */
@@ -57,8 +49,6 @@ class Stack {
         _elements.push_back(item);
     };
     /**
-     * comments
-     *
      * __API__
      * gen: method
      */
@@ -66,8 +56,6 @@ class Stack {
         _elements.pop_back();
     };
     /**
-     * comments
-     *
      * __API__
      * gen: method
      */
@@ -75,8 +63,6 @@ class Stack {
         return _elements.back();
      };
      /**
-      * comments
-      *
       * __API__
       * gen: method
       */
@@ -88,8 +74,6 @@ class Stack {
    std::vector<T*> _elements;
 
 };
-
 }
-
 #endif
 

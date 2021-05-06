@@ -6,25 +6,25 @@
 #include "cxx/simple/task.hpp"
 
 using namespace iegen::example;
-extern "C" JNIEXPORT void Java_com_examples_templates_TemplateFunctions_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+extern "C" JNIEXPORT void Java_com_examples_templates_TemplateMethods_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});
 }
-extern "C" JNIEXPORT void Java_com_examples_templates_TemplateFunctions_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT void Java_com_examples_templates_TemplateMethods_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
     iegen::handleNativeCrash(env, [&] {
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(id);
         delete this_object;
     });
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_TemplateFunctions_jConstructor(JNIEnv* env, jobject obj){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_TemplateMethods_jConstructor(JNIEnv* env, jobject obj){
   return iegen::handleNativeCrash(env, [&] {
-      auto this_object = new iegen::example::TemplateFunctions();
-      return iegen::UnsafeRefAsLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(this_object);
+      auto this_object = new iegen::example::TemplateMethods();
+      return iegen::UnsafeRefAsLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(this_object);
       }
   );
 }
 
 
-extern "C" JNIEXPORT jint Java_com_examples_templates_TemplateFunctions_jMaxInt(JNIEnv* env, jobject obj, jobjectid id, jint arg0, jint arg1){
+extern "C" JNIEXPORT jint Java_com_examples_templates_TemplateMethods_jMaxInt(JNIEnv* env, jobject obj, jobjectid id, jint arg0, jint arg1){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -33,7 +33,7 @@ extern "C" JNIEXPORT jint Java_com_examples_templates_TemplateFunctions_jMaxInt(
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(id);
         
         auto result = this_object->max<int>(arg0, arg1);
 
@@ -43,7 +43,7 @@ extern "C" JNIEXPORT jint Java_com_examples_templates_TemplateFunctions_jMaxInt(
 }
 
 
-extern "C" JNIEXPORT jstring Java_com_examples_templates_TemplateFunctions_jMaxString(JNIEnv* env, jobject obj, jobjectid id, jstring arg0, jstring arg1){
+extern "C" JNIEXPORT jstring Java_com_examples_templates_TemplateMethods_jMaxString(JNIEnv* env, jobject obj, jobjectid id, jstring arg0, jstring arg1){
     return iegen::handleNativeCrash(env, [&] {
         
         const std::string & jni_to_cxx_arg0 = iegen::jni_to_string(env, arg0);
@@ -52,7 +52,7 @@ extern "C" JNIEXPORT jstring Java_com_examples_templates_TemplateFunctions_jMaxS
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(id);
         
         auto result = this_object->max<std::string>(jni_to_cxx_arg0, jni_to_cxx_arg1);
         jstring cxx_to_jni_result = iegen::string_to_jni(env, result);
@@ -62,7 +62,7 @@ extern "C" JNIEXPORT jstring Java_com_examples_templates_TemplateFunctions_jMaxS
 }
 
 
-extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMakepairProjectProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
+extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepairProjectProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -73,7 +73,7 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(id);
         
         auto result = this_object->makePair<iegen::example::Project, iegen::example::Project>(jni_to_cxx_arg0, jni_to_cxx_arg1);
         auto first = result.first;
@@ -91,7 +91,7 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
 }
 
 
-extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMakepairTaskProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
+extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepairTaskProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -102,7 +102,7 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateFunctions_jMake
 
         validateID(id);
 
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateFunctions, iegen::example::TemplateFunctions>(id);
+        auto this_object = iegen::UnsafeRefFromLong<iegen::example::TemplateMethods, iegen::example::TemplateMethods>(id);
         
         auto result = this_object->makePair<iegen::example::Task, iegen::example::Project>(jni_to_cxx_arg0, jni_to_cxx_arg1);
         auto first = result.first;

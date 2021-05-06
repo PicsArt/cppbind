@@ -3,7 +3,6 @@ package com.examples.simple
 import alias.*
 
 
-
 /**
  * Class holding project information.
  */
@@ -79,7 +78,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

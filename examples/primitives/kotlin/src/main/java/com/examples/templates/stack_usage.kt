@@ -3,7 +3,6 @@ package com.examples.templates
 import alias.*
 import com.examples.simple.*
 
-
 /**
  * comments
  * 
@@ -71,7 +70,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

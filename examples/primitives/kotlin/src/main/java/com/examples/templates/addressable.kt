@@ -3,7 +3,6 @@ package com.examples.templates
 import alias.*
 import com.examples.simple.Root
 
-
 /**
  * Addressable is a base class for all the objects, that have abs path.
  */

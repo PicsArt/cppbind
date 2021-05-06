@@ -3,7 +3,6 @@ package com.examples.templates
 import alias.*
 import com.examples.simple.Root
 
-
 /**
  * comments
  * 
@@ -46,7 +45,7 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

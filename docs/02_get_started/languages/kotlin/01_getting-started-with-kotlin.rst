@@ -2,6 +2,8 @@ Binding with Kotlin
 ===================
 This section demonstrates binding examples from simple to more complex cases.
 
+.. _classes-label:
+
 Classes/Structs
 ^^^^^^^^^^^^^^^
 Let´s generate wrapper code for the following custom type.
@@ -117,7 +119,7 @@ Inheritance
 
 This section covers single and multiple inheritance.
 
-Simple Inheritance
+Single Inheritance
 ~~~~~~~~~~~~~~~~~~
 
 Assume we have two types **Bicycle** inherited from **Vehicle**:
@@ -192,3 +194,65 @@ Here are the generated wrappers for kotlin:
 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
    :language: kotlin
    :lines: 6-
+
+.. note::
+    As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.
+
+Now we are ready to use them:
+
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/main.kt
+   :language: kotlin
+   :start-after: [multi-inheritance-usage]
+   :end-before: [multi-inheritance-usage]
+
+Templates
+^^^^^^^^^
+In this part we will cover template methods and classes/structs.
+For templates we must explicitly specify all possible types in **__API__**.
+
+
+Template Methods
+~~~~~~~~~~~~~~~~
+
+Let´s assume we have a class with two template methods:
+
+.. literalinclude:: /../examples/primitives/cxx/templates/template_functions.hpp
+   :language: cpp
+   :lines: 10-48
+
+For all templates we specify **template** attribute in **__API__**.
+It´s value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
+contain either strings(all possible types) or objects with **name** and **type** keys. We will see example with **name** and it´s usage later.
+Now let´s see how kotlin wrappers look like:
+
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_functions.kt
+   :language: kotlin
+   :lines: 5-
+
+As we can see for **makePair** two overloaded methods are generated with types **Project**, **Project** and **Task**, **Project**.
+For **max** again two overloaded methods are generated with **String** and **Int**.
+Now we can use them, here is an example:
+
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt
+   :language: kotlin
+   :start-after: [template-funcs-examples]
+   :end-before: [template-funcs-examples]
+
+
+Template Classes/Structs
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now let´s generate bindings for a template class Stack. Assume it will hold Projects or Tasks from  :ref:`classes-label` section.
+Here is the code in c++:
+
+.. literalinclude:: /../examples/primitives/cxx/templates/stack.hpp
+   :language: cpp
+   :lines: 18-77
+
+Similarly to methods for classes we will have a new kotlin class for each combination of types.
+Let´s see generated wrappers:
+
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
+   :language: kotlin
+   :lines: 6-
+

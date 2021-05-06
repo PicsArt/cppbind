@@ -138,8 +138,8 @@ class:
             ///// External wrapper functions ////////////
             {{private_external|string|indent}}
             {%- if not has_non_abstract_base_class %}
-            private external fun jSet_this(id: Long, self: Any): Void
-            private external fun jFinalize(id: Long): Void
+            private external fun jSet_this(id: Long, self: Any): Unit
+            private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
         {%- endif %}
@@ -205,8 +205,8 @@ interface:
             }
             {%- endif -%}
             ///// External wrapper functions ////////////
-            private external fun jSet_this(id: Long, self: Any): Void
-            private external fun jFinalize(id: Long): Void
+            private external fun jSet_this(id: Long, self: Any): Unit
+            private external fun jFinalize(id: Long): Unit
         }
         {%- endif %}
   cxx: *var_class_cxx
@@ -396,14 +396,14 @@ property_getter:
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if gen_property_setter %}
-      private external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Void
+      private external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
       @JvmStatic
       external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if gen_property_setter %}
       @JvmStatic
-      external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Void
+      external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     body: |
@@ -471,14 +471,14 @@ getter:
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
+      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
       @JvmStatic
       external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
       @JvmStatic
-      external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
+      external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     body: |

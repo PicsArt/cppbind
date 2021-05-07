@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 open class Vehicle
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
@@ -42,7 +41,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

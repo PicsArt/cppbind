@@ -83,7 +83,9 @@ class:
         - private_external
       content: |
         {%- set bases = base_types_converters if base_types_converters is defined else [] -%}
-        {%- if helper.kotlin.check_class_bases(name, bases) and helper.kotlin.has_valid_ancestors(ancestors) -%}
+        {%- do helper.Validator.validate_single_root(cursor) -%}
+        {%- do helper.Validator.validate_bases(name, bases) -%}
+        {%- do helper.Validator.validate_ancestors(ancestors) -%}
         {%- if comment %}
         {{comment}}
         {%- endif %}
@@ -154,7 +156,6 @@ class:
             private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
-        {%- endif %}
   cxx: *var_class_cxx
 
 interface:
@@ -170,6 +171,7 @@ interface:
         - companion
         - interface_external
       content: |
+        {%- do helper.Validator.validate_single_root(cursor) -%}
         {%- if comment %}
         {{comment}}
         {%- endif %}
@@ -188,7 +190,7 @@ interface:
             }
         }
         {%-endif %}
-        {% if helper.kotlin.has_valid_ancestors(ancestors) %}
+        {% do helper.Validator.validate_ancestors(ancestors) %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
         internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
             companion object {
@@ -228,7 +230,6 @@ interface:
             private external fun jSet_this(id: Long, self: Any): Unit
             private external fun jFinalize(id: Long): Unit
         }
-        {%- endif %}
   cxx: *var_class_cxx
 
 var_template_method_include: &var_template_method_include

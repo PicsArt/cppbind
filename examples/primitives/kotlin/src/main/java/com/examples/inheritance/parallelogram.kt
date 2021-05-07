@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 interface IParallelogram {
     fun getObjId(): Long
     
@@ -32,7 +31,7 @@ class ParallelogramHelper {
     }
 }
 
-open abstract class Parallelogram
+open class Parallelogram
 internal constructor(_id: Long) : IParallelogram, AutoCloseable {
     companion object {
         init {

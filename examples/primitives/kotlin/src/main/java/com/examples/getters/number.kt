@@ -26,7 +26,7 @@ internal constructor(_id: Long) : AutoCloseable {
         @JvmStatic
         private external fun jConstructor(n: Int): Long
     }
-
+    
     protected var id = _id
     
     open fun getObjId(): Long {
@@ -62,7 +62,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
@@ -104,7 +104,7 @@ internal constructor(_id: Long) : AutoCloseable {
         @JvmStatic
         private external fun jConstructor(n: Double): Long
     }
-
+    
     protected var id = _id
     
     open fun getObjId(): Long {
@@ -140,7 +140,7 @@ internal constructor(_id: Long) : AutoCloseable {
 
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }

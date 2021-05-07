@@ -3,7 +3,6 @@ package com.examples.inheritance
 import alias.*
 
 
-
 interface IRectangle : IParallelogram {
     
     open override val area: Double

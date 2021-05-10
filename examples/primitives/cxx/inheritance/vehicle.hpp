@@ -7,7 +7,7 @@ namespace iegen::example {
  *
  * __API__
  * gen: class
- * shared_ref: False
+ * shared_ref: True
  * package: inheritance
  * swift.include: CWrapper
  */

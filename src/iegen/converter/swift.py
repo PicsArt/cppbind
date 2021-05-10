@@ -50,12 +50,3 @@ def get_c_func_name(hint_name):
 
 def get_map_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
-
-
-def get_exception_name(name):
-    if not name.startswith("std::"):
-        raise Exception("Possible thrown exception must be an standard exception")
-
-    name = name.replace("::", "_").replace("&", "")
-    components = name.split("_")
-    return ''.join(x.title() for x in components)

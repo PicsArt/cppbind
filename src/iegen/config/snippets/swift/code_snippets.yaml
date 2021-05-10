@@ -7,7 +7,9 @@ file:
       - body
     content: |
       import Foundation
+      {{helper_includes|format_list('import {}')|join('\n')}}
       {{include}}
+      import Exceptions
 
       {{body}}
   cc:
@@ -45,7 +47,7 @@ file:
       }
       #endif
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
-  exceptions:
+  exceptions_utils_swift:
     file_path: |
       {{[config.out_dir, config.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
@@ -55,15 +57,15 @@ file:
 
           static var uncaughtExceptionHandler = defaultHandler;
 
-          static func defaultHandler() {
-              print("Uncaught exception is found")
+          static func defaultHandler(_ err_msg: String) {
+              print("Uncaught exception is found: \(err_msg)")
           }
 
-          static func handleUncaughtException() {
-              uncaughtExceptionHandler()
+          static func handleUncaughtException(_ err_msg : String) {
+              uncaughtExceptionHandler(err_msg)
           }
 
-          public static func setUncaughtExceptionHandler(_ handler: @escaping () -> Void) {
+          public static func setUncaughtExceptionHandler(_ handler: @escaping (String) -> Void) {
               uncaughtExceptionHandler = handler;
           }
 
@@ -71,10 +73,75 @@ file:
               uncaughtExceptionHandler = defaultHandler;
           }
       }
+  std_exceptions_swift:
+    file_path: |
+      {{[config.out_dir, config.package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
+    scopes:
+      - body
+    content: |
+      import CWrapper
+      {% for cls, base_cls in helper.Exceptions.get_std_exc_tree() %}
+      {{'public' if base_cls else 'open'}} class {{helper.Exceptions.get_exc_name(cls)}} : {{helper.Exceptions.get_exc_name(base_cls) if base_cls else 'Error'}} {
+      {% if not base_cls %}
+            public let cself : UnsafeMutableRawPointer
+            public let owner : Bool
 
-      public enum CustomError : Error {
-          {{body}}
+            public init(_ _cself: UnsafeMutableRawPointer, _ _owner: Bool = false) {
+                self.cself = _cself
+                self.owner = _owner
+            }
+            deinit {
+              if owner {
+                  release_std_exception(cself)
+              }
+            }
+
+          open func what() -> String {
+              let result = _func_std_exception_what(cself);
+              let sc_to_swift_result = String(cString: result!)
+              return sc_to_swift_result;
+          }
+      {% endif %}
       }
+      {% endfor %}
+  std_exceptions_header:
+    file_path: |
+      {{[config.cxx_out_dir, config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
+    scopes:
+      - body
+    content: |
+      #ifndef _C_std_exceptions_WRAPPER_
+      #define _C_std_exceptions_WRAPPER_
+
+      #if __cplusplus
+      extern "C" {
+      #endif
+      void release_std_exception(void* _Nonnull cself);
+      const char * _Nullable _func_std_exception_what(void* _Nonnull cself);
+      #if __cplusplus
+      }
+      #endif
+      #endif /* ifndef _C_std_exceptions_WRAPPER_ */
+  std_exceptions_cpp:
+    file_path: |
+      {{[config.cxx_out_dir, config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes:
+      - body
+    content: |
+      #include <string.h>
+      #include <memory>
+      #include "{{[config.cxx_out_dir, config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h"
+
+      void release_std_exception(void* _Nonnull cself) {
+          delete dynamic_cast<std::exception*>(static_cast<std::exception*>(cself));
+      }
+
+      const char * _Nullable _func_std_exception_what(void* _Nonnull cself){
+          auto c_to_cxx_cself = dynamic_cast<std::exception*>(static_cast<std::exception*>(cself));
+          const auto& result = c_to_cxx_cself->what();
+          return result;
+      }
+
 
 enum:
   swift: 
@@ -108,8 +175,10 @@ class:
                               : {% for base_type_converter in base_types_converters -%}
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
-                                {% endif %} {
-            {% if not has_non_abstract_base_class %}
+                                {% endif %}{%- if helper.Exceptions.is_std_custom_exc(ctx) or helper.Exceptions.is_root_exc(ctx) -%}
+                                {{', ' if base_types_converters is defined and base_types_converters|length > 0 else ' : '}}{{'Exceptions.StdException ' if helper.Exceptions.is_std_custom_exc(ctx) else 'Error '}}
+                                {%- endif %} {
+            {% if not has_non_abstract_base_class and not helper.Exceptions.is_std_custom_exc(ctx)%}
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 
@@ -256,10 +325,10 @@ function:
     body: |
       {{comment}}
       {%- if is_operator %}
-      public static func {{helper.swift.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}} {
+      public static func {{helper.swift.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      public {{"static " if is_static}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}} {
+      public {{"static " if is_static}}{{"override " if is_override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -275,19 +344,22 @@ function:
           {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
         {%- endif %}
           if (err.is_err) {
-              {%- if helper.Exceptions.can_throw(exception_types) %}
+              {%- if helper.Exceptions.can_throw(throws) %}
               let err_type = Int(err.err_type)
-              let err_msg = String(cString: err.err_msg!)
               switch(err_type) {
-              {%- for exc_type in exception_types %}
+              {%- for exc_type in throws %}
                   case({{loop.index}}):
-                      throw CustomError.{{helper.swift.get_exception_name(exc_type)}}(err_msg)
+                      throw {{'Exceptions.' if helper.Exceptions.is_std_exc(exc_type)}}{{helper.Exceptions.get_exc_name(exc_type)}}(err.err_ptr, true)
               {%- endfor %}
                   default:
-                      ExceptionHandler.handleUncaughtException()
+                      let err_msg = String(cString: err.err_msg)
+                      ExceptionHandler.handleUncaughtException(err_msg)
+                      fatalError("Unexpected Exception")
               }
               {%- else %}
-              ExceptionHandler.handleUncaughtException()
+              let err_msg = String(cString: err.err_msg)
+              ExceptionHandler.handleUncaughtException(err_msg)
+              fatalError("Unexpected Exception")
               {%- endif %}
           }
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -296,7 +368,7 @@ function:
       }
     interface_body: |
       {{comment}}
-      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(exception_types)}}-> {{rconverter.swift.target_type_name}}
+      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}
   cc:
     body: |
       {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
@@ -332,18 +404,26 @@ function:
             {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
           }
         {%- endif %}
-        {%- if helper.Exceptions.can_throw(exception_types) %}
-          {%- for exc_type in exception_types -%}
+        {%- if helper.Exceptions.can_throw(throws) %}
+          {%- for exc_type in throws -%}
           catch ({{exc_type}} e) {
               err->is_err = true;
-              err->err_msg = e.what();
               err->err_type = {{loop.index}};
+              err->err_ptr = new {{exc_type}}(e);
           }
           {%- endfor %}
           {%- endif %}
+          {%- if not 'std::exception' in throws %}
+          catch (std::exception e) {
+              err->is_err = true;
+              err->err_type = {{throws|length + 1}};
+              err->err_ptr = new std::exception(e);
+              err->err_msg = e.what();
+          }
+          {%- endif %}
           catch (...) {
               err->is_err = true;
-              err->err_msg = "Unknown Exception";
+              err->err_msg = "Uncaught Exception";
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
@@ -360,14 +440,15 @@ function:
         {%- else -%}
         {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}{{', ' if args|length > 0}}ErrorObj* _Nonnull err
         {%- endif %});
-  exceptions:
+  exceptions_utils_swift:
     body:
-      unique_content: |
-        {%- if helper.Exceptions.can_throw(exception_types) -%}
-        {% for exc_type in exception_types %}
-            case {{helper.swift.get_exception_name(exc_type)}}(_ err_msg: String)
-        {%- endfor %}
-        {%- endif %}
+  std_exceptions_swift:
+    body:
+  std_exceptions_header:
+    body:
+  std_exceptions_cpp:
+    body:
+
 
 property_getter:
   swift:

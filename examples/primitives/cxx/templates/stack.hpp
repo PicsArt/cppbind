@@ -14,7 +14,7 @@
 
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: class
@@ -74,6 +74,7 @@ class Stack {
    std::vector<T*> _elements;
 
 };
+// [example]
 }
 #endif
 

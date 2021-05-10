@@ -2,10 +2,8 @@
 #define one_template_getter_hpp
 
 namespace iegen::example {
-
+// [example]
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: getters
@@ -13,8 +11,6 @@ namespace iegen::example {
  */
 struct SimpleItem  {
     /**
-     * comments
-     *
      * __API__
      * gen: property_setter
      */
@@ -69,9 +65,8 @@ class OneTypeTemplateGetter  {
     T* itemWithType() const {
        return new T();
     }
-
-
 };
+// [example]
 }
 
 #endif

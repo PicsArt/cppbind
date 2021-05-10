@@ -8,7 +8,7 @@
 #include <string>
 
 namespace iegen::example {
-
+// [example]
 /**
  * Addressable is a base class for all the objects, that have abs path.
  * __API__
@@ -55,6 +55,6 @@ inline Addressable<T>::Addressable(const T& parent, const std::string& name) {
     _parent_path = parent.path;
     _name = name;
 }
-
+// [example]
 }
 #endif

@@ -5,7 +5,6 @@ import alias.*
 
 /**
  * An example for with overloaded methods.
- * 
  */
 open class Counter
 internal constructor(_id: Long) : AutoCloseable {

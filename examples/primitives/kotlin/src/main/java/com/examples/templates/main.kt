@@ -18,11 +18,11 @@ assert(stackPrj.empty())
 // [stack-usage-examples]
 stackPrj.push(prj)
 var stackUsage = StackUsage()
-var res = stackUsage.firstItemOfSpecialized(stackPrj)
+var res = stackUsage.firstItemOfSpecializedStack(stackPrj)
 assert(res.title == prj.title)
 assert(res.getObjId() == prj.getObjId())
 
-res = stackUsage.firstItemOfTemplate(stackPrj)
+res = stackUsage.firstItemOfTemplateStack(stackPrj)
 assert(res.title == prj.title)
 assert(res.getObjId() == prj.getObjId())
 // [stack-usage-examples]

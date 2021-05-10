@@ -7,7 +7,7 @@
 #include "cxx/simple/task.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * Class holding project information.
  * __API__
@@ -57,6 +57,6 @@ private:
     std::vector<Task*> _tasks;
     std::string _title;
 };
-
+// [example]
 }
 #endif

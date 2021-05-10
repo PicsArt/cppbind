@@ -6,7 +6,7 @@
 #include "cxx/inheritance/rectangle.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: class
@@ -42,6 +42,6 @@ public:
     };
 
 };
-
+// [example]
 }
 #endif

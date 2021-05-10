@@ -8,8 +8,7 @@
 #include <string>
 
 namespace iegen::example {
-
-
+// [example]
 /**
  * This class contains a private string field and getter/setter methods for it.
  * __API__
@@ -21,8 +20,6 @@ namespace iegen::example {
 class Person {
 public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
@@ -61,6 +58,6 @@ private:
     std::string _fullname;
 
 };
-
+// [example]
 }
 #endif

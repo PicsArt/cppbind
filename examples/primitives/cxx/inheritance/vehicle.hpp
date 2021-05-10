@@ -2,9 +2,8 @@
 #define vehicle_hpp
 
 namespace iegen::example {
-
+// [example]
 /**
- *
  * __API__
  * gen: class
  * shared_ref: False
@@ -31,6 +30,6 @@ public:
 private:
     int _numberOfSeats;
 };
-
+// [example]
 }
 #endif

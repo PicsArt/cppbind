@@ -10,10 +10,8 @@
 #include "cxx/simple/project.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: templates
@@ -25,35 +23,28 @@ namespace iegen::example {
 class StackUsage  {
     public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
     StackUsage() {};
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      */
-    Project* firstItemOfSpecialized(iegen::example::Stack<Project>* p) {
+    Project* firstItemOfSpecializedStack(iegen::example::Stack<Project>* p) {
         return p->top();
     };
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      * template: {"V": [{"type": "iegen::example::Project"}]}
      */
     template <typename V>
-    V* firstItemOfTemplate(iegen::example::Stack<V>* p) {
+    V* firstItemOfTemplateStack(iegen::example::Stack<V>* p) {
         return p->top();
     };
-
 
     // not supported usage example
     template <typename V>
@@ -62,6 +53,6 @@ class StackUsage  {
     };
 
 };
-
+// [example]
 }
 #endif

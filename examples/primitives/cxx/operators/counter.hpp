@@ -2,16 +2,15 @@
 #define counter_h
 
 namespace iegen::example {
+// [example]
 /**
  * An example for with overloaded methods.
- *
  * __API__
  * gen: class
  * package: operators
  * swift.include: CWrapper
  */
 class Counter {
-
 public:
     /**
      * Counter constructor.
@@ -57,7 +56,6 @@ public:
     }
 
     /**
-     *
      * __API__
      * gen: method
      * kotlin.name: gt
@@ -68,7 +66,6 @@ public:
     }
 
     /**
-     *
      * __API__
      * gen: method
      * kotlin.name: add
@@ -78,10 +75,9 @@ public:
         this->_count += counter.count();
         return *this;
     }
-
-
 private:
 	int _count;
 };
+// [example]
 }
 #endif

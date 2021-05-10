@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace iegen::example {
-
+// [example]
 // forward declaration
 class Teacher;
 
@@ -51,6 +51,6 @@ public:
 private:
     std::vector<Teacher*> _teachers;
 };
-
+// [example]
 }
 #endif

@@ -4,7 +4,7 @@
 #include <string>
 
 namespace iegen::example {
-
+// [example]
 /**
  * Class holding task information.
  * __API__
@@ -37,7 +37,7 @@ public:
 protected:
     std::string _title;
 };
-
+// [example]
 }
 
 #endif

@@ -3,8 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
  */
 public class StackUsage  {
     
@@ -23,8 +21,6 @@ public class StackUsage  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init() {
 
@@ -32,24 +28,20 @@ public class StackUsage  {
     }
     
     /**
-     * comments
-     * 
      */
-    public func firstItemOfSpecialized(p: StackProject) -> Project {
+    public func firstItemOfSpecializedStack(p: StackProject) -> Project {
 
         let swift_to_sc_p = p.cself
-        let result = _func_StackUsage_firstItemOfSpecialized(cself, swift_to_sc_p);
+        let result = _func_StackUsage_firstItemOfSpecializedStack(cself, swift_to_sc_p);
         let sc_to_swift_result = Project(result)
         return sc_to_swift_result;
     }
     /**
-     * comments
-     * 
      */
-    public func firstItemOfTemplate(arg0: StackProject) -> Project {
+    public func firstItemOfTemplateStack(arg0: StackProject) -> Project {
 
         let swift_to_sc_arg0 = arg0.cself
-        let result = _func_StackUsage_firstItemOfTemplateProject(cself, swift_to_sc_arg0);
+        let result = _func_StackUsage_firstItemOfTemplateStackProject(cself, swift_to_sc_arg0);
         let sc_to_swift_result = Project(result)
         return sc_to_swift_result;
     }

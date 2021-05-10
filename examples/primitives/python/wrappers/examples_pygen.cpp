@@ -76,5 +76,5 @@ void bindExamples(py::module& m) {
     py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
     bindStackUsage(templates_stack_usage);
     py::module_ templates_template_functions = templates.def_submodule("template_functions", "template_functions");
-    bindTemplateFunctions(templates_template_functions);
+    bindTemplateMethods(templates_template_functions);
 }

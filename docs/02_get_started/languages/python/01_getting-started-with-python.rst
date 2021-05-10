@@ -1,6 +1,8 @@
-Binding with Kotlin
+Binding with Python
 ===================
-This section demonstrates binding examples from simple to more complex cases.
+This section demonstrates binding examples for python from simple to more complex cases.
+For python bindings iegen uses pybind11. Iegen generates types which are calling pybind code under the hood.
+
 
 .. _classes-label:
 
@@ -20,16 +22,19 @@ In a code above we are exporting all public methods and constructors.
     Notice that the title method is marked as a getter, so it
     will be a read-only property for the target language.
 
-Generated code for kotlin looks as follows.
+Generated code for python looks as follows.
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/simple/task_pygen.py
+   :language: py
+
+.. note::
+    Here you can see metaclass and bind_utils module imports. These are iegen helper modules. Another thing to note here
+    is import of **examples.simple.task** this is pytbind's task module corresponding to iegen's task module.
 
 Now we are able to use it.
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/simple/main.py
+   :language: py
    :start-after: [task-usage]
    :end-before: [task-usage]
 
@@ -42,18 +47,17 @@ Let's assume we have another class using the one above.
 
 .. note::
     We are using **include** attribute based on which appropriate import will be generated for
-    each target language. In case of kotlin we do not have this attribute, as both wrappers are generated under the same package.
+    each target language.
 
-Here is the generated wrapper code for kotlin:
+Here is the generated wrapper code for python:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/simple/project_pygen.py
+   :language: py
 
 And the usage example:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/simple/main.py
+   :language: py
    :start-after: [project-usage]
    :end-before: [project-usage]
 
@@ -77,24 +81,24 @@ And the Frame struct using it:
 
 .. note::
     We are generating **property_setter** for public field **backgroundColor**.
-    A writable property field will correspond to it in kotlin. To generate read-only field we should use **property_getter** instead.
+    A writable property field will correspond to it in python. To generate read-only field we should use **property_getter** instead.
 
-Here is the generated kotlin code for Color:
+Here is the generated python code for Color:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/enums/color_pygen.py
+   :language: py
+   :lines: 8-
 
 And for Frame:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/frame.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/enums/frame_pygen.py
+   :language: py
+   :lines: 8-
 
 Now we are ready to use them:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/enums/main.py
+   :language: py
    :start-after: [color-usage]
    :end-before: [color-usage]
 
@@ -112,16 +116,20 @@ Let's now bind struct with static and overloaded methods:
 
 As you can see overloaded or static methods are like regular methods. There's nothing special to add in the **API** for them.
 
-Here is the wrapper for kotlin:
+Here is the wrapper for python:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/overloads/utils_pygen.py
+   :language: py
+   :lines: 8-
+
+.. note::
+    Python does not have method overloading, but here with bind decorator we have overloaded sum and concatenate methods.
+    Sum is also a classmethod as it was static in original code.
 
 We are ready to use it:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/overloads/main.py
+   :language: py
    :start-after: [overload-usage]
    :end-before: [overload-usage]
 
@@ -157,20 +165,20 @@ Assume we have two types **Bicycle** inherited from **Vehicle**:
     by iegen then in the wrapper code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.
-Iegen will generate two kotlin classes one inherited from the other:
+Iegen will generate two python classes one inherited from the other:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/vehicle_pygen.py
+   :language: py
+   :lines: 8-
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/bicycle_pygen.py
+   :language: py
+   :lines: 9-
 
 Now we can use them:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/inheritance/main.py
+   :language: py
    :start-after: [simple-inheritance-usage]
    :end-before: [simple-inheritance-usage]
 
@@ -202,40 +210,40 @@ The last two in their turn are based from **Parallelogram**:
 In this case again we have used the same value for **shared_ref** for all 4 types.
 
 .. note::
-    Here we used **gen: interface** instead of **gen: class**.
-    Most of the modern languages do not support multiple inheritance so we have to tell iegen to generate
-    interfaces with implementations instead.
+    Here we used **gen: interface** instead of **gen: class**. If you are using for python only then there's you can use
+    **gen: class**. Here we use **gen: interface** as these examples are used for all languages and most of the do
+    not support multiple inheritance.
 
 .. note::
     It's important to note that in case of multiple inheritance all parent's should have the same root type,
     otherwise an error will be thrown and the code won't be parsed.
 
-Here are the generated wrappers for kotlin:
+Here are the generated wrappers for python:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/parallelogram_pygen.py
+   :language: py
+   :lines: 9-
 
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rectangle.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/rectangle_pygen.py
+   :language: py
+   :lines: 9-
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rhombus.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/rhombus_pygen.py
+   :language: py
+   :lines: 9-
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/inheritance/square_pygen.py
+   :language: py
+   :lines: 10-
 
 .. note::
     As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.
 
 Now we are ready to use them:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/inheritance/main.py
+   :language: py
    :start-after: [multi-inheritance-usage]
    :end-before: [multi-inheritance-usage]
 
@@ -258,7 +266,7 @@ Let's assume we have a class with two template methods:
 For all templates we specify **template** attribute in **__API__**.
 It's value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
 contain either strings(all possible types) or objects with **name** and **type** keys. We will see example with **name** and it's usage later.
-Now let's see how kotlin wrappers look like:
+Now let's see how python wrappers look like:
 
 .. note::
     Keys in **__API__** should be in the same order as in the template parameter list.
@@ -267,16 +275,16 @@ Now let's see how kotlin wrappers look like:
     We gave template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
     This is mandatory otherwise iegen won't be able to find Task type.
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_functions.kt
-   :language: kotlin
-   :lines: 5-
+.. literalinclude:: /../examples/primitives/python/src/templates/template_functions_pygen.py
+   :language: py
+   :lines: 10-
 
 As we can see for **makePair** two overloaded methods are generated with types **Project**, **Project** and **Task**, **Project**.
 For **max** again two overloaded methods are generated with **String** and **Int**.
 Now we can use them, here is an example:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt
-   :language: kotlin
+.. literalinclude:: /../examples/primitives/python/src/templates/main.py
+   :language: py
    :start-after: [template-funcs-examples]
    :end-before: [template-funcs-examples]
 
@@ -292,12 +300,12 @@ Here is the code in c++:
    :start-after: [example]
    :end-before: [example]
 
-Similarly to methods we shall have a new kotlin class for each combination of types.
-Let's take a look at generated kotlin wrappers:
+Similarly to methods we shall have a new python class for each combination of types.
+Let's take a look at generated python wrappers:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
-   :language: kotlin
-   :lines: 6-
+.. literalinclude:: /../examples/primitives/python/src/templates/stack_pygen.py
+   :language: py
+   :lines: 10-
 
 Here we have two stacks one for Task and the other for Project. Iegen appends template arguments type names to the class name
 i.e Task is appended to Stack an we have **StackTask**.

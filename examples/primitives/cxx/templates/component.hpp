@@ -10,7 +10,7 @@
 #include "cxx/simple/root.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * comments
  *
@@ -34,7 +34,6 @@ public:
     Component(const Root& parent, const std::string& name) : Addressable<Root>(parent, name){}
 
 };
-
+// [example]
 }
-
 #endif

@@ -23,7 +23,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jConstruct
 }
 
 
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemofspecialized(JNIEnv* env, jobject obj, jobjectid id, jobjectid p){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemofspecializedstack(JNIEnv* env, jobject obj, jobjectid id, jobjectid p){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -33,7 +33,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
 
         auto this_object = iegen::UnsafeRefFromLong<iegen::example::StackUsage, iegen::example::StackUsage>(id);
         
-        auto result = this_object->firstItemOfSpecialized(jni_to_cxx_p);
+        auto result = this_object->firstItemOfSpecializedStack(jni_to_cxx_p);
 
         jobjectid cxx_to_jni_result =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(result);
         return cxx_to_jni_result;
@@ -42,7 +42,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
 }
 
 
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemoftemplateProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemoftemplatestackProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0){
     return iegen::handleNativeCrash(env, [&] {
         
 
@@ -52,7 +52,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
 
         auto this_object = iegen::UnsafeRefFromLong<iegen::example::StackUsage, iegen::example::StackUsage>(id);
         
-        auto result = this_object->firstItemOfTemplate<iegen::example::Project>(jni_to_cxx_arg0);
+        auto result = this_object->firstItemOfTemplateStack<iegen::example::Project>(jni_to_cxx_arg0);
 
         jobjectid cxx_to_jni_result =  iegen::UnsafeRefAsLong<iegen::example::Project, iegen::example::Project>(result);
         return cxx_to_jni_result;

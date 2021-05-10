@@ -3,7 +3,7 @@
 #include "cxx/inheritance/parallelogram.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: interface
@@ -60,6 +60,6 @@ protected:
     double _width;
 
 };
-
+// [example]
 }
 #endif

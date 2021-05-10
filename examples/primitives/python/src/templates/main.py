@@ -1,6 +1,6 @@
 from templates.stack_pygen import StackProject, StackTask
 from templates.stack_usage_pygen import StackUsage
-from templates.template_functions_pygen import TemplateFunctions
+from templates.template_functions_pygen import TemplateMethods
 from templates.addressable_pygen import AddressableRoot
 from templates.component_pygen import Component
 from simple.project_pygen import Project
@@ -21,29 +21,29 @@ assert stack_prj.empty() is True
 # [stack-usage-examples]
 stack_prj.push(item=prj)
 stack_usage = StackUsage()
-res = stack_usage.first_item_of_specialized(p=stack_prj)
+res = stack_usage.first_item_of_specialized_stack(p=stack_prj)
 assert res.title == prj.title
 
-res = stack_usage.first_item_of_template(arg0=stack_prj)
+res = stack_usage.first_item_of_template_stack(arg0=stack_prj)
 assert res.title == prj.title
 # [stack-usage-examples]
 
 # [template-funcs-examples]
-tf = TemplateFunctions()
-max_int = tf.max(arg0=2, arg1=5)
+tm = TemplateMethods()
+max_int = tm.max(arg0=2, arg1=5)
 assert max_int == 5
-max_string = tf.max(arg0="d", arg1="a")
+max_string = tm.max(arg0="d", arg1="a")
 assert max_string == "d"
 
 prj1 = Project(title="My first project")
 prj2 = Project(title="My second project")
-pair_prj_prj = tf.make_pair(arg0=prj1, arg1=prj2)
+pair_prj_prj = tm.make_pair(arg0=prj1, arg1=prj2)
 assert len(pair_prj_prj) == 2
 assert pair_prj_prj[0].title == prj1.title
 assert pair_prj_prj[1].title == prj2.title
 
 task1 = Task(title="My Task")
-pair_task_prj = tf.make_pair(arg0=task1, arg1=prj1)
+pair_task_prj = tm.make_pair(arg0=task1, arg1=prj1)
 assert len(pair_task_prj) == 2
 assert pair_task_prj[0].title == task1.title
 assert pair_task_prj[1].title == prj1.title

@@ -97,7 +97,21 @@ def _get_declaration_includes(ctx, cursor, config, includes):
 
 def get_default_value(arg):
     if arg.default:
+        pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
-            return None
-        return arg.default
+            return f' = None'
+        elif pointee.kind == cli.TypeKind.ENUM:
+            return f' = {arg.converter.python.target_type_name}.{arg.default}'
+        return f' = {arg.default}'
+    return ''
+
+
+def get_pybind_default_value(arg):
+    if arg.default:
+        pointee = cutil.get_pointee_type(arg.cursor.type)
+        if arg.default in ('nullptr', 'NULL'):
+            return f' = static_cast<{arg.converter.python.cxx_type_name}>({arg.default})'
+        elif pointee.kind == cli.TypeKind.ENUM:
+            return f' = {pointee.spelling}::{arg.default}'
+        return f' = {arg.default}'
     return ''

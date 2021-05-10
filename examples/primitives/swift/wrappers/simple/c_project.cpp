@@ -1,10 +1,8 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/simple/c_project.h"
-#include "cxx/simple/project.hpp"
+#include "swift/wrappers/classes/c_project.h"
+#include "cxx/classes/project.hpp"
 
-
-using namespace iegen::example;
 void release_Project(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
 }

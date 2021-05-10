@@ -1,10 +1,8 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/simple/c_root.h"
-#include "cxx/simple/root.hpp"
+#include "swift/wrappers/classes/c_root.h"
+#include "cxx/classes/root.hpp"
 
-
-using namespace iegen::example;
 void release_Root(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(cself));
 }

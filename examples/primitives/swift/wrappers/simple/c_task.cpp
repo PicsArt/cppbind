@@ -1,10 +1,8 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/simple/c_task.h"
-#include "cxx/simple/task.hpp"
+#include "swift/wrappers/classes/c_task.h"
+#include "cxx/classes/task.hpp"
 
-
-using namespace iegen::example;
 void release_Task(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(cself));
 }

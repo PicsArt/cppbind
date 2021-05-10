@@ -2,6 +2,7 @@
 #define project_hpp
 
 #include <vector>
+#include <memory>
 #include <string>
 
 #include "cxx/simple/task.hpp"
@@ -14,7 +15,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: simple
- * python.include: simple.task_pygen
+ * python.include: simple.task
  * swift.include: CWrapper
  */
 class Project {
@@ -41,7 +42,7 @@ public:
      * __API__
      * gen: method
      */
-    void addTask(Task* task) {
+    void addTask(std::shared_ptr<iegen::example::Task> task) {
         _tasks.push_back(task);
     }
 
@@ -50,11 +51,11 @@ public:
      * __API__
      * gen: method
      */
-    const std::vector<Task*>& tasks() const {
+    const std::vector<std::shared_ptr<iegen::example::Task>>& tasks() const {
         return _tasks;
     }
 private:
-    std::vector<Task*> _tasks;
+    std::vector<std::shared_ptr<iegen::example::Task>> _tasks;
     std::string _title;
 };
 

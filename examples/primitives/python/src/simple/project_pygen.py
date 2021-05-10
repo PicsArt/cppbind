@@ -1,14 +1,15 @@
 from __future__ import annotations
 from typing import *
-import examples.simple.project as pybind_project_pygen
+import examples.classes.project as pybind_project_pygen
 from bind_utils import *
 from metaclass import *
-from simple.task_pygen import *
+from classes.task import *
 
 
 class Project(metaclass=OriginalMethodsMetaclass):
     """
-    Class holding project information."""
+    comments
+    """
     
     @bind
     def __init__(self, title: str):
@@ -18,17 +19,20 @@ class Project(metaclass=OriginalMethodsMetaclass):
     @bind
     def title(self) -> str:
         """
-        Get project´s title."""
+        comments
+        """
         pass
     
     @bind
-    def add_task(self, task: Task) -> None:
+    def add_task(self, task: PyTask) -> None:
         """
-        Add a task to project."""
+        comments
+        """
         pass
 
     @bind
     def tasks(self) -> list:
         """
-        Get project´s tasks."""
+        comments
+        """
         pass

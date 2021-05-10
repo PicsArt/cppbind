@@ -2,12 +2,12 @@ load("//:utils.bzl", "untar")
 
 py_binary(
     name = "run_iegen",
-    srcs = ["//:iegen_library"],
+    srcs = ["//src:iegen_library"],
     legacy_create_init = False,
     main = "src/iegen/runner.py",
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = ["//:iegen_library"],
+    deps = ["//src:iegen_library"],
 )
 
 genrule(

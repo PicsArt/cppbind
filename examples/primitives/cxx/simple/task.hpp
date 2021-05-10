@@ -9,9 +9,11 @@ namespace iegen::example {
  * Class holding task information.
  * __API__
  * gen: class
- * shared_ref: False
+ * shared_ref: True
  * package: simple
+  * python.package: simple.task
  * swift.include: CWrapper
+ * python.name: PyTask
  */
 class Task {
 public:

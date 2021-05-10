@@ -130,17 +130,13 @@ class bind:
 
         @functools.wraps(self.fn.function)
         def _decorator(*args, **kwargs):
+            _kwargs = _get_default_args(self.fn.function)
+            _kwargs.update(kwargs)
             if inspect.isclass(instance):
-                # for python >= 3.9
+                # for python 3.9
                 # case of static method, e.g decorated with @classmethod
-                if not hasattr(instance, 'originals'):
-                    # called on an instance which is of pybind type
-                    cls = getattr(importlib.import_module(instance.__module__), instance.__name__)
-                else:
-                    # instance is iegen generated cls
-                    cls = instance
-                return cls.originals[self.fn.name].__get__(self.fn.name)(*args, **kwargs)
-            return self.cls.originals[self.fn.name](instance, *args, **kwargs)
+                return instance.originals[self.fn.name].__get__(self.fn.name)(*args, **_kwargs)
+            return self.cls.originals[self.fn.name](instance, *args, **_kwargs)
 
         return _decorator
 
@@ -159,13 +155,10 @@ class bind:
             # case of static method, e.g decorated with @classmethod
             # update self docstring to add overload docstring
             functools.update_wrapper(self, self.fn.function)
-            if not hasattr(args[0], 'originals'):
-                # called on an instance which is of pybind type i.e the first argument is pybind cls
-                cls = getattr(importlib.import_module(args[0].__module__), args[0].__name__)
-            else:
-                # the first argument is iegen generated cls
-                cls = args[0]
-            return cls.originals[self.fn.name].__get__(self.fn.name)(*args[1:], **kwargs)
+            # the first argument is cls
+            _kwargs = _get_default_args(self.fn.function)
+            _kwargs.update(kwargs)
+            return args[0].originals[self.fn.name].__get__(self.fn.name)(*args[1:], **_kwargs)
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
         prop = cls.originals[self.fn.name]
@@ -175,3 +168,12 @@ class bind:
         else:
             # getter
             return prop.fget(*args)
+
+
+def _get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }

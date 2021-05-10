@@ -1,26 +1,29 @@
-package com.examples.simple
+package com.examples.classes
 
 import alias.*
 
 
+
 /**
- * Class holding project information.
+ * comments
+ * 
  */
 open class Project
-internal constructor(_id: Long) : AutoCloseable {
+    internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+          System.loadLibrary("wrapper_jni");
         }
-        
         /**
-         * Project constructor.
+         * comments
+         * 
          */
         protected fun construct_helper(title: String): Long {
+            
+            
             val id = jConstructor(title)
             return id
         }
-
         @JvmStatic
         private external fun jConstructor(title: String): Long
 
@@ -30,33 +33,37 @@ internal constructor(_id: Long) : AutoCloseable {
     protected var id = _id
     
     open fun getObjId(): Long {
-        if (id == 0L) {
+        if(id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
     }
-    
     /**
-     * Project constructor.
+     * comments
+     * 
      */
-    constructor(title: String) : this(construct_helper(title)) {
-        //jSet_this(id, this)
+    constructor(title: String): this(construct_helper(title)) {
+      //jSet_this(id, this)
     }
     
     /**
-     * Get project´s title.
+     * comments
+     * 
      */
     val title: String
-        get() {
+          get() {
             val result = jTitle(getObjId())
             
             return result
-        }
+          }
+          
     
     /**
-     * Add a task to project.
+     * comments
+     * 
      */
-    fun addTask(task: Task): Unit {
+    fun addTask(task: Task): Void {
+        
         val kotlin_to_jdk_task = task.getObjId()
         val result = jAddtask(getObjId(), kotlin_to_jdk_task)
         
@@ -64,9 +71,11 @@ internal constructor(_id: Long) : AutoCloseable {
     }
 
     /**
-     * Get project´s tasks.
+     * comments
+     * 
      */
     fun tasks(): List<Task> {
+        
         val result = jTasks(getObjId())
         val jdk_to_kotlin_result: MutableList<Task> = mutableListOf()
         for (value in result) {
@@ -75,25 +84,22 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return jdk_to_kotlin_result
     }
-
     override fun close() {
-        if (id != 0L) {
-            jFinalize(id)
-            id = 0L
-        }
+    	if (id != 0L) {
+    		jFinalize(id)
+    		id = 0L
+    	}
     }
-
     /**
-     * Finalize and deletes the object
-     */
+    * Finalize and deletes the object
+    */
     protected fun finalize() {
-        close()
+    	close()
     }
-
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
-    private external fun jAddtask(id: Long, task: Long): Unit
+    private external fun jAddtask(id: Long, task: Long): Void
     private external fun jTasks(id: Long): LongArray
-    private external fun jSet_this(id: Long, self: Any): Unit
-    private external fun jFinalize(id: Long): Unit
+    private external fun jSet_this(id: Long, self: Any): Void
+    private external fun jFinalize(id: Long): Void
 }

@@ -1,26 +1,29 @@
-package com.examples.simple
+package com.examples.classes
 
 import alias.*
 
 
+
 /**
- * Class holding task information.
+ * comments
+ * 
  */
 open class Task
-internal constructor(_id: Long) : AutoCloseable {
+    internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+          System.loadLibrary("wrapper_jni");
         }
-        
         /**
-         * Task Constructor.
+         * comments
+         * 
          */
         protected fun construct_helper(title: String): Long {
+            
+            
             val id = jConstructor(title)
             return id
         }
-
         @JvmStatic
         private external fun jConstructor(title: String): Long
     }
@@ -28,45 +31,45 @@ internal constructor(_id: Long) : AutoCloseable {
     protected var id = _id
     
     open fun getObjId(): Long {
-        if (id == 0L) {
+        if(id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
     }
-    
     /**
-     * Task Constructor.
+     * comments
+     * 
      */
-    constructor(title: String) : this(construct_helper(title)) {
-        //jSet_this(id, this)
+    constructor(title: String): this(construct_helper(title)) {
+      //jSet_this(id, this)
     }
     
     /**
-     * Get objects title.
+     * comments
+     * 
      */
     val title: String
-        get() {
+          get() {
             val result = jTitle(getObjId())
             
             return result
-        }
-
+          }
+          
+    
     override fun close() {
-        if (id != 0L) {
-            jFinalize(id)
-            id = 0L
-        }
+    	if (id != 0L) {
+    		jFinalize(id)
+    		id = 0L
+    	}
     }
-
     /**
-     * Finalize and deletes the object
-     */
+    * Finalize and deletes the object
+    */
     protected fun finalize() {
-        close()
+    	close()
     }
-
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
-    private external fun jSet_this(id: Long, self: Any): Unit
-    private external fun jFinalize(id: Long): Unit
+    private external fun jSet_this(id: Long, self: Any): Void
+    private external fun jFinalize(id: Long): Void
 }

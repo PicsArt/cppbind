@@ -11,10 +11,10 @@ void bindOptionals(py::module& m) {
     py::class_<iegen::example::Optionals> optionals(m, "Optionals");
 
     optionals.def(py::init<>());
-    optionals.def("optional_ptr_with_nullptr_default", &iegen::example::Optionals::optionalPtrWithNullptrDefault, py::arg("task") = static_cast<iegen::example::Task *>(nullptr));
-    optionals.def("optional_int_with_default", &iegen::example::Optionals::optionalIntWithDefault, py::arg("val") = 5);
-    optionals.def("optional_string_with_default", &iegen::example::Optionals::optionalStringWithDefault, py::arg("val") = "abc");
-    optionals.def("optional_char_with_default", &iegen::example::Optionals::optionalCharWithDefault, py::arg("symbol") = ',');
-    optionals.def("optional_ptr_with_null_default", &iegen::example::Optionals::optionalPtrWithNullDefault, py::arg("task") = static_cast<iegen::example::Task *>(NULL));
-    optionals.def("optional_enum_with_default", &iegen::example::Optionals::optionalEnumWithDefault, py::arg("c") = iegen::example::Color::Red);
+    optionals.def("optional_ptr_with_nullptr_default", &iegen::example::Optionals::optionalPtrWithNullptrDefault, py::arg("task"));
+    optionals.def("optional_int_with_default", &iegen::example::Optionals::optionalIntWithDefault, py::arg("val"));
+    optionals.def("optional_string_with_default", &iegen::example::Optionals::optionalStringWithDefault, py::arg("val"));
+    optionals.def("optional_char_with_default", &iegen::example::Optionals::optionalCharWithDefault, py::arg("symbol"));
+    optionals.def("optional_ptr_with_null_default", &iegen::example::Optionals::optionalPtrWithNullDefault, py::arg("task"));
+    optionals.def("optional_enum_with_default", &iegen::example::Optionals::optionalEnumWithDefault, py::arg("c"));
 }

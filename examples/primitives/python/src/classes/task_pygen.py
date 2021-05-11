@@ -5,7 +5,7 @@ from bind_utils import *
 from metaclass import *
 
 
-class Task(metaclass=OriginalMethodsMetaclass):
+class PyTask(metaclass=OriginalMethodsMetaclass):
     """
     comments
     """

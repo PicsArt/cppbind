@@ -15,7 +15,7 @@ class Optionals(metaclass=OriginalMethodsMetaclass):
         pass
     
     @bind
-    def optional_ptr_with_nullptr_default(self, task: Task = None) -> Task:
+    def optional_ptr_with_nullptr_default(self, task: PyTask = None) -> PyTask:
         """
         """
         pass
@@ -36,7 +36,7 @@ class Optionals(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def optional_ptr_with_null_default(self, task: Task = None) -> Task:
+    def optional_ptr_with_null_default(self, task: PyTask = None) -> PyTask:
         """"""
         pass
 

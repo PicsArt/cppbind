@@ -1,5 +1,5 @@
 from project_pygen import Project
-from task_pygen import Task
+from task_pygen import PyTask as Task
 from classes.root_pygen import Root
 
 # [project-usage]

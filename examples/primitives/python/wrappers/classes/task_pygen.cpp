@@ -6,12 +6,12 @@
 
 namespace py = pybind11;
 
-void bindTask(py::module& m) {
+void bindPyTask(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::Task> task(m, "Task");
+    py::class_<iegen::example::Task> pytask(m, "PyTask");
 
-    task.def(py::init<const std::string &>(), py::arg("title"));
+    pytask.def(py::init<const std::string &>(), py::arg("title"));
 
 
-    task.def_property_readonly("title", &iegen::example::Task::title);
+    pytask.def_property_readonly("title", &iegen::example::Task::title);
 }

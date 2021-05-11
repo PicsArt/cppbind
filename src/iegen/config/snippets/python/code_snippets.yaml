@@ -249,11 +249,8 @@ constructor:
       {%- set comma = joiner(', ') %}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
                                                                                    {{comma()}}{{arg.converter.python.cxx_type_name}}
-                                                                                   {%- endfor -%}>(){{', ' if args}}
-                                                                                   {%- set comma = joiner(', ') -%}
-                                                                                   {%- for arg in args -%}
-                                                                                   {{comma()}}py::arg("{{arg.name}}"){{helper.python.get_pybind_default_value(arg)}}
-                                                                                   {%- endfor -%});
+                                                                                   {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+
     include: *var_template_method_include
 
 function:
@@ -298,11 +295,7 @@ function:
       {%- if ctx.node.is_function_template -%}
       <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
       {%- endif -%}
-      {{', ' if args}}
-      {%- set comma = joiner(', ') -%}
-      {%- for arg in args -%}
-      {{comma()}}py::arg("{{arg.name}}"){{helper.python.get_pybind_default_value(arg)}}
-      {%- endfor -%});
+      {{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
     include: *var_template_method_include
 
 

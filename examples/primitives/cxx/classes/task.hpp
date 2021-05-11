@@ -13,6 +13,7 @@ namespace iegen::example {
  * shared_ref: False
  * package: classes
  * swift.include: CWrapper
+ * python.name: PyTask
  */
 class Task {
 public:

@@ -11,7 +11,7 @@ namespace iegen::example {
  * __API__
  * gen: class
  * shared_ref: False
- * package: classes
+ * package: classes.task
  * swift.include: CWrapper
  */
 class Task {

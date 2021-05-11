@@ -1,4 +1,5 @@
-from classes import Root, Task, Project
+from classes import Root, Project
+from classes.task import Task
 
 # [project-usage]
 title = 'My Project'

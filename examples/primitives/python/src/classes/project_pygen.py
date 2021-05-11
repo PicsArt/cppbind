@@ -3,7 +3,7 @@ from typing import *
 import examples.classes.project as pybind_project_pygen
 from bind_utils import *
 from metaclass import *
-from classes import *
+from classes.task import *
 
 
 class Project(metaclass=OriginalMethodsMetaclass):

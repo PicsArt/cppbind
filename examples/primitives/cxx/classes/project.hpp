@@ -15,7 +15,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: classes
- * python.include: classes.task_pygen
+ * python.include: classes
  * swift.include: CWrapper
  */
 class Project {

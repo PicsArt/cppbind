@@ -138,8 +138,8 @@ class:
             ///// External wrapper functions ////////////
             {{private_external|string|indent}}
             {%- if not has_non_abstract_base_class %}
-            private external fun jSet_this(id: Long, self: Any): Void
-            private external fun jFinalize(id: Long): Void
+            private external fun jSet_this(id: Long, self: Any): Unit
+            private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
         {%- endif %}
@@ -205,8 +205,8 @@ interface:
             }
             {%- endif -%}
             ///// External wrapper functions ////////////
-            private external fun jSet_this(id: Long, self: Any): Void
-            private external fun jFinalize(id: Long): Void
+            private external fun jSet_this(id: Long, self: Any): Unit
+            private external fun jFinalize(id: Long): Unit
         }
         {%- endif %}
   cxx: *var_class_cxx
@@ -222,23 +222,26 @@ constructor:
   kotlin:
     head: |
       {{comment}}
-      constructor({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): this(construct_helper({{args|join(', ', attribute='name')}})) {
+      {%- set comma = joiner(', ') %}
+      constructor({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
         //jSet_this(id, this)
       }
     companion: |
       {{comment}}
-      protected fun construct_helper({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): Long {
-          {%- set call_args = [] %}
-          {% for arg in args -%}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {{converter.snippet(arg.name)|indent}}
+      {%- set comma = joiner(', ') %}
+      protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): Long {
+          {%- set call_args = [] -%}
+          {%- for arg in args -%}
+          {%- set converter = arg.converter.kotlin_to_jdk %}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
-          {% endfor %}
+          {%- endfor %}
           val id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
           return id
       }
+      {%- set comma = joiner(', ') %}
       @JvmStatic
-      private external fun jConstructor{{overloading_prefix}}({{args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg')|join(', ')}}): Long
+      private external fun jConstructor{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
   cxx:
     body: |
       extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
@@ -264,14 +267,15 @@ constructor:
 function:
   kotlin:
     body: |
+      {%- set comma = joiner(', ') -%}
       {%- if not is_static %}
       {{comment}}
-      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = ['getObjId()'] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}
           {%- set converter = arg.converter.kotlin_to_jdk %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if ctx.parent_context.node.is_interface %}
@@ -279,19 +283,20 @@ function:
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result')|indent}}
+          {{result_converter.snippet('result', nullable=nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- endif %}
     companion: |
       {%- if is_static %}
+      {%- set comma = joiner(', ') -%}
       {{comment}}
-      fun {{name}}({{args|format_list("{arg.name}: {arg.converter.kotlin.target_type_name}", 'arg')|join(', ')}}): {{rconverter.kotlin.target_type_name}} {
+      fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = [] %}
           {%- set result_converter = rconverter.jdk_to_kotlin %}
           {% for arg in args -%}
           {%- set converter = arg.converter.kotlin_to_jdk %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {% if ctx.parent_context.node.is_interface -%}
@@ -299,23 +304,23 @@ function:
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result')|indent}}
+          {{result_converter.snippet('result', nullable=nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
-      {%- set jdk_args=args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') %}
+      {%- set comma = joiner(', ') %}
       @JvmStatic
-      private external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{name|capitalize}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     private_external: |
       {%- if not is_static -%}
-      {%- set jdk_args=["id: Long"] + args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') -%}
-      private external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
+      {%- set comma = joiner(', ') -%}
+      private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     interface_external: |
       {%- if not is_static -%}
-      {%- set jdk_args=["id: Long"] + args|format_list("{arg.name}: {arg.converter.jdk.target_type_name}", 'arg') -%}
+      {%- set comma = joiner(', ') -%}
       @JvmStatic
-      external fun j{{name|capitalize}}{{overloading_prefix}}({{jdk_args|join(', ')}}): {{rconverter.jdk.target_type_name}}
+      external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
   cxx:
     body: |
@@ -367,20 +372,20 @@ property_getter:
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {{comment}}
-      {{'var' if gen_property_setter else 'val'}} {{name}}: {{result_converter.target_type_name}}
+      {{'var' if gen_property_setter else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
               {%- endif %}
-              {{result_converter.snippet('result')|indent(8)}}
+              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
             }
             {% if gen_property_setter %}
             {% set converter = rconverter.kotlin_to_jdk %}
             set(value) {
-              {{converter.snippet('value')|indent(8)}}
+              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               {%- if ctx.parent_context.node.is_interface %}
               {{owner_class.name}}Helper{{owner_class.template_suffix}}.jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
@@ -391,14 +396,14 @@ property_getter:
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if gen_property_setter %}
-      private external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Void
+      private external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
       @JvmStatic
       external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if gen_property_setter %}
       @JvmStatic
-      external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Void
+      external fun jSet{{name|lower}}(id: Long, value : {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     body: |
@@ -436,20 +441,20 @@ getter:
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {{comment}}
-      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined or is_override else 'val'}} {{name}}: {{result_converter.target_type_name}}
+      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined or is_override else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
             get() {
               {%- if ctx.parent_context.node.is_interface %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
               {%- endif %}
-              {{result_converter.snippet('result')|indent(8)}}
+              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
             }
             {% if setter_ctx is defined %}
             {% set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
             set(value) {
-              {{converter.snippet('value')|indent(8)}}
+              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               {%- if ctx.parent_context.node.is_interface %}
               {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
@@ -466,14 +471,14 @@ getter:
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
+      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
       @JvmStatic
       external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
       @JvmStatic
-      external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Void
+      external fun j{{setter_ctx.name|capitalize}}(id: Long, value : {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     body: |

@@ -22,7 +22,6 @@ typedef struct _CDataMap{
 typedef struct _ErrorObj {
     bool is_err;
     int err_type;
-    const char * err_msg;
     void * err_ptr;
 } ErrorObj;
 

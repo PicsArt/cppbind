@@ -47,10 +47,8 @@ class Exceptions:
         return False
 
     @staticmethod
-    def is_root_exc(ctx):
-        if not ctx.is_exception:
-            return False
-        return not any(base.is_exception for base in ctx.ancestors)
+    def has_exc_base(ctx):
+        return any(base.is_exception for base in ctx.ancestors)
 
     @staticmethod
     def get_exc_name(name):

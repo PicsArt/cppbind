@@ -1,1 +1,1 @@
-from .task_pygen import Task
+from .task_pygen import PyTask

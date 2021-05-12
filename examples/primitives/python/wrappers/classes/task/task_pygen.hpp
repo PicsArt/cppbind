@@ -5,6 +5,6 @@
 
 namespace py = pybind11;
 
-void bindTask(py::module& m);
+void bindPyTask(py::module& m);
 
 #endif

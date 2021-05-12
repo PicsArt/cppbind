@@ -14,6 +14,7 @@ namespace iegen::example {
  * package: classes
  * python.package: classes.task
  * swift.include: CWrapper
+ * python.name: PyTask
  */
 class Task {
 public:

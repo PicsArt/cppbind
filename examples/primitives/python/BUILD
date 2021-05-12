@@ -37,6 +37,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "optionals",
+    srcs = ["src/optionals/main.py"],
+    main = "src/optionals/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

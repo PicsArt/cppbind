@@ -130,11 +130,13 @@ class bind:
 
         @functools.wraps(self.fn.function)
         def _decorator(*args, **kwargs):
+            _kwargs = _get_default_args(self.fn.function)
+            _kwargs.update(kwargs)
             if inspect.isclass(instance):
                 # for python 3.9
                 # case of static method, e.g decorated with @classmethod
-                return instance.originals[self.fn.name].__get__(self.fn.name)(*args, **kwargs)
-            return self.cls.originals[self.fn.name](instance, *args, **kwargs)
+                return instance.originals[self.fn.name].__get__(self.fn.name)(*args, **_kwargs)
+            return self.cls.originals[self.fn.name](instance, *args, **_kwargs)
 
         return _decorator
 
@@ -154,7 +156,9 @@ class bind:
             # update self docstring to add overload docstring
             functools.update_wrapper(self, self.fn.function)
             # the first argument is cls
-            return args[0].originals[self.fn.name].__get__(self.fn.name)(*args[1:], **kwargs)
+            _kwargs = _get_default_args(self.fn.function)
+            _kwargs.update(kwargs)
+            return args[0].originals[self.fn.name].__get__(self.fn.name)(*args[1:], **_kwargs)
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
         prop = cls.originals[self.fn.name]
@@ -164,3 +168,12 @@ class bind:
         else:
             # getter
             return prop.fget(*args)
+
+
+def _get_default_args(func):
+    signature = inspect.signature(func)
+    return {
+        k: v.default
+        for k, v in signature.parameters.items()
+        if v.default is not inspect.Parameter.empty
+    }

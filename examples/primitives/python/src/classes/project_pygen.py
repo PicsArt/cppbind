@@ -24,7 +24,7 @@ class Project(metaclass=OriginalMethodsMetaclass):
         pass
     
     @bind
-    def add_task(self, task: Task) -> None:
+    def add_task(self, task: PyTask) -> None:
         """
         comments
         """

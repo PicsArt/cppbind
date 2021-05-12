@@ -129,6 +129,7 @@ enum:
       {% set m = 'pybind_' + file + config['file_postfix'] %}
 
       class {{name}}({{m}}.{{name}}):
+          {{comment|string|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
           {{case.comment|string|indent(4)}}
@@ -256,7 +257,7 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                        {%- endfor %}):
           pass
   cxx:
@@ -265,6 +266,7 @@ constructor:
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
                                                                                    {{comma()}}{{arg.converter.python.cxx_type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+
     include: *var_template_method_include
 
 function:
@@ -282,7 +284,7 @@ function:
       @bind
       def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
                                                           {%- for arg in args -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
           pass

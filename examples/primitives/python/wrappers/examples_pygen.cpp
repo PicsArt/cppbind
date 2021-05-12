@@ -23,9 +23,9 @@ void bindExamples(py::module& m) {
     bindStudent(forward_decl_student);
     py::module_ forward_decl_teacher = forward_decl.def_submodule("teacher", "teacher");
     bindTeacher(forward_decl_teacher);
-    py::module_ functions = m.def_submodule("functions", "functions");
-    py::module_ functions_functional = functions.def_submodule("functional", "functional");
-    bindFunctionalExamples(functions_functional);
+    py::module_ functionals = m.def_submodule("functionals", "functionals");
+    py::module_ functionals_functional_example = functionals.def_submodule("functional_example", "functional_example");
+    bindFunctionalExamples(functionals_functional_example);
     py::module_ getters = m.def_submodule("getters", "getters");
     py::module_ getters_many_type_template_getter = getters.def_submodule("many_type_template_getter", "many_type_template_getter");
     bindFoo(getters_many_type_template_getter);
@@ -75,6 +75,6 @@ void bindExamples(py::module& m) {
     bindStackTask(templates_stack);
     py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
     bindStackUsage(templates_stack_usage);
-    py::module_ templates_template_functions = templates.def_submodule("template_functions", "template_functions");
-    bindTemplateFunctions(templates_template_functions);
+    py::module_ templates_template_methods = templates.def_submodule("template_methods", "template_methods");
+    bindTemplateMethods(templates_template_methods);
 }

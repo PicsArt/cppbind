@@ -246,7 +246,7 @@ class Context(object):
                 if ctx:
                     includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                     self.runner.config.out_prj_dir))
-        return includes
+        return sorted(includes)
 
     @property
     def template_type_parameters(self):

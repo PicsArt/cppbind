@@ -8,7 +8,7 @@
 #include "python/wrappers/enums/frame_pygen.hpp"
 #include "python/wrappers/forward_decl/student_pygen.hpp"
 #include "python/wrappers/forward_decl/teacher_pygen.hpp"
-#include "python/wrappers/functions/functional_pygen.hpp"
+#include "python/wrappers/functionals/functional_example_pygen.hpp"
 #include "python/wrappers/getters/many_type_template_getter_pygen.hpp"
 #include "python/wrappers/getters/number_pygen.hpp"
 #include "python/wrappers/getters/one_type_template_getter_pygen.hpp"
@@ -28,7 +28,7 @@
 #include "python/wrappers/templates/component_pygen.hpp"
 #include "python/wrappers/templates/stack_pygen.hpp"
 #include "python/wrappers/templates/stack_usage_pygen.hpp"
-#include "python/wrappers/templates/template_functions_pygen.hpp"
+#include "python/wrappers/templates/template_methods_pygen.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

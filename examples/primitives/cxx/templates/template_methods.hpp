@@ -1,10 +1,8 @@
-#ifndef stack_usage_hpp
-#define stack_usage_hpp
+#ifndef template_methods_hpp
+#define template_methods_hpp
 
-#include<unordered_map>
-#include<vector>
-#include <memory>
-#include <string>
+#include <utility>
+
 
 namespace iegen::example {
 

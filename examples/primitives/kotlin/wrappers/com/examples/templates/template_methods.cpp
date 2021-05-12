@@ -1,7 +1,7 @@
 #include "jni.h"
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
-#include "cxx/templates/template_functions.hpp"
+#include "cxx/templates/template_methods.hpp"
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
 

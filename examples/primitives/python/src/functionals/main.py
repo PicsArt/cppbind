@@ -1,4 +1,4 @@
-from functions.functional_pygen import FunctionalExamples
+from functionals.functional_example_pygen import FunctionalExamples
 
 # [functional-usage]
 f = FunctionalExamples()

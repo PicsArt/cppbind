@@ -19,7 +19,6 @@ internal constructor(_id: Long) : AutoCloseable {
          * 
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
@@ -31,7 +30,6 @@ internal constructor(_id: Long) : AutoCloseable {
          */
         protected fun construct_helper(st: Project): Long {
             val kotlin_to_jdk_st = st.getObjId()
-            
             val id = jConstructor_1(kotlin_to_jdk_st)
             return id
         }
@@ -55,14 +53,14 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     /**
      * comments
      * 
      */
-    constructor(st: Project) : this(construct_helper(st)) {
+    constructor(st: Project): this(construct_helper(st)) {
         //jSet_this(id, this)
     }
     
@@ -128,8 +126,8 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jPop(id: Long): Unit
     private external fun jTop(id: Long): Long
     private external fun jEmpty(id: Long): Boolean
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }
 
 /**
@@ -147,7 +145,6 @@ internal constructor(_id: Long) : AutoCloseable {
          * 
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
@@ -159,7 +156,6 @@ internal constructor(_id: Long) : AutoCloseable {
          */
         protected fun construct_helper(st: Task): Long {
             val kotlin_to_jdk_st = st.getObjId()
-            
             val id = jConstructor_1(kotlin_to_jdk_st)
             return id
         }
@@ -183,14 +179,14 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     /**
      * comments
      * 
      */
-    constructor(st: Task) : this(construct_helper(st)) {
+    constructor(st: Task): this(construct_helper(st)) {
         //jSet_this(id, this)
     }
     
@@ -256,6 +252,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jPop(id: Long): Unit
     private external fun jTop(id: Long): Long
     private external fun jEmpty(id: Long): Boolean
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

@@ -3,15 +3,9 @@
 
 namespace py = pybind11;
 void bindExamples(py::module& m) {
-    py::module_ enums = m.def_submodule("enums", "enums");
-    py::module_ enums_color = enums.def_submodule("color", "color");
-    bindColor(enums_color);
     py::module_ classes_task = m.def_submodule("classes.task", "classes.task");
     py::module_ classes_task_task = classes_task.def_submodule("task", "task");
     bindPyTask(classes_task_task);
-    py::module_ optionals = m.def_submodule("optionals", "optionals");
-    py::module_ optionals_optionals = optionals.def_submodule("optionals", "optionals");
-    bindOptionals(optionals_optionals);
     py::module_ classes = m.def_submodule("classes", "classes");
     py::module_ classes_project = classes.def_submodule("project", "project");
     bindProject(classes_project);
@@ -46,6 +40,9 @@ void bindExamples(py::module& m) {
     py::module_ operators = m.def_submodule("operators", "operators");
     py::module_ operators_counter = operators.def_submodule("counter", "counter");
     bindCounter(operators_counter);
+    py::module_ optionals = m.def_submodule("optionals", "optionals");
+    py::module_ optionals_optionals = optionals.def_submodule("optionals", "optionals");
+    bindOptionals(optionals_optionals);
     py::module_ overloads = m.def_submodule("overloads", "overloads");
     py::module_ overloads_overload = overloads.def_submodule("overload", "overload");
     bindOverloadedFunctions(overloads_overload);
@@ -56,7 +53,7 @@ void bindExamples(py::module& m) {
     bindComponent(templates_component);
     py::module_ templates_stack = templates.def_submodule("stack", "stack");
     bindStackProject(templates_stack);
-    bindStackTask(templates_stack);
+    bindStackPyTask(templates_stack);
     py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
     bindStackUsage(templates_stack_usage);
     py::module_ templates_template_functions = templates.def_submodule("template_functions", "template_functions");

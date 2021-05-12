@@ -18,7 +18,6 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
          */
         protected fun construct_helper(side: Double): Long {
             
-            
             val id = jConstructor(side)
             return id
         }
@@ -37,7 +36,7 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
     /**
      * 
      */
-    constructor(side: Double) : this(construct_helper(side)) {
+    constructor(side: Double): this(construct_helper(side)) {
         //jSet_this(id, this)
     }
     
@@ -76,6 +75,6 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
     ///// External wrapper functions ////////////
     private external fun jArea(id: Long): Double
     private external fun jPerimeter(id: Long): Double
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

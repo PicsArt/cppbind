@@ -19,7 +19,6 @@ internal constructor(_id: Long) : AutoCloseable {
          * 
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
@@ -43,7 +42,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     
@@ -124,6 +123,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jMaxString(id: Long, arg0: String, arg1: String): String
     private external fun jMakepairProjectProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
     private external fun jMakepairTaskProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

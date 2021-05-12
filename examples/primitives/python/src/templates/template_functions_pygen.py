@@ -38,7 +38,7 @@ class TemplateFunctions(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def make_pair(self, arg0: Task, arg1: Project) -> tuple:
+    def make_pair(self, arg0: PyTask, arg1: Project) -> tuple:
         """
         comments
         """

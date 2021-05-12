@@ -7,6 +7,7 @@
 #include <vector>
 #include <type_traits>
 #include <memory>
+#include <iostream>
 
 
 typedef jlong jobjectid;
@@ -149,6 +150,7 @@ auto handleNativeCrash(JNIEnv* env, Callable f) -> decltype(f()) {
 std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p);
 
 jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second);
+
 jobject make_jni_long_pair(JNIEnv *env, jlong first, jlong second);
 
 std::string jni_to_string(JNIEnv* env, jobject jobj);

@@ -20,7 +20,6 @@ internal constructor(_id: Long) : AutoCloseable {
          */
         protected fun construct_helper(_value: Int): Long {
             
-            
             val id = jConstructor(_value)
             return id
         }
@@ -40,7 +39,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(_value: Int) : this(construct_helper(_value)) {
+    constructor(_value: Int): this(construct_helper(_value)) {
         //jSet_this(id, this)
     }
     
@@ -76,9 +75,9 @@ internal constructor(_id: Long) : AutoCloseable {
     }
     ///// External wrapper functions ////////////
     private external fun jValue(id: Long): Int
-    private external fun jSetvalue(id: Long, value : Int): Void
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSetvalue(id: Long, value : Int): Unit
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }
 
 /**
@@ -96,7 +95,6 @@ internal constructor(_id: Long) : AutoCloseable {
          * 
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
@@ -122,7 +120,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     
@@ -247,6 +245,6 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jGetstringvector(id: Long): StringArray
     private external fun jGetobjvector(id: Long): LongArray
     private external fun jGetintvector(id: Long): IntArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

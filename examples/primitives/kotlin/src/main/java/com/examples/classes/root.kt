@@ -8,7 +8,7 @@ import alias.*
  * comments
  * 
  */
-open class Task
+open class Root
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
@@ -18,13 +18,13 @@ internal constructor(_id: Long) : AutoCloseable {
          * comments
          * 
          */
-        protected fun construct_helper(title: String): Long {
+        protected fun construct_helper(_path: String): Long {
             
-            val id = jConstructor(title)
+            val id = jConstructor(_path)
             return id
         }
         @JvmStatic
-        private external fun jConstructor(title: String): Long
+        private external fun jConstructor(_path: String): Long
     }
     
     protected var id = _id
@@ -39,7 +39,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(title: String) : this(construct_helper(title)) {
+    constructor(_path: String): this(construct_helper(_path)) {
         //jSet_this(id, this)
     }
     
@@ -47,9 +47,9 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    val title: String
+    val path: String
         get() {
-            val result = jTitle(getObjId())
+            val result = jPath(getObjId())
             
             return result
         }
@@ -68,7 +68,7 @@ internal constructor(_id: Long) : AutoCloseable {
         close()
     }
     ///// External wrapper functions ////////////
-    private external fun jTitle(id: Long): String
+    private external fun jPath(id: Long): String
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

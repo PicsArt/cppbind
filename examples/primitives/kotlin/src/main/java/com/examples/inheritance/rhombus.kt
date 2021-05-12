@@ -28,7 +28,6 @@ internal constructor(_id: Long) : IRhombus, AutoCloseable {
         protected fun construct_helper(diagonal1: Double, diagonal2: Double): Long {
             
             
-            
             val id = jConstructor(diagonal1, diagonal2)
             return id
         }
@@ -45,7 +44,7 @@ internal constructor(_id: Long) : IRhombus, AutoCloseable {
     /**
      * 
      */
-    constructor(diagonal1: Double, diagonal2: Double) : this(construct_helper(diagonal1, diagonal2)) {
+    constructor(diagonal1: Double, diagonal2: Double): this(construct_helper(diagonal1, diagonal2)) {
         //jSet_this(id, this)
     }
     override fun close() {
@@ -61,6 +60,6 @@ internal constructor(_id: Long) : IRhombus, AutoCloseable {
         close()
     }
     ///// External wrapper functions ////////////
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

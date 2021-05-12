@@ -23,6 +23,7 @@ file:
       #include <iostream>
       {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
       {{include}}
+
       {{body}}
 
 enum:

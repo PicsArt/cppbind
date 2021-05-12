@@ -8,7 +8,7 @@ import alias.*
  * comments
  * 
  */
-open class Root
+open class Project
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
@@ -18,13 +18,15 @@ internal constructor(_id: Long) : AutoCloseable {
          * comments
          * 
          */
-        protected fun construct_helper(_path: String): Long {
+        protected fun construct_helper(title: String): Long {
             
-            val id = jConstructor(_path)
+            val id = jConstructor(title)
             return id
         }
         @JvmStatic
-        private external fun jConstructor(_path: String): Long
+        private external fun jConstructor(title: String): Long
+
+
     }
     
     protected var id = _id
@@ -39,7 +41,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(_path: String) : this(construct_helper(_path)) {
+    constructor(title: String): this(construct_helper(title)) {
         //jSet_this(id, this)
     }
     
@@ -47,14 +49,40 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    val path: String
+    val title: String
         get() {
-            val result = jPath(getObjId())
+            val result = jTitle(getObjId())
             
             return result
         }
         
     
+    /**
+     * comments
+     * 
+     */
+    fun addTask(task: Task): Unit {
+        
+        val kotlin_to_jdk_task = task.getObjId()
+        val result = jAddtask(getObjId(), kotlin_to_jdk_task)
+        
+        return result
+    }
+
+    /**
+     * comments
+     * 
+     */
+    fun tasks(): List<Task> {
+        
+        val result = jTasks(getObjId())
+        val jdk_to_kotlin_result: MutableList<Task> = mutableListOf()
+        for (value in result) {
+            val jdk_to_kotlin_value = Task(value)
+            jdk_to_kotlin_result.add(jdk_to_kotlin_value)
+        }
+        return jdk_to_kotlin_result
+    }
     override fun close() {
         if (id != 0L) {
     	    jFinalize(id)
@@ -68,7 +96,9 @@ internal constructor(_id: Long) : AutoCloseable {
         close()
     }
     ///// External wrapper functions ////////////
-    private external fun jPath(id: Long): String
+    private external fun jTitle(id: Long): String
+    private external fun jAddtask(id: Long, task: Long): Unit
+    private external fun jTasks(id: Long): LongArray
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

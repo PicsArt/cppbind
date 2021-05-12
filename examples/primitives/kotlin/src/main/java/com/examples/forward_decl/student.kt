@@ -17,7 +17,6 @@ internal constructor(_id: Long) : AutoCloseable {
         /**
          */
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
@@ -37,7 +36,7 @@ internal constructor(_id: Long) : AutoCloseable {
     }
     /**
      */
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     
@@ -79,6 +78,6 @@ internal constructor(_id: Long) : AutoCloseable {
     ///// External wrapper functions ////////////
     private external fun jAddteacher(id: Long, t: Long): Unit
     private external fun jTeachers(id: Long): LongArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

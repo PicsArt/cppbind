@@ -77,7 +77,6 @@ internal constructor(_id: Long) : IRectangle, AutoCloseable {
         protected fun construct_helper(length: Double, width: Double): Long {
             
             
-            
             val id = jConstructor(length, width)
             return id
         }
@@ -95,7 +94,7 @@ internal constructor(_id: Long) : IRectangle, AutoCloseable {
     /**
      * 
      */
-    constructor(length: Double, width: Double) : this(construct_helper(length, width)) {
+    constructor(length: Double, width: Double): this(construct_helper(length, width)) {
         //jSet_this(id, this)
     }
     override fun close() {
@@ -111,6 +110,6 @@ internal constructor(_id: Long) : IRectangle, AutoCloseable {
         close()
     }
     ///// External wrapper functions ////////////
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

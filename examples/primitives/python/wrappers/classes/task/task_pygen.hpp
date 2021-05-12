@@ -1,5 +1,5 @@
-#ifndef classes_task_hpp
-#define classes_task_hpp
+#ifndef classes_task_task_hpp
+#define classes_task_task_hpp
 
 #include <pybind11/pybind11.h>
 

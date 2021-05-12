@@ -70,18 +70,9 @@ def get_full_name(cursor):
 
 def get_full_displayname(cursor):
     ancestors = get_semantic_ancestors(cursor)
-    ancestors = ancestors[1::]
-
-    full_display_name = '::'.join([c.displayname for c in ancestors])
-    if cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
-        return f'{full_display_name}::{cursor.spelling}'
-    else:
-        return f'{full_display_name}::{cursor.displayname}'
-
-    # ancestors = get_semantic_ancestors(cursor)
-    # spellings = [a.displayname for a in ancestors[1::]]
-    # spellings.append(cursor.displayname if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
-    # return '::'.join(spellings)
+    spellings = [a.displayname for a in ancestors[1::]]
+    spellings.append(cursor.spelling if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
+    return '::'.join(spellings)
 
 
 def is_final_cursor(cursor):

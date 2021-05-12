@@ -2,7 +2,7 @@
 #define examples_pygen_hpp
 
 #include "python/wrappers/enums/color_pygen.hpp"
-#include "python/wrappers/classes/task_pygen.hpp"
+#include "python/wrappers/classes/task/task_pygen.hpp"
 #include "python/wrappers/optionals/optionals_pygen.hpp"
 #include "python/wrappers/classes/project_pygen.hpp"
 #include "python/wrappers/classes/root_pygen.hpp"

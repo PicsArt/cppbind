@@ -16,8 +16,8 @@ namespace iegen::example {
  * gen: class
  * package: optionals
  * swift.include: CWrapper
- * python.include: classes.task_pygen
- * python.include: enums.color_pygen
+ * python.include: classes.task
+ * python.include: enums
  */
 class Optionals {
 

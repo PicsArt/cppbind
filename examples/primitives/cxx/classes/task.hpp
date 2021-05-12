@@ -32,6 +32,7 @@ public:
      *
      * __API__
      * gen: getter
+     * throws: no_throw
      *
      */
     std::string& title() {

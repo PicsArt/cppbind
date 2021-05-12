@@ -34,6 +34,7 @@ class TemplateFunctions  {
      * __API__
      * gen: method
      * template: {"T": [{"type": "int"}, {"type": "std::string"}]}
+     * throws: no_throw
      */
     template <typename T>
     T const& max(T const& a, T const& b) {
@@ -46,6 +47,7 @@ class TemplateFunctions  {
      * __API__
      * gen: method
      * template: {"T": ["iegen::example::Project", "iegen::example::Task"], "V": ["iegen::example::Project"]}
+     * throws: no_throw
      */
     template <typename T, typename V>
     std::pair<T, V> makePair(T const& a, V const& b) {

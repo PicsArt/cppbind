@@ -27,6 +27,7 @@ public:
      * fullname setter
      *__API__
      * gen: setter
+     * throws: no_throw
      */
     void setFullName(const std::string& val) {
         _fullname = val;
@@ -37,6 +38,7 @@ public:
      * fullname getter
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     const std::string& fullName() {
         return _fullname;

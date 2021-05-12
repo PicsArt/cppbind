@@ -7,8 +7,7 @@ from inheritance.parallelogram_pygen import *
 
 
 class Rhombus(Parallelogram, metaclass=OriginalMethodsMetaclass):
-    """
-    """
+    """"""
     
     @bind
     def __init__(self, diagonal1: float, diagonal2: float):

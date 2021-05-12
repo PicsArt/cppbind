@@ -9,8 +9,6 @@
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: templates
@@ -19,19 +17,15 @@ namespace iegen::example {
  * python.include: simple.task_pygen
  * swift.include: CWrapper
  */
-class TemplateFunctions  {
+class TemplateMethods  {
     public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
-    TemplateFunctions() {};
+    TemplateMethods() {};
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      * template: {"T": [{"type": "int"}, {"type": "std::string"}]}
@@ -42,8 +36,6 @@ class TemplateFunctions  {
     }
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      * template: {"T": ["iegen::example::Project", "iegen::example::Task"], "V": ["iegen::example::Project"]}
@@ -52,20 +44,6 @@ class TemplateFunctions  {
     std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
     }
-
-//        /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     * template: {"V": [{"type": "iegen::example::Project"}]}
-//     */
-//    template <typename V>
-//    void usage4(std::shared_ptr<V> p) {
-//    //    return p->top();
-//    };
-
 };
-
 }
 #endif

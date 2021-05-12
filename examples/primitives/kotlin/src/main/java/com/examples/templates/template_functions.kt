@@ -3,26 +3,18 @@ package com.examples.templates
 import alias.*
 import com.examples.simple.*
 
-
-/**
- * comments
- * 
- */
-open class TemplateFunctions
+open class TemplateMethods
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
             System.loadLibrary("wrapper_jni");
         }
-        /**
-         * comments
-         * 
-         */
+        
         protected fun construct_helper(): Long {
-            
             val id = jConstructor()
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(): Long
 
@@ -39,47 +31,24 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
-    /**
-     * comments
-     * 
-     */
+    
     constructor() : this(construct_helper()) {
         //jSet_this(id, this)
     }
     
-    
-    /**
-     * comments
-     * 
-     */
     open fun max(arg0: Int, arg1: Int): Int {
-        
-        
-        
         val result = jMaxInt(getObjId(), arg0, arg1)
         
         return result
     }
 
-    /**
-     * comments
-     * 
-     */
     open fun max(arg0: String, arg1: String): String {
-        
-        
-        
         val result = jMaxString(getObjId(), arg0, arg1)
         
         return result
     }
 
-    /**
-     * comments
-     * 
-     */
     open fun makePair(arg0: Project, arg1: Project): Pair<Project, Project> {
-        
         val kotlin_to_jdk_arg0 = arg0.getObjId()
         val kotlin_to_jdk_arg1 = arg1.getObjId()
         val result = jMakepairProjectProject(getObjId(), kotlin_to_jdk_arg0, kotlin_to_jdk_arg1)
@@ -91,12 +60,7 @@ internal constructor(_id: Long) : AutoCloseable {
         return jdk_to_kotlin_result
     }
 
-    /**
-     * comments
-     * 
-     */
     open fun makePair(arg0: Task, arg1: Project): Pair<Task, Project> {
-        
         val kotlin_to_jdk_arg0 = arg0.getObjId()
         val kotlin_to_jdk_arg1 = arg1.getObjId()
         val result = jMakepairTaskProject(getObjId(), kotlin_to_jdk_arg0, kotlin_to_jdk_arg1)
@@ -107,18 +71,21 @@ internal constructor(_id: Long) : AutoCloseable {
         val jdk_to_kotlin_result = Pair<Task, Project>(jdk_to_kotlin_first, jdk_to_kotlin_second)
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jMaxInt(id: Long, arg0: Int, arg1: Int): Int
     private external fun jMaxString(id: Long, arg0: String, arg1: String): String

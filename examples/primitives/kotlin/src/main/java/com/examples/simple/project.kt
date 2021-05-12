@@ -3,10 +3,8 @@ package com.examples.simple
 import alias.*
 
 
-
 /**
- * comments
- * 
+ * Class holding project information.
  */
 open class Project
 internal constructor(_id: Long) : AutoCloseable {
@@ -14,16 +12,15 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
-         * comments
-         * 
+         * Project constructor.
          */
         protected fun construct_helper(title: String): Long {
-            
-            
             val id = jConstructor(title)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(title: String): Long
 
@@ -38,17 +35,16 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
-     * comments
-     * 
+     * Project constructor.
      */
     constructor(title: String) : this(construct_helper(title)) {
         //jSet_this(id, this)
     }
     
     /**
-     * comments
-     * 
+     * Get project´s title.
      */
     val title: String
         get() {
@@ -56,14 +52,11 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-        
     
     /**
-     * comments
-     * 
+     * Add a task to project.
      */
     fun addTask(task: Task): Unit {
-        
         val kotlin_to_jdk_task = task.getObjId()
         val result = jAddtask(getObjId(), kotlin_to_jdk_task)
         
@@ -71,11 +64,9 @@ internal constructor(_id: Long) : AutoCloseable {
     }
 
     /**
-     * comments
-     * 
+     * Get project´s tasks.
      */
     fun tasks(): List<Task> {
-        
         val result = jTasks(getObjId())
         val jdk_to_kotlin_result: MutableList<Task> = mutableListOf()
         for (value in result) {
@@ -84,18 +75,21 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
     private external fun jAddtask(id: Long, task: Long): Unit

@@ -3,8 +3,7 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
+ * Class holding task information.
  */
 public class Task  {
     
@@ -23,8 +22,7 @@ public class Task  {
     }
     
     /**
-     * comments
-     * 
+     * Task Constructor.
      */
     public convenience init(title: String) {
 
@@ -33,8 +31,7 @@ public class Task  {
     }
     
     /**
-     * comments
-     * 
+     * Get objects title.
      */
     public var title: String {
           get {

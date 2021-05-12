@@ -2,7 +2,6 @@ package com.examples.enums
 
 import alias.*
 
-
 enum class Color(val value: Int) {
     /**
      * Red = 1

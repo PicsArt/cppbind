@@ -7,8 +7,7 @@ from metaclass import *
 
 class Task(metaclass=OriginalMethodsMetaclass):
     """
-    comments
-    """
+    Class holding task information."""
     
     @bind
     def __init__(self, title: str):
@@ -18,6 +17,5 @@ class Task(metaclass=OriginalMethodsMetaclass):
     @bind
     def title(self) -> str:
         """
-        comments
-        """
+        Get objects title."""
         pass

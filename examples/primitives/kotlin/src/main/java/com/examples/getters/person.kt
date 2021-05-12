@@ -3,7 +3,6 @@ package com.examples.getters
 import alias.*
 
 
-
 /**
  * This class contains a private string field and getter/setter methods for it.
  */
@@ -13,18 +12,16 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
         protected fun construct_helper(name: String, email: String, age: Int): Long {
-            
-            
-            
-            
             val id = jConstructor(name, email, age)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(name: String, email: String, age: Int): Long
     }
@@ -37,6 +34,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -45,65 +43,56 @@ internal constructor(_id: Long) : AutoCloseable {
         //jSet_this(id, this)
     }
     
-    /**
-     */
     var fullName: String
         get() {
             val result = jFullname(getObjId())
             
             return result
         }
-        
-        
         set(value) {
             
             jSetfullname(getObjId(), value)
         }
 
-    /**
-     */
     val email: String
         get() {
             val result = jEmail(getObjId())
             
             return result
         }
-        
 
-    /**
-     */
     var age: Int
         get() {
             val result = jAge(getObjId())
             
             return result
         }
-        
-        
         set(value) {
             
             jSetage(getObjId(), value)
         }
         
-    
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jFullname(id: Long): String
-    private external fun jSetfullname(id: Long, value : String): Unit
+    private external fun jSetfullname(id: Long, value: String): Unit
     private external fun jEmail(id: Long): String
     private external fun jAge(id: Long): Int
-    private external fun jSetage(id: Long, value : Int): Unit
+    private external fun jSetage(id: Long, value: Int): Unit
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

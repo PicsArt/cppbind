@@ -8,8 +8,7 @@ from inheritance.rectangle_pygen import *
 
 
 class Square(Rhombus, Rectangle, metaclass=OriginalMethodsMetaclass):
-    """
-    """
+    """"""
     
     @bind
     def __init__(self, side: float):
@@ -18,12 +17,10 @@ class Square(Rhombus, Rectangle, metaclass=OriginalMethodsMetaclass):
     @property
     @bind
     def area(self) -> float:
-        """
-        """
+        """"""
         pass
     
     @bind
     def perimeter(self) -> float:
-        """
-        """
+        """"""
         pass

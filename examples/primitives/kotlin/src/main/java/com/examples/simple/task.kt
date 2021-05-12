@@ -3,10 +3,8 @@ package com.examples.simple
 import alias.*
 
 
-
 /**
- * comments
- * 
+ * Class holding task information.
  */
 open class Task
 internal constructor(_id: Long) : AutoCloseable {
@@ -14,16 +12,15 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
-         * comments
-         * 
+         * Task Constructor.
          */
         protected fun construct_helper(title: String): Long {
-            
-            
             val id = jConstructor(title)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(title: String): Long
     }
@@ -36,17 +33,16 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
-     * comments
-     * 
+     * Task Constructor.
      */
     constructor(title: String) : this(construct_helper(title)) {
         //jSet_this(id, this)
     }
     
     /**
-     * comments
-     * 
+     * Get objects title.
      */
     val title: String
         get() {
@@ -54,20 +50,21 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-        
-    
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jTitle(id: Long): String
     private external fun jSet_this(id: Long, self: Any): Unit

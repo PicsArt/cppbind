@@ -3,7 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * 
  */
 public protocol IRhombus : IParallelogram {
 
@@ -32,7 +31,6 @@ public class Rhombus : IRhombus {
     }
 
     /**
-     * 
      */
     public convenience init(diagonal1: Double, diagonal2: Double) {
 

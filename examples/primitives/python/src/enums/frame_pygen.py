@@ -7,7 +7,7 @@ from metaclass import *
 
 class Frame(metaclass=OriginalMethodsMetaclass):
     """
-    """
+    Class Frame."""
     
     @bind
     def __init__(self):

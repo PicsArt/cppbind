@@ -6,8 +6,7 @@
 namespace iegen::example {
 
 /**
- * comments
- *
+ * Class holding task information.
  * __API__
  * gen: class
  * shared_ref: False
@@ -17,8 +16,7 @@ namespace iegen::example {
 class Task {
 public:
     /**
-     * comments
-     *
+     * Task Constructor.
      * __API__
      * gen: constructor
      *
@@ -26,8 +24,7 @@ public:
     Task(const std::string& title) : _title(title) {};
 
     /**
-     * comments
-     *
+     * Get objects title.
      * __API__
      * gen: getter
      *

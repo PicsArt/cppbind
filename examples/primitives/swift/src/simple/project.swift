@@ -3,8 +3,7 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
+ * Class holding project information.
  */
 public class Project  {
     
@@ -23,8 +22,7 @@ public class Project  {
     }
     
     /**
-     * comments
-     * 
+     * Project constructor.
      */
     public convenience init(title: String) {
 
@@ -33,8 +31,7 @@ public class Project  {
     }
     
     /**
-     * comments
-     * 
+     * Get project´s title.
      */
     public var title: String {
           get {
@@ -48,8 +45,7 @@ public class Project  {
           
     }
     /**
-     * comments
-     * 
+     * Add a task to project.
      */
     public func addTask(task: Task) -> Void {
 
@@ -57,8 +53,7 @@ public class Project  {
         _func_Project_addTask(cself, swift_to_sc_task);
     }
     /**
-     * comments
-     * 
+     * Get project´s tasks.
      */
     public func tasks() -> Array<Task> {
 

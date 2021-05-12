@@ -6,25 +6,12 @@ py_library(
     name = "clang",
     srcs = glob(["3pty/clang/**/*.py"]),
     imports = ["3pty/"],
+    visibility = ["//visibility:public"],
 )
 
 entry_points = {"console_scripts": [(
     "iegen = iegen.runner:run_package"
 )]}
-
-py_library(
-    name = "iegen_library",
-    srcs = glob(["src/iegen/**/*.py"]),
-    data = glob(["src/iegen/config/**/*"]),
-    imports = [
-        ".",
-        "src/",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":clang",
-    ] + all_requirements,
-)
 
 py_wheel(
     name = "iegen",
@@ -35,6 +22,6 @@ py_wheel(
     version = "0.0.1",
     deps = [
         ":clang",
-        ":iegen_library",
+        "//src:iegen_library",
     ],
 )

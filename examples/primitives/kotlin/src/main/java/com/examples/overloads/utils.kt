@@ -29,7 +29,6 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-
         @JvmStatic
         private external fun jSum(first: Int, second: Int): Int
 
@@ -41,7 +40,6 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-
         @JvmStatic
         private external fun jSum_1(first: Float, second: Float): Float
 
@@ -57,7 +55,7 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     

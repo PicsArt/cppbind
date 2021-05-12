@@ -31,7 +31,7 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     

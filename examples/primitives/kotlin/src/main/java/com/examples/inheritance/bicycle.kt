@@ -23,7 +23,7 @@ internal constructor(_id: Long) : Vehicle(_id) {
         return id;
     }
     
-    constructor(numberOfSeats: Int) : this(construct_helper(numberOfSeats)) {
+    constructor(numberOfSeats: Int): this(construct_helper(numberOfSeats)) {
         //jSet_this(id, this)
     }
 }

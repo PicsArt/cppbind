@@ -39,7 +39,7 @@ internal constructor(_id: Long) : AutoCloseable {
     /**
      * Project constructor.
      */
-    constructor(title: String) : this(construct_helper(title)) {
+    constructor(title: String): this(construct_helper(title)) {
         //jSet_this(id, this)
     }
     

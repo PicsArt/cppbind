@@ -25,7 +25,6 @@ class ParallelogramHelper {
         
         @JvmStatic
         external fun jArea(id: Long): Double
-
         @JvmStatic
         external fun jPerimeter(id: Long): Double
     }

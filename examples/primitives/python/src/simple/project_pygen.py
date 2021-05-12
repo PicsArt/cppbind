@@ -3,7 +3,7 @@ from typing import *
 import examples.simple.project as pybind_project_pygen
 from bind_utils import *
 from metaclass import *
-from simple.task_pygen import *
+from simple.task import *
 
 
 class Project(metaclass=OriginalMethodsMetaclass):
@@ -22,7 +22,7 @@ class Project(metaclass=OriginalMethodsMetaclass):
         pass
     
     @bind
-    def add_task(self, task: Task) -> None:
+    def add_task(self, task: PyTask) -> None:
         """
         Add a task to project."""
         pass

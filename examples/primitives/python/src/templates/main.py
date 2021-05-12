@@ -1,11 +1,11 @@
-from templates.stack_pygen import StackProject, StackTask
+from templates.stack_pygen import StackProject, StackPyTask
 from templates.stack_usage_pygen import StackUsage
 from templates.template_methods_pygen import TemplateMethods
 from templates.addressable_pygen import AddressableRoot
 from templates.component_pygen import Component
-from simple.project_pygen import Project
-from simple.root_pygen import Root
-from simple.task_pygen import Task
+from simple import Project, Root
+from simple.task import PyTask as Task
+
 
 # [stack-examples]
 stack_prj = StackProject()

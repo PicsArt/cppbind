@@ -56,10 +56,14 @@ $Object:
     {%- set tmp_name = name %}
     {%- endif %}
     {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{cxx_root_type_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
-  kotlin_to_jdk:
-    val {{target_name}} = {{name}}.getObjId()
-  jdk_to_kotlin:
+  kotlin_to_jdk: |
+    val {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.getObjId(){{' ?: 0L' if nullable is defined and nullable}}
+  jdk_to_kotlin: |
+    {%- if nullable is defined and nullable -%}
+    val {{target_name}} = if ({{name}} == 0L) null else {{target_type_name[1:] if type_ctx.node.is_interface else target_type_name}}({{name}})
+    {%- else -%}
     val {{target_name}} = {{target_type_name[1:] if type_ctx.node.is_interface else target_type_name}}({{name}})
+    {%- endif -%}
 
 $Enum:
   custom:
@@ -262,11 +266,10 @@ std::shared_ptr:
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
-  kotlin_to_jdk:
-    val {{target_name}} = {{name}}.getObjId()
+  kotlin_to_jdk: |
+    {{args[0].snippet(name, nullable=nullable)|indent}}
   jdk_to_kotlin: |
-    {{args[0].snippet(name)|indent}}
-
+    {{args[0].snippet(name, nullable=nullable)|indent}}
 std::pair:
   custom:
     pname: Pair

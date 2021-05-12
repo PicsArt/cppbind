@@ -11,8 +11,7 @@ namespace iegen::example {
  * gen: class
  * package: templates
  * kotlin.include: com.examples.simple.*
- * python.include: simple.project_pygen
- * python.include: simple.task_pygen
+ * python.include: simple
  * swift.include: CWrapper
  */
 class TemplateMethods  {

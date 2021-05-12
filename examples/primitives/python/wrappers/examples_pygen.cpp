@@ -3,9 +3,6 @@
 
 namespace py = pybind11;
 void bindExamples(py::module& m) {
-    py::module_ extra = m.def_submodule("extra", "extra");
-    py::module_ extra_object = extra.def_submodule("object", "object");
-    bindObject(extra_object);
     py::module_ containers = m.def_submodule("containers", "containers");
     py::module_ containers_map = containers.def_submodule("map", "map");
     bindMapItem(containers_map);
@@ -55,12 +52,16 @@ void bindExamples(py::module& m) {
     py::module_ operators = m.def_submodule("operators", "operators");
     py::module_ operators_counter = operators.def_submodule("counter", "counter");
     bindCounter(operators_counter);
+    py::module_ simple_task = m.def_submodule("simple.task", "simple.task");
+    py::module_ simple_task_task = simple_task.def_submodule("task", "task");
+    bindPyTask(simple_task_task);
+    py::module_ optionals = m.def_submodule("optionals", "optionals");
+    py::module_ optionals_optionals = optionals.def_submodule("optionals", "optionals");
+    bindOptionals(optionals_optionals);
     py::module_ overloads = m.def_submodule("overloads", "overloads");
     py::module_ overloads_utils = overloads.def_submodule("utils", "utils");
     bindUtils(overloads_utils);
     py::module_ simple = m.def_submodule("simple", "simple");
-    py::module_ simple_task = simple.def_submodule("task", "task");
-    bindTask(simple_task);
     py::module_ simple_project = simple.def_submodule("project", "project");
     bindProject(simple_project);
     py::module_ simple_root = simple.def_submodule("root", "root");
@@ -72,7 +73,7 @@ void bindExamples(py::module& m) {
     bindComponent(templates_component);
     py::module_ templates_stack = templates.def_submodule("stack", "stack");
     bindStackProject(templates_stack);
-    bindStackTask(templates_stack);
+    bindStackPyTask(templates_stack);
     py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
     bindStackUsage(templates_stack_usage);
     py::module_ templates_template_methods = templates.def_submodule("template_methods", "template_methods");

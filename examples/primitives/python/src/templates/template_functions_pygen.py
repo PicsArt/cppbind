@@ -3,8 +3,8 @@ from typing import *
 import examples.templates.template_methods as pybind_template_methods_pygen
 from bind_utils import *
 from metaclass import *
-from simple.project_pygen import *
-from simple.task_pygen import *
+from simple import *
+
 
 
 class TemplateFunctions(metaclass=OriginalMethodsMetaclass):
@@ -38,7 +38,7 @@ class TemplateFunctions(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def make_pair(self, arg0: Task, arg1: Project) -> tuple:
+    def make_pair(self, arg0: PyTask, arg1: Project) -> tuple:
         """
         comments
         """

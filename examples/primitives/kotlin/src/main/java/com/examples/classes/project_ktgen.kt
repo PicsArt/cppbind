@@ -20,7 +20,6 @@ open class Project
          */
         protected fun construct_helper(title: String): Long {
             
-            
             val id = jConstructor(title)
             return id
         }
@@ -100,6 +99,6 @@ open class Project
     private external fun jTitle(id: Long): String
     private external fun jAddtask(id: Long, task: Long): Void
     private external fun jTasks(id: Long): LongArray
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

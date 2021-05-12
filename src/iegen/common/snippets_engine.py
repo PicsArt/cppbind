@@ -102,8 +102,8 @@ class Converter:
         self.template_choice = template_choice
         self.context = self._make_context()
 
-    def snippet(self, name):
-        return self.type_converter.snippet(name, self.context)
+    def snippet(self, name, **kwargs):
+        return self.type_converter.snippet(name, {**self.context, **kwargs})
 
     def converted_name(self, name):
         return self.type_converter.converted_name(name)

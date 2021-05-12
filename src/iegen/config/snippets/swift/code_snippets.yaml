@@ -1,7 +1,7 @@
 file:
   swift:
     file_path: |
-      {{[config.out_dir, config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{config.out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - include
       - body
@@ -13,26 +13,26 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
-    scopes: 
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes:
       - body
       - include
     content: |
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath([config.cxx_out_dir, config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
+      #include "{{path.relpath(config.cxx_out_dir + pat_sep + [config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
       {{include}}
 
       {{body}}
   ch:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
-    scopes: 
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+    scopes:
       - body
       - include
     content: |
       #ifndef _C_{{file}}_WRAPPER_
-      #define _C_{{file}}_WRAPPER_ 
+      #define _C_{{file}}_WRAPPER_
 
       {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
       {{include}}
@@ -48,7 +48,7 @@ file:
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
   exceptions_utils_swift:
     file_path: |
-      {{[config.out_dir, config.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{config.out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -75,7 +75,7 @@ file:
       }
   std_exceptions_swift:
     file_path: |
-      {{[config.out_dir, config.package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{config.out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -108,7 +108,7 @@ file:
       }
   std_exceptions_header:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
+      {{config.cxx_out_dir + pat_sep +  [config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
     content: |
@@ -126,7 +126,7 @@ file:
       #endif /* ifndef _C_std_exceptions_WRAPPER_ */
   std_exceptions_cpp:
     file_path: |
-      {{[config.cxx_out_dir, config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{config.cxx_out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -146,7 +146,7 @@ file:
 
 
 enum:
-  swift: 
+  swift:
     body: |
 
      public enum {{name}}: CUnsignedInt{
@@ -394,7 +394,8 @@ function:
 
         {%- if rconverter.c.target_type_name != 'void' %}
           try {
-            const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+            const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                                                      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
             {{rconverter.cxx_to_c.snippet('result')|indent}}
             return {{rconverter.cxx_to_c.converted_name('result')}};
           }
@@ -565,4 +566,3 @@ getter:
         {% set converter = setter_ctx.args[0].converter.c %}
         void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}} {{setter_ctx.args[0].name}});
         {% endif %}
-

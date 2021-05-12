@@ -32,6 +32,12 @@ class Context(object):
             # todo implementation is odd for now
             assert param_var.kind == cli.CursorKind.PARM_DECL
             val = None
+            if cutil.get_pointee_type(param_var.type).kind == cli.TypeKind.ENUM:
+                for def_curs in param_var.walk_preorder():
+                    if def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
+                        for token in def_curs.get_tokens():
+                            if token.cursor.kind == cli.CursorKind.DECL_REF_EXPR and token.kind != cli.TokenKind.PUNCTUATION:
+                                return token.spelling
             for def_curs in param_var.walk_preorder():
                 if def_curs.kind in [
                     cli.CursorKind.INTEGER_LITERAL,

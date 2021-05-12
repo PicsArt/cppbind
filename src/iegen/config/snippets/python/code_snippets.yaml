@@ -15,6 +15,14 @@ file:
       {%- endif %}
       {{body}}
       {{''}}
+  python_init:
+    file_path: |
+      {{config.out_dir + pat_sep + [config.package_prefix, package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+    scopes:
+      - package_include
+    content: |
+      {{package_include}}
+      {{''}}
   cxx:
     file_path: |
       {{cxx_output_filepath}}.cpp
@@ -78,6 +86,29 @@ file:
       void bind{{config.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m);
 
       #endif
+  pybind_package:
+    file_path: |
+      {{config.cxx_out_dir + pat_sep + [config.pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
+    gen: false
+    scopes:
+      - body
+    content: |
+      {%- set packages = config.pybind_module.split('.') %}
+      {%- set package = packages[0] %}
+      {%- set file = config.cxx_out_dir +pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join %}
+      #include <pybind11/pybind11.h>
+      #include "{{helper.python.cxx_rel_path(file, config.out_prj_dir)}}.hpp"
+
+      namespace py = pybind11;
+      PYBIND11_MODULE({{package}}, m) {
+          py::module_ parent = m;
+          {%- for p in packages[1:] %}
+          {%- set parent_module = packages[loop.index - 1] %}
+          py::module_ {{parent_module}} = parent.def_submodule("{{p}}", "{{p}}");
+          parent = {{parent_module}};
+          {%- endfor %}
+          bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(parent);
+      }
 
 var_pybind_module_cxx: &var_pybind_module
   body:
@@ -98,12 +129,17 @@ enum:
       {% set m = 'pybind_' + file + config['file_postfix'] %}
 
       class {{name}}({{m}}.{{name}}):
+          {{comment|string|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
           {{case.comment|string|indent(4)}}
           {%- endif %}
           {{case.name}} = {{m}}.{{name}}.{{case.name}}
           {%- endfor %}
+  python_init:
+    package_include:
+      unique_content: |
+        from .{{file + config.file_postfix}} import {{name}}
   cxx:
     body: |
       void {{'bind' + name}}(py::module& m) {
@@ -121,6 +157,8 @@ enum:
       void {{'bind' + name}}(py::module& m);
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
+  pybind_package:
+    body:
 
 var_class: &var_class
   python:
@@ -162,6 +200,10 @@ var_class: &var_class
             {%- if body %}
             {{body|string|indent}}
             {%- endif %}
+  python_init:
+    package_include:
+      unique_content: |
+        from .{{file + config.file_postfix}} import {{name}}
   cxx:
     include:
       unique_content: |
@@ -195,7 +237,8 @@ var_class: &var_class
       void {{'bind' + name + template_suffix}}(py::module& m);
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
-
+  pybind_package:
+    body:
 
 class: *var_class
 
@@ -214,7 +257,7 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                        {%- endfor %}):
           pass
   cxx:
@@ -223,6 +266,7 @@ constructor:
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
                                                                                    {{comma()}}{{arg.converter.python.cxx_type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')}});
+
     include: *var_template_method_include
 
 function:
@@ -240,7 +284,7 @@ function:
       @bind
       def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
                                                           {%- for arg in args -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{' = 'if arg.default}}{{helper.python.get_default_value(arg)}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
           pass

@@ -73,7 +73,8 @@ def make_func_context(ctx):
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type
+                type=arg.type,
+                nullable=arg.name in ctx.api_args['nullable_arg']
             ) for arg in ctx.args
         ]
 
@@ -85,6 +86,7 @@ def make_func_context(ctx):
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
+        template_choice = ctx.template_choice
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 

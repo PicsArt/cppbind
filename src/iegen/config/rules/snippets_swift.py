@@ -86,6 +86,7 @@ def make_func_context(ctx):
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
+        template_choice = ctx.template_choice
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 

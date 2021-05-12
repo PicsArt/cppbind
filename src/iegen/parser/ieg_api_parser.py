@@ -10,7 +10,6 @@ from iegen.utils.clang import extract_pure_comment
 
 
 class APIParser(object):
-
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
 
     def __init__(self, attributes, api_start_kw, languages=None):
@@ -31,7 +30,7 @@ class APIParser(object):
             return api, attr_dict
         pure_comment = extract_pure_comment(raw_comment, index)
         # else
-        ATTR_REGEXPR =\
+        ATTR_REGEXPR = \
             rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*:\s*(.+)$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
@@ -62,9 +61,9 @@ class APIParser(object):
 
                 array = self.attributes[attr].get('array', False)
 
-                if attr in attr_dict and not array:
-                    # redefinition or array
-                    raise Exception(f"Attribute {attr} is defined in multiple places.")
+                if attr in attr_dict and not array and len(language) != 1 and '__all__' in attr_dict[attr]:
+                    # redefinition for all
+                    raise Exception(f"Attribute {attr} is defined multiple times.")
 
                 value = self.parse_attr(attr, value)
 
@@ -73,7 +72,8 @@ class APIParser(object):
                     if array:
                         att_lang_dict.setdefault(lang, []).append(value)
                     else:
-                        att_lang_dict[lang] = value
+                        if len(language) == 1 or lang not in att_lang_dict:
+                            att_lang_dict[lang] = value
 
         return api, attr_dict, pure_comment
 

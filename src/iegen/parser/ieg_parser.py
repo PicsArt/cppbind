@@ -47,17 +47,19 @@ class CXXParser(object):
         logging.info("parsing files: {}".format(files.replace("\n", " ")))
         # logging.info(f"parsing files: {base_files}")
 
-        all_files = set()
-        for file in files.split(','):
-            abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
-            all_files.update(abs_paths)
-
         all_excluded_files = set()
         for file in excluded_files.split(','):
             abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
             all_excluded_files.update(abs_paths)
 
-        all_files -= all_excluded_files
+        # using list to keep files order constant
+        all_files = []
+        for file in files.split(','):
+            files_glob = sorted(glob.glob(file.strip(), recursive=True))
+            for fp in files_glob:
+                abs_fp = os.path.abspath(fp)
+                if abs_fp not in all_excluded_files:
+                    all_files.append(abs_fp)
 
         logging.debug(f"parsing found files: {all_files}")
         logging.debug(f"Clang args: {args}")

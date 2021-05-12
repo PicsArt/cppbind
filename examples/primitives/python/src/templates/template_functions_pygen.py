@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import *
-import examples.templates.template_functions as pybind_template_functions_pygen
+import examples.templates.template_methods as pybind_template_methods_pygen
 from bind_utils import *
 from metaclass import *
-from classes.project_pygen import *
-from classes.task_pygen import *
+from simple import *
+
 
 
 class TemplateFunctions(metaclass=OriginalMethodsMetaclass):

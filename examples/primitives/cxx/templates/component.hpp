@@ -7,7 +7,7 @@
 
 #include <string>
 #include "cxx/templates/addressable.hpp"
-#include "cxx/classes/root.hpp"
+#include "cxx/simple/root.hpp"
 
 namespace iegen::example {
 
@@ -18,7 +18,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: True
  * package: templates
- * kotlin.include: com.examples.classes.Root
+ * kotlin.include: com.examples.simple.Root
  * python.include: templates.addressable_pygen
  * swift.include: CWrapper
  */

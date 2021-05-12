@@ -25,8 +25,8 @@ swift_library(
 )
 
 swift_test(
-    name = "classes",
-    srcs = ["src/classes/main.swift"],
+    name = "simple",
+    srcs = ["src/simple/main.swift"],
     deps = [":sw_examples_library"],
 )
 
@@ -57,6 +57,24 @@ swift_test(
 swift_test(
     name = "enums",
     srcs = ["src/enums/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "getters",
+    srcs = ["src/enums/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "operators",
+    srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "overloads",
+    srcs = ["src/templates/main.swift"],
     deps = [":sw_examples_library"],
 )
 

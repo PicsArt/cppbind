@@ -1,3 +1,0 @@
-Binding with Python
-===================
-

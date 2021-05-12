@@ -3,6 +3,7 @@
 #include "swift/wrappers/inheritance/c_square.h"
 #include "cxx/inheritance/square.hpp"
 
+
 using namespace iegen::example;
 void release_Square(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Square*>(static_cast<iegen::example::Parallelogram*>(cself));

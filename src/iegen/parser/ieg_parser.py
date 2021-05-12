@@ -16,7 +16,7 @@ class CXXParser(object):
     """
     """
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
-        cli.TranslationUnit.PARSE_INCOMPLETE
+                        cli.TranslationUnit.PARSE_INCOMPLETE
 
     def __init__(self, filter=None, processor=None, parser_config=None):
         self.config = parser_config or default_config.parser
@@ -36,9 +36,9 @@ class CXXParser(object):
         index = cli.Index.create()
 
         # build parser arguments
-        args = ['-x', 'c++', '--std=c++17'] +\
-            self.config.clang_args.split(',') + ['-I' + includeDir.strip()
-                                                 for includeDir in self.config.include_dirs.split(',')]
+        args = ['-x', 'c++', '--std=c++17'] + self.config.clang_args.split(',') + ['-I' + includeDir.strip()
+                                                                                   for includeDir in
+                                                                                   self.config.include_dirs.split(',')]
         files = self.config.src_glob
         excluded_files = self.config.src_exclude_glob
         # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')

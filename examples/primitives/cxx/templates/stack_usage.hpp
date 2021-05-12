@@ -7,7 +7,7 @@
 #include <string>
 
 #include "cxx/templates/stack.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
 
 namespace iegen::example {
 
@@ -18,8 +18,8 @@ namespace iegen::example {
  * gen: class
  * package: templates
  * python.include: templates.stack_pygen
- * python.include: classes.project_pygen
- * kotlin.include: com.examples.classes.*
+ * python.include: simple.project_pygen
+ * kotlin.include: com.examples.simple.*
  * swift.include: CWrapper
  */
 class StackUsage  {

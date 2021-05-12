@@ -5,7 +5,7 @@
 
 using namespace iegen::example;
 void release_Parallelogram(void* _Nonnull cself){
-        delete dynamic_cast<iegen::example::Parallelogram*>(static_cast<iegen::example::Parallelogram*>(cself));
+    delete dynamic_cast<iegen::example::Parallelogram*>(static_cast<iegen::example::Parallelogram*>(cself));
 }
 double _prop_get_Parallelogram_area(void* _Nonnull cself){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Parallelogram*>(static_cast<iegen::example::Parallelogram*>(cself));

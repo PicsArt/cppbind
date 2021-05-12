@@ -7,7 +7,7 @@ from metaclass import *
 
 class Color(pybind_color_pygen.Color):
     """
-    """
+    Color Enum."""
     # Red = 1
     Red = pybind_color_pygen.Color.Red
     # Green = 1

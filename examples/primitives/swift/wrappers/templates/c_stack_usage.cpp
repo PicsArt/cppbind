@@ -2,7 +2,8 @@
 #include <memory>
 #include "swift/wrappers/templates/c_stack_usage.h"
 #include "cxx/templates/stack_usage.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
+
 
 using namespace iegen::example;
 void release_StackUsage(void* _Nonnull cself) {

@@ -2,7 +2,8 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/templates/stack_usage.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
+
 
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackUsage_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){

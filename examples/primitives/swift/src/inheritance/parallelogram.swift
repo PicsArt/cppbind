@@ -3,8 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
  */
 public protocol IParallelogram  {
 

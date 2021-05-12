@@ -3,11 +3,12 @@ from typing import *
 import examples.inheritance.square as pybind_square_pygen
 from bind_utils import *
 from metaclass import *
+from inheritance.rhombus_pygen import *
+from inheritance.rectangle_pygen import *
 
 
 class Square(Rhombus, Rectangle, metaclass=OriginalMethodsMetaclass):
-    """
-    """
+    """"""
     
     @bind
     def __init__(self, side: float):
@@ -16,12 +17,10 @@ class Square(Rhombus, Rectangle, metaclass=OriginalMethodsMetaclass):
     @property
     @bind
     def area(self) -> float:
-        """
-        """
+        """"""
         pass
     
     @bind
     def perimeter(self) -> float:
-        """
-        """
+        """"""
         pass

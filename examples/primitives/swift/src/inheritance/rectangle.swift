@@ -3,7 +3,6 @@ import Foundation
 import CWrapper
 
 /**
- * 
  */
 public protocol IRectangle : IParallelogram {
 
@@ -11,32 +10,26 @@ public protocol IRectangle : IParallelogram {
     
     
     /**
-     * 
      */
     var area: Double { get
     }
 
     /**
-     * 
      */
     var length: Double { get
     }
 
     /**
-     * comments
-     * 
      */
     var width: Double { get
     }
     /**
-     * 
      */
     func perimeter() -> Double 
 }
 extension IRectangle {
     
     /**
-     * 
      */
     public var area: Double {
           get {
@@ -48,7 +41,6 @@ extension IRectangle {
     }
 
     /**
-     * 
      */
     public var length: Double {
           get {
@@ -60,8 +52,6 @@ extension IRectangle {
     }
 
     /**
-     * comments
-     * 
      */
     public var width: Double {
           get {
@@ -72,7 +62,6 @@ extension IRectangle {
           
     }
     /**
-     * 
      */
     public func perimeter() -> Double {
 
@@ -97,7 +86,6 @@ public class Rectangle : IRectangle {
     }
 
     /**
-     * 
      */
     public convenience init(length: Double, width: Double) {
 

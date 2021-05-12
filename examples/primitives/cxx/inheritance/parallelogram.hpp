@@ -1,13 +1,9 @@
 #ifndef parallelogram_hpp
 #define parallelogram_hpp
 
-#include <string>
-
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * gen: interface
  * shared_ref: False

@@ -2,8 +2,9 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/templates/stack.hpp"
-#include "cxx/classes/project.hpp"
-#include "cxx/classes/task.hpp"
+#include "cxx/simple/project.hpp"
+#include "cxx/simple/task.hpp"
+
 
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackProject_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
@@ -91,6 +92,7 @@ extern "C" JNIEXPORT jboolean Java_com_examples_templates_StackProject_jEmpty(JN
       }
     );
 }
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

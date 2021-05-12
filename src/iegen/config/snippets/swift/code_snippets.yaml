@@ -64,13 +64,11 @@ var_class_include: &var_class_include
     unique_content: |
       #include "{{prj_rel_file_name}}"
       {{include_cxx|format_list('#include "{}"')|join('\n')}}
-      {%- set template_includes = ctx.template_includes %}
-      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
 
 var_template_method_include: &var_template_method_include
     unique_content: |
-      {%- set template_includes = ctx.template_includes %}
-      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
 
 
 class:
@@ -115,7 +113,9 @@ class:
     include: *var_class_include
     body:
       content: |
+        {%- if ctx.namespace %}
         using namespace {{ctx.namespace}};
+        {%- endif %}
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -186,9 +186,9 @@ interface:
         using namespace {{ctx.namespace}};
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
             {%- if root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
-                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
         }
   ch:

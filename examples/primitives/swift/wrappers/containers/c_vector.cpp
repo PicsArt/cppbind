@@ -3,6 +3,7 @@
 #include "swift/wrappers/containers/c_vector.h"
 #include "cxx/containers/vector.hpp"
 
+
 using namespace iegen::example;
 void release_VectorItem(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::VectorItem*>(static_cast<iegen::example::VectorItem*>(cself));
@@ -24,6 +25,7 @@ void* _Nonnull create_VectorItem(int _value){
     auto this_object = new iegen::example::VectorItem(_value);
     return static_cast<iegen::example::VectorItem*>(this_object);
 }
+
 using namespace iegen::example;
 void release_VectorExamples(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));

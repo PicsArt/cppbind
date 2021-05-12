@@ -1,29 +1,24 @@
 #ifndef rhombus_hpp
 #define rhombus_hpp
 
-#include <string>
-#include <iostream>
 #include <math.h>
-
 #include "cxx/inheritance/parallelogram.hpp"
 
 namespace iegen::example {
 
 /**
- *
  * __API__
  * gen: interface
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
+ * python.include: inheritance.parallelogram_pygen
  */
 class Rhombus : public virtual Parallelogram {
 public:
     /**
-     *
      * __API__
      * gen: constructor
-     *
      */
     Rhombus(double diagonal1, double diagonal2) : Parallelogram() {
            _diagonal1 = diagonal1;

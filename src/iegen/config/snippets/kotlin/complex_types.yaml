@@ -140,8 +140,8 @@ std::vector:
     }
 
   kotlin_to_jdk: |
-    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    val {{target_name}} = {{target_type_name}}({{name}}.size){{array_init}}
+    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
     var index = 0
     for (value in {{name}}) {
         {{args[0].snippet('value')|indent}}
@@ -220,10 +220,10 @@ std::map:
   kotlin_to_jdk: |
     {%- set tmp_key_name = 'tmp_key_' + target_name %}
     {%- set tmp_val_name = 'tmp_val_' + target_name %}
-    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
-    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size){{karray_init}}
-    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size){{varray_init}}
+    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{ {}() }}'.format(args[1].target_type_name) %}
+    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size) {{karray_init}}
+    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size) {{varray_init}}
     val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
     var index = 0
     for ((key, value) in {{name}}) {
@@ -302,9 +302,13 @@ std::pair:
     {{args[1].snippet('second')}}
     {%- if args[0].custom.pname != 'Object' %}
     jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first')}});
+    {%- else %}
+    jobject {{name}}_first = {{args[0].converted_name('first')}};
     {%- endif %}
     {%- if args[1].custom.pname != 'Object' %}
     jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second')}});
+    {%- else %}
+    jobject {{name}}_second = {{args[1].converted_name('second')}};
     {%- endif %}
     {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{name}}_first, {{name}}_second);
   kotlin_to_jdk: |

@@ -1,8 +1,7 @@
 package com.examples.templates
 
 import alias.*
-import com.examples.classes.*
-
+import com.examples.simple.*
 
 /**
  * comments
@@ -14,6 +13,7 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
@@ -22,6 +22,7 @@ internal constructor(_id: Long) : AutoCloseable {
             val id = jConstructor()
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(): Long
 
@@ -36,6 +37,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * comments
      * 
@@ -44,13 +46,11 @@ internal constructor(_id: Long) : AutoCloseable {
         //jSet_this(id, this)
     }
     
-    
     /**
      * comments
      * 
      */
     fun firstItemOfSpecialized(p: StackProject): Project {
-        
         val kotlin_to_jdk_p = p.getObjId()
         val result = jFirstitemofspecialized(getObjId(), kotlin_to_jdk_p)
         val jdk_to_kotlin_result = Project(result)
@@ -62,24 +62,26 @@ internal constructor(_id: Long) : AutoCloseable {
      * 
      */
     open fun firstItemOfTemplate(arg0: StackProject): Project {
-        
         val kotlin_to_jdk_arg0 = arg0.getObjId()
         val result = jFirstitemoftemplateProject(getObjId(), kotlin_to_jdk_arg0)
         val jdk_to_kotlin_result = Project(result)
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jFirstitemofspecialized(id: Long, p: Long): Long
     private external fun jFirstitemoftemplateProject(id: Long, arg0: Long): Long

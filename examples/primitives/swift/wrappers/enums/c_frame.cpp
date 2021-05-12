@@ -3,6 +3,7 @@
 #include "swift/wrappers/enums/c_frame.h"
 #include "cxx/enums/frame.hpp"
 
+
 using namespace iegen::example;
 void release_Frame(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Frame*>(static_cast<iegen::example::Frame*>(cself));

@@ -3,7 +3,6 @@ package com.examples.forward_decl
 import alias.*
 
 
-
 /**
  * comments
  * 
@@ -14,12 +13,12 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
-        /**
-         */
+        
         protected fun construct_helper(): Long {
             val id = jConstructor()
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(): Long
 
@@ -34,27 +33,19 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
-    /**
-     */
+    
     constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
     
-    
-    /**
-     */
     fun addTeacher(t: Teacher): Unit {
-        
         val kotlin_to_jdk_t = t.getObjId()
         val result = jAddteacher(getObjId(), kotlin_to_jdk_t)
         
         return result
     }
 
-    /**
-     */
     fun teachers(): List<Teacher> {
-        
         val result = jTeachers(getObjId())
         val jdk_to_kotlin_result: MutableList<Teacher> = mutableListOf()
         for (value in result) {
@@ -63,18 +54,21 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jAddteacher(id: Long, t: Long): Unit
     private external fun jTeachers(id: Long): LongArray

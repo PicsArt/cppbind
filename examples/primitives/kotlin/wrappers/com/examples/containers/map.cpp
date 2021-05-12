@@ -3,6 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/containers/map.hpp"
 
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_MapItem_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});
@@ -44,6 +45,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_containers_MapItem_jConstructor
       }
   );
 }
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_containers_MapExamples_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
     return iegen::handleNativeCrash(env, [&] {});

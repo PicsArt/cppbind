@@ -2,7 +2,8 @@
 #include <iostream>
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/templates/addressable.hpp"
-#include "cxx/classes/root.hpp"
+#include "cxx/simple/root.hpp"
+
 
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_AddressableRoot_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){

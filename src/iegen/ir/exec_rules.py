@@ -244,15 +244,15 @@ class Context(object):
             list(str): List containing includes.
         """
         template_arg = self.node.args.get('template', None)
-        includes = set()
+        includes = []
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
                 ctx = self.find_by_type(t['type'] if isinstance(t, dict) else t)
                 if ctx:
-                    includes.add(os.path.relpath(ctx.node.clang_cursor.location.file.name,
-                                                 self.runner.config.out_prj_dir))
-        return sorted(includes)
+                    includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
+                                                    self.runner.config.out_prj_dir))
+        return includes
 
     @property
     def template_type_parameters(self):

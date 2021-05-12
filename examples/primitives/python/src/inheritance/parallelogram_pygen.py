@@ -7,9 +7,7 @@ from abc import abstractmethod
 
 
 class Parallelogram(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     @abstractmethod
     def __init__(self, *args, **kwargs):
         pass

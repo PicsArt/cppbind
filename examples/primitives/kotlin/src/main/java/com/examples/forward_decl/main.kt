@@ -1,33 +1,35 @@
-package com.examples.classes
+package com.examples.forward_decl
 
-import com.examples.classes.Project
-import com.examples.classes.Task
-import com.examples.classes.Root
+import com.examples.forward_decl.*
 
-class ClassesApp {
+class ForwardDeclsApp {
 
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
 
-            // [project-usage]
-            // create a new project
-            val title = "My Project"
-            val prj = Project(title)
-            assert(prj.title == title)
-            // add tasks to it
-            val task1 = Task("My Task")
-            prj.addTask(task1)
-            assert(prj.tasks()[0].getObjId() == task1.getObjId())
-            // [project-usage]
+            // [forward-decl-usage]
+            val student1 = Student()
+            val student2 = Student()
+            val teacher1 = Teacher()
+            val teacher2 = Teacher()
 
-            // [root-usage]
-            // create a new project
-            val path = "/path/to/root"
-            val root = Root(path)
-            assert(root.path == path)
-            // [root-usage]
+            // teacher1 has 2 students
+            student1.addTeacher(teacher1)
+            teacher1.addStudent(student1)
+            student2.addTeacher(teacher1)
+            teacher1.addStudent(student2)
 
+            // teacher2 has 1 student
+            student2.addTeacher(teacher2)
+            teacher2.addStudent(student2)
+
+            assert(teacher1.students().size == 2)
+            assert(teacher2.students().size == 1)
+
+            assert(student1.teachers().size == 1)
+            assert(student2.teachers().size == 2)
+            // [forward-decl-usage]
         }
 
     }

@@ -1,14 +1,10 @@
-/**
- * This is a simple enum example.
- */
-
 #ifndef color_hpp
 #define color_hpp
 
 namespace iegen::example {
 
 /**
- *
+ * Color Enum.
  * __API__
  * gen: enum
  * package: enums

@@ -4,6 +4,7 @@
 #include "cxx/forward_decl/teacher.hpp"
 #include "cxx/forward_decl/student.hpp"
 
+
 using namespace iegen::example;
 void release_Teacher(void* _Nonnull cself) {
     delete dynamic_cast<iegen::example::Teacher*>(static_cast<iegen::example::Teacher*>(cself));

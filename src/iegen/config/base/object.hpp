@@ -13,6 +13,7 @@ namespace iegen {
  * gen: class
  * package: extra
  * shared_ref: True
+ * swift.include: CWrapper
  */
 class Object {
 public:

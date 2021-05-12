@@ -3,7 +3,6 @@ package com.examples.operators
 import alias.*
 
 
-
 /**
  * An example for with overloaded methods.
  * 
@@ -14,14 +13,15 @@ internal constructor(_id: Long) : AutoCloseable {
         init {
             System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * Counter constructor.
          */
         protected fun construct_helper(count: Int): Long {
-            
             val id = jConstructor(count)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(count: Int): Long
 
@@ -38,6 +38,7 @@ internal constructor(_id: Long) : AutoCloseable {
         }
         return id;
     }
+    
     /**
      * Counter constructor.
      */
@@ -54,13 +55,11 @@ internal constructor(_id: Long) : AutoCloseable {
             
             return result
         }
-        
     
     /**
      * Plus operator
      */
     operator fun plus(counter: Counter): Counter {
-        
         val kotlin_to_jdk_counter = counter.getObjId()
         val result = jPlus(getObjId(), kotlin_to_jdk_counter)
         val jdk_to_kotlin_result = Counter(result)
@@ -71,46 +70,40 @@ internal constructor(_id: Long) : AutoCloseable {
      * Comparison operator for kotlin
      */
     operator fun compareTo(counter: Counter): Int {
-        
         val kotlin_to_jdk_counter = counter.getObjId()
         val result = jCompareto(getObjId(), kotlin_to_jdk_counter)
         
         return result
     }
 
-    /**
-     * 
-     */
     fun gt(counter: Counter): Boolean {
-        
         val kotlin_to_jdk_counter = counter.getObjId()
         val result = jGt(getObjId(), kotlin_to_jdk_counter)
         
         return result
     }
 
-    /**
-     * 
-     */
     fun add(counter: Counter): Counter {
-        
         val kotlin_to_jdk_counter = counter.getObjId()
         val result = jAdd(getObjId(), kotlin_to_jdk_counter)
         val jdk_to_kotlin_result = Counter(result)
         return jdk_to_kotlin_result
     }
+
     override fun close() {
         if (id != 0L) {
-    	    jFinalize(id)
+            jFinalize(id)
             id = 0L
         }
     }
+
     /**
      * Finalize and deletes the object
      */
     protected fun finalize() {
         close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jCount(id: Long): Int
     private external fun jPlus(id: Long, counter: Long): Long

@@ -6,103 +6,106 @@ System requirements
 
  Operating system: Linux, Mac
 
-Dev environment setup
-^^^^^^^^^^^^^^^^^^^^^
+Environment setup
+^^^^^^^^^^^^^^^^^
 
+Clone iegen master branch into current directory\ :
 
-  Clone iegen master branch into current directory\ :
+.. code-block:: bash
 
-  .. code-block:: bash
+    git clone  https://github.com/PicsArt/iegen.git
+    cd iegen
 
-     git clone  https://github.com/PicsArt/iegen.git
+If the project is already cloned, pull the latest version:
 
-  If the project is already cloned, pull the latest version:
+.. code-block:: bash
 
-  .. code-block:: bash
-
-     git fetch
-     git pull
+    git fetch
+    git pull
 
 Linux
 ~~~~~
 
+Update/upgrade the system\ :
 
-  Update/upgrade the system\ :
+.. code-block:: bash
 
-  .. code-block:: bash
+    sudo apt-get update
+    sudo apt-get upgrade
 
-     # Linux
-     sudo apt-get update
-     sudo apt-get upgrade
+Install Clang\ :
 
-  Install Clang\ :
+.. code-block:: bash
 
-  .. code-block:: bash
+    sudo apt-get install -y libclang-9-dev
 
-     sudo apt-get install -y libclang-9-dev
+If python 3.7 or higher is already installed then skip this step.
 
-  If python 3.7 or greater is already installed then skip the next step.
+Install python\ :
 
-  Install python\ :
+.. code-block:: bash
 
-  .. code-block:: bash
-
-      sudo apt install software-properties-common
-      sudo add-apt-repository ppa:deadsnakes/ppa
-      sudo apt install python3.7
-      sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
-      sudo update-alternatives --config python3
-      python3 -m pip install --upgrade pip
-      python3 -m pip install virtualenv
+    sudo apt install software-properties-common
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt install python3.7
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
+    sudo update-alternatives --config python3
+    python3 -m pip install --upgrade pip
+    python3 -m pip install virtualenv
 
 
-  Create and activate virtualenv\ :
+Create and activate virtualenv\ :
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     cd /path/to/project/
-     python3 -m venv venv
-     source venv/bin/activate
+    python3 -m venv venv
+    source venv/bin/activate
 
 Mac OS X
 ~~~~~~~~
 
-  For MacOS version 10.14 or below\ :
+Add libclang path to DYLD_LIBRARY_PATH.
+If you have Xcode installed then run the following command:
 
-  .. code-block::
+.. code-block:: bash
 
-     open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_{version}.pkg
-     echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Library/Developer/CommandLineTools/usr/lib"' >> ~/.profile
+    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib"' >> ~/.profile
 
-  For higher versions\ :
+If only CommandLineTools is installed then:
 
+.. code-block:: bash
 
-  If python 3.7 or greater is already installed then skip the next step.
+    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Library/Developer/CommandLineTools/usr/lib"' >> ~/.profile
 
-  Install python\ :
+If python 3.7 or higher is already installed then skip this step.
 
-  .. code-block:: bash
+Install python\ :
 
-      brew install python@3.7
-      echo 'export PATH="/usr/local/opt/python@3.7/lib:$PATH"' >> ~/.profile
-      python3 -m pip install virtualenv
+.. code-block:: bash
 
+    brew install python@3.7
+    echo 'export PATH="/usr/local/opt/python@3.7/lib:$PATH"' >> ~/.profile
 
-  Create and activate virtualenv\ :
+Install virtualenv\ :
 
-  .. code-block:: bash
+.. code-block:: bash
 
-     cd /path/to/project/
-     python3 -m venv venv
-     source venv/bin/activate
+    python3 -m pip install virtualenv
 
-iegen installation
-^^^^^^^^^^^^^^^^^^
+Create and activate a virtualenv\ :
+
+.. code-block:: bash
+
+    python3 -m venv venv
+    source venv/bin/activate
+
+Dev installation
+^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
     pip3 install -r src/requirements.txt
-    python3 setup.py install
+    python3 setup.py install develop
 
 Installation is complete to test run the command\ :
 

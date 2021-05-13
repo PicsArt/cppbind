@@ -1,18 +1,18 @@
 from __future__ import annotations
 from typing import *
-import examples.undefined.hello_user as pybind_hello_user_pygen
-from metaclass import *
-from bind_utils import *
+import hello_user.hello.hello_user as pybind_hello_user
+from hello_user.bind_utils import *
+from hello_user.metaclass import *
 
 
 class UserInfo(metaclass=OriginalMethodsMetaclass):
     """
     Structure to describe user."""
+    
     @bind
     def __init__(self, user_name: str, user_age: int):
         pass
-
-
+    
     @property
     @bind
     def age(self) -> int:
@@ -21,6 +21,7 @@ class UserInfo(metaclass=OriginalMethodsMetaclass):
         """
         pass
 
+
     @property
     @bind
     def name(self) -> str:
@@ -28,6 +29,7 @@ class UserInfo(metaclass=OriginalMethodsMetaclass):
         Name of user.
         """
         pass
+
 
     @property
     @bind
@@ -42,26 +44,24 @@ class UserInfo(metaclass=OriginalMethodsMetaclass):
         """
         Some wishes of the user."""
         pass
-    
 
 
 class Host(metaclass=OriginalMethodsMetaclass):
     """
     Host class."""
+    
     @bind
     def __init__(self):
         pass
-
-
     
     @bind
     def hello(self, user: UserInfo) -> str:
         """
         Greeting function."""
         pass
+
     @bind
     def welcome(self, user: UserInfo) -> str:
         """
         Welcome function."""
         pass
-

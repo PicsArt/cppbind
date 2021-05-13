@@ -1,6 +1,6 @@
 import Foundation
 
-
+import CWrapper
 
 /**
  * Structure to describe user.
@@ -39,8 +39,8 @@ public class UserInfo  {
     public var age: UInt {
           get {
             let result = _prop_get_UserInfo_age(cself);
-            
-            return result
+            let sc_to_swift_result = UInt(result)
+            return sc_to_swift_result
           }
           
           

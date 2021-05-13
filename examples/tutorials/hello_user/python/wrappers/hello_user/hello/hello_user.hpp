@@ -1,5 +1,5 @@
-#ifndef undefined_hello_user_hpp
-#define undefined_hello_user_hpp
+#ifndef hello_hello_user_hpp
+#define hello_hello_user_hpp
 
 #include <pybind11/pybind11.h>
 

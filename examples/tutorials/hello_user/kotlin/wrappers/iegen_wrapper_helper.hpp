@@ -2,11 +2,12 @@
 #define __WRAPPER_HELPER_HPP__
 
 #include "jni.h"
-#include<utility>
-#include<string>
+#include <utility>
+#include <string>
 #include <vector>
 #include <type_traits>
 #include <memory>
+#include <iostream>
 
 
 typedef jlong jobjectid;
@@ -52,11 +53,12 @@ inline void deleteRef(jlong id) {
 
 template <typename T, typename BaseT>
 inline jlong AllocRefPtrAsLong(const std::shared_ptr<T>& ref) {
-    if (!std::is_same<T, BaseT>::value) {
+    if constexpr (!std::is_same<T, BaseT>::value) {
         std::shared_ptr<BaseT> baseptr = std::static_pointer_cast<BaseT>(ref);
         return reinterpret_cast<jlong>(new std::shared_ptr<BaseT>(baseptr));
+    } else {
+        return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
     }
-    return reinterpret_cast<jlong>(new std::shared_ptr<T>(ref));
 }
 
 template <typename T, typename BaseT>
@@ -75,14 +77,16 @@ template <typename T, typename BaseT>
 inline std::shared_ptr<T> RefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
     validateID(id);
-    if (!std::is_same<T, BaseT>::value) {
+    if constexpr (!std::is_same<T, BaseT>::value) {
         auto baseptr = *reinterpret_cast<std::shared_ptr<BaseT>*>(id);
-        if (std::is_polymorphic<T>::value) {
+        if constexpr (std::is_polymorphic<T>::value) {
             return std::dynamic_pointer_cast<T>(baseptr);
+        } else {
+            return std::static_pointer_cast<T>(baseptr);
         }
-        return std::static_pointer_cast<T>(baseptr);
+    } else {
+        return *reinterpret_cast<std::shared_ptr<T>*>(id);
     }
-    return *reinterpret_cast<std::shared_ptr<T>*>(id);
 }
 
 template <typename T>
@@ -118,14 +122,16 @@ inline jlong UnsafeRefAsLong(T* unsafe) {
 template<typename T, typename BaseT>
 inline T* NullableUnsafeRefFromLong(jlong id) {
     IsTypeValidForJNI<T>();
-    if (!std::is_same<T, BaseT>::value) {
+    if constexpr (!std::is_same<T, BaseT>::value) {
         BaseT* baseobj = reinterpret_cast<BaseT*>(id);
-        if (std::is_polymorphic<T>::value) {
+        if constexpr (std::is_polymorphic<T>::value) {
             return dynamic_cast<T*>(baseobj);
+        } else {
+            return static_cast<T*>(baseobj);
         }
-        return static_cast<T*>(baseobj);
+    } else {
+        return reinterpret_cast<T*>(id);
     }
-    return reinterpret_cast<T*>(id);
 }
 
 template<typename T, typename BaseT>
@@ -144,6 +150,8 @@ auto handleNativeCrash(JNIEnv* env, Callable f) -> decltype(f()) {
 std::pair<jobject, jobject> extract_jni_pair(JNIEnv *env, jobject p);
 
 jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second);
+
+jobject make_jni_long_pair(JNIEnv *env, jlong first, jlong second);
 
 std::string jni_to_string(JNIEnv* env, jobject jobj);
 
@@ -168,5 +176,18 @@ jint extractInt(JNIEnv* env, jobject obj);
 jlong extractLong(JNIEnv* env, jobject obj);
 
 jobject extractObject(JNIEnv* env, jobject obj);
-} // end of iegenn
+
+jobject longToObject(JNIEnv* env, jlong obj);
+
+jobject intToObject(JNIEnv* env, jint obj);
+
+jobject floatToObject(JNIEnv* env, jfloat val);
+
+jobject doubleToObject(JNIEnv* env, jdouble val) ;
+
+jobject shortToObject(JNIEnv* env, jshort val);
+
+jobject boolToObject(JNIEnv* env, jboolean val);
+
+} // end of iegen
 #endif //__WRAPPER_HELPER_HPP__

@@ -26,6 +26,20 @@ jobject make_jni_object_pair(JNIEnv *env, jobject first, jobject second) {
 
 }
 
+jobject make_jni_long_pair(JNIEnv *env, jlong first, jlong second) {
+    // Get the pair class that we wish to return an instance of
+    jclass pairClass = env->FindClass("kotlin/Pair");
+    // Get the method id of an empty constructor in class
+
+    jmethodID constructor = env->GetMethodID(pairClass, "<init>", "(Ljava/lang/Long;Ljava/lang/Long;)V");
+
+    // Create an instance of class
+    jobject obj = env->NewObject(pairClass, constructor, first, second);
+
+    return obj;
+
+}
+
 
 std::string jni_to_string(JNIEnv* env, jobject jobj) {
     jstring jStr = (jstring)jobj;
@@ -117,6 +131,42 @@ jint extractInt(JNIEnv* env, jobject obj)  {
 jlong extractLong(JNIEnv* env, jobject obj)  {
     return env->CallLongMethod(obj,
         env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()L"));
+}
+
+jobject longToObject(JNIEnv* env, jlong val) {
+    jclass cls = env->FindClass("java/lang/Long");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(J)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject intToObject(JNIEnv* env, jint val) {
+    jclass cls = env->FindClass("java/lang/Integer");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(I)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject floatToObject(JNIEnv* env, jfloat val) {
+    jclass cls = env->FindClass("java/lang/Float");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(F)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject doubleToObject(JNIEnv* env, jdouble val) {
+    jclass cls = env->FindClass("java/lang/Double");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(D)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject shortToObject(JNIEnv* env, jshort val) {
+    jclass cls = env->FindClass("java/lang/Short");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(S)V");
+    return env->NewObject(cls, constructorId, val);
+}
+
+jobject boolToObject(JNIEnv* env, jboolean val) {
+    jclass cls = env->FindClass("java/lang/Boolean");
+    jmethodID constructorId = env->GetMethodID(cls, "<init>", "(Z)V");
+    return env->NewObject(cls, constructorId, val);
 }
 
 }

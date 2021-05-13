@@ -354,8 +354,8 @@ function:
                       throw {{'Exceptions.' if helper.Exceptions.is_std_exc(exc_type)}}{{helper.Exceptions.get_exc_name(exc_type)}}(err.err_ptr, true)
               {%- endfor %}
                   default:
-                      let err_msg = String(cString: _func_std_exception_what(err.err_ptr)!)
-                      ExceptionHandler.handleUncaughtException(err_msg)
+                      let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                      ExceptionHandler.handleUncaughtException(exc_obj.what())
               }
               {%- else %}
               ExceptionHandler.handleUncaughtException("Uncaught Exception")

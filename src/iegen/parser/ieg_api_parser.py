@@ -4,6 +4,7 @@ Implements ieg api parser on cxx comment
 import distutils.util
 import json
 import re
+import yaml
 from collections import OrderedDict
 
 from iegen.utils.clang import extract_pure_comment
@@ -30,21 +31,33 @@ class APIParser(object):
             return api, attr_dict
         pure_comment = extract_pure_comment(raw_comment, index)
         # else
-        ATTR_REGEXPR = \
-            rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*:\s*(.+)$"
+        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
         lines = api_section.splitlines()
         filtered = filter(lambda x: not re.match(SKIP_REGEXPR, x), lines)
-        for line in filtered:
 
-            m = re.match(ATTR_REGEXPR, line)
+        yaml_lines = []
+        for line in filtered:
+            comment_end_idx = 0
+            comment_prefix = re.search(r'\s*\*', line)
+            if comment_prefix:
+                comment_end_idx = comment_prefix.end()
+            yaml_lines.append(line[comment_end_idx:])
+        yaml_lines = '\n'.join(yaml_lines)
+
+        try:
+            attrs = yaml.load(yaml_lines, Loader=yaml.Loader)
+        except yaml.YAMLError as e:
+            raise Exception(f"Error while scanning yaml style comments: {e}")
+
+        for attr_key, value in attrs.items():
+            m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 # error
                 raise Exception(line)
-            language, attr, value = m.groups()
-            value = value.strip()
+            language, attr = m.groups()
 
             if language:
                 language = [language]
@@ -70,7 +83,7 @@ class APIParser(object):
                 for lang in language:
                     att_lang_dict = attr_dict.setdefault(attr, OrderedDict())
                     if array:
-                        att_lang_dict.setdefault(lang, []).append(value)
+                        att_lang_dict.setdefault(lang, []).extend(value if isinstance(value, list) else [value])
                     else:
                         if len(language) == 1 or lang not in att_lang_dict:
                             att_lang_dict[lang] = value
@@ -80,10 +93,11 @@ class APIParser(object):
     def parse_attr(self, attr_name, attr_value):
         attr_type = self.attributes[attr_name].get('type', None)
         if isinstance(self.attributes[attr_name]['default'], bool) or attr_type == 'bool':
-            return bool(distutils.util.strtobool(attr_value))
+            return bool(distutils.util.strtobool(str(attr_value)))
 
-        if attr_type == 'json':
-            return json.loads(attr_value)
+        if attr_type == 'dict':
+            if not isinstance(attr_value, dict):
+                raise Exception(f"Wrong attribute type: {type(attr_value)}, it must be dictionary")
         # default string type
         return attr_value
 

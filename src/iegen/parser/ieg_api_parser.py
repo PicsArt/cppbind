@@ -80,13 +80,17 @@ class APIParser(object):
 
                 value = self.parse_attr(attr, value)
 
+                if array:
+                    if not isinstance(value, list):
+                        value = [value]
+                elif isinstance(value, list):
+                    raise Exception(f"Wrong attribute type: {attr} cannot be array")
+
                 for lang in language:
                     att_lang_dict = attr_dict.setdefault(attr, OrderedDict())
-                    if array:
-                        att_lang_dict.setdefault(lang, []).extend(value if isinstance(value, list) else [value])
-                    else:
-                        if len(language) == 1 or lang not in att_lang_dict:
-                            att_lang_dict[lang] = value
+                    if array or len(language) == 1 or lang not in att_lang_dict:
+                        att_lang_dict[lang] = value
+
 
         return api, attr_dict, pure_comment
 

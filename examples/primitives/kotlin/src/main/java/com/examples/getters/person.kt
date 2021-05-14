@@ -39,7 +39,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(name: String, email: String, age: Int) : this(construct_helper(name, email, age)) {
+    constructor(name: String, email: String, age: Int): this(construct_helper(name, email, age)) {
         //jSet_this(id, this)
     }
     

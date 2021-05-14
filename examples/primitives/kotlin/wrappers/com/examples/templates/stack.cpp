@@ -5,6 +5,7 @@
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
 
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_templates_StackProject_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
 }

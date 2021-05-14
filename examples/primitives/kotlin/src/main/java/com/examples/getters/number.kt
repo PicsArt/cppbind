@@ -40,7 +40,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(n: Int) : this(construct_helper(n)) {
+    constructor(n: Int): this(construct_helper(n)) {
         //jSet_this(id, this)
     }
     
@@ -118,7 +118,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(n: Double) : this(construct_helper(n)) {
+    constructor(n: Double): this(construct_helper(n)) {
         //jSet_this(id, this)
     }
     

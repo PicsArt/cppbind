@@ -40,11 +40,11 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
 
-    constructor(st: Project) : this(construct_helper(st)) {
+    constructor(st: Project): this(construct_helper(st)) {
         //jSet_this(id, this)
     }
     
@@ -133,11 +133,11 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor() : this(construct_helper()) {
+    constructor(): this(construct_helper()) {
         //jSet_this(id, this)
     }
 
-    constructor(st: Task) : this(construct_helper(st)) {
+    constructor(st: Task): this(construct_helper(st)) {
         //jSet_this(id, this)
     }
     

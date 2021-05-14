@@ -1,5 +1,5 @@
-#ifndef functions_functional_hpp
-#define functions_functional_hpp
+#ifndef functionals_functional_example_hpp
+#define functionals_functional_example_hpp
 
 #include <pybind11/pybind11.h>
 

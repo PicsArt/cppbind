@@ -39,7 +39,7 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
      * comments
      * 
      */
-    constructor(parent: Root, name: String) : this(construct_helper(parent, name)) {
+    constructor(parent: Root, name: String): this(construct_helper(parent, name)) {
         //jSet_this(id, this)
     }
 

@@ -216,16 +216,16 @@ Template Methods
 
 Let´s assume we have a class with two template methods:
 
-.. literalinclude:: /../examples/primitives/cxx/templates/template_functions.hpp
+.. literalinclude:: /../examples/primitives/cxx/templates/template_methods.hpp
    :language: cpp
-   :lines: 10-48
+   :lines: 10-46
 
 For all templates we specify **template** attribute in **__API__**.
 It´s value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
 contain either strings(all possible types) or objects with **name** and **type** keys. We will see example with **name** and it´s usage later.
 Now let´s see how kotlin wrappers look like:
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_functions.kt
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
    :language: kotlin
    :lines: 5-
 

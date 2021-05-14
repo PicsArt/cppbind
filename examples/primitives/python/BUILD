@@ -52,8 +52,8 @@ py_test(
 
 py_test(
     name = "functionals",
-    srcs = ["src/functions/main.py"],
-    main = "src/functions/main.py",
+    srcs = ["src/functionals/main.py"],
+    main = "src/functionals/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

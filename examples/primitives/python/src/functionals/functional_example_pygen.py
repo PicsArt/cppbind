@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import *
-import examples.functions.functional as pybind_functional_pygen
+import examples.functionals.functional_example as pybind_functional_example_pygen
 from bind_utils import *
 from metaclass import *
 

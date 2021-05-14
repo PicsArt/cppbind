@@ -33,7 +33,7 @@ internal constructor(_id: Long) : IRhombus, AutoCloseable {
         return id;
     }
     
-    constructor(diagonal1: Double, diagonal2: Double) : this(construct_helper(diagonal1, diagonal2)) {
+    constructor(diagonal1: Double, diagonal2: Double): this(construct_helper(diagonal1, diagonal2)) {
         //jSet_this(id, this)
     }
 

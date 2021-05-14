@@ -1,7 +1,7 @@
 #include <string.h>
 #include <memory>
-#include "swift/wrappers/templates/c_template_functions.h"
-#include "cxx/templates/template_functions.hpp"
+#include "swift/wrappers/templates/c_template_methods.h"
+#include "cxx/templates/template_methods.hpp"
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/task.hpp"
 

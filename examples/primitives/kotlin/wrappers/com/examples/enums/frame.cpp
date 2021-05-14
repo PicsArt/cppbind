@@ -3,6 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/enums/frame.hpp"
 
+
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_enums_Frame_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
 }

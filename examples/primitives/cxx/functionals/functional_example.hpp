@@ -1,5 +1,5 @@
-#ifndef function_hpp
-#define function_hpp
+#ifndef functional_example_hpp
+#define functional_example_hpp
 #include <functional>
 
 namespace iegen::example {
@@ -8,7 +8,7 @@ namespace iegen::example {
  * __API__
  * gen: class
  * shared_ref: true
- * package: functions
+ * package: functionals
  * swift.include: CWrapper
  */
 class FunctionalExamples {

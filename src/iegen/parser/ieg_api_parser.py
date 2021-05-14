@@ -2,10 +2,10 @@
 Implements ieg api parser on cxx comment
 """
 import distutils.util
-import json
 import re
 import yaml
 from collections import OrderedDict
+from iegen.common.yaml_process import UniqueKeyLoader
 
 from iegen.utils.clang import extract_pure_comment
 
@@ -53,7 +53,7 @@ class APIParser(object):
         yaml_lines = '\n'.join(yaml_lines)
 
         try:
-            attrs = yaml.load(yaml_lines, Loader=yaml.Loader)
+            attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
 

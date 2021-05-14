@@ -346,20 +346,22 @@ function:
           {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
         {%- endif %}
           if (err.is_err) {
-              {%- if helper.Exceptions.can_throw(throws) %}
               let err_type = Int(err.err_type)
               switch(err_type) {
+              {%- if helper.Exceptions.can_throw(throws) %}
               {%- for exc_type in throws %}
                   case({{loop.index}}):
                       throw {{'Exceptions.' if helper.Exceptions.is_std_exc(exc_type)}}{{helper.Exceptions.get_exc_name(exc_type)}}(err.err_ptr, true)
               {%- endfor %}
-                  default:
+              {%- endif %}
+              {%- if not 'std::exception' in throws %}
+                  case({{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}}):
                       let exc_obj = Exceptions.StdException(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
-              }
-              {%- else %}
-              ExceptionHandler.handleUncaughtException("Uncaught Exception")
               {%- endif %}
+                  default:
+                      ExceptionHandler.handleUncaughtException("Uncaught Exception")
+              }
           }
         {%- if rconverter.c.target_type_name != 'void' %}
           return {{rconverter.sc_to_swift.converted_name('result')}};
@@ -416,7 +418,7 @@ function:
           {%- if not 'std::exception' in throws %}
           catch (const std::exception& e) {
               err->is_err = true;
-              err->err_type = {{throws|length + 1}};
+              err->err_type = {{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}};
               err->err_ptr = new std::exception(e);
           }
           {%- endif %}

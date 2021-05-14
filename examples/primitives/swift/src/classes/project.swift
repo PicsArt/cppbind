@@ -57,7 +57,14 @@ public class Project  {
         var err = ErrorObj()
         _func_Project_addTask(cself, swift_to_sc_task, &err);
         if (err.is_err) {
-            ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
     }
     /**
@@ -79,7 +86,14 @@ public class Project  {
           sc_to_swift_result.append(sc_to_swift_value_result);
         }
         if (err.is_err) {
-            ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

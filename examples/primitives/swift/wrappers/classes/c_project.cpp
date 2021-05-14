@@ -29,7 +29,7 @@ void _func_Project_addTask(void* _Nonnull cself , void* _Nonnull task, ErrorObj*
     }
     catch (const std::exception& e) {
         err->is_err = true;
-        err->err_type = 2;
+        err->err_type = 1;
         err->err_ptr = new std::exception(e);
     }
     catch (...) {
@@ -52,7 +52,7 @@ CDataArray _func_Project_tasks(void* _Nonnull cself , ErrorObj* _Nonnull err){
     }
     catch (const std::exception& e) {
         err->is_err = true;
-        err->err_type = 2;
+        err->err_type = 1;
         err->err_ptr = new std::exception(e);
     }
     catch (...) {

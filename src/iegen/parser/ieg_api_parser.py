@@ -36,16 +36,16 @@ class APIParser(object):
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
         lines = api_section.splitlines()
-        filtered = filter(lambda x: not re.match(SKIP_REGEXPR, x), lines)
+        filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
 
-        yaml_lines = []
-        for line in filtered:
-            comment_end_idx = 0
-            comment_prefix = re.search(r'\s*\*', line)
-            if comment_prefix:
-                comment_end_idx = comment_prefix.end()
-            yaml_lines.append(line[comment_end_idx:])
-        yaml_lines = '\n'.join(yaml_lines)
+        if not filtered:
+            raise Exception("API comments must start with 'gen' attribute")
+        comment_prefix = re.search(r'\s*\*?\s*gen:', filtered[0])
+        if not comment_prefix:
+            raise Exception("API comments must start with 'gen' attribute")
+        yaml_indent_cnt = comment_prefix.end() - len('gen:')
+
+        yaml_lines = '\n'.join([line[yaml_indent_cnt:] for line in filtered])
 
         try:
             attrs = yaml.load(yaml_lines, Loader=yaml.Loader)

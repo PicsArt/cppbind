@@ -64,6 +64,18 @@ is_operator:
   type: bool
   allowed_on: [ cxx_method ]
 
+is_exception:
+  inheritable: false
+  default: false
+  type: bool
+  allowed_on: [ class, class_template, struct, struct_template ]
+
+throws:
+  inheritable: false
+  array: true
+  allowed_on: [ function, function_template, cxx_method ]
+  required_on: [ function, function_template, cxx_method ]
+
 nullable_return:
   inheritable: false
   default: false

@@ -54,7 +54,18 @@ public class Project  {
     public func addTask(task: Task) -> Void {
 
         let swift_to_sc_task = task.cself
-        _func_Project_addTask(cself, swift_to_sc_task);
+        var err = ErrorObj()
+        _func_Project_addTask(cself, swift_to_sc_task, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -62,7 +73,8 @@ public class Project  {
      */
     public func tasks() -> Array<Task> {
 
-        let result = _func_Project_tasks(cself);
+        var err = ErrorObj()
+        let result = _func_Project_tasks(cself, &err);
         let _tmp_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.data.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: Int(result.size))
         var sc_to_swift_result: [Task] = [] 
         defer {
@@ -72,6 +84,16 @@ public class Project  {
           let value_result = _tmp_result_data[_i];
           let sc_to_swift_value_result = Task(value_result)
           sc_to_swift_result.append(sc_to_swift_value_result);
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

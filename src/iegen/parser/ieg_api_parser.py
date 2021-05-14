@@ -56,7 +56,7 @@ class APIParser(object):
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 # error
-                raise Exception(line)
+                raise Exception({attr_key: value})
             language, attr = m.groups()
 
             if language:
@@ -91,12 +91,11 @@ class APIParser(object):
                     if array or len(language) == 1 or lang not in att_lang_dict:
                         att_lang_dict[lang] = value
 
-
         return api, attr_dict, pure_comment
 
     def parse_attr(self, attr_name, attr_value):
         attr_type = self.attributes[attr_name].get('type', None)
-        if isinstance(self.attributes[attr_name]['default'], bool) or attr_type == 'bool':
+        if isinstance(self.attributes[attr_name].get('default'), bool) or attr_type == 'bool':
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':

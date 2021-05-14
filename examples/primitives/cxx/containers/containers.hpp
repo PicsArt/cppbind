@@ -60,6 +60,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringPair(const std::pair<std::string, std::string>& info) {
         mapStringData.insert(info);
@@ -70,6 +71,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addIntMap(const std::map<int, int>& info) {
         mapIntData.insert(info.begin(), info.end());
@@ -80,6 +82,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringMap(const std::map<std::string, std::string>& info) {
         mapStringData.insert(info.begin(), info.end());
@@ -90,6 +93,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addIntPair(const std::pair<int, int>& info) {
         mapIntData.insert(info);
@@ -100,6 +104,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::pair<std::string, std::string> getStringPair() {
         return std::make_pair("first", "second");
@@ -121,6 +126,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<std::string, std::string> getStringMap() {
         return mapStringData;
@@ -131,6 +137,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<int, int> getIntMap() {
         return mapIntData;
@@ -141,6 +148,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<std::string, Item> getMap() {
         return mapMixedData;
@@ -151,6 +159,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addIntVector(const std::vector<int>& v){
         for (auto item: v) {
@@ -163,6 +172,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringVector(const std::vector<std::string>& v){
         for (auto item: v) {
@@ -175,6 +185,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<std::string>& getStringVector(){
         return vectorStringData;
@@ -185,6 +196,7 @@ struct Containers {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<int>& getIntVector(){
         return vectorIntData;

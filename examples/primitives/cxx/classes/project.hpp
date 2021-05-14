@@ -34,6 +34,7 @@ public:
      *
      * __API__
      * gen: getter
+     * throws: no_throw
      *
      */
     std::string& title() {
@@ -46,6 +47,7 @@ public:
      *
      * __API__
      * gen: method
+     * throws: no_throw
      *
      */
     void addTask(Task* task) {
@@ -57,6 +59,7 @@ public:
      *
      * __API__
      * gen: method
+     * throws: no_throw
      *
      */
     const std::vector<Task*>& tasks() const {

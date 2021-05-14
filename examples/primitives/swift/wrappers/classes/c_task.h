@@ -1,5 +1,5 @@
 #ifndef _C_task_WRAPPER_
-#define _C_task_WRAPPER_ 
+#define _C_task_WRAPPER_
 
 #include "swift/wrappers/c_helpers.h"
 

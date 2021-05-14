@@ -40,6 +40,7 @@ struct Utils {
      * Concatenate with two strings.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::string concatenate(std::string first, std::string second) {
         return first + second;
@@ -49,6 +50,7 @@ struct Utils {
      * Concatenate with three strings.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::string concatenate(std::string first, std::string second, std::string third) {
         return first + second + third;

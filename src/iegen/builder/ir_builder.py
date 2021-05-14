@@ -71,6 +71,11 @@ class CXXIEGIRBuilder(object):
 
                     new_att_val = att_val
                     if new_att_val is None:
+                        # check mandatory attribute existence
+                        node_kind = current_node.kind_name
+                        if "required_on" in properties and node_kind in properties["required_on"]:
+                            raise Exception(f"Attribute {att_name} is mandatory attribute on {node_kind}.")
+
                         # inherit from parent or add default value
                         if properties["inheritable"]:
                             parrent_args = self.node_stack[-2].args

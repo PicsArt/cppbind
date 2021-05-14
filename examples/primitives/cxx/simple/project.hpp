@@ -2,35 +2,40 @@
 #define project_hpp
 
 #include <vector>
-#include <memory>
 #include <string>
 
-#include "cxx/simple/task.hpp"
+#include "cxx/classes/task.hpp"
 
 namespace iegen::example {
 
 /**
- * Class holding project information.
+ * comments
+ *
  * __API__
  * gen: class
  * shared_ref: False
- * package: simple
- * python.include: simple.task
+ * package: classes
+ * python.include: classes.task
  * swift.include: CWrapper
  */
 class Project {
 public:
     /**
-     * Project constructor.
+     * comments
+     *
      * __API__
      * gen: constructor
+     *
      */
     Project(const std::string& title) : _title(title) {};
 
     /**
-     * Get project´s title.
+     * comments
+     *
      * __API__
      * gen: getter
+     * throws: no_throw
+     *
      */
     std::string& title() {
         return _title;
@@ -38,24 +43,30 @@ public:
 
 
     /**
-     * Add a task to project.
+     * comments
+     *
      * __API__
      * gen: method
+     * throws: no_throw
+     *
      */
-    void addTask(std::shared_ptr<iegen::example::Task> task) {
+    void addTask(Task* task) {
         _tasks.push_back(task);
     }
 
     /**
-     * Get project´s tasks.
+     * comments
+     *
      * __API__
      * gen: method
+     * throws: no_throw
+     *
      */
-    const std::vector<std::shared_ptr<iegen::example::Task>>& tasks() const {
+    const std::vector<Task*>& tasks() const {
         return _tasks;
     }
 private:
-    std::vector<std::shared_ptr<iegen::example::Task>> _tasks;
+    std::vector<Task*> _tasks;
     std::string _title;
 };
 

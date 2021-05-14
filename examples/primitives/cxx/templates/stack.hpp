@@ -43,6 +43,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void push(T* item) {
         _elements.push_back(item);
@@ -50,6 +51,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void pop() {
         _elements.pop_back();
@@ -57,6 +59,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
      T* top() const {
         return _elements.back();
@@ -64,6 +67,7 @@ class Stack {
      /**
       * __API__
       * gen: method
+      * throws: no_throw
       */
      bool empty() const {
         return _elements.empty();

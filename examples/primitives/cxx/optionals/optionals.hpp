@@ -35,6 +35,7 @@ public:
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	Task* optionalPtrWithNullptrDefault(Task* task = nullptr) {
 	    return task;
@@ -43,6 +44,7 @@ public:
 	/**
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	int optionalIntWithDefault(int val = 5) {
 	    return val;
@@ -51,6 +53,7 @@ public:
 	/**
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	std::string optionalStringWithDefault(std::string val = "abc") {
 	    return val;
@@ -59,6 +62,7 @@ public:
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	char optionalCharWithDefault(char symbol = ',') {
         return symbol;
@@ -67,6 +71,7 @@ public:
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	Task* optionalPtrWithNullDefault(Task* task = NULL) {
 	    return task;
@@ -75,6 +80,7 @@ public:
 	/**
      * __API__
      * gen: method
+     * throws: no_throw
      */
 	Color optionalEnumWithDefault(Color c = Color::Red) {
 	    return c;

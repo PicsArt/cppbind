@@ -4,7 +4,7 @@
 
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 namespace py = pybind11;
 
@@ -20,15 +20,15 @@ void bindStackProject(py::module& m) {
     stackProject.def("top", &iegen::example::Stack<iegen::example::Project>::top);
     stackProject.def("empty", &iegen::example::Stack<iegen::example::Project>::empty);
 }
-void bindStackPyTask(py::module& m) {
+void bindStackRoot(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::Stack<iegen::example::Task>> stackPytask(m, "StackPyTask");
+    py::class_<iegen::example::Stack<iegen::example::Root>> stackRoot(m, "StackRoot");
 
-    stackPytask.def(py::init<>());
+    stackRoot.def(py::init<>());
 
-    stackPytask.def(py::init<iegen::example::Task &>(), py::arg("st"));
-    stackPytask.def("push", &iegen::example::Stack<iegen::example::Task>::push, py::arg("item"));
-    stackPytask.def("pop", &iegen::example::Stack<iegen::example::Task>::pop);
-    stackPytask.def("top", &iegen::example::Stack<iegen::example::Task>::top);
-    stackPytask.def("empty", &iegen::example::Stack<iegen::example::Task>::empty);
+    stackRoot.def(py::init<iegen::example::Root &>(), py::arg("st"));
+    stackRoot.def("push", &iegen::example::Stack<iegen::example::Root>::push, py::arg("item"));
+    stackRoot.def("pop", &iegen::example::Stack<iegen::example::Root>::pop);
+    stackRoot.def("top", &iegen::example::Stack<iegen::example::Root>::top);
+    stackRoot.def("empty", &iegen::example::Stack<iegen::example::Root>::empty);
 }

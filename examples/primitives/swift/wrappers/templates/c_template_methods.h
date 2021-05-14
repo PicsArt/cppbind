@@ -13,7 +13,7 @@ extern "C" {
     int _func_TemplateMethods_maxInt(void* _Nonnull cself , int arg0, int arg1);
     char* _Nonnull _func_TemplateMethods_maxString(void* _Nonnull cself , char* _Nonnull arg0, char* _Nonnull arg1);
     CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1);
-    CDataPair _func_TemplateMethods_makePairTaskProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1);
+    CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1);
 #if __cplusplus
 }
 #endif

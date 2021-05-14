@@ -72,11 +72,11 @@ public class TemplateMethods  {
     }
     /**
      */
-    public func makePair(arg0: Task, arg1: Project) -> (Task, Project) {
+    public func makePair(arg0: Root, arg1: Project) -> (Root, Project) {
 
         let swift_to_sc_arg0 = arg0.cself
         let swift_to_sc_arg1 = arg1.cself
-        let result = _func_TemplateMethods_makePairTaskProject(cself, swift_to_sc_arg0, swift_to_sc_arg1);
+        let result = _func_TemplateMethods_makePairRootProject(cself, swift_to_sc_arg0, swift_to_sc_arg1);
         let _tmp_pair_first_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.first.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         let _tmp_pair_second_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.second.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         defer {
@@ -85,9 +85,9 @@ public class TemplateMethods  {
         }
         let first_result = _tmp_pair_first_result_data[0];
         let second_result = _tmp_pair_second_result_data[0];
-        let sc_to_swift_first_result = Task(first_result)
+        let sc_to_swift_first_result = Root(first_result)
         let sc_to_swift_second_result = Project(second_result)
-        let sc_to_swift_result: (Task, Project) = ( sc_to_swift_first_result, sc_to_swift_second_result )
+        let sc_to_swift_result: (Root, Project) = ( sc_to_swift_first_result, sc_to_swift_second_result )
         return sc_to_swift_result;
     }
 }

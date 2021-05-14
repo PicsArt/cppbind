@@ -60,15 +60,15 @@ internal constructor(_id: Long) : AutoCloseable {
         return jdk_to_kotlin_result
     }
 
-    open fun makePair(arg0: Task, arg1: Project): Pair<Task, Project> {
+    open fun makePair(arg0: Root, arg1: Project): Pair<Root, Project> {
         val kotlin_to_jdk_arg0 = arg0.getObjId()
         val kotlin_to_jdk_arg1 = arg1.getObjId()
-        val result = jMakepairTaskProject(getObjId(), kotlin_to_jdk_arg0, kotlin_to_jdk_arg1)
+        val result = jMakepairRootProject(getObjId(), kotlin_to_jdk_arg0, kotlin_to_jdk_arg1)
         val first  = result.first
         val second  = result.second
-        val jdk_to_kotlin_first = Task(first)
+        val jdk_to_kotlin_first = Root(first)
         val jdk_to_kotlin_second = Project(second)
-        val jdk_to_kotlin_result = Pair<Task, Project>(jdk_to_kotlin_first, jdk_to_kotlin_second)
+        val jdk_to_kotlin_result = Pair<Root, Project>(jdk_to_kotlin_first, jdk_to_kotlin_second)
         return jdk_to_kotlin_result
     }
 
@@ -90,7 +90,7 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jMaxInt(id: Long, arg0: Int, arg1: Int): Int
     private external fun jMaxString(id: Long, arg0: String, arg1: String): String
     private external fun jMakepairProjectProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
-    private external fun jMakepairTaskProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
+    private external fun jMakepairRootProject(id: Long, arg0: Long, arg1: Long): Pair<Long, Long>
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

@@ -35,7 +35,7 @@ class TemplateMethods  {
     /**
      * __API__
      * gen: method
-     * template: {"T": ["iegen::example::Project", "iegen::example::Task"], "V": ["iegen::example::Project"]}
+     * template: {"T": ["iegen::example::Project", "iegen::example::Root"], "V": ["iegen::example::Project"]}
      */
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {

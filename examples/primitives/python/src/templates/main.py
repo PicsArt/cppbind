@@ -1,11 +1,9 @@
-from templates.stack_pygen import StackProject, StackPyTask
+from templates.stack_pygen import StackProject
 from templates.stack_usage_pygen import StackUsage
 from templates.template_methods_pygen import TemplateMethods
 from templates.addressable_pygen import AddressableRoot
 from templates.component_pygen import Component
 from simple import Project, Root
-from simple.task import PyTask as Task
-
 
 # [stack-examples]
 stack_prj = StackProject()
@@ -42,11 +40,11 @@ assert len(pair_prj_prj) == 2
 assert pair_prj_prj[0].title == prj1.title
 assert pair_prj_prj[1].title == prj2.title
 
-task1 = Task(title="My Task")
-pair_task_prj = tm.make_pair(arg0=task1, arg1=prj1)
-assert len(pair_task_prj) == 2
-assert pair_task_prj[0].title == task1.title
-assert pair_task_prj[1].title == prj1.title
+root1 = Root("/path/to/root/")
+pair_root_prj = tm.make_pair(arg0=root1, arg1=prj1)
+assert len(pair_root_prj) == 2
+assert pair_root_prj[0].path == root1.path
+assert pair_root_prj[1].title == prj1.title
 
 # [template-funcs-examples]
 

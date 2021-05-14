@@ -6,30 +6,22 @@
 
 using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_inheritance_Vehicle_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-    return iegen::handleNativeCrash(env, [&] {});
 }
 extern "C" JNIEXPORT void Java_com_examples_inheritance_Vehicle_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-    iegen::handleNativeCrash(env, [&] {
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::Vehicle, iegen::example::Vehicle>(id);
-        delete this_object;
-    });
+    auto this_object = *reinterpret_cast<std::shared_ptr<iegen::example::Vehicle>*>(id);
+    delete &this_object;
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_inheritance_Vehicle_jConstructor(JNIEnv* env, jobject obj, jint numberOfSeats){
-  return iegen::handleNativeCrash(env, [&] {
-      
-      auto this_object = new iegen::example::Vehicle(numberOfSeats);
-      return iegen::UnsafeRefAsLong<iegen::example::Vehicle, iegen::example::Vehicle>(this_object);
-      }
-  );
+    
+    iegen::example::Vehicle* obj_ptr = new iegen::example::Vehicle(numberOfSeats);
+    auto this_object = std::shared_ptr<iegen::example::Vehicle>(obj_ptr);
+    return reinterpret_cast<jlong>(new std::shared_ptr<iegen::example::Vehicle>(this_object));
 }
 
 extern "C" JNIEXPORT jint Java_com_examples_inheritance_Vehicle_jNumberofseats(JNIEnv* env, jobject obj, jobjectid id){
-    return iegen::handleNativeCrash(env, [&] {
-        validateID(id);
-        auto this_object = iegen::UnsafeRefFromLong<iegen::example::Vehicle, iegen::example::Vehicle>(id);
-        auto result = this_object->numberOfSeats();
-        
-        return result;
-        }
-    );
+    validateID(id);
+    auto this_object = *reinterpret_cast<std::shared_ptr<iegen::example::Vehicle>*>(id);
+    auto result = this_object->numberOfSeats();
+    
+    return result;
 }

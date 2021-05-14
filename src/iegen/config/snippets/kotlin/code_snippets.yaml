@@ -59,13 +59,25 @@ var_class_cxx: &var_class_cxx
       {%- endif %}
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
       extern "C" JNIEXPORT void {{get_jni_name('jSet_this')}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-          return iegen::handleNativeCrash(env, [&] {});
       }
       extern "C" JNIEXPORT void {{get_jni_name('jFinalize')}}(JNIEnv* env, jobject obj, jobjectid id){
-          iegen::handleNativeCrash(env, [&] {
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or ancestors|any('shared_ref'))}}RefFromLong<{{cxx_type_name}}, {{cxx_root_type_name}}>(id);
-              delete {{'&' if shared_ref or ancestors|any('shared_ref')}}this_object;
-          });
+          {%- if root.shared_ref %}
+          {%- if cxx_root_type_name != cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{cxx_type_name}}>*>(id);
+          {%- endif %}
+          delete &this_object;
+          {%- else %}
+          {%- if cxx_root_type_name != cxx_type_name %}
+          {{cxx_root_type_name}}* baseptr = reinterpret_cast<{{cxx_root_type_name}}*>(id);
+          {{cxx_type_name}}* this_object = dynamic_cast<{{cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{cxx_type_name}}* this_object = reinterpret_cast<{{cxx_type_name}}*>(id);
+          {%- endif %}
+          delete this_object;
+          {%- endif %}
       }
       {%- endif %}
 
@@ -271,22 +283,25 @@ constructor:
   cxx:
     body: |
       extern "C" JNIEXPORT jobjectid {{get_jni_name('jConstructor'+overloading_prefix)}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
-        return iegen::handleNativeCrash(env, [&] {
-            {%- set call_args = [] -%}
-            {%- for arg in args -%}
-            {% set converter = arg.converter.jni_to_cxx %}
-            {{converter.snippet(arg.name)|indent(8)}}
-            {%- do call_args.append(converter.converted_name(arg.name)) %}
-            {%- endfor %}
-            {%- if not (shared_ref or owner_class.ancestors|any('shared_ref')) %}
-            auto this_object = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
-            return iegen::UnsafeRefAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(this_object);
-            {%- else %}
-            auto this_object = iegen::allocateRef<{{owner_class.cxx_type_name}}>({{call_args|join(', ')}});
-            return iegen::AllocRefPtrAsLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(this_object);
-            {%- endif %}
-            }
-        );
+          {%- set call_args = [] -%}
+          {%- for arg in args -%}
+          {% set converter = arg.converter.jni_to_cxx %}
+          {{converter.snippet(arg.name)|indent(4)}}
+          {%- do call_args.append(converter.converted_name(arg.name)) -%}
+          {%- endfor %}
+          {%- if not owner_class.root.shared_ref %}
+          {{owner_class.cxx_root_type_name}}* baseptr = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
+          return reinterpret_cast<jlong>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* obj_ptr = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
+          auto this_object = std::shared_ptr<{{owner_class.cxx_type_name}}>(obj_ptr);
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          std::shared_ptr<{{owner_class.cxx_root_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.cxx_root_type_name}}>(this_object);
+          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx_root_type_name}}>(baseptr));
+          {%- else %}
+          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx_type_name}}>(this_object));
+          {%- endif %}
+          {%- endif %}
       }
     include: *var_template_method_include
 
@@ -387,19 +402,29 @@ function:
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}({{jni_args|join(', ')}}){
-          return iegen::handleNativeCrash(env, [&] {
-              {%- set call_args = [] %}
-              {{args_snippet(args, call_args)|indent(8)}}
-              {%- if not is_static %}
-              validateID(id);
-
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
-              {{call_code("this_object->", call_args)|indent(8)}}
-              {%- else %}
-              {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(8)}}
-              {%- endif %}
-            }
-          );
+          {%- set call_args = [] %}
+          {{args_snippet(args, call_args)|indent(4)}}
+          {%- if not is_static %}
+          validateID(id);
+          {%- if owner_class.root.shared_ref %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
+          {%- endif %}
+          {%- else %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
+          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
+          {%- endif %}
+          {%- endif %}
+          {{call_code("this_object->", call_args)|indent(4)}}
+          {%- else %}
+          {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(4)}}
+          {%- endif %}
       }
     include: *var_template_method_include
 
@@ -453,26 +478,48 @@ property_getter:
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
-          return iegen::handleNativeCrash(env, [&] {
-              validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
-              auto result = this_object->{{cxx_name}};
-              {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
-              return {{rconverter.cxx_to_jni.converted_name('result')}};
-              }
-          );
+          validateID(id);
+          {%- if owner_class.root.shared_ref %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
+          {%- endif %}
+          {%- else %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
+          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
+          {%- endif %}
+          {%- endif %}
+          auto result = this_object->{{cxx_name}};
+          {{rconverter.cxx_to_jni.snippet('result')|indent(4)}}
+          return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- if gen_property_setter %}
       {% set func_name="jSet%s"|format(name|lower) %}
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
-          return iegen::handleNativeCrash(env, [&] {
-              validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
-              {% set converter = rconverter.jni_to_cxx %}
-              {{converter.snippet('value')|indent(8)}}
-              this_object->{{cxx_name}} = {{converter.converted_name('value')}};
-              }
-          );
+          validateID(id);
+          {%- if owner_class.root.shared_ref %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
+          {%- endif %}
+          {%- else %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
+          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
+          {%- endif %}
+          {%- endif %}
+          {% set converter = rconverter.jni_to_cxx %}
+          {{converter.snippet('value')|indent(4)}}
+          this_object->{{cxx_name}} = {{converter.converted_name('value')}};
       }
       {% endif %}
 
@@ -532,26 +579,47 @@ getter:
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id){
-          return iegen::handleNativeCrash(env, [&] {
-              validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
-              auto result = this_object->{{cxx_name}}();
-              {{rconverter.cxx_to_jni.snippet('result')|indent(8)}}
-              return {{rconverter.cxx_to_jni.converted_name('result')}};
-              }
-          );
+          validateID(id);
+          {%- if owner_class.root.shared_ref %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
+          {%- endif %}
+          {%- else %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
+          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
+          {%- endif %}
+          {%- endif %}
+          auto result = this_object->{{cxx_name}}();
+          {{rconverter.cxx_to_jni.snippet('result')|indent(4)}}
+          return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- if setter_ctx is defined %}
       {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
       extern "C" JNIEXPORT void {{get_jni_name(func_name, class_name)}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
-          return iegen::handleNativeCrash(env, [&] {
-              validateID(id);
-              auto this_object = iegen::{{"Unsafe" if not (shared_ref or owner_class.ancestors|any('shared_ref'))}}RefFromLong<{{owner_class.cxx_type_name}}, {{owner_class.cxx_root_type_name}}>(id);
-              {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
-              {{converter.snippet(setter_ctx.args[0].name)|indent(8)}}
-              this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
-              }
-          );
+          validateID(id);
+          {%- if owner_class.root.shared_ref %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
+          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
+          {%- else %}
+          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
+          {%- endif %}
+          {%- else %}
+          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
+          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
+          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
+          {%- else %}
+          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
+          {%- endif %}
+          {%- endif %}
+          {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
+          {{converter.snippet(setter_ctx.args[0].name)|indent(4)}}
+          this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}
-

@@ -38,7 +38,7 @@ class StackProject(metaclass=OriginalMethodsMetaclass):
         pass
 
 
-class StackPyTask(metaclass=OriginalMethodsMetaclass):
+class StackRoot(metaclass=OriginalMethodsMetaclass):
     """"""
     
     @bind
@@ -46,11 +46,11 @@ class StackPyTask(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def __init__(self, st: PyTask):
+    def __init__(self, st: Root):
         pass
     
     @bind
-    def push(self, item: PyTask) -> None:
+    def push(self, item: Root) -> None:
         """"""
         pass
 
@@ -60,7 +60,7 @@ class StackPyTask(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def top(self) -> PyTask:
+    def top(self) -> Root:
         """"""
         pass
 

@@ -13,12 +13,17 @@ namespace iegen::example {
  *
  * __API__
  * gen: class
- * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
+ * template: 
+ *   T: 
+ *     - iegen::example::Project
+ *     - iegen::example::Task
  * package: templates
- * kotlin.include: com.example.classes.Project
- * kotlin.include: com.example.classes.Task
- * python.include: classes.project_pygen
- * python.include: classes.task_pygen
+ * kotlin.include:
+ *   - com.example.classes.Project
+ *   - com.example.classes.Task
+ * python.include:
+ *   - classes.project_pygen
+ *   - classes.task_pygen
  */
 template <class T>
 class Stack {

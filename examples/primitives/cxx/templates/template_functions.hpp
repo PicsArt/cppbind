@@ -15,8 +15,9 @@ namespace iegen::example {
  * __API__
  * gen: class
  * package: templates
- * python.include: classes.project_pygen
- * python.include: classes.task_pygen
+ * python.include:
+ *   - classes.project_pygen
+ *   - classes.task_pygen
  */
 class TemplateFunctions  {
     public:
@@ -33,7 +34,10 @@ class TemplateFunctions  {
      *
      * __API__
      * gen: method
-     * template: {"T": [{"type": "int"}, {"type": "std::string"}]}
+     * template:
+     *   T:
+     *     - type: int
+     *     - type: std::string
      * throws: no_throw
      */
     template <typename T>
@@ -46,7 +50,12 @@ class TemplateFunctions  {
      *
      * __API__
      * gen: method
-     * template: {"T": ["iegen::example::Project", "iegen::example::Task"], "V": ["iegen::example::Project"]}
+     * template:
+     *   T:
+     *     - iegen::example::Project
+     *     - iegen::example::Task
+     *   V: 
+     *    - iegen::example::Project
      * throws: no_throw
      */
     template <typename T, typename V>
@@ -59,7 +68,9 @@ class TemplateFunctions  {
 //     *
 //     * __API__
 //     * gen: method
-//     * template: {"V": [{"type": "iegen::example::Project"}]}
+//     * template:
+//     *   V:
+//     *     - type: iegen::example::Project
 //     */
 //    template <typename V>
 //    void usage4(std::shared_ptr<V> p) {

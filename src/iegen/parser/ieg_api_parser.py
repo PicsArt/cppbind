@@ -45,7 +45,12 @@ class APIParser(object):
             raise Exception("API comments must start with 'gen' attribute")
         yaml_indent_cnt = comment_prefix.end() - len('gen:')
 
-        yaml_lines = '\n'.join([line[yaml_indent_cnt:] for line in filtered])
+        yaml_lines = []
+        for line in filtered:
+            if len(line) <= yaml_indent_cnt:
+                raise Exception("Invalid yaml format")
+            yaml_lines.append(line[yaml_indent_cnt:])
+        yaml_lines = '\n'.join(yaml_lines)
 
         try:
             attrs = yaml.load(yaml_lines, Loader=yaml.Loader)

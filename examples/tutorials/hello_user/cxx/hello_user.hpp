@@ -11,21 +11,18 @@ struct UserInfo {
 
     /**
      * Creates user
-     *
      * __API__
      * gen: constructor
      */
     UserInfo(const std::string& user_name, unsigned int user_age) : age(user_age), name(user_name) {}
     /**
      * Age of user.
-     *
      * __API__
      * gen: property_getter
      */
     unsigned int age = 0;
     /**
      * Name of user.
-     *
      * __API__
      * gen: property_getter
      */
@@ -49,7 +46,6 @@ class Host {
 public:
     /**
      * Creates host
-     *
      * __API__
      * gen: constructor
      */

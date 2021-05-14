@@ -23,10 +23,10 @@ IEGEN is a C++ bindings generation tool. For supported languages please refer to
 First Steps
 -----------
 
-Are you writing C++ libraries and want to be able to use it in various platforms using various languages then iegen can be very handy tool for you.
+Are you writing C++ libraries and want to be able to use them in various platforms using various languages then iegen can be very handy tool for you.
 
 :doc:`Installation </02_get_started/02_installation>` | 
-:doc:`Configuration </configuration>`
+:doc:`Configuration </02_get_started/04_configuration>`
 
 .. toctree::
    :maxdepth: 1
@@ -56,31 +56,24 @@ Let's start with :ref:`Basic example`.
 Tutorials
 ---------
 
-Advance Topics
---------------
+Advanced Topics
+---------------
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Advaced Features
+   :caption: Advanced Features
 
-   /user.guide
-   /01_introduction/configuration
+   /custom.types
    /features
+   /faq
 
 Examples
 --------
 
-User Gide
----------
-:doc:`User Gide </user.guide>`
-
 Developer Gide
 --------------
-:doc:`Developer Gide </developer.guide>`
-
-Code Documentation
-------------------
+:doc:`Developer Guide </developer.guide>`
 
 Indices and tables
 ------------------

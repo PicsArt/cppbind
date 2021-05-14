@@ -11,7 +11,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: True
  * package: simple
-  * python.package: simple.task
+ * python.package: simple.task
  * swift.include: CWrapper
  * python.name: PyTask
  */

@@ -1,14 +1,13 @@
 from __future__ import annotations
 from typing import *
-import examples.classes.task.task as pybind_task_pygen
+import examples.simple.task.task as pybind_task_pygen
 from bind_utils import *
 from metaclass import *
 
 
 class PyTask(metaclass=OriginalMethodsMetaclass):
     """
-    comments
-    """
+    Class holding task information."""
     
     @bind
     def __init__(self, title: str):
@@ -18,6 +17,5 @@ class PyTask(metaclass=OriginalMethodsMetaclass):
     @bind
     def title(self) -> str:
         """
-        comments
-        """
+        Get objects title."""
         pass

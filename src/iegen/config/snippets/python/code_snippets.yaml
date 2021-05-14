@@ -203,7 +203,7 @@ var_class: &var_class
   python_init:
     package_include:
       unique_content: |
-        from .{{file + config.file_postfix}} import {{name}}
+        from .{{file + config.file_postfix}} import {{name}}{{template_suffix}}
   cxx:
     include:
       unique_content: |

@@ -3,7 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/templates/template_methods.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 
 using namespace iegen::example;
@@ -84,10 +84,10 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepa
 }
 
 
-extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepairTaskProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
+extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepairRootProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0, jobjectid arg1){
     
 
-    auto jni_to_cxx_arg0 =  reinterpret_cast<iegen::example::Task*>(arg0);
+    auto jni_to_cxx_arg0 =  reinterpret_cast<iegen::example::Root*>(arg0);
 
 
     auto jni_to_cxx_arg1 =  reinterpret_cast<iegen::example::Project*>(arg1);
@@ -95,12 +95,12 @@ extern "C" JNIEXPORT jobject Java_com_examples_templates_TemplateMethods_jMakepa
     validateID(id);
     iegen::example::TemplateMethods* this_object = reinterpret_cast<iegen::example::TemplateMethods*>(id);
     
-    auto result = this_object->makePair<iegen::example::Task, iegen::example::Project>(jni_to_cxx_arg0, jni_to_cxx_arg1);
+    auto result = this_object->makePair<iegen::example::Root, iegen::example::Project>(jni_to_cxx_arg0, jni_to_cxx_arg1);
     auto first = result.first;
     auto second = result.second;
 
 
-    iegen::example::Task* cxx_to_jni_first_baseptr = first;
+    iegen::example::Root* cxx_to_jni_first_baseptr = first;
     jobjectid cxx_to_jni_first = reinterpret_cast<jlong>(cxx_to_jni_first_baseptr);
 
 

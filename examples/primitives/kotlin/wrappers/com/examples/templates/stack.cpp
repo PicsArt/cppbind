@@ -3,7 +3,7 @@
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 
 using namespace iegen::example;
@@ -71,63 +71,63 @@ extern "C" JNIEXPORT jboolean Java_com_examples_templates_StackProject_jEmpty(JN
 }
 
 using namespace iegen::example;
-extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
+extern "C" JNIEXPORT void Java_com_examples_templates_StackRoot_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
 }
-extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-    iegen::example::Stack<iegen::example::Task>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Task>*>(id);
+extern "C" JNIEXPORT void Java_com_examples_templates_StackRoot_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
+    iegen::example::Stack<iegen::example::Root>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Root>*>(id);
     delete this_object;
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackTask_jConstructor(JNIEnv* env, jobject obj){
-    iegen::example::Stack<iegen::example::Task>* baseptr = new iegen::example::Stack<iegen::example::Task>();
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackRoot_jConstructor(JNIEnv* env, jobject obj){
+    iegen::example::Stack<iegen::example::Root>* baseptr = new iegen::example::Stack<iegen::example::Root>();
     return reinterpret_cast<jlong>(baseptr);
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackTask_jConstructor_11(JNIEnv* env, jobject obj, jobjectid st){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackRoot_jConstructor_11(JNIEnv* env, jobject obj, jobjectid st){
     
-    auto& jni_to_cxx_st = * reinterpret_cast<iegen::example::Task*>(st);
-    iegen::example::Stack<iegen::example::Task>* baseptr = new iegen::example::Stack<iegen::example::Task>(jni_to_cxx_st);
+    auto& jni_to_cxx_st = * reinterpret_cast<iegen::example::Root*>(st);
+    iegen::example::Stack<iegen::example::Root>* baseptr = new iegen::example::Stack<iegen::example::Root>(jni_to_cxx_st);
     return reinterpret_cast<jlong>(baseptr);
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jPush(JNIEnv* env, jobject obj, jobjectid id, jobjectid item){
+extern "C" JNIEXPORT void Java_com_examples_templates_StackRoot_jPush(JNIEnv* env, jobject obj, jobjectid id, jobjectid item){
     
 
-    auto jni_to_cxx_item =  reinterpret_cast<iegen::example::Task*>(item);
+    auto jni_to_cxx_item =  reinterpret_cast<iegen::example::Root*>(item);
 
     validateID(id);
-    iegen::example::Stack<iegen::example::Task>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Task>*>(id);
+    iegen::example::Stack<iegen::example::Root>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Root>*>(id);
     
     this_object->push(jni_to_cxx_item);
 }
 
 
-extern "C" JNIEXPORT void Java_com_examples_templates_StackTask_jPop(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT void Java_com_examples_templates_StackRoot_jPop(JNIEnv* env, jobject obj, jobjectid id){
     
     validateID(id);
-    iegen::example::Stack<iegen::example::Task>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Task>*>(id);
+    iegen::example::Stack<iegen::example::Root>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Root>*>(id);
     
     this_object->pop();
 }
 
 
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackTask_jTop(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackRoot_jTop(JNIEnv* env, jobject obj, jobjectid id){
     
     validateID(id);
-    iegen::example::Stack<iegen::example::Task>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Task>*>(id);
+    iegen::example::Stack<iegen::example::Root>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Root>*>(id);
     
     auto result = this_object->top();
 
 
-    iegen::example::Task* cxx_to_jni_result_baseptr = result;
+    iegen::example::Root* cxx_to_jni_result_baseptr = result;
     jobjectid cxx_to_jni_result = reinterpret_cast<jlong>(cxx_to_jni_result_baseptr);
     return cxx_to_jni_result;
 }
 
 
-extern "C" JNIEXPORT jboolean Java_com_examples_templates_StackTask_jEmpty(JNIEnv* env, jobject obj, jobjectid id){
+extern "C" JNIEXPORT jboolean Java_com_examples_templates_StackRoot_jEmpty(JNIEnv* env, jobject obj, jobjectid id){
     
     validateID(id);
-    iegen::example::Stack<iegen::example::Task>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Task>*>(id);
+    iegen::example::Stack<iegen::example::Root>* this_object = reinterpret_cast<iegen::example::Stack<iegen::example::Root>*>(id);
     
     auto result = this_object->empty();
 

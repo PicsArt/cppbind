@@ -3,7 +3,7 @@
 #include "swift/wrappers/templates/c_stack.h"
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 
 using namespace iegen::example;
@@ -48,41 +48,41 @@ bool _func_StackProject_empty(void* _Nonnull cself ){
 }
 
 using namespace iegen::example;
-void release_StackTask(void* _Nonnull cself) {
-    delete dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));
+void release_StackRoot(void* _Nonnull cself) {
+    delete dynamic_cast<iegen::example::Stack<iegen::example::Root>*>(static_cast<iegen::example::Stack<iegen::example::Root>*>(cself));
 }
-void* _Nonnull create_StackTask(){
-    auto this_object = new iegen::example::Stack<iegen::example::Task>();
-    return static_cast<iegen::example::Stack<iegen::example::Task>*>(this_object);
+void* _Nonnull create_StackRoot(){
+    auto this_object = new iegen::example::Stack<iegen::example::Root>();
+    return static_cast<iegen::example::Stack<iegen::example::Root>*>(this_object);
 }
-void* _Nonnull create_StackTask_1(void* _Nonnull st){
+void* _Nonnull create_StackRoot_1(void* _Nonnull st){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
-    auto& c_to_cxx_st = *dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(st));
-    auto this_object = new iegen::example::Stack<iegen::example::Task>(c_to_cxx_st);
-    return static_cast<iegen::example::Stack<iegen::example::Task>*>(this_object);
+    auto& c_to_cxx_st = *dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(st));
+    auto this_object = new iegen::example::Stack<iegen::example::Root>(c_to_cxx_st);
+    return static_cast<iegen::example::Stack<iegen::example::Root>*>(this_object);
 }
-void _func_StackTask_push(void* _Nonnull cself , void* _Nonnull item){
+void _func_StackRoot_push(void* _Nonnull cself , void* _Nonnull item){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
-    auto c_to_cxx_item = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(item));
+    auto c_to_cxx_item = dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(item));
   
-    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));
+    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Root>*>(static_cast<iegen::example::Stack<iegen::example::Root>*>(cself));
   c_to_cxx_cself->push(c_to_cxx_item);
 }
-void _func_StackTask_pop(void* _Nonnull cself ){
-    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));
+void _func_StackRoot_pop(void* _Nonnull cself ){
+    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Root>*>(static_cast<iegen::example::Stack<iegen::example::Root>*>(cself));
   c_to_cxx_cself->pop();
 }
-void* _Nonnull _func_StackTask_top(void* _Nonnull cself ){
-    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));
+void* _Nonnull _func_StackRoot_top(void* _Nonnull cself ){
+    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Root>*>(static_cast<iegen::example::Stack<iegen::example::Root>*>(cself));
     const auto& result = c_to_cxx_cself->top();
-    auto value_ptr_result = const_cast<iegen::example::Task*>(result);
-    auto cxx_to_c_result = static_cast<iegen::example::Task*>(value_ptr_result);
+    auto value_ptr_result = const_cast<iegen::example::Root*>(result);
+    auto cxx_to_c_result = static_cast<iegen::example::Root*>(value_ptr_result);
     return cxx_to_c_result;
 }
-bool _func_StackTask_empty(void* _Nonnull cself ){
-    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Task>*>(static_cast<iegen::example::Stack<iegen::example::Task>*>(cself));
+bool _func_StackRoot_empty(void* _Nonnull cself ){
+    auto c_to_cxx_cself = dynamic_cast<iegen::example::Stack<iegen::example::Root>*>(static_cast<iegen::example::Stack<iegen::example::Root>*>(cself));
     const auto& result = c_to_cxx_cself->empty();
     
     return result;

@@ -3,8 +3,8 @@ from typing import *
 import examples.optionals.optionals as pybind_optionals_pygen
 from bind_utils import *
 from metaclass import *
-from classes.task_pygen import *
-from enums.color_pygen import *
+from simple.task import *
+from enums import *
 
 
 class Optionals(metaclass=OriginalMethodsMetaclass):

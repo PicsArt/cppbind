@@ -6,10 +6,10 @@
 
 using namespace iegen::example;
 void release_Bicycle(void* _Nonnull cself) {
-    delete dynamic_cast<iegen::example::Bicycle*>(static_cast<iegen::example::Vehicle*>(cself));
+    delete static_cast<std::shared_ptr<iegen::example::Vehicle>*>(cself);
 }
 void* _Nonnull create_Bicycle(int numberOfSeats){
     
     auto this_object = new iegen::example::Bicycle(numberOfSeats);
-    return static_cast<iegen::example::Vehicle*>(this_object);
+    return new std::shared_ptr<iegen::example::Vehicle>(this_object);
 }

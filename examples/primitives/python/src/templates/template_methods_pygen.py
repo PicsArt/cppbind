@@ -29,6 +29,6 @@ class TemplateMethods(metaclass=OriginalMethodsMetaclass):
         pass
 
     @bind
-    def make_pair(self, arg0: PyTask, arg1: Project) -> tuple:
+    def make_pair(self, arg0: Root, arg1: Project) -> tuple:
         """"""
         pass

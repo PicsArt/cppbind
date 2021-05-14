@@ -3,7 +3,7 @@
 #include "swift/wrappers/templates/c_template_methods.h"
 #include "cxx/templates/template_methods.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 
 using namespace iegen::example;
@@ -60,10 +60,10 @@ CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , vo
     CDataPair cxx_to_c_result = { _first_data_cxx_to_c_result, _second_data_cxx_to_c_result };
     return cxx_to_c_result;
 }
-CDataPair _func_TemplateMethods_makePairTaskProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
+CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
-    auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(arg0));
+    auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(arg0));
   
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
@@ -75,8 +75,8 @@ CDataPair _func_TemplateMethods_makePairTaskProject(void* _Nonnull cself , void*
     auto _second_data_cxx_to_c_result = new void* _Nonnull;
     const auto& first_result = result.first;
     const auto& second_result = result.second;
-    auto value_ptr_first_result = const_cast<iegen::example::Task*>(first_result);
-        auto cxx_to_c_first_result = static_cast<iegen::example::Task*>(value_ptr_first_result);
+    auto value_ptr_first_result = const_cast<iegen::example::Root*>(first_result);
+        auto cxx_to_c_first_result = static_cast<iegen::example::Root*>(value_ptr_first_result);
     auto value_ptr_second_result = const_cast<iegen::example::Project*>(second_result);
         auto cxx_to_c_second_result = static_cast<iegen::example::Project*>(value_ptr_second_result);
     *_first_data_cxx_to_c_result = cxx_to_c_first_result;

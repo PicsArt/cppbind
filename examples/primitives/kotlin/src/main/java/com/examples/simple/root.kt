@@ -1,7 +1,6 @@
-package com.examples.classes
+package com.examples.simple
 
 import alias.*
-
 
 
 /**
@@ -9,21 +8,21 @@ import alias.*
  * 
  */
 open class Root
-    internal constructor(_id: Long) : AutoCloseable {
+internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-          System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni");
         }
+        
         /**
          * comments
          * 
          */
         protected fun construct_helper(_path: String): Long {
-            
-            
             val id = jConstructor(_path)
             return id
         }
+
         @JvmStatic
         private external fun jConstructor(_path: String): Long
     }
@@ -31,17 +30,18 @@ open class Root
     protected var id = _id
     
     open fun getObjId(): Long {
-        if(id == 0L) {
+        if (id == 0L) {
             throw RuntimeException("Object is not allocated")
         }
         return id;
     }
+    
     /**
      * comments
      * 
      */
     constructor(_path: String): this(construct_helper(_path)) {
-      //jSet_this(id, this)
+        //jSet_this(id, this)
     }
     
     /**
@@ -49,27 +49,28 @@ open class Root
      * 
      */
     val path: String
-          get() {
+        get() {
             val result = jPath(getObjId())
             
             return result
-          }
-          
-    
+        }
+
     override fun close() {
-    	if (id != 0L) {
-    		jFinalize(id)
-    		id = 0L
-    	}
+        if (id != 0L) {
+            jFinalize(id)
+            id = 0L
+        }
     }
+
     /**
-    * Finalize and deletes the object
-    */
+     * Finalize and deletes the object
+     */
     protected fun finalize() {
-    	close()
+        close()
     }
+
     ///// External wrapper functions ////////////
     private external fun jPath(id: Long): String
-    private external fun jSet_this(id: Long, self: Any): Void
-    private external fun jFinalize(id: Long): Void
+    private external fun jSet_this(id: Long, self: Any): Unit
+    private external fun jFinalize(id: Long): Unit
 }

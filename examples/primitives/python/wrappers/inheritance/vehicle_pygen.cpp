@@ -8,7 +8,7 @@ namespace py = pybind11;
 
 void bindVehicle(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::Vehicle> vehicle(m, "Vehicle");
+    py::class_<iegen::example::Vehicle, std::shared_ptr<iegen::example::Vehicle>> vehicle(m, "Vehicle");
 
     vehicle.def(py::init<int>(), py::arg("numberOfSeats"));
 

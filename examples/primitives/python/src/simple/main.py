@@ -1,5 +1,5 @@
-from classes import Root, Project
-from classes.task import PyTask as Task
+from simple import Root, Project
+from simple.task import PyTask as Task
 
 # [project-usage]
 title = 'My Project'

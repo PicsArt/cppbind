@@ -4,7 +4,7 @@
 
 #include "cxx/templates/template_methods.hpp"
 #include "cxx/simple/project.hpp"
-#include "cxx/simple/task.hpp"
+#include "cxx/simple/root.hpp"
 
 namespace py = pybind11;
 
@@ -16,5 +16,5 @@ void bindTemplateMethods(py::module& m) {
     templatemethods.def("max", &iegen::example::TemplateMethods::max<int>, py::arg("arg0"), py::arg("arg1"));
     templatemethods.def("max", &iegen::example::TemplateMethods::max<std::string>, py::arg("arg0"), py::arg("arg1"));
     templatemethods.def("make_pair", &iegen::example::TemplateMethods::makePair<iegen::example::Project, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
-    templatemethods.def("make_pair", &iegen::example::TemplateMethods::makePair<iegen::example::Task, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
+    templatemethods.def("make_pair", &iegen::example::TemplateMethods::makePair<iegen::example::Root, iegen::example::Project>, py::arg("arg0"), py::arg("arg1"));
 }

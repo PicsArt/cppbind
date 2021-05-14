@@ -27,6 +27,7 @@ public:
      * Getter for count.
      * __API__
      * gen: getter
+     * throws: no_throw
      */
 	int count() const {
 	    return _count;
@@ -37,6 +38,7 @@ public:
      * __API__
      * gen: method
      * kotlin.name: plus
+     * throws: no_throw
      */
     Counter operator+(const Counter& counter) {
         return Counter(_count + counter.count());
@@ -48,6 +50,7 @@ public:
      * gen: method
      * kotlin.is_operator: True
      * kotlin.name: compareTo
+     * throws: no_throw
      */
     int compareTo(const Counter& counter) {
         if (_count > counter.count()) return 1;
@@ -61,6 +64,7 @@ public:
      * gen: method
      * kotlin.name: gt
      * kotlin.is_operator: False
+     * throws: no_throw
      */
     bool operator>(const Counter& counter) {
         return _count > counter.count();
@@ -72,6 +76,7 @@ public:
      * gen: method
      * kotlin.name: add
      * kotlin.is_operator: False
+     * throws: no_throw
      */
     Counter& operator +=(const Counter& counter) {
         this->_count += counter.count();

@@ -18,18 +18,29 @@ char* _Nonnull _prop_get_Project_title(void* _Nonnull cself){
     auto cxx_to_c_result = strdup(result.c_str()); 
     return cxx_to_c_result;
 }
-void _func_Project_addTask(void* _Nonnull cself , void* _Nonnull task){
+void _func_Project_addTask(void* _Nonnull cself , void* _Nonnull task, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_task = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(task));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
-  c_to_cxx_cself->addTask(c_to_cxx_task);
+    try {
+      c_to_cxx_cself->addTask(c_to_cxx_task);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-CDataArray _func_Project_tasks(void* _Nonnull cself ){
+CDataArray _func_Project_tasks(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
-    const auto& result = c_to_cxx_cself->tasks();
-    auto _data_cxx_to_c_result = new void* _Nonnull [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->tasks();
+      auto _data_cxx_to_c_result = new void* _Nonnull [result.size()];
     CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
     for (int _i = 0; _i < result.size(); ++_i) {
       auto& value_result = result[_i];
@@ -37,5 +48,16 @@ CDataArray _func_Project_tasks(void* _Nonnull cself ){
         auto cxx_to_c_value_result = static_cast<iegen::example::Task*>(value_ptr_value_result);
       _data_cxx_to_c_result[_i] = cxx_to_c_value_result;
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataArray result;
+    return result;
 }

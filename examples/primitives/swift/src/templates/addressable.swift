@@ -17,7 +17,7 @@ public protocol IAddressableRoot  {
      * @brief Get object's abs path based on parent's abs path and object's name
      * @return the abs path of the object
      */
-    func absPath() -> String 
+    func absPath() -> String
 }
 extension IAddressableRoot {
     
@@ -28,10 +28,21 @@ extension IAddressableRoot {
      */
     public func absPath() -> String {
 
-        let result = _func_AddressableRoot_absPath(cself);
+        var err = ErrorObj()
+        let result = _func_AddressableRoot_absPath(cself, &err);
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

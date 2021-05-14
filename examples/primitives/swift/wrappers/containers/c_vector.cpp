@@ -34,7 +34,7 @@ void* _Nonnull create_VectorExamples(){
     auto this_object = new iegen::example::VectorExamples();
     return static_cast<iegen::example::VectorExamples*>(this_object);
 }
-void _func_VectorExamples_addIntVector(void* _Nonnull cself , CDataArray v){
+void _func_VectorExamples_addIntVector(void* _Nonnull cself , CDataArray v, ErrorObj* _Nonnull err){
     std::vector<int> c_to_cxx_v;
 
     auto data_v = reinterpret_cast<int*>(v.data);
@@ -46,9 +46,19 @@ void _func_VectorExamples_addIntVector(void* _Nonnull cself , CDataArray v){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-  c_to_cxx_cself->addIntVector(c_to_cxx_v);
+    try {
+      c_to_cxx_cself->addIntVector(c_to_cxx_v);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-void _func_VectorExamples_addObjVector(void* _Nonnull cself , CDataArray v){
+void _func_VectorExamples_addObjVector(void* _Nonnull cself , CDataArray v, ErrorObj* _Nonnull err){
     std::vector<VectorItem *> c_to_cxx_v;
 
     auto data_v = reinterpret_cast<void* _Nonnull*>(v.data);
@@ -62,9 +72,19 @@ void _func_VectorExamples_addObjVector(void* _Nonnull cself , CDataArray v){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-  c_to_cxx_cself->addObjVector(c_to_cxx_v);
+    try {
+      c_to_cxx_cself->addObjVector(c_to_cxx_v);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-void _func_VectorExamples_addStringVector(void* _Nonnull cself , CDataArray v){
+void _func_VectorExamples_addStringVector(void* _Nonnull cself , CDataArray v, ErrorObj* _Nonnull err){
     std::vector<std::string> c_to_cxx_v;
 
     auto data_v = reinterpret_cast<char* _Nonnull*>(v.data);
@@ -77,24 +97,47 @@ void _func_VectorExamples_addStringVector(void* _Nonnull cself , CDataArray v){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-  c_to_cxx_cself->addStringVector(c_to_cxx_v);
+    try {
+      c_to_cxx_cself->addStringVector(c_to_cxx_v);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-CDataArray _func_VectorExamples_getStringVector(void* _Nonnull cself ){
+CDataArray _func_VectorExamples_getStringVector(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getStringVector();
-    auto _data_cxx_to_c_result = new char* _Nonnull [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getStringVector();
+      auto _data_cxx_to_c_result = new char* _Nonnull [result.size()];
     CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
     for (int _i = 0; _i < result.size(); ++_i) {
       auto& value_result = result[_i];
       auto cxx_to_c_value_result = strdup(value_result.c_str()); 
       _data_cxx_to_c_result[_i] = cxx_to_c_value_result;
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataArray result;
+    return result;
 }
-CDataArray _func_VectorExamples_getObjVector(void* _Nonnull cself ){
+CDataArray _func_VectorExamples_getObjVector(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getObjVector();
-    auto _data_cxx_to_c_result = new void* _Nonnull [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getObjVector();
+      auto _data_cxx_to_c_result = new void* _Nonnull [result.size()];
     CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
     for (int _i = 0; _i < result.size(); ++_i) {
       auto& value_result = result[_i];
@@ -102,17 +145,40 @@ CDataArray _func_VectorExamples_getObjVector(void* _Nonnull cself ){
         auto cxx_to_c_value_result = static_cast<iegen::example::VectorItem*>(value_ptr_value_result);
       _data_cxx_to_c_result[_i] = cxx_to_c_value_result;
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataArray result;
+    return result;
 }
-CDataArray _func_VectorExamples_getIntVector(void* _Nonnull cself ){
+CDataArray _func_VectorExamples_getIntVector(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::VectorExamples*>(static_cast<iegen::example::VectorExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getIntVector();
-    auto _data_cxx_to_c_result = new int [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getIntVector();
+      auto _data_cxx_to_c_result = new int [result.size()];
     CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
     for (int _i = 0; _i < result.size(); ++_i) {
       auto& value_result = result[_i];
       
       _data_cxx_to_c_result[_i] = value_result;
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataArray result;
+    return result;
 }

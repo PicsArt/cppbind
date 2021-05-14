@@ -34,7 +34,7 @@ void* _Nonnull create_MapExamples(){
     auto this_object = new iegen::example::MapExamples();
     return static_cast<iegen::example::MapExamples*>(this_object);
 }
-void _func_MapExamples_addStringPair(void* _Nonnull cself , CDataPair info){
+void _func_MapExamples_addStringPair(void* _Nonnull cself , CDataPair info, ErrorObj* _Nonnull err){
     auto first_tmp_info = *reinterpret_cast<char* _Nonnull*>(info.first);
     auto second_tmp_info = *reinterpret_cast<char* _Nonnull*>(info.second);
     auto c_to_cxx_first_tmp_info = std::string(first_tmp_info);
@@ -44,9 +44,19 @@ void _func_MapExamples_addStringPair(void* _Nonnull cself , CDataPair info){
     std::pair<std::string, std::string> c_to_cxx_info { c_to_cxx_first_tmp_info, c_to_cxx_second_tmp_info };
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-  c_to_cxx_cself->addStringPair(c_to_cxx_info);
+    try {
+      c_to_cxx_cself->addStringPair(c_to_cxx_info);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-void _func_MapExamples_addIntMap(void* _Nonnull cself , CDataMap info){
+void _func_MapExamples_addIntMap(void* _Nonnull cself , CDataMap info, ErrorObj* _Nonnull err){
     std::map<int, int> c_to_cxx_info;
 
     for (size_t _i = 0; _i < info.size; ++_i) {
@@ -58,9 +68,19 @@ void _func_MapExamples_addIntMap(void* _Nonnull cself , CDataMap info){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-  c_to_cxx_cself->addIntMap(c_to_cxx_info);
+    try {
+      c_to_cxx_cself->addIntMap(c_to_cxx_info);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-void _func_MapExamples_addStringMap(void* _Nonnull cself , CDataMap info){
+void _func_MapExamples_addStringMap(void* _Nonnull cself , CDataMap info, ErrorObj* _Nonnull err){
     std::map<std::string, std::string> c_to_cxx_info;
 
     for (size_t _i = 0; _i < info.size; ++_i) {
@@ -74,12 +94,23 @@ void _func_MapExamples_addStringMap(void* _Nonnull cself , CDataMap info){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-  c_to_cxx_cself->addStringMap(c_to_cxx_info);
+    try {
+      c_to_cxx_cself->addStringMap(c_to_cxx_info);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-CDataMap _func_MapExamples_getStringMap(void* _Nonnull cself ){
+CDataMap _func_MapExamples_getStringMap(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getStringMap();
-    auto _k_data_cxx_to_c_result = new char* _Nonnull [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getStringMap();
+      auto _k_data_cxx_to_c_result = new char* _Nonnull [result.size()];
     auto _v_data_cxx_to_c_result = new char* _Nonnull [result.size()];
     CDataMap cxx_to_c_result = { _k_data_cxx_to_c_result, _v_data_cxx_to_c_result, (long long)result.size() };
     size_t _i_result = 0;
@@ -94,12 +125,24 @@ CDataMap _func_MapExamples_getStringMap(void* _Nonnull cself ){
           _i_result += 1;
         }
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataMap result;
+    return result;
 }
-CDataMap _func_MapExamples_getIntMap(void* _Nonnull cself ){
+CDataMap _func_MapExamples_getIntMap(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getIntMap();
-    auto _k_data_cxx_to_c_result = new int [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getIntMap();
+      auto _k_data_cxx_to_c_result = new int [result.size()];
     auto _v_data_cxx_to_c_result = new int [result.size()];
     CDataMap cxx_to_c_result = { _k_data_cxx_to_c_result, _v_data_cxx_to_c_result, (long long)result.size() };
     size_t _i_result = 0;
@@ -114,9 +157,20 @@ CDataMap _func_MapExamples_getIntMap(void* _Nonnull cself ){
           _i_result += 1;
         }
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataMap result;
+    return result;
 }
-void _func_MapExamples_addMixedMap(void* _Nonnull cself , CDataMap info){
+void _func_MapExamples_addMixedMap(void* _Nonnull cself , CDataMap info, ErrorObj* _Nonnull err){
     std::map<std::string, MapItem> c_to_cxx_info;
 
     for (size_t _i = 0; _i < info.size; ++_i) {
@@ -131,12 +185,23 @@ void _func_MapExamples_addMixedMap(void* _Nonnull cself , CDataMap info){
     }
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-  c_to_cxx_cself->addMixedMap(c_to_cxx_info);
+    try {
+      c_to_cxx_cself->addMixedMap(c_to_cxx_info);
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
 }
-CDataMap _func_MapExamples_getMixedMap(void* _Nonnull cself ){
+CDataMap _func_MapExamples_getMixedMap(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::MapExamples*>(static_cast<iegen::example::MapExamples*>(cself));
-    const auto& result = c_to_cxx_cself->getMixedMap();
-    auto _k_data_cxx_to_c_result = new char* _Nonnull [result.size()];
+    try {
+      const auto& result = c_to_cxx_cself->getMixedMap();
+      auto _k_data_cxx_to_c_result = new char* _Nonnull [result.size()];
     auto _v_data_cxx_to_c_result = new void* _Nonnull [result.size()];
     CDataMap cxx_to_c_result = { _k_data_cxx_to_c_result, _v_data_cxx_to_c_result, (long long)result.size() };
     size_t _i_result = 0;
@@ -152,5 +217,16 @@ CDataMap _func_MapExamples_getMixedMap(void* _Nonnull cself ){
           _i_result += 1;
         }
     }
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataMap result;
+    return result;
 }

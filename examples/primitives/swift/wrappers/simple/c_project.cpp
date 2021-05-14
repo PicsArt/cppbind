@@ -22,9 +22,8 @@ char* _Nonnull _prop_get_Project_title(void* _Nonnull cself){
 }
 void _func_Project_addTask(void* _Nonnull cself , void* _Nonnull task, ErrorObj* _Nonnull err){
     
-    std::shared_ptr<iegen::example::Task> c_to_cxx_task;
-    auto baseptr = *reinterpret_cast<std::shared_ptr<iegen::example::Task>*>(task);
-    c_to_cxx_task = std::dynamic_pointer_cast<iegen::example::Task>(baseptr);
+    // we might need to avoid dynamic_cast if there is no multiple inheritance
+    auto c_to_cxx_task = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(task));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(cself));
     try {
@@ -47,10 +46,8 @@ CDataArray _func_Project_tasks(void* _Nonnull cself , ErrorObj* _Nonnull err){
     CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
     for (int _i = 0; _i < result.size(); ++_i) {
       auto& value_result = result[_i];
-      
-        void* _Nonnull cxx_to_c_value_result;
-        std::shared_ptr<iegen::example::Task> baseptr = std::static_pointer_cast<iegen::example::Task>(value_result);
-        cxx_to_c_value_result = reinterpret_cast<void* _Nonnull>(new std::shared_ptr<iegen::example::Task>(baseptr));
+      auto value_ptr_value_result = const_cast<iegen::example::Task*>(value_result);
+        auto cxx_to_c_value_result = static_cast<iegen::example::Task*>(value_ptr_value_result);
       _data_cxx_to_c_result[_i] = cxx_to_c_value_result;
     }
       return cxx_to_c_result;

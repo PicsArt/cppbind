@@ -14,17 +14,29 @@ void* _Nonnull create_TemplateMethods(){
     auto this_object = new iegen::example::TemplateMethods();
     return static_cast<iegen::example::TemplateMethods*>(this_object);
 }
-int _func_TemplateMethods_maxInt(void* _Nonnull cself , int arg0, int arg1){
+int _func_TemplateMethods_maxInt(void* _Nonnull cself , int arg0, int arg1, ErrorObj* _Nonnull err){
     
   
     
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateMethods*>(static_cast<iegen::example::TemplateMethods*>(cself));
-    const auto& result = c_to_cxx_cself->max(arg0, arg1);
-    
+    try {
+      const auto& result = c_to_cxx_cself->max<int>(arg0, arg1);
+      
+      return result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    int result;
     return result;
 }
-char* _Nonnull _func_TemplateMethods_maxString(void* _Nonnull cself , char* _Nonnull arg0, char* _Nonnull arg1){
+char* _Nonnull _func_TemplateMethods_maxString(void* _Nonnull cself , char* _Nonnull arg0, char* _Nonnull arg1, ErrorObj* _Nonnull err){
     auto c_to_cxx_arg0 = std::string(arg0);
     free(arg0);
   
@@ -32,11 +44,23 @@ char* _Nonnull _func_TemplateMethods_maxString(void* _Nonnull cself , char* _Non
     free(arg1);
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateMethods*>(static_cast<iegen::example::TemplateMethods*>(cself));
-    const auto& result = c_to_cxx_cself->max(c_to_cxx_arg0, c_to_cxx_arg1);
-    auto cxx_to_c_result = strdup(result.c_str()); 
-    return cxx_to_c_result;
+    try {
+      const auto& result = c_to_cxx_cself->max<std::string>(c_to_cxx_arg0, c_to_cxx_arg1);
+      auto cxx_to_c_result = strdup(result.c_str()); 
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    char* _Nonnull result;
+    return result;
 }
-CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
+CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg0));
@@ -46,8 +70,9 @@ CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , vo
     auto c_to_cxx_arg1 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateMethods*>(static_cast<iegen::example::TemplateMethods*>(cself));
-    const auto& result = c_to_cxx_cself->makePair(c_to_cxx_arg0, c_to_cxx_arg1);
-    auto _first_data_cxx_to_c_result = new void* _Nonnull;
+    try {
+      const auto& result = c_to_cxx_cself->makePair<iegen::example::Project, iegen::example::Project>(c_to_cxx_arg0, c_to_cxx_arg1);
+      auto _first_data_cxx_to_c_result = new void* _Nonnull;
     auto _second_data_cxx_to_c_result = new void* _Nonnull;
     const auto& first_result = result.first;
     const auto& second_result = result.second;
@@ -58,9 +83,20 @@ CDataPair _func_TemplateMethods_makePairProjectProject(void* _Nonnull cself , vo
     *_first_data_cxx_to_c_result = cxx_to_c_first_result;
     *_second_data_cxx_to_c_result = cxx_to_c_second_result;
     CDataPair cxx_to_c_result = { _first_data_cxx_to_c_result, _second_data_cxx_to_c_result };
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataPair result;
+    return result;
 }
-CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1){
+CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void* _Nonnull arg0, void* _Nonnull arg1, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Root*>(static_cast<iegen::example::Root*>(arg0));
@@ -70,8 +106,9 @@ CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void*
     auto c_to_cxx_arg1 = dynamic_cast<iegen::example::Project*>(static_cast<iegen::example::Project*>(arg1));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::TemplateMethods*>(static_cast<iegen::example::TemplateMethods*>(cself));
-    const auto& result = c_to_cxx_cself->makePair(c_to_cxx_arg0, c_to_cxx_arg1);
-    auto _first_data_cxx_to_c_result = new void* _Nonnull;
+    try {
+      const auto& result = c_to_cxx_cself->makePair<iegen::example::Root, iegen::example::Project>(c_to_cxx_arg0, c_to_cxx_arg1);
+      auto _first_data_cxx_to_c_result = new void* _Nonnull;
     auto _second_data_cxx_to_c_result = new void* _Nonnull;
     const auto& first_result = result.first;
     const auto& second_result = result.second;
@@ -82,5 +119,16 @@ CDataPair _func_TemplateMethods_makePairRootProject(void* _Nonnull cself , void*
     *_first_data_cxx_to_c_result = cxx_to_c_first_result;
     *_second_data_cxx_to_c_result = cxx_to_c_second_result;
     CDataPair cxx_to_c_result = { _first_data_cxx_to_c_result, _second_data_cxx_to_c_result };
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    CDataPair result;
+    return result;
 }

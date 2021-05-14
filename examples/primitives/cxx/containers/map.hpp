@@ -1,11 +1,9 @@
-#ifndef containers_h
-#define containers_h
+#ifndef map_examples_h
+#define map_examples_h
 
 #include <unordered_map>
 #include <map>
-#include <vector>
 #include <string>
-
 
 namespace iegen::example {
 
@@ -15,8 +13,9 @@ namespace iegen::example {
  * __API__
  * gen: class
  * package: containers
+ * swift.include: CWrapper
  */
-struct Item {
+struct MapItem {
     /**
      * comments
      *
@@ -31,7 +30,7 @@ struct Item {
      * __API__
      * gen: constructor
      */
-    Item(int _value) : value(_value){};
+    MapItem(int _value) : value(_value){};
 
 };
 
@@ -42,7 +41,7 @@ struct Item {
  * gen: class
  * package: containers
  */
-struct Containers {
+struct MapExamples {
 
     /**
      * comments
@@ -50,10 +49,7 @@ struct Containers {
      * __API__
      * gen: constructor
      */
-    Containers() {
-        mapMixedData.insert(std::make_pair("first", Item(1)));
-        mapMixedData.insert(std::make_pair("second", Item(2)));
-    };
+    MapExamples() {};
 
     /**
      * comments
@@ -88,38 +84,6 @@ struct Containers {
         mapStringData.insert(info.begin(), info.end());
     };
 
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    void addIntPair(const std::pair<int, int>& info) {
-        mapIntData.insert(info);
-    };
-
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    std::pair<std::string, std::string> getStringPair() {
-        return std::make_pair("first", "second");
-    };
-
-//    /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     */
-//    std::pair<int, int> getIntPair() {
-//        return std::make_pair(1, 2);
-//    };
-
 
     /**
      * comments
@@ -150,67 +114,46 @@ struct Containers {
      * gen: method
      * throws: no_throw
      */
-    std::unordered_map<std::string, Item> getMap() {
+    void addMixedMap(const std::map<std::string, MapItem>& info) {
+        mapMixedData.insert(info.begin(), info.end());
+    }
+
+    /**
+     * comments
+     *
+     * __API__
+     * gen: method
+     * throws: no_throw
+     */
+    std::unordered_map<std::string, MapItem> getMixedMap() {
         return mapMixedData;
     }
-
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    void addIntVector(const std::vector<int>& v){
-        for (auto item: v) {
-            vectorIntData.push_back(item);
-        }
-    }
-
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    void addStringVector(const std::vector<std::string>& v){
-        for (auto item: v) {
-            vectorStringData.push_back(item);
-        }
-    }
-
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    const std::vector<std::string>& getStringVector(){
-        return vectorStringData;
-    }
-
-    /**
-     * comments
-     *
-     * __API__
-     * gen: method
-     * throws: no_throw
-     */
-    const std::vector<int>& getIntVector(){
-        return vectorIntData;
-    }
+// TODO: commented as for now for kotlin we do not have nested containers support
+//    /**
+//     * comments
+//     *
+//     * __API__
+//     * gen: method
+//     */
+//    void setNestedMap(const std::map<int, std::map<int, int>>& m) {
+//        nestedMap = m;
+//    }
+//     /**
+//     * comments
+//     *
+//     * __API__
+//     * gen: method
+//     */
+//     std::map<int, std::map<int, int>> getNestedMap() {
+//        return nestedMap;
+//     }
 
 private:
-    std::vector<std::string> vectorStringData;
-    std::vector<int> vectorIntData;
     std::unordered_map<std::string, std::string> mapStringData;
     std::unordered_map<int, int> mapIntData;
-    std::unordered_map<std::string, Item> mapMixedData;
-
+    std::unordered_map<std::string, MapItem> mapMixedData;
+    std::map<int, std::map<int, int>> nestedMap;
 };
-
 
 } // namespace pi::video_engine::model
 

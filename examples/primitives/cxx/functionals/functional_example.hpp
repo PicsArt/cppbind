@@ -26,6 +26,7 @@ public:
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     static std::function<int(int)> genFuncToIncrementResult(const std::function<int(int)> &f) {
         return [f](int i) {

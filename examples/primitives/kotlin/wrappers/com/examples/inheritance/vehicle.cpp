@@ -8,19 +8,18 @@ using namespace iegen::example;
 extern "C" JNIEXPORT void Java_com_examples_inheritance_Vehicle_jSet_1this(JNIEnv* env, jobject obj, jobjectid id, jobject self){
 }
 extern "C" JNIEXPORT void Java_com_examples_inheritance_Vehicle_jFinalize(JNIEnv* env, jobject obj, jobjectid id){
-    auto this_object = *reinterpret_cast<std::shared_ptr<iegen::example::Vehicle>*>(id);
-    delete &this_object;
+    iegen::example::Vehicle* this_object = reinterpret_cast<iegen::example::Vehicle*>(id);
+    delete this_object;
 }
 extern "C" JNIEXPORT jobjectid Java_com_examples_inheritance_Vehicle_jConstructor(JNIEnv* env, jobject obj, jint numberOfSeats){
     
-    iegen::example::Vehicle* obj_ptr = new iegen::example::Vehicle(numberOfSeats);
-    auto this_object = std::shared_ptr<iegen::example::Vehicle>(obj_ptr);
-    return reinterpret_cast<jlong>(new std::shared_ptr<iegen::example::Vehicle>(this_object));
+    iegen::example::Vehicle* baseptr = new iegen::example::Vehicle(numberOfSeats);
+    return reinterpret_cast<jlong>(baseptr);
 }
 
 extern "C" JNIEXPORT jint Java_com_examples_inheritance_Vehicle_jNumberofseats(JNIEnv* env, jobject obj, jobjectid id){
     validateID(id);
-    auto this_object = *reinterpret_cast<std::shared_ptr<iegen::example::Vehicle>*>(id);
+    iegen::example::Vehicle* this_object = reinterpret_cast<iegen::example::Vehicle*>(id);
     auto result = this_object->numberOfSeats();
     
     return result;

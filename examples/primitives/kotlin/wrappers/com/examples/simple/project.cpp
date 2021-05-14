@@ -32,7 +32,7 @@ extern "C" JNIEXPORT jstring Java_com_examples_simple_Project_jTitle(JNIEnv* env
 extern "C" JNIEXPORT void Java_com_examples_simple_Project_jAddtask(JNIEnv* env, jobject obj, jobjectid id, jobjectid task){
     
 
-    std::shared_ptr<iegen::example::Task> jni_to_cxx_task = *reinterpret_cast<std::shared_ptr<iegen::example::Task>*>(task);
+    auto jni_to_cxx_task =  reinterpret_cast<iegen::example::Task*>(task);
 
     validateID(id);
     iegen::example::Project* this_object = reinterpret_cast<iegen::example::Project*>(id);
@@ -52,7 +52,9 @@ extern "C" JNIEXPORT jobjectidArray Java_com_examples_simple_Project_jTasks(JNIE
     size_t index = 0;
     for (auto& value : result) {
         
-        jobjectid cxx_to_jni_value = reinterpret_cast<jlong>(new std::shared_ptr<iegen::example::Task>(value));
+
+        iegen::example::Task* cxx_to_jni_value_baseptr = value;
+        jobjectid cxx_to_jni_value = reinterpret_cast<jlong>(cxx_to_jni_value_baseptr);
         env->SetLongArrayRegion(cxx_to_jni_result, index, 1, &cxx_to_jni_value);
         ++index;
     }

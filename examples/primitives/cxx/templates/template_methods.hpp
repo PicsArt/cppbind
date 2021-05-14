@@ -25,6 +25,7 @@ class TemplateMethods  {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      * template: {"T": [{"type": "int"}, {"type": "std::string"}]}
      */
     template <typename T>
@@ -35,6 +36,7 @@ class TemplateMethods  {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      * template: {"T": ["iegen::example::Project", "iegen::example::Root"], "V": ["iegen::example::Project"]}
      */
     template <typename T, typename V>

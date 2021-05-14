@@ -8,7 +8,7 @@ namespace iegen::example {
 /**
  * __API__
  * gen: class
- * shared_ref: True
+ * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
  * python.include: inheritance.vehicle_pygen

@@ -1,5 +1,5 @@
 #ifndef _C_bicycle_WRAPPER_
-#define _C_bicycle_WRAPPER_ 
+#define _C_bicycle_WRAPPER_
 
 #include "swift/wrappers/c_helpers.h"
 

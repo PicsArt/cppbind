@@ -33,8 +33,19 @@ public class TemplateMethods  {
 
         let swift_to_sc_arg0 = CInt(arg0)
         let swift_to_sc_arg1 = CInt(arg1)
-        let result = _func_TemplateMethods_maxInt(cself, swift_to_sc_arg0, swift_to_sc_arg1);
+        var err = ErrorObj()
+        let result = _func_TemplateMethods_maxInt(cself, swift_to_sc_arg0, swift_to_sc_arg1, &err);
         let sc_to_swift_result = Int(result)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -43,10 +54,21 @@ public class TemplateMethods  {
 
         let swift_to_sc_arg0 = strdup(arg0)!
         let swift_to_sc_arg1 = strdup(arg1)!
-        let result = _func_TemplateMethods_maxString(cself, swift_to_sc_arg0, swift_to_sc_arg1);
+        var err = ErrorObj()
+        let result = _func_TemplateMethods_maxString(cself, swift_to_sc_arg0, swift_to_sc_arg1, &err);
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }
@@ -56,7 +78,8 @@ public class TemplateMethods  {
 
         let swift_to_sc_arg0 = arg0.cself
         let swift_to_sc_arg1 = arg1.cself
-        let result = _func_TemplateMethods_makePairProjectProject(cself, swift_to_sc_arg0, swift_to_sc_arg1);
+        var err = ErrorObj()
+        let result = _func_TemplateMethods_makePairProjectProject(cself, swift_to_sc_arg0, swift_to_sc_arg1, &err);
         let _tmp_pair_first_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.first.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         let _tmp_pair_second_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.second.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         defer {
@@ -68,6 +91,16 @@ public class TemplateMethods  {
         let sc_to_swift_first_result = Project(first_result)
         let sc_to_swift_second_result = Project(second_result)
         let sc_to_swift_result: (Project, Project) = ( sc_to_swift_first_result, sc_to_swift_second_result )
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -76,7 +109,8 @@ public class TemplateMethods  {
 
         let swift_to_sc_arg0 = arg0.cself
         let swift_to_sc_arg1 = arg1.cself
-        let result = _func_TemplateMethods_makePairRootProject(cself, swift_to_sc_arg0, swift_to_sc_arg1);
+        var err = ErrorObj()
+        let result = _func_TemplateMethods_makePairRootProject(cself, swift_to_sc_arg0, swift_to_sc_arg1, &err);
         let _tmp_pair_first_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.first.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         let _tmp_pair_second_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.second.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: 1)
         defer {
@@ -88,6 +122,16 @@ public class TemplateMethods  {
         let sc_to_swift_first_result = Root(first_result)
         let sc_to_swift_second_result = Project(second_result)
         let sc_to_swift_result: (Root, Project) = ( sc_to_swift_first_result, sc_to_swift_second_result )
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
 }

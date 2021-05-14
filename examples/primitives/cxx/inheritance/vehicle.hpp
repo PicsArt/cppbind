@@ -7,7 +7,7 @@ namespace iegen::example {
  *
  * __API__
  * gen: class
- * shared_ref: True
+ * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
  */
@@ -22,6 +22,7 @@ public:
     /**
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     int numberOfSeats() const {
         return _numberOfSeats;

@@ -13,25 +13,49 @@ void* _Nonnull create_StackUsage(){
     auto this_object = new iegen::example::StackUsage();
     return static_cast<iegen::example::StackUsage*>(this_object);
 }
-void* _Nonnull _func_StackUsage_firstItemOfSpecialized(void* _Nonnull cself , void* _Nonnull p){
+void* _Nonnull _func_StackUsage_firstItemOfSpecialized(void* _Nonnull cself , void* _Nonnull p, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_p = dynamic_cast<iegen::example::Stack<iegen::example::Project>*>(static_cast<iegen::example::Stack<iegen::example::Project>*>(p));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::StackUsage*>(static_cast<iegen::example::StackUsage*>(cself));
-    const auto& result = c_to_cxx_cself->firstItemOfSpecialized(c_to_cxx_p);
-    auto value_ptr_result = const_cast<iegen::example::Project*>(result);
+    try {
+      const auto& result = c_to_cxx_cself->firstItemOfSpecialized(c_to_cxx_p);
+      auto value_ptr_result = const_cast<iegen::example::Project*>(result);
     auto cxx_to_c_result = static_cast<iegen::example::Project*>(value_ptr_result);
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    void* _Nonnull result;
+    return result;
 }
-void* _Nonnull _func_StackUsage_firstItemOfTemplateProject(void* _Nonnull cself , void* _Nonnull arg0){
+void* _Nonnull _func_StackUsage_firstItemOfTemplateProject(void* _Nonnull cself , void* _Nonnull arg0, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_arg0 = dynamic_cast<iegen::example::Stack<iegen::example::Project>*>(static_cast<iegen::example::Stack<iegen::example::Project>*>(arg0));
   
     auto c_to_cxx_cself = dynamic_cast<iegen::example::StackUsage*>(static_cast<iegen::example::StackUsage*>(cself));
-    const auto& result = c_to_cxx_cself->firstItemOfTemplate(c_to_cxx_arg0);
-    auto value_ptr_result = const_cast<iegen::example::Project*>(result);
+    try {
+      const auto& result = c_to_cxx_cself->firstItemOfTemplate<iegen::example::Project>(c_to_cxx_arg0);
+      auto value_ptr_result = const_cast<iegen::example::Project*>(result);
     auto cxx_to_c_result = static_cast<iegen::example::Project*>(value_ptr_result);
-    return cxx_to_c_result;
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    void* _Nonnull result;
+    return result;
 }

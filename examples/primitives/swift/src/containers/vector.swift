@@ -99,7 +99,18 @@ public class VectorExamples  {
           let swift_to_sc_value = CInt(value)
           _data_swift_to_sc_v[_i] = swift_to_sc_value;
         }
-        _func_VectorExamples_addIntVector(cself, swift_to_sc_v);
+        var err = ErrorObj()
+        _func_VectorExamples_addIntVector(cself, swift_to_sc_v, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -119,7 +130,18 @@ public class VectorExamples  {
           let swift_to_sc_value = value.cself
           _data_swift_to_sc_v[_i] = swift_to_sc_value;
         }
-        _func_VectorExamples_addObjVector(cself, swift_to_sc_v);
+        var err = ErrorObj()
+        _func_VectorExamples_addObjVector(cself, swift_to_sc_v, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -139,7 +161,18 @@ public class VectorExamples  {
           let swift_to_sc_value = strdup(value)!
           _data_swift_to_sc_v[_i] = swift_to_sc_value;
         }
-        _func_VectorExamples_addStringVector(cself, swift_to_sc_v);
+        var err = ErrorObj()
+        _func_VectorExamples_addStringVector(cself, swift_to_sc_v, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -147,7 +180,8 @@ public class VectorExamples  {
      */
     public func getStringVector() -> Array<String> {
 
-        let result = _func_VectorExamples_getStringVector(cself);
+        var err = ErrorObj()
+        let result = _func_VectorExamples_getStringVector(cself, &err);
         let _tmp_result_data = UnsafeBufferPointer<UnsafeMutablePointer<CChar>>(start: result.data.assumingMemoryBound(to: UnsafeMutablePointer<CChar>.self), count: Int(result.size))
         var sc_to_swift_result: [String] = [] 
         defer {
@@ -161,6 +195,16 @@ public class VectorExamples  {
             }
           sc_to_swift_result.append(sc_to_swift_value_result);
         }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -169,7 +213,8 @@ public class VectorExamples  {
      */
     public func getObjVector() -> Array<VectorItem> {
 
-        let result = _func_VectorExamples_getObjVector(cself);
+        var err = ErrorObj()
+        let result = _func_VectorExamples_getObjVector(cself, &err);
         let _tmp_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.data.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: Int(result.size))
         var sc_to_swift_result: [VectorItem] = [] 
         defer {
@@ -180,6 +225,16 @@ public class VectorExamples  {
           let sc_to_swift_value_result = VectorItem(value_result)
           sc_to_swift_result.append(sc_to_swift_value_result);
         }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -188,7 +243,8 @@ public class VectorExamples  {
      */
     public func getIntVector() -> Array<Int> {
 
-        let result = _func_VectorExamples_getIntVector(cself);
+        var err = ErrorObj()
+        let result = _func_VectorExamples_getIntVector(cself, &err);
         let _tmp_result_data = UnsafeBufferPointer<CInt>(start: result.data.assumingMemoryBound(to: CInt.self), count: Int(result.size))
         var sc_to_swift_result: [Int] = [] 
         defer {
@@ -198,6 +254,16 @@ public class VectorExamples  {
           let value_result = _tmp_result_data[_i];
           let sc_to_swift_value_result = Int(value_result)
           sc_to_swift_result.append(sc_to_swift_value_result);
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

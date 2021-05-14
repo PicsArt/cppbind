@@ -102,7 +102,18 @@ public class MapExamples  {
         let swift_to_sc_second_info = strdup(second_info)!
         _first_swift_to_sc_info[0] = swift_to_sc_first_info
         _second_swift_to_sc_info[0] = swift_to_sc_second_info
-        _func_MapExamples_addStringPair(cself, swift_to_sc_info);
+        var err = ErrorObj()
+        _func_MapExamples_addStringPair(cself, swift_to_sc_info, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -128,7 +139,18 @@ public class MapExamples  {
             _val_swift_to_sc_info[_i_info] = swift_to_sc_val
             _i_info += 1
         }
-        _func_MapExamples_addIntMap(cself, swift_to_sc_info);
+        var err = ErrorObj()
+        _func_MapExamples_addIntMap(cself, swift_to_sc_info, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -154,7 +176,18 @@ public class MapExamples  {
             _val_swift_to_sc_info[_i_info] = swift_to_sc_val
             _i_info += 1
         }
-        _func_MapExamples_addStringMap(cself, swift_to_sc_info);
+        var err = ErrorObj()
+        _func_MapExamples_addStringMap(cself, swift_to_sc_info, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -162,7 +195,8 @@ public class MapExamples  {
      */
     public func getStringMap() -> Dictionary<String, String> {
 
-        let result = _func_MapExamples_getStringMap(cself);
+        var err = ErrorObj()
+        let result = _func_MapExamples_getStringMap(cself, &err);
         let _tmp_k_result_data = UnsafeBufferPointer<UnsafeMutablePointer<CChar>>(start: result.keys.assumingMemoryBound(to: UnsafeMutablePointer<CChar>.self), count: Int(result.size))
         let _tmp_v_result_data = UnsafeBufferPointer<UnsafeMutablePointer<CChar>>(start: result.values.assumingMemoryBound(to: UnsafeMutablePointer<CChar>.self), count: Int(result.size))
         var sc_to_swift_result: [String:String] = [:] 
@@ -185,6 +219,16 @@ public class MapExamples  {
             sc_to_swift_result[sc_to_swift_key_result] = sc_to_swift_value_result
           }
         }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -193,7 +237,8 @@ public class MapExamples  {
      */
     public func getIntMap() -> Dictionary<Int, Int> {
 
-        let result = _func_MapExamples_getIntMap(cself);
+        var err = ErrorObj()
+        let result = _func_MapExamples_getIntMap(cself, &err);
         let _tmp_k_result_data = UnsafeBufferPointer<CInt>(start: result.keys.assumingMemoryBound(to: CInt.self), count: Int(result.size))
         let _tmp_v_result_data = UnsafeBufferPointer<CInt>(start: result.values.assumingMemoryBound(to: CInt.self), count: Int(result.size))
         var sc_to_swift_result: [Int:Int] = [:] 
@@ -209,6 +254,16 @@ public class MapExamples  {
             let sc_to_swift_value_result = Int(value_result)
             sc_to_swift_result[sc_to_swift_key_result] = sc_to_swift_value_result
           }
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }
@@ -236,7 +291,18 @@ public class MapExamples  {
             _val_swift_to_sc_info[_i_info] = swift_to_sc_val
             _i_info += 1
         }
-        _func_MapExamples_addMixedMap(cself, swift_to_sc_info);
+        var err = ErrorObj()
+        _func_MapExamples_addMixedMap(cself, swift_to_sc_info, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      * comments
@@ -244,7 +310,8 @@ public class MapExamples  {
      */
     public func getMixedMap() -> Dictionary<String, MapItem> {
 
-        let result = _func_MapExamples_getMixedMap(cself);
+        var err = ErrorObj()
+        let result = _func_MapExamples_getMixedMap(cself, &err);
         let _tmp_k_result_data = UnsafeBufferPointer<UnsafeMutablePointer<CChar>>(start: result.keys.assumingMemoryBound(to: UnsafeMutablePointer<CChar>.self), count: Int(result.size))
         let _tmp_v_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.values.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: Int(result.size))
         var sc_to_swift_result: [String:MapItem] = [:] 
@@ -263,6 +330,16 @@ public class MapExamples  {
             let sc_to_swift_value_result = MapItem(value_result, true)
             sc_to_swift_result[sc_to_swift_key_result] = sc_to_swift_value_result
           }
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

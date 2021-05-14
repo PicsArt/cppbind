@@ -73,7 +73,7 @@ void bindExamples(py::module& m) {
     bindComponent(templates_component);
     py::module_ templates_stack = templates.def_submodule("stack", "stack");
     bindStackProject(templates_stack);
-    bindStackRoot(templates_stack);
+    bindStackPyTask(templates_stack);
     py::module_ templates_stack_usage = templates.def_submodule("stack_usage", "stack_usage");
     bindStackUsage(templates_stack_usage);
     py::module_ templates_template_methods = templates.def_submodule("template_methods", "template_methods");

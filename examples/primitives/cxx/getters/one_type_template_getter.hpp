@@ -48,6 +48,7 @@ class OneTypeTemplateGetter  {
      *
      * __API__
      * gen: getter
+     * throws: no_throw
      * template: {"T": ["iegen::example::SimpleItem"] }
      */
     template <typename T>
@@ -63,6 +64,7 @@ class OneTypeTemplateGetter  {
      *
      * __API__
      * gen: getter
+     * throws: no_throw
      * template: {"T": [{"type": "iegen::example::SimpleItem", "name": "simple_item_with_type"}] }
      */
     template <typename T>

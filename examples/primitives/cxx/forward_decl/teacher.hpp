@@ -34,6 +34,7 @@ public:
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStudent(Student* s) {
         _students.push_back(s);
@@ -42,6 +43,7 @@ public:
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<Student*>& students() const {
         return _students;

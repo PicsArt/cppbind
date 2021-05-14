@@ -6,6 +6,6 @@
 namespace py = pybind11;
 
 void bindStackProject(py::module& m);
-void bindStackRoot(py::module& m);
+void bindStackPyTask(py::module& m);
 
 #endif

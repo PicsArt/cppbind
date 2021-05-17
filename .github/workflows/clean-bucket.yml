@@ -11,13 +11,6 @@ jobs:
   delete-docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract branch name
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo ${{ github.event.pull_request.head.ref }})" >> $GITHUB_ENV
-
-      - name: Print deleted branch
-        run: echo "${BRANCH_NAME}"
-
       - name: install-aws-cli
         uses: unfor19/install-aws-cli-action@v1
         with:
@@ -31,4 +24,4 @@ jobs:
           aws-region: us-east-1
 
       - name: Delete files from s3 amazon bucket with the AWS CLI
-        run: aws s3 rm --recursive  s3://iegen.picsart.com/${BRANCH_NAME}/
+        run: aws s3 rm --recursive  s3://iegen.picsart.com/${{ github.event.pull_request.head.ref }}/

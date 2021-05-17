@@ -1,4 +1,4 @@
-#IEGEN
+# IEGEN
 
 IEGEN is a C++ bindings generation tool.
 It generates bindings for python, swift and kotlin.
@@ -9,5 +9,6 @@ Also, it can be customized to have generated bindings better feet to your needs.
 
 Documentation and tutorials available at
 [iegen docs](https://github.com/PicsArt/iegen)
+
 Examples used in documentation available at
 [iegen examples](https://github.com/PicsArt/iegen/tree/master/examples/primitives)

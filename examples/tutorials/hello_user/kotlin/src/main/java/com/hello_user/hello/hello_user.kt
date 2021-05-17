@@ -15,7 +15,6 @@ internal constructor(_id: Long) : AutoCloseable {
         
         /**
          * Creates user
-         * 
          */
         protected fun construct_helper(user_name: String, user_age: Long): Long {
             val id = jConstructor(user_name, user_age)
@@ -37,7 +36,6 @@ internal constructor(_id: Long) : AutoCloseable {
     
     /**
      * Creates user
-     * 
      */
     constructor(user_name: String, user_age: Long): this(construct_helper(user_name, user_age)) {
         //jSet_this(id, this)
@@ -45,7 +43,6 @@ internal constructor(_id: Long) : AutoCloseable {
     
     /**
      * Age of user.
-     * 
      */
     val age: Long
         get() {
@@ -56,7 +53,6 @@ internal constructor(_id: Long) : AutoCloseable {
 
     /**
      * Name of user.
-     * 
      */
     val name: String
         get() {
@@ -115,7 +111,6 @@ internal constructor(_id: Long) : AutoCloseable {
         
         /**
          * Creates host
-         * 
          */
         protected fun construct_helper(): Long {
             val id = jConstructor()
@@ -139,7 +134,6 @@ internal constructor(_id: Long) : AutoCloseable {
     
     /**
      * Creates host
-     * 
      */
     constructor(): this(construct_helper()) {
         //jSet_this(id, this)

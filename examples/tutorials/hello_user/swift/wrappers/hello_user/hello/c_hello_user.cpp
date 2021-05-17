@@ -59,23 +59,47 @@ void* _Nonnull create_Host(){
     auto this_object = new Host();
     return static_cast<Host*>(this_object);
 }
-char* _Nonnull _func_Host_hello(void* _Nonnull cself , void* _Nonnull user){
+char* _Nonnull _func_Host_hello(void* _Nonnull cself , void* _Nonnull user, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto& c_to_cxx_user = *dynamic_cast<UserInfo*>(static_cast<UserInfo*>(user));
   
     auto c_to_cxx_cself = dynamic_cast<Host*>(static_cast<Host*>(cself));
-    const auto& result = c_to_cxx_cself->hello(c_to_cxx_user);
-    auto cxx_to_c_result = strdup(result.c_str()); 
-    return cxx_to_c_result;
+    try {
+      const auto& result = c_to_cxx_cself->hello(c_to_cxx_user);
+      auto cxx_to_c_result = strdup(result.c_str()); 
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    char* _Nonnull result;
+    return result;
 }
-char* _Nonnull _func_Host_welcome(void* _Nonnull cself , void* _Nonnull user){
+char* _Nonnull _func_Host_welcome(void* _Nonnull cself , void* _Nonnull user, ErrorObj* _Nonnull err){
     
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto& c_to_cxx_user = *dynamic_cast<UserInfo*>(static_cast<UserInfo*>(user));
   
     auto c_to_cxx_cself = dynamic_cast<Host*>(static_cast<Host*>(cself));
-    const auto& result = c_to_cxx_cself->welcome(c_to_cxx_user);
-    auto cxx_to_c_result = strdup(result.c_str()); 
-    return cxx_to_c_result;
+    try {
+      const auto& result = c_to_cxx_cself->welcome(c_to_cxx_user);
+      auto cxx_to_c_result = strdup(result.c_str()); 
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    char* _Nonnull result;
+    return result;
 }

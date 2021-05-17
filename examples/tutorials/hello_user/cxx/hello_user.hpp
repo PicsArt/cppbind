@@ -54,6 +54,7 @@ public:
      * Greeting function.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::string hello(const UserInfo& user) {
         return (user.age > 21 ? "Hello ": "Hi ") + user.name;
@@ -62,11 +63,12 @@ public:
      * Welcome function.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::string welcome(const UserInfo& user) {
         if (!user.want_a_drink)
             return "Welcome " + user.name + "! Let me know if you want something.";
-        return "Welcome " + user.name + "! Do you want cap of " + (user.age > 21 ? "beer?": "juice?");
+        return "Welcome " +  user.name + "! Do you want cap of " + (user.age > 21 ? "beer?": "juice?");
     }
 };
 

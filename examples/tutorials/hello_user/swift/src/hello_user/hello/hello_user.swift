@@ -23,7 +23,6 @@ public class UserInfo  {
     
     /**
      * Creates user
-     * 
      */
     public convenience init(user_name: String, user_age: UInt) {
 
@@ -34,7 +33,6 @@ public class UserInfo  {
     
     /**
      * Age of user.
-     * 
      */
     public var age: UInt {
           get {
@@ -53,7 +51,6 @@ public class UserInfo  {
 
     /**
      * Name of user.
-     * 
      */
     public var name: String {
           get {
@@ -113,7 +110,6 @@ public class Host  {
     
     /**
      * Creates host
-     * 
      */
     public convenience init() {
 
@@ -126,10 +122,21 @@ public class Host  {
     public func hello(user: UserInfo) -> String {
 
         let swift_to_sc_user = user.cself
-        let result = _func_Host_hello(cself, swift_to_sc_user);
+        var err = ErrorObj()
+        let result = _func_Host_hello(cself, swift_to_sc_user, &err);
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }
@@ -139,10 +146,21 @@ public class Host  {
     public func welcome(user: UserInfo) -> String {
 
         let swift_to_sc_user = user.cself
-        let result = _func_Host_welcome(cself, swift_to_sc_user);
+        var err = ErrorObj()
+        let result = _func_Host_welcome(cself, swift_to_sc_user, &err);
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

@@ -1,5 +1,5 @@
 #ifndef _C_hello_user_WRAPPER_
-#define _C_hello_user_WRAPPER_ 
+#define _C_hello_user_WRAPPER_
 
 #include "swift/wrappers/c_helpers.h"
 
@@ -21,8 +21,8 @@ extern "C" {
 
     void release_Host(void* _Nonnull cself);
     void* _Nonnull create_Host();
-    char* _Nonnull _func_Host_hello(void* _Nonnull cself , void* _Nonnull user);
-    char* _Nonnull _func_Host_welcome(void* _Nonnull cself , void* _Nonnull user);
+    char* _Nonnull _func_Host_hello(void* _Nonnull cself , void* _Nonnull user, ErrorObj* _Nonnull err);
+    char* _Nonnull _func_Host_welcome(void* _Nonnull cself , void* _Nonnull user, ErrorObj* _Nonnull err);
 #if __cplusplus
 }
 #endif

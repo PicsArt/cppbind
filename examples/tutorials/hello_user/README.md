@@ -21,7 +21,7 @@ To do that use **clang_args** property in **iegen_config.cfg** file. It's a comm
 In this example we have a small usage program for each language which creates some users and greets them.
 You can find them under usage directory.
 
-To run this program for swift use the following command:
+To run this program fall three languages run the following command:
  ```bash
- bazel run hello_swift
+ bazel run hello_user_swift hello_user_python hello_user_kotlin
  ```

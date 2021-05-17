@@ -17,8 +17,7 @@ class UserInfo(metaclass=OriginalMethodsMetaclass):
     @bind
     def age(self) -> int:
         """
-        Age of user.
-        """
+        Age of user."""
         pass
 
 
@@ -26,8 +25,7 @@ class UserInfo(metaclass=OriginalMethodsMetaclass):
     @bind
     def name(self) -> str:
         """
-        Name of user.
-        """
+        Name of user."""
         pass
 
 

@@ -6,8 +6,14 @@ file:
       - body
       - include
     content: |
+      """
+      {{creation_comment_lines|format_list("{}")|join('\n')}}
+      """
+
       from __future__ import annotations
+
       from typing import *
+
       import {{[config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {%- if include %}
@@ -21,6 +27,10 @@ file:
     scopes:
       - package_include
     content: |
+      """
+      {{creation_comment_lines|format_list("{}")|join('\n')}}
+      """
+
       {{package_include}}
       {{''}}
   cxx:
@@ -30,6 +40,10 @@ file:
       - body
       - include
     content: |
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
@@ -45,7 +59,11 @@ file:
     scopes:
       - body
     content: |
-      {%- set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
+      {% set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -62,6 +80,10 @@ file:
     scopes:
       - body
     content: |
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
       #include <pybind11/pybind11.h>
       #include "{{config.pybind_module.split('.')[-1] + config.file_postfix}}.hpp"
 
@@ -75,7 +97,11 @@ file:
     scopes:
       - include
     content: |
-      {%- set package = config.pybind_module.split('.')[-1] -%}
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
+      {% set package = config.pybind_module.split('.')[-1] -%}
       #ifndef {{package + config.file_postfix}}_hpp
       #define {{package + config.file_postfix}}_hpp
 
@@ -93,7 +119,10 @@ file:
     scopes:
       - body
     content: |
-      {%- set packages = config.pybind_module.split('.') %}
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+      {% set packages = config.pybind_module.split('.') %}
       {%- set package = packages[0] %}
       {%- set file = config.cxx_out_dir +pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join %}
       #include <pybind11/pybind11.h>
@@ -164,10 +193,10 @@ var_class: &var_class
   python:
     include:
       unique_content: |
-        {{include|format_list("from {} import *")|join('\n')}}
         {%- if is_abstract %}
         from abc import abstractmethod
         {%- endif %}
+        {{include|format_list("from {} import *")|join('\n')}}
     body:
       scopes:
         - constructor_body

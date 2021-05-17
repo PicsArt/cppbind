@@ -6,6 +6,10 @@ file:
       - body
       - include
     content: |
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
       package {{config.package_prefix}}.{{package}}
 
       {{helper_includes|format_list('import {}.*')|join('\n')}}
@@ -18,6 +22,10 @@ file:
       - body
       - include
     content: |
+      /*
+       {{creation_comment_lines|format_list("* {}")|join('\n')|indent(1)}}
+       */
+
       #include "jni.h"
       #include <iostream>
       {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}

@@ -3,7 +3,7 @@
 #include <pybind11/functional.h>
 
 #include "cxx/templates/addressable.hpp"
-#include "cxx/classes/root.hpp"
+#include "cxx/simple/root.hpp"
 
 namespace py = pybind11;
 

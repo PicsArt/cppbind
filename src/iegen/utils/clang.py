@@ -160,6 +160,8 @@ def is_unexposed(clang_type):
     clang_type = get_canonical_type(clang_type)
     if clang_type.kind == cli.TypeKind.UNEXPOSED:
         return True
+    if clang_type.kind == cli.TypeKind.POINTER:
+        return is_unexposed(get_pointee_type(clang_type))
     elif is_template(clang_type):
         for arg_type in template_argument_types(clang_type):
             _is_unexposed = is_unexposed(arg_type)

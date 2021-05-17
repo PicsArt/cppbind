@@ -203,7 +203,7 @@ var_class: &var_class
   python_init:
     package_include:
       unique_content: |
-        from .{{file + config.file_postfix}} import {{name}}
+        from .{{file + config.file_postfix}} import {{name}}{{template_suffix}}
   cxx:
     include:
       unique_content: |
@@ -219,7 +219,9 @@ var_class: &var_class
         - body
       content: |
         void {{'bind' + name + template_suffix}}(py::module& m) {
+            {%- if ctx.namespace %}
             using namespace {{ctx.namespace}};
+            {%- endif %}
             {% set comma = joiner(', ') -%}
             {% set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
             py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}

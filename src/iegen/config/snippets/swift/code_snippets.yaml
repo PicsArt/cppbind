@@ -158,6 +158,16 @@ enum:
         {%- endfor %}
       }
 
+var_class_include: &var_class_include
+    unique_content: |
+      #include "{{prj_rel_file_name}}"
+      {{include_cxx|format_list('#include "{}"')|join('\n')}}
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
+
+var_template_method_include: &var_template_method_include
+    unique_content: |
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
+
 
 class:
   swift:
@@ -200,12 +210,12 @@ class:
             {{body|string|indent}}
         }
   cc:
-    include:
-      unique_content: |
-        #include "{{prj_rel_file_name}}"
-        {{include_cxx|format_list('#include "{}"')|join('\n')}}
+    include: *var_class_include
     body:
       content: |
+        {%- if ctx.namespace %}
+        using namespace {{ctx.namespace}};
+        {%- endif %}
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -270,17 +280,15 @@ interface:
             {{head|string|indent}}
         }
   cc:
-    include:
-      unique_content: |
-        #include "{{prj_rel_file_name}}"
-        {{include_cxx|format_list('#include "{}"')|join('\n')}}
+    include: *var_class_include
     body:
       content: |
+        using namespace {{ctx.namespace}};
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
             {%- if root.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
-                delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
+            delete dynamic_cast<{{cxx_type_name}}*>(static_cast<{{cxx_root_type_name}}*>(cself));
             {%- endif %}
         }
   ch:
@@ -317,6 +325,7 @@ constructor:
           return static_cast<{{owner_class.root.cxx_type_name}}*>(this_object);
           {%- endif %}
       }
+    include: *var_template_method_include
   ch:
     body:
       content: |
@@ -431,6 +440,7 @@ function:
           return result;
           {%- endif %}
       }
+    include: *var_template_method_include
   ch:
     body:
       content: |

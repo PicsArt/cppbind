@@ -32,14 +32,15 @@ $Object:
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = cxx_pointee_unqualified_name %}
     {%- if  type_ctx.shared_ref or type_ctx.ancestors|any('shared_ref') %}
-    auto {{target_name}} = {{dereferencer}} iegen::RefFromLong<{{pointee}}, {{cxx_root_type_name}}>({{name}});
+    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{cxx_root_type_name}}>*>({{name}});
+    auto {{target_name}} = {{dereferencer}} std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
     {%- else %}
     {%- if cxx_root_type_name == pointee %}
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
-    auto base = {{dereferencer}} reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
-    // TODO: check for dynamic cast here
-    auto {{target_name}} = dynamic_cast<{{pointee}}*>(base);
+    auto base = reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
+    // TODO: check this case
+    auto {{target_name}} = {{dereferencer}} dynamic_cast<{{pointee}}*>(base);
     {%- endif %}
     {%- endif %}
   cxx_to_jni: |
@@ -48,14 +49,24 @@ $Object:
     {%- if is_value_type -%}
     {%- set tmp_name = '_' + name %}
     {%- if shared %}
-    std::shared_ptr<{{pointee}}> {{tmp_name}} = iegen::CopyAsSharedPtr<{{pointee}}>({{name}});
+    std::shared_ptr<{{pointee}}> {{tmp_name}} = std::make_shared<{{pointee}}>({{name}});
     {%- else %}
-    {{pointee}}* {{tmp_name}} = iegen::CopyAsPtr<{{pointee}}>({{name}});
+    {{pointee}}* {{tmp_name}} = new {{pointee}}({{name}});
     {%- endif %}
     {%- else %}
     {%- set tmp_name = name %}
     {%- endif %}
-    {{target_type_name}} {{target_name}} = {% if shared %} iegen::AllocRefPtrAsLong{% else %} iegen::UnsafeRefAsLong{%endif%}<{{pointee}}, {{cxx_root_type_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
+    {% if shared %}
+    {%- if cxx_root_type_name != pointee %}
+    std::shared_ptr<{{cxx_root_type_name}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{cxx_root_type_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{cxx_root_type_name}}>({{target_name}}_baseptr));
+    {%- else %}
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}}));
+    {%- endif %}
+    {% else %}
+    {{cxx_root_type_name}}* {{target_name}}_baseptr = {{'&' if not is_pointer and not is_value_type}}{{tmp_name}};
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
+    {%- endif %}
   kotlin_to_jdk: |
     val {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.getObjId(){{' ?: 0L' if nullable is defined and nullable}}
   jdk_to_kotlin: |
@@ -92,10 +103,13 @@ std::__cxx11::basic_string:
     type_info: jstring
   jdk:
     type_info: String
-  jni_to_cxx:
-    "{{target_type_name}} {{target_name}} = iegen::jni_to_string(env, {{name}});"
-  cxx_to_jni:
-    "{{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}});"
+  jni_to_cxx: |
+    jstring j{{target_name}}Str = (jstring){{name}};
+    auto {{target_name}}_cstr = env->GetStringUTFChars(j{{target_name}}Str, 0);
+    {{target_type_name}} {{target_name}} = {{target_name}}_cstr;
+    env->ReleaseStringUTFChars(j{{target_name}}Str, {{target_name}}_cstr);
+  cxx_to_jni: |
+    {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}}.c_str());
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -140,8 +154,8 @@ std::vector:
     }
 
   kotlin_to_jdk: |
-    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    val {{target_name}} = {{target_type_name}}({{name}}.size){{array_init}}
+    {%- set array_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
     var index = 0
     for (value in {{name}}) {
         {{args[0].snippet('value')|indent}}
@@ -220,10 +234,10 @@ std::map:
   kotlin_to_jdk: |
     {%- set tmp_key_name = 'tmp_key_' + target_name %}
     {%- set tmp_val_name = 'tmp_val_' + target_name %}
-    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{{}()}}'.format(args[0].target_type_name) %}
-    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{{}()}}'.format(args[1].target_type_name) %}
-    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size){{karray_init}}
-    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size){{varray_init}}
+    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{ {}() }}'.format(args[1].target_type_name) %}
+    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size) {{karray_init}}
+    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size) {{varray_init}}
     val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
     var index = 0
     for ((key, value) in {{name}}) {
@@ -261,12 +275,80 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    auto {{target_name}} = iegen::RefFromLong<{{pointee}}, {{pointee_base}}>({{name}});
+    {%- if pointee_base != pointee %}
+    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+    {{target_type_name}} {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {%- else %}
+    {{target_type_name}} {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+    {%- endif %}
   cxx_to_jni: |
+    {# TODO: won´t work if arg[0] itself is a template type #}
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
-    {{target_type_name}} {{target_name}} = iegen::AllocRefPtrAsLong<{{pointee}}, {{pointee_base}}>({{name}});
+    {%- if pointee_base != pointee %}
+    std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{pointee_base}}>({{name}});
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    {%- else %}
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
+    {%- endif %}
   kotlin_to_jdk: |
     {{args[0].snippet(name, nullable=nullable)|indent}}
   jdk_to_kotlin: |
     {{args[0].snippet(name, nullable=nullable)|indent}}
+
+std::pair:
+  custom:
+    pname: Pair
+  kotlin:
+    type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+  jni:
+    type_info: jobject
+  jdk:
+    type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+  jni_to_cxx: |
+    jclass pairClass = env->FindClass("kotlin/Pair");
+
+    jfieldID firstID = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
+    jfieldID secondID = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
+
+    auto firstObject = env->GetObjectField({{name}}, firstID);
+    auto secondObject = env->GetObjectField({{name}}, secondID);
+    {%- set tmp_first = '_' + target_name %}
+    {%- set extract_first = 'iegen::extract{}'.format(args[0].custom.pname) %}
+    {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
+    auto first = {{extract_first}}(env, firstObject);
+    auto second = {{extract_second}}(env, secondObject);
+    {{args[0].snippet('first')}}
+    {{args[1].snippet('second')}}
+    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[1].converted_name('second')}});
+  cxx_to_jni: |
+    auto first = {{name}}.first;
+    auto second = {{name}}.second;
+    {{args[0].snippet('first')}}
+    {{args[1].snippet('second')}}
+    {%- if args[0].custom.pname != 'Object' %}
+    jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first')}});
+    {%- else %}
+    jobject {{name}}_first = {{args[0].converted_name('first')}};
+    {%- endif %}
+    {%- if args[1].custom.pname != 'Object' %}
+    jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second')}});
+    {%- else %}
+    jobject {{name}}_second = {{args[1].converted_name('second')}};
+    {%- endif %}
+    {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{name}}_first, {{name}}_second);
+  kotlin_to_jdk: |
+    val first = {{name}}.first
+    val second = {{name}}.second
+    {{args[0].snippet('first')|indent}}
+    {{args[1].snippet('second')|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+  jdk_to_kotlin: |
+    val first  = {{name}}.first
+    val second  = {{name}}.second
+    {{args[0].snippet('first')|indent}}
+    {{args[1].snippet('second')|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+
+std::__ndk1::pair:
+  std::pair

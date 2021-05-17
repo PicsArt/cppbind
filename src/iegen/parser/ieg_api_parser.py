@@ -39,7 +39,7 @@ class APIParser(object):
         filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
 
         if not filtered:
-            raise Exception("API comments must start with 'gen' attribute")
+            raise Exception("API comments are empty")
         comment_prefix = re.search(r'\s*\*?\s*gen:', filtered[0])
         if not comment_prefix:
             raise Exception("API comments must start with 'gen' attribute")
@@ -78,11 +78,6 @@ class APIParser(object):
                     raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
 
                 array = self.attributes[attr].get('array', False)
-
-                if attr in attr_dict and not array and len(language) != 1 and '__all__' in attr_dict[attr]:
-                    # redefinition for all
-                    raise Exception(f"Attribute {attr} is defined multiple times.")
-
                 value = self.parse_attr(attr, value)
 
                 if array:

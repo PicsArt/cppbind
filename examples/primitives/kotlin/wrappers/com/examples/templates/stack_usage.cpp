@@ -18,7 +18,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jConstruct
 }
 
 
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemofspecialized(JNIEnv* env, jobject obj, jobjectid id, jobjectid p){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemofspecializedstack(JNIEnv* env, jobject obj, jobjectid id, jobjectid p){
     
 
     auto jni_to_cxx_p =  reinterpret_cast<iegen::example::Stack<iegen::example::Project>*>(p);
@@ -26,7 +26,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
     validateID(id);
     iegen::example::StackUsage* this_object = reinterpret_cast<iegen::example::StackUsage*>(id);
     
-    auto result = this_object->firstItemOfSpecialized(jni_to_cxx_p);
+    auto result = this_object->firstItemOfSpecializedStack(jni_to_cxx_p);
 
 
     iegen::example::Project* cxx_to_jni_result_baseptr = result;
@@ -35,7 +35,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
 }
 
 
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemoftemplateProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitemoftemplatestackProject(JNIEnv* env, jobject obj, jobjectid id, jobjectid arg0){
     
 
     auto jni_to_cxx_arg0 =  reinterpret_cast<iegen::example::Stack<iegen::example::Project>*>(arg0);
@@ -43,7 +43,7 @@ extern "C" JNIEXPORT jobjectid Java_com_examples_templates_StackUsage_jFirstitem
     validateID(id);
     iegen::example::StackUsage* this_object = reinterpret_cast<iegen::example::StackUsage*>(id);
     
-    auto result = this_object->firstItemOfTemplate<iegen::example::Project>(jni_to_cxx_arg0);
+    auto result = this_object->firstItemOfTemplateStack<iegen::example::Project>(jni_to_cxx_arg0);
 
 
     iegen::example::Project* cxx_to_jni_result_baseptr = result;

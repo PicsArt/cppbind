@@ -4,7 +4,7 @@
 #include "cxx/inheritance/vehicle.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: class
@@ -21,6 +21,6 @@ public:
      */
     Bicycle(int numberOfSeats) : Vehicle(numberOfSeats) {};
 };
-
+// [example]
 }
 #endif

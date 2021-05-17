@@ -2,7 +2,7 @@
 #define parallelogram_hpp
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: interface
@@ -31,6 +31,6 @@ public:
 
     virtual ~Parallelogram() = default;
 };
-
+// [example]
 }
 #endif

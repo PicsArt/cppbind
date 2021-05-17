@@ -22,8 +22,6 @@ public class Person  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init(name: String, email: String, age: Int) {
 

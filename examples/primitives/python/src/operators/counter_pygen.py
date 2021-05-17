@@ -7,8 +7,7 @@ from metaclass import *
 
 class Counter(metaclass=OriginalMethodsMetaclass):
     """
-    An example for with overloaded methods.
-    """
+    An example for with overloaded methods."""
     
     @bind
     def __init__(self, count: int):
@@ -35,12 +34,10 @@ class Counter(metaclass=OriginalMethodsMetaclass):
 
     @bind
     def __gt__(self, counter: Counter) -> bool:
-        """
-        """
+        """"""
         pass
 
     @bind
     def __iadd__(self, counter: Counter) -> Counter:
-        """
-        """
+        """"""
         pass

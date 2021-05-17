@@ -7,9 +7,8 @@
 #include <string>
 
 namespace iegen::example {
+// [example]
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: getters
@@ -21,20 +20,17 @@ template <class T>
 class Number {
     public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
     Number(const T& n): num(n) {}
 
      /**
-     * comments
-     *
      * __API__
      * gen: property_setter
      */
      T num;
 };
+// [example]
 }
 #endif

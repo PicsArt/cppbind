@@ -4,6 +4,7 @@
 #include "cxx/enums/color.hpp"
 
 namespace iegen::example {
+// [example]
 /**
  * Class Frame.
  * __API__
@@ -25,5 +26,6 @@ struct Frame {
     Color backgroundColor;
 
 };
+// [example]
 }
 #endif

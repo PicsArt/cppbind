@@ -17,11 +17,23 @@ void* _Nonnull create_AddressableRoot(void* _Nonnull parent, char* _Nonnull name
     auto this_object = new iegen::example::Addressable<iegen::example::Root>(c_to_cxx_parent, c_to_cxx_name);
     return new std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>(this_object);
 }
-char* _Nonnull _func_AddressableRoot_absPath(void* _Nonnull cself ){
+char* _Nonnull _func_AddressableRoot_absPath(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = std::dynamic_pointer_cast<iegen::example::Addressable<iegen::example::Root>>(
               *static_cast<std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>*>(cself)
               );
-    const auto& result = c_to_cxx_cself->absPath();
-    auto cxx_to_c_result = strdup(result.c_str()); 
-    return cxx_to_c_result;
+    try {
+      const auto& result = c_to_cxx_cself->absPath();
+      auto cxx_to_c_result = strdup(result.c_str()); 
+      return cxx_to_c_result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    char* _Nonnull result;
+    return result;
 }

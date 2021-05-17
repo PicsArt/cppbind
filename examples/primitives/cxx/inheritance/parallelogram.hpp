@@ -18,12 +18,14 @@ public:
     /**
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     virtual double area() const = 0;
 
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual double perimeter() const = 0;
 

@@ -31,6 +31,7 @@ class StackUsage  {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     Project* firstItemOfSpecializedStack(iegen::example::Stack<Project>* p) {
         return p->top();
@@ -40,6 +41,7 @@ class StackUsage  {
      * __API__
      * gen: method
      * template: {"V": [{"type": "iegen::example::Project"}]}
+     * throws: no_throw
      */
     template <typename V>
     V* firstItemOfTemplateStack(iegen::example::Stack<V>* p) {

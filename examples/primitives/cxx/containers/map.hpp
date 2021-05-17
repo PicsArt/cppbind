@@ -56,6 +56,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringPair(const std::pair<std::string, std::string>& info) {
         mapStringData.insert(info);
@@ -66,6 +67,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addIntMap(const std::map<int, int>& info) {
         mapIntData.insert(info.begin(), info.end());
@@ -76,6 +78,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringMap(const std::map<std::string, std::string>& info) {
         mapStringData.insert(info.begin(), info.end());
@@ -87,6 +90,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<std::string, std::string> getStringMap() {
         return mapStringData;
@@ -97,6 +101,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<int, int> getIntMap() {
         return mapIntData;
@@ -107,6 +112,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addMixedMap(const std::map<std::string, MapItem>& info) {
         mapMixedData.insert(info.begin(), info.end());
@@ -117,6 +123,7 @@ struct MapExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     std::unordered_map<std::string, MapItem> getMixedMap() {
         return mapMixedData;

@@ -14,7 +14,7 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: simple
- * python.include: simple.task_pygen
+ * python.include: simple.task
  * swift.include: CWrapper
  */
 class Project {
@@ -30,6 +30,7 @@ public:
      * Get project´s title.
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     std::string& title() {
         return _title;
@@ -40,6 +41,7 @@ public:
      * Add a task to project.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addTask(Task* task) {
         _tasks.push_back(task);
@@ -49,6 +51,7 @@ public:
      * Get project´s tasks.
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<Task*>& tasks() const {
         return _tasks;

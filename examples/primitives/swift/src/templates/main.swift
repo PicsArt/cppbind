@@ -37,11 +37,11 @@ assert(Mirror(reflecting: pairPrjPrj).children.count == 2)
 assert(pairPrjPrj.0.title == prj1.title)
 assert(pairPrjPrj.1.title == prj2.title)
 
-let task1 = Task(title: "My Task")
-let pairTaskPrj = tm.makePair(arg0: task1, arg1: prj1)
-assert(Mirror(reflecting: pairTaskPrj).children.count == 2)
-assert(pairTaskPrj.0.title == task1.title)
-assert(pairTaskPrj.1.title == prj1.title)
+let root1 = Root(_path: "/path/to/root/")
+let pairRootPrj = tm.makePair(arg0: root1, arg1: prj1)
+assert(Mirror(reflecting: pairRootPrj).children.count == 2)
+assert(pairRootPrj.0.path == root1.path)
+assert(pairRootPrj.1.title == prj1.title)
 
 // [template-funcs-examples]
 

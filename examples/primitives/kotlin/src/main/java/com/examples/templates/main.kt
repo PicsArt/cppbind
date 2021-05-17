@@ -40,10 +40,10 @@ var pairPrjPrj = tm.makePair(prj1, prj2)
 assert(pairPrjPrj.first.title == prj1.title)
 assert(pairPrjPrj.second.title == prj2.title)
 
-val task1 = Task("My Task")
-var pairTaskPrj = tm.makePair(task1, prj1)
-assert(pairTaskPrj.first.title == task1.title)
-assert(pairTaskPrj.second.title == prj1.title)
+val root1 = Root("/path/to/root/")
+var pairRootPrj = tm.makePair(root1, prj1)
+assert(pairRootPrj.first.path == root1.path)
+assert(pairRootPrj.second.title == prj1.title)
 
 // [template-funcs-examples]
 

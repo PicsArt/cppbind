@@ -35,6 +35,7 @@ struct Addressable {
     * @return the abs path of the object
     * __API__
     * gen: method
+    * throws: no_throw
     */
   std::string absPath() const;
   virtual ~Addressable() = default;

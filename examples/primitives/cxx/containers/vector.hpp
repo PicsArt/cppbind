@@ -56,6 +56,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addIntVector(const std::vector<int>& v){
         for (auto item: v) {
@@ -68,6 +69,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addObjVector(const std::vector<VectorItem*>& v){
         for (auto item: v) {
@@ -80,6 +82,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void addStringVector(const std::vector<std::string>& v){
         for (auto item: v) {
@@ -92,6 +95,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<std::string>& getStringVector(){
         return vectorStringData;
@@ -102,6 +106,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<VectorItem*>& getObjVector(){
         return vectorObjData;
@@ -112,6 +117,7 @@ struct VectorExamples {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     const std::vector<int>& getIntVector(){
         return vectorIntData;

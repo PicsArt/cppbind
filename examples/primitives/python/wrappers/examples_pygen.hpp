@@ -1,14 +1,13 @@
 #ifndef examples_pygen_hpp
 #define examples_pygen_hpp
 
-#include "python/wrappers/extra/object_pygen.hpp"
 #include "python/wrappers/containers/map_pygen.hpp"
 #include "python/wrappers/containers/vector_pygen.hpp"
 #include "python/wrappers/enums/color_pygen.hpp"
 #include "python/wrappers/enums/frame_pygen.hpp"
 #include "python/wrappers/forward_decl/student_pygen.hpp"
 #include "python/wrappers/forward_decl/teacher_pygen.hpp"
-#include "python/wrappers/functions/functional_pygen.hpp"
+#include "python/wrappers/functionals/functional_example_pygen.hpp"
 #include "python/wrappers/getters/many_type_template_getter_pygen.hpp"
 #include "python/wrappers/getters/number_pygen.hpp"
 #include "python/wrappers/getters/one_type_template_getter_pygen.hpp"
@@ -20,15 +19,16 @@
 #include "python/wrappers/inheritance/rhombus_pygen.hpp"
 #include "python/wrappers/inheritance/square_pygen.hpp"
 #include "python/wrappers/operators/counter_pygen.hpp"
+#include "python/wrappers/simple/task/task_pygen.hpp"
+#include "python/wrappers/optionals/optionals_pygen.hpp"
 #include "python/wrappers/overloads/utils_pygen.hpp"
-#include "python/wrappers/simple/task_pygen.hpp"
 #include "python/wrappers/simple/project_pygen.hpp"
 #include "python/wrappers/simple/root_pygen.hpp"
 #include "python/wrappers/templates/addressable_pygen.hpp"
 #include "python/wrappers/templates/component_pygen.hpp"
 #include "python/wrappers/templates/stack_pygen.hpp"
 #include "python/wrappers/templates/stack_usage_pygen.hpp"
-#include "python/wrappers/templates/template_functions_pygen.hpp"
+#include "python/wrappers/templates/template_methods_pygen.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

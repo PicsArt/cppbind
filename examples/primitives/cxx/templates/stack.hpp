@@ -21,8 +21,7 @@ namespace iegen::example {
  * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
  * package: templates
  * kotlin.include: com.examples.simple.*
- * python.include: simple.project_pygen
- * python.include: simple.task_pygen
+ * python.include: simple
  * swift.include: CWrapper
  */
 template <class T>
@@ -44,6 +43,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void push(T* item) {
         _elements.push_back(item);
@@ -51,6 +51,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void pop() {
         _elements.pop_back();
@@ -58,6 +59,7 @@ class Stack {
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
      T* top() const {
         return _elements.back();
@@ -65,6 +67,7 @@ class Stack {
      /**
       * __API__
       * gen: method
+      * throws: no_throw
       */
      bool empty() const {
         return _elements.empty();

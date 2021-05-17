@@ -1,5 +1,5 @@
 #ifndef _C_teacher_WRAPPER_
-#define _C_teacher_WRAPPER_ 
+#define _C_teacher_WRAPPER_
 
 #include "swift/wrappers/c_helpers.h"
 
@@ -10,8 +10,8 @@ extern "C" {
 #endif
     void release_Teacher(void* _Nonnull cself);
     void* _Nonnull create_Teacher();
-    void _func_Teacher_addStudent(void* _Nonnull cself , void* _Nonnull s);
-    CDataArray _func_Teacher_students(void* _Nonnull cself );
+    void _func_Teacher_addStudent(void* _Nonnull cself , void* _Nonnull s, ErrorObj* _Nonnull err);
+    CDataArray _func_Teacher_students(void* _Nonnull cself , ErrorObj* _Nonnull err);
 #if __cplusplus
 }
 #endif

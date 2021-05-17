@@ -21,6 +21,7 @@ public:
     /**
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     int numberOfSeats() const {
         return _numberOfSeats;

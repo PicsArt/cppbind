@@ -52,8 +52,8 @@ py_test(
 
 py_test(
     name = "functionals",
-    srcs = ["src/functions/main.py"],
-    main = "src/functions/main.py",
+    srcs = ["src/functionals/main.py"],
+    main = "src/functionals/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -126,6 +126,18 @@ py_test(
     name = "overloads",
     srcs = ["src/operators/main.py"],
     main = "src/operators/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "optionals",
+    srcs = ["src/optionals/main.py"],
+    main = "src/optionals/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

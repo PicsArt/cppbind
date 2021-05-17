@@ -1,5 +1,5 @@
 #ifndef _C_person_WRAPPER_
-#define _C_person_WRAPPER_ 
+#define _C_person_WRAPPER_
 
 #include "swift/wrappers/c_helpers.h"
 

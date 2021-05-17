@@ -46,8 +46,19 @@ public class Counter  {
      */
     public static func +(cself: Counter, counter: Counter) -> Counter {
         let swift_to_sc_counter = counter.cself
-        let result = _func_Counter_operator_add_(cself.cself, swift_to_sc_counter);
+        var err = ErrorObj()
+        let result = _func_Counter_operator_add_(cself.cself, swift_to_sc_counter, &err);
         let sc_to_swift_result = Counter(result, true)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
@@ -56,24 +67,57 @@ public class Counter  {
     public func compareTo(counter: Counter) -> Int {
 
         let swift_to_sc_counter = counter.cself
-        let result = _func_Counter_compareTo(cself, swift_to_sc_counter);
+        var err = ErrorObj()
+        let result = _func_Counter_compareTo(cself, swift_to_sc_counter, &err);
         let sc_to_swift_result = Int(result)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
      */
     public static func >(cself: Counter, counter: Counter) -> Bool {
         let swift_to_sc_counter = counter.cself
-        let result = _func_Counter_operator_gt_(cself.cself, swift_to_sc_counter);
+        var err = ErrorObj()
+        let result = _func_Counter_operator_gt_(cself.cself, swift_to_sc_counter, &err);
         
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return result;
     }
     /**
      */
     public static func +=(cself: Counter, counter: Counter) -> Counter {
         let swift_to_sc_counter = counter.cself
-        let result = _func_Counter_operator_iadd_(cself.cself, swift_to_sc_counter);
+        var err = ErrorObj()
+        let result = _func_Counter_operator_iadd_(cself.cself, swift_to_sc_counter, &err);
         let sc_to_swift_result = Counter(result)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
 }

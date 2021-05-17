@@ -42,8 +42,19 @@ public class Square : IRhombus, IRectangle {
      */
     public func perimeter() -> Double {
 
-        let result = _func_Square_perimeter(cself);
+        var err = ErrorObj()
+        let result = _func_Square_perimeter(cself, &err);
         
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return result;
     }
 }

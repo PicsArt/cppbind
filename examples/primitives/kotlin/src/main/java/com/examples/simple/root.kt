@@ -40,7 +40,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      * 
      */
-    constructor(_path: String) : this(construct_helper(_path)) {
+    constructor(_path: String): this(construct_helper(_path)) {
         //jSet_this(id, this)
     }
     

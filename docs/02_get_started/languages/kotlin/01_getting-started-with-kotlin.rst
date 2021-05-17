@@ -250,7 +250,7 @@ Template Methods
 
 Let's assume we have a class with two template methods:
 
-.. literalinclude:: /../examples/primitives/cxx/templates/template_functions.hpp
+.. literalinclude:: /../examples/primitives/cxx/templates/template_methods.hpp
    :language: cpp
    :start-after: [example]
    :end-before: [example]
@@ -267,7 +267,7 @@ Now let's see how kotlin wrappers look like:
     We gave template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
     This is mandatory otherwise iegen won't be able to find Task type.
 
-.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_functions.kt
+.. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
    :language: kotlin
    :lines: 5-
 

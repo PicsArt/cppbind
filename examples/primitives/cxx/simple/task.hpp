@@ -11,7 +11,9 @@ namespace iegen::example {
  * gen: class
  * shared_ref: False
  * package: simple
+ * python.package: simple.task
  * swift.include: CWrapper
+ * python.name: PyTask
  */
 class Task {
 public:
@@ -27,6 +29,7 @@ public:
      * Get objects title.
      * __API__
      * gen: getter
+     * throws: no_throw
      *
      */
     std::string& title() {

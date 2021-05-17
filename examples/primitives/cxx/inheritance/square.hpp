@@ -28,6 +28,7 @@ public:
     /**
      * __API__
      * gen: getter
+     * throws: no_throw
      */
     double area() const override {
         return Rectangle::area();
@@ -36,6 +37,7 @@ public:
     /**
      * __API__
      * gen: method
+     * throws: no_throw
      */
     double perimeter() const override {
         return Rectangle::perimeter();

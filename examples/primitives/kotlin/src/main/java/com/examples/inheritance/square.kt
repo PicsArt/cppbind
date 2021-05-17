@@ -28,7 +28,7 @@ internal constructor(_id: Long) : IRhombus, IRectangle, AutoCloseable {
         return id;
     }
     
-    constructor(side: Double) : this(construct_helper(side)) {
+    constructor(side: Double): this(construct_helper(side)) {
         //jSet_this(id, this)
     }
     

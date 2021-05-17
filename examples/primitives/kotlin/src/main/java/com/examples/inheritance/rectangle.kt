@@ -38,7 +38,6 @@ class RectangleHelper {
         
         @JvmStatic
         external fun jArea(id: Long): Double
-
         @JvmStatic
         external fun jPerimeter(id: Long): Double
 
@@ -75,7 +74,7 @@ internal constructor(_id: Long) : IRectangle, AutoCloseable {
         return id;
     }
     
-    constructor(length: Double, width: Double) : this(construct_helper(length, width)) {
+    constructor(length: Double, width: Double): this(construct_helper(length, width)) {
         //jSet_this(id, this)
     }
 

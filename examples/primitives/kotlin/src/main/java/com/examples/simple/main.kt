@@ -20,8 +20,6 @@ assert(prj.tasks().size == 1)
 assert(prj.tasks()[0].title == task1.title)
 // [project-usage]
 
-assert(prj.tasks()[0].getObjId() == task1.getObjId())
-
 // [root-usage]
 // create a new project
 val path = "/path/to/root"

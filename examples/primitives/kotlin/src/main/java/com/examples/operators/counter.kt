@@ -41,7 +41,7 @@ internal constructor(_id: Long) : AutoCloseable {
     /**
      * Counter constructor.
      */
-    constructor(count: Int) : this(construct_helper(count)) {
+    constructor(count: Int): this(construct_helper(count)) {
         //jSet_this(id, this)
     }
     

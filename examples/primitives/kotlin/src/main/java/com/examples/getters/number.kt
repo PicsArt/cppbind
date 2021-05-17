@@ -3,6 +3,10 @@ package com.examples.getters
 import alias.*
 
 
+/**
+ * comments
+ * 
+ */
 open class NumberInt
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
@@ -10,6 +14,10 @@ internal constructor(_id: Long) : AutoCloseable {
             System.loadLibrary("wrapper_jni");
         }
         
+        /**
+         * comments
+         * 
+         */
         protected fun construct_helper(n: Int): Long {
             val id = jConstructor(n)
             return id
@@ -28,10 +36,18 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor(n: Int) : this(construct_helper(n)) {
+    /**
+     * comments
+     * 
+     */
+    constructor(n: Int): this(construct_helper(n)) {
         //jSet_this(id, this)
     }
     
+    /**
+     * comments
+     * 
+     */
     var num: Int
         get() {
             val result = jNum(getObjId())
@@ -65,6 +81,10 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jFinalize(id: Long): Unit
 }
 
+/**
+ * comments
+ * 
+ */
 open class NumberDouble
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
@@ -72,6 +92,10 @@ internal constructor(_id: Long) : AutoCloseable {
             System.loadLibrary("wrapper_jni");
         }
         
+        /**
+         * comments
+         * 
+         */
         protected fun construct_helper(n: Double): Long {
             val id = jConstructor(n)
             return id
@@ -90,10 +114,18 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    constructor(n: Double) : this(construct_helper(n)) {
+    /**
+     * comments
+     * 
+     */
+    constructor(n: Double): this(construct_helper(n)) {
         //jSet_this(id, this)
     }
     
+    /**
+     * comments
+     * 
+     */
     var num: Double
         get() {
             val result = jNum(getObjId())

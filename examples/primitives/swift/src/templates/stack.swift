@@ -39,28 +39,72 @@ public class StackProject  {
     public func push(item: Project) -> Void {
 
         let swift_to_sc_item = item.cself
-        _func_StackProject_push(cself, swift_to_sc_item);
+        var err = ErrorObj()
+        _func_StackProject_push(cself, swift_to_sc_item, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      */
     public func pop() -> Void {
 
-        _func_StackProject_pop(cself);
+        var err = ErrorObj()
+        _func_StackProject_pop(cself, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      */
     public func top() -> Project {
 
-        let result = _func_StackProject_top(cself);
+        var err = ErrorObj()
+        let result = _func_StackProject_top(cself, &err);
         let sc_to_swift_result = Project(result)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
      */
     public func empty() -> Bool {
 
-        let result = _func_StackProject_empty(cself);
+        var err = ErrorObj()
+        let result = _func_StackProject_empty(cself, &err);
         
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return result;
     }
 }
@@ -101,28 +145,72 @@ public class StackTask  {
     public func push(item: Task) -> Void {
 
         let swift_to_sc_item = item.cself
-        _func_StackTask_push(cself, swift_to_sc_item);
+        var err = ErrorObj()
+        _func_StackTask_push(cself, swift_to_sc_item, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      */
     public func pop() -> Void {
 
-        _func_StackTask_pop(cself);
+        var err = ErrorObj()
+        _func_StackTask_pop(cself, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      */
     public func top() -> Task {
 
-        let result = _func_StackTask_top(cself);
+        var err = ErrorObj()
+        let result = _func_StackTask_top(cself, &err);
         let sc_to_swift_result = Task(result)
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return sc_to_swift_result;
     }
     /**
      */
     public func empty() -> Bool {
 
-        let result = _func_StackTask_empty(cself);
+        var err = ErrorObj()
+        let result = _func_StackTask_empty(cself, &err);
         
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
         return result;
     }
 }

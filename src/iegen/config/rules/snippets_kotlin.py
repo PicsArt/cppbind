@@ -73,7 +73,8 @@ def make_func_context(ctx):
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type
+                type=arg.type,
+                nullable=arg.name in ctx.api_args['nullable_arg']
             ) for arg in ctx.args
         ]
 
@@ -157,7 +158,8 @@ def make_class_context(ctx):
 
     context = _make(ctx)
     ancestors = [types.SimpleNamespace(**_make(ancestor)) for ancestor in ctx.ancestors]
-    context.update(dict(ancestors=ancestors))
+    root = types.SimpleNamespace(**_make(ctx.root))
+    context.update(dict(ancestors=ancestors, root=root))
     return context
 
 

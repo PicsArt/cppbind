@@ -19,10 +19,22 @@ double _prop_get_Rectangle_area(void* _Nonnull cself){
     
     return result;
 }
-double _func_Rectangle_perimeter(void* _Nonnull cself ){
+double _func_Rectangle_perimeter(void* _Nonnull cself , ErrorObj* _Nonnull err){
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Rectangle*>(static_cast<iegen::example::Parallelogram*>(cself));
-    const auto& result = c_to_cxx_cself->perimeter();
-    
+    try {
+      const auto& result = c_to_cxx_cself->perimeter();
+      
+      return result;
+    }
+    catch (const std::exception& e) {
+        err->is_err = true;
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->is_err = true;
+    }
+    double result;
     return result;
 }
 double _prop_get_Rectangle_length(void* _Nonnull cself){

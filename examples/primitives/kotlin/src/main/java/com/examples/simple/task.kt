@@ -37,7 +37,7 @@ internal constructor(_id: Long) : AutoCloseable {
     /**
      * Task Constructor.
      */
-    constructor(title: String) : this(construct_helper(title)) {
+    constructor(title: String): this(construct_helper(title)) {
         //jSet_this(id, this)
     }
     

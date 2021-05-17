@@ -34,13 +34,25 @@ public class Student  {
     public func addTeacher(t: Teacher) -> Void {
 
         let swift_to_sc_t = t.cself
-        _func_Student_addTeacher(cself, swift_to_sc_t);
+        var err = ErrorObj()
+        _func_Student_addTeacher(cself, swift_to_sc_t, &err);
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     /**
      */
     public func teachers() -> Array<Teacher> {
 
-        let result = _func_Student_teachers(cself);
+        var err = ErrorObj()
+        let result = _func_Student_teachers(cself, &err);
         let _tmp_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.data.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: Int(result.size))
         var sc_to_swift_result: [Teacher] = [] 
         defer {
@@ -50,6 +62,16 @@ public class Student  {
           let value_result = _tmp_result_data[_i];
           let sc_to_swift_value_result = Teacher(value_result)
           sc_to_swift_result.append(sc_to_swift_value_result);
+        }
+        if (err.is_err) {
+            let err_type = Int(err.err_type)
+            switch(err_type) {
+                case(1):
+                    let exc_obj = Exceptions.StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
         }
         return sc_to_swift_result;
     }

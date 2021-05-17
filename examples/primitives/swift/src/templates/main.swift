@@ -14,11 +14,11 @@ assert(stackPrj.empty())
 // [stack-usage-examples]
 stackPrj.push(item: prj)
 let stackUsage = StackUsage()
-var res = stackUsage.firstItemOfSpecialized(p: stackPrj)
+var res = stackUsage.firstItemOfSpecializedStack(p: stackPrj)
 assert(res.title == prj.title)
 assert(res.cself == prj.cself)
 
-res = stackUsage.firstItemOfTemplate(arg0: stackPrj)
+res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
 assert(res.title == prj.title)
 assert(res.cself == prj.cself)
 // [stack-usage-examples]

@@ -4,7 +4,6 @@ import CWrapper
 
 /**
  * An example for with overloaded methods.
- * 
  */
 public class Counter  {
     
@@ -84,7 +83,6 @@ public class Counter  {
         return sc_to_swift_result;
     }
     /**
-     * 
      */
     public static func >(cself: Counter, counter: Counter) -> Bool {
         let swift_to_sc_counter = counter.cself
@@ -104,7 +102,6 @@ public class Counter  {
         return result;
     }
     /**
-     * 
      */
     public static func +=(cself: Counter, counter: Counter) -> Counter {
         let swift_to_sc_counter = counter.cself

@@ -4,7 +4,7 @@ import alias.*
 
 
 /**
- * An example for with overloaded methods.
+ * An example with overloaded methods.
  */
 open class Utils
 internal constructor(_id: Long) : AutoCloseable {

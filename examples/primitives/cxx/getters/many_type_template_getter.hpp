@@ -3,10 +3,8 @@
 #include <utility>
 
 namespace iegen::example {
-
+// [example]
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: getters
@@ -14,8 +12,6 @@ namespace iegen::example {
  */
 struct Foo  {
     /**
-     * comments
-     *
      * __API__
      * gen: property_setter
      */
@@ -27,16 +23,12 @@ struct Foo  {
 
 
 /**
- * comments
- *
  * __API__
  * gen: class
  * package: getters
  */
 struct Bar  {
     /**
-     * comments
-     *
      * __API__
      * gen: property_setter
      */
@@ -98,9 +90,8 @@ class ManyTypeTemplateGetter  {
         U u;
         return std::make_pair(t, u);
     }
-
-
 };
+// [example]
 }
 
 #endif

@@ -4,7 +4,7 @@
 #include <string>
 
 namespace iegen::example {
-
+// [example]
 /**
  * comments
  *
@@ -34,7 +34,7 @@ public:
      */
      std::string path;
 };
-
+// [example]
 }
 
 #endif

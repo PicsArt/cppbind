@@ -3,6 +3,10 @@ package com.examples.templates
 import alias.*
 import com.examples.simple.*
 
+/**
+ * comments
+ * 
+ */
 open class StackProject
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
@@ -96,6 +100,10 @@ internal constructor(_id: Long) : AutoCloseable {
     private external fun jFinalize(id: Long): Unit
 }
 
+/**
+ * comments
+ * 
+ */
 open class StackTask
 internal constructor(_id: Long) : AutoCloseable {
     companion object {

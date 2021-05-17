@@ -62,12 +62,13 @@ def test_parser_processor_cr_counter(parser_config):
             * comments
             *
             * __API__
+            * gen: class
             * kotlin.file: utils
             * kotlin.module: pi.xxx
             * swift.prefix: PI
             */
             """,
-            "7a17d27ab9a47111d992a96e5c0435d8"
+            "99843fbfc41cfdc7cc598dd819bec8e6"
         ),
         (
             'attributes',

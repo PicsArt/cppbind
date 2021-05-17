@@ -12,6 +12,6 @@ void bindStackUsage(py::module& m) {
     py::class_<iegen::example::StackUsage> stackusage(m, "StackUsage");
 
     stackusage.def(py::init<>());
-    stackusage.def("first_item_of_specialized", &iegen::example::StackUsage::firstItemOfSpecialized, py::arg("p"));
-    stackusage.def("first_item_of_template", &iegen::example::StackUsage::firstItemOfTemplate<iegen::example::Project>, py::arg("arg0"));
+    stackusage.def("first_item_of_specialized_stack", &iegen::example::StackUsage::firstItemOfSpecializedStack, py::arg("p"));
+    stackusage.def("first_item_of_template_stack", &iegen::example::StackUsage::firstItemOfTemplateStack<iegen::example::Project>, py::arg("arg0"));
 }

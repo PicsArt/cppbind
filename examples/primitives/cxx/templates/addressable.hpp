@@ -8,12 +8,14 @@
 #include <string>
 
 namespace iegen::example {
-
+// [example]
 /**
  * Addressable is a base class for all the objects, that have abs path.
  * __API__
  * gen: interface
- * template: {"T": [{"type": "iegen::example::Root"}]}
+ * template:
+ *   T:
+ *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
  * kotlin.include: com.examples.simple.Root
@@ -56,6 +58,6 @@ inline Addressable<T>::Addressable(const T& parent, const std::string& name) {
     _parent_path = parent.path;
     _name = name;
 }
-
+// [example]
 }
 #endif

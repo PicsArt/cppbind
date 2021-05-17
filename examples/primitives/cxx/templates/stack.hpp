@@ -16,9 +16,14 @@
 namespace iegen::example {
 
 /**
+ * comments
+ *
  * __API__
  * gen: class
- * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
+ * template:
+ *   T:
+ *     - iegen::example::Project
+ *     - iegen::example::Task
  * package: templates
  * kotlin.include: com.examples.simple.*
  * python.include: simple

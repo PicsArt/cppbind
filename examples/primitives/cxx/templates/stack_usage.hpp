@@ -17,8 +17,9 @@ namespace iegen::example {
  * __API__
  * gen: class
  * package: templates
- * python.include: templates.stack_pygen
- * python.include: simple.project_pygen
+ * python.include:
+ *   - templates.stack_pygen
+ *   - simple.project_pygen
  * kotlin.include: com.examples.simple.*
  * swift.include: CWrapper
  */
@@ -48,7 +49,9 @@ class StackUsage  {
      *
      * __API__
      * gen: method
-     * template: {"V": [{"type": "iegen::example::Project"}]}
+     * template:
+     *   V:
+     *     - type: iegen::example::Project
      * throws: no_throw
      */
     template <typename V>

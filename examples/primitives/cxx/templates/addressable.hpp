@@ -13,7 +13,9 @@ namespace iegen::example {
  * Addressable is a base class for all the objects, that have abs path.
  * __API__
  * gen: interface
- * template: {"T": [{"type": "iegen::example::Root"}]}
+ * template:
+ *   T:
+ *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
  * kotlin.include: com.examples.simple.Root

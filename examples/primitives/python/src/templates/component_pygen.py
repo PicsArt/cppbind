@@ -5,15 +5,12 @@ from bind_utils import *
 from metaclass import *
 from templates.addressable_pygen import *
 
+
 class Component(AddressableRoot, metaclass=OriginalMethodsMetaclass):
     """
     comments
     """
+    
     @bind
     def __init__(self, parent: Root, name: str):
         pass
-
-
-    
-    
-

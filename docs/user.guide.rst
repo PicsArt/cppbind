@@ -70,7 +70,7 @@ Binding classes
 ^^^^^^^^^^^^^^^
 Binding a simple class:
 
-.. literalinclude:: ../examples/cxx/classes/room.hpp
+.. literalinclude:: ../examples/cxx/simple/room.hpp
    :language: c
 
 Generated API for python:

@@ -1,11 +1,11 @@
+/**
+ * This is a template class example that will be used as a base type for other types.
+ * In this example implementations are in the same file.
+ */
+
 #ifndef addressable_hpp
 #define addressable_hpp
 #include <string>
-
-/**
- * This is a template class example that will be used as a base type for other types.
- * In this example also implementations are in the same file.
- */
 
 namespace iegen::example {
 
@@ -16,7 +16,9 @@ namespace iegen::example {
  * template: {"T": [{"type": "iegen::example::Root"}]}
  * shared_ref: true
  * package: templates
- * python.include: classes.root_pygen
+ * kotlin.include: com.examples.simple.Root
+ * python.include: simple.root_pygen
+ * swift.include: CWrapper
  */
 template <typename T>
 struct Addressable {

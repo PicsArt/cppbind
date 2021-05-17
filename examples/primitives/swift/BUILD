@@ -13,7 +13,10 @@ cc_library(
 
 swift_library(
     name = "sw_examples_library",
-    srcs = glob(["src/**/*.swift"]),
+    srcs = glob(
+        ["src/**/*.swift"],
+        exclude = ["**/main.swift"],
+    ),
     module_name = "Wrapper",
     visibility = ["//visibility:public"],
     deps = [
@@ -22,8 +25,56 @@ swift_library(
 )
 
 swift_test(
-    name = "classes",
-    srcs = ["src/classes/main.swift"],
+    name = "simple",
+    srcs = ["src/simple/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "containers",
+    srcs = ["src/containers/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "templates",
+    srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "inheritance",
+    srcs = ["src/inheritance/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "forward_decl",
+    srcs = ["src/forward_decl/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "enums",
+    srcs = ["src/enums/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "getters",
+    srcs = ["src/enums/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "operators",
+    srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "overloads",
+    srcs = ["src/templates/main.swift"],
     deps = [":sw_examples_library"],
 )
 

@@ -44,11 +44,75 @@ cc_binary(
 )
 
 kt_jvm_test(
-    name = "classes",
+    name = "simple",
     srcs = glob(["src/**/*.kt"]),
     data = [":libwrapper_jni.so"],
     jvm_flags = ["-Djava.library.path=kotlin"],
-    main_class = "com.examples.classes.ClassesApp",
+    main_class = "com.examples.simple.SimpleApp",
+)
+
+kt_jvm_test(
+    name = "operators",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.operators.OperatorsApp",
+)
+
+kt_jvm_test(
+    name = "containers",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.containers.ContainersApp",
+)
+
+kt_jvm_test(
+    name = "templates",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.templates.TemplatesApp",
+)
+
+kt_jvm_test(
+    name = "inheritance",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.inheritance.InheritanceApp",
+)
+
+kt_jvm_test(
+    name = "forward_decl",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.forward_decl.ForwardDeclsApp",
+)
+
+kt_jvm_test(
+    name = "enums",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.enums.EnumsApp",
+)
+
+kt_jvm_test(
+    name = "getters",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.getters.GettersApp",
+)
+
+kt_jvm_test(
+    name = "overloads",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.getters.GettersApp",
 )
 
 filegroup(

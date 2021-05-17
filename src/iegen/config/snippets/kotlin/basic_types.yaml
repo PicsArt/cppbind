@@ -1,10 +1,10 @@
 void:
   kotlin:
-    type_info: Void
+    type_info: Unit
   jni:
     type_info: void
   jdk:
-    type_info: Void
+    type_info: Unit
   jni_to_cxx: 
   cxx_to_jni: 
   kotlin_to_jdk:

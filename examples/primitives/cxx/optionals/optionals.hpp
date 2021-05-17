@@ -4,7 +4,7 @@
 #include <string>
 #include <complex>
 #include "cxx/enums/color.hpp"
-#include "cxx/classes/task.hpp"
+#include "cxx/simple/task.hpp"
 
 /*
  * Operators overload examples
@@ -16,7 +16,7 @@ namespace iegen::example {
  * gen: class
  * package: optionals
  * swift.include: CWrapper
- * python.include: classes.task
+ * python.include: simple.task
  * python.include: enums
  */
 class Optionals {

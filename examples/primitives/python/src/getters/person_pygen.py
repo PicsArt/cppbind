@@ -8,25 +8,38 @@ from metaclass import *
 class Person(metaclass=OriginalMethodsMetaclass):
     """
     This class contains a private string field and getter/setter methods for it."""
+    
     @bind
-    def __init__(self, name: str):
+    def __init__(self, name: str, email: str, age: int):
         pass
-
-
+    
     @property
     @bind
     def full_name(self) -> str:
-        """
-        fullname getter"""
+        """"""
         pass
 
     @full_name.setter
     @bind
     def full_name(self, value: str):
-        """
-        fullname getter"""
+        """"""
+        pass
+
+    @property
+    @bind
+    def email(self) -> str:
+        """"""
         pass
 
 
-    
+    @property
+    @bind
+    def age(self) -> int:
+        """"""
+        pass
 
+    @age.setter
+    @bind
+    def age(self, value: int):
+        """"""
+        pass

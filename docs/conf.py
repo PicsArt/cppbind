@@ -34,7 +34,6 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
-    'breathe',
 ]
 
 # Make sure the target is unique

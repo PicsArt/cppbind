@@ -3,7 +3,7 @@
 #include <pybind11/functional.h>
 
 #include "cxx/templates/stack_usage.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
 
 namespace py = pybind11;
 

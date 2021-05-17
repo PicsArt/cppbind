@@ -1,9 +1,13 @@
+/**
+ * This is an example containing class that has a template specialized base.
+ */
+
 #ifndef component_hpp
 #define component_hpp
 
 #include <string>
 #include "cxx/templates/addressable.hpp"
-#include "cxx/classes/root.hpp"
+#include "cxx/simple/root.hpp"
 
 namespace iegen::example {
 
@@ -12,9 +16,11 @@ namespace iegen::example {
  *
  * __API__
  * gen: class
- * shared_ref: False
+ * shared_ref: True
  * package: templates
+ * kotlin.include: com.examples.simple.Root
  * python.include: templates.addressable_pygen
+ * swift.include: CWrapper
  */
 class Component : public Addressable<Root> {
 public:

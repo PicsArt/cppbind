@@ -9,6 +9,7 @@ from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE
 import iegen.converter.swift as convert
+import iegen.converter as converter
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -48,7 +49,7 @@ def make_def_context(ctx):
         config = ctx.config
         pat_sep = os.sep
         path = os.path
-        helper = convert
+        helper = converter
 
         cursor = ctx.cursor
         cxx_name = ctx.cursor.spelling
@@ -85,11 +86,17 @@ def make_func_context(ctx):
         overloading_prefix = ctx.overloading_prefix
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
+        template_choice = ctx.template_choice
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
-            is_override = bool(ctx.cursor.get_overriden_cursors())
+            overriden_cursors = ctx.cursor.get_overriden_cursors()
+            is_override = bool(overriden_cursors)
+            if is_override:
+                parent_ctx = ctx.find_by_type(overriden_cursors[0].lexical_parent.type.spelling)
+                if parent_ctx:
+                    is_override = not parent_ctx.node.is_interface
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -133,7 +140,6 @@ def make_class_context(ctx):
                                                              search_name=ctx.node.full_displayname
                                                              if ctx.cursor.type.kind == cli.TypeKind.INVALID
                                                              else None)
-
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]

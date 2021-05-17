@@ -50,7 +50,7 @@ Let's start with :ref:`Basic example`.
    :caption: Getting started with
    :glob:
 
-   /02_get_started/languages/*_getting-started-with-iegen-*
+   /02_get_started/languages/**/*_getting-started-with-*
 
 
 Tutorials

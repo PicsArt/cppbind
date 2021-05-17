@@ -27,8 +27,105 @@ py_library(
 )
 
 py_test(
-    name = "main",
-    srcs = ["src/classes/main.py"],
+    name = "simple",
+    srcs = ["src/simple/main.py"],
+    main = "src/simple/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "getters",
+    srcs = ["src/getters/main.py"],
+    main = "src/getters/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "functionals",
+    srcs = ["src/functionals/main.py"],
+    main = "src/functionals/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "inheritance",
+    srcs = ["src/inheritance/main.py"],
+    main = "src/inheritance/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "templates",
+    srcs = ["src/templates/main.py"],
+    main = "src/templates/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "containers",
+    srcs = ["src/containers/main.py"],
+    main = "src/containers/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "forward_decl",
+    srcs = ["src/forward_decl/main.py"],
+    main = "src/forward_decl/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "operators",
+    srcs = ["src/operators/main.py"],
+    main = "src/operators/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "overloads",
+    srcs = ["src/operators/main.py"],
+    main = "src/operators/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

@@ -3,87 +3,68 @@ from typing import *
 import examples.templates.stack as pybind_stack_pygen
 from bind_utils import *
 from metaclass import *
-from classes.project_pygen import *
-from classes.task_pygen import *
+from simple import *
+
 
 class StackProject(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
+    
     @bind
     def __init__(self):
         pass
-
 
     @bind
     def __init__(self, st: Project):
         pass
-
-
     
     @bind
     def push(self, item: Project) -> None:
-        """
-        comments
-        """
+        """"""
         pass
+
     @bind
     def pop(self) -> None:
-        """
-        comments
-        """
+        """"""
         pass
+
     @bind
     def top(self) -> Project:
-        """
-        comments
-        """
+        """"""
         pass
+
     @bind
     def empty(self) -> bool:
-        """
-        comments
-        """
+        """"""
         pass
 
 
-class StackTask(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+class StackPyTask(metaclass=OriginalMethodsMetaclass):
+    """"""
+    
     @bind
     def __init__(self):
         pass
 
-
     @bind
-    def __init__(self, st: Task):
+    def __init__(self, st: PyTask):
         pass
-
-
     
     @bind
-    def push(self, item: Task) -> None:
-        """
-        comments
-        """
-        pass
-    @bind
-    def pop(self) -> None:
-        """
-        comments
-        """
-        pass
-    @bind
-    def top(self) -> Task:
-        """
-        comments
-        """
-        pass
-    @bind
-    def empty(self) -> bool:
-        """
-        comments
-        """
+    def push(self, item: PyTask) -> None:
+        """"""
         pass
 
+    @bind
+    def pop(self) -> None:
+        """"""
+        pass
+
+    @bind
+    def top(self) -> PyTask:
+        """"""
+        pass
+
+    @bind
+    def empty(self) -> bool:
+        """"""
+        pass

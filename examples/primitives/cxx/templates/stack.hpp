@@ -1,3 +1,10 @@
+/**
+ * This is a template class example.
+ * For templates user mush explicitly specify all possible types for each template parameter in the API using
+ * template attribute.
+ */
+
+
 #ifndef stack_hpp
 #define stack_hpp
 
@@ -9,69 +16,58 @@
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * gen: class
  * template: {"T": ["iegen::example::Project", "iegen::example::Task"]}
  * package: templates
- * kotlin.include: com.example.classes.Project
- * kotlin.include: com.example.classes.Task
- * python.include: classes.project_pygen
- * python.include: classes.task_pygen
+ * kotlin.include: com.examples.simple.*
+ * python.include: simple
+ * swift.include: CWrapper
  */
 template <class T>
 class Stack {
 
     public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
     Stack() {};
 
-       /**
-     * comments
-     *
+    /**
      * __API__
      * gen: constructor
      */
     Stack(T& st) {};
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void push(T* item) {
         _elements.push_back(item);
     };
     /**
-     * comments
-     *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     void pop() {
         _elements.pop_back();
     };
     /**
-     * comments
-     *
      * __API__
      * gen: method
+     * throws: no_throw
      */
      T* top() const {
         return _elements.back();
      };
      /**
-      * comments
-      *
       * __API__
       * gen: method
+      * throws: no_throw
       */
      bool empty() const {
         return _elements.empty();
@@ -81,8 +77,6 @@ class Stack {
    std::vector<T*> _elements;
 
 };
-
 }
-
 #endif
 

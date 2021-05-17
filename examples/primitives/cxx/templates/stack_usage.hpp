@@ -7,7 +7,7 @@
 #include <string>
 
 #include "cxx/templates/stack.hpp"
-#include "cxx/classes/project.hpp"
+#include "cxx/simple/project.hpp"
 
 namespace iegen::example {
 
@@ -18,8 +18,9 @@ namespace iegen::example {
  * gen: class
  * package: templates
  * python.include: templates.stack_pygen
- * python.include: classes.project_pygen
- * kotlin.include: com.example.classes.Project
+ * python.include: simple.project_pygen
+ * kotlin.include: com.examples.simple.*
+ * swift.include: CWrapper
  */
 class StackUsage  {
     public:
@@ -36,6 +37,7 @@ class StackUsage  {
      *
      * __API__
      * gen: method
+     * throws: no_throw
      */
     Project* firstItemOfSpecialized(iegen::example::Stack<Project>* p) {
         return p->top();
@@ -47,6 +49,7 @@ class StackUsage  {
      * __API__
      * gen: method
      * template: {"V": [{"type": "iegen::example::Project"}]}
+     * throws: no_throw
      */
     template <typename V>
     V* firstItemOfTemplate(iegen::example::Stack<V>* p) {

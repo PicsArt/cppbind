@@ -6,8 +6,7 @@ from metaclass import *
 
 
 class Vehicle(metaclass=OriginalMethodsMetaclass):
-    """
-    """
+    """"""
     
     @bind
     def __init__(self, number_of_seats: int):

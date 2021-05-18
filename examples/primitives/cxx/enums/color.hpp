@@ -2,7 +2,7 @@
 #define color_hpp
 
 namespace iegen::example {
-
+// [example]
 /**
  * Color Enum.
  * __API__
@@ -24,6 +24,6 @@ enum class Color {
      */
     Blue = 20
 };
-
+// [example]
 }
 #endif

@@ -3,8 +3,9 @@
 #include <string>
 
 namespace iegen::example {
+// [example]
 /**
- * An example for with overloaded methods.
+ * An example with overloaded methods.
  * __API__
  * gen: class
  * shared_ref: true
@@ -59,5 +60,6 @@ struct Utils {
         return first + second + third;
     }
 };
+// [example]
 }
 #endif

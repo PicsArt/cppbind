@@ -13,10 +13,6 @@ internal constructor(_id: Long) : AutoCloseable {
             System.loadLibrary("wrapper_jni");
         }
         
-        /**
-         * comments
-         * 
-         */
         protected fun construct_helper(name: String, email: String, age: Int): Long {
             val id = jConstructor(name, email, age)
             return id
@@ -35,10 +31,6 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    /**
-     * comments
-     * 
-     */
     constructor(name: String, email: String, age: Int): this(construct_helper(name, email, age)) {
         //jSet_this(id, this)
     }

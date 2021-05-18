@@ -14,7 +14,7 @@
 
 
 namespace iegen::example {
-
+// [example]
 /**
  * comments
  *
@@ -82,6 +82,7 @@ class Stack {
    std::vector<T*> _elements;
 
 };
+// [example]
 }
 #endif
 

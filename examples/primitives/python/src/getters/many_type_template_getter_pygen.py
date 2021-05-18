@@ -6,46 +6,34 @@ from metaclass import *
 
 
 class Foo(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @property
     @bind
     def value(self) -> int:
-        """
-        comments
-        """
+        """"""
         pass
 
     @value.setter
     @bind
     def value(self, value: int):
-        """
-        comments
-        """
+        """"""
         pass
 
 
 class Bar(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @property
     @bind
     def value(self) -> int:
-        """
-        comments
-        """
+        """"""
         pass
 
     @value.setter
     @bind
     def value(self, value: int):
-        """
-        comments
-        """
+        """"""
         pass
 
 

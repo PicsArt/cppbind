@@ -5,7 +5,7 @@
 
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: class
@@ -44,5 +44,6 @@ class TemplateMethods  {
        return std::make_pair(a, b);
     }
 };
+// [example]
 }
 #endif

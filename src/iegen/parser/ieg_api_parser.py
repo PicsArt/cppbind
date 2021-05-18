@@ -119,18 +119,17 @@ class APIParser(object):
 
     def get_external_api_attrs(self, cursor):
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL]:
-            comment_file_name = cursor.type.spelling + ".yaml"
+            comment_file_name = cursor.type.spelling.replace('::', '-') + ".yaml"
             if comment_file_name in self.api_comment_files:
                 return self.api_comment_files[comment_file_name].get(cursor.type.spelling)
-        elif cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.CONSTRUCTOR]:
-            comment_file_name = cursor.semantic_parent.type.spelling + ".yaml"
+        elif cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
+            comment_file_name = cursor.semantic_parent.type.spelling.replace('::', '-') + ".yaml"
             if comment_file_name in self.api_comment_files:
                 if '&(' in cursor.type.spelling:
                     method_spelling = cursor.type.spelling.replace('&(', '& ' + cursor.spelling + '(')
                 else:
                     method_spelling = cursor.type.spelling.replace('(', cursor.spelling + '(')
                 return self.api_comment_files[comment_file_name].get(method_spelling)
-
 
     @staticmethod
     def get_api_comment_files(parser_config):

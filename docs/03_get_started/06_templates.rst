@@ -31,7 +31,6 @@ Now let's see how kotlin wrappers look like:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
            :language: kotlin
-           :lines: 5-
 
     .. tab:: python
 
@@ -77,7 +76,7 @@ Now we can use them, here are the examples:
 Template Classes/Structs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let's generate bindings for a template class Stack. Assume it will hold Projects or Tasks from  :ref:`classes-label-kt` section.
+Now let's generate bindings for a template class Stack. Assume it will hold Projects or Tasks from  :ref:`classes-label` section.
 Here is the code in c++:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack.hpp
@@ -93,7 +92,6 @@ Let's take a look at generated wrappers:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
            :language: kotlin
-           :lines: 6-
 
     .. tab:: python
 

@@ -23,7 +23,6 @@ Generated code for the target language looks as follows.
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
             :language: kotlin
-            :lines: 6-
 
     .. tab:: python
 
@@ -78,7 +77,6 @@ Here are the generated wrappers:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
            :language: kotlin
-           :lines: 6-
 
     .. tab:: python
 

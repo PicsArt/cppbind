@@ -10,7 +10,7 @@ IEGEN
 Introduction
 ------------
 
-IEGEN is a C++ bindings generation tool. For supported languages please refer to :ref:`features:Supported Languages`. The tool can be easily extended for other languages as well. Also, it can be customized to have generated bindings better feet to your needs.
+IEGEN is a C++ bindings generation tool. For supported languages please refer to :ref:`supported-languages-label`. The tool can be easily extended for other languages as well. Also, it can be customized to have generated bindings better feet to your needs.
 
 .. toctree::
    :maxdepth: 1

@@ -18,19 +18,16 @@ Here is the wrapper code:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
            :language: kotlin
-           :lines: 6-
 
     .. tab:: python
 
         .. literalinclude:: /../examples/primitives/python/src/overloads/utils_pygen.py
            :language: py
-           :lines: 8-
 
     .. tab:: swift
 
         .. literalinclude:: /../examples/primitives/swift/src/overloads/Utils.swift
            :language: swift
-           :lines: 4-
 
 .. note::
     Python does not have method overloading, but here with bind decorator we have overloaded sum and concatenate methods.

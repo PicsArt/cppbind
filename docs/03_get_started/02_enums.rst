@@ -28,13 +28,11 @@ And the Frame struct using it:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
            :language: kotlin
-           :lines: 6-
 
         And for Frame:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/frame.kt
            :language: kotlin
-           :lines: 6-
 
 
     .. tab:: python
@@ -43,13 +41,11 @@ And the Frame struct using it:
 
         .. literalinclude:: /../examples/primitives/python/src/enums/color_pygen.py
            :language: py
-           :lines: 8-
 
         And for Frame:
 
         .. literalinclude:: /../examples/primitives/python/src/enums/frame_pygen.py
            :language: py
-           :lines: 8-
 
     .. tab:: swift
 
@@ -57,13 +53,11 @@ And the Frame struct using it:
 
         .. literalinclude:: /../examples/primitives/swift/src/enums/color.swift
            :language: swift
-           :lines: 4-
 
         And for Frame:
 
         .. literalinclude:: /../examples/primitives/swift/src/enums/frame.swift
            :language: swift
-           :lines: 4-
 
 
 

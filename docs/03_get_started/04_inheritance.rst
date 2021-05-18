@@ -37,21 +37,17 @@ Iegen will generate two classes one inherited from the other:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
            :language: kotlin
-           :lines: 6-
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
            :language: kotlin
-           :lines: 6-
 
     .. tab:: python
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/vehicle_pygen.py
            :language: py
-           :lines: 8-
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/bicycle_pygen.py
            :language: py
-           :lines: 9-
 
     .. tab:: swift
 
@@ -130,39 +126,30 @@ Here are the generated wrappers:
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
            :language: kotlin
-           :lines: 6-
-
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rectangle.kt
            :language: kotlin
-           :lines: 6-
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rhombus.kt
            :language: kotlin
-           :lines: 6-
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
            :language: kotlin
-           :lines: 6-
 
     .. tab:: python
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/parallelogram_pygen.py
            :language: py
-           :lines: 9-
 
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/rectangle_pygen.py
            :language: py
-           :lines: 9-
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/rhombus_pygen.py
            :language: py
-           :lines: 9-
 
         .. literalinclude:: /../examples/primitives/python/src/inheritance/square_pygen.py
            :language: py
-           :lines: 10-
 
 
     .. tab:: swift

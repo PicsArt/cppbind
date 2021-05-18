@@ -4,7 +4,7 @@ Installation
 System requirements
 ^^^^^^^^^^^^^^^^^^^
 
-Operating system: Linux, Mac
+Operating system: Linux, Mac, Windows
 
 Environment setup
 ^^^^^^^^^^^^^^^^^

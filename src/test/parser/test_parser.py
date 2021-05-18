@@ -90,7 +90,7 @@ def test_parser_processor_cr_counter(parser_config):
 def test_API_parser(attributes, api_start_kw, test_data, res_md5):
 
     parsser = APIParser(attributes=attributes, api_start_kw=api_start_kw)
-    api, args, _ = parsser.parse(
+    api, args, _ = parsser.parse_comments(
         test_data
     )
     str_res = f"api={api}, args={args}"
@@ -137,7 +137,7 @@ def test_API_parser_negative(attributes, api_start_kw, test_data):
 
     parsser = APIParser(attributes=attributes, api_start_kw=api_start_kw)
     try:
-        api, args = parsser.parse(
+        api, args = parsser.parse_comments(
             test_data
         )
     except Exception:

@@ -22,7 +22,7 @@ class APIParser(object):
         self.languages = list(self.languages)
         self.api_comment_files = APIParser.get_api_comment_files(parser_config)
 
-    def parse_comment(self, raw_comment):
+    def parse_comments(self, raw_comment):
         """
         Parse comment to extract API command and its attributes
         """

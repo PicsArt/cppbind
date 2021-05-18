@@ -56,7 +56,7 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
 
         if self.ieg_api_parser.has_api(cursor.raw_comment):
-            api, args, pure_comment = self.ieg_api_parser.parse_comment(cursor.raw_comment)
+            api, args, pure_comment = self.ieg_api_parser.parse_comments(cursor.raw_comment)
         else:
             api_attrs = self.ieg_api_parser.get_external_api_attrs(cursor)
             if api_attrs:

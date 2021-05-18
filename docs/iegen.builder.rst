@@ -1,27 +1,32 @@
-iegen.builder package
-=====================
-
-Submodules
-----------
-
-iegen.builder.ir\_builder module
---------------------------------
-
-.. automodule:: iegen.builder.ir_builder
-   :content-only:
-
-iegen.builder.out\_builder module
----------------------------------
-
-.. automodule:: iegen.builder.out_builder
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
+iegen.builder
+=============
 
 .. automodule:: iegen.builder
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   iegen.builder.ir_builder
+   iegen.builder.out_builder
+

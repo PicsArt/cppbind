@@ -1,3 +1,7 @@
+"""
+Iegen is a tool to generate c++ bindings for various languages.
+"""
+
 import os
 import sys
 import logging as logging

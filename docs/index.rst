@@ -14,10 +14,10 @@ IEGEN is a C++ bindings generation tool. For supported languages please refer to
 
 .. toctree::
    :maxdepth: 1
+   :glob:
+   :caption: Introduction
 
-   /01_introduction/getting-started-with-iegen
-   about
-   api
+   /01_introduction/[0-9]*_*
 
 
 First Steps
@@ -25,36 +25,28 @@ First Steps
 
 Are you writing C++ libraries and want to be able to use them in various platforms using various languages then iegen can be very handy tool for you.
 
-:doc:`Installation </02_get_started/02_installation>` | 
-:doc:`Configuration </02_get_started/04_configuration>`
+:doc:`Installation </02_first_steps/02_installation>` |
+:doc:`Configuration </02_first_steps/04_configuration>`
 
 .. toctree::
    :maxdepth: 1
    :glob:
-   :caption: First steps
+   :caption: First Steps
    :hidden:
 
-   /02_get_started/[0-9]*_*
+   /02_first_steps/[0-9]*_*
 
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   /features
+Binding With Examples
+---------------------
 
 Let's start with :ref:`Basic example`.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting started with
+   :caption: Binding With Examples
    :glob:
 
-   /02_get_started/languages/**/*_getting-started-with-*
-
-
-Tutorials
----------
+   /03_get_started/[0-9]*_*
 
 Advanced Topics
 ---------------
@@ -63,17 +55,31 @@ Advanced Topics
    :maxdepth: 2
    :hidden:
    :caption: Advanced Features
+   :glob:
 
-   /custom.types
-   /features
-   /faq
+   /04_advanced_features/[0-9]*_*
 
-Examples
---------
+FAQs
+----
 
-Developer Gide
---------------
-:doc:`Developer Guide </developer.guide>`
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: FAQs
+   :glob:
+
+   /05_faqs/[0-9]*_*
+
+API Documentation
+=================
+
+.. autosummary::
+   :toctree:
+   :caption: API Documentation
+   :recursive:
+
+   iegen
+
 
 Indices and tables
 ------------------

@@ -1,4 +1,4 @@
-Custom types
+Custom Types
 ^^^^^^^^^^^^
 
 Type conversions are described in yaml config files. There are predefined basic and complex types. User can also have custom types configuration.

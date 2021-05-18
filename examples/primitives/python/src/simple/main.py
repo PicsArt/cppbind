@@ -1,6 +1,11 @@
 from simple import Root, Project
 from simple.task import PyTask as Task
 
+# [task-usage]
+task = Task("My Task")
+assert task.title == "My Task"
+# [task-usage]
+
 # [project-usage]
 title = 'My Project'
 prj = Project(title=title)
@@ -15,7 +20,6 @@ assert prj.tasks() == [task1, task2]
 # [project-usage]
 
 # [root-usage]
-# create a new root instance
 path = '/path/to/root/'
 root = Root(path)
 assert root.path == path

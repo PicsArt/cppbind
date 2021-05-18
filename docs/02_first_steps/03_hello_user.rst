@@ -90,6 +90,6 @@ and added the instruction for example *gen: method* which tells that method need
 
 To find out how to configure IEGEN and run on your code and how to create binding library for your target language please read the following topics.
 
-* :doc:`API Attributes </02_get_started/05_api_configuration>`
-* :doc:`Configuration for "Hello user" </02_get_started/hello_user_configuration>`
+* :doc:`API Attributes </02_first_steps/05_api_configuration>`
+* :doc:`Configuration for "Hello user" </02_first_steps/hello_user_configuration>`
 

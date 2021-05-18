@@ -21,18 +21,6 @@ file:
       {%- endif %}
       {{body}}
       {{''}}
-  python_init:
-    file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
-    scopes:
-      - package_include
-    content: |
-      """
-      {{creation_comment_lines|format_list("{}")|join('\n')}}
-      """
-
-      {{package_include}}
-      {{''}}
   cxx:
     file_path: |
       {{cxx_output_filepath}}.cpp
@@ -165,10 +153,6 @@ enum:
           {%- endif %}
           {{case.name}} = {{m}}.{{name}}.{{case.name}}
           {%- endfor %}
-  python_init:
-    package_include:
-      unique_content: |
-        from .{{file + config.file_postfix}} import {{name}}
   cxx:
     body: |
       void {{'bind' + name}}(py::module& m) {
@@ -229,10 +213,6 @@ var_class: &var_class
             {%- if body %}
             {{body|string|indent}}
             {%- endif %}
-  python_init:
-    package_include:
-      unique_content: |
-        from .{{file + config.file_postfix}} import {{name}}{{template_suffix}}
   cxx:
     include:
       unique_content: |

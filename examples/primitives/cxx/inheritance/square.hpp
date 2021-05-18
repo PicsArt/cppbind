@@ -6,15 +6,16 @@
 #include "cxx/inheritance/rectangle.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: class
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
- * python.include: inheritance.rhombus_pygen
- * python.include: inheritance.rectangle_pygen
+ * python.include:
+ *   - inheritance.rhombus_pygen
+ *   - inheritance.rectangle_pygen
  */
 class Square final : public Rhombus, public Rectangle {
 public:
@@ -44,6 +45,6 @@ public:
     };
 
 };
-
+// [example]
 }
 #endif

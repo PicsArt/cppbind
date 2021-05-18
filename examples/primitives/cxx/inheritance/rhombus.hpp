@@ -5,7 +5,7 @@
 #include "cxx/inheritance/parallelogram.hpp"
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * gen: interface
@@ -39,6 +39,6 @@ private:
     double _diagonal1;
     double _diagonal2;
 };
-
+// [example]
 }
 #endif

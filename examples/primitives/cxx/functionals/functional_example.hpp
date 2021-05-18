@@ -3,8 +3,8 @@
 #include <functional>
 
 namespace iegen::example {
+// [example]
 /**
- * comments
  * __API__
  * gen: class
  * shared_ref: true
@@ -14,16 +14,12 @@ namespace iegen::example {
 class FunctionalExamples {
 public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
     FunctionalExamples() {}
 
     /**
-     * comments
-     *
      * __API__
      * gen: method
      * throws: no_throw
@@ -33,8 +29,7 @@ public:
             return f(i) + 1;
         };
     }
-
 };
-
+// [example]
 }
 #endif

@@ -14,7 +14,9 @@ from simple import *
 
 
 class StackProject(metaclass=OriginalMethodsMetaclass):
-    """"""
+    """
+    comments
+    """
     
     @bind
     def __init__(self):
@@ -46,7 +48,9 @@ class StackProject(metaclass=OriginalMethodsMetaclass):
 
 
 class StackPyTask(metaclass=OriginalMethodsMetaclass):
-    """"""
+    """
+    comments
+    """
     
     @bind
     def __init__(self):

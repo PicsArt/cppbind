@@ -25,6 +25,17 @@ class MyLoader(yaml.SafeLoader):
         super().__init__(stream)
 
 
+class UniqueKeyLoader(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        mapping = []
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in mapping:
+                raise Exception(f"Yaml error: duplicate key: {key}")
+            mapping.append(key)
+        return super().construct_mapping(node, deep)
+
+
 def join_nodes(rdata, edata):
     if rdata is None:
         rdata = copy.copy(edata)

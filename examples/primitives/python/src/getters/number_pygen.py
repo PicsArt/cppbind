@@ -13,9 +13,7 @@ from metaclass import *
 
 
 class Numberint(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @bind
     def __init__(self, n: int):
@@ -24,24 +22,18 @@ class Numberint(metaclass=OriginalMethodsMetaclass):
     @property
     @bind
     def num(self) -> int:
-        """
-        comments
-        """
+        """"""
         pass
 
     @num.setter
     @bind
     def num(self, value: int):
-        """
-        comments
-        """
+        """"""
         pass
 
 
 class Numberfloat(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @bind
     def __init__(self, n: float):
@@ -50,15 +42,11 @@ class Numberfloat(metaclass=OriginalMethodsMetaclass):
     @property
     @bind
     def num(self) -> float:
-        """
-        comments
-        """
+        """"""
         pass
 
     @num.setter
     @bind
     def num(self, value: float):
-        """
-        comments
-        """
+        """"""
         pass

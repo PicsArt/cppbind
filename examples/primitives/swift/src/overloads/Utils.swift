@@ -8,7 +8,7 @@ import Foundation
 import CWrapper
 
 /**
- * An example for with overloaded methods.
+ * An example with overloaded methods.
  */
 public class Utils  {
     

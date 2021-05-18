@@ -13,24 +13,18 @@ from metaclass import *
 
 
 class SimpleItem(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @property
     @bind
     def value(self) -> int:
-        """
-        comments
-        """
+        """"""
         pass
 
     @value.setter
     @bind
     def value(self, value: int):
-        """
-        comments
-        """
+        """"""
         pass
 
 

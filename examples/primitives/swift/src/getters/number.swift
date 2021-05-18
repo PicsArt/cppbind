@@ -8,8 +8,6 @@ import Foundation
 import CWrapper
 
 /**
- * comments
- * 
  */
 public class NumberInt  {
     
@@ -28,8 +26,6 @@ public class NumberInt  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init(n: Int) {
 
@@ -38,8 +34,6 @@ public class NumberInt  {
     }
     
     /**
-     * comments
-     * 
      */
     public var num: Int {
           get {
@@ -58,8 +52,6 @@ public class NumberInt  {
     
 }
 /**
- * comments
- * 
  */
 public class NumberDouble  {
     
@@ -78,8 +70,6 @@ public class NumberDouble  {
     }
     
     /**
-     * comments
-     * 
      */
     public convenience init(n: Double) {
 
@@ -88,8 +78,6 @@ public class NumberDouble  {
     }
     
     /**
-     * comments
-     * 
      */
     public var num: Double {
           get {

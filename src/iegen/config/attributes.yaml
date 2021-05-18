@@ -55,7 +55,7 @@ shared_ref:
 template:
   inheritable: true
   default: null
-  type: json
+  type: dict
   allowed_on: [ class_template, struct_template, function_template ]
 
 is_operator:

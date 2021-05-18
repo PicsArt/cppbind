@@ -15,24 +15,18 @@ from simple.project_pygen import *
 
 
 class StackUsage(metaclass=OriginalMethodsMetaclass):
-    """
-    comments
-    """
+    """"""
     
     @bind
     def __init__(self):
         pass
     
     @bind
-    def first_item_of_specialized(self, p: StackProject) -> Project:
-        """
-        comments
-        """
+    def first_item_of_specialized_stack(self, p: StackProject) -> Project:
+        """"""
         pass
 
     @bind
-    def first_item_of_template(self, arg0: StackProject) -> Project:
-        """
-        comments
-        """
+    def first_item_of_template_stack(self, arg0: StackProject) -> Project:
+        """"""
         pass

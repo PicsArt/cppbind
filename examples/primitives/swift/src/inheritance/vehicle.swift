@@ -8,7 +8,6 @@ import Foundation
 import CWrapper
 
 /**
- * 
  */
 public class Vehicle  {
     

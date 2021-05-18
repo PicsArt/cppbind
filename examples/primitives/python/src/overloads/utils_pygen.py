@@ -14,7 +14,7 @@ from metaclass import *
 
 class Utils(metaclass=OriginalMethodsMetaclass):
     """
-    An example for with overloaded methods."""
+    An example with overloaded methods."""
     
     @bind
     def __init__(self):

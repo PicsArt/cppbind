@@ -28,12 +28,12 @@ class CXXIEGIRBuilder(object):
     Class to build intermediate representation.
     """
 
-    def __init__(self, attributes=None, api_start_kw=None):
+    def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
 
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
         self.attributes = attributes
-        self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES)
+        self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES, parser_config)
         self.ir = IEG_Ast()
         self.node_stack = []
         self._sys_vars = {}
@@ -56,59 +56,64 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
 
         if self.ieg_api_parser.has_api(cursor.raw_comment):
-            api, args, pure_comment =\
-                self.ieg_api_parser.parse(cursor.raw_comment)
+            api, args, pure_comment = self.ieg_api_parser.parse_comment(cursor.raw_comment)
+        else:
+            api_attrs = self.ieg_api_parser.get_external_api_attrs(cursor)
+            if api_attrs:
+                api, args, pure_comment = self.ieg_api_parser.parse_api_attrs(api_attrs)
+            else:
+                return
 
-            args = args or OrderedDict()
+        args = args or OrderedDict()
 
-            # add all missing attributes
-            for att_name, properties in self.attributes.items():
-                for lang in ALL_LANGUAGES:
-                    att_val = args.get(
-                        att_name,
-                        {}
-                    ).get(lang, None)
+        # add all missing attributes
+        for att_name, properties in self.attributes.items():
+            for lang in ALL_LANGUAGES:
+                att_val = args.get(
+                    att_name,
+                    {}
+                ).get(lang, None)
 
-                    new_att_val = att_val
+                new_att_val = att_val
+                if new_att_val is None:
+                    # check mandatory attribute existence
+                    node_kind = current_node.kind_name
+                    if "required_on" in properties and node_kind in properties["required_on"]:
+                        raise Exception(f"Attribute {att_name} is mandatory attribute on {node_kind}.")
+
+                    # inherit from parent or add default value
+                    if properties["inheritable"]:
+                        parrent_args = self.node_stack[-2].args
+                        assert parrent_args is not None, f"Args missing for node {self.node_stack[-2]}"
+                        new_att_val = parrent_args.get(
+                            att_name,
+                            {}
+                        ).get(lang, None)
+
                     if new_att_val is None:
-                        # check mandatory attribute existence
+                        # use default value
+                        new_att_val = properties.get("default", None)
+                else:
+                    # attribute is set check weather or not it is allowed.
+                    if "allowed_on" in properties:
                         node_kind = current_node.kind_name
-                        if "required_on" in properties and node_kind in properties["required_on"]:
-                            raise Exception(f"Attribute {att_name} is mandatory attribute on {node_kind}.")
+                        if node_kind not in properties["allowed_on"]:
+                            raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
 
-                        # inherit from parent or add default value
-                        if properties["inheritable"]:
-                            parrent_args = self.node_stack[-2].args
-                            assert parrent_args is not None, f"Args missing for node {self.node_stack[-2]}"
-                            new_att_val = parrent_args.get(
-                                att_name,
-                                {}
-                            ).get(lang, None)
+                # now we need to process variables of value and set value
+                if new_att_val is not None:
+                    if isinstance(new_att_val, str):
+                        new_att_val = new_att_val.format(**self.get_sys_vars(lang))
+                        # sys vars can have different types than string parse to get correct type
+                        new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
-                        if new_att_val is None:
-                            # use default value
-                            new_att_val = properties.get("default", None)
-                    else:
-                        # attribute is set check weather or not it is allowed.
-                        if "allowed_on" in properties:
-                            node_kind = current_node.kind_name
-                            if node_kind not in properties["allowed_on"]:
-                                raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
+                    args.setdefault(att_name,
+                                    OrderedDict())[lang] = new_att_val
 
-                    # now we need to process variables of value and set value
-                    if new_att_val is not None:
-                        if isinstance(new_att_val, str):
-                            new_att_val = new_att_val.format(**self.get_sys_vars(lang))
-                            # sys vars can have different types than string parse to get correct type
-                            new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
-
-                        args.setdefault(att_name,
-                                        OrderedDict())[lang] = new_att_val
-
-            current_node.api = api
-            current_node.pure_comment = pure_comment
-            assert args is not None
-            current_node.args = args
+        current_node.api = api
+        current_node.pure_comment = pure_comment
+        assert args is not None
+        current_node.args = args
 
     def __update_internal_vars(self, node):
         is_operator = node.clang_cursor.displayname.startswith("operator")

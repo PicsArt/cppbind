@@ -32,7 +32,9 @@ class WrapperGenerator(object):
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
         ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                     api_start_kw=default_config.api_start_kw)
+                                     api_start_kw=default_config.api_start_kw,
+                                     parser_config=parser.config)
+
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder)
 

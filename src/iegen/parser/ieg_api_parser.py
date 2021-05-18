@@ -4,34 +4,33 @@ Implements ieg api parser on cxx comment
 import distutils.util
 import re
 import yaml
+import os
 from collections import OrderedDict
 from iegen.common.yaml_process import UniqueKeyLoader
 
 from iegen.utils.clang import extract_pure_comment
+import clang.cindex as cli
 
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
 
-    def __init__(self, attributes, api_start_kw, languages=None):
+    def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
         self.languages = languages or APIParser.ALL_LANGUAGES
         self.languages = list(self.languages)
+        self.api_comment_files = APIParser.get_api_comment_files(parser_config)
 
-    def parse(self, raw_comment):
+    def parse_comment(self, raw_comment):
         """
         Parse comment to extract API command and its attributes
         """
-        api = None
-        attr_dict = OrderedDict()
 
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
-            return api, attr_dict
+            return None, OrderedDict()
         pure_comment = extract_pure_comment(raw_comment, index)
-        # else
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
@@ -56,6 +55,14 @@ class APIParser(object):
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
+
+        return self.parse_api_attrs(attrs, pure_comment)
+
+
+    def parse_api_attrs(self, attrs, pure_comment=None):
+        api = None
+        attr_dict = OrderedDict()
+        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
@@ -109,3 +116,40 @@ class APIParser(object):
         Tests whether or not comment has API section.
         """
         return raw_comment and self.api_start_kw in raw_comment
+
+    def get_external_api_attrs(self, cursor):
+        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL]:
+            comment_file_name = cursor.type.spelling + ".yaml"
+            if comment_file_name in self.api_comment_files:
+                return self.api_comment_files[comment_file_name].get(cursor.type.spelling)
+        elif cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.CONSTRUCTOR]:
+            comment_file_name = cursor.semantic_parent.type.spelling + ".yaml"
+            if comment_file_name in self.api_comment_files:
+                if '&(' in cursor.type.spelling:
+                    method_spelling = cursor.type.spelling.replace('&(', '& ' + cursor.spelling + '(')
+                else:
+                    method_spelling = cursor.type.spelling.replace('(', cursor.spelling + '(')
+                return self.api_comment_files[comment_file_name].get(method_spelling)
+
+
+    @staticmethod
+    def get_api_comment_files(parser_config):
+        if not hasattr(parser_config, 'api_comment_dir'):
+            return {}
+
+        api_comment_dir = parser_config.api_comment_dir
+        if not os.path.isdir(api_comment_dir):
+            raise Exception(f"Wrong api comment directory path: {api_comment_dir}")
+
+        api_comment_files = {}
+        for root, dirs, files, in os.walk(api_comment_dir):
+            for file in files:
+                if file in api_comment_files:
+                    raise Exception(f"Duplicate file name: {file}")
+                try:
+                    attrs = yaml.load(open(os.path.join(root, file)), Loader=UniqueKeyLoader)
+                    api_comment_files[file] = attrs
+                except yaml.YAMLError as e:
+                    raise Exception(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
+
+        return api_comment_files

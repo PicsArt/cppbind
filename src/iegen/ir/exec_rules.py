@@ -248,7 +248,7 @@ class Context(object):
         if template_arg:
             template_arg = itertools.chain(*template_arg[self.runner.language].values())
             for t in template_arg:
-                ctx = self.find_by_type(t['type'] if isinstance(t, dict) else t)
+                ctx = self.find_by_type(t['type'])
                 if ctx:
                     includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
                                                     self.runner.config.out_prj_dir))
@@ -371,13 +371,9 @@ class RunRule(object):
                             all_possible_args = list(itertools.product(*template_arg.values()))
                             template_keys = child.args['template'][self.language].keys()
                             for i, combination in enumerate(all_possible_args):
-                                if isinstance(combination[0], dict):
-                                    choice = [item['type'] for item in combination]
-                                    choice_names = [item['name'] for item in combination if 'name' in item]
-                                    _template_choice = dict(zip(template_keys, choice))
-                                else:
-                                    _template_choice = dict(zip(template_keys, combination))
-                                    choice_names = []
+                                choice = [item['type'] for item in combination]
+                                choice_names = [item['name'] for item in combination if 'name' in item]
+                                _template_choice = dict(zip(template_keys, choice))
                                 _template_ctx = {'choice': _template_choice, 'names': choice_names}
                                 _run_recursive(child, _template_ctx)
                         else:

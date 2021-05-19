@@ -1,7 +1,6 @@
 """
 Processor module provides various processor for ieg parser
 """
-import ast
 import copy
 import os
 from collections import OrderedDict
@@ -55,14 +54,11 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        if self.ieg_api_parser.has_api(cursor.raw_comment):
-            api, args, pure_comment = self.ieg_api_parser.parse_comments(cursor.raw_comment)
-        else:
-            api_attrs = self.ieg_api_parser.get_external_api_attrs(cursor)
-            if api_attrs:
-                api, args, pure_comment = self.ieg_api_parser.parse_api_attrs(api_attrs)
-            else:
-                return
+        api_parser_result = self.ieg_api_parser.parse_api(cursor)
+        if not api_parser_result:
+            return
+
+        api, args, pure_comment = api_parser_result
 
         args = args or OrderedDict()
 

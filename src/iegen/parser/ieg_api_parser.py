@@ -8,7 +8,7 @@ import os
 from collections import OrderedDict
 from iegen.common.yaml_process import UniqueKeyLoader
 
-from iegen.utils.clang import extract_pure_comment
+from iegen.utils.clang import extract_pure_comment, get_full_displayname
 import clang.cindex as cli
 
 
@@ -20,7 +20,7 @@ class APIParser(object):
         self.api_start_kw = api_start_kw
         self.languages = languages or APIParser.ALL_LANGUAGES
         self.languages = list(self.languages)
-        self.api_comment_files = APIParser.get_api_comment_files(parser_config)
+        self.api_type_attributes = APIParser.get_api_type_attributes(parser_config)
 
     def parse_comments(self, raw_comment):
         """
@@ -57,6 +57,15 @@ class APIParser(object):
             raise Exception(f"Error while scanning yaml style comments: {e}")
 
         return self.parse_api_attrs(attrs, pure_comment)
+
+
+    def parse_api(self, cursor):
+        if self.has_api(cursor.raw_comment):
+            return self.parse_comments(cursor.raw_comment)
+        else:
+            api_attrs = self.get_external_api_attrs(cursor)
+            if api_attrs:
+                return self.parse_api_attrs(api_attrs)
 
 
     def parse_api_attrs(self, attrs, pure_comment=None):
@@ -118,37 +127,59 @@ class APIParser(object):
         return raw_comment and self.api_start_kw in raw_comment
 
     def get_external_api_attrs(self, cursor):
-        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL]:
-            comment_file_name = cursor.type.spelling.replace('::', '-') + ".yaml"
-            if comment_file_name in self.api_comment_files:
-                return self.api_comment_files[comment_file_name].get(cursor.type.spelling)
-        elif cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
-            comment_file_name = cursor.semantic_parent.type.spelling.replace('::', '-') + ".yaml"
-            if comment_file_name in self.api_comment_files:
-                if '&(' in cursor.type.spelling:
-                    method_spelling = cursor.type.spelling.replace('&(', '& ' + cursor.spelling + '(')
-                else:
-                    method_spelling = cursor.type.spelling.replace('(', cursor.spelling + '(')
-                return self.api_comment_files[comment_file_name].get(method_spelling)
+        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL, cli.CursorKind.CXX_METHOD,
+                           cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
+            attrs = self.api_type_attributes.get(get_full_displayname(cursor))
+            if attrs:
+                return attrs['attr']
 
     @staticmethod
-    def get_api_comment_files(parser_config):
-        if not hasattr(parser_config, 'api_comment_dir'):
+    def get_api_type_attributes(parser_config):
+        if not hasattr(parser_config, 'api_type_attributes_dir'):
             return {}
 
-        api_comment_dir = parser_config.api_comment_dir
-        if not os.path.isdir(api_comment_dir):
-            raise Exception(f"Wrong api comment directory path: {api_comment_dir}")
+        api_type_attributes_dir = parser_config.api_type_attributes_dir
+        if not os.path.isdir(api_type_attributes_dir):
+            raise Exception(f"Wrong api comment directory path: {api_type_attributes_dir}")
 
-        api_comment_files = {}
-        for root, dirs, files, in os.walk(api_comment_dir):
+        api_type_attributes = {}
+        for root, dirs, files, in os.walk(api_type_attributes_dir):
             for file in files:
-                if file in api_comment_files:
-                    raise Exception(f"Duplicate file name: {file}")
                 try:
-                    attrs = yaml.load(open(os.path.join(root, file)), Loader=UniqueKeyLoader)
-                    api_comment_files[file] = attrs
+                    current_file = os.path.join(root, file)
+                    attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
+                    flat_attrs = APIParser.get_flat_dict(attrs, current_file)
+                    for key, val in flat_attrs.items():
+                        if key in api_type_attributes:
+                            raise Exception(f"Duplication of key {key} in {current_file}, "
+                                            f"which already has been previously defined in {api_type_attributes[key]['file']}")
+                        api_type_attributes[key] = val
                 except yaml.YAMLError as e:
                     raise Exception(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
+        return api_type_attributes
 
-        return api_comment_files
+    @staticmethod
+    def get_flat_dict(attrs, file):
+        def flatten_dict(d):
+            res = {}
+            if 'type' in d:
+                if 'attributes' in d:
+                    res[d['type']] = {'attr': d['attributes'], 'file': file}
+                if 'children' in d:
+                    for child in d['children']:
+                        for key, val in flatten_dict(child).items():
+                            res[d['type'] + "::" + key] = val
+            return res
+
+        if not 'gen_actions' in attrs:
+            return {}
+
+        flat_dict = {}
+        for item in attrs['gen_actions']:
+            d = flatten_dict(item)
+            for key, val in d.items():
+                if key in flat_dict:
+                    raise Exception(f"Definition with duplicate {key} key in {file}")
+                flat_dict[key] = val
+
+        return flat_dict

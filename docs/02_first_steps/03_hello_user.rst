@@ -78,15 +78,30 @@ To do that you just need to change your Doxygen comments to include IEGEN instru
    :language: cpp 
    :emphasize-lines: 5-8, 14-15, 20-21, 26-27, 32-33, 40-43, 49-50, 55-56, 63-64
 
-That is it. Now you should be able to use it on your codes written in supported languages. Here is a usage example of Swift.
+That is it. Now you should be able to use it on your codes written in supported languages. Here are usage examples for kotlin, python and swift.
  
 .. _Basic example usage with swift:
 
-.. literalinclude:: /../examples/tutorials/hello_user/usage/swift/hello_user_usage.swift
-   :language: swift 
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/tutorials/hello_user/usage/kotlin/hello_user_usage.kt
+           :language: kotlin
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/tutorials/hello_user/usage/python/hello_user_usage.py
+           :language: py
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/tutorials/hello_user/usage/swift/hello_user_usage.swift
+           :language: swift
 
 Basically what we have done here we have added *__API__* tag to let IEGEN know that structure needs to be processed
-and added the instruction for example *gen: method* which tells that method needs to be generated.
+and added the instruction for example *gen: method* which tells that method needs to be generated. More about API attributes
+
+The example using bazel for build is available at `Hello User <https://github.com/PicsArt/iegen/tree/hello-tutorial/examples/tutorials/hello_user>`_.
 
 To find out how to configure IEGEN and run on your code and how to create binding library for your target language please read the following topics.
 

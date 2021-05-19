@@ -2,7 +2,7 @@ from inheritance import Bicycle, Rectangle, Rhombus, Square
 
 # [simple-inheritance-usage]
 bicycle = Bicycle(1)
-assert bicycle.numberOfSeats == 1
+assert bicycle.number_of_seats == 1
 # [simple-inheritance-usage]
 
 

@@ -1,7 +1,7 @@
 import Wrapper
 
 // [task-usage]
-task = Task(title: "My Task")
+let task = Task(title: "My Task")
 assert(task.title == "My Task")
 // [task-usage]
 

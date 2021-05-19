@@ -63,7 +63,11 @@ class ManyTypeTemplateGetter  {
      * __API__
      * gen: getter
      * throws: no_throw
-     * template: {"T": ["iegen::example::Foo"], "U": ["iegen::example::Bar"] }
+     * template:
+     *   T:
+     *     - type: iegen::example::Foo
+     *   U:
+     *     - type: iegen::example::Bar
      */
     template <typename T, typename U>
     std::pair<T, U> pair() const {
@@ -82,7 +86,14 @@ class ManyTypeTemplateGetter  {
      * __API__
      * gen: getter
      * throws: no_throw
-     * template: {"T": [{"type": "iegen::example::Foo", "name": "foo_bar_pair"}, {"type": "iegen::example::Bar", "name": "bar_bar_pair"}],  "U": [{"type": "iegen::example::Bar"}] }
+     * template:
+     *   T:
+     *     - type: iegen::example::Foo
+     *       name: foo_bar_pair
+     *     - type: iegen::example::Bar
+     *       name: bar_bar_pair
+     *   U:
+     *     - type: iegen::example::Bar
      */
     template <typename T, typename U>
     std::pair<T, U> pairWithType() const {

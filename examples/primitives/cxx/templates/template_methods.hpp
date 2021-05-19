@@ -26,7 +26,10 @@ class TemplateMethods  {
      * __API__
      * gen: method
      * throws: no_throw
-     * template: {"T": [{"type": "int"}, {"type": "std::string"}]}
+     * template:
+     *   T:
+     *     - type: int
+     *     - type: std::string
      */
     template <typename T>
     T const& max(T const& a, T const& b) {
@@ -37,7 +40,12 @@ class TemplateMethods  {
      * __API__
      * gen: method
      * throws: no_throw
-     * template: {"T": ["iegen::example::Project", "iegen::example::Root"], "V": ["iegen::example::Project"]}
+     * template:
+     *   T:
+     *     - type: iegen::example::Project
+     *     - type: iegen::example::Root
+     *   V:
+     *     - type: iegen::example::Project
      */
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {

@@ -1,14 +1,16 @@
+import copy
+import datetime
 import os
 import types
-import copy
+
 import clang.cindex as cli
 import iegen
+import iegen.converter.python as convert
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
-from iegen.utils import load_from_paths
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE
-import iegen.converter.python as convert
+from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -58,6 +60,7 @@ def make_def_context(ctx):
 
         cxx_output_filepath = f'{pat_sep}'.join([config.cxx_out_dir] + [item.replace('.', pat_sep) for item in (
             config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
+        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
         return locals()
 

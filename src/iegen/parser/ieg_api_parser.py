@@ -5,22 +5,29 @@ import distutils.util
 import re
 import yaml
 import os
+from types import SimpleNamespace
 from collections import OrderedDict
 from iegen.common.yaml_process import UniqueKeyLoader
 
-from iegen.utils.clang import extract_pure_comment, get_full_displayname
+from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 import clang.cindex as cli
 
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
+    RULE_KEYS = {
+        'title': 'gen_actions',
+        'node': 'type',
+        'action': 'rule',
+        'children': 'sub'
+    }
 
     def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
         self.languages = languages or APIParser.ALL_LANGUAGES
         self.languages = list(self.languages)
-        self.api_type_attributes = APIParser.get_api_type_attributes(parser_config)
+        self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
     def parse_comments(self, raw_comment):
         """
@@ -63,7 +70,7 @@ class APIParser(object):
         if self.has_api(cursor.raw_comment):
             return self.parse_comments(cursor.raw_comment)
         else:
-            api_attrs = self.get_external_api_attrs(cursor)
+            api_attrs = self.build_external_api_attrs(cursor)
             if api_attrs:
                 return self.parse_api_attrs(api_attrs)
 
@@ -126,15 +133,15 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-    def get_external_api_attrs(self, cursor):
+    def build_external_api_attrs(self, cursor):
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL, cli.CursorKind.CXX_METHOD,
                            cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
             attrs = self.api_type_attributes.get(get_full_displayname(cursor))
             if attrs:
-                return attrs['attr']
+                return attrs.attr
 
     @staticmethod
-    def get_api_type_attributes(parser_config):
+    def build_api_type_attributes(parser_config):
         if not hasattr(parser_config, 'api_type_attributes_dir'):
             return {}
 
@@ -145,41 +152,45 @@ class APIParser(object):
         api_type_attributes = {}
         for root, dirs, files, in os.walk(api_type_attributes_dir):
             for file in files:
+                current_file = os.path.join(root, file)
                 try:
-                    current_file = os.path.join(root, file)
                     attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
-                    flat_attrs = APIParser.get_flat_dict(attrs, current_file)
-                    for key, val in flat_attrs.items():
-                        if key in api_type_attributes:
-                            raise Exception(f"Duplication of key {key} in {current_file}, "
-                                            f"which already has been previously defined in {api_type_attributes[key]['file']}")
-                        api_type_attributes[key] = val
                 except yaml.YAMLError as e:
                     raise Exception(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
+
+                APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
+
         return api_type_attributes
 
     @staticmethod
-    def get_flat_dict(attrs, file):
-        def flatten_dict(d):
-            res = {}
-            if 'type' in d:
-                if 'attributes' in d:
-                    res[d['type']] = {'attr': d['attributes'], 'file': file}
-                if 'children' in d:
-                    for child in d['children']:
-                        for key, val in flatten_dict(child).items():
-                            res[d['type'] + "::" + key] = val
-            return res
+    def update_api_type_attributes(attrs, current_file, api_type_attributes):
+        title = APIParser.RULE_KEYS['title']
+        node = APIParser.RULE_KEYS['node']
+        action = APIParser.RULE_KEYS['action']
+        children = APIParser.RULE_KEYS['children']
 
-        if not 'gen_actions' in attrs:
-            return {}
+        def flatten_dict(src_dict):
+            res_dict = {}
+            if node in src_dict:
+                if action in src_dict:
+                    res_dict[src_dict[node]] = SimpleNamespace(attr=src_dict[action],
+                                                               file=current_file)
+                if children in src_dict:
+                    for sub in src_dict[children]:
+                        for key, val in flatten_dict(sub).items():
+                            flat_key = join_type_parts([src_dict[node], key])
+                            if flat_key in res_dict:
+                                raise Exception(f"Definition with duplicate '{key}' key in {current_file}")
+                            res_dict[flat_key] = val
+            return res_dict
 
-        flat_dict = {}
-        for item in attrs['gen_actions']:
-            d = flatten_dict(item)
-            for key, val in d.items():
-                if key in flat_dict:
-                    raise Exception(f"Definition with duplicate {key} key in {file}")
-                flat_dict[key] = val
+        if not title in attrs:
+            return
 
-        return flat_dict
+        for item in attrs[title]:
+            flat_dict = flatten_dict(item)
+            for key, val in flat_dict.items():
+                if key in api_type_attributes:
+                    raise Exception(f"Definition with duplicate '{key}' key in {current_file}, "
+                                    f"which already has been previously defined in {api_type_attributes[key].file}")
+                api_type_attributes[key] = val

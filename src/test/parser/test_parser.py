@@ -3,6 +3,7 @@ import pytest
 import hashlib
 import os
 import yaml
+from collections import OrderedDict
 
 from iegen.parser.ieg_parser import CXXParser
 from iegen.parser.ieg_api_parser import APIParser
@@ -150,7 +151,7 @@ def test_external_API_parser_negative(parser_config):
     test_script_dir = os.path.dirname(os.path.realpath(__file__))
     api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'negative')
     for dir in os.listdir(api_rules_dir):
-        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
+        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
             APIParser.build_api_type_attributes(parser_config)
         except (YamlKeyDuplicationError, yaml.YAMLError):
@@ -164,9 +165,24 @@ def test_external_API_parser_negative(parser_config):
 def test_external_API_parser_positive(parser_config):
     test_script_dir = os.path.dirname(os.path.realpath(__file__))
     api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'positive')
-    for dir in os.listdir(api_rules_dir):
-        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
+
+    results = {
+        'with_many_files': 'eaf10624726a2a486a91e76bafddcdbd',
+        'with_nested_cfg': 'bc7dd1e2a76a87b6394b8e05129960b3',
+        'with_mixed_cfg': '62bae84ff387f71e5cd812ef94c0c5a6',
+        'with_simple_cfg': '9f78ff9ef3a105e70395ab944af63f72'
+    }
+
+    for dir, res_md5 in results.items():
+        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            APIParser.build_api_type_attributes(parser_config)
+            res = APIParser.build_api_type_attributes(parser_config)
+
+            ordered_res = OrderedDict()
+            for key in sorted(res.keys()):
+                ordered_res[key] = res[key]
+
+            assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5, \
+                "External API parser results has bean changed."
         except Exception:
             assert False, "should not get error"

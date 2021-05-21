@@ -1,6 +1,7 @@
 """
 Implements ieg api parser on cxx comment
 """
+import glob
 import distutils.util
 import re
 import yaml
@@ -143,20 +144,20 @@ class APIParser(object):
         if not hasattr(parser_config, 'api_type_attributes_dir'):
             return {}
 
-        api_type_attributes_dir = parser_config.api_type_attributes_dir
-        if not os.path.isdir(api_type_attributes_dir):
-            raise Exception(f"Wrong api comment directory path: {api_type_attributes_dir}")
+        files = set()
+        for file in parser_config.api_type_attributes_dir.split(','):
+            files_glob = glob.glob(file.strip(), recursive=True)
+            for fp in files_glob:
+                files.add(os.path.abspath(fp))
 
         api_type_attributes = {}
-        for root, dirs, files, in os.walk(api_type_attributes_dir):
-            for file in files:
-                current_file = os.path.join(root, file)
-                try:
-                    attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
-                except yaml.YAMLError as e:
-                    raise yaml.YAMLError(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
+        for current_file in list(files):
+            try:
+                attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
+            except yaml.YAMLError as e:
+                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
 
-                APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
+            APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
 
         return api_type_attributes
 
@@ -170,17 +171,19 @@ class APIParser(object):
         def flatten_dict(src_dict, ancestors):
             if _type in src_dict:
                 ancestors.append(src_dict[_type])
-                if _rule in src_dict:
-                    flat_key = join_type_parts(ancestors)
-                    if flat_key in api_type_attributes:
-                        raise YamlKeyDuplicationError(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                                        f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
-                                                                    file=current_file)
-                if _sub in src_dict:
-                    for sub in src_dict[_sub]:
-                        flatten_dict(sub, ancestors)
-                ancestors.pop()
+                try:
+                    if _rule in src_dict:
+                        flat_key = join_type_parts(ancestors)
+                        if flat_key in api_type_attributes:
+                            raise YamlKeyDuplicationError(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
+                        api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
+                                                                        file=current_file)
+                    if _sub in src_dict:
+                        for sub in src_dict[_sub]:
+                            flatten_dict(sub, ancestors)
+                finally:
+                    ancestors.pop()
 
         if not _title in attrs:
             return

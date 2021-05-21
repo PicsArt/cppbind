@@ -6,9 +6,9 @@ gen_actions:
           gen: method
           throws: no_throw
 
-      - type: "setStr(const std::string &)"
+      - type: "str()"
         rule:
-          gen: setter
+          gen: getter
           throws: no_throw
 
       - type: "setStr(const std::string &)"

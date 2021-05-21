@@ -7,7 +7,7 @@ import yaml
 import os
 from types import SimpleNamespace
 from collections import OrderedDict
-from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 import clang.cindex as cli
@@ -15,12 +15,10 @@ import clang.cindex as cli
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
-    RULE_KEYS = {
-        'title': 'gen_actions',
-        'node': 'type',
-        'action': 'rule',
-        'children': 'sub'
-    }
+    RULE_TITLE_KEY = 'gen_actions'
+    RULE_TYPE_KEY = 'type'
+    RULE_RULE_KEY = 'rule'
+    RULE_SUB_KEY = 'sub'
 
     def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
         self.attributes = attributes
@@ -156,7 +154,7 @@ class APIParser(object):
                 try:
                     attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
                 except yaml.YAMLError as e:
-                    raise Exception(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
+                    raise yaml.YAMLError(f"Wrong yaml format: {os.path.join(root, file)}: {e}")
 
                 APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
 
@@ -164,28 +162,28 @@ class APIParser(object):
 
     @staticmethod
     def update_api_type_attributes(attrs, current_file, api_type_attributes):
-        title = APIParser.RULE_KEYS['title']
-        node = APIParser.RULE_KEYS['node']
-        action = APIParser.RULE_KEYS['action']
-        children = APIParser.RULE_KEYS['children']
+        _title = APIParser.RULE_TITLE_KEY
+        _type = APIParser.RULE_TYPE_KEY
+        _rule = APIParser.RULE_RULE_KEY
+        _sub = APIParser.RULE_SUB_KEY
 
         def flatten_dict(src_dict, ancestors):
-            if node in src_dict:
-                ancestors.append(src_dict[node])
-                if action in src_dict:
+            if _type in src_dict:
+                ancestors.append(src_dict[_type])
+                if _rule in src_dict:
                     flat_key = join_type_parts(ancestors)
                     if flat_key in api_type_attributes:
-                        raise Exception(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                        raise YamlKeyDuplicationError(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
                                         f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[action],
+                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
                                                                     file=current_file)
-                if children in src_dict:
-                    for sub in src_dict[children]:
+                if _sub in src_dict:
+                    for sub in src_dict[_sub]:
                         flatten_dict(sub, ancestors)
                 ancestors.pop()
 
-        if not title in attrs:
+        if not _title in attrs:
             return
 
-        for item in attrs[title]:
+        for item in attrs[_title]:
             flatten_dict(item, [])

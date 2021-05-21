@@ -2,11 +2,12 @@ import types
 import pytest
 import hashlib
 import os
+import yaml
 
 from iegen.parser.ieg_parser import CXXParser
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.builder.ir_builder import CXXPrintProcsessor
-
+from iegen.common.yaml_process import YamlKeyDuplicationError
 
 def test_parser(parser_config):
     parsser = CXXParser(parser_config=parser_config)
@@ -147,12 +148,25 @@ def test_API_parser_negative(attributes, api_start_kw, test_data):
 
 def test_external_API_parser_negative(parser_config):
     test_script_dir = os.path.dirname(os.path.realpath(__file__))
-    api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir')
+    api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'negative')
+    for dir in os.listdir(api_rules_dir):
+        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
+        try:
+            APIParser.build_api_type_attributes(parser_config)
+        except (YamlKeyDuplicationError, yaml.YAMLError):
+            pass
+        except Exception as e:
+            assert False, f"unexpected exception: {e}"
+        else:
+            assert False, "should get error"
+
+
+def test_external_API_parser_positive(parser_config):
+    test_script_dir = os.path.dirname(os.path.realpath(__file__))
+    api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'positive')
     for dir in os.listdir(api_rules_dir):
         parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
         try:
             APIParser.build_api_type_attributes(parser_config)
         except Exception:
-            pass
-        else:
-            assert False, "should get error"
+            assert False, "should not get error"

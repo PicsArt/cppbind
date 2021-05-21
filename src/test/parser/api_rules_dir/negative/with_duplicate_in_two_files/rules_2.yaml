@@ -5,6 +5,7 @@ gen_actions:
         sub:
           - type: "yaml_test::WithExternalAPIComments"
             sub:
+              # entry with this key is already defined in ./rules_1.yaml file
               - type: "retInt(int)"
                 rule:
                   gen: method

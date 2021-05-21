@@ -167,10 +167,10 @@ def test_external_API_parser_positive(parser_config):
     api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'positive')
 
     results = {
-        'with_many_files': 'eaf10624726a2a486a91e76bafddcdbd',
-        'with_nested_cfg': 'bc7dd1e2a76a87b6394b8e05129960b3',
-        'with_mixed_cfg': '62bae84ff387f71e5cd812ef94c0c5a6',
-        'with_simple_cfg': '9f78ff9ef3a105e70395ab944af63f72'
+        'with_many_files': '61e1677833d942e27eae06854b3652e7',
+        'with_nested_cfg': 'cb6548fb573f46ddead383ade7a712a1',
+        'with_mixed_cfg': '61e1677833d942e27eae06854b3652e7',
+        'with_simple_cfg': 'e7cee96cb9c30a9a13621db5324122b6'
     }
 
     for dir, res_md5 in results.items():
@@ -180,7 +180,7 @@ def test_external_API_parser_positive(parser_config):
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
-                ordered_res[key] = res[key]
+                ordered_res[key] = res[key].attr
 
             assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5, \
                 "External API parser results has bean changed."

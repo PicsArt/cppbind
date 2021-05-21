@@ -146,7 +146,8 @@ def test_API_parser_negative(attributes, api_start_kw, test_data):
         assert False, "should get error"
 
 def test_external_API_parser_negative(parser_config):
-    api_rules_dir = os.path.join('parser', 'api_rules_dir')
+    test_script_dir = os.path.dirname(os.path.realpath(__file__))
+    api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir')
     for dir in os.listdir(api_rules_dir):
         parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
         try:

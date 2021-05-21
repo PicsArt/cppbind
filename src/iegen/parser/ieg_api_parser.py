@@ -70,7 +70,7 @@ class APIParser(object):
         if self.has_api(cursor.raw_comment):
             return self.parse_comments(cursor.raw_comment)
         else:
-            api_attrs = self.build_external_api_attrs(cursor)
+            api_attrs = self.get_external_api_attrs(cursor)
             if api_attrs:
                 return self.parse_api_attrs(api_attrs)
 
@@ -133,7 +133,7 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-    def build_external_api_attrs(self, cursor):
+    def get_external_api_attrs(self, cursor):
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL, cli.CursorKind.CXX_METHOD,
                            cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
             attrs = self.api_type_attributes.get(get_full_displayname(cursor))
@@ -169,28 +169,23 @@ class APIParser(object):
         action = APIParser.RULE_KEYS['action']
         children = APIParser.RULE_KEYS['children']
 
-        def flatten_dict(src_dict):
-            res_dict = {}
+        def flatten_dict(src_dict, ancestors):
             if node in src_dict:
+                ancestors.append(src_dict[node])
                 if action in src_dict:
-                    res_dict[src_dict[node]] = SimpleNamespace(attr=src_dict[action],
-                                                               file=current_file)
+                    flat_key = join_type_parts(ancestors)
+                    if flat_key in api_type_attributes:
+                        raise Exception(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                                        f"which already has been previously defined in {api_type_attributes[flat_key].file}")
+                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[action],
+                                                                    file=current_file)
                 if children in src_dict:
                     for sub in src_dict[children]:
-                        for key, val in flatten_dict(sub).items():
-                            flat_key = join_type_parts([src_dict[node], key])
-                            if flat_key in res_dict:
-                                raise Exception(f"Definition with duplicate '{key}' key in {current_file}")
-                            res_dict[flat_key] = val
-            return res_dict
+                        flatten_dict(sub, ancestors)
+                ancestors.pop()
 
         if not title in attrs:
             return
 
         for item in attrs[title]:
-            flat_dict = flatten_dict(item)
-            for key, val in flat_dict.items():
-                if key in api_type_attributes:
-                    raise Exception(f"Definition with duplicate '{key}' key in {current_file}, "
-                                    f"which already has been previously defined in {api_type_attributes[key].file}")
-                api_type_attributes[key] = val
+            flatten_dict(item, [])

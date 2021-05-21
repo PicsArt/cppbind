@@ -1,6 +1,7 @@
 import types
 import pytest
 import hashlib
+import os
 
 from iegen.parser.ieg_parser import CXXParser
 from iegen.parser.ieg_api_parser import APIParser
@@ -13,7 +14,6 @@ def test_parser(parser_config):
     processor = CXXPrintProcsessor()
     for c in parsser.parss_x():
         processor(c)
-
 
 def test_parser_processor(parser_config):
     parsser = CXXParser(parser_config=parser_config)
@@ -144,3 +144,14 @@ def test_API_parser_negative(attributes, api_start_kw, test_data):
         pass
     else:
         assert False, "should get error"
+
+def test_external_API_parser_negative(parser_config):
+    api_rules_dir = os.path.join('parser', 'api_rules_dir')
+    for dir in os.listdir(api_rules_dir):
+        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir)
+        try:
+            APIParser.build_api_type_attributes(parser_config)
+        except Exception:
+            pass
+        else:
+            assert False, "should get error"

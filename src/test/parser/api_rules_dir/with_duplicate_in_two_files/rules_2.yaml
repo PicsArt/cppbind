@@ -1,0 +1,11 @@
+gen_actions:
+  - type: pi
+    sub:
+      - type: video_engine
+        sub:
+          - type: "yaml_test::WithExternalAPIComments"
+            sub:
+              - type: "retInt(int)"
+                rule:
+                  gen: method
+                  throws: no_throw

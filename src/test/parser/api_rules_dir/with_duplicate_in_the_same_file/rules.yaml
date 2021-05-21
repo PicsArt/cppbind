@@ -1,0 +1,17 @@
+gen_actions:
+  - type: "pi::video_engine::yaml_test::WithExternalAPIComments"
+    sub:
+      - type: "retInt(int)"
+        rule:
+          gen: method
+          throws: no_throw
+
+      - type: "setStr(const std::string &)"
+        rule:
+          gen: setter
+          throws: no_throw
+
+      - type: "setStr(const std::string &)"
+        rule:
+          gen: setter
+          throws: no_throw

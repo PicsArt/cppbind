@@ -133,8 +133,10 @@ class APIParser(object):
         return raw_comment and self.api_start_kw in raw_comment
 
     def get_external_api_attrs(self, cursor):
-        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL, cli.CursorKind.CXX_METHOD,
-                           cli.CursorKind.FUNCTION_TEMPLATE, cli.CursorKind.CONSTRUCTOR]:
+        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL,
+                           cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE,
+                           cli.CursorKind.CONSTRUCTOR, cli.CursorKind.CLASS_TEMPLATE,
+                           cli.CursorKind.ENUM_DECL]:
             attrs = self.api_type_attributes.get(get_full_displayname(cursor))
             if attrs:
                 return attrs.attr

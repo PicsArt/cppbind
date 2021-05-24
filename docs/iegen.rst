@@ -1,34 +1,43 @@
-iegen package
-=============
+﻿iegen
+=====
 
-Subpackages
------------
+.. automodule:: iegen
 
-.. toctree::
-   :maxdepth: 4
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      find_prj_dir
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
 
    iegen.builder
    iegen.common
    iegen.converter
    iegen.ir
    iegen.parser
+   iegen.runner
    iegen.utils
 
-Submodules
-----------
-
-iegen.runner module
--------------------
-
-.. automodule:: iegen.runner
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: iegen
-   :members:
-   :undoc-members:
-   :show-inheritance:

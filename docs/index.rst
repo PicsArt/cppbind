@@ -10,77 +10,76 @@ IEGEN
 Introduction
 ------------
 
-IEGEN is a C++ bindings generation tool. For supported languages please refer to :ref:`features:Supported Languages`. The tool can be easily extended for other languages as well. Also, it can be customized to have generated bindings better feet to your needs.
+IEGEN is a C++ bindings generation tool. For supported languages please refer to :ref:`supported-languages-label`. The tool can be easily extended for other languages as well. Also, it can be customized to have generated bindings better feet to your needs.
 
 .. toctree::
    :maxdepth: 1
+   :glob:
+   :caption: Introduction
 
-   /01_introduction/getting-started-with-iegen
-   about
-   api
+   /01_introduction/[0-9]*_*
 
 
 First Steps
 -----------
 
-Are you writing C++ libraries and want to be able to use it in various platforms using various languages then iegen can be very handy tool for you.
+Are you writing C++ libraries and want to be able to use them in various platforms using various languages then iegen can be very handy tool for you.
 
-:doc:`Installation </02_get_started/02_installation>` | 
-:doc:`Configuration </configuration>`
+:doc:`Installation </02_first_steps/02_installation>` |
+:doc:`Configuration </02_first_steps/04_configuration>`
 
 .. toctree::
    :maxdepth: 1
    :glob:
-   :caption: First steps
+   :caption: First Steps
    :hidden:
 
-   /02_get_started/[0-9]*_*
+   /02_first_steps/[0-9]*_*
 
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   /features
+Binding With Examples
+---------------------
 
 Let's start with :ref:`Basic example`.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Getting started with
+   :caption: Binding With Examples
    :glob:
 
-   /02_get_started/languages/**/*_getting-started-with-*
+   /03_get_started/[0-9]*_*
 
-
-Tutorials
----------
-
-Advance Topics
---------------
+Advanced Topics
+---------------
 
 .. toctree::
    :maxdepth: 2
    :hidden:
    :caption: Advanced Features
+   :glob:
 
-   /user.guide
-   /01_introduction/configuration
-   /features
+   /04_advanced_features/[0-9]*_*
 
-Examples
---------
+FAQs
+----
 
-User Gide
----------
-:doc:`User Gide </user.guide>`
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: FAQs
+   :glob:
 
-Developer Gide
---------------
-:doc:`Developer Gide </developer.guide>`
+   /05_faqs/[0-9]*_*
 
-Code Documentation
-------------------
+API Documentation
+=================
+
+.. autosummary::
+   :toctree:
+   :caption: API Documentation
+   :recursive:
+
+   iegen
+
 
 Indices and tables
 ------------------

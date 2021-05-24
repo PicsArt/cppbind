@@ -34,7 +34,13 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
+    'sphinx.ext.autosummary',
+    'sphinx_tabs.tabs',
 ]
+
+autosummary_generate = True
+autosummary_generate_overwrite = False
+napoleon_include_init_with_doc = True
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True

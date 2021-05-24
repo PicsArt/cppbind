@@ -1,21 +1,40 @@
-iegen.converter package
-=======================
-
-Submodules
-----------
-
-iegen.converter.kotlin module
------------------------------
-
-.. automodule:: iegen.converter.kotlin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
+iegen.converter
+===============
 
 .. automodule:: iegen.converter
-   :members:
-   :undoc-members:
-   :show-inheritance:
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Exceptions
+      Validator
+   
+   
+
+   
+   
+   
+
+
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   iegen.converter.kotlin
+   iegen.converter.python
+   iegen.converter.swift
+

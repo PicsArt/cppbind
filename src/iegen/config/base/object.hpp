@@ -8,7 +8,7 @@ namespace iegen {
 
 /**
  * comments
- * 
+ *
  * __API__
  * gen: class
  * package: extra
@@ -24,6 +24,7 @@ public:
      * @return class name and object address
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual std::string toString() const;
 
@@ -32,6 +33,7 @@ public:
      * @return class name
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual std::string className() const;
 
@@ -41,6 +43,7 @@ public:
      * @return is equals two objects
      * __API__
      * gen: method
+     * throws: no_throw
      */
     bool equals(std::shared_ptr<Object> other) const;
 
@@ -51,6 +54,7 @@ public:
      * @return hash of the object
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual std::size_t hash() const;
 
@@ -59,6 +63,7 @@ public:
      * @return object state as string
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual std::string debugInfo() const;
 
@@ -67,6 +72,7 @@ public:
      * @return bytes count
      * __API__
      * gen: method
+     * throws: no_throw
      */
     virtual size_t bytesCount() const;
 

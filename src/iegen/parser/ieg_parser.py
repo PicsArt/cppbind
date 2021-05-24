@@ -72,10 +72,10 @@ class CXXParser(object):
             has_error = False
             for diagnostic in tu.diagnostics:
                 if diagnostic.severity in (cli.Diagnostic.Error, cli.Diagnostic.Fatal):
-                    logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
+                    logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}, line: {diagnostic.location.line}")
                     has_error = True
                 else:
-                    logging.warning(f"Warning while parsing {file_name}: {diagnostic.spelling}")
+                    logging.warning(f"Warning while parsing {file_name}: {diagnostic.spelling}, line: {diagnostic.location.line}")
             if not has_error:
                 yield tu
 

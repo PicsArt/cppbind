@@ -36,6 +36,7 @@ class CXXIEGIRBuilder(object):
         self.ir = IEG_Ast()
         self.node_stack = []
         self._sys_vars = {}
+        self.errors = set()
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = Node(tu.cursor)
@@ -75,7 +76,8 @@ class CXXIEGIRBuilder(object):
                     # check mandatory attribute existence
                     node_kind = current_node.kind_name
                     if "required_on" in properties and node_kind in properties["required_on"]:
-                        raise Exception(f"Attribute {att_name} is mandatory attribute on {node_kind}.")
+                        self.errors.add(f"Error in {current_node.file_name} file, line {current_node.line_number}:\n"
+                                           f"Attribute '{att_name}' is mandatory attribute on {node_kind}.")
 
                     # inherit from parent or add default value
                     if properties["inheritable"]:
@@ -94,7 +96,8 @@ class CXXIEGIRBuilder(object):
                     if "allowed_on" in properties:
                         node_kind = current_node.kind_name
                         if node_kind not in properties["allowed_on"]:
-                            raise Exception(f"Attribute {att_name} is not allowed on {node_kind}.")
+                            self.errors.add(f"Error in {current_node.file_name} file, line {current_node.line_number}:\n"
+                                               f"Attribute {att_name} is not allowed on {node_kind}.")
 
                 # now we need to process variables of value and set value
                 if new_att_val is not None:

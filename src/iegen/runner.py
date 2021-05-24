@@ -38,6 +38,11 @@ class WrapperGenerator(object):
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder)
 
+        if ir_builder.errors:
+            for error in ir_builder.errors:
+                logging.critical(error)
+            raise Exception('Wrong attribute usage')
+
         ir = ir_builder.ir
         logging.debug("IR is ready.")
 

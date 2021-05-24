@@ -62,17 +62,21 @@ def get_semantic_ancestors(cursor):
     return ancestors[::-1]
 
 
+def join_type_parts(type_parts):
+    return '::'.join(type_parts)
+
+
 def get_full_name(cursor):
     ancestors = get_semantic_ancestors(cursor)
     ancestors = ancestors[1::] + [cursor]
-    return '::'.join([c.spelling for c in ancestors])
+    return join_type_parts([c.spelling for c in ancestors])
 
 
 def get_full_displayname(cursor):
     ancestors = get_semantic_ancestors(cursor)
     spellings = [a.displayname for a in ancestors[1::]]
     spellings.append(cursor.spelling if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
-    return '::'.join(spellings)
+    return join_type_parts(spellings)
 
 
 def is_final_cursor(cursor):

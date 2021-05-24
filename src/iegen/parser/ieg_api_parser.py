@@ -1,37 +1,42 @@
 """
 Implements ieg api parser on cxx comment
 """
+import glob
 import distutils.util
 import re
 import yaml
+import os
+from types import SimpleNamespace
 from collections import OrderedDict
-from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 
-from iegen.utils.clang import extract_pure_comment
+from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
+import clang.cindex as cli
 
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
+    RULE_TITLE_KEY = 'gen_actions'
+    RULE_TYPE_KEY = 'type'
+    RULE_RULE_KEY = 'rule'
+    RULE_SUB_KEY = 'sub'
 
-    def __init__(self, attributes, api_start_kw, languages=None):
+    def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
         self.languages = languages or APIParser.ALL_LANGUAGES
         self.languages = list(self.languages)
+        self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
-    def parse(self, raw_comment):
+    def parse_comments(self, raw_comment):
         """
         Parse comment to extract API command and its attributes
         """
-        api = None
-        attr_dict = OrderedDict()
 
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
-            return api, attr_dict
+            return None, OrderedDict()
         pure_comment = extract_pure_comment(raw_comment, index)
-        # else
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
@@ -56,6 +61,23 @@ class APIParser(object):
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
+
+        return self.parse_api_attrs(attrs, pure_comment)
+
+
+    def parse_api(self, cursor):
+        if self.has_api(cursor.raw_comment):
+            return self.parse_comments(cursor.raw_comment)
+        else:
+            api_attrs = self.get_external_api_attrs(cursor)
+            if api_attrs:
+                return self.parse_api_attrs(api_attrs)
+
+
+    def parse_api_attrs(self, attrs, pure_comment=None):
+        api = None
+        attr_dict = OrderedDict()
+        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
@@ -114,3 +136,64 @@ class APIParser(object):
         Tests whether or not comment has API section.
         """
         return raw_comment and self.api_start_kw in raw_comment
+
+    def get_external_api_attrs(self, cursor):
+        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL,
+                           cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE,
+                           cli.CursorKind.CONSTRUCTOR, cli.CursorKind.CLASS_TEMPLATE,
+                           cli.CursorKind.ENUM_DECL]:
+            attrs = self.api_type_attributes.get(get_full_displayname(cursor))
+            if attrs:
+                return attrs.attr
+
+    @staticmethod
+    def build_api_type_attributes(parser_config):
+        if not hasattr(parser_config, 'api_type_attributes_dir'):
+            return {}
+
+        files = set()
+        for file in parser_config.api_type_attributes_dir.split(','):
+            files_glob = glob.glob(file.strip(), recursive=True)
+            for fp in files_glob:
+                files.add(os.path.abspath(fp))
+
+        api_type_attributes = {}
+        for current_file in list(files):
+            try:
+                attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
+            except yaml.YAMLError as e:
+                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
+
+            APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
+
+        return api_type_attributes
+
+    @staticmethod
+    def update_api_type_attributes(attrs, current_file, api_type_attributes):
+        _title = APIParser.RULE_TITLE_KEY
+        _type = APIParser.RULE_TYPE_KEY
+        _rule = APIParser.RULE_RULE_KEY
+        _sub = APIParser.RULE_SUB_KEY
+
+        def flatten_dict(src_dict, ancestors):
+            if _type in src_dict:
+                ancestors.append(src_dict[_type])
+                try:
+                    if _rule in src_dict:
+                        flat_key = join_type_parts(ancestors)
+                        if flat_key in api_type_attributes:
+                            raise YamlKeyDuplicationError(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
+                        api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
+                                                                        file=current_file)
+                    if _sub in src_dict:
+                        for sub in src_dict[_sub]:
+                            flatten_dict(sub, ancestors)
+                finally:
+                    ancestors.pop()
+
+        if not _title in attrs:
+            return
+
+        for item in attrs[_title]:
+            flatten_dict(item, [])

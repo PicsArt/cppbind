@@ -7,6 +7,8 @@ import yaml
 import glob
 import iegen.common as PROJECT_CONFIG_DIR
 
+class YamlKeyDuplicationError(Exception):
+    pass
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
@@ -31,7 +33,7 @@ class UniqueKeyLoader(yaml.SafeLoader):
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
             if key in mapping:
-                raise Exception(f"Yaml error: duplicate key: {key}")
+                raise YamlKeyDuplicationError(f"Yaml error: duplicate key: {key}")
             mapping.append(key)
         return super().construct_mapping(node, deep)
 

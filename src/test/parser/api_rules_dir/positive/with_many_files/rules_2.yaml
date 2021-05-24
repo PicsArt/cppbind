@@ -1,0 +1,21 @@
+gen_actions:
+  - type: "pi::video_engine::yaml_test::WithExternalAPIComments::max(const T &, const T &)"
+    rule:
+      gen: method
+      throws: no_throw
+      template:
+        T:
+          - type: int
+          - type: std::string
+
+  - type: pi
+    sub:
+      - type: video_engine
+        sub:
+          - type: yaml_test
+            sub:
+              - type: "WithExternalAPIComments"
+                sub:
+                  - type: "WithExternalAPIComments(std::string)"
+                    rule:
+                      gen: constructor

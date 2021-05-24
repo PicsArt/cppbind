@@ -13,7 +13,10 @@ namespace iegen::example {
  * gen: class
  * package: getters
  * shared_ref: True
- * template: {"T": ["int", "double"]}
+ * template:
+ *   T:
+ *     - type: int
+ *     - type: double
  * swift.include: CWrapper
  */
 template <class T>

@@ -28,8 +28,8 @@ class TemplateMethods  {
      * throws: no_throw
      * template:
      *   T:
-     *     - int
-     *     - std::string
+     *     - type: int
+     *     - type: std::string
      */
     template <typename T>
     T const& max(T const& a, T const& b) {
@@ -42,10 +42,10 @@ class TemplateMethods  {
      * throws: no_throw
      * template:
      *   T:
-     *     - iegen::example::Project
-     *     - iegen::example::Root
+     *     - type: iegen::example::Project
+     *     - type: iegen::example::Root
      *   V:
-     *     - "iegen::example::Project"
+     *     - type: iegen::example::Project
      */
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {

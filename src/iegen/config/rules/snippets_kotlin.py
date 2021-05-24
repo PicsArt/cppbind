@@ -1,3 +1,4 @@
+import datetime
 import os
 import types
 import copy
@@ -56,6 +57,7 @@ def make_def_context(ctx):
 
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.node.pure_comment)
+        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
         return locals()
 

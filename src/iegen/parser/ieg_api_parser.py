@@ -101,6 +101,11 @@ class APIParser(object):
         if attr_type == 'dict':
             if not isinstance(attr_value, dict):
                 raise Exception(f"Wrong attribute type: {type(attr_value)}, it must be dictionary")
+            if attr_name == 'template':
+                for attrs in attr_value.values():
+                    for attr in attrs:
+                        if not isinstance(attr, dict) or not 'type' in attr:
+                            raise Exception(f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
         # default string type
         return attr_value
 

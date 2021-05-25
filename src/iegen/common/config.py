@@ -88,6 +88,8 @@ class IEGConfig(object):
         for lang in cnfg.getlist("LANGUAGE", "all_languages"):
             self.languages[lang] = self.__load_language(cnfg, lang)
 
+        self.platforms = cnfg.getlist("PLATFORM", "all_platforms")
+
         self.attributes = cnfg.getyaml_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
 

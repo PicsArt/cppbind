@@ -16,16 +16,17 @@ import clang.cindex as cli
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
+    ALL_PLATFORMS = ['mac', 'linux', 'win']
     RULE_TITLE_KEY = 'gen_actions'
     RULE_TYPE_KEY = 'type'
     RULE_RULE_KEY = 'rule'
     RULE_SUB_KEY = 'sub'
 
-    def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
+    def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
-        self.languages = languages or APIParser.ALL_LANGUAGES
-        self.languages = list(self.languages)
+        self.languages = list(languages or APIParser.ALL_LANGUAGES)
+        self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
     def parse_comments(self, raw_comment):
@@ -77,19 +78,24 @@ class APIParser(object):
     def parse_api_attrs(self, attrs, pure_comment=None):
         api = None
         attr_dict = OrderedDict()
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 # error
                 raise Exception({attr_key: value})
-            language, attr = m.groups()
+            platform, language, attr = m.groups()
 
             if language:
                 language = [language]
             else:
                 language = self.languages + ['__all__']
+
+            if platform:
+                platform = [platform]
+            else:
+                platform = self.platforms + ['__all__']
 
             if api is None and attr == 'gen':
                 api = value
@@ -108,10 +114,13 @@ class APIParser(object):
                 elif isinstance(value, list):
                     raise Exception(f"Wrong attribute type: {attr} cannot be array")
 
-                for lang in language:
-                    att_lang_dict = attr_dict.setdefault(attr, OrderedDict())
-                    if array or len(language) == 1 or lang not in att_lang_dict:
-                        att_lang_dict[lang] = value
+                for plat in platform:
+                    attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
+                    if array or len(platform) == 1 or plat not in attr_plat_dict:
+                        for lang in language:
+                            attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                            if array or len(language) == 1 or lang not in attr_lang_dict:
+                                attr_plat_dict[plat][lang] = value
 
         return api, attr_dict, pure_comment
 

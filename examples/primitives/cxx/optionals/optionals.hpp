@@ -56,8 +56,8 @@ public:
      * gen: method
      * throws: no_throw
      */
-	std::string optionalStringWithDefault(std::string val = "abc") {
-	    return val;
+	std::string optionalStringWithDefault(std::string optionalStr = "abc") {
+	    return optionalStr;
 	}
 
     /**

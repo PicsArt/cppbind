@@ -12,6 +12,7 @@ from iegen import (
     default_config as default_config,
     logging as logging
 )
+from iegen.common.error import Error
 
 
 class WrapperGenerator(object):
@@ -38,9 +39,7 @@ class WrapperGenerator(object):
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder)
 
-        if ir_builder.errors:
-            for error in ir_builder.errors:
-                logging.critical(error)
+        if Error.has_error:
             raise Exception('Wrong attribute usage')
 
         ir = ir_builder.ir
@@ -70,8 +69,11 @@ def run_package():
     args = parser.parse_args()
     gen = WrapperGenerator()
 
-    gen.run(set(args.languages))
-
+    try:
+        gen.run(set(args.languages))
+    except Exception as e:
+        Error.error(e)
+        exit(1)
 
 if __name__ == "__main__":
     run_package()

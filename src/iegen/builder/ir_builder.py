@@ -8,6 +8,7 @@ from collections import OrderedDict
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import IEG_Ast, Node
+from iegen.common.error import Error
 
 ALL_LANGUAGES = list(default_config.languages)
 ALL_LANGUAGES = sorted(ALL_LANGUAGES)
@@ -36,7 +37,6 @@ class CXXIEGIRBuilder(object):
         self.ir = IEG_Ast()
         self.node_stack = []
         self._sys_vars = {}
-        self.errors = set()
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = Node(tu.cursor)
@@ -76,8 +76,10 @@ class CXXIEGIRBuilder(object):
                     # check mandatory attribute existence
                     node_kind = current_node.kind_name
                     if "required_on" in properties and node_kind in properties["required_on"]:
-                        self.errors.add(f"Error in {current_node.file_name} file, line {current_node.line_number}:\n"
-                                           f"Attribute '{att_name}' is mandatory attribute on {node_kind}.")
+                        Error.error(f"Attribute '{att_name}' is mandatory attribute on {node_kind}.",
+                                    current_node.file_name,
+                                    current_node.line_number)
+                        break
 
                     # inherit from parent or add default value
                     if properties["inheritable"]:
@@ -96,8 +98,10 @@ class CXXIEGIRBuilder(object):
                     if "allowed_on" in properties:
                         node_kind = current_node.kind_name
                         if node_kind not in properties["allowed_on"]:
-                            self.errors.add(f"Error in {current_node.file_name} file, line {current_node.line_number}:\n"
-                                               f"Attribute {att_name} is not allowed on {node_kind}.")
+                            Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
+                                        current_node.file_name,
+                                        current_node.line_number)
+                            break
 
                 # now we need to process variables of value and set value
                 if new_att_val is not None:

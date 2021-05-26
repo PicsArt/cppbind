@@ -6,9 +6,11 @@ import distutils.util
 import re
 import yaml
 import os
+from collections import defaultdict
 from types import SimpleNamespace
 from collections import OrderedDict
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
+from iegen.common.error import Error
 
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 import clang.cindex as cli
@@ -80,12 +82,15 @@ class APIParser(object):
         attr_dict = OrderedDict()
         ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
+        prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 # error
                 raise Exception({attr_key: value})
             platform, language, attr = m.groups()
+
+            prior = APIParser.get_priority(platform, language)
 
             if language:
                 language = [language]
@@ -114,13 +119,17 @@ class APIParser(object):
                 elif isinstance(value, list):
                     raise Exception(f"Wrong attribute type: {attr} cannot be array")
 
+                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
                 for plat in platform:
-                    attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
-                    if array or len(platform) == 1 or plat not in attr_plat_dict:
-                        for lang in language:
-                            attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
-                            if array or len(language) == 1 or lang not in attr_lang_dict:
-                                attr_plat_dict[plat][lang] = value
+                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                    for lang in language:
+                        curr_max_prior = max(prev_priors[attr][(plat, lang)])
+                        if prior > curr_max_prior:
+                            attr_lang_dict[lang] = value
+                        if prior in prev_priors[attr][(plat, lang)]:
+                            Error.critical(f"Conflicting attributes: attributes like platform.attr and"
+                                           f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}")
+                        prev_priors[attr][(plat, lang)].append(prior)
 
         return api, attr_dict, pure_comment
 
@@ -154,6 +163,14 @@ class APIParser(object):
             attrs = self.api_type_attributes.get(get_full_displayname(cursor))
             if attrs:
                 return attrs.attr
+
+    @staticmethod
+    def get_priority(plat, lang):
+        if plat is None and lang is None:
+            return 1
+        if plat is None or lang is None:
+            return 2
+        return 3
 
     @staticmethod
     def build_api_type_attributes(parser_config):

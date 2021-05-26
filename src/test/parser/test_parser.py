@@ -7,8 +7,10 @@ from collections import OrderedDict
 
 from iegen.parser.ieg_parser import CXXParser
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.builder.ir_builder import CXXPrintProcsessor
+from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
 from iegen.common.yaml_process import YamlKeyDuplicationError
+from iegen import default_config
+from iegen.common.error import Error
 
 def test_parser(parser_config):
     parsser = CXXParser(parser_config=parser_config)
@@ -186,3 +188,16 @@ def test_external_API_parser_positive(parser_config):
                 "External API parser results has bean changed."
         except Exception:
             assert False, "should not get error"
+
+
+def test_parser_errors(parser_config):
+    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'negative')
+    parser = CXXParser(parser_config=parser_config)
+
+    parser_config.src_glob = os.path.join(test_dir, '*.hpp')
+
+    ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+                                 api_start_kw=default_config.api_start_kw,
+                                 parser_config=parser.config)
+    parser.parse(ir_builder)
+    assert Error.has_error == True, "Must cause an error"

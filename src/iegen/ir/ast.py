@@ -89,6 +89,10 @@ class Node(object):
         return file_name
 
     @property
+    def line_number(self):
+        return self.clang_cursor.extent.start.line
+
+    @property
     def is_interface(self):
         return self.api == 'interface'
 

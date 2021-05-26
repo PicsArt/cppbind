@@ -32,7 +32,7 @@ class Error:
 
     @classmethod
     def log_traceback(cls, traceback_stack):
-        traceback_list = format_list(traceback_stack)
-        traceback_list.pop()
-        for frame in traceback_list:
-            logging.debug(frame.strip())
+        if logging.getLevelName(logging.root.level) == "DEBUG":
+            traceback_list = format_list(traceback_stack)
+            traceback_list.pop()
+            logging.debug(''.join(traceback_list))

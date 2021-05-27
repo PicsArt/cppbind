@@ -1,8 +1,10 @@
 """
 Parser module based on clang
 """
-import os
+
 import glob
+import os
+
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import (
@@ -107,6 +109,11 @@ class CXXParser(object):
     def parse(self, processor):
 
         for tu in self.parss_tu_x():
+            tu_parent_dirs = self.__dirs_to_process(tu)
+
+            for dir_name in tu_parent_dirs:
+                if hasattr(processor, 'start_dir'):
+                    processor.start_dir(dir_name)
 
             if hasattr(processor, 'start_tu'):
                 processor.start_tu(tu)
@@ -115,6 +122,25 @@ class CXXParser(object):
 
             if hasattr(processor, 'end_tu'):
                 processor.end_tu(tu)
+
+            for dir_name in reversed(tu_parent_dirs):
+                if hasattr(processor, 'end_dir'):
+                    processor.end_dir(dir_name)
+
+    def __dirs_to_process(self, tu):
+        dirs_to_search = set()
+
+        root = os.path.dirname(tu.spelling)
+        dirs_to_search.add(os.path.relpath(root, os.getcwd()))
+        while root:
+            root = os.path.dirname(root)
+            dir_name = os.path.relpath(root, os.getcwd())
+            # TODO: better check
+            if '.' in dir_name:
+                break
+            dirs_to_search.add(dir_name)
+        # sort to get root to child list
+        return sorted(dirs_to_search)
 
     def _process_cursor(self, cursor, processor):
 

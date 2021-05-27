@@ -35,10 +35,16 @@ interface_name:
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:
-  inheritable: true
+  inheritable: false
   array: true
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ dir, class, class_template, struct, struct_template, enum ]
+
+code_fragment:
+  inheritable: false
+  array: true
+  default: null
+  allowed_on: [ dir ]
 
 include_cxx:
   inheritable: true
@@ -87,4 +93,3 @@ nullable_arg:
   default: [ ]
   array: true
   allowed_on: [ cxx_method, constructor, function, function_template ]
-

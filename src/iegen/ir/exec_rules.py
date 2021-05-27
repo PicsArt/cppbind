@@ -4,16 +4,18 @@ import itertools
 import json
 import os
 import types
+
 import clang.cindex as cli
-from iegen import logging as logging
-from iegen.utils.clang import extract_pure_comment
 import iegen.utils.clang as cutil
+from iegen import logging as logging
+from iegen.ir.ast import NodeType
+from iegen.utils.clang import extract_pure_comment
 
 
 class Context(object):
 
     def __init__(self, runner, node, template_ctx=None):
-        assert node.clang_cursor, "cursor is not provided"
+        # assert node.clang_cursor, "cursor is not provided"
         self.runner = runner
         self.config = runner.config
         self.node = node
@@ -360,22 +362,25 @@ class RunRule(object):
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
                     for child in node.children:
-                        # check if the node is template and generate code for each combination of template args
-                        if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
-                            parent_template = node.args.get('template', None)
-                            template_arg = {}
-                            # if parent also has a template argument join with child´s
-                            if parent_template:
-                                template_arg = template_arg.update(parent_template[self.language])
-                            template_arg.update(child.args['template'][self.language])
-                            all_possible_args = list(itertools.product(*template_arg.values()))
-                            template_keys = child.args['template'][self.language].keys()
-                            for i, combination in enumerate(all_possible_args):
-                                choice = [item['type'] for item in combination]
-                                choice_names = [item['name'] for item in combination if 'name' in item]
-                                _template_choice = dict(zip(template_keys, choice))
-                                _template_ctx = {'choice': _template_choice, 'names': choice_names}
-                                _run_recursive(child, _template_ctx)
+                        if child.type() == NodeType.CLANG_NODE:
+                            # check if the node is template and generate code for each combination of template args
+                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
+                                parent_template = node.args.get('template', None)
+                                template_arg = {}
+                                # if parent also has a template argument join with child´s
+                                if parent_template:
+                                    template_arg = template_arg.update(parent_template[self.language])
+                                template_arg.update(child.args['template'][self.language])
+                                all_possible_args = list(itertools.product(*template_arg.values()))
+                                template_keys = child.args['template'][self.language].keys()
+                                for i, combination in enumerate(all_possible_args):
+                                    choice = [item['type'] for item in combination]
+                                    choice_names = [item['name'] for item in combination if 'name' in item]
+                                    _template_choice = dict(zip(template_keys, choice))
+                                    _template_ctx = {'choice': _template_choice, 'names': choice_names}
+                                    _run_recursive(child, _template_ctx)
+                            else:
+                                _run_recursive(child, template_ctx)
                         else:
                             _run_recursive(child, template_ctx)
                     logging.debug(f"End processing children for {node.displayname}.")
@@ -406,14 +411,13 @@ class RunRule(object):
 
     def create_context(self, node):
         assert node is not None
-        cntx = self.all_contexts.setdefault(node.full_displayname,
-                                            Context(self, node))
-        return cntx
+        if node.api:
+            self.all_contexts.setdefault(node.full_displayname,
+                                         Context(self, node))
 
     def get_context(self, type_name):
 
-        cntx = self.all_contexts.get(type_name, None)
-        return cntx
+        return self.all_contexts.get(type_name, None)
 
     def allocate_all_contexts(self):
         logging.debug("Allocating context for all nodes")

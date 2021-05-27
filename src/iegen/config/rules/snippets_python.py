@@ -52,14 +52,6 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
 
-        cursor = ctx.cursor
-        cxx_name = ctx.cursor.spelling
-
-        prj_rel_file_name = ctx.prj_rel_file_name
-        comment = convert.make_comment(ctx.node.pure_comment)
-
-        cxx_output_filepath = f'{pat_sep}'.join([config.cxx_out_dir] + [item.replace('.', pat_sep) for item in (
-            config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + config.file_postfix)])
         date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
         return locals()
@@ -67,6 +59,30 @@ def make_def_context(ctx):
     context = make()
     context.update(GLOBAL_VARIABLES)
     context.update(ctx.api_args)
+    return context
+
+
+def make_clang_context(ctx):
+    def make():
+        cursor = ctx.cursor
+        cxx_name = ctx.cursor.spelling
+
+        prj_rel_file_name = ctx.prj_rel_file_name
+        comment = convert.make_comment(ctx.node.pure_comment)
+
+        cxx_output_filepath = f'{os.sep}'.join([ctx.config.cxx_out_dir] + [item.replace('.', os.sep) for item in (
+            ctx.config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.config.file_postfix)])
+        return locals()
+
+    context = make_def_context(ctx)
+    context.update(make())
+    return context
+
+
+def make_package_context(ctx):
+    context = make_def_context(ctx)
+
+    context['package'] = ctx.name
     return context
 
 
@@ -108,7 +124,7 @@ def make_func_context(ctx):
 
         return locals()
 
-    context = make_def_context(ctx)
+    context = make_clang_context(ctx)
     context.update(make())
     return context
 
@@ -123,7 +139,7 @@ def make_enum_context(ctx):
                 case.comment = convert.make_hashtag_comment(case.comment)
         return locals()
 
-    context = make_def_context(ctx)
+    context = make_clang_context(ctx)
     context.update(make())
     return context
 
@@ -146,7 +162,7 @@ def make_class_context(ctx):
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
-        context = make_def_context(ctx)
+        context = make_clang_context(ctx)
         context.update(make())
         return context
 
@@ -193,7 +209,7 @@ def make_member_context(ctx):
 
         return locals()
 
-    context = make_def_context(ctx)
+    context = make_clang_context(ctx)
     context.update(make())
     return context
 
@@ -253,6 +269,11 @@ def get_file(context, builder, fscope_name):
     file_name = file_info.get_file_name(context)
 
     return builder.get_file(file_name, init_func=lambda s: preprocess_scope(context, s, file_info))
+
+
+def gen_package(ctx, builder):
+    context = make_package_context(ctx)
+    preprocess_entry(context, builder, 'package')
 
 
 def gen_enum(ctx, builder):

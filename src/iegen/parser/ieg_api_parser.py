@@ -18,7 +18,7 @@ import clang.cindex as cli
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
-    ALL_PLATFORMS = ['mac', 'linux', 'win']
+    ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
     RULE_TITLE_KEY = 'gen_actions'
     RULE_TYPE_KEY = 'type'
     RULE_RULE_KEY = 'rule'
@@ -82,6 +82,7 @@ class APIParser(object):
         attr_dict = OrderedDict()
         ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
+        # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
@@ -124,8 +125,10 @@ class APIParser(object):
                     attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
                     for lang in language:
                         curr_max_prior = max(prev_priors[attr][(plat, lang)])
+                        # overwrite the value only if the current option has higher priority than all previous ones.
                         if prior > curr_max_prior:
                             attr_lang_dict[lang] = value
+                        # If we have this case it means we have a conflict of options: plat.lang and lang.plat
                         if prior in prev_priors[attr][(plat, lang)]:
                             Error.critical(f"Conflicting attributes: attributes like platform.attr and"
                                            f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}")
@@ -166,6 +169,10 @@ class APIParser(object):
 
     @staticmethod
     def get_priority(plat, lang):
+        """
+        A method to get priority of platform/language specific attribute:
+        Priorities sorted descending: platform.language.attr, [language|platform].attr, attr
+        """
         if plat is None and lang is None:
             return 1
         if plat is None or lang is None:

@@ -72,7 +72,7 @@ def test_parser_processor_cr_counter(parser_config):
             * swift.prefix: PI
             */
             """,
-            "0f17bd6bda42a9580eabeec7518726b6"
+            "55a89dc4969a1072c3598a72707dac54"
         ),
         (
             'attributes',
@@ -86,7 +86,7 @@ def test_parser_processor_cr_counter(parser_config):
             * shared_ref: False
             */
             """,
-            "2ed825ae09a846c62d574815528a9463"
+            "c4ef14239b668d5c4876742ca5f9da31"
         )
     ],
     indirect=['attributes', 'api_start_kw']

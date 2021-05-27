@@ -93,7 +93,7 @@ class CXXIEGIRBuilder(object):
 
                         if new_att_val is None:
                             # use default value
-                            new_att_val = properties.get("default", None)
+                            new_att_val = new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
                     else:
                         # attribute is set check weather or not it is allowed.
                         if "allowed_on" in properties:
@@ -163,6 +163,19 @@ class CXXIEGIRBuilder(object):
         if node.api or node.children:  # node has API call or child whit API call
             parent_node = self.node_stack[-1]
             parent_node.add_children(node)
+
+    @staticmethod
+    def get_attr_default_value(prop, plat, lang):
+        def_val = prop.get("default")
+        if not isinstance(def_val, dict):
+            return def_val
+
+        if plat in def_val and lang in def_val:
+            Error.error(f"Conflict of attributes: {plat} and {lang}: only one of them must be defined separately, or they must be both specified")
+
+        for key in (plat + '.' + lang, plat, lang, 'else'):
+            if key in def_val:
+                return def_val[key]
 
 
 cxx_ieg_ir_builder = CXXIEGIRBuilder()

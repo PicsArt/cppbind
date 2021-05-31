@@ -280,7 +280,8 @@ def get_file(context, builder, fscope_name):
 
 
 def gen_package(ctx, builder):
-    pass
+    context = make_package_context(ctx)
+    preprocess_entry(context, builder, 'package')
 
 
 def gen_enum(ctx, builder):

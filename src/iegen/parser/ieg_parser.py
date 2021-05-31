@@ -4,6 +4,7 @@ Parser module based on clang
 
 import glob
 import os
+import re
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
@@ -111,6 +112,10 @@ class CXXParser(object):
         for tu in self.parss_tu_x():
             tu_parent_dirs = self.__dirs_to_process(tu)
 
+            # TODO:
+            # currently we are not parsing the entire directory tree at once instead for each file we
+            # are going from root to leaf, if there are already processed dirs then we are retrieving them from the dict
+            # later we may construct the whole source directory tree and then build the ir tree
             for dir_name in tu_parent_dirs:
                 if hasattr(processor, 'start_dir'):
                     processor.start_dir(dir_name)
@@ -135,8 +140,9 @@ class CXXParser(object):
         while root:
             root = os.path.dirname(root)
             dir_name = os.path.relpath(root, os.getcwd())
-            # TODO: better check
-            if '.' in dir_name:
+
+            match = re.match(r'^[./]+$', dir_name)
+            if match:
                 break
             dirs_to_search.add(dir_name)
         # sort to get root to child list

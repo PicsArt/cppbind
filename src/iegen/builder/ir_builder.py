@@ -28,7 +28,6 @@ class CXXIEGIRBuilder(object):
     """
 
     def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
-        self.config = parser_config or default_config.parser
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
         self.attributes = attributes
@@ -41,29 +40,31 @@ class CXXIEGIRBuilder(object):
     def start_dir(self, dir_name):
         if dir_name not in self.processed_dirs:
             dir_node = DirectoryNode(dir_name)
-            self.processed_dirs[dir_name] = dir_node
-            if self.node_stack:
-                parent_node = self.node_stack[-1]
-                if parent_node:
-                    parent_node.add_children(dir_node)
-
+            self.node_stack.append(dir_node)
+            self.__update_internal_vars(dir_node)
+            args = api = pure_comment = None
             parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name)
             if parsed_api:
-                api, args, pure_comment = self.ieg_api_parser.parse_yaml_api(dir_name)
-
-                self.__add_missing_attributes(dir_node, args, api, pure_comment)
+                api, args, pure_comment = parsed_api
+            self.__process_attrs(dir_node, args, api, pure_comment)
         else:
             # directory is already processed
             dir_node = self.processed_dirs[dir_name]
-        self.__update_internal_vars(dir_node)
-        self.node_stack.append(dir_node)
+            self.node_stack.append(dir_node)
 
     def end_dir(self, dir_name):
         assert self.node_stack, "stack should not be empty"
         node = self.node_stack.pop()
         assert node.name == dir_name
-        if not node.parent and node not in self.ir.roots:
-            self.ir.roots.append(node)
+        # node is not processed and has an API call or child with API call
+        if node.name not in self.processed_dirs and (node.api or node.children):
+            if len(self.node_stack) > 0:
+                parent_node = self.node_stack[-1]
+                if node not in parent_node.children:
+                    parent_node.add_children(node)
+            elif node not in self.ir.roots:
+                self.ir.roots.append(node)
+        self.processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = ClangNode(tu.cursor)
@@ -92,9 +93,9 @@ class CXXIEGIRBuilder(object):
 
         api, args, pure_comment = api_parser_result
 
-        self.__add_missing_attributes(current_node, args, api, pure_comment)
+        self.__process_attrs(current_node, args, api, pure_comment)
 
-    def __add_missing_attributes(self, current_node, args, api, pure_comment):
+    def __process_attrs(self, current_node, args, api, pure_comment):
         args = args or OrderedDict()
 
         # add all missing attributes
@@ -115,7 +116,7 @@ class CXXIEGIRBuilder(object):
                     # inherit from parent or add default value
                     if properties["inheritable"]:
                         if len(self.node_stack) > 1:
-                            # directory based nodes might not have parent
+                            # directory based nodes may not have parent
                             parent_args = self.node_stack[-2].args
                             new_att_val = parent_args.get(
                                 att_name,
@@ -147,22 +148,22 @@ class CXXIEGIRBuilder(object):
         current_node.args = args
 
     def __update_internal_vars(self, node):
-        sys_vars = {}
+        sys_vars = {'module_name': ''}
         if node.type == NodeType.DIRECTORY_NODE:
-            sys_vars = {
+            sys_vars.update({
+                'is_operator': False,
                 'file_name': node.name,
                 'file_full_name': node.name,
                 'object_name': node.name
-            }
+            })
 
-        if node.type == NodeType.CLANG_NODE:
-            sys_vars = {
+        elif node.type == NodeType.CLANG_NODE:
+            sys_vars.update({
                 'is_operator': node.clang_cursor.displayname.startswith('operator'),
                 'file_full_name': node.file_name,
                 'file_name': os.path.splitext(os.path.basename(node.file_name))[0],
                 'object_name': node.clang_cursor.spelling,
-                'module_name': ''
-            }
+            })
 
         self._sys_vars.update(sys_vars)
 

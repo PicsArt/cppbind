@@ -133,7 +133,8 @@ class APIParser(object):
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or not 'type' in attr:
-                            raise Exception(f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
+                            raise Exception(
+                                f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
         # default string type
         return attr_value
 
@@ -183,6 +184,7 @@ class APIParser(object):
         _dir = APIParser.RULE_DIR_KEY
 
         def flatten_dict(src_dict, ancestors):
+            assert (_type in src_dict) ^ (_dir in src_dict), f'{_dir} and {_type} are mutually exclusive.'
             if _type in src_dict or _dir in src_dict:
                 _type in src_dict and ancestors.append(src_dict[_type])
                 _dir in src_dict and ancestors.append(src_dict[_dir])
@@ -191,9 +193,14 @@ class APIParser(object):
                         if _type in src_dict:
                             flat_key = join_type_parts(ancestors)
                         else:
-                            flat_key = os.path.relpath(
-                                os.path.abspath(os.path.join(os.path.dirname(current_file), src_dict[_dir])),
-                                os.getcwd())
+                            _dir_name = src_dict[_dir]
+                            if os.path.isabs(_dir_name):
+                                # if an absolute path is specified then we assume it's absolute to current dir
+                                flat_key = _dir_name.replace('/', '', 1)
+                            else:
+                                flat_key = os.path.relpath(
+                                    os.path.abspath(os.path.join(os.path.dirname(current_file), _dir_name)),
+                                    os.getcwd())
                         if flat_key in api_type_attributes:
                             raise YamlKeyDuplicationError(
                                 f"Definition with duplicate '{flat_key}' key in {current_file},\n"

@@ -155,11 +155,6 @@ var_pybind_module_cxx: &var_pybind_module
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
 
-var_pybind_module_hpp: &var_pybind_module_hpp
-  include:
-    unique_content: |
-      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
-
 package:
   python_init:
     code_fragment:
@@ -168,6 +163,11 @@ package:
     include:
       unique_content: |
         {{include|format_list('from {} import *')|join('\n')}}
+
+var_pybind_module_hpp: &var_pybind_module_hpp
+  include:
+    unique_content: |
+      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
 
 enum:
   python:

@@ -15,7 +15,8 @@ from iegen.utils.clang import extract_pure_comment
 class Context(object):
 
     def __init__(self, runner, node, template_ctx=None):
-        # assert node.clang_cursor, "cursor is not provided"
+        if node.type == NodeType.CLANG_NODE:
+            assert node.clang_cursor, "cursor is not provided"
         self.runner = runner
         self.config = runner.config
         self.node = node
@@ -362,9 +363,10 @@ class RunRule(object):
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
                     for child in node.children:
-                        if child.type() == NodeType.CLANG_NODE:
+                        if child.type == NodeType.CLANG_NODE:
                             # check if the node is template and generate code for each combination of template args
-                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
+                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
+                                                           cli.CursorKind.FUNCTION_TEMPLATE]:
                                 parent_template = node.args.get('template', None)
                                 template_arg = {}
                                 # if parent also has a template argument join with child´s
@@ -412,8 +414,9 @@ class RunRule(object):
     def create_context(self, node):
         assert node is not None
         if node.api:
-            self.all_contexts.setdefault(node.full_displayname,
-                                         Context(self, node))
+            return self.all_contexts.setdefault(node.full_displayname,
+                                                Context(self, node))
+        return None
 
     def get_context(self, type_name):
 

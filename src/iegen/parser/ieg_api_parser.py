@@ -154,11 +154,11 @@ class APIParser(object):
 
     @staticmethod
     def build_api_type_attributes(parser_config):
-        if not hasattr(parser_config, 'api_type_attributes_dir'):
+        if not hasattr(parser_config, 'api_type_attributes_glob'):
             return {}
 
         files = set()
-        for file in parser_config.api_type_attributes_dir.split(','):
+        for file in parser_config.api_type_attributes_glob.split(','):
             files_glob = glob.glob(file.strip(), recursive=True)
             for fp in files_glob:
                 files.add(os.path.abspath(fp))

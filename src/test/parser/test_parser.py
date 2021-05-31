@@ -151,7 +151,7 @@ def test_external_API_parser_negative(parser_config):
     test_script_dir = os.path.dirname(os.path.realpath(__file__))
     api_rules_dir = os.path.join(test_script_dir, 'api_rules_dir', 'negative')
     for dir in os.listdir(api_rules_dir):
-        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir, '*.yaml')
+        parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
             APIParser.build_api_type_attributes(parser_config)
         except (YamlKeyDuplicationError, yaml.YAMLError):
@@ -174,7 +174,7 @@ def test_external_API_parser_positive(parser_config):
     }
 
     for dir, res_md5 in results.items():
-        parser_config.api_type_attributes_dir = os.path.join(api_rules_dir, dir, '*.yaml')
+        parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
             res = APIParser.build_api_type_attributes(parser_config)
 

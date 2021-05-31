@@ -34,6 +34,7 @@ class Node(ABC):
     def __repr__(self):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
 
+    @property
     @abstractmethod
     def type(self):
         pass
@@ -103,6 +104,7 @@ class DirectoryNode(Node):
         super().__init__(api, args, parent, children, pure_comment)
         self.name = name
 
+    @property
     def type(self):
         return NodeType.DIRECTORY_NODE
 
@@ -125,6 +127,7 @@ class ClangNode(Node):
         super().__init__(api, args, parent, children, pure_comment)
         self.clang_cursor = clang_cursor
 
+    @property
     def type(self):
         return NodeType.CLANG_NODE
 

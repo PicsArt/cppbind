@@ -32,13 +32,6 @@ def load_yaml_file(x):
         load_yaml(yml_file)
 
 
-def load_yaml_or_file(x):
-    try:
-        return load_yaml_file(x)
-    except Exception:
-        return yaml.load(x, MyLoader)
-
-
 def read_config(config_file=None):
     """
     creates and loads config file.
@@ -51,8 +44,6 @@ def read_config(config_file=None):
         converters={
             'list': lambda x: [i.strip() for i in x.split(',')],
             'yaml': lambda x: yaml.load(x, MyLoader),
-            'yaml_or_file': load_yaml_or_file,
-            'yaml_file': load_yaml_file,
         }
     )
     config.read_file(open(config_file))
@@ -92,7 +83,7 @@ class IEGConfig(object):
 
         self.attr_file = cnfg.get("API", "attributes")
 
-        self.attributes = cnfg.getyaml_or_file("API", "attributes")
+        self.attributes = load_yaml_file(self.attr_file)
         self.api_start_kw = cnfg.get("API", "parser_start")
 
         self.logging = types.SimpleNamespace()

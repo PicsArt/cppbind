@@ -67,13 +67,13 @@ class APIParser(object):
         return self.parse_api_attrs(attrs, location, pure_comment)
 
 
-    def parse_api(self, node):
-        location = SimpleNamespace(file_name=node.file_name,
-                                   line_number=node.line_number)
-        if self.has_api(node.clang_cursor.raw_comment):
-            return self.parse_comments(node.clang_cursor.raw_comment, location)
+    def parse_api(self, cursor):
+        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
+                                   line_number=cursor.extent.start.line)
+        if self.has_api(cursor.raw_comment):
+            return self.parse_comments(cursor.raw_comment, location)
         else:
-            api_attrs = self.get_external_api_attrs(node)
+            api_attrs = self.get_external_api_attrs(cursor)
             if api_attrs:
                 return self.parse_api_attrs(api_attrs, location)
 
@@ -160,8 +160,7 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-    def get_external_api_attrs(self, node):
-        cursor = node.clang_cursor
+    def get_external_api_attrs(self, cursor):
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL,
                            cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE,
                            cli.CursorKind.CONSTRUCTOR, cli.CursorKind.CLASS_TEMPLATE,

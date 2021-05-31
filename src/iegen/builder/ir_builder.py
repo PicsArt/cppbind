@@ -55,7 +55,7 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        api_parser_result = self.ieg_api_parser.parse_api(current_node)
+        api_parser_result = self.ieg_api_parser.parse_api(cursor)
         if not api_parser_result:
             return
 

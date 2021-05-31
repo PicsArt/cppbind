@@ -4,7 +4,6 @@ import hashlib
 import os
 import yaml
 from collections import OrderedDict
-from unittest.mock import patch
 
 from iegen.parser.ieg_parser import CXXParser
 from iegen.parser.ieg_api_parser import APIParser
@@ -12,8 +11,6 @@ from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
 from iegen.common.yaml_process import YamlKeyDuplicationError
 from iegen import default_config
 from iegen.common.error import Error
-from clang.cindex import Cursor
-
 
 def test_parser(parser_config):
     parsser = CXXParser(parser_config=parser_config)
@@ -95,16 +92,11 @@ def test_parser_processor_cr_counter(parser_config):
     indirect=['attributes', 'api_start_kw']
 )
 
-@patch('clang.cindex.Cursor.raw_comment', None)
 def test_API_parser(attributes, api_start_kw, test_data, res_md5):
 
     parsser = APIParser(attributes=attributes, api_start_kw=api_start_kw)
 
-    # creating dummy cursor object and set raw_comment attribute for it
-    cursor = Cursor()
-    cursor.raw_comment = test_data
-
-    api, args, _ = parsser.parse_comments(cursor)
+    api, args, _ = parsser.parse_comments(test_data)
     str_res = f"api={api}, args={args}"
     print(str_res)
     assert hashlib.md5(str_res.encode()).hexdigest() == res_md5,\

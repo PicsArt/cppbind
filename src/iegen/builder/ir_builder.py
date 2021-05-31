@@ -55,7 +55,7 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        api_parser_result = self.ieg_api_parser.parse_api(cursor)
+        api_parser_result = self.ieg_api_parser.parse_api(current_node)
         if not api_parser_result:
             return
 
@@ -171,7 +171,8 @@ class CXXIEGIRBuilder(object):
             return def_val
 
         if plat in def_val and lang in def_val:
-            Error.error(f"Conflict of attributes: {plat} and {lang}: only one of them must be defined separately, or they must be both specified")
+            Error.critical(f"Conflict of attributes in {default_config.attr_file} attributes definiton file: {plat} and {lang}: "
+                           f"only one of them must be defined separately, or they must be both specified")
 
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:

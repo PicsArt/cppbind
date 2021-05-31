@@ -90,6 +90,8 @@ class IEGConfig(object):
 
         self.platforms = cnfg.getlist("PLATFORM", "all_platforms")
 
+        self.attr_file = cnfg.get("API", "attributes")
+
         self.attributes = cnfg.getyaml_or_file("API", "attributes")
         self.api_start_kw = cnfg.get("API", "parser_start")
 

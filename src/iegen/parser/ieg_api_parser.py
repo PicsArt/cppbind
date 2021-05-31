@@ -14,7 +14,6 @@ from iegen.common.error import Error
 
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 import clang.cindex as cli
-from iegen.ir.ast import Node
 
 
 class APIParser(object):
@@ -32,11 +31,10 @@ class APIParser(object):
         self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
-    def parse_comments(self, cursor):
+    def parse_comments(self, raw_comment, location=None):
         """
         Parse comment to extract API command and its attributes
         """
-        raw_comment = cursor.raw_comment
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
             return None, OrderedDict()
@@ -66,20 +64,21 @@ class APIParser(object):
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
 
-        return self.parse_api_attrs(attrs, cursor, pure_comment)
+        return self.parse_api_attrs(attrs, location, pure_comment)
 
 
-    def parse_api(self, cursor):
-        if self.has_api(cursor.raw_comment):
-            return self.parse_comments(cursor)
+    def parse_api(self, node):
+        location = SimpleNamespace(file_name=node.file_name,
+                                   line_number=node.line_number)
+        if self.has_api(node.clang_cursor.raw_comment):
+            return self.parse_comments(node.clang_cursor.raw_comment, location)
         else:
-            api_attrs = self.get_external_api_attrs(cursor)
+            api_attrs = self.get_external_api_attrs(node)
             if api_attrs:
-                return self.parse_api_attrs(api_attrs, cursor)
+                return self.parse_api_attrs(api_attrs, location)
 
 
-    def parse_api_attrs(self, attrs, cursor, pure_comment=None):
-        current_node = Node(cursor)
+    def parse_api_attrs(self, attrs, location, pure_comment=None):
         api = None
         attr_dict = OrderedDict()
         ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
@@ -132,9 +131,9 @@ class APIParser(object):
                             attr_lang_dict[lang] = value
                         # If we have this case it means we have a conflict of options: plat.lang and lang.plat
                         if prior in prev_priors[attr][(plat, lang)]:
-                            Error.error(f"Conflicting attributes: attributes like platform.attr and"
+                            Error.error(f"Conflicting attributes: attributes like platform.attr and "
                                         f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
-                                        current_node.file_name, current_node.line_number)
+                                        location.file_name, location.line_number)
                         prev_priors[attr][(plat, lang)].append(prior)
 
         return api, attr_dict, pure_comment
@@ -161,7 +160,8 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-    def get_external_api_attrs(self, cursor):
+    def get_external_api_attrs(self, node):
+        cursor = node.clang_cursor
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL,
                            cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE,
                            cli.CursorKind.CONSTRUCTOR, cli.CursorKind.CLASS_TEMPLATE,

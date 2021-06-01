@@ -6,8 +6,9 @@ from collections import OrderedDict
 import pytest
 import yaml
 
-from iegen import default_config as default_config
+from iegen import default_config
 from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
+from iegen.common.error import Error
 from iegen.common.yaml_process import YamlKeyDuplicationError
 from iegen.ir.ast import NodeType
 from iegen.parser.ieg_api_parser import APIParser
@@ -64,46 +65,45 @@ def test_parser_processor_cr_counter(parser_config):
     "attributes, api_start_kw, test_data, res_md5",
     [
         (
-            'attributes',
-            'api_start_kw',
-            """
-            /**
-            * comments
-            *
-            * __API__
-            * gen: class
-            * kotlin.file: utils
-            * kotlin.module: pi.xxx
-            * swift.prefix: PI
-            */
-            """,
-            "99843fbfc41cfdc7cc598dd819bec8e6"
+                'attributes',
+                'api_start_kw',
+                """
+                /**
+                * comments
+                *
+                * __API__
+                * gen: class
+                * kotlin.file: utils
+                * kotlin.module: pi.xxx
+                * swift.prefix: PI
+                */
+                """,
+                "55a89dc4969a1072c3598a72707dac54"
         ),
         (
-            'attributes',
-            'api_start_kw',
-            """
-            /**
-            * commants
-            *
-            * __API__
-            * gen: class
-            * shared_ref: False
-            */
-            """,
-            "9874a230226c0e7c4f16a56ced234a75"
+                'attributes',
+                'api_start_kw',
+                """
+                /**
+                * commants
+                *
+                * __API__
+                * gen: class
+                * shared_ref: False
+                */
+                """,
+                "c4ef14239b668d5c4876742ca5f9da31"
         )
     ],
     indirect=['attributes', 'api_start_kw']
 )
 def test_API_parser(attributes, api_start_kw, test_data, res_md5):
     parsser = APIParser(attributes=attributes, api_start_kw=api_start_kw)
-    api, args, _ = parsser.parse_comments(
-        test_data
-    )
+
+    api, args, _ = parsser.parse_comments(test_data)
     str_res = f"api={api}, args={args}"
     print(str_res)
-    assert hashlib.md5(str_res.encode()).hexdigest() == res_md5,\
+    assert hashlib.md5(str_res.encode()).hexdigest() == res_md5, \
         "API parser result has bean changed."
 
 
@@ -111,32 +111,32 @@ def test_API_parser(attributes, api_start_kw, test_data, res_md5):
     "attributes, api_start_kw, test_data",
     [
         (
-            'attributes',
-            'api_start_kw',
-            """
-            /**
-            * comments
-            *
-            * __API__
-            * kotlin.file: utils
-            dd
-            * kotlin.module: pi.xxx
-            * swift_prefix: PI
-            */
-            """,
+                'attributes',
+                'api_start_kw',
+                """
+                /**
+                * comments
+                *
+                * __API__
+                * kotlin.file: utils
+                dd
+                * kotlin.module: pi.xxx
+                * swift_prefix: PI
+                */
+                """,
         ),
         (
-            'attributes',
-            'api_start_kw',
-            """
-            /**
-            * commants
-            *
-            * __API__
-            * gen: class
-            * shared_ref
-            */
-            """,
+                'attributes',
+                'api_start_kw',
+                """
+                /**
+                * commants
+                *
+                * __API__
+                * gen: class
+                * shared_ref
+                */
+                """,
         )
     ],
     indirect=['attributes', 'api_start_kw']
@@ -190,6 +190,19 @@ def test_external_API_parser_positive(parser_config):
                 "External API parser results has bean changed."
         except Exception:
             assert False, "should not get error"
+
+
+def test_parser_errors(parser_config):
+    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'negative')
+    parser = CXXParser(parser_config=parser_config)
+
+    parser_config.src_glob = os.path.join(test_dir, '*.hpp')
+
+    ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+                                 api_start_kw=default_config.api_start_kw,
+                                 parser_config=parser.config)
+    parser.parse(ir_builder)
+    assert Error.has_error == True, "Must cause an error"
 
 
 def test_parser_with_dir_api(parser_config):

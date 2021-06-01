@@ -21,7 +21,6 @@ assert(prj.tasks()[0].title == task1.title)
 // [project-usage]
 
 // [root-usage]
-// create a new project
 val path = "/path/to/root"
 val root = Root(path)
 assert(root.path == path)

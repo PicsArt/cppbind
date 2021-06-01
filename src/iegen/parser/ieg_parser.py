@@ -13,7 +13,7 @@ from iegen import (
     logging as logging
 )
 from iegen.parser.filter import cxx_ieg_filter
-
+from iegen.common.error import Error
 
 class CXXParser(object):
     """
@@ -75,10 +75,14 @@ class CXXParser(object):
             has_error = False
             for diagnostic in tu.diagnostics:
                 if diagnostic.severity in (cli.Diagnostic.Error, cli.Diagnostic.Fatal):
-                    logging.critical(f"Error while parsing {file_name}: {diagnostic.spelling}")
+                    Error.error(diagnostic.spelling,
+                                file_name,
+                                diagnostic.location.line)
                     has_error = True
                 else:
-                    logging.warning(f"Warning while parsing {file_name}: {diagnostic.spelling}")
+                    Error.warning(diagnostic.spelling,
+                                  file_name,
+                                  diagnostic.location.line)
             if not has_error:
                 yield tu
 

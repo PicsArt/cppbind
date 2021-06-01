@@ -235,7 +235,7 @@ class Context(object):
     @property
     def api_args(self):
         if not hasattr(self, '_api_args'):
-            self._api_args = {name: values[self.runner.language] for name, values in self.node.args.items()}
+            self._api_args = {name: values[self.runner.platform][self.runner.language] for name, values in self.node.args.items()}
         return self._api_args
 
     @property
@@ -249,7 +249,7 @@ class Context(object):
         template_arg = self.node.args.get('template', None)
         includes = []
         if template_arg:
-            template_arg = itertools.chain(*template_arg[self.runner.language].values())
+            template_arg = itertools.chain(*template_arg[self.runner.platform][self.runner.language].values())
             for t in template_arg:
                 ctx = self.find_by_type(t['type'])
                 if ctx:
@@ -294,7 +294,7 @@ class Context(object):
         if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
  API has no '{name}' attribute for {self.node.displayname}.")
-        val = val.get(self.runner.language, None)
+        val = val.get(self.runner.platform, {}).get(self.runner.language, None)
         if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
                                     attribute for language {self.runner.language}.")
@@ -303,9 +303,10 @@ class Context(object):
 
 class RunRule(object):
 
-    def __init__(self, ir, language, config):
+    def __init__(self, ir, platform, language, config):
         self.ir = ir
         self.language = language
+        self.platform = platform
         self.config = config
         # calling order should be such as that parent node processes first
         self.api_call_order = [
@@ -327,7 +328,7 @@ class RunRule(object):
 
         # init all rules
         init_att_name = "gen_init"
-        logging.debug(f"Initialising rule for {self.language}.")
+        logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
             func(self.config, builder)
@@ -365,16 +366,15 @@ class RunRule(object):
                     for child in node.children:
                         if child.type == NodeType.CLANG_NODE:
                             # check if the node is template and generate code for each combination of template args
-                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
-                                                           cli.CursorKind.FUNCTION_TEMPLATE]:
+                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
                                 parent_template = node.args.get('template', None)
                                 template_arg = {}
                                 # if parent also has a template argument join with child´s
                                 if parent_template:
-                                    template_arg = template_arg.update(parent_template[self.language])
-                                template_arg.update(child.args['template'][self.language])
+                                    template_arg = template_arg.update(parent_template[self.platform][self.language])
+                                template_arg.update(child.args['template'][self.platform][self.language])
                                 all_possible_args = list(itertools.product(*template_arg.values()))
-                                template_keys = child.args['template'][self.language].keys()
+                                template_keys = child.args['template'][self.platform][self.language].keys()
                                 for i, combination in enumerate(all_possible_args):
                                     choice = [item['type'] for item in combination]
                                     choice_names = [item['name'] for item in combination if 'name' in item]

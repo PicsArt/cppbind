@@ -5,6 +5,8 @@ import distutils.util
 import distutils.util
 import glob
 import os
+from collections import defaultdict
+from types import SimpleNamespace
 import re
 from collections import OrderedDict
 from types import SimpleNamespace
@@ -13,29 +15,31 @@ import yaml
 
 import clang.cindex as cli
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
+from iegen.common.error import Error
+
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
 class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
+    ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
     RULE_TITLE_KEY = 'gen_actions'
     RULE_TYPE_KEY = 'type'
-    RULE_RULE_KEY = 'rule'
-    RULE_SUB_KEY = 'sub'
     RULE_DIR_KEY = 'dir'
+    RULE_RULE_KEY = 'rule'
+    RULE_SUB_KEY = ':'
 
-    def __init__(self, attributes, api_start_kw, languages=None, parser_config=None):
+    def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
         self.api_start_kw = api_start_kw
-        self.languages = languages or APIParser.ALL_LANGUAGES
-        self.languages = list(self.languages)
+        self.languages = list(languages or APIParser.ALL_LANGUAGES)
+        self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
-    def parse_comments(self, raw_comment):
+    def parse_comments(self, raw_comment, location=None):
         """
         Parse comment to extract API command and its attributes
         """
-
         index = raw_comment.find(self.api_start_kw)
         if index == -1:
             return None, OrderedDict()
@@ -65,11 +69,13 @@ class APIParser(object):
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
 
-        return self.parse_api_attrs(attrs, pure_comment)
+        return self.parse_api_attrs(attrs, location, pure_comment)
 
     def parse_api(self, cursor):
+        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
+                                   line_number=cursor.extent.start.line)
         if self.has_api(cursor.raw_comment):
-            return self.parse_comments(cursor.raw_comment)
+            return self.parse_comments(cursor.raw_comment, location)
         else:
             return self.parse_yaml_api(get_full_displayname(cursor))
 
@@ -78,24 +84,34 @@ class APIParser(object):
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
-                return self.parse_api_attrs(api_attrs)
+                return self.parse_api_attrs(api_attrs, location)
 
-    def parse_api_attrs(self, attrs, pure_comment=None):
+
+    def parse_api_attrs(self, attrs, location, pure_comment=None):
         api = None
         attr_dict = OrderedDict()
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
+        # Data structure to keep previous priorities
+        prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 # error
                 raise Exception({attr_key: value})
-            language, attr = m.groups()
+            platform, language, attr = m.groups()
+
+            prior = APIParser.get_priority(platform, language)
 
             if language:
                 language = [language]
             else:
                 language = self.languages + ['__all__']
+
+            if platform:
+                platform = [platform]
+            else:
+                platform = self.platforms + ['__all__']
 
             if api is None and attr == 'gen':
                 api = value
@@ -114,10 +130,20 @@ class APIParser(object):
                 elif isinstance(value, list):
                     raise Exception(f"Wrong attribute type: {attr} cannot be array")
 
-                for lang in language:
-                    att_lang_dict = attr_dict.setdefault(attr, OrderedDict())
-                    if array or len(language) == 1 or lang not in att_lang_dict:
-                        att_lang_dict[lang] = value
+                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
+                for plat in platform:
+                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                    for lang in language:
+                        curr_max_prior = max(prev_priors[attr][(plat, lang)])
+                        # overwrite the value only if the current option has higher priority than all previous ones.
+                        if prior > curr_max_prior:
+                            attr_lang_dict[lang] = value
+                        # If we have this case it means we have a conflict of options: plat.lang and lang.plat
+                        if prior in prev_priors[attr][(plat, lang)]:
+                            Error.error(f"Conflicting attributes: attributes like platform.attr and "
+                                        f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
+                                        location.file_name, location.line_number)
+                        prev_priors[attr][(plat, lang)].append(prior)
 
         return api, attr_dict, pure_comment
 
@@ -152,6 +178,18 @@ class APIParser(object):
             attrs = self.api_type_attributes.get(get_full_displayname(cursor))
             if attrs:
                 return attrs.attr
+
+    @staticmethod
+    def get_priority(plat, lang):
+        """
+        A method to get priority of platform/language specific attribute:
+        Priorities sorted descending: platform.language.attr, [language|platform].attr, attr
+        """
+        if plat is None and lang is None:
+            return 1
+        if plat is None or lang is None:
+            return 2
+        return 3
 
     @staticmethod
     def build_api_type_attributes(parser_config):

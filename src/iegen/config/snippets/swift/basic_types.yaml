@@ -48,6 +48,7 @@ unsigned int:
   swift_to_sc:
     let {{target_name}} = CUnsignedInt({{name}})
   sc_to_swift:
+    let {{target_name}} = UInt({{name}})
 
 short:
   swift:

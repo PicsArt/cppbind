@@ -194,10 +194,28 @@ def test_parser_errors(parser_config):
     test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'negative')
     parser = CXXParser(parser_config=parser_config)
 
+    ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+                                 api_start_kw=default_config.api_start_kw,
+                                 parser_config=parser.config)
+
+    for file in os.listdir(test_dir):
+        Error.has_error = False
+
+        parser_config.src_glob = os.path.join(test_dir, file)
+        parser.parse(ir_builder)
+        assert Error.has_error == True, "Must cause an error"
+
+
+def test_jinja_attrs(parser_config):
+    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'jinja_attr')
+    parser = CXXParser(parser_config=parser_config)
+
     parser_config.src_glob = os.path.join(test_dir, '*.hpp')
 
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
+
+    res_md5 = "ca80a78f181f64333246b115ac5f6981"
     parser.parse(ir_builder)
-    assert Error.has_error == True, "Must cause an error"
+    assert hashlib.md5(str(ir_builder.ir).encode()).hexdigest() == res_md5, "API parser result has bean changed"

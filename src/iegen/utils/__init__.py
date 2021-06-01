@@ -3,6 +3,7 @@ Common utils that can by used from different modules
 """
 import os
 import errno
+import sys
 
 import importlib.util
 
@@ -27,3 +28,15 @@ def load_module_from_path(module_name, path_name):
 def load_module_from_paths(module_name, path_name, default_dirs):
     return load_from_paths(lambda path: load_module_from_path(module_name, path),
                            path_name, default_dirs)
+
+
+def get_host_platform():
+    platform = sys.platform
+    if platform.startswith('linux'):
+        return 'linux'
+    if platform.startswith('win'):
+        return 'win'
+    if platform == 'darwin':
+        return 'mac'
+
+    raise Exception(f"Not supported os platform: {platform}")

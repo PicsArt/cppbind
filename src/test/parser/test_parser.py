@@ -72,7 +72,7 @@ def test_parser_processor_cr_counter(parser_config):
             * swift.prefix: PI
             */
             """,
-            "99843fbfc41cfdc7cc598dd819bec8e6"
+            "55a89dc4969a1072c3598a72707dac54"
         ),
         (
             'attributes',
@@ -86,17 +86,17 @@ def test_parser_processor_cr_counter(parser_config):
             * shared_ref: False
             */
             """,
-            "9874a230226c0e7c4f16a56ced234a75"
+            "c4ef14239b668d5c4876742ca5f9da31"
         )
     ],
     indirect=['attributes', 'api_start_kw']
 )
+
 def test_API_parser(attributes, api_start_kw, test_data, res_md5):
 
     parsser = APIParser(attributes=attributes, api_start_kw=api_start_kw)
-    api, args, _ = parsser.parse_comments(
-        test_data
-    )
+
+    api, args, _ = parsser.parse_comments(test_data)
     str_res = f"api={api}, args={args}"
     print(str_res)
     assert hashlib.md5(str_res.encode()).hexdigest() == res_md5,\

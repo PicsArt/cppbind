@@ -108,7 +108,11 @@ class CXXIEGIRBuilder(object):
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
-                            new_att_val = Template(new_att_val).render(self.get_sys_vars(plat, lang))
+                            context = self.get_sys_vars(plat, lang)
+                            parent_args = self.node_stack[-2].args
+                            for attr_key in parent_args:
+                                context[attr_key] = parent_args[attr_key][plat][lang]
+                            new_att_val = Template(new_att_val).render(context)
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
@@ -126,17 +130,17 @@ class CXXIEGIRBuilder(object):
         object_name = node.clang_cursor.spelling
         module_name = ""
         self._sys_vars.update(dict(
-            object_name=object_name,
-            module_name=module_name,
-            file_name=file_name,
-            file_full_name=file_full_name,
-            is_operator=is_operator,
+            _object_name=object_name,
+            _module_name=module_name,
+            _file_name=file_name,
+            _file_full_name=file_full_name,
+            _is_operator=is_operator,
         ))
 
     def get_sys_vars(self, plat, lang):
         sys_vars = copy.copy(self._sys_vars)
         module_name = self.get_module_name(plat, lang)
-        sys_vars['module_name'] = module_name
+        sys_vars['_module_name'] = module_name
         return sys_vars
 
     def get_module_name(self, plat, lang):

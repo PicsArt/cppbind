@@ -5,17 +5,17 @@ prefix:
 
 file:
   inheritable: true
-  default: '{{file_name}}'
+  default: '{{_file_name}}'
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 file_full_name:
   inheritable: true
-  default: '{{file_full_name}}'
+  default: '{{_file_full_name}}'
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 module:
   inheritable: false
-  default: '{{module_name}}'
+  default: '{{_module_name}}'
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 package:
@@ -26,12 +26,12 @@ package:
 name:
   inheritable: false
   type: string
-  default: '{{object_name}}'
+  default: '{{_object_name}}'
 
 interface_name:
   inheritable: false
   type: string
-  default: 'I{{object_name}}'
+  default: 'I{{_object_name}}'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:
@@ -60,7 +60,7 @@ template:
 
 is_operator:
   inheritable: false
-  default: '{{is_operator}}'
+  default: '{{_is_operator}}'
   type: bool
   allowed_on: [ cxx_method ]
 
@@ -87,4 +87,3 @@ nullable_arg:
   default: [ ]
   array: true
   allowed_on: [ cxx_method, constructor, function, function_template ]
-

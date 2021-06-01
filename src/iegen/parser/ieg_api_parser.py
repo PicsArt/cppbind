@@ -5,18 +5,16 @@ import distutils.util
 import distutils.util
 import glob
 import os
-from collections import defaultdict
-from types import SimpleNamespace
 import re
+from collections import defaultdict
 from collections import OrderedDict
 from types import SimpleNamespace
 
 import yaml
 
 import clang.cindex as cli
-from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.common.error import Error
-
+from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
@@ -77,15 +75,17 @@ class APIParser(object):
         if self.has_api(cursor.raw_comment):
             return self.parse_comments(cursor.raw_comment, location)
         else:
-            return self.parse_yaml_api(get_full_displayname(cursor))
+            return self.parse_yaml_api(get_full_displayname(cursor), location)
 
-    def parse_yaml_api(self, name):
+    def parse_yaml_api(self, name, location=None):
         attrs = self.api_type_attributes.get(name)
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
+                # for dir api pass file and the first line
+                location = location or SimpleNamespace(file_name=attrs.file,
+                                                       line_number=0)
                 return self.parse_api_attrs(api_attrs, location)
-
 
     def parse_api_attrs(self, attrs, location, pure_comment=None):
         api = None

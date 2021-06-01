@@ -50,6 +50,16 @@ class Node(ABC):
         pass
 
     @property
+    @abstractmethod
+    def file_name(self):
+        pass
+
+    @property
+    @abstractmethod
+    def line_number(self):
+        pass
+
+    @property
     def children(self):
         return self._children
 
@@ -100,9 +110,18 @@ class Node(ABC):
 
 class DirectoryNode(Node):
 
-    def __init__(self, name, api=None, args=None, parent=None, children=None, pure_comment=None):
+    def __init__(self, name, file_name=None,api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
         self.name = name
+        self._file_name = file_name
+
+    @property
+    def file_name(self):
+        return self._file_name
+
+    @property
+    def line_number(self):
+        return None
 
     @property
     def type(self):

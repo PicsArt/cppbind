@@ -12,8 +12,9 @@ from iegen import (
     default_config as default_config,
     logging as logging
 )
-from iegen.parser.filter import cxx_ieg_filter
 from iegen.common.error import Error
+from iegen.parser.filter import cxx_ieg_filter
+
 
 class CXXParser(object):
     """
@@ -127,7 +128,7 @@ class CXXParser(object):
             if hasattr(processor, 'start_tu'):
                 processor.start_tu(tu)
 
-            self._process_cursor(tu.cursor, processor)
+            self._process_cursor_children(tu.cursor, processor)
 
             if hasattr(processor, 'end_tu'):
                 processor.end_tu(tu)
@@ -174,12 +175,15 @@ class CXXParser(object):
             processor(cursor)
 
         # now if needed dive into children
-        if not self.filter.filter_cursor_children(cursor):
-            for child in cursor.get_children():
-                self._process_cursor(child, processor)
+        self._process_cursor_children(cursor, processor)
 
         if hasattr(processor, 'end_cursor'):
             processor.end_cursor(cursor)
+
+    def _process_cursor_children(self, cursor, processor):
+        if not self.filter.filter_cursor_children(cursor):
+            for child in cursor.get_children():
+                self._process_cursor(child, processor)
 
     def is_implementation(self, cursor):
         if cursor.lexical_parent and cursor.semantic_parent:

@@ -84,8 +84,14 @@ class APIParser(object):
             if api_attrs:
                 # for dir api pass file and the first line
                 location = location or SimpleNamespace(file_name=attrs.file,
-                                                       line_number=0)
+                                                       line_number=None)
                 return self.parse_api_attrs(api_attrs, location)
+
+    def yaml_api_file_name(self, name):
+        attrs = self.api_type_attributes.get(name)
+        if attrs:
+            return attrs.file
+        return None
 
     def parse_api_attrs(self, attrs, location, pure_comment=None):
         api = None

@@ -39,11 +39,13 @@ class CXXIEGIRBuilder(object):
         self.ir = IEG_Ast()
         self.node_stack = []
         self._sys_vars = {}
-        self.processed_dirs = {}
+        self._processed_dirs = {}
+        # cache for holding parent args
+        self._parent_arg_mapping = {}
 
     def start_dir(self, dir_name):
-        if dir_name not in self.processed_dirs:
-            dir_node = DirectoryNode(dir_name)
+        if dir_name not in self._processed_dirs:
+            dir_node = DirectoryNode(dir_name, file_name=self.ieg_api_parser.yaml_api_file_name(dir_name))
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
             args = api = pure_comment = None
@@ -53,7 +55,7 @@ class CXXIEGIRBuilder(object):
             self.__process_attrs(dir_node, args, api, pure_comment)
         else:
             # directory is already processed
-            dir_node = self.processed_dirs[dir_name]
+            dir_node = self._processed_dirs[dir_name]
             self.node_stack.append(dir_node)
 
     def end_dir(self, dir_name):
@@ -61,14 +63,14 @@ class CXXIEGIRBuilder(object):
         node = self.node_stack.pop()
         assert node.name == dir_name
         # node is not processed and has an API call or child with API call
-        if node.name not in self.processed_dirs and (node.api or node.children):
+        if node.name not in self._processed_dirs and (node.api or node.children):
             if len(self.node_stack) > 0:
                 parent_node = self.node_stack[-1]
                 if node not in parent_node.children:
                     parent_node.add_children(node)
             elif node not in self.ir.roots:
                 self.ir.roots.append(node)
-        self.processed_dirs[dir_name] = node
+        self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
         current_node = ClangNode(tu.cursor)
@@ -85,6 +87,8 @@ class CXXIEGIRBuilder(object):
             else:
                 # tu has no dir parent, add it to roots
                 self.ir.roots.append(tu_node)
+        # tu is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
     def start_cursor(self, cursor, *args, **kwargs):
         current_node = ClangNode(cursor)
@@ -112,6 +116,10 @@ class CXXIEGIRBuilder(object):
                     ).get(plat, {}).get(lang, None)
 
                     new_att_val = att_val
+                    node_kind = current_node.kind_name
+                    allowed = True
+                    if "allowed_on" in properties:
+                        allowed = node_kind in properties["allowed_on"]
                     if new_att_val is None:
                         # check mandatory attribute existence
                         node_kind = current_node.kind_name
@@ -123,27 +131,25 @@ class CXXIEGIRBuilder(object):
 
                         # inherit from parent or add default value
                         if properties["inheritable"]:
-                            if len(self.node_stack) > 1:
-                                # directory based nodes may not have parent
-                                parent_args = self.node_stack[-2].args
-                                assert parent_args is not None, f"Args missing for node {self.node_stack[-2]}"
-                                new_att_val = parent_args.get(
+                            # directory based nodes may not have parent
+                            self._parent_args = self._get_parent_args()
+                            if self._parent_args:
+                                new_att_val = self._parent_args.get(
                                     att_name,
                                     {}
                                 ).get(plat, {}).get(lang, None)
 
-                        if new_att_val is None:
-                            # use default value
-                            new_att_val = new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
+                        if allowed:
+                            if new_att_val is None:
+                                # use default value
+                                new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
                     else:
                         # attribute is set check weather or not it is allowed.
-                        if "allowed_on" in properties:
-                            node_kind = current_node.kind_name
-                            if node_kind not in properties["allowed_on"]:
-                                Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
-                                            current_node.file_name,
-                                            current_node.line_number)
-                                break
+                        if not allowed:
+                            Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
+                                        current_node.file_name,
+                                        current_node.line_number)
+                            break
 
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
@@ -158,6 +164,21 @@ class CXXIEGIRBuilder(object):
         current_node.pure_comment = pure_comment
         assert args is not None
         current_node.args = args
+
+    def _get_parent_args(self):
+        if len(self.node_stack) < 2:
+            return None
+        direct_parent_name = self.node_stack[-2].full_displayname
+        if direct_parent_name in self._parent_arg_mapping:
+            return self._parent_arg_mapping[direct_parent_name]
+        parents = reversed(self.node_stack[:-1])
+        parent_args = None
+        for parent in parents:
+            if parent.api:
+                parent_args = parent.args
+                break
+        self._parent_arg_mapping[direct_parent_name] = parent_args
+        return parent_args
 
     def __update_internal_vars(self, node):
         sys_vars = {'module_name': ''}
@@ -209,7 +230,11 @@ class CXXIEGIRBuilder(object):
         node = self.node_stack.pop()
         if node.api or node.children:  # node has API call or child whit API call
             parent_node = self.node_stack[-1]
+            if not node.api:
+                self.__process_attrs(node, None, None, None)
             parent_node.add_children(node)
+        # cursor is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(node.full_displayname, None)
 
     @staticmethod
     def get_attr_default_value(prop, plat, lang):

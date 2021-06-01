@@ -4,6 +4,7 @@ Processor module provides various processor for ieg parser
 import copy
 import os
 from collections import OrderedDict
+from jinja2 import Template
 
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser
@@ -107,7 +108,7 @@ class CXXIEGIRBuilder(object):
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
-                            new_att_val = new_att_val.format(**self.get_sys_vars(plat, lang))
+                            new_att_val = Template(new_att_val).render(self.get_sys_vars(plat, lang))
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 

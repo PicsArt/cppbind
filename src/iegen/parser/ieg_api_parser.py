@@ -22,7 +22,7 @@ class APIParser(object):
     RULE_TITLE_KEY = 'gen_actions'
     RULE_TYPE_KEY = 'type'
     RULE_RULE_KEY = 'rule'
-    RULE_SUB_KEY = 'sub'
+    RULE_SUB_KEY = ':'
 
     def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes

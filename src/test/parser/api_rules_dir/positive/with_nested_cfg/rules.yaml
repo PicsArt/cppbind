@@ -1,12 +1,12 @@
 gen_actions:
   - type: pi
-    sub:
-      - type: video_engine
-        sub:
-          - type: yaml_test
-            sub:
-              - type: "WithExternalAPIComments"
-                sub:
-                  - type: "WithExternalAPIComments(std::string)"
-                    rule:
-                      gen: constructor
+    ::
+    - type: video_engine
+      ::
+      - type: yaml_test
+        ::
+        - type: "WithExternalAPIComments"
+          ::
+          - type: "WithExternalAPIComments(std::string)"
+            rule:
+              gen: constructor

@@ -57,8 +57,8 @@ def test_parser_processor_cr_counter(parser_config):
     count_processor.end_cursor = decr_dept
     parsser.parse(count_processor)
 
-    assert count == 20, "number of cursors has bean changed"
-    assert max_dept == 6, "max depth has bean changed"
+    assert count == 19, "number of cursors has bean changed"
+    assert max_dept == 5, "max depth has bean changed"
 
 
 @pytest.mark.parametrize(
@@ -193,7 +193,7 @@ def test_external_API_parser_positive(parser_config):
 
 
 def test_parser_errors(parser_config):
-    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'negative')
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'negative')
     parser = CXXParser(parser_config=parser_config)
 
     parser_config.src_glob = os.path.join(test_dir, '*.hpp')
@@ -209,7 +209,9 @@ def test_parser_with_dir_api(parser_config):
     # change cwd
     os.chdir(SCRIPT_DIR)
     cxx_inputs_rel_path = '../test_cxx_inputs'
+
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path))
+    parser_config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path, '*.h'))
 
     parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, '*.yaml')
     # load yaml file api
@@ -227,6 +229,11 @@ def test_parser_with_dir_api(parser_config):
     assert len(processor.ir.roots) == 1
     root = processor.ir.roots[0]
     assert root.type is NodeType.DIRECTORY_NODE
+    print('>>>>>>>>>>>>>>>>>>>>>>>>>>>.')
+    print(parser_config.src_glob)
+
+    print(SCRIPT_DIR)
+    print(root.name)
     assert root.api == 'package'
     assert root.name == cxx_inputs_rel_path
     assert root.children[0].type == NodeType.CLANG_NODE

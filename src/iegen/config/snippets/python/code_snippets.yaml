@@ -11,7 +11,9 @@ file:
       Please do not change it manually.
       """
       {{include}}
+      {%- if code_fragment %}
       {{code_fragment}}
+      {%- endif %}
       {{''}}
   python:
     file_path: |

@@ -30,7 +30,7 @@ def test_builder(out_dir):
 
 
 # @pytest.mark.skip(reason="Due to dict test is not stable")
-# @pytest.mark.skip(reason="Due to test contains file absolute pats that are differ from machine to machine")
+@pytest.mark.skip(reason="Due to test contains file absolute pats that are differ from machine to machine")
 def test_build_ir(parser_config, attributes, api_start_kw):
     parsser = CXXParser(parser_config=parser_config)
     # print(config)

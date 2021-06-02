@@ -107,12 +107,12 @@ class CXXIEGIRBuilder(object):
 
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
-                        if isinstance(new_att_val, str):
+                        if isinstance(new_att_val, str) or isinstance(new_att_val, list) or isinstance(new_att_val, dict):
                             context = self.get_sys_vars(plat, lang)
                             parent_args = self.node_stack[-2].args
                             for attr_key in parent_args:
                                 context[attr_key] = parent_args[attr_key][plat][lang]
-                            new_att_val = Template(new_att_val).render(context)
+                            new_att_val = CXXIEGIRBuilder.eval_attr_val(new_att_val, context)
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
@@ -183,5 +183,11 @@ class CXXIEGIRBuilder(object):
             if key in def_val:
                 return def_val[key]
 
-
-cxx_ieg_ir_builder = CXXIEGIRBuilder()
+    @classmethod
+    def eval_attr_val(cls, val, ctx):
+        if isinstance(val, str):
+            return Template(val).render(ctx)
+        if isinstance(val, list):
+            return [cls.eval_attr_val(item, ctx) for item in val]
+        if isinstance(val, dict):
+            return {cls.eval_attr_val(k, ctx): cls.eval_attr_val(v, ctx) for k, v in val.items()}

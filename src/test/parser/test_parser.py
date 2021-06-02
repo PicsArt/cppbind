@@ -215,7 +215,7 @@ def test_jinja_attrs(parser_config):
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
-
-    res_md5 = "ca80a78f181f64333246b115ac5f6981"
     parser.parse(ir_builder)
-    assert hashlib.md5(str(ir_builder.ir).encode()).hexdigest() == res_md5, "API parser result has bean changed"
+
+    for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
+        assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"

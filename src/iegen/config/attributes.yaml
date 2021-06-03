@@ -43,7 +43,7 @@ include:
 code_fragment:
   inheritable: false
   array: true
-  default: null
+  default: []
   allowed_on: [ dir ]
 
 include_cxx:

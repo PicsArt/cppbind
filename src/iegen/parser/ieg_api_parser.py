@@ -6,6 +6,7 @@ import distutils.util
 import re
 import yaml
 import os
+from jinja2 import Template
 from collections import defaultdict
 from types import SimpleNamespace
 from collections import OrderedDict
@@ -67,14 +68,15 @@ class APIParser(object):
         return self.parse_api_attrs(attrs, location, pure_comment)
 
 
-    def parse_api(self, cursor):
+    def parse_api(self, cursor, ctx=None):
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
         if self.has_api(cursor.raw_comment):
-            return self.parse_comments(cursor.raw_comment, location)
+            return self.parse_comments(Template(cursor.raw_comment).render(ctx), location)
         else:
             api_attrs = self.get_external_api_attrs(cursor)
             if api_attrs:
+                api_attrs = APIParser.eval_attr_template(api_attrs, ctx)
                 return self.parse_api_attrs(api_attrs, location)
 
 
@@ -232,3 +234,9 @@ class APIParser(object):
 
         for item in attrs[_title]:
             flatten_dict(item, [])
+
+    @staticmethod
+    def eval_attr_template(attrs, ctx):
+        if isinstance(attrs, dict):
+            return yaml.load(Template(yaml.dump(attrs)).render(ctx), Loader=UniqueKeyLoader)
+        return yaml.load(Template(attrs).render(ctx), Loader=UniqueKeyLoader)

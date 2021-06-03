@@ -68,11 +68,10 @@ def test_parser_processor_cr_counter(parser_config):
             * __API__
             * gen: class
             * kotlin.file: utils
-            * kotlin.module: pi.xxx
             * swift.prefix: PI
             */
             """,
-            "55a89dc4969a1072c3598a72707dac54"
+            "e78e907d4c03cd4ae3644d27a3ad7e00"
         ),
         (
             'attributes',
@@ -116,7 +115,6 @@ def test_API_parser(attributes, api_start_kw, test_data, res_md5):
             * __API__
             * kotlin.file: utils
             dd
-            * kotlin.module: pi.xxx
             * swift_prefix: PI
             */
             """,
@@ -172,7 +170,8 @@ def test_external_API_parser_positive(parser_config):
         'with_many_files': '61e1677833d942e27eae06854b3652e7',
         'with_nested_cfg': 'cb6548fb573f46ddead383ade7a712a1',
         'with_mixed_cfg': '61e1677833d942e27eae06854b3652e7',
-        'with_simple_cfg': 'e7cee96cb9c30a9a13621db5324122b6'
+        'with_simple_cfg': 'e7cee96cb9c30a9a13621db5324122b6',
+        'with_jinja_expr': '292f69c0cbd4ea9447a3ab6dbeb2e6bf'
     }
 
     for dir, res_md5 in results.items():

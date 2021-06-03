@@ -5,6 +5,7 @@ import copy
 import os
 from collections import OrderedDict
 from jinja2 import Template
+from types import SimpleNamespace
 
 from iegen import default_config as default_config
 from iegen.parser.ieg_api_parser import APIParser
@@ -56,7 +57,9 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        api_parser_result = self.ieg_api_parser.parse_api(cursor)
+        ctx = self.get_full_ctx()
+
+        api_parser_result = self.ieg_api_parser.parse_api(cursor, ctx)
         if not api_parser_result:
             return
 
@@ -66,8 +69,8 @@ class CXXIEGIRBuilder(object):
 
         # add all missing attributes
         for att_name, properties in self.attributes.items():
-            for plat in ALL_PLATFORMS:
-                for lang in ALL_LANGUAGES:
+            for plat in ALL_PLATFORMS + ["__all__"]:
+                for lang in ALL_LANGUAGES + ["__all__"]:
                     att_val = args.get(
                         att_name,
                         {}
@@ -94,7 +97,11 @@ class CXXIEGIRBuilder(object):
 
                         if new_att_val is None:
                             # use default value
-                            new_att_val = new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
+                            new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
+                            try:
+                                new_att_val = Template(new_att_val).render(self.get_sys_vars())
+                            except TypeError:
+                                pass
                     else:
                         # attribute is set check weather or not it is allowed.
                         if "allowed_on" in properties:
@@ -107,12 +114,7 @@ class CXXIEGIRBuilder(object):
 
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
-                        if isinstance(new_att_val, str) or isinstance(new_att_val, list) or isinstance(new_att_val, dict):
-                            context = self.get_sys_vars(plat, lang)
-                            parent_args = self.node_stack[-2].args
-                            for attr_key in parent_args:
-                                context[attr_key] = parent_args[attr_key][plat][lang]
-                            new_att_val = CXXIEGIRBuilder.eval_attr_val(new_att_val, context)
+                        if isinstance(new_att_val, str):
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
@@ -128,40 +130,16 @@ class CXXIEGIRBuilder(object):
         file_full_name = node.file_name
         file_name = os.path.splitext(os.path.basename(file_full_name))[0]
         object_name = node.clang_cursor.spelling
-        module_name = ""
         self._sys_vars.update(dict(
             _object_name=object_name,
-            _module_name=module_name,
             _file_name=file_name,
             _file_full_name=file_full_name,
             _is_operator=is_operator,
         ))
 
-    def get_sys_vars(self, plat, lang):
+    def get_sys_vars(self):
         sys_vars = copy.copy(self._sys_vars)
-        module_name = self.get_module_name(plat, lang)
-        sys_vars['_module_name'] = module_name
         return sys_vars
-
-    def get_module_name(self, plat, lang):
-        module_att_name = 'module'
-        if module_att_name not in self.attributes:
-            return ''
-        parent_module = []
-        properties = self.attributes[module_att_name]
-        allowed_on = properties.get('allowed_on', [])
-        for node in reversed(self.node_stack[:-1]):
-            if not allowed_on or node.kind_name in allowed_on:
-                mod = node.args.get("module", None)
-                if mod is not None:
-                    parent_module = [mod.get(plat, {}).get(lang)]
-                    break
-
-        current_node = self.node_stack[-1]
-        if not allowed_on or current_node.kind_name in allowed_on:
-            parent_module.append(current_node.spelling)
-
-        return '.'.join(parent_module)
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()
@@ -172,6 +150,7 @@ class CXXIEGIRBuilder(object):
     @staticmethod
     def get_attr_default_value(prop, plat, lang):
         def_val = prop.get("default")
+
         if not isinstance(def_val, dict):
             return def_val
 
@@ -183,11 +162,23 @@ class CXXIEGIRBuilder(object):
             if key in def_val:
                 return def_val[key]
 
-    @classmethod
-    def eval_attr_val(cls, val, ctx):
-        if isinstance(val, str):
-            return Template(val).render(ctx)
-        if isinstance(val, list):
-            return [cls.eval_attr_val(item, ctx) for item in val]
-        if isinstance(val, dict):
-            return {cls.eval_attr_val(k, ctx): cls.eval_attr_val(v, ctx) for k, v in val.items()}
+    def get_full_ctx(self):
+        ctx = self.get_sys_vars()
+        if len(self.node_stack) > 1:
+            parent_args = self.node_stack[-2].args
+            for attr_key, attr_val in parent_args.items():
+                for plat_key, plat_val in attr_val.items():
+                    ctx.setdefault(plat_key, SimpleNamespace())
+                    for lang_key, val in plat_val.items():
+                        ctx.setdefault(lang_key, SimpleNamespace())
+                        if not hasattr(ctx[plat_key], lang_key):
+                            setattr(ctx[plat_key], lang_key, SimpleNamespace())
+                        if plat_key != '__all__' and lang_key != '__all__':
+                            setattr(getattr(ctx[plat_key], lang_key), attr_key, val)
+                        elif plat_key == '__all__' and lang_key == '__all__':
+                            ctx[attr_key] = val
+                        elif plat_key == '__all__':
+                            setattr(ctx[lang_key], attr_key, val)
+                        else:
+                            setattr(ctx[plat_key], attr_key, val)
+        return ctx

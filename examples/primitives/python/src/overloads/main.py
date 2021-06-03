@@ -1,3 +1,4 @@
+from overloads import pretty_print
 from .utils_pygen import Utils
 
 # [overload-usage]
@@ -13,3 +14,6 @@ try:
     Utils.sum("1", "1")
 except TypeError:
     pass
+
+# test for dir actions with absolute path(abs against iegen working dir)
+pretty_print('{"first_name": "John", "last_name": "Doe"}')

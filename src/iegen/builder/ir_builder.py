@@ -4,12 +4,14 @@ Processor module provides various processor for ieg parser
 import copy
 import os
 from collections import OrderedDict
+
 from jinja2 import Template
 
 from iegen import default_config as default_config
-from iegen.parser.ieg_api_parser import APIParser
-from iegen.ir.ast import IEG_Ast, Node
 from iegen.common.error import Error
+from iegen.ir.ast import DirectoryNode, ClangNode, NodeType
+from iegen.ir.ast import IEG_Ast
+from iegen.parser.ieg_api_parser import APIParser
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -30,7 +32,6 @@ class CXXIEGIRBuilder(object):
     """
 
     def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
-
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
         self.attributes = attributes
@@ -38,21 +39,59 @@ class CXXIEGIRBuilder(object):
         self.ir = IEG_Ast()
         self.node_stack = []
         self._sys_vars = {}
+        self._processed_dirs = {}
+        # cache for holding parent args
+        self._parent_arg_mapping = {}
+
+    def start_dir(self, dir_name):
+        if dir_name not in self._processed_dirs:
+            dir_node = DirectoryNode(dir_name, file_name=self.ieg_api_parser.yaml_api_file_name(dir_name))
+            self.node_stack.append(dir_node)
+            self.__update_internal_vars(dir_node)
+            args = api = pure_comment = None
+            parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name)
+            if parsed_api:
+                api, args, pure_comment = parsed_api
+            self.__process_attrs(dir_node, args, api, pure_comment)
+        else:
+            # directory is already processed
+            dir_node = self._processed_dirs[dir_name]
+            self.node_stack.append(dir_node)
+
+    def end_dir(self, dir_name):
+        assert self.node_stack, "stack should not be empty"
+        node = self.node_stack.pop()
+        assert node.name == dir_name
+        # node is not processed and has an API call or child with API call
+        if node.name not in self._processed_dirs and (node.api or node.children):
+            if len(self.node_stack) > 0:
+                parent_node = self.node_stack[-1]
+                if node not in parent_node.children:
+                    parent_node.add_children(node)
+            elif node not in self.ir.roots:
+                self.ir.roots.append(node)
+        self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
-        current_node = Node(tu.cursor)
+        current_node = ClangNode(tu.cursor)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
     def end_tu(self, tu, *args, **kwargs):
-        current_node = self.node_stack.pop()
-        assert not self.node_stack, "stack should be empty"
-        if current_node.children:  # node has child whit API call
-            self.ir.roots.append(current_node)
+        tu_node = self.node_stack.pop()
+        if tu_node.api or tu_node.children:  # node has API call or child whit API call
+            if len(self.node_stack) > 0:
+                parent_node = self.node_stack[-1]
+                parent_node.add_children(tu_node)
+            else:
+                # tu has no dir parent, add it to roots
+                self.ir.roots.append(tu_node)
+        # tu is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
     def start_cursor(self, cursor, *args, **kwargs):
-        current_node = Node(cursor)
+        current_node = ClangNode(cursor)
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
@@ -62,6 +101,9 @@ class CXXIEGIRBuilder(object):
 
         api, args, pure_comment = api_parser_result
 
+        self.__process_attrs(current_node, args, api, pure_comment)
+
+    def __process_attrs(self, current_node, args, api, pure_comment):
         args = args or OrderedDict()
 
         # add all missing attributes
@@ -74,6 +116,10 @@ class CXXIEGIRBuilder(object):
                     ).get(plat, {}).get(lang, None)
 
                     new_att_val = att_val
+                    node_kind = current_node.kind_name
+                    allowed = True
+                    if "allowed_on" in properties:
+                        allowed = node_kind in properties["allowed_on"]
                     if new_att_val is None:
                         # check mandatory attribute existence
                         node_kind = current_node.kind_name
@@ -85,25 +131,25 @@ class CXXIEGIRBuilder(object):
 
                         # inherit from parent or add default value
                         if properties["inheritable"]:
-                            parrent_args = self.node_stack[-2].args
-                            assert parrent_args is not None, f"Args missing for node {self.node_stack[-2]}"
-                            new_att_val = parrent_args.get(
-                                att_name,
-                                {}
-                            ).get(plat, {}).get(lang, None)
+                            # directory based nodes may not have parent
+                            self._parent_args = self._get_parent_args()
+                            if self._parent_args:
+                                new_att_val = self._parent_args.get(
+                                    att_name,
+                                    {}
+                                ).get(plat, {}).get(lang, None)
 
-                        if new_att_val is None:
-                            # use default value
-                            new_att_val = new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
+                        if allowed:
+                            if new_att_val is None:
+                                # use default value
+                                new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
                     else:
                         # attribute is set check weather or not it is allowed.
-                        if "allowed_on" in properties:
-                            node_kind = current_node.kind_name
-                            if node_kind not in properties["allowed_on"]:
-                                Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
-                                            current_node.file_name,
-                                            current_node.line_number)
-                                break
+                        if not allowed:
+                            Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
+                                        current_node.file_name,
+                                        current_node.line_number)
+                            break
 
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
@@ -119,19 +165,40 @@ class CXXIEGIRBuilder(object):
         assert args is not None
         current_node.args = args
 
+    def _get_parent_args(self):
+        if len(self.node_stack) < 2:
+            return None
+        direct_parent_name = self.node_stack[-2].full_displayname
+        if direct_parent_name in self._parent_arg_mapping:
+            return self._parent_arg_mapping[direct_parent_name]
+        parents = reversed(self.node_stack[:-1])
+        parent_args = None
+        for parent in parents:
+            if parent.api:
+                parent_args = parent.args
+                break
+        self._parent_arg_mapping[direct_parent_name] = parent_args
+        return parent_args
+
     def __update_internal_vars(self, node):
-        is_operator = node.clang_cursor.displayname.startswith("operator")
-        file_full_name = node.file_name
-        file_name = os.path.splitext(os.path.basename(file_full_name))[0]
-        object_name = node.clang_cursor.spelling
-        module_name = ""
-        self._sys_vars.update(dict(
-            object_name=object_name,
-            module_name=module_name,
-            file_name=file_name,
-            file_full_name=file_full_name,
-            is_operator=is_operator,
-        ))
+        sys_vars = {'module_name': ''}
+        if node.type == NodeType.DIRECTORY_NODE:
+            sys_vars.update({
+                'is_operator': False,
+                'file_name': node.name,
+                'file_full_name': node.name,
+                'object_name': node.name
+            })
+
+        elif node.type == NodeType.CLANG_NODE:
+            sys_vars.update({
+                'is_operator': node.clang_cursor.displayname.startswith('operator'),
+                'file_full_name': node.file_name,
+                'file_name': os.path.splitext(os.path.basename(node.file_name))[0],
+                'object_name': node.clang_cursor.spelling,
+            })
+
+        self._sys_vars.update(sys_vars)
 
     def get_sys_vars(self, plat, lang):
         sys_vars = copy.copy(self._sys_vars)
@@ -163,7 +230,11 @@ class CXXIEGIRBuilder(object):
         node = self.node_stack.pop()
         if node.api or node.children:  # node has API call or child whit API call
             parent_node = self.node_stack[-1]
+            if not node.api:
+                self.__process_attrs(node, None, None, None)
             parent_node.add_children(node)
+        # cursor is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(node.full_displayname, None)
 
     @staticmethod
     def get_attr_default_value(prop, plat, lang):
@@ -172,12 +243,10 @@ class CXXIEGIRBuilder(object):
             return def_val
 
         if plat in def_val and lang in def_val:
-            Error.critical(f"Conflict of attributes in {default_config.attr_file} attributes definiton file: {plat} and {lang}: "
-                           f"only one of them must be defined separately, or they must be both specified")
+            Error.critical(
+                f"Conflict of attributes in {default_config.attr_file} attributes definiton file: {plat} and {lang}: "
+                f"only one of them must be defined separately, or they must be both specified")
 
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:
                 return def_val[key]
-
-
-cxx_ieg_ir_builder = CXXIEGIRBuilder()

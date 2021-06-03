@@ -1,10 +1,4 @@
-/**
- * /brief testing file
- * testing comments
- * __API__
- * gen: module
- * name: test
- */
+
 namespace test_api{
 
 /**
@@ -31,6 +25,7 @@ class Person {
      * __API__
      * gen: method
      * name: test
+     * throws: no_throw
      */
     int age() const{
         if(true)

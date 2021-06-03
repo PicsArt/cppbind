@@ -1,0 +1,34 @@
+# three ways to describe directory actions
+gen_actions:
+  - dir: "."
+    rule:
+      gen: package
+      name: simple
+      python.code_fragment:
+        - import json
+        - >
+          def pretty_print(json_str):
+              parsed = json.loads(json_str)
+              print(json.dumps(parsed, indent=4, sort_keys=True))
+
+  - dir: "/cxx/overloads"
+    rule:
+      gen: package
+      name: overloads
+      python.code_fragment:
+        - import json
+        - >
+          def pretty_print(json_str):
+              parsed = json.loads(json_str)
+              print(json.dumps(parsed, indent=4, sort_keys=True))
+
+  - dir: "../operators"
+    rule:
+      gen: package
+      name: operators
+      python.code_fragment:
+        - import json
+        - >
+          def pretty_print(json_str):
+              parsed = json.loads(json_str)
+              print(json.dumps(parsed, indent=4, sort_keys=True))

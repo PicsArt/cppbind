@@ -1,16 +1,20 @@
 """
 Parser module based on clang
 """
-import os
+
 import glob
+import os
+import re
+
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import (
     default_config as default_config,
     logging as logging
 )
-from iegen.parser.filter import cxx_ieg_filter
 from iegen.common.error import Error
+from iegen.parser.filter import cxx_ieg_filter
+
 
 class CXXParser(object):
     """
@@ -111,14 +115,43 @@ class CXXParser(object):
     def parse(self, processor):
 
         for tu in self.parss_tu_x():
+            tu_parent_dirs = self.__dirs_to_process(tu)
+
+            # TODO:
+            # currently we are not parsing the entire directory tree at once instead for each file we
+            # are going from root to leaf, if there are already processed dirs then we are retrieving them from the dict
+            # later we may construct the whole source directory tree and then build the ir tree
+            for dir_name in tu_parent_dirs:
+                if hasattr(processor, 'start_dir'):
+                    processor.start_dir(dir_name)
 
             if hasattr(processor, 'start_tu'):
                 processor.start_tu(tu)
 
-            self._process_cursor(tu.cursor, processor)
+            self._process_cursor_children(tu.cursor, processor)
 
             if hasattr(processor, 'end_tu'):
                 processor.end_tu(tu)
+
+            for dir_name in reversed(tu_parent_dirs):
+                if hasattr(processor, 'end_dir'):
+                    processor.end_dir(dir_name)
+
+    def __dirs_to_process(self, tu):
+        dirs_to_search = set()
+
+        root = os.path.dirname(tu.spelling)
+        dirs_to_search.add(os.path.relpath(root, os.getcwd()))
+        while root:
+            root = os.path.dirname(root)
+            dir_name = os.path.relpath(root, os.getcwd())
+
+            match = re.match(r'^[./]+$', dir_name)
+            if match:
+                break
+            dirs_to_search.add(dir_name)
+        # sort to get root to child list
+        return sorted(dirs_to_search)
 
     def _process_cursor(self, cursor, processor):
 
@@ -142,12 +175,15 @@ class CXXParser(object):
             processor(cursor)
 
         # now if needed dive into children
-        if not self.filter.filter_cursor_children(cursor):
-            for child in cursor.get_children():
-                self._process_cursor(child, processor)
+        self._process_cursor_children(cursor, processor)
 
         if hasattr(processor, 'end_cursor'):
             processor.end_cursor(cursor)
+
+    def _process_cursor_children(self, cursor, processor):
+        if not self.filter.filter_cursor_children(cursor):
+            for child in cursor.get_children():
+                self._process_cursor(child, processor)
 
     def is_implementation(self, cursor):
         if cursor.lexical_parent and cursor.semantic_parent:

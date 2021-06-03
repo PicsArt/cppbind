@@ -1,20 +1,21 @@
 """
 Implements ieg api parser on cxx comment
 """
-import glob
 import distutils.util
+import glob
 import re
-import yaml
 import os
 from jinja2 import Template
 from collections import defaultdict
-from types import SimpleNamespace
 from collections import OrderedDict
-from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.common.error import Error
+from types import SimpleNamespace
 
-from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
+import yaml
+
 import clang.cindex as cli
+from iegen.common.error import Error
+from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
+from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
 class APIParser(object):
@@ -22,6 +23,7 @@ class APIParser(object):
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
     RULE_TITLE_KEY = 'gen_actions'
     RULE_TYPE_KEY = 'type'
+    RULE_DIR_KEY = 'dir'
     RULE_RULE_KEY = 'rule'
     RULE_SUB_KEY = ':'
 
@@ -74,11 +76,24 @@ class APIParser(object):
         if self.has_api(cursor.raw_comment):
             return self.parse_comments(Template(cursor.raw_comment).render(ctx), location)
         else:
-            api_attrs = self.get_external_api_attrs(cursor)
+            return self.parse_yaml_api(get_full_displayname(cursor), ctx, location)
+
+    def parse_yaml_api(self, name, ctx, location=None):
+        attrs = self.api_type_attributes.get(name)
+        if attrs:
+            api_attrs = attrs.attr
             if api_attrs:
                 api_attrs = APIParser.eval_attr_template(api_attrs, ctx)
+                # for dir api pass file and the first line
+                location = location or SimpleNamespace(file_name=attrs.file,
+                                                       line_number=None)
                 return self.parse_api_attrs(api_attrs, location)
 
+    def yaml_api_file_name(self, name):
+        attrs = self.api_type_attributes.get(name)
+        if attrs:
+            return attrs.file
+        return None
 
     def parse_api_attrs(self, attrs, location, pure_comment=None):
         api = None
@@ -152,7 +167,8 @@ class APIParser(object):
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or not 'type' in attr:
-                            raise Exception(f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
+                            raise Exception(
+                                f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
         # default string type
         return attr_value
 
@@ -185,11 +201,11 @@ class APIParser(object):
 
     @staticmethod
     def build_api_type_attributes(parser_config):
-        if not hasattr(parser_config, 'api_type_attributes_dir'):
+        if not hasattr(parser_config, 'api_type_attributes_glob'):
             return {}
 
         files = set()
-        for file in parser_config.api_type_attributes_dir.split(','):
+        for file in parser_config.api_type_attributes_glob.split(','):
             files_glob = glob.glob(file.strip(), recursive=True)
             for fp in files_glob:
                 files.add(os.path.abspath(fp))
@@ -211,16 +227,30 @@ class APIParser(object):
         _type = APIParser.RULE_TYPE_KEY
         _rule = APIParser.RULE_RULE_KEY
         _sub = APIParser.RULE_SUB_KEY
+        _dir = APIParser.RULE_DIR_KEY
 
         def flatten_dict(src_dict, ancestors):
-            if _type in src_dict:
-                ancestors.append(src_dict[_type])
+            assert (_type in src_dict) ^ (_dir in src_dict), f'{_dir} and {_type} are mutually exclusive.'
+            if _type in src_dict or _dir in src_dict:
+                _type in src_dict and ancestors.append(src_dict[_type])
+                _dir in src_dict and ancestors.append(src_dict[_dir])
                 try:
                     if _rule in src_dict:
-                        flat_key = join_type_parts(ancestors)
+                        if _type in src_dict:
+                            flat_key = join_type_parts(ancestors)
+                        else:
+                            _dir_name = src_dict[_dir]
+                            if os.path.isabs(_dir_name):
+                                # if an absolute path is specified then we assume it's absolute to current dir
+                                flat_key = _dir_name.replace('/', '', 1)
+                            else:
+                                flat_key = os.path.relpath(
+                                    os.path.abspath(os.path.join(os.path.dirname(current_file), _dir_name)),
+                                    os.getcwd())
                         if flat_key in api_type_attributes:
-                            raise YamlKeyDuplicationError(f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
+                            raise YamlKeyDuplicationError(
+                                f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                                f"which already has been previously defined in {api_type_attributes[flat_key].file}")
                         api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
                                                                         file=current_file)
                     if _sub in src_dict:

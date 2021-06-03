@@ -6,9 +6,7 @@
 #include "cxx/enums/color.hpp"
 #include "cxx/simple/task.hpp"
 
-/*
- * Operators overload examples
- */
+
 namespace iegen::example {
 
 /**

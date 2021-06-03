@@ -179,6 +179,8 @@ file:
           return result;
       }
 
+package:
+  swift:
 
 enum:
   swift:

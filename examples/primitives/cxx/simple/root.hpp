@@ -6,8 +6,6 @@
 namespace iegen::example {
 // [example]
 /**
- * comments
- *
  * __API__
  * gen: class
  * shared_ref: False

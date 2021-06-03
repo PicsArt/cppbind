@@ -1,0 +1,7 @@
+gen_actions:
+  - dir: "."
+    rule:
+      gen: package
+      name: inputs
+      python.code_fragment:
+        - import json

@@ -16,7 +16,7 @@ file_full_name:
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ dir, class, class_template, struct, struct_template, enum, function, function_template ]
 
 name:
   inheritable: false
@@ -30,13 +30,19 @@ interface_name:
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:
-  inheritable: true
+  inheritable: false
   array: true
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ dir, class, class_template, struct, struct_template, enum ]
+
+code_fragment:
+  inheritable: false
+  array: true
+  default: []
+  allowed_on: [ dir ]
 
 include_cxx:
-  inheritable: true
+  inheritable: false
   array: true
   default: [ ]
   allowed_on: [ class, class_template, struct, struct_template ]
@@ -57,7 +63,7 @@ is_operator:
   inheritable: false
   default: '{{_is_operator}}'
   type: bool
-  allowed_on: [ cxx_method ]
+  allowed_on: [ cxx_method, function_template ]
 
 is_exception:
   inheritable: false
@@ -75,7 +81,7 @@ nullable_return:
   inheritable: false
   default: false
   type: bool
-  allowed_on: [ cxx_method, function, function_template ]
+  allowed_on: [ cxx_method, function, function_template, field ]
 
 nullable_arg:
   inheritable: false

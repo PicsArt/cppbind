@@ -1,3 +1,4 @@
+from operators import pretty_print
 from operators.counter_pygen import Counter
 
 # [counter - usage]
@@ -10,3 +11,7 @@ assert counter2 > counter1
 counter1 += counter2
 assert counter1.count == 3
 # [counter - usage]
+
+
+# test for dir actions with relative path
+pretty_print('{"first_name": "John", "last_name": "Doe"}')

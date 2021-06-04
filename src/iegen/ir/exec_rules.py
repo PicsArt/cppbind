@@ -8,7 +8,7 @@ import types
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import logging as logging
-from iegen.ir.ast import NodeType
+from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
 
 
@@ -403,7 +403,7 @@ class RunRule(object):
 
     def call_api(self, rule, node, builder, template_ctx=None):
         api = node.api
-        if api == 'none':
+        if api == Node.API_NONE:
             return
         att_name = "gen_" + api
         logging.debug(f"Call API: {api} on {node.displayname}")

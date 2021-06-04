@@ -16,6 +16,7 @@ import clang.cindex as cli
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
+from iegen.ir.ast import Node
 
 
 class APIParser(object):
@@ -120,7 +121,7 @@ class APIParser(object):
                 platform = self.platforms + ['__all__']
 
             if api is None and attr == 'gen':
-                api = value or 'none'
+                api = value or Node.API_NONE
             else:
                 # now check attribute
                 # attribute should be in attributes

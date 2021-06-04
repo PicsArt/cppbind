@@ -14,6 +14,8 @@ class NodeType(Enum):
 
 
 class Node(ABC):
+    API_NONE = 'none'
+
     def __init__(self, api=None, args=None,
                  parent=None, children=None, pure_comment=None):
         self.api = api

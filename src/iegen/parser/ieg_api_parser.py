@@ -5,14 +5,13 @@ import distutils.util
 import glob
 import re
 import os
-from jinja2 import Template
+import yaml
 from collections import defaultdict
 from collections import OrderedDict
 from types import SimpleNamespace
+from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
-import yaml
-
-import clang.cindex as cli
+from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
@@ -74,7 +73,7 @@ class APIParser(object):
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
         if self.has_api(cursor.raw_comment):
-            return self.parse_comments(Template(cursor.raw_comment).render(ctx), location)
+            return self.parse_comments(JINJA_ENV.from_string(cursor.raw_comment).render(ctx), location)
         else:
             return self.parse_yaml_api(get_full_displayname(cursor), ctx, location)
 
@@ -83,10 +82,13 @@ class APIParser(object):
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
-                api_attrs = APIParser.eval_attr_template(api_attrs, ctx)
                 # for dir api pass file and the first line
                 location = location or SimpleNamespace(file_name=attrs.file,
                                                        line_number=None)
+                try:
+                    api_attrs = APIParser.eval_attr_template(api_attrs, ctx)
+                except JinjaUndefinedError as e:
+                    Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
                 return self.parse_api_attrs(api_attrs, location)
 
     def yaml_api_file_name(self, name):
@@ -178,14 +180,6 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-    def get_external_api_attrs(self, cursor):
-        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL,
-                           cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE,
-                           cli.CursorKind.CONSTRUCTOR, cli.CursorKind.CLASS_TEMPLATE,
-                           cli.CursorKind.ENUM_DECL]:
-            attrs = self.api_type_attributes.get(get_full_displayname(cursor))
-            if attrs:
-                return attrs.attr
 
     @staticmethod
     def get_priority(plat, lang):
@@ -268,5 +262,5 @@ class APIParser(object):
     @staticmethod
     def eval_attr_template(attrs, ctx):
         if isinstance(attrs, dict):
-            return yaml.load(Template(yaml.dump(attrs)).render(ctx), Loader=UniqueKeyLoader)
-        return yaml.load(Template(attrs).render(ctx), Loader=UniqueKeyLoader)
+            return yaml.load(JINJA_ENV.from_string(yaml.dump(attrs)).render(ctx), Loader=UniqueKeyLoader)
+        return yaml.load(JINJA_ENV.from_string(attrs).render(ctx), Loader=UniqueKeyLoader)

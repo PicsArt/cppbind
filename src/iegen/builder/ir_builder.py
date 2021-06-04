@@ -4,10 +4,11 @@ Processor module provides various processor for ieg parser
 import copy
 import os
 from collections import OrderedDict
-from jinja2 import Template
 from types import SimpleNamespace
+from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen import default_config as default_config
+from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, ClangNode, NodeType
 from iegen.ir.ast import IEG_Ast
@@ -146,10 +147,11 @@ class CXXIEGIRBuilder(object):
                             if new_att_val is None:
                                 # use default value
                                 new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
-                                try:
-                                    new_att_val = Template(new_att_val).render(self.get_sys_vars())
-                                except TypeError:
-                                    pass
+                                if isinstance(new_att_val, str):
+                                    try:
+                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(self.get_sys_vars())
+                                    except JinjaUndefinedError as e:
+                                        Error.critical(f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
                     else:
                         # attribute is set check weather or not it is allowed.
                         if not allowed:

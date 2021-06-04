@@ -44,12 +44,12 @@ class CXXIEGIRBuilder(object):
         self._parent_arg_mapping = {}
 
     def start_dir(self, dir_name):
-        ctx = self.get_full_ctx()
         if dir_name not in self._processed_dirs:
             dir_node = DirectoryNode(dir_name, file_name=self.ieg_api_parser.yaml_api_file_name(dir_name))
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
             args = api = pure_comment = None
+            ctx = self.get_full_ctx()
             parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name, ctx)
             if parsed_api:
                 api, args, pure_comment = parsed_api
@@ -238,8 +238,8 @@ class CXXIEGIRBuilder(object):
 
     def get_full_ctx(self):
         ctx = self.get_sys_vars()
-        if len(self.node_stack) > 1:
-            parent_args = self.node_stack[-2].args
+        parent_args = self._get_parent_args()
+        if parent_args:
             for attr_key, attr_val in parent_args.items():
                 for plat_key, plat_val in attr_val.items():
                     ctx.setdefault(plat_key, SimpleNamespace())

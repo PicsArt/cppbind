@@ -120,7 +120,7 @@ class APIParser(object):
                 platform = self.platforms + ['__all__']
 
             if api is None and attr == 'gen':
-                api = value
+                api = value or 'none'
             else:
                 # now check attribute
                 # attribute should be in attributes

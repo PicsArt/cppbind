@@ -403,6 +403,8 @@ class RunRule(object):
 
     def call_api(self, rule, node, builder, template_ctx=None):
         api = node.api
+        if api == 'none':
+            return
         att_name = "gen_" + api
         logging.debug(f"Call API: {api} on {node.displayname}")
         func = getattr(rule, att_name)

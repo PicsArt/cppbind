@@ -3,3 +3,4 @@ gen_actions:
     rule:
       gen:
       project_dir: '{{path.dirname(path.dirname(_current_working_dir))}}'
+      project_link: 'https://github.com/PicsArt/iegen/tree/master/'

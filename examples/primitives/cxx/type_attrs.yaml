@@ -1,0 +1,7 @@
+# will be changed to gen: None
+gen_actions:
+  - dir: "."
+    rule:
+      gen: package
+      name: cxx
+      project_dir: '{{path.dirname(path.dirname(_current_working_dir))}}'

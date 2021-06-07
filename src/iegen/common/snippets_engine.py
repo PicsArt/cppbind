@@ -591,12 +591,20 @@ class SnippetsEngine:
 
         env.filters['any'] = _any
 
-        def to_snake_case(string):
+        def to_snake_case(string, patterns=None):
+            if patterns:
+                for p in patterns:
+                    string = string.replace(p, to_snake_case(p))
+                return string
             return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
 
         env.filters['to_snake_case'] = to_snake_case
 
-        def to_camel_case(string):
+        def to_camel_case(string, patterns=None):
+            if patterns:
+                for p in patterns:
+                    string = string.replace(p, to_camel_case(p))
+                return string
             init, *temp = string.split('_')
             return ''.join([init, *map(str.title, temp)])
 

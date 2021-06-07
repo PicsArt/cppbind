@@ -5,6 +5,7 @@ import copy
 import os
 from collections import OrderedDict
 
+from git import Repo, GitError
 from jinja2 import Template
 
 from iegen import default_config as default_config
@@ -154,7 +155,17 @@ class CXXIEGIRBuilder(object):
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
-                            new_att_val = Template(new_att_val).render(self.get_sys_vars(plat, lang))
+                            context = self.get_sys_vars(plat, lang, pure_comment)
+                            parent_args = self._get_parent_args()
+                            if parent_args:
+                                for attr_key in parent_args:
+                                    context[attr_key] = parent_args[attr_key][plat][lang]
+
+                            for attr_key in args:
+                                value = args[attr_key].get(plat, {}).get(lang, None)
+                                if value:
+                                    context[attr_key] = args[attr_key].get(plat, {}).get(lang, None)
+                            new_att_val = Template(new_att_val).render(context)
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
@@ -181,29 +192,51 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
-        sys_vars = {'module_name': ''}
+        sys_vars = {
+            'path': os.path,
+            '_current_working_dir': os.getcwd(),
+            '_module_name': '',
+            '_pure_comment': '',
+            '_line_number': node.line_number,
+            '_file_full_name': node.file_name,
+        }
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
-                'is_operator': False,
-                'file_name': node.name,
-                'file_full_name': node.name,
-                'object_name': node.name
+                '_is_operator': False,
+                '_object_name': node.name,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0] if node.file_name else node.name,
             })
 
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
-                'is_operator': node.clang_cursor.displayname.startswith('operator'),
-                'file_full_name': node.file_name,
-                'file_name': os.path.splitext(os.path.basename(node.file_name))[0],
-                'object_name': node.clang_cursor.spelling,
+                '_is_operator': node.clang_cursor.displayname.startswith('operator'),
+                '_object_name': node.clang_cursor.spelling,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 
         self._sys_vars.update(sys_vars)
 
-    def get_sys_vars(self, plat, lang):
+    def get_sys_vars(self, plat, lang, pure_comment):
         sys_vars = copy.copy(self._sys_vars)
         module_name = self.get_module_name(plat, lang)
-        sys_vars['module_name'] = module_name
+        sys_vars['_module_name'] = module_name
+
+        def get_git_repo_url(project_dir=None):
+            if project_dir:
+                try:
+                    repo = Repo(project_dir)
+                    url = next(repo.remote().urls).replace('.git', '')
+                    branch = repo.active_branch.name
+                    return f'{url}/tree/{branch}/'
+                except GitError:
+                    # not a git repo leave variable empty
+                    Error.warning(
+                        f'Could not find a git repository under: {project_dir}.')
+                    return ''
+
+        sys_vars['get_git_repo_url'] = get_git_repo_url
+        if pure_comment:
+            sys_vars['_pure_comment'] = '\n'.join(pure_comment)
         return sys_vars
 
     def get_module_name(self, plat, lang):

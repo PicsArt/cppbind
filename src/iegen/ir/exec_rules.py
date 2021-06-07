@@ -340,10 +340,10 @@ class RunRule(object):
 
             def _run_recursive(node, template_ctx=None):
                 stack_added = False
-                node_key = (node, json.dumps(template_ctx))
+                node_key = self.__node_key(node, template_ctx)
                 if node.api and (not calling_api or node.api in calling_api) and node_key not in processed:
                     ancestor = node.ancestor_with_api
-                    ancestor_key = (ancestor, json.dumps(template_ctx))
+                    ancestor_key = self.__node_key(ancestor, template_ctx)
                     if ancestor_key in processed:
                         # for already called api resume builders scope stack
                         logging.debug(f"Restoring stack for {ancestor.displayname}.")
@@ -352,8 +352,9 @@ class RunRule(object):
                             f"Restored stack {self.__str_stacks(processed[ancestor_key])}."
                         )
                     # allocate scope
-                    stack_added = True
-                    builder.add_scope_stack()
+                    if node.type == NodeType.CLANG_NODE:
+                        stack_added = True
+                        builder.add_scope_stack()
 
                     # call api
                     self.call_api(rule, node, builder, template_ctx)
@@ -427,6 +428,12 @@ class RunRule(object):
         self.all_contexts = dict()
         for node in self.ir.walk():
             self.create_context(node)
+
+    def __node_key(self, node, template_ctx):
+        node_key = (node,)
+        if node and node.type == NodeType.CLANG_NODE and node.is_template:
+            node_key = (node, json.dumps(template_ctx))
+        return node_key
 
     def __str_stacks(self, capture_data):
         # first lang stack data

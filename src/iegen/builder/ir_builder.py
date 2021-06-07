@@ -4,10 +4,11 @@ Processor module provides various processor for ieg parser
 import copy
 import os
 from collections import OrderedDict
-
-from jinja2 import Template
+from types import SimpleNamespace
+from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen import default_config as default_config
+from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, ClangNode, NodeType
 from iegen.ir.ast import IEG_Ast
@@ -49,7 +50,8 @@ class CXXIEGIRBuilder(object):
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
             args = api = pure_comment = None
-            parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name)
+            ctx = self.get_full_ctx()
+            parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name, ctx)
             if parsed_api:
                 api, args, pure_comment = parsed_api
             self.__process_attrs(dir_node, args, api, pure_comment)
@@ -95,7 +97,9 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        api_parser_result = self.ieg_api_parser.parse_api(cursor)
+        ctx = self.get_full_ctx()
+
+        api_parser_result = self.ieg_api_parser.parse_api(cursor, ctx)
         if not api_parser_result:
             return
 
@@ -108,8 +112,8 @@ class CXXIEGIRBuilder(object):
 
         # add all missing attributes
         for att_name, properties in self.attributes.items():
-            for plat in ALL_PLATFORMS:
-                for lang in ALL_LANGUAGES:
+            for plat in ALL_PLATFORMS + ["__all__"]:
+                for lang in ALL_LANGUAGES + ["__all__"]:
                     att_val = args.get(
                         att_name,
                         {}
@@ -143,6 +147,11 @@ class CXXIEGIRBuilder(object):
                             if new_att_val is None:
                                 # use default value
                                 new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
+                                if isinstance(new_att_val, str):
+                                    try:
+                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(self.get_sys_vars())
+                                    except JinjaUndefinedError as e:
+                                        Error.critical(f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
                     else:
                         # attribute is set check weather or not it is allowed.
                         if not allowed:
@@ -154,7 +163,6 @@ class CXXIEGIRBuilder(object):
                     # now we need to process variables of value and set value
                     if new_att_val is not None:
                         if isinstance(new_att_val, str):
-                            new_att_val = Template(new_att_val).render(self.get_sys_vars(plat, lang))
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
@@ -181,50 +189,28 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
-        sys_vars = {'module_name': ''}
+        sys_vars = {}
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
-                'is_operator': False,
-                'file_name': node.name,
-                'file_full_name': node.name,
-                'object_name': node.name
+                '_is_operator': False,
+                '_file_name': node.name,
+                '_file_full_name': node.name,
+                '_object_name': node.name
             })
 
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
-                'is_operator': node.clang_cursor.displayname.startswith('operator'),
-                'file_full_name': node.file_name,
-                'file_name': os.path.splitext(os.path.basename(node.file_name))[0],
-                'object_name': node.clang_cursor.spelling,
+                '_is_operator': node.clang_cursor.displayname.startswith('operator'),
+                '_file_full_name': node.file_name,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
+                '_object_name': node.clang_cursor.spelling,
             })
 
         self._sys_vars.update(sys_vars)
 
-    def get_sys_vars(self, plat, lang):
+    def get_sys_vars(self):
         sys_vars = copy.copy(self._sys_vars)
-        module_name = self.get_module_name(plat, lang)
-        sys_vars['module_name'] = module_name
         return sys_vars
-
-    def get_module_name(self, plat, lang):
-        module_att_name = 'module'
-        if module_att_name not in self.attributes:
-            return ''
-        parent_module = []
-        properties = self.attributes[module_att_name]
-        allowed_on = properties.get('allowed_on', [])
-        for node in reversed(self.node_stack[:-1]):
-            if not allowed_on or node.kind_name in allowed_on:
-                mod = node.args.get("module", None)
-                if mod is not None:
-                    parent_module = [mod.get(plat, {}).get(lang)]
-                    break
-
-        current_node = self.node_stack[-1]
-        if not allowed_on or current_node.kind_name in allowed_on:
-            parent_module.append(current_node.spelling)
-
-        return '.'.join(parent_module)
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()
@@ -239,6 +225,7 @@ class CXXIEGIRBuilder(object):
     @staticmethod
     def get_attr_default_value(prop, plat, lang):
         def_val = prop.get("default")
+
         if not isinstance(def_val, dict):
             return def_val
 
@@ -250,3 +237,24 @@ class CXXIEGIRBuilder(object):
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:
                 return def_val[key]
+
+    def get_full_ctx(self):
+        ctx = self.get_sys_vars()
+        parent_args = self._get_parent_args()
+        if parent_args:
+            for attr_key, attr_val in parent_args.items():
+                for plat_key, plat_val in attr_val.items():
+                    ctx.setdefault(plat_key, SimpleNamespace())
+                    for lang_key, val in plat_val.items():
+                        ctx.setdefault(lang_key, SimpleNamespace())
+                        if not hasattr(ctx[plat_key], lang_key):
+                            setattr(ctx[plat_key], lang_key, SimpleNamespace())
+                        if plat_key != '__all__' and lang_key != '__all__':
+                            setattr(getattr(ctx[plat_key], lang_key), attr_key, val)
+                        elif plat_key == '__all__' and lang_key == '__all__':
+                            ctx[attr_key] = val
+                        elif plat_key == '__all__':
+                            setattr(ctx[lang_key], attr_key, val)
+                        else:
+                            setattr(ctx[plat_key], attr_key, val)
+        return ctx

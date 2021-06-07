@@ -1,0 +1,34 @@
+gen_actions:
+  - type: "pi::video_engine::yaml_test::WithExternalAPIComments"
+    ::
+    - type: "retInt(int)"
+      rule:
+        gen: '{{"method"}}'
+        throws: no_throw
+
+    - type: "str()"
+      rule:
+        gen: getter
+        throws: '{{"no_throw" if shared_ref else "std::out_of_range"}}'
+
+    - type: "setStr(const std::string &)"
+      rule:
+        gen: setter
+        throws: no_throw
+
+  - type: "pi::video_engine::yaml_test::WithExternalAPIComments"
+    rule: |
+      gen: class
+      package: yaml_test
+      swift.include: CWrapper
+
+  - type: "pi::video_engine::yaml_test::WithExternalAPIComments::max(const T &, const T &)"
+    rule: |
+      {{gen}}: method
+      {% set myList = ['exc1','exc2','exc3'] %}
+      throws: {{myList}}
+      template:
+        T:
+          - type: int
+          - type: std::string
+

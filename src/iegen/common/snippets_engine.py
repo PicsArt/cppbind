@@ -5,7 +5,6 @@ import glob
 import shutil
 import copy
 from jinja2 import Environment, BaseLoader, StrictUndefined
-# from iegen import logging as logging
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen.common.yaml_process import load_yaml

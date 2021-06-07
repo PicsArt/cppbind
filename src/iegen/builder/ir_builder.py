@@ -228,8 +228,9 @@ class CXXIEGIRBuilder(object):
                     url = next(repo.remote().urls).replace('.git', '')
                     branch = repo.active_branch.name
                     return f'{url}/tree/{branch}/'
-                except GitError:
+                except (GitError, TypeError):
                     # not a git repo leave variable empty
+                    # TypeError may be thrown in case of incorrect reference to a git commit
                     Error.warning(
                         f'Could not find a git repository under: {project_dir}.')
                     return ''

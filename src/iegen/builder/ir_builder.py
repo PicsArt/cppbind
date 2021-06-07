@@ -100,7 +100,11 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        ctx = self.get_full_ctx()
+        # we have a _pure_comment sys var, adding it to jinja context
+        pure_comment = None
+        if cursor.raw_comment:
+            pure_comment = self.ieg_api_parser.retrieve_pure_comment(cursor.raw_comment)
+        ctx = self.get_full_ctx(pure_comment)
 
         api_parser_result = self.ieg_api_parser.parse_api(cursor, ctx)
         if not api_parser_result:
@@ -152,9 +156,12 @@ class CXXIEGIRBuilder(object):
                                 new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
                                 if isinstance(new_att_val, str):
                                     try:
-                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(self.get_sys_vars())
+                                        context = self.get_full_ctx(pure_comment)
+                                        self._add_args_to_ctx(args, context)
+                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(context)
                                     except JinjaUndefinedError as e:
-                                        Error.critical(f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
+                                        Error.critical(
+                                            f"Jinja evaluation error in attributes definition file {default_config.attr_file}: {e}")
                     else:
                         # attribute is set check weather or not it is allowed.
                         if not allowed:
@@ -218,7 +225,7 @@ class CXXIEGIRBuilder(object):
     def get_sys_vars(self, pure_comment):
         sys_vars = copy.copy(self._sys_vars)
 
-        def get_git_repo_url(project_dir=None):
+        def _get_git_repo_url(project_dir=None):
             if project_dir:
                 try:
                     repo = Repo(project_dir)
@@ -232,7 +239,7 @@ class CXXIEGIRBuilder(object):
                         f'Could not find a git repository under: {project_dir}.')
                     return ''
 
-        sys_vars['get_git_repo_url'] = get_git_repo_url
+        sys_vars['_get_git_repo_url'] = _get_git_repo_url
         if pure_comment:
             sys_vars['_pure_comment'] = '\n'.join(pure_comment)
         return sys_vars
@@ -263,23 +270,26 @@ class CXXIEGIRBuilder(object):
             if key in def_val:
                 return def_val[key]
 
-    def get_full_ctx(self):
-        ctx = self.get_sys_vars()
+    def get_full_ctx(self, pure_comment=None):
+        ctx = self.get_sys_vars(pure_comment)
         parent_args = self._get_parent_args()
         if parent_args:
-            for attr_key, attr_val in parent_args.items():
-                for plat_key, plat_val in attr_val.items():
-                    ctx.setdefault(plat_key, SimpleNamespace())
-                    for lang_key, val in plat_val.items():
-                        ctx.setdefault(lang_key, SimpleNamespace())
-                        if not hasattr(ctx[plat_key], lang_key):
-                            setattr(ctx[plat_key], lang_key, SimpleNamespace())
-                        if plat_key != '__all__' and lang_key != '__all__':
-                            setattr(getattr(ctx[plat_key], lang_key), attr_key, val)
-                        elif plat_key == '__all__' and lang_key == '__all__':
-                            ctx[attr_key] = val
-                        elif plat_key == '__all__':
-                            setattr(ctx[lang_key], attr_key, val)
-                        else:
-                            setattr(ctx[plat_key], attr_key, val)
+            self._add_args_to_ctx(parent_args, ctx)
         return ctx
+
+    def _add_args_to_ctx(self, args, ctx):
+        for attr_key, attr_val in args.items():
+            for plat_key, plat_val in attr_val.items():
+                ctx.setdefault(plat_key, SimpleNamespace())
+                for lang_key, val in plat_val.items():
+                    ctx.setdefault(lang_key, SimpleNamespace())
+                    if not hasattr(ctx[plat_key], lang_key):
+                        setattr(ctx[plat_key], lang_key, SimpleNamespace())
+                    if plat_key != '__all__' and lang_key != '__all__':
+                        setattr(getattr(ctx[plat_key], lang_key), attr_key, val)
+                    elif plat_key == '__all__' and lang_key == '__all__':
+                        ctx[attr_key] = val
+                    elif plat_key == '__all__':
+                        setattr(ctx[lang_key], attr_key, val)
+                    else:
+                        setattr(ctx[plat_key], attr_key, val)

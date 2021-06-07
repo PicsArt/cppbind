@@ -34,14 +34,23 @@ class APIParser(object):
         self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
+    def retrieve_pure_comment(self, raw_comment, index=None):
+        index = index or self.__api_index(raw_comment)
+        if index == -1:
+            return raw_comment
+        return extract_pure_comment(raw_comment, index)
+
+    def __api_index(self, raw_comment):
+        return raw_comment.find(self.api_start_kw)
+
     def parse_comments(self, raw_comment, location=None):
         """
         Parse comment to extract API command and its attributes
         """
-        index = raw_comment.find(self.api_start_kw)
+        index = self.__api_index(raw_comment)
         if index == -1:
             return None, OrderedDict()
-        pure_comment = extract_pure_comment(raw_comment, index)
+        pure_comment = self.retrieve_pure_comment(raw_comment, index)
         SKIP_REGEXPR = r'^[\s*/]*$'
 
         api_section = raw_comment[index + len(self.api_start_kw)::]
@@ -69,7 +78,6 @@ class APIParser(object):
 
         return self.parse_api_attrs(attrs, location, pure_comment)
 
-
     def parse_api(self, cursor, ctx=None):
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
@@ -83,7 +91,7 @@ class APIParser(object):
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
-                # for dir api pass file and the first line
+                # for dir api pass yaml file path
                 location = location or SimpleNamespace(file_name=attrs.file,
                                                        line_number=None)
                 try:

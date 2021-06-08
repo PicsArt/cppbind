@@ -244,11 +244,11 @@ def test_parser_with_dir_api(parser_config):
 
     parser.parse(processor)
     assert len(processor.ir.roots) == 1
-    dir_root = processor.ir.roots[0].children[0]
-    assert dir_root.type is NodeType.DIRECTORY_NODE
-    assert dir_root.api == 'package'
-    assert dir_root.name == cxx_inputs_rel_path
-    assert dir_root.children[0].type == NodeType.CLANG_NODE
+    root = processor.ir.roots[0]
+    assert root.type is NodeType.DIRECTORY_NODE
+    assert root.api == 'package'
+    assert root.name == cxx_inputs_rel_path
+    assert root.children[0].type == NodeType.CLANG_NODE
 
     os.chdir(init_cwd)
 
@@ -260,7 +260,7 @@ def test_empty_gen_rule(parser_config):
     os.chdir(working_dir)
 
     parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
-    parser_config.src_glob = os.path.join(working_dir, 'src', '*.hpp')
+    parser_config.src_glob = os.path.join(working_dir, '*.hpp')
 
     parser = CXXParser(parser_config=parser_config)
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
@@ -269,16 +269,15 @@ def test_empty_gen_rule(parser_config):
     parser.parse(ir_builder)
     ir = ir_builder.ir
 
-    lang = 'python'
-    plat = 'linux'
+    lang, plat = 'python', 'linux'
 
     # check that directory gen rule is empty
-    assert ir.roots[0].children[0].api == Node.API_NONE, 'wrong directory gen rule'
-    assert ir.roots[0].children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
+    assert ir.roots[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
 
     # check that 'package' inheritable attribute is inherited from dir to class
-    dir_pkg_value = ir.roots[0].children[0].args['package'][plat][lang]
-    cls_pkg_value = ir.roots[0].children[0].children[0].children[0].args['package'][plat][lang]
+    dir_pkg_value = ir.roots[0].args['package'][plat][lang]
+    cls_pkg_value = ir.roots[0].children[0].children[0].args['package'][plat][lang]
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     lang_config = default_config.languages[lang]
@@ -296,3 +295,31 @@ def test_empty_gen_rule(parser_config):
         # remove generated new directory
         rmtree(os.path.join(working_dir, lang_config.out_dir))
         os.chdir(init_cwd)
+
+def test_root_config(parser_config):
+    init_cwd = os.getcwd()
+    working_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config')
+
+    os.chdir(working_dir)
+
+    parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
+    parser_config.src_glob = os.path.join(working_dir, '*.hpp')
+
+    parser = CXXParser(parser_config=parser_config)
+    ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+                                 api_start_kw=default_config.api_start_kw,
+                                 parser_config=parser.config)
+    parser.parse(ir_builder)
+    ir = ir_builder.ir
+
+    lang, plat = 'python', 'linux'
+
+    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
+    assert ir.roots[0].type == NodeType.ROOT_NODE, 'wrong directory node kind'
+
+    root_clang_value = ir.roots[0].args['clang_args'][plat][lang]
+    dir_clang_value = ir.roots[0].children[0].args['clang_args'][plat][lang]
+    cls_clang_value = ir.roots[0].children[0].children[0].children[0].args['clang_args'][plat][lang]
+    assert root_clang_value == dir_clang_value == cls_clang_value == 'clang_args', "inheritance of attributes doesn't work correctly"
+
+    os.chdir(init_cwd)

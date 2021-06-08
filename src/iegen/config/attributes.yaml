@@ -22,6 +22,7 @@ name:
   inheritable: false
   type: string
   default: '{{_object_name}}'
+  allowed_on: [ cxx, file_system ]
 
 interface_name:
   inheritable: false
@@ -88,3 +89,8 @@ nullable_arg:
   default: [ ]
   array: true
   allowed_on: [ cxx_method, constructor, function, function_template ]
+
+clang_args:
+  inheritable: true
+  default: -D__ANDROID__
+  allowed_on: [ root, dir ]

@@ -263,7 +263,7 @@ class APIParser(object):
                                               f"which must be uniquely specified only in one file.\n"
                                               f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
             api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_config],
-                                                                     file={current_file})
+                                                                     file=current_file)
 
         if not _title in attrs:
             return

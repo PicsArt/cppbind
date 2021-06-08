@@ -1,5 +1,9 @@
+config:
+  gen:
+  clang_args: clang_args
+
 gen_actions:
-  - dir: "."
+  - dir: "src"
     rule:
       gen:
       package: example_pkg

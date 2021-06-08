@@ -151,7 +151,7 @@ class CXXParser(object):
             root = os.path.dirname(root)
             dir_name = os.path.relpath(root, os.getcwd())
 
-            match = re.match(r'^[./]+$', dir_name)
+            match = re.match(r'^[./]+$', dir_name) and dir_name != '.'
             if match:
                 break
             dirs_to_search.add(dir_name)

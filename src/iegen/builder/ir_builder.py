@@ -10,7 +10,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.ir.ast import RootNode, DirectoryNode, ClangNode, NodeType
+from iegen.ir.ast import RootNode, DirectoryNode, ClangNode, NodeType, Node
 from iegen.ir.ast import IEG_Ast
 from iegen.parser.ieg_api_parser import APIParser
 
@@ -35,7 +35,7 @@ class CXXIEGIRBuilder(object):
     def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
-        self.attributes = attributes
+        self.attributes = CXXIEGIRBuilder.process_attributes(attributes)
         self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES, ALL_PLATFORMS, parser_config)
         self.ir = IEG_Ast()
         self.node_stack = []
@@ -46,19 +46,18 @@ class CXXIEGIRBuilder(object):
 
     def start_root(self):
         root_node = RootNode()
-        self.node_stack.append(root_node)
-        self.__update_internal_vars(root_node)
-        args = api = pure_comment = None
         parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name)
         if parsed_api:
             api, args, pure_comment = parsed_api
-        self.__process_attrs(root_node, args, api, pure_comment)
+            self.node_stack.append(root_node)
+            self.__process_attrs(root_node, args, api, pure_comment)
 
     def end_root(self):
-        assert self.node_stack, "stack should not be empty"
-        node = self.node_stack.pop()
-        assert node.name == RootNode.ROOT_KEY
-        self.ir.roots.append(node)
+        if self.node_stack:
+            node = self.node_stack.pop()
+            assert node.name == RootNode.ROOT_KEY
+            assert len(self.node_stack) == 0, "stack should be empty"
+            self.ir.roots.append(node)
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
@@ -137,13 +136,10 @@ class CXXIEGIRBuilder(object):
 
                     new_att_val = att_val
                     node_kind = current_node.kind_name
-                    allowed = True
-                    if "allowed_on" in properties:
-                        allowed = node_kind in properties["allowed_on"]
+                    allowed = node_kind in properties["allowed_on"]
                     if new_att_val is None:
                         # check mandatory attribute existence
-                        node_kind = current_node.kind_name
-                        if "required_on" in properties and node_kind in properties["required_on"]:
+                        if node_kind in properties["required_on"]:
                             Error.error(f"Attribute '{att_name}' is mandatory attribute on {node_kind}.",
                                         current_node.file_name,
                                         current_node.line_number)
@@ -207,15 +203,7 @@ class CXXIEGIRBuilder(object):
     def __update_internal_vars(self, node):
         sys_vars = {}
 
-        if node.type == NodeType.ROOT_NODE:
-            sys_vars.update({
-                '_is_operator': False,
-                '_file_name': '',
-                '_file_full_name': '',
-                '_object_name': ''
-            })
-
-        elif node.type == NodeType.DIRECTORY_NODE:
+        if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_is_operator': False,
                 '_file_name': node.name,
@@ -283,3 +271,25 @@ class CXXIEGIRBuilder(object):
                         else:
                             setattr(ctx[plat_key], attr_key, val)
         return ctx
+
+    @staticmethod
+    def process_attributes(attrs):
+        """
+        A function to replace node group aliases with their actual values list
+        """
+        aliases = Node.NODE_GROUP_ALIASES
+
+        for field in ['allowed_on', 'required_on']:
+            for key, val in attrs.items():
+                if not field in val:
+                    attrs[key][field] = aliases['cxx'] if field == 'allowed_on' else []
+                else:
+                    res = []
+                    for node in val[field]:
+                        if node in aliases:
+                            res.extend(aliases[node])
+                        else:
+                            res.append(node)
+                    attrs[key][field] = res
+
+        return attrs

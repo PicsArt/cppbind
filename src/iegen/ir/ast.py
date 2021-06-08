@@ -17,6 +17,14 @@ class NodeType(Enum):
 class Node(ABC):
     API_NONE = 'none'
 
+    NODE_GROUP_ALIASES = {
+        'file_system': ('dir',),
+        'cxx': (
+            'class', 'class_template', 'struct', 'struct_template', 'constructor',
+            'function', 'function_template', 'cxx_method', 'enum', 'field'
+        )
+    }
+
     def __init__(self, api=None, args=None,
                  parent=None, children=None, pure_comment=None):
         self.api = api
@@ -50,16 +58,6 @@ class Node(ABC):
     @property
     @abstractmethod
     def kind_name(self):
-        pass
-
-    @property
-    @abstractmethod
-    def file_name(self):
-        pass
-
-    @property
-    @abstractmethod
-    def line_number(self):
         pass
 
     @property
@@ -156,19 +154,11 @@ class RootNode(Node):
 
     @property
     def full_displayname(self):
-        return None
+        return "Root"
 
     @property
     def kind_name(self):
         return "root"
-
-    @property
-    def file_name(self):
-        return None
-
-    @property
-    def line_number(self):
-        return None
 
     @property
     def displayname(self):

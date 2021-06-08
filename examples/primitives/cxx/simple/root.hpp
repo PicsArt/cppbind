@@ -9,7 +9,6 @@ namespace iegen::example {
  * __API__
  * gen: class
  * shared_ref: False
- * package: simple
  * swift.include: CWrapper
  */
 struct Root {

@@ -225,37 +225,6 @@ def test_jinja_attrs(parser_config):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
 
 
-def test_parser_with_dir_api(parser_config):
-    # change cwd
-    init_cwd = os.getcwd()
-    os.chdir(SCRIPT_DIR)
-    cxx_inputs_rel_path = '../test_cxx_inputs'
-
-    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path))
-    parser_config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path, '*.h'))
-
-    parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, '*.yaml')
-    # load yaml file api
-    APIParser(attributes=default_config.attributes,
-              api_start_kw=default_config.attributes,
-              parser_config=parser_config)
-
-    parser = CXXParser(parser_config=parser_config)
-
-    processor = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                api_start_kw=default_config.api_start_kw,
-                                parser_config=parser_config)
-
-    parser.parse(processor)
-    assert len(processor.ir.roots) == 1
-    root = processor.ir.roots[0]
-    assert root.type is NodeType.DIRECTORY_NODE
-    assert root.api == 'package'
-    assert root.name == cxx_inputs_rel_path
-    assert root.children[0].type == NodeType.CLANG_NODE
-
-    os.chdir(init_cwd)
-
 def test_empty_gen_rule(parser_config):
     init_cwd = os.getcwd()
     working_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen')

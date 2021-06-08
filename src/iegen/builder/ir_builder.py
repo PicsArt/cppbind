@@ -10,7 +10,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.ir.ast import DirectoryNode, ClangNode, NodeType
+from iegen.ir.ast import DirectoryNode, ClangNode, NodeType, FileNode
 from iegen.ir.ast import IEG_Ast
 from iegen.parser.ieg_api_parser import APIParser
 
@@ -75,10 +75,17 @@ class CXXIEGIRBuilder(object):
         self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
-        current_node = ClangNode(tu.cursor)
+        current_node = FileNode(tu.cursor)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
+
+        ctx = self.get_full_ctx()
+        parsed_api = self.ieg_api_parser.parse_yaml_api(tu.spelling, ctx)
+
+        if parsed_api:
+            api, args, pure_comment = parsed_api
+            self.__process_attrs(current_node, args, api, pure_comment)
 
     def end_tu(self, tu, *args, **kwargs):
         tu_node = self.node_stack.pop()
@@ -151,7 +158,8 @@ class CXXIEGIRBuilder(object):
                                     try:
                                         new_att_val = JINJA_ENV.from_string(new_att_val).render(self.get_sys_vars())
                                     except JinjaUndefinedError as e:
-                                        Error.critical(f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
+                                        Error.critical(
+                                            f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
                     else:
                         # attribute is set check weather or not it is allowed.
                         if not allowed:

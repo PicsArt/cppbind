@@ -1,0 +1,5 @@
+gen_actions:
+  - file: "./example.h"
+    rule:
+      gen:
+      package: test_cxx_inputs

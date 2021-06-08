@@ -16,7 +16,7 @@ file_full_name:
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ dir, class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ dir, file, class, class_template, struct, struct_template, enum, function, function_template ]
 
 name:
   inheritable: false
@@ -33,13 +33,13 @@ include:
   inheritable: false
   array: true
   default: [ ]
-  allowed_on: [ dir, class, class_template, struct, struct_template, enum ]
+  allowed_on: [ dir, file, class, class_template, struct, struct_template, enum ]
 
 code_fragment:
   inheritable: false
   array: true
   default: []
-  allowed_on: [ dir ]
+  allowed_on: [ dir, file ]
 
 include_cxx:
   inheritable: false

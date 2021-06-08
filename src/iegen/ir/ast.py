@@ -11,6 +11,7 @@ import iegen.utils.clang as cutil
 class NodeType(Enum):
     CLANG_NODE = 1
     DIRECTORY_NODE = 2
+    FILE_NODE = 3
 
 
 class Node(ABC):
@@ -112,7 +113,7 @@ class Node(ABC):
 
 class DirectoryNode(Node):
 
-    def __init__(self, name, file_name=None,api=None, args=None, parent=None, children=None, pure_comment=None):
+    def __init__(self, name, file_name=None, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
         self.name = name
         self._file_name = file_name
@@ -142,32 +143,11 @@ class DirectoryNode(Node):
         return self.name
 
 
-class ClangNode(Node):
+class CursorBaseNode(Node, ABC):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
         self.clang_cursor = clang_cursor
-
-    @property
-    def type(self):
-        return NodeType.CLANG_NODE
-
-    def __eq__(self, other):
-        return self.full_displayname == other.full_displayname
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.full_displayname)
-
-    @property
-    def kind_name(self):
-        assert self.clang_cursor, "cursor is not provided"
-        if self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT:
-            return "file"
-        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
-        return cl_kind
 
     @property
     def kind(self):
@@ -200,6 +180,44 @@ class ClangNode(Node):
     @property
     def line_number(self):
         return self.clang_cursor.extent.start.line
+
+
+class FileNode(CursorBaseNode):
+
+    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+
+    @property
+    def type(self):
+        return NodeType.FILE_NODE
+
+    @property
+    def kind_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        assert self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT
+        return "file"
+
+
+class ClangNode(CursorBaseNode):
+
+    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+
+    @property
+    def type(self):
+        return NodeType.CLANG_NODE
+
+    @property
+    def kind_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
+        return cl_kind
+
+    @property
+    def kind_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
+        return cl_kind
 
     @property
     def is_interface(self):

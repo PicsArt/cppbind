@@ -14,7 +14,8 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
+from iegen.parser.api_rule_types import NodeApiType
+from iegen.utils.clang import extract_pure_comment, get_full_displayname
 from iegen.ir.ast import Node
 
 
@@ -22,8 +23,6 @@ class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
     RULE_TITLE_KEY = 'gen_actions'
-    RULE_TYPE_KEY = 'type'
-    RULE_DIR_KEY = 'dir'
     RULE_RULE_KEY = 'rule'
     RULE_SUB_KEY = ':'
 
@@ -68,7 +67,6 @@ class APIParser(object):
             raise Exception(f"Error while scanning yaml style comments: {e}")
 
         return self.parse_api_attrs(attrs, location, pure_comment)
-
 
     def parse_api(self, cursor, ctx=None):
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
@@ -181,7 +179,6 @@ class APIParser(object):
         """
         return raw_comment and self.api_start_kw in raw_comment
 
-
     @staticmethod
     def get_priority(plat, lang):
         """
@@ -219,40 +216,27 @@ class APIParser(object):
     @staticmethod
     def update_api_type_attributes(attrs, current_file, api_type_attributes):
         _title = APIParser.RULE_TITLE_KEY
-        _type = APIParser.RULE_TYPE_KEY
         _rule = APIParser.RULE_RULE_KEY
         _sub = APIParser.RULE_SUB_KEY
-        _dir = APIParser.RULE_DIR_KEY
 
         def flatten_dict(src_dict, ancestors):
-            assert (_type in src_dict) ^ (_dir in src_dict), f'{_dir} and {_type} are mutually exclusive.'
-            if _type in src_dict or _dir in src_dict:
-                _type in src_dict and ancestors.append(src_dict[_type])
-                _dir in src_dict and ancestors.append(src_dict[_dir])
-                try:
-                    if _rule in src_dict:
-                        if _type in src_dict:
-                            flat_key = join_type_parts(ancestors)
-                        else:
-                            _dir_name = src_dict[_dir]
-                            if os.path.isabs(_dir_name):
-                                # if an absolute path is specified then we assume it's absolute to current dir
-                                flat_key = _dir_name.replace('/', '', 1)
-                            else:
-                                flat_key = os.path.relpath(
-                                    os.path.abspath(os.path.join(os.path.dirname(current_file), _dir_name)),
-                                    os.getcwd())
-                        if flat_key in api_type_attributes:
-                            raise YamlKeyDuplicationError(
-                                f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                                f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                        api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
-                                                                        file=current_file)
-                    if _sub in src_dict:
-                        for sub in src_dict[_sub]:
-                            flatten_dict(sub, ancestors)
-                finally:
-                    ancestors.pop()
+            NodeApiType.assert_has_one(src_dict)
+            rule = NodeApiType.get_rule(src_dict)
+            ancestors.append(src_dict[rule.name])
+            try:
+                if _rule in src_dict:
+                    flat_key = rule.key(current_file=current_file, src_dict=src_dict, ancestors=ancestors)
+                    if flat_key in api_type_attributes:
+                        raise YamlKeyDuplicationError(
+                            f"Definition with duplicate '{flat_key}' key in {current_file},\n"
+                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
+                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
+                                                                    file=current_file)
+                if _sub in src_dict:
+                    for sub in src_dict[_sub]:
+                        flatten_dict(sub, ancestors)
+            finally:
+                ancestors.pop()
 
         if not _title in attrs:
             return

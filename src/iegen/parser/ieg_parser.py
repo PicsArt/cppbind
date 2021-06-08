@@ -114,6 +114,9 @@ class CXXParser(object):
 
     def parse(self, processor):
 
+        if hasattr(processor, 'start_root'):
+            processor.start_root()
+
         for tu in self.parss_tu_x():
             tu_parent_dirs = self.__dirs_to_process(tu)
 
@@ -137,11 +140,13 @@ class CXXParser(object):
                 if hasattr(processor, 'end_dir'):
                     processor.end_dir(dir_name)
 
+        if hasattr(processor, 'end_root'):
+            processor.end_root()
+
     def __dirs_to_process(self, tu):
         dirs_to_search = set()
 
-        root = os.path.dirname(tu.spelling)
-        dirs_to_search.add(os.path.relpath(root, os.getcwd()))
+        root = tu.spelling
         while root:
             root = os.path.dirname(root)
             dir_name = os.path.relpath(root, os.getcwd())

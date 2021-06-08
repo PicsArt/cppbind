@@ -10,7 +10,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.ir.ast import DirectoryNode, ClangNode, NodeType
+from iegen.ir.ast import RootNode, DirectoryNode, ClangNode, NodeType
 from iegen.ir.ast import IEG_Ast
 from iegen.parser.ieg_api_parser import APIParser
 
@@ -43,6 +43,22 @@ class CXXIEGIRBuilder(object):
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
+
+    def start_root(self):
+        root_node = RootNode()
+        self.node_stack.append(root_node)
+        self.__update_internal_vars(root_node)
+        args = api = pure_comment = None
+        parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name)
+        if parsed_api:
+            api, args, pure_comment = parsed_api
+        self.__process_attrs(root_node, args, api, pure_comment)
+
+    def end_root(self):
+        assert self.node_stack, "stack should not be empty"
+        node = self.node_stack.pop()
+        assert node.name == RootNode.ROOT_KEY
+        self.ir.roots.append(node)
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
@@ -190,7 +206,16 @@ class CXXIEGIRBuilder(object):
 
     def __update_internal_vars(self, node):
         sys_vars = {}
-        if node.type == NodeType.DIRECTORY_NODE:
+
+        if node.type == NodeType.ROOT_NODE:
+            sys_vars.update({
+                '_is_operator': False,
+                '_file_name': '',
+                '_file_full_name': '',
+                '_object_name': ''
+            })
+
+        elif node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_is_operator': False,
                 '_file_name': node.name,

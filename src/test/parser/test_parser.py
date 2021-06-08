@@ -24,7 +24,6 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 def test_parser(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    print(parser_config)
     processor = CXXPrintProcsessor()
     for c in parsser.parss_x():
         processor(c)
@@ -32,14 +31,12 @@ def test_parser(parser_config):
 
 def test_parser_processor(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    # print(parser_config)
     processor = CXXPrintProcsessor()
     parsser.parse(processor)
 
 
 def test_parser_processor_cr_counter(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    # print(parser_config)
     count = 0
     max_dept = 0
     dept = 0
@@ -106,7 +103,6 @@ def test_API_parser(attributes, api_start_kw, test_data, res_md5):
 
     api, args, _ = parsser.parse_comments(test_data)
     str_res = f"api={api}, args={args}"
-    print(str_res)
     assert hashlib.md5(str_res.encode()).hexdigest() == res_md5, \
         "API parser result has bean changed."
 
@@ -248,11 +244,11 @@ def test_parser_with_dir_api(parser_config):
 
     parser.parse(processor)
     assert len(processor.ir.roots) == 1
-    root = processor.ir.roots[0]
-    assert root.type is NodeType.DIRECTORY_NODE
-    assert root.api == 'package'
-    assert root.name == cxx_inputs_rel_path
-    assert root.children[0].type == NodeType.CLANG_NODE
+    dir_root = processor.ir.roots[0].children[0]
+    assert dir_root.type is NodeType.DIRECTORY_NODE
+    assert dir_root.api == 'package'
+    assert dir_root.name == cxx_inputs_rel_path
+    assert dir_root.children[0].type == NodeType.CLANG_NODE
 
     os.chdir(init_cwd)
 
@@ -264,7 +260,7 @@ def test_empty_gen_rule(parser_config):
     os.chdir(working_dir)
 
     parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
-    parser_config.src_glob = os.path.join(working_dir, '*.hpp')
+    parser_config.src_glob = os.path.join(working_dir, 'src', '*.hpp')
 
     parser = CXXParser(parser_config=parser_config)
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
@@ -277,12 +273,13 @@ def test_empty_gen_rule(parser_config):
     plat = 'linux'
 
     # check that directory gen rule is empty
-    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
+    assert ir.roots[0].children[0].api == Node.API_NONE, 'wrong directory gen rule'
+    assert ir.roots[0].children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
 
     # check that 'package' inheritable attribute is inherited from dir to class
-    dir_pkg_value = ir.roots[0].args['package'][plat][lang]
-    cls_pkg_value = ir.roots[0].children[0].children[0].args['package'][plat][lang]
-    assert dir_pkg_value == cls_pkg_value, "inheritance of attributes doesn't work correctly"
+    dir_pkg_value = ir.roots[0].children[0].args['package'][plat][lang]
+    cls_pkg_value = ir.roots[0].children[0].children[0].children[0].args['package'][plat][lang]
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     lang_config = default_config.languages[lang]
     lang_config.out_dir = 'example_out_dir'

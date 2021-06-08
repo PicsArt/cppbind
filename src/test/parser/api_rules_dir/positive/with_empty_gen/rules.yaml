@@ -1,5 +1,5 @@
 gen_actions:
-  - dir: "."
+  - dir: "src"
     rule:
       gen:
       package: example_pkg

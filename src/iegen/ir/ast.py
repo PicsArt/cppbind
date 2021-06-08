@@ -11,6 +11,7 @@ import iegen.utils.clang as cutil
 class NodeType(Enum):
     CLANG_NODE = 1
     DIRECTORY_NODE = 2
+    ROOT_NODE = 3
 
 
 class Node(ABC):
@@ -139,6 +140,38 @@ class DirectoryNode(Node):
 
     @property
     def full_displayname(self):
+        return self.name
+
+
+class RootNode(Node):
+    ROOT_KEY = '__root__'
+
+    def __init__(self):
+        super().__init__(None, None, None, None, None)
+        self.name = RootNode.ROOT_KEY
+
+    @property
+    def type(self):
+        return NodeType.ROOT_NODE
+
+    @property
+    def full_displayname(self):
+        return None
+
+    @property
+    def kind_name(self):
+        return "root"
+
+    @property
+    def file_name(self):
+        return None
+
+    @property
+    def line_number(self):
+        return None
+
+    @property
+    def displayname(self):
         return self.name
 
 

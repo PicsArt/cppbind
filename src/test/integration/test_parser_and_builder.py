@@ -34,12 +34,13 @@ def test_parser_with_dir_api(parser_config):
 
     parser.parse(processor)
 
-    assert len(processor.ir.roots) == 1
-    root = processor.ir.roots[0]
-    assert root.type is NodeType.DIRECTORY_NODE
-    assert root.name == CXX_INPUTS_REL_PATH
-    assert len(root.children) == 1
-    dir_node = root.children[0]
+    root = processor.ir
+    dir_root = root.children[0]
+    assert root.type is NodeType.ROOT_NODE
+    assert dir_root.type is NodeType.DIRECTORY_NODE
+    assert dir_root.name == CXX_INPUTS_REL_PATH
+    assert len(dir_root.children) == 1
+    dir_node = dir_root.children[0]
     assert dir_node.type == NodeType.DIRECTORY_NODE
     assert dir_node.api == 'package'
     assert dir_node.name == f'{CXX_INPUTS_REL_PATH}/{dir_example_folder}'
@@ -66,12 +67,14 @@ def test_parser_with_file_api(parser_config):
                                 parser_config=config)
 
     parser.parse(processor)
-    assert len(processor.ir.roots) == 1
-    root = processor.ir.roots[0]
-    assert root.type is NodeType.DIRECTORY_NODE
-    assert root.name == CXX_INPUTS_REL_PATH
+
+    root = processor.ir
+    assert root.type is NodeType.ROOT_NODE
     assert len(root.children) == 1
-    dir_node = root.children[0]
+    root_dir = root.children[0]
+    assert root_dir.name == CXX_INPUTS_REL_PATH
+    assert len(root_dir.children) == 1
+    dir_node = root_dir.children[0]
     assert dir_node.type == NodeType.DIRECTORY_NODE
     assert dir_node.api is None
     assert dir_node.name == f'{CXX_INPUTS_REL_PATH}/{file_example_folder}'

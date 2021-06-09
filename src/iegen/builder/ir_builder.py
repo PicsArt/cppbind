@@ -12,20 +12,21 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.ir.ast import RootNode, DirectoryNode, ClangNode, NodeType
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
+from iegen.ir.ast import RootNode
 from iegen.parser.ieg_api_parser import APIParser
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
 
 NODE_GROUP_ALIASES = {
-    'file_system': ('dir',),
+    'file_system': ('dir', 'file'),
     'cxx': (
         'class', 'class_template', 'struct', 'struct_template', 'constructor',
         'function', 'function_template', 'cxx_method', 'enum', 'field'
     )
 }
+
 
 class CXXPrintProcsessor(object):
 

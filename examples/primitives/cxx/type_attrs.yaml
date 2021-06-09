@@ -1,0 +1,6 @@
+gen_actions:
+  - dir: "."
+    rule:
+      gen:
+      project_dir: '{{_current_working_dir}}'
+      project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'

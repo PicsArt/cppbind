@@ -57,10 +57,11 @@ def get_operator_name(spelling):
 
 
 def make_comment(pure_comment):
+    lines = [line for line in pure_comment.splitlines() if line]
     nl = '\n'
-    if not pure_comment:
+    if not lines:
         return ""
-    return f'"""{nl.join(pure_comment)}"""'
+    return f'"""{nl}{nl.join(lines)}{nl}"""'
 
 
 def make_hashtag_comment(pure_comment):

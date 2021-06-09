@@ -3,9 +3,9 @@ import os
 import types
 from shutil import rmtree
 from collections import OrderedDict
-
 import pytest
 import yaml
+from unittest.mock import patch
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
@@ -207,7 +207,7 @@ def test_parser_errors(parser_config):
 
 
 def test_jinja_attrs(parser_config):
-    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'jinja_attr')
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
     parser = CXXParser(parser_config=parser_config)
 
     parser_config.src_glob = os.path.join(test_dir, '*.hpp')
@@ -221,10 +221,8 @@ def test_jinja_attrs(parser_config):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
 
 
+@patch('os.getcwd', lambda: SCRIPT_DIR)
 def test_parser_with_dir_api(parser_config):
-    # change cwd
-    init_cwd = os.getcwd()
-    os.chdir(SCRIPT_DIR)
     cxx_inputs_rel_path = '../test_cxx_inputs'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path))
@@ -243,21 +241,19 @@ def test_parser_with_dir_api(parser_config):
                                 parser_config=parser_config)
 
     parser.parse(processor)
-    assert len(processor.ir.roots) == 1
-    root = processor.ir.roots[0]
-    assert root.type is NodeType.DIRECTORY_NODE
-    assert root.api == 'package'
-    assert root.name == cxx_inputs_rel_path
-    assert root.children[0].type == NodeType.CLANG_NODE
 
-    os.chdir(init_cwd)
+    root = processor.ir
+    dir_root = root.children[0]
+    assert root.type is NodeType.ROOT_NODE
+    assert dir_root.type is NodeType.DIRECTORY_NODE
+    assert dir_root.api == 'package'
+    assert dir_root.name == cxx_inputs_rel_path
+    assert dir_root.children[0].type == NodeType.CLANG_NODE
 
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(parser_config):
-    init_cwd = os.getcwd()
-    working_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen')
-
-    # to skip redundant dir nodes in ir
-    os.chdir(working_dir)
+    working_dir = os.getcwd()
 
     parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     parser_config.src_glob = os.path.join(working_dir, '*.hpp')
@@ -267,21 +263,23 @@ def test_empty_gen_rule(parser_config):
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
     parser.parse(ir_builder)
-    ir = ir_builder.ir
 
+    ir = ir_builder.ir
+    dir_root = ir.children[0]
     lang, plat = 'python', 'linux'
 
     # check that directory gen rule is empty
-    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
-    assert ir.roots[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert dir_root.api == Node.API_NONE, 'wrong directory gen rule'
+    assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert dir_root.children[0].children[0].api == 'class', 'wrong api type'
 
     # check that 'package' inheritable attribute is inherited from dir to class
-    dir_pkg_value = ir.roots[0].args['package'][plat][lang]
-    cls_pkg_value = ir.roots[0].children[0].children[0].args['package'][plat][lang]
+    dir_pkg_value = dir_root.args['package'][plat][lang]
+    cls_pkg_value = dir_root.children[0].children[0].args['package'][plat][lang]
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     lang_config = default_config.languages[lang]
-    lang_config.out_dir = 'example_out_dir'
+    lang_config.out_dir = os.path.join(working_dir, 'example_out_dir')
     lang_rule = load_module_from_paths(f"{lang}.rule", lang_config.rule, default_config.default_config_dirs)
     run_rule = RunRule(ir, plat, lang, lang_config)
     builder = Builder()
@@ -294,13 +292,10 @@ def test_empty_gen_rule(parser_config):
     else:
         # remove generated new directory
         rmtree(os.path.join(working_dir, lang_config.out_dir))
-        os.chdir(init_cwd)
 
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
 def test_root_config(parser_config):
-    init_cwd = os.getcwd()
-    working_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config')
-
-    os.chdir(working_dir)
+    working_dir = os.getcwd()
 
     parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     parser_config.src_glob = os.path.join(working_dir, '*.hpp')
@@ -310,16 +305,16 @@ def test_root_config(parser_config):
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
     parser.parse(ir_builder)
-    ir = ir_builder.ir
+    root = ir_builder.ir
 
     lang, plat = 'python', 'linux'
 
-    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
-    assert ir.roots[0].type == NodeType.ROOT_NODE, 'wrong directory node kind'
+    assert root.api == Node.API_NONE, 'wrong root gen rule'
+    assert root.type == NodeType.ROOT_NODE, 'wrong root node kind'
+    assert root.children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert root.children[0].children[0].children[0].api == 'class', 'wrong class node api'
 
-    root_clang_value = ir.roots[0].args['clang_args'][plat][lang]
-    dir_clang_value = ir.roots[0].children[0].args['clang_args'][plat][lang]
-    cls_clang_value = ir.roots[0].children[0].children[0].children[0].args['clang_args'][plat][lang]
+    root_clang_value = root.args['clang_args'][plat][lang]
+    dir_clang_value = root.children[0].args['clang_args'][plat][lang]
+    cls_clang_value = root.children[0].children[0].children[0].args['clang_args'][plat][lang]
     assert root_clang_value == dir_clang_value == cls_clang_value == 'clang_args', "inheritance of attributes doesn't work correctly"
-
-    os.chdir(init_cwd)

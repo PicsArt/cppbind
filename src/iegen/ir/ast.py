@@ -17,14 +17,6 @@ class NodeType(Enum):
 class Node(ABC):
     API_NONE = 'none'
 
-    NODE_GROUP_ALIASES = {
-        'file_system': ('dir',),
-        'cxx': (
-            'class', 'class_template', 'struct', 'struct_template', 'constructor',
-            'function', 'function_template', 'cxx_method', 'enum', 'field'
-        )
-    }
-
     def __init__(self, api=None, args=None,
                  parent=None, children=None, pure_comment=None):
         self.api = api
@@ -147,6 +139,15 @@ class RootNode(Node):
     def __init__(self):
         super().__init__(None, None, None, None, None)
         self.name = RootNode.ROOT_KEY
+
+    def __repr__(self):
+        return f"RootNode({self.__dict__})"
+
+    def walk(self):
+        """
+        """
+        for node in self.walk_preorder():
+            yield node
 
     @property
     def type(self):
@@ -279,19 +280,3 @@ class ClangNode(Node):
                 cxx_root_type_name = cutil.replace_template_choice(
                     _root_cursor.type.spelling, template_choice)
         return cxx_root_type_name
-
-
-class IEG_Ast(object):
-
-    def __init__(self):
-        self.roots = []
-
-    def __repr__(self):
-        return f"IEG_Ast({self.__dict__})"
-
-    def walk(self):
-        """
-        """
-        for root in self.roots:
-            for node in root.walk_preorder():
-                yield node

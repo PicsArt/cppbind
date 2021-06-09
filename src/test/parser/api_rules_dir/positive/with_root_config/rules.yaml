@@ -1,9 +1,9 @@
-config:
+root:
   gen:
   clang_args: clang_args
 
 gen_actions:
-  - dir: "src"
+  - dir: "."
     rule:
       gen:
       package: example_pkg

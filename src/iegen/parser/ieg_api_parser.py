@@ -26,7 +26,7 @@ class APIParser(object):
     RULE_DIR_KEY = 'dir'
     RULE_RULE_KEY = 'rule'
     RULE_SUB_KEY = ':'
-    RULE_CONFIG_KEY = 'config'
+    RULE_ROOT_KEY = 'root'
 
     def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
@@ -225,7 +225,7 @@ class APIParser(object):
         _rule = APIParser.RULE_RULE_KEY
         _sub = APIParser.RULE_SUB_KEY
         _dir = APIParser.RULE_DIR_KEY
-        _config = APIParser.RULE_CONFIG_KEY
+        _root = APIParser.RULE_ROOT_KEY
 
         def flatten_dict(src_dict, ancestors):
             assert (_type in src_dict) ^ (_dir in src_dict), f'{_dir} and {_type} are mutually exclusive.'
@@ -257,12 +257,12 @@ class APIParser(object):
                 finally:
                     ancestors.pop()
 
-        if _config in attrs:
+        if _root in attrs:
             if RootNode.ROOT_KEY in api_type_attributes:
-                raise YamlKeyDuplicationError(f"Redefinition of '{_config}' section in {current_file} file, "
+                raise YamlKeyDuplicationError(f"Redefinition of '{_root}' section in {current_file} file, "
                                               f"which must be uniquely specified only in one file.\n"
                                               f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
-            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_config],
+            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_root],
                                                                      file=current_file)
 
         if not _title in attrs:

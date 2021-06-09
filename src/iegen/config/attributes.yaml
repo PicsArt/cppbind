@@ -94,3 +94,25 @@ clang_args:
   inheritable: true
   default: -D__ANDROID__
   allowed_on: [ root, dir ]
+
+
+project_dir:
+  inheritable: True
+  default: '{{_current_working_dir}}'
+  allowed_on: [ dir ]
+
+project_link:
+  inheritable: True
+  default: '{{_get_git_repo_url(project_dir)}}'
+  allowed_on: [ dir ]
+
+comment:
+  inheritable: false
+  default:
+    python: |
+      {{_pure_comment}}
+      {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
+      Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}} <{{project_link}}{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
+      {%- endif %}
+    else: |
+      {{_pure_comment}}

@@ -309,6 +309,7 @@ constructor:
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                        {%- endfor %}):
+          {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   cxx:
     body: |
@@ -336,7 +337,7 @@ function:
                                                           {%- for arg in args -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
-          {{comment|string|indent}}
+          {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   cxx:
     body: |

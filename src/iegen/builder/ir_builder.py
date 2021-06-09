@@ -5,6 +5,8 @@ import copy
 import os
 from collections import OrderedDict
 from types import SimpleNamespace
+
+from git import Repo, GitError
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen import default_config as default_config
@@ -75,7 +77,7 @@ class CXXIEGIRBuilder(object):
             parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name, ctx)
             if parsed_api:
                 api, args, pure_comment = parsed_api
-            self.__process_attrs(dir_node, args, api, pure_comment)
+            self.__process_attrs(dir_node, args, api, pure_comment, ctx)
         else:
             # directory is already processed
             dir_node = self._processed_dirs[dir_name]
@@ -121,10 +123,11 @@ class CXXIEGIRBuilder(object):
 
         api, args, pure_comment = api_parser_result
 
-        self.__process_attrs(current_node, args, api, pure_comment)
+        self.__process_attrs(current_node, args, api, pure_comment, ctx)
 
-    def __process_attrs(self, current_node, args, api, pure_comment):
+    def __process_attrs(self, current_node, args, api, pure_comment, ctx=None):
         args = args or OrderedDict()
+        context = ctx or self.get_full_ctx(pure_comment)
 
         # add all missing attributes
         for att_name, properties in self.attributes.items():
@@ -162,9 +165,10 @@ class CXXIEGIRBuilder(object):
                                 new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
                                 if isinstance(new_att_val, str):
                                     try:
-                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(self.get_sys_vars())
+                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(context)
                                     except JinjaUndefinedError as e:
-                                        Error.critical(f"Jinja evaluation error in attributes definiton file {default_config.attr_file}: {e}")
+                                        Error.critical(
+                                            f"Jinja evaluation error in attributes definition file {default_config.attr_file}: {e}")
                     else:
                         # attribute is set check weather or not it is allowed.
                         if not allowed:
@@ -178,7 +182,8 @@ class CXXIEGIRBuilder(object):
                         if isinstance(new_att_val, str):
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
-
+                        # add attr to current node context so that it can be used for coming attributes
+                        CXXIEGIRBuilder._add_arg_to_ctx(att_name, new_att_val, plat, lang, context)
                         args.setdefault(att_name, OrderedDict()).setdefault(plat, OrderedDict())[lang] = new_att_val
 
         current_node.api = api
@@ -202,28 +207,48 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
-        sys_vars = {}
-
+        sys_vars = {
+            'path': os.path,
+            '_current_working_dir': os.getcwd(),
+            '_pure_comment': '',
+            '_line_number': node.line_number,
+            '_file_full_name': node.file_name,
+        }
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_is_operator': False,
-                '_file_name': node.name,
-                '_file_full_name': node.name,
-                '_object_name': node.name
+                '_object_name': node.name,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0] if node.file_name else node.name,
             })
 
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
-                '_file_full_name': node.file_name,
-                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
                 '_object_name': node.clang_cursor.spelling,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 
         self._sys_vars.update(sys_vars)
 
     def get_sys_vars(self):
         sys_vars = copy.copy(self._sys_vars)
+
+        def _get_git_repo_url(project_dir=None):
+            if project_dir:
+                try:
+                    repo = Repo(project_dir)
+                    url = next(repo.remote().urls).replace('.git', '')
+                    branch = repo.active_branch.name
+                    return f'{url}/tree/{branch}/'
+                except (GitError, TypeError):
+                    # not a git repo leave variable empty
+                    # TypeError may be thrown in case of incorrect reference to a git commit
+                    Error.warning(
+                        f'Could not find a git repository under: {project_dir}.')
+                    return ''
+
+        sys_vars['_get_git_repo_url'] = _get_git_repo_url
+
         return sys_vars
 
     def end_cursor(self, cursor, *args, **kwargs):
@@ -252,26 +277,37 @@ class CXXIEGIRBuilder(object):
             if key in def_val:
                 return def_val[key]
 
-    def get_full_ctx(self):
+    def get_full_ctx(self, pure_comment=None):
         ctx = self.get_sys_vars()
+        if pure_comment is None:
+            current_node = self.node_stack[-1]
+            if current_node.type == NodeType.CLANG_NODE and current_node.clang_cursor.raw_comment:
+                pure_comment, _ = self.ieg_api_parser.separate_pure_and_api_comment(
+                    current_node.clang_cursor.raw_comment)
+                if pure_comment:
+                    ctx['_pure_comment'] = '\n'.join(pure_comment)
         parent_args = self._get_parent_args()
         if parent_args:
             for attr_key, attr_val in parent_args.items():
                 for plat_key, plat_val in attr_val.items():
-                    ctx.setdefault(plat_key, SimpleNamespace())
                     for lang_key, val in plat_val.items():
-                        ctx.setdefault(lang_key, SimpleNamespace())
-                        if not hasattr(ctx[plat_key], lang_key):
-                            setattr(ctx[plat_key], lang_key, SimpleNamespace())
-                        if plat_key != '__all__' and lang_key != '__all__':
-                            setattr(getattr(ctx[plat_key], lang_key), attr_key, val)
-                        elif plat_key == '__all__' and lang_key == '__all__':
-                            ctx[attr_key] = val
-                        elif plat_key == '__all__':
-                            setattr(ctx[lang_key], attr_key, val)
-                        else:
-                            setattr(ctx[plat_key], attr_key, val)
+                        CXXIEGIRBuilder._add_arg_to_ctx(attr_key, val, plat_key, lang_key, ctx)
         return ctx
+
+    @staticmethod
+    def _add_arg_to_ctx(attr_key, attr_vay, plat_key, lang_key, ctx):
+        ctx.setdefault(plat_key, SimpleNamespace())
+        ctx.setdefault(lang_key, SimpleNamespace())
+        if not hasattr(ctx[plat_key], lang_key):
+            setattr(ctx[plat_key], lang_key, SimpleNamespace())
+        if plat_key != '__all__' and lang_key != '__all__':
+            setattr(getattr(ctx[plat_key], lang_key), attr_key, attr_vay)
+        elif plat_key == '__all__' and lang_key == '__all__':
+            ctx[attr_key] = attr_vay
+        elif plat_key == '__all__':
+            setattr(ctx[lang_key], attr_key, attr_vay)
+        else:
+            setattr(ctx[plat_key], attr_key, attr_vay)
 
     @staticmethod
     def process_attributes(attrs):

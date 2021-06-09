@@ -50,6 +50,7 @@ public:
 	}
 
 	/**
+     * @param[in] optionalStr string with default value
      * __API__
      * gen: method
      * throws: no_throw

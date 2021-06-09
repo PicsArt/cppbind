@@ -80,7 +80,9 @@ class Node(ABC):
 
     @property
     def root(self):
-        root_node = self
+        if not self.parent:
+            return None
+        root_node = self.parent
         while True:
             if root_node.parent:
                 root_node = root_node.parent
@@ -103,7 +105,7 @@ class Node(ABC):
 
 class DirectoryNode(Node):
 
-    def __init__(self, name, file_name=None,api=None, args=None, parent=None, children=None, pure_comment=None):
+    def __init__(self, name, file_name=None, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
         self.name = name
         self._file_name = file_name

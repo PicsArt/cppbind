@@ -11,6 +11,7 @@ from iegen.common.yaml_process import load_yaml
 from iegen.common.config import config
 from iegen import logging as logging
 from iegen import converter
+from iegen.utils import make_camel_case, make_snake_case
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -590,15 +591,8 @@ class SnippetsEngine:
 
         env.filters['any'] = _any
 
-        def to_snake_case(string):
-            return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
+        env.filters['to_snake_case'] = make_snake_case
 
-        env.filters['to_snake_case'] = to_snake_case
-
-        def to_camel_case(string):
-            init, *temp = string.split('_')
-            return ''.join([init, *map(str.title, temp)])
-
-        env.filters['to_camel_case'] = to_camel_case
+        env.filters['to_camel_case'] = make_camel_case
 
         self.jinja2_env = env

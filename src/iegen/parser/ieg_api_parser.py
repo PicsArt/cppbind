@@ -3,19 +3,20 @@ Implements ieg api parser on cxx comment
 """
 import distutils.util
 import glob
-import re
 import os
-import yaml
+import re
 from collections import defaultdict
 from collections import OrderedDict
 from types import SimpleNamespace
+
+import yaml
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 from iegen.ir.ast import Node, RootNode
+from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
 class APIParser(object):
@@ -35,17 +36,22 @@ class APIParser(object):
         self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
-    def parse_comments(self, raw_comment, location=None):
+    def separate_pure_and_api_comment(self, raw_comment, index=None):
+        index = index or raw_comment.find(self.api_start_kw)
+        if index == -1:
+            return raw_comment, None
+        return extract_pure_comment(raw_comment, index), raw_comment[index + len(self.api_start_kw)::]
+
+    def parse_comments(self, raw_comment, ctx, location=None):
         """
         Parse comment to extract API command and its attributes
         """
-        index = raw_comment.find(self.api_start_kw)
-        if index == -1:
+        pure_comment, api_section = self.separate_pure_and_api_comment(raw_comment)
+        if api_section is None:
             return None, OrderedDict()
-        pure_comment = extract_pure_comment(raw_comment, index)
+        api_section = JINJA_ENV.from_string(api_section).render(ctx)
         SKIP_REGEXPR = r'^[\s*/]*$'
 
-        api_section = raw_comment[index + len(self.api_start_kw)::]
         lines = api_section.splitlines()
         filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
 
@@ -70,12 +76,11 @@ class APIParser(object):
 
         return self.parse_api_attrs(attrs, location, pure_comment)
 
-
     def parse_api(self, cursor, ctx=None):
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
         if self.has_api(cursor.raw_comment):
-            return self.parse_comments(JINJA_ENV.from_string(cursor.raw_comment).render(ctx), location)
+            return self.parse_comments(cursor.raw_comment, ctx, location)
         else:
             return self.parse_yaml_api(get_full_displayname(cursor), ctx, location)
 
@@ -85,7 +90,7 @@ class APIParser(object):
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
-                # for dir api pass file and the first line
+                # for dir api pass yaml file path
                 location = location or SimpleNamespace(file_name=attrs.file,
                                                        line_number=None)
                 try:
@@ -182,7 +187,6 @@ class APIParser(object):
         Tests whether or not comment has API section.
         """
         return raw_comment and self.api_start_kw in raw_comment
-
 
     @staticmethod
     def get_priority(plat, lang):

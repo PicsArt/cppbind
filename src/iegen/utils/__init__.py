@@ -3,6 +3,7 @@ Common utils that can by used from different modules
 """
 import os
 import errno
+import re
 import sys
 
 import importlib.util
@@ -40,3 +41,38 @@ def get_host_platform():
         return 'mac'
 
     raise Exception(f"Not supported os platform: {platform}")
+
+
+def make_snake_case(string, sub_strings=None):
+    """
+    Returns snake cased version of input string if sub_strings is None.
+    If sub_strings is specified then only replaces all sub_string occurrences with their snake cased version.
+    Args:
+        string(str): String to replace
+        sub_strings(list): List of sub_strings to be replaced with their snake cased version.
+    Returns:
+        str: Snake cased input string.
+    """
+    if sub_strings:
+        for p in sub_strings:
+            string = string.replace(p, make_snake_case(p))
+        return string
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
+
+
+def make_camel_case(string, sub_strings=None):
+    """
+    Returns camel cased version of input string if sub_strings is None.
+    If sub_strings is specified then only replaces all sub_string occurrences with their camel cased version.
+    Args:
+        string(str): String to replace
+        sub_strings(list): List of sub_strings to be replaced with their camel cased version.
+    Returns:
+        str: Camel cased input string.
+    """
+    if sub_strings:
+        for p in sub_strings:
+            string = string.replace(p, make_camel_case(p))
+        return string
+    init, *temp = string.split('_')
+    return ''.join([init, *map(str.title, temp)])

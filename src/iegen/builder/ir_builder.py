@@ -10,7 +10,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.ir.ast import DirectoryNode, ClangNode, NodeType, FileNode
+from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
 from iegen.ir.ast import IEG_Ast
 from iegen.parser.ieg_api_parser import APIParser
 
@@ -100,7 +100,7 @@ class CXXIEGIRBuilder(object):
         self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
     def start_cursor(self, cursor, *args, **kwargs):
-        current_node = ClangNode(cursor)
+        current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 

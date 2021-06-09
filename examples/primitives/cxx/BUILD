@@ -13,6 +13,8 @@ filegroup(
     srcs = glob([
         "**/*.cpp",
         "**/*.h*",
+        "**/*.yaml",
+        "**/*.yml",
     ]),
     visibility = ["//visibility:public"],
 )

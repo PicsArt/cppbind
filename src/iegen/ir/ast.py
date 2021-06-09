@@ -143,7 +143,7 @@ class DirectoryNode(Node):
         return self.name
 
 
-class CursorBaseNode(Node, ABC):
+class ClangNode(Node, ABC):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
@@ -182,7 +182,7 @@ class CursorBaseNode(Node, ABC):
         return self.clang_cursor.extent.start.line
 
 
-class FileNode(CursorBaseNode):
+class FileNode(ClangNode):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(clang_cursor, api, args, parent, children, pure_comment)
@@ -198,7 +198,7 @@ class FileNode(CursorBaseNode):
         return "file"
 
 
-class ClangNode(CursorBaseNode):
+class CXXNode(ClangNode):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(clang_cursor, api, args, parent, children, pure_comment)

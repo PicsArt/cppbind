@@ -1,0 +1,12 @@
+root:
+  gen:
+  clang_args: clang_args
+
+gen_actions:
+  - dir: "."
+    rule:
+      gen:
+      package: example_pkg
+  - type: Example
+    rule:
+      gen: class

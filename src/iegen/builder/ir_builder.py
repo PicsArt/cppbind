@@ -12,13 +12,20 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen import default_config as default_config
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
+from iegen.ir.ast import RootNode, DirectoryNode, ClangNode, NodeType
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
-from iegen.ir.ast import IEG_Ast
 from iegen.parser.ieg_api_parser import APIParser
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
 
+NODE_GROUP_ALIASES = {
+    'file_system': ('dir',),
+    'cxx': (
+        'class', 'class_template', 'struct', 'struct_template', 'constructor',
+        'function', 'function_template', 'cxx_method', 'enum', 'field'
+    )
+}
 
 class CXXPrintProcsessor(object):
 
@@ -37,14 +44,29 @@ class CXXIEGIRBuilder(object):
     def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
-        self.attributes = attributes
+        self.attributes = CXXIEGIRBuilder.process_attributes(attributes)
         self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES, ALL_PLATFORMS, parser_config)
-        self.ir = IEG_Ast()
+        self.ir = RootNode()
         self.node_stack = []
         self._sys_vars = {}
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
+
+    def start_root(self):
+        root_node = self.ir
+        self.node_stack.append(root_node)
+        args = api = pure_comment = None
+        parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name)
+        if parsed_api:
+            api, args, pure_comment = parsed_api
+        self.__process_attrs(root_node, args, api, pure_comment)
+
+    def end_root(self):
+        assert self.node_stack, "stack should not be empty"
+        node = self.node_stack.pop()
+        assert node.name == RootNode.ROOT_KEY
+        assert len(self.node_stack) == 0, "stack should be empty"
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
@@ -72,8 +94,6 @@ class CXXIEGIRBuilder(object):
                 parent_node = self.node_stack[-1]
                 if node not in parent_node.children:
                     parent_node.add_children(node)
-            elif node not in self.ir.roots:
-                self.ir.roots.append(node)
         self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
@@ -95,9 +115,6 @@ class CXXIEGIRBuilder(object):
             if len(self.node_stack) > 0:
                 parent_node = self.node_stack[-1]
                 parent_node.add_children(tu_node)
-            else:
-                # tu has no dir parent, add it to roots
-                self.ir.roots.append(tu_node)
         # tu is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
@@ -131,13 +148,10 @@ class CXXIEGIRBuilder(object):
 
                     new_att_val = att_val
                     node_kind = current_node.kind_name
-                    allowed = True
-                    if "allowed_on" in properties:
-                        allowed = node_kind in properties["allowed_on"]
+                    allowed = node_kind in properties["allowed_on"]
                     if new_att_val is None:
                         # check mandatory attribute existence
-                        node_kind = current_node.kind_name
-                        if "required_on" in properties and node_kind in properties["required_on"]:
+                        if node_kind in properties["required_on"]:
                             Error.error(f"Attribute '{att_name}' is mandatory attribute on {node_kind}.",
                                         current_node.file_name,
                                         current_node.line_number)
@@ -247,7 +261,7 @@ class CXXIEGIRBuilder(object):
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()
-        if node.api or node.children:  # node has API call or child whit API call
+        if node.api or node.children:  # node has API call or child with API call
             parent_node = self.node_stack[-1]
             if not node.api:
                 self.__process_attrs(node, None, None, None)
@@ -302,3 +316,24 @@ class CXXIEGIRBuilder(object):
             setattr(ctx[lang_key], attr_key, attr_vay)
         else:
             setattr(ctx[plat_key], attr_key, attr_vay)
+
+    @staticmethod
+    def process_attributes(attrs):
+        """
+        A function to replace node group aliases with their actual values list
+        """
+
+        for field in ['allowed_on', 'required_on']:
+            for key, val in attrs.items():
+                if not field in val:
+                    attrs[key][field] = NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else []
+                else:
+                    res = []
+                    for node in val[field]:
+                        if node in NODE_GROUP_ALIASES:
+                            res.extend(NODE_GROUP_ALIASES[node])
+                        else:
+                            res.append(node)
+                    attrs[key][field] = res
+
+        return attrs

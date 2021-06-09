@@ -33,6 +33,7 @@ def test_parser_with_dir_api(parser_config):
                                 parser_config=config)
 
     parser.parse(processor)
+
     assert len(processor.ir.roots) == 1
     root = processor.ir.roots[0]
     assert root.type is NodeType.DIRECTORY_NODE

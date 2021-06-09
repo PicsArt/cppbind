@@ -11,7 +11,8 @@ import iegen.utils.clang as cutil
 class NodeType(Enum):
     CLANG_NODE = 1
     DIRECTORY_NODE = 2
-    FILE_NODE = 3
+    ROOT_NODE = 3
+    FILE_NODE = 4
 
 
 class Node(ABC):
@@ -50,16 +51,6 @@ class Node(ABC):
     @property
     @abstractmethod
     def kind_name(self):
-        pass
-
-    @property
-    @abstractmethod
-    def file_name(self):
-        pass
-
-    @property
-    @abstractmethod
-    def line_number(self):
         pass
 
     @property
@@ -144,6 +135,38 @@ class DirectoryNode(Node):
     def full_displayname(self):
         return self.name
 
+class RootNode(Node):
+    ROOT_KEY = '__root__'
+
+    def __init__(self):
+        super().__init__(None, None, None, None, None)
+        self.name = RootNode.ROOT_KEY
+
+    def __repr__(self):
+        return f"RootNode({self.__dict__})"
+
+    def walk(self):
+        """
+        """
+        for node in self.walk_preorder():
+            yield node
+
+    @property
+    def type(self):
+        return NodeType.ROOT_NODE
+
+    @property
+    def full_displayname(self):
+        return "Root"
+
+    @property
+    def kind_name(self):
+        return "root"
+
+    @property
+    def displayname(self):
+        return self.name
+
 
 class ClangNode(Node, ABC):
 
@@ -216,12 +239,6 @@ class CXXNode(ClangNode):
         return cl_kind
 
     @property
-    def kind_name(self):
-        assert self.clang_cursor, "cursor is not provided"
-        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
-        return cl_kind
-
-    @property
     def is_interface(self):
         return self.api == 'interface'
 
@@ -276,19 +293,3 @@ class CXXNode(ClangNode):
                 cxx_root_type_name = cutil.replace_template_choice(
                     _root_cursor.type.spelling, template_choice)
         return cxx_root_type_name
-
-
-class IEG_Ast(object):
-
-    def __init__(self):
-        self.roots = []
-
-    def __repr__(self):
-        return f"IEG_Ast({self.__dict__})"
-
-    def walk(self):
-        """
-        """
-        for root in self.roots:
-            for node in root.walk_preorder():
-                yield node

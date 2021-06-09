@@ -397,8 +397,7 @@ class RunRule(object):
             # we register file and add one scope
             builder.add_scope_stack()
 
-            for root in self.ir.roots:
-                _run_recursive(root)
+            _run_recursive(self.ir)
 
             builder.pop_scope_stack()
 

@@ -7,13 +7,14 @@ from shutil import rmtree
 
 import pytest
 import yaml
+from unittest.mock import patch
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
 from iegen.common.yaml_process import YamlKeyDuplicationError
-from iegen.ir.ast import Node
+from iegen.ir.ast import Node, NodeType
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
@@ -25,7 +26,6 @@ CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
 def test_parser(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    print(parser_config)
     processor = CXXPrintProcsessor()
     for c in parsser.parss_x():
         processor(c)
@@ -33,14 +33,12 @@ def test_parser(parser_config):
 
 def test_parser_processor(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    # print(parser_config)
     processor = CXXPrintProcsessor()
     parsser.parse(processor)
 
 
 def test_parser_processor_cr_counter(parser_config):
     parsser = CXXParser(parser_config=parser_config)
-    # print(parser_config)
     count = 0
     max_dept = 0
     dept = 0
@@ -107,7 +105,6 @@ def test_API_parser(attributes, api_start_kw, test_data, res_md5):
 
     api, args, _ = parsser.parse_comments(test_data, {})
     str_res = f"api={api}, args={args}"
-    print(str_res)
     assert hashlib.md5(str_res.encode()).hexdigest() == res_md5, \
         "API parser result has bean changed."
 
@@ -215,7 +212,8 @@ def test_parser_errors(parser_config):
 
 def test_jinja_attrs(parser_config):
     config = copy.deepcopy(parser_config)
-    test_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_examples', 'jinja_attr')
+
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
     parser = CXXParser(parser_config=config)
 
     config.src_glob = os.path.join(test_dir, '*.hpp')
@@ -228,14 +226,10 @@ def test_jinja_attrs(parser_config):
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
 
-
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(parser_config):
     config = copy.deepcopy(parser_config)
-    init_cwd = os.getcwd()
-    working_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen')
-
-    # to skip redundant dir nodes in ir
-    os.chdir(working_dir)
+    working_dir = os.getcwd()
 
     config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     config.src_glob = os.path.join(working_dir, '*.hpp')
@@ -245,21 +239,23 @@ def test_empty_gen_rule(parser_config):
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
     parser.parse(ir_builder)
-    ir = ir_builder.ir
 
-    lang = 'python'
-    plat = 'linux'
+    ir = ir_builder.ir
+    dir_root = ir.children[0]
+    lang, plat = 'python', 'linux'
 
     # check that directory gen rule is empty
-    assert ir.roots[0].api == Node.API_NONE, 'wrong directory gen rule'
+    assert dir_root.api == Node.API_NONE, 'wrong directory gen rule'
+    assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert dir_root.children[0].children[0].api == 'class', 'wrong api type'
 
     # check that 'package' inheritable attribute is inherited from dir to class
-    dir_pkg_value = ir.roots[0].args['package'][plat][lang]
-    cls_pkg_value = ir.roots[0].children[0].children[0].args['package'][plat][lang]
-    assert dir_pkg_value == cls_pkg_value, "inheritance of attributes doesn't work correctly"
+    dir_pkg_value = dir_root.args['package'][plat][lang]
+    cls_pkg_value = dir_root.children[0].children[0].args['package'][plat][lang]
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     lang_config = default_config.languages[lang]
-    lang_config.out_dir = 'example_out_dir'
+    lang_config.out_dir = os.path.join(working_dir, 'example_out_dir')
     lang_rule = load_module_from_paths(f"{lang}.rule", lang_config.rule, default_config.default_config_dirs)
     run_rule = RunRule(ir, plat, lang, lang_config)
     builder = Builder()
@@ -272,7 +268,32 @@ def test_empty_gen_rule(parser_config):
     else:
         # remove generated new directory
         rmtree(os.path.join(working_dir, lang_config.out_dir))
-        os.chdir(init_cwd)
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
+def test_root_config(parser_config):
+    working_dir = os.getcwd()
+
+    parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
+    parser_config.src_glob = os.path.join(working_dir, '*.hpp')
+
+    parser = CXXParser(parser_config=parser_config)
+    ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+                                 api_start_kw=default_config.api_start_kw,
+                                 parser_config=parser.config)
+    parser.parse(ir_builder)
+    root = ir_builder.ir
+
+    lang, plat = 'python', 'linux'
+
+    assert root.api == Node.API_NONE, 'wrong root gen rule'
+    assert root.type == NodeType.ROOT_NODE, 'wrong root node kind'
+    assert root.children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+    assert root.children[0].children[0].children[0].api == 'class', 'wrong class node api'
+
+    root_clang_value = root.args['clang_args'][plat][lang]
+    dir_clang_value = root.children[0].args['clang_args'][plat][lang]
+    cls_clang_value = root.children[0].children[0].children[0].args['clang_args'][plat][lang]
+    assert root_clang_value == dir_clang_value == cls_clang_value == 'clang_args', "inheritance of attributes doesn't work correctly"
 
 
 def test_file_api_positive(parser_config):

@@ -15,7 +15,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.ir.ast import Node
+from iegen.ir.ast import Node, RootNode
 from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
@@ -27,6 +27,7 @@ class APIParser(object):
     RULE_DIR_KEY = 'dir'
     RULE_RULE_KEY = 'rule'
     RULE_SUB_KEY = ':'
+    RULE_ROOT_KEY = 'root'
 
     def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
@@ -83,7 +84,8 @@ class APIParser(object):
         else:
             return self.parse_yaml_api(get_full_displayname(cursor), ctx, location)
 
-    def parse_yaml_api(self, name, ctx, location=None):
+    def parse_yaml_api(self, name, ctx=None, location=None):
+        ctx = ctx or {}
         attrs = self.api_type_attributes.get(name)
         if attrs:
             api_attrs = attrs.attr
@@ -227,6 +229,7 @@ class APIParser(object):
         _rule = APIParser.RULE_RULE_KEY
         _sub = APIParser.RULE_SUB_KEY
         _dir = APIParser.RULE_DIR_KEY
+        _root = APIParser.RULE_ROOT_KEY
 
         def flatten_dict(src_dict, ancestors):
             assert (_type in src_dict) ^ (_dir in src_dict), f'{_dir} and {_type} are mutually exclusive.'
@@ -241,7 +244,7 @@ class APIParser(object):
                             _dir_name = src_dict[_dir]
                             if os.path.isabs(_dir_name):
                                 # if an absolute path is specified then we assume it's absolute to current dir
-                                flat_key = _dir_name.replace('/', '', 1)
+                                flat_key = _dir_name.replace('/', '', 1) or '.'
                             else:
                                 flat_key = os.path.relpath(
                                     os.path.abspath(os.path.join(os.path.dirname(current_file), _dir_name)),
@@ -257,6 +260,14 @@ class APIParser(object):
                             flatten_dict(sub, ancestors)
                 finally:
                     ancestors.pop()
+
+        if _root in attrs:
+            if RootNode.ROOT_KEY in api_type_attributes:
+                raise YamlKeyDuplicationError(f"Redefinition of '{_root}' section in {current_file} file, "
+                                              f"which must be uniquely specified only in one file.\n"
+                                              f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
+            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_root],
+                                                                     file=current_file)
 
         if not _title in attrs:
             return

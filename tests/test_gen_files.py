@@ -1,5 +1,4 @@
 import difflib
-import filecmp
 import os
 import sys
 import unittest
@@ -25,8 +24,8 @@ class TestFilesIdentical(unittest.TestCase):
                     examples_file = os.path.join(examples_root, common_path, file)
                     gen_file = os.path.join(root, file)
                     print(f'comparing {examples_file}, {gen_file}')
-                    with open(examples_file, "rtU") as f1:
-                        with open(gen_file, "rtU") as f2:
+                    with open(examples_file, "rt") as f1:
+                        with open(gen_file, "rt") as f2:
                             f1 = filter(is_filtered, f1)
                             f2 = filter(is_filtered, f2)
                             identical = all(x == y for x, y in zip(f1, f2))

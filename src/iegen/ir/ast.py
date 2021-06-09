@@ -90,7 +90,9 @@ class Node(ABC):
 
     @property
     def root(self):
-        root_node = self
+        if not self.parent:
+            return None
+        root_node = self.parent
         while True:
             if root_node.parent:
                 root_node = root_node.parent

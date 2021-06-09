@@ -55,9 +55,8 @@ jobs:
       - name: Install python modules
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install sphinx_rtd_theme==0.5.0
-          python3 -m pip install sphinx==3.3.1
-          python3 -m pip install sphinx-tabs==3.0.0
+          if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
+          sudo apt-get install -y libclang-9-dev
 
       - name: Generate files
         run: make html

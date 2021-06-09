@@ -68,7 +68,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = convert.make_comment(ctx.node.pure_comment)
+        comment = convert.make_comment(ctx.comment)
 
         cxx_output_filepath = f'{os.sep}'.join([ctx.config.cxx_out_dir] + [item.replace('.', os.sep) for item in (
             ctx.config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.config.file_postfix)])

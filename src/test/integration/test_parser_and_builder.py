@@ -1,5 +1,6 @@
 import copy
 import os
+from unittest.mock import patch
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXIEGIRBuilder
@@ -11,11 +12,8 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_REL_PATH = '../test_cxx_inputs'
 
 
+@patch('os.getcwd', lambda: SCRIPT_DIR)
 def test_parser_with_dir_api(parser_config):
-    # change cwd
-    init_cwd = os.getcwd()
-    os.chdir(SCRIPT_DIR)
-
     dir_example_folder = 'dir_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
@@ -45,14 +43,9 @@ def test_parser_with_dir_api(parser_config):
     assert dir_node.api == 'package'
     assert dir_node.name == f'{CXX_INPUTS_REL_PATH}/{dir_example_folder}'
 
-    os.chdir(init_cwd)
 
-
+@patch('os.getcwd', lambda: SCRIPT_DIR)
 def test_parser_with_file_api(parser_config):
-    # change cwd
-    init_cwd = os.getcwd()
-    os.chdir(SCRIPT_DIR)
-
     file_example_folder = 'file_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
@@ -85,5 +78,3 @@ def test_parser_with_file_api(parser_config):
     file_node = dir_node.children[0]
     assert file_node.api == Node.API_NONE
     assert file_node.type == NodeType.FILE_NODE
-
-    os.chdir(init_cwd)

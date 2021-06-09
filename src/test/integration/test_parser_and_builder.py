@@ -1,3 +1,4 @@
+import copy
 import os
 
 from iegen import default_config
@@ -18,19 +19,20 @@ def test_parser_with_dir_api(parser_config):
     dir_example_folder = 'dir_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
-    parser_config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))
+    config = copy.deepcopy(parser_config)
+    config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))
 
-    parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
+    config.api_type_attributes_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
     # load yaml file api
     APIParser(attributes=default_config.attributes,
               api_start_kw=default_config.attributes,
-              parser_config=parser_config)
+              parser_config=config)
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser(parser_config=config)
 
     processor = CXXIEGIRBuilder(attributes=default_config.attributes,
                                 api_start_kw=default_config.api_start_kw,
-                                parser_config=parser_config)
+                                parser_config=config)
 
     parser.parse(processor)
     assert len(processor.ir.roots) == 1
@@ -54,19 +56,20 @@ def test_parser_with_file_api(parser_config):
     file_example_folder = 'file_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
-    parser_config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))
+    config = copy.deepcopy(parser_config)
+    config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))
 
-    parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
+    config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
     # load yaml file api
     APIParser(attributes=default_config.attributes,
               api_start_kw=default_config.attributes,
-              parser_config=parser_config)
+              parser_config=config)
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser(parser_config=config)
 
     processor = CXXIEGIRBuilder(attributes=default_config.attributes,
                                 api_start_kw=default_config.api_start_kw,
-                                parser_config=parser_config)
+                                parser_config=config)
 
     parser.parse(processor)
     assert len(processor.ir.roots) == 1

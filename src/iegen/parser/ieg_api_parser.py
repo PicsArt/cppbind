@@ -3,20 +3,20 @@ Implements ieg api parser on cxx comment
 """
 import distutils.util
 import glob
-import re
 import os
-import yaml
+import re
 from collections import defaultdict
 from collections import OrderedDict
 from types import SimpleNamespace
+
+import yaml
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.parser.api_rule_types import NodeApiType
-from iegen.utils.clang import extract_pure_comment, get_full_displayname
 from iegen.ir.ast import Node
+from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
 
 
 class APIParser(object):
@@ -24,6 +24,9 @@ class APIParser(object):
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
     RULE_TITLE_KEY = 'gen_actions'
     RULE_RULE_KEY = 'rule'
+    RULE_TYPE_KEY = 'type'
+    RULE_DIR_KEY = 'dir'
+    RULE_FILE_KEY = 'file'
     RULE_SUB_KEY = ':'
 
     def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
@@ -218,14 +221,13 @@ class APIParser(object):
         _title = APIParser.RULE_TITLE_KEY
         _rule = APIParser.RULE_RULE_KEY
         _sub = APIParser.RULE_SUB_KEY
+        _type = APIParser.RULE_TYPE_KEY
 
         def flatten_dict(src_dict, ancestors):
-            NodeApiType.assert_has_one(src_dict)
-            rule = NodeApiType.get_rule(src_dict)
-            ancestors.append(src_dict[rule.name])
+            _type in src_dict and ancestors.append(src_dict[_type])
             try:
                 if _rule in src_dict:
-                    flat_key = rule.key(current_file=current_file, src_dict=src_dict, ancestors=ancestors)
+                    flat_key = APIParser._get_key(current_file=current_file, src_dict=src_dict, ancestors=ancestors)
                     if flat_key in api_type_attributes:
                         raise YamlKeyDuplicationError(
                             f"Definition with duplicate '{flat_key}' key in {current_file},\n"
@@ -236,13 +238,43 @@ class APIParser(object):
                     for sub in src_dict[_sub]:
                         flatten_dict(sub, ancestors)
             finally:
-                ancestors.pop()
+                _type in src_dict and ancestors.pop()
 
-        if not _title in attrs:
+        if _title not in attrs:
             return
 
         for item in attrs[_title]:
             flatten_dict(item, [])
+
+    @staticmethod
+    def _get_key(src_dict, current_file, ancestors):
+        assert (APIParser.RULE_TYPE_KEY in src_dict) + (APIParser.RULE_DIR_KEY in src_dict) + (
+                APIParser.RULE_FILE_KEY in src_dict) == 1, \
+            f'API should contain one of the keywords: {APIParser.RULE_TITLE_KEY},{APIParser.RULE_DIR_KEY},{APIParser.RULE_FILE_KEY}'
+
+        # dir
+        if APIParser.RULE_DIR_KEY in src_dict:
+            dir_name = src_dict[APIParser.RULE_DIR_KEY]
+            if os.path.isabs(dir_name):
+                # if an absolute path is specified then we assume it's absolute to current dir
+                flat_key = dir_name.replace('/', '', 1)
+                return os.path.relpath(os.path.join(flat_key, os.getcwd()), os.getcwd())
+            else:
+                return os.path.relpath(
+                    os.path.abspath(os.path.join(os.path.dirname(current_file), dir_name)),
+                    os.getcwd())
+        # type
+        elif APIParser.RULE_TYPE_KEY in src_dict:
+            return join_type_parts(ancestors)
+        # file
+        else:
+            file_name = src_dict[APIParser.RULE_FILE_KEY]
+            if os.path.isabs(file_name):
+                # if an absolute path is specified then we assume it's absolute to current dir
+                flat_key = file_name.replace('/', '', 1)
+                return os.path.join(flat_key, os.getcwd())
+            else:
+                return os.path.abspath(os.path.join(os.path.dirname(current_file), file_name))
 
     @staticmethod
     def eval_attr_template(attrs, ctx):

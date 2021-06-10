@@ -1,25 +1,27 @@
+import copy
 import hashlib
 import os
 import types
-from shutil import rmtree
 from collections import OrderedDict
+from shutil import rmtree
+
 import pytest
 import yaml
 from unittest.mock import patch
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXPrintProcsessor, CXXIEGIRBuilder
+from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
 from iegen.common.yaml_process import YamlKeyDuplicationError
-from iegen.ir.ast import NodeType, Node
+from iegen.ir.ast import Node, NodeType
+from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
-from iegen.ir.exec_rules import RunRule
-from iegen.builder.out_builder import Builder
 from iegen.utils import load_module_from_paths
 
-
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
 
 def test_parser(parser_config):
@@ -151,11 +153,12 @@ def test_API_parser_negative(attributes, api_start_kw, test_data):
 
 
 def test_external_API_parser_negative(parser_config):
+    config = copy.deepcopy(parser_config)
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
     for dir in os.listdir(api_rules_dir):
-        parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            APIParser.build_api_type_attributes(parser_config)
+            APIParser.build_api_type_attributes(config)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
         except Exception as e:
@@ -166,7 +169,7 @@ def test_external_API_parser_negative(parser_config):
 
 def test_external_API_parser_positive(parser_config):
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
-
+    config = copy.deepcopy(parser_config)
     results = {
         'with_many_files': '61e1677833d942e27eae06854b3652e7',
         'with_nested_cfg': 'cb6548fb573f46ddead383ade7a712a1',
@@ -176,9 +179,9 @@ def test_external_API_parser_positive(parser_config):
     }
 
     for dir, res_md5 in results.items():
-        parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            res = APIParser.build_api_type_attributes(parser_config)
+            res = APIParser.build_api_type_attributes(config)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -191,26 +194,29 @@ def test_external_API_parser_positive(parser_config):
 
 
 def test_parser_errors(parser_config):
+    config = copy.deepcopy(parser_config)
+
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'negative')
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser(parser_config=config)
 
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
-
     for file in os.listdir(test_dir):
         Error.has_error = False
 
-        parser_config.src_glob = os.path.join(test_dir, file)
+        config.src_glob = os.path.join(test_dir, file)
         parser.parse(ir_builder)
         assert Error.has_error == True, "Must cause an error"
 
 
 def test_jinja_attrs(parser_config):
-    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
-    parser = CXXParser(parser_config=parser_config)
+    config = copy.deepcopy(parser_config)
 
-    parser_config.src_glob = os.path.join(test_dir, '*.hpp')
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
+    parser = CXXParser(parser_config=config)
+
+    config.src_glob = os.path.join(test_dir, '*.hpp')
 
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                  api_start_kw=default_config.api_start_kw,
@@ -220,45 +226,15 @@ def test_jinja_attrs(parser_config):
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
 
-
-@patch('os.getcwd', lambda: SCRIPT_DIR)
-def test_parser_with_dir_api(parser_config):
-    cxx_inputs_rel_path = '../test_cxx_inputs'
-
-    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path))
-    parser_config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, cxx_inputs_rel_path, '*.h'))
-
-    parser_config.api_type_attributes_glob = os.path.join(api_rules_dir, '*.yaml')
-    # load yaml file api
-    APIParser(attributes=default_config.attributes,
-              api_start_kw=default_config.attributes,
-              parser_config=parser_config)
-
-    parser = CXXParser(parser_config=parser_config)
-
-    processor = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                api_start_kw=default_config.api_start_kw,
-                                parser_config=parser_config)
-
-    parser.parse(processor)
-
-    root = processor.ir
-    dir_root = root.children[0]
-    assert root.type is NodeType.ROOT_NODE
-    assert dir_root.type is NodeType.DIRECTORY_NODE
-    assert dir_root.api == 'package'
-    assert dir_root.name == cxx_inputs_rel_path
-    assert dir_root.children[0].type == NodeType.CLANG_NODE
-
-
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(parser_config):
+    config = copy.deepcopy(parser_config)
     working_dir = os.getcwd()
 
-    parser_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
-    parser_config.src_glob = os.path.join(working_dir, '*.hpp')
+    config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
+    config.src_glob = os.path.join(working_dir, '*.hpp')
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser(parser_config=config)
     ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
                                  api_start_kw=default_config.api_start_kw,
                                  parser_config=parser.config)
@@ -318,3 +294,43 @@ def test_root_config(parser_config):
     dir_clang_value = root.children[0].args['clang_args'][plat][lang]
     cls_clang_value = root.children[0].children[0].children[0].args['clang_args'][plat][lang]
     assert root_clang_value == dir_clang_value == cls_clang_value == 'clang_args', "inheritance of attributes doesn't work correctly"
+
+
+def test_file_api_positive(parser_config):
+    config = copy.deepcopy(parser_config)
+    file_api_folder = 'file_api_example'
+    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
+    config.api_type_attributes_glob = api_rules_dir
+
+    api_parser = APIParser(attributes=default_config.attributes,
+                           api_start_kw=default_config.attributes,
+                           parser_config=config)
+
+    example_file_key = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
+
+    api, args, pure_comment = api_parser.parse_yaml_api(example_file_key, {})
+
+    assert api == Node.API_NONE
+    assert pure_comment is None
+    assert args['package']['__all__']['__all__'] == 'test_cxx_inputs'
+
+
+def test_dir_api_positive(parser_config):
+    config = copy.deepcopy(parser_config)
+    dir_api_folder = 'dir_api_example'
+    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
+    config.api_type_attributes_glob = api_rules_dir
+
+    api_parser = APIParser(attributes=default_config.attributes,
+                           api_start_kw=default_config.attributes,
+                           parser_config=config)
+
+    example_dir_key = os.path.relpath(
+        os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
+
+    api, args, pure_comment = api_parser.parse_yaml_api(example_dir_key, {})
+
+    assert api == 'package'
+    assert pure_comment is None
+    assert args['name']['__all__']['__all__'] == 'inputs'
+    assert args['code_fragment']['__all__']['python'] == ['import json']

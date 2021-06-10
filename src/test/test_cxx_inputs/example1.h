@@ -49,7 +49,7 @@ private:
 
 
 template <class T, int N>
-class Bag{
+class Group{
 };
 }
 
@@ -57,7 +57,7 @@ int main()
 {
     using namespace test_api;
     Person* p = new Person();
-    Bag<Person, 42> bagofpersons;
+    Group<Person, 42> groupOfPersons;
 
     return 0;
 }

@@ -1,7 +1,7 @@
 file:
   kotlin: 
     file_path: |
-      {{ctx.out_dir + pat_sep + [ctx.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
+      {{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
     scopes: 
       - body
       - include
@@ -11,14 +11,14 @@ file:
        * Please do not change it manually.
        */
 
-      package {{ctx.package_prefix}}.{{package}}
+      package {{package_prefix}}.{{package}}
 
       {{helper_includes|format_list('import {}.*')|join('\n')}}
       {{include}}
       {{body}}
   cxx:
     file_path: |
-      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes: 
       - body
       - include

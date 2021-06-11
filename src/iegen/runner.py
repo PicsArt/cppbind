@@ -33,7 +33,9 @@ class WrapperGenerator(object):
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
-        ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
+        ir_builder = CXXIEGIRBuilder(platform=platform,
+                                     language=language,
+                                     attributes=default_config.attributes,
                                      api_start_kw=default_config.api_start_kw,
                                      parser_config=parser.config)
 

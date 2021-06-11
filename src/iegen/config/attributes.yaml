@@ -154,16 +154,40 @@ package_prefix:
 
 helpers_package_prefix:
   inheritable: true
-  default:
-    kotlin: '{{kotlin.package_prefix}}'
-    python: '{{python.package_prefix}}'
-    swift: '{{swift.package_prefix}}'
+  default: '{{package_prefix}}'
   allowed_on: [ root ]
 
 helpers_include_prefix:
   inheritable: true
+  default: '{{helpers_package_prefix}}'
+  allowed_on: [ root ]
+
+common_helpers_dir:
+  inheritable: true
+  default: std_helpers
+  allowed_on: [ root ]
+
+cxx_helpers_dir:
+  inheritable: true
   default:
-    kotlin: '{{kotlin.helpers_package_prefix}}'
-    python: '{{python.helpers_package_prefix}}'
-    swift: '{{swift.helpers_package_prefix}}'
+    swift: '{{path.join(common_helpers_dir, "swift/cxx")}}'
+    else: '{{path.join(common_helpers_dir, "cxx")}}'
+  allowed_on: [ root ]
+
+helpers_dir:
+  inheritable: true
+  default:
+    kotlin: '{{path.join(common_helpers_dir, "kotlin")}}'
+    python: '{{path.join(common_helpers_dir, "python")}}'
+    swift: '{{path.join(common_helpers_dir, "swift")}}'
+  allowed_on: [ root ]
+
+cxx_base_dir:
+  inheritable: true
+  default: base
+  allowed_on: [ root ]
+
+file_postfix:
+  inheritable: true
+  default: _gen
   allowed_on: [ root ]

@@ -40,7 +40,7 @@ class CXXIEGIRBuilder(object):
     Class to build intermediate representation.
     """
 
-    def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
+    def __init__(self, platform, language, attributes=None, api_start_kw=None, parser_config=None):
         attributes = attributes or default_config.attributes
         api_start_kw = api_start_kw or default_config.api_start_kw
         self.attributes = CXXIEGIRBuilder.process_attributes(attributes)
@@ -51,6 +51,8 @@ class CXXIEGIRBuilder(object):
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
+        self.platform = platform
+        self.language = language
 
     def start_root(self):
         root_node = self.ir
@@ -130,12 +132,14 @@ class CXXIEGIRBuilder(object):
 
     def __process_attrs(self, current_node, args, api, pure_comment, ctx=None):
         args = args or OrderedDict()
-        context = ctx or self.get_full_ctx(pure_comment)
+        context = ctx or self.get_ctx(pure_comment)
+        parent_args = self._get_parent_args()
 
         # add all missing attributes
-        for att_name, properties in self.attributes.items():
-            for plat in ALL_PLATFORMS + ["__all__"]:
-                for lang in ALL_LANGUAGES + ["__all__"]:
+        for plat in ALL_PLATFORMS + ["__all__"]:
+            for lang in ALL_LANGUAGES + ["__all__"]:
+                context.update(self.get_ctx_by_plat_lang(plat, lang, parent_args))
+                for att_name, properties in self.attributes.items():
                     att_val = args.get(
                         att_name,
                         {}
@@ -186,7 +190,7 @@ class CXXIEGIRBuilder(object):
                             # sys vars can have different types than string parse to get correct type
                             new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
                         # add attr to current node context so that it can be used for coming attributes
-                        CXXIEGIRBuilder._add_arg_to_ctx(att_name, new_att_val, plat, lang, context)
+                        context[att_name] = new_att_val
                         args.setdefault(att_name, OrderedDict()).setdefault(plat, OrderedDict())[lang] = new_att_val
 
         current_node.api = api
@@ -284,7 +288,7 @@ class CXXIEGIRBuilder(object):
             if key in def_val:
                 return def_val[key]
 
-    def get_full_ctx(self, pure_comment=None):
+    def get_ctx(self, pure_comment=None):
         ctx = self.get_sys_vars()
         if pure_comment is None:
             current_node = self.node_stack[-1]
@@ -293,28 +297,24 @@ class CXXIEGIRBuilder(object):
                     current_node.clang_cursor.raw_comment)
                 if pure_comment:
                     ctx['_pure_comment'] = '\n'.join(pure_comment)
-        parent_args = self._get_parent_args()
-        if parent_args:
-            for attr_key, attr_val in parent_args.items():
-                for plat_key, plat_val in attr_val.items():
-                    for lang_key, val in plat_val.items():
-                        CXXIEGIRBuilder._add_arg_to_ctx(attr_key, val, plat_key, lang_key, ctx)
         return ctx
 
-    @staticmethod
-    def _add_arg_to_ctx(attr_key, attr_vay, plat_key, lang_key, ctx):
-        ctx.setdefault(plat_key, SimpleNamespace())
-        ctx.setdefault(lang_key, SimpleNamespace())
-        if not hasattr(ctx[plat_key], lang_key):
-            setattr(ctx[plat_key], lang_key, SimpleNamespace())
-        if plat_key != '__all__' and lang_key != '__all__':
-            setattr(getattr(ctx[plat_key], lang_key), attr_key, attr_vay)
-        elif plat_key == '__all__' and lang_key == '__all__':
-            ctx[attr_key] = attr_vay
-        elif plat_key == '__all__':
-            setattr(ctx[lang_key], attr_key, attr_vay)
-        else:
-            setattr(ctx[plat_key], attr_key, attr_vay)
+    def get_ctx_by_plat_lang(self, plat=None, lang=None, parent_args=None):
+        plat = plat or self.platform
+        lang = lang or self.language
+        parent_args = parent_args or self._get_parent_args()
+        ctx = {}
+        if parent_args:
+            for attr in parent_args:
+                val = parent_args[attr].get(plat, {}).get(lang)
+                if val is not None:
+                    ctx[attr] = val
+        return ctx
+
+    def get_full_ctx(self):
+        ctx = self.get_ctx()
+        ctx.update(self.get_ctx_by_plat_lang())
+        return ctx
 
     @staticmethod
     def process_attributes(attrs):

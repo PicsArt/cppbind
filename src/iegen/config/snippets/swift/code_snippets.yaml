@@ -1,7 +1,7 @@
 file:
   swift:
     file_path: |
-      {{ctx.out_dir + pat_sep + [ctx.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - include
       - body
@@ -18,7 +18,7 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
@@ -30,13 +30,13 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, package]|map('replace', '.', pat_sep)|path_join, ctx.out_prj_dir)}}/c_{{file}}.h"
+      #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
       {{include}}
 
       {{body}}
   ch:
     file_path: |
-      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
       - include
@@ -63,7 +63,7 @@ file:
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
   exceptions_utils_swift:
     file_path: |
-      {{ctx.out_dir + pat_sep + [ctx.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -95,7 +95,7 @@ file:
       }
   std_exceptions_swift:
     file_path: |
-      {{ctx.out_dir + pat_sep + [ctx.package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -133,7 +133,7 @@ file:
       }
   std_exceptions_header:
     file_path: |
-      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
+      {{cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
     content: |
@@ -156,7 +156,7 @@ file:
       #endif /* ifndef _C_std_exceptions_WRAPPER_ */
   std_exceptions_cpp:
     file_path: |
-      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -167,7 +167,7 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join)}}.h"
+      #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join)}}.h"
 
       void release_std_exception(void* _Nonnull cself) {
           delete dynamic_cast<std::exception*>(static_cast<std::exception*>(cself));

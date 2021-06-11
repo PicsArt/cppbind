@@ -23,28 +23,34 @@ def load_snippets_engine(path, main_target):
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(rule, *args, **kwargs):
+def gen_init(ctx, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
-    def make_context(config, ctx):
-        # helper variables
-        cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
-        helpers_dir = find_prj_dir(config.helpers_dir)
-        out_dir = ctx['out_dir']
-        helpers_package_prefix = ctx['helpers_package_prefix']
-        helpers_out_dir = os.path.join(out_dir + helpers_package_prefix.replace('.', os.sep))
-        # base variables
-        cxx_base_dir = find_prj_dir(config.cxx_base_dir)
-        return locals()
-
-    context = {k: v[rule.platform][rule.language] for k, v in rule.ir.args.items()}
-    context.update(make_context(rule.config, context))
+    context = make_root_context(ctx)
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    rule.config.snippets, DEFAULT_DIRS)
+                    ctx.config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
+
+
+def make_root_context(ctx):
+    def make():
+        # helper variables
+        cxx_helpers_dir = find_prj_dir(ctx.cxx_helpers_dir)
+        helpers_dir = find_prj_dir(ctx.helpers_dir)
+        out_dir = ctx.out_dir
+        helpers_package_prefix = ctx.helpers_package_prefix
+        helpers_out_dir = os.path.join(out_dir + helpers_package_prefix.replace('.', os.sep))
+        # base variables
+        cxx_base_dir = find_prj_dir(ctx.cxx_base_dir)
+        return locals()
+
+    context = {k: getattr(ctx, k) for k in ctx.node.args}
+    context.update(make())
+
+    return context
 
 
 def make_def_context(ctx):
@@ -73,7 +79,7 @@ def make_clang_context(ctx):
         comment = convert.make_comment(ctx.comment)
 
         cxx_output_filepath = f'{os.sep}'.join([ctx.cxx_out_dir] + [item.replace('.', os.sep) for item in (
-            ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.config.file_postfix)])
+            ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.file_postfix)])
         return locals()
 
     context = make_def_context(ctx)

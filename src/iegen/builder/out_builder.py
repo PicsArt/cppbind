@@ -29,7 +29,9 @@ class Scope(object):
         """
         Adds text or scope to corresponding partition
         """
-        return self.add(*[part for part in list(dict.fromkeys(parts)) if part not in self.parts], add_front=add_front)
+        return self.add(
+            *[part for part in list(dict.fromkeys([p.strip() for p in parts if p])) if part not in self.parts],
+            add_front=add_front)
 
     def add(self, *parts, add_front=False):
         """

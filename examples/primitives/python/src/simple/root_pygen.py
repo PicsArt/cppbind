@@ -21,7 +21,7 @@ class Root(metaclass=OriginalMethodsMetaclass):
     def __init__(self, _path: str):
         """
         comments
-        Documentation generated from: `cxx/simple/root.hpp#L24 <https://github.com/PicsArt/iegen/tree/master/examples/primitivescxx/simple/root.hpp#L24>`_
+        Documentation generated from: `cxx/simple/root.hpp#L23 <https://github.com/PicsArt/iegen/tree/master/examples/primitivescxx/simple/root.hpp#L23>`_
         """
         pass
     
@@ -30,7 +30,15 @@ class Root(metaclass=OriginalMethodsMetaclass):
     def path(self) -> str:
         """
         comments
-        Documentation generated from: `cxx/simple/root.hpp#L33 <https://github.com/PicsArt/iegen/tree/master/examples/primitivescxx/simple/root.hpp#L33>`_
+        Documentation generated from: `cxx/simple/root.hpp#L31 <https://github.com/PicsArt/iegen/tree/master/examples/primitivescxx/simple/root.hpp#L31>`_
         """
         pass
 
+    @path.setter
+    @bind
+    def path(self, value: str):
+        """
+        comments
+        Documentation generated from: `cxx/simple/root.hpp#L31 <https://github.com/PicsArt/iegen/tree/master/examples/primitivescxx/simple/root.hpp#L31>`_
+        """
+        pass

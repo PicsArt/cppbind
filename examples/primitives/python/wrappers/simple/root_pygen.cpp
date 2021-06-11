@@ -17,5 +17,5 @@ void bindRoot(py::module& m) {
 
     root.def(py::init<const std::string &>(), py::arg("_path"));
 
-    root.def_readonly("path", &iegen::example::Root::path);
+    root.def_readwrite("path", &iegen::example::Root::path);
 }

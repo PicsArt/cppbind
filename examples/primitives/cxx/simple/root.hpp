@@ -19,7 +19,6 @@ public:
      *
      * __API__
      * gen: constructor
-     *
      */
     Root(const std::string& _path) : path(_path) {};
 
@@ -27,8 +26,7 @@ public:
      * comments
      *
      * __API__
-     * gen: property_getter
-     *
+     * gen: property_setter
      */
      std::string path;
 };

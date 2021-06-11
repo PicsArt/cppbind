@@ -1,5 +1,5 @@
 from simple import pretty_print
-from simple import Root, Project
+from simple import Root, Project, Path
 from simple.task import PyTask as Task
 
 # [task-usage]
@@ -25,6 +25,12 @@ path = '/path/to/root/'
 root = Root(path)
 assert root.path == path
 # [root-usage]
+
+# [path-usage]
+path_obj = Path('/some/path')
+root_from_obj = Root(path_obj)
+root.path = path_obj
+# [path-usage]
 
 # test for dir actions with current path
 pretty_print('{"first_name": "John", "last_name": "Doe"}')

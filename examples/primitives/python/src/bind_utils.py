@@ -10,28 +10,17 @@ class Function:
     Function is a wrap over standard python function.
     """
 
-    def __init__(self, original_function):
-        self.function = original_function
-
-    def __call__(self, *args, **kwargs):
-        """
-        Overriding the __call__ function which makes the
-        instance callable.
-        """
-
-        fn = Namespace.get_instance().get(self.function, *args)
-        if not fn:
-            raise Exception("no matching function found.")
-
-        return fn(*args, **kwargs)
+    def __init__(self, original_function, is_overloaded=False):
+        self.original_function = original_function
+        self.is_overloaded = is_overloaded
 
     @property
     def classname(self):
-        return self.function.__qualname__.split('.')[0]
+        return self.original_function.__qualname__.split('.')[0]
 
     @property
     def name(self):
-        return self.function.__name__
+        return self.original_function.__name__
 
 
 class Namespace:
@@ -74,12 +63,15 @@ class Namespace:
         """
         key = self._key(fn)
         name, signature = key
-        if name not in self.function_map:
-            self.function_map[name] = {signature: fn}
-        else:
-            self.function_map[name][signature] = fn
-
         func = Function(fn)
+        if name not in self.function_map:
+            self.function_map[name] = {signature: func}
+        else:
+            overloads = self.overloads_signature(fn)
+            setattr(func.original_function, '__doc__', f'{func.original_function.__doc__}\nOverloads:\n\t{overloads}')
+            func.is_overloaded = True
+            self.function_map[name][signature] = func
+
         return func
 
     def get(self, fn):
@@ -116,19 +108,14 @@ class bind:
     def __init__(self, fn):
         namespace = Namespace.get_instance()
         self.fn = namespace.register(fn)
-        overloads = namespace.overloads_signature(fn)
-        # for properties setting in constructor to not show overloads
-        if overloads:
-            setattr(self.fn.function, '__doc__', f'{self.fn.function.__doc__}\nOverloads:\n\t{overloads}')
         # for instance methods
-        functools.update_wrapper(self, self.fn.function)
-
+        functools.update_wrapper(self, self.fn.original_function)
         self.cls = None
 
     def __get__(self, instance, owner):
         """Support instance methods."""
 
-        @functools.wraps(self.fn.function)
+        @functools.wraps(self.fn.original_function)
         def _decorator(*args, **kwargs):
             if inspect.isclass(instance):
                 # for python >= 3.9
@@ -140,8 +127,8 @@ class bind:
                     # instance is iegen generated cls
                     cls = instance
                 return cls.originals[self.fn.name].__get__(self.fn.name)(
-                    **_map_to_kwargs(self.fn.function, *args, **kwargs))
-            return self.cls.originals[self.fn.name](instance, **_map_to_kwargs(self.fn.function, *args, **kwargs))
+                    **_map_to_kwargs(self.fn, *args, **kwargs))
+            return self.cls.originals[self.fn.name](instance, **_map_to_kwargs(self.fn, *args, **kwargs))
 
         return _decorator
 
@@ -159,7 +146,7 @@ class bind:
             # for python <= 3.8
             # case of static method, e.g decorated with @classmethod
             # update self docstring to add overload docstring
-            functools.update_wrapper(self, self.fn.function)
+            functools.update_wrapper(self, self.fn.original_function)
             if not hasattr(args[0], 'originals'):
                 # called on an instance which is of pybind type i.e the first argument is pybind cls
                 cls = getattr(importlib.import_module(args[0].__module__), args[0].__name__)
@@ -167,26 +154,53 @@ class bind:
                 # the first argument is iegen generated cls
                 cls = args[0]
             return cls.originals[self.fn.name].__get__(self.fn.name)(
-                **_map_to_kwargs(self.fn.function, *args[1:], **kwargs))
+                **_map_to_kwargs(self.fn, *args[1:], **kwargs))
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
         prop = cls.originals[self.fn.name]
         if len(args) == 2:
             # setter
-            return prop.fset(*args)
+            annotation = next(iter(inspect.getfullargspec(self.fn.original_function).annotations.values()))
+            # first is self, second is the value
+            value = _convert_arg(args[1], annotation)
+            return prop.fset(args[0], value)
         else:
             # getter
             return prop.fget(*args)
 
 
+def _convert_arg(arg, type_hint):
+    try:
+        if False:
+            pass
+        elif type_hint == 'int':
+            python_to_pybind_arg = int(arg)
+            return python_to_pybind_arg
+        elif type_hint == 'float':
+            python_to_pybind_arg = float(arg)
+            return python_to_pybind_arg
+        elif type_hint == 'str':
+            python_to_pybind_arg = str(arg)
+            return python_to_pybind_arg
+        return arg
+    except TypeError:
+        raise TypeError(
+            f'To cast {type(arg)} to {type_hint} please provide a __{type_hint}__ method for {type(arg)}.')
+
+
 def _map_to_kwargs(func, *args, **kwargs):
-    all_kwargs = _get_default_args(func)
-    args_names = inspect.getfullargspec(func).args
+    all_kwargs = _get_default_args(func.original_function)
+    signature = inspect.getfullargspec(func.original_function)
+    annotations = signature.annotations
+    args_names = signature.args
     'self' in args_names and args_names.remove('self')
     'cls' in args_names and args_names.remove('cls')
     for ii, arg in enumerate(args):
-        all_kwargs[args_names[ii]] = arg
-    all_kwargs.update(kwargs)
+        arg_name = args_names[ii]
+        annotation = annotations[arg_name]
+        all_kwargs[arg_name] = arg if func.is_overloaded else _convert_arg(arg, annotation)
+    for k, v in kwargs.items():
+        all_kwargs[k] = v if func.is_overloaded else _convert_arg(v, annotations[k])
     return all_kwargs
 
 
@@ -197,3 +211,4 @@ def _get_default_args(func):
         for k, v in signature.parameters.items()
         if v.default is not inspect.Parameter.empty
     }
+

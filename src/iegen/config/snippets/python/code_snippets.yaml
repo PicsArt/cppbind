@@ -32,6 +32,7 @@ file:
       from typing import *
 
       import {{[config.pybind_module, package, file]|join('.')}} as {{'pybind_' + file + config.file_postfix}}
+      from bind_utils import *
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {%- if include %}
       {{include}}
@@ -149,26 +150,33 @@ file:
           bind{{helper.python.module_name_to_func_name(config.pybind_module)}}(parent);
       }
 
+  bind: !include bind_snippet.yaml
+
 var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
+      {{marker}}
       {% set package_name = package|replace('.', '_') %}
       py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
+      {{marker}}
       py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
+      {{marker}}
       bind{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
 
 package:
   python_init:
     code_fragment:
       unique_content: |
+        {{marker}}
         {{code_fragment|join('\n')}}
     include:
       unique_content: |
-        {{include|format_list('from {} import *')|join('\n')}}
+        {{include|format_list('from {} import *')|join('\n' + marker)}}
 
 var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
+      {{marker}}
       #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
 
 enum:
@@ -215,7 +223,7 @@ var_class: &var_class
         {%- if is_abstract %}
         from abc import abstractmethod
         {%- endif %}
-        {{include|format_list("from {} import *")|join('\n')}}
+        {{include|format_list("from {} import *")|join('\n' + marker)}}
     body:
       scopes:
         - constructor_body
@@ -255,13 +263,17 @@ var_class: &var_class
   cxx:
     include:
       unique_content: |
+        {{marker}}
         #include "{{prj_rel_file_name}}"
         {%- set template_includes = ctx.template_includes %}
         {%- if template_includes %}
-        {{template_includes|format_list('#include "{}"')|join('\n')}}
+        {{marker}}
+        {{template_includes|format_list('#include "{}"')|join('\n' + marker)}}
         {%- endif %}
-        {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
-        {{include_cxx|format_list('#include "{}"')|join('\n')}}
+        {{marker}}
+        {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n' + marker)}}
+        {{marker}}
+        {{include_cxx|format_list('#include "{}"')|join('\n' + marker)}}
     body:
       scopes:
         - body
@@ -298,7 +310,7 @@ var_template_method_include: &var_template_method_include
     unique_content: |
       {%- set template_includes = ctx.template_includes %}
       {%- if template_includes %}
-      {{template_includes|format_list('#include "{}"')|join('\n')}}
+      {{template_includes|format_list('#include "{}"')|join('\n' + marker)}}
       {%- endif %}
 
 constructor:
@@ -311,6 +323,19 @@ constructor:
                                        {%- endfor %}):
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
+  bind:
+    converter:
+      unique_content: |
+        {%- for arg in args -%}
+        {%- set converter = arg.converter.python_to_pybind -%}
+        {%- set snippet = converter.snippet('arg') -%}
+        {%- if snippet -%}
+        {{marker}}
+        elif type_hint == '{{arg.converter.python.target_type_name}}':
+            {{snippet|indent}}
+            return {{converter.converted_name('arg')}}
+        {%- endif -%}
+        {%- endfor %}
   cxx:
     body: |
       {%- set comma = joiner(', ') %}
@@ -339,6 +364,19 @@ function:
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
+  bind:
+    converter:
+      unique_content: |
+        {%- for arg in args -%}
+        {%- set converter = arg.converter.python_to_pybind -%}
+        {%- set snippet = converter.snippet('arg') -%}
+        {%- if snippet -%}
+        {{marker}}
+        elif type_hint == '{{arg.converter.python.target_type_name}}':
+            {{snippet|indent}}
+            return {{converter.converted_name('arg')}}
+        {%- endif -%}
+        {%- endfor %}
   cxx:
     body: |
       {%- if is_operator %}
@@ -382,6 +420,17 @@ property_getter:
           {{comment|string|indent}}
           pass
       {%- endif %}
+  bind:
+    converter:
+      unique_content: |
+        {%- set converter = rconverter.python_to_pybind -%}
+        {%- set snippet = converter.snippet('arg') -%}
+        {%- if snippet %}
+        {{marker}}
+        elif type_hint == '{{rconverter.python.target_type_name}}':
+            {{snippet|indent}}
+            return {{converter.converted_name('arg')}}
+        {%- endif %}
   cxx:
     body: |
       {%- set _name = name|to_snake_case -%}
@@ -415,6 +464,17 @@ getter:
           {{comment|string|indent}}
           pass
       {%- endif -%}
+  bind:
+    converter:
+      unique_content: |
+        {%- set converter = rconverter.python_to_pybind -%}
+        {%- set snippet = converter.snippet('arg') -%}
+        {%- if snippet %}
+        {{marker}}
+        elif type_hint == '{{rconverter.python.target_type_name}}':
+            {{snippet|indent}}
+            return {{converter.converted_name('arg')}}
+        {%- endif %}
   cxx:
     body: |
       {%- if ctx.node.is_function_template %}

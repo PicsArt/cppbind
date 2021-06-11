@@ -229,7 +229,7 @@ class Context(object):
     @property
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
-            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.runner.config.out_prj_dir)
+            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.node.args['out_prj_dir'][self.runner.platform][self.runner.language])
         return self._prj_rel_file_name
 
     @property
@@ -254,7 +254,7 @@ class Context(object):
                 ctx = self.find_by_type(t['type'])
                 if ctx:
                     includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
-                                                    self.runner.config.out_prj_dir))
+                                                    self.node.args['out_prj_dir'][self.runner.platform][self.runner.language]))
         return includes
 
     @property
@@ -331,7 +331,7 @@ class RunRule(object):
         logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
-            func(self.config, builder)
+            func(self, builder)
 
         # executes once for a type
         processed = dict()

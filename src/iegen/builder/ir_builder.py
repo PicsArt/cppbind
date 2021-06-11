@@ -55,8 +55,11 @@ class CXXIEGIRBuilder(object):
     def start_root(self):
         root_node = self.ir
         self.node_stack.append(root_node)
-        args = api = pure_comment = None
-        parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name)
+        self.__update_internal_vars(root_node)
+        args = pure_comment = None
+        api = root_node.api
+        ctx = self.get_full_ctx()
+        parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name, ctx)
         if parsed_api:
             api, args, pure_comment = parsed_api
         self.__process_attrs(root_node, args, api, pure_comment)
@@ -207,13 +210,17 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
-        sys_vars = {
-            'path': os.path,
-            '_current_working_dir': os.getcwd(),
-            '_pure_comment': '',
-            '_line_number': node.line_number,
-            '_file_full_name': node.file_name,
-        }
+        if node.type == NodeType.ROOT_NODE:
+            sys_vars = {'path': os.path}
+        else:
+            sys_vars = {
+                'path': os.path,
+                '_current_working_dir': os.getcwd(),
+                '_pure_comment': '',
+                '_line_number': node.line_number,
+                '_file_full_name': node.file_name,
+            }
+
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_is_operator': False,

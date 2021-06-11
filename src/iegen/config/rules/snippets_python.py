@@ -23,24 +23,26 @@ def load_snippets_engine(path, main_target):
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(config, *args, **kwargs):
+def gen_init(rule, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
-
     # load snippets
 
-    def make_context(config):
+    def make_context(config, ctx):
         # helper variables
         cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
         helpers_dir = find_prj_dir(config.helpers_dir)
-        helpers_out_dir = os.path.join(config.out_dir + config.helpers_package_prefix.replace('.', os.sep))
+        out_dir = ctx['out_dir']
+        helpers_package_prefix = ctx['helpers_package_prefix']
+        helpers_out_dir = os.path.join(out_dir + helpers_package_prefix.replace('.', os.sep))
         # base variables
         cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
 
-    context = make_context(config)
+    context = {k: v[rule.platform][rule.language] for k, v in rule.ir.args.items()}
+    context.update(make_context(rule.config, context))
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    config.snippets, DEFAULT_DIRS)
+                    rule.config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 
@@ -70,8 +72,8 @@ def make_clang_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = convert.make_comment(ctx.comment)
 
-        cxx_output_filepath = f'{os.sep}'.join([ctx.config.cxx_out_dir] + [item.replace('.', os.sep) for item in (
-            ctx.config.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.config.file_postfix)])
+        cxx_output_filepath = f'{os.sep}'.join([ctx.cxx_out_dir] + [item.replace('.', os.sep) for item in (
+            ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.config.file_postfix)])
         return locals()
 
     context = make_def_context(ctx)

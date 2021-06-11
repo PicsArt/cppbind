@@ -90,12 +90,6 @@ nullable_arg:
   array: true
   allowed_on: [ cxx_method, constructor, function, function_template ]
 
-clang_args:
-  inheritable: true
-  default: -D__ANDROID__
-  allowed_on: [ root, dir ]
-
-
 project_dir:
   inheritable: True
   default: '{{_current_working_dir}}'
@@ -116,3 +110,60 @@ comment:
       {%- endif %}
     else: |
       {{_pure_comment}}
+
+clang_args:
+  inheritable: true
+  default: -D__ANDROID__
+  allowed_on: [ root, dir ]
+
+out_prj_dir:
+  inheritable: true
+  default: wr_out
+  allowed_on: [ root ]
+
+run_dir:
+  inheritable: true
+  default: example_lib
+  allowed_on: [ root ]
+
+cxx_out_dir:
+  inheritable: true
+  default: '{{path.join(out_prj_dir, run_dir, "cxx_out")}}'
+  allowed_on: [ root ]
+
+out_dir:
+  inheritable: true
+  default:
+    kotlin: '{{path.join(out_prj_dir, run_dir, "android", run_dir, "source/main/java")}}'
+    python: '{{path.join(out_prj_dir, "python", run_dir, "src")}}'
+    swift: '{{path.join(out_prj_dir, "swift")}}'
+  allowed_on: [ root ]
+
+#cxx_base_out_dir:
+#  inheritable: true
+#  default: ./examples/example_cxx/
+#  allowed_on: [ root ]
+
+package_prefix:
+  inheritable: true
+  default:
+    kotlin: com.picsart.example_lib
+    python: example_lib
+    swift: com.picsart.example_lib
+  allowed_on: [ root ]
+
+helpers_package_prefix:
+  inheritable: true
+  default:
+    kotlin: '{{kotlin.package_prefix}}'
+    python: '{{python.package_prefix}}'
+    swift: '{{swift.package_prefix}}'
+  allowed_on: [ root ]
+
+helpers_include_prefix:
+  inheritable: true
+  default:
+    kotlin: '{{kotlin.helpers_package_prefix}}'
+    python: '{{python.helpers_package_prefix}}'
+    swift: '{{swift.helpers_package_prefix}}'
+  allowed_on: [ root ]

@@ -1,7 +1,7 @@
 
 # from iegnen import context_of_type
 
-def gen_init(config, *args, **kwargs):
+def gen_init(rule, *args, **kwargs):
     pass
 
 def gen_class(ctx, builder):

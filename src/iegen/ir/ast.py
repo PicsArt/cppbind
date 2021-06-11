@@ -139,7 +139,7 @@ class RootNode(Node):
     ROOT_KEY = '__root__'
 
     def __init__(self):
-        super().__init__(None, None, None, None, None)
+        super().__init__(Node.API_NONE, None, None, None, None)
         self.name = RootNode.ROOT_KEY
 
     def __repr__(self):

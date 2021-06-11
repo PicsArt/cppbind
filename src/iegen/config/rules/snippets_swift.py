@@ -23,9 +23,8 @@ def load_snippets_engine(path, main_target):
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(config, *args, **kwargs):
+def gen_init(rule, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
-
     # load snippets
 
     def make_context(config):
@@ -36,10 +35,11 @@ def gen_init(config, *args, **kwargs):
         cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
 
-    context = make_context(config)
+    context = {k: v[rule.platform][rule.language] for k, v in rule.ir.args.items()}
+    context.update(make_context(rule.config))
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    config.snippets, DEFAULT_DIRS)
+                    rule.config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 

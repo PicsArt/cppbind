@@ -1,7 +1,7 @@
 file:
   python_init:
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+      {{ctx.out_dir + pat_sep + [ctx.package_prefix, package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
     scopes:
       - include
       - code_fragment
@@ -17,7 +17,7 @@ file:
       {{''}}
   python:
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+      {{ctx.out_dir + pat_sep + [ctx.package_prefix, package, file + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
     scopes:
       - body
       - include
@@ -83,7 +83,7 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -101,7 +101,7 @@ file:
       }
   pybind_module_hpp:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{ctx.cxx_out_dir + pat_sep + [ctx.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - include
     content: |
@@ -123,7 +123,7 @@ file:
       #endif
   pybind_package:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{ctx.cxx_out_dir + pat_sep + [config.pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
     gen: false
     scopes:
       - body
@@ -134,9 +134,9 @@ file:
        */
       {% set packages = config.pybind_module.split('.') %}
       {%- set package = packages[0] %}
-      {%- set file = config.cxx_out_dir +pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join %}
+      {%- set file = ctx.cxx_out_dir +pat_sep + [ctx.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join %}
       #include <pybind11/pybind11.h>
-      #include "{{helper.python.cxx_rel_path(file, config.out_prj_dir)}}.hpp"
+      #include "{{helper.python.cxx_rel_path(file, ctx.out_prj_dir)}}.hpp"
 
       namespace py = pybind11;
       PYBIND11_MODULE({{package}}, m) {
@@ -169,7 +169,7 @@ package:
 var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
-      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', config.out_prj_dir)}}"
+      #include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', ctx.out_prj_dir)}}"
 
 enum:
   python:
@@ -260,7 +260,7 @@ var_class: &var_class
         {%- if template_includes %}
         {{template_includes|format_list('#include "{}"')|join('\n')}}
         {%- endif %}
-        {{helper.python.get_declaration_includes(ctx, config)|format_list('#include "{}"')|join('\n')}}
+        {{helper.python.get_declaration_includes(ctx)|format_list('#include "{}"')|join('\n')}}
         {{include_cxx|format_list('#include "{}"')|join('\n')}}
     body:
       scopes:

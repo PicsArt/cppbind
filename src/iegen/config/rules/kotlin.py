@@ -54,7 +54,7 @@ def build_jni_func_cxx(ctx, builder):
     # todo for cxx to jni
     converter_code = result_type_converter.cxx_to_jni
 
-    package = f'{ctx.config.package_prefix}.{ctx.package}'
+    package = f'{ctx.package_prefix}.{ctx.package}'
     class_name = ctx.parent_context.name
     method_name = convert.jni_func_name(ctx) + ctx.overloading_prefix
 
@@ -147,7 +147,7 @@ def build_jni_constructor_cxx(ctx, builder):
 
     args_str = str(arg_scope)
 
-    package = f'{ctx.config.package_prefix}.{ctx.package}'
+    package = f'{ctx.package_prefix}.{ctx.package}'
     class_name = ctx.parent_context.name
     method_name = 'jConstructor' + ctx.overloading_prefix
 
@@ -202,8 +202,8 @@ def build_jni_constructor(ctx, builder):
 
 
 def get_cxx_jni_file(ctx, builder):
-    out_dir = ctx.config.cxx_out_dir
-    package_prefix = ctx.config.package_prefix
+    out_dir = ctx.cxx_out_dir
+    package_prefix = ctx.package_prefix
 
     module_dir = os.path.join(package_prefix, ctx.package).replace('.', os.sep)
     file_path = os.path.join(out_dir, module_dir, ctx.file + '.cpp')
@@ -228,8 +228,8 @@ def get_cxx_jni_file(ctx, builder):
 
 
 def get_file(ctx, builder):
-    out_dir = ctx.config.out_dir
-    package_prefix = ctx.config.package_prefix
+    out_dir = ctx.out_dir
+    package_prefix = ctx.package_prefix
 
     module_dir = os.path.join(package_prefix, ctx.package).replace('.', os.sep)
     file_path = os.path.join(out_dir, module_dir, ctx.file + '.kt')
@@ -263,14 +263,18 @@ def get_file(ctx, builder):
     return file_scope
 
 
-def gen_init(config, *args, **kwargs):
+def gen_init(rule, *args, **kwargs):
     # load snippets
+    config = rule.config
+    out_prj_dir = rule.ir['out_prj_dir'][rule.platform][rule.language]
+    cxx_out_dir = rule.ir['cxx_out_dir'][rule.platform][rule.language]
+    out_dir = rule.ir['out_dir'][rule.platform][rule.language]
 
     load_from_paths(lambda path: convert.load_snipppets_engine(path, 'kotlin'),
                     config.snippets, DEFAULT_DIRS)
 
     # handle cxx helper files
-    prj_rel = os.path.relpath(config.cxx_out_dir, config.out_prj_dir)
+    prj_rel = os.path.relpath(cxx_out_dir, out_prj_dir)
     cxx_helpers_dir = config.cxx_helpers_dir
     if not os.path.isabs(cxx_helpers_dir):
         if not os.path.isdir(cxx_helpers_dir):
@@ -279,16 +283,16 @@ def gen_init(config, *args, **kwargs):
     for file_name in glob.glob(cxx_helpers_files, recursive=True):
         logging.info(f"Using helper file {file_name}")
         file_rel_name = os.path.relpath(file_name, cxx_helpers_dir)
-        incude_name = os.path.join(prj_rel, file_rel_name)
-        logging.info(f"Helper include name {incude_name}")
-        convert.CXX_INCLUDE_NAMES.append(incude_name)
-        target_file = os.path.join(config.cxx_out_dir, file_rel_name)
+        include_name = os.path.join(prj_rel, file_rel_name)
+        logging.info(f"Helper include name {include_name}")
+        convert.CXX_INCLUDE_NAMES.append(include_name)
+        target_file = os.path.join(cxx_out_dir, file_rel_name)
         os.makedirs(os.path.dirname(target_file), exist_ok=True)
         shutil.copyfile(file_name, target_file)
 
     # now handle kotlin helper files
     kotlin_imports = []
-    prj_rel = os.path.relpath(config.out_dir, config.out_prj_dir)
+    prj_rel = os.path.relpath(out_dir, out_prj_dir)
     kotlin_helpers_dir = config.kotlin_helpers_dir
     if not os.path.isabs(kotlin_helpers_dir):
         if not os.path.isdir(kotlin_helpers_dir):
@@ -301,8 +305,8 @@ def gen_init(config, *args, **kwargs):
         file_rel_name = os.path.relpath(file_name, kotlin_helpers_dir)
         import_name = os.path.join(prj_rel, file_rel_name)
         logging.info(f"Helper import name {import_name}")
-        kotlin_imports.append(incude_name)
-        target_file = os.path.join(config.out_dir, file_rel_name)
+        kotlin_imports.append(include_name)
+        target_file = os.path.join(out_dir, file_rel_name)
         os.makedirs(os.path.dirname(target_file), exist_ok=True)
         shutil.copyfile(file_name, target_file)
 

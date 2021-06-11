@@ -24,9 +24,8 @@ def load_snippets_engine(path, main_target):
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(config, *args, **kwargs):
+def gen_init(rule, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
-
     # load snippets
 
     def make_context(config):
@@ -37,10 +36,11 @@ def gen_init(config, *args, **kwargs):
         cxx_base_dir = find_prj_dir(config.cxx_base_dir)
         return locals()
 
-    context = make_context(config)
+    context = {k: v[rule.platform][rule.language] for k, v in rule.ir.args.items()}
+    context.update(make_context(rule.config))
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    config.snippets, DEFAULT_DIRS)
+                    rule.config.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 
@@ -110,7 +110,7 @@ def make_func_context(ctx):
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
                                              class_name,
                                              _suffix,
                                              method_name,
@@ -156,7 +156,7 @@ def make_class_context(ctx):
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
             get_jni_name = partial(convert.get_jni_func_name,
-                                   f'{ctx.config.package_prefix}.{ctx.package}',
+                                   f'{ctx.package_prefix}.{ctx.package}',
                                    ctx.name,
                                    template_suffix)
             has_non_abstract_base_class = False
@@ -216,7 +216,7 @@ def make_member_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
                                              class_name,
                                              owner_class.template_suffix,
                                              method_name,

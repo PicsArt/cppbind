@@ -31,7 +31,7 @@ def gen_init(ctx, *args, **kwargs):
     context = make_root_context(ctx)
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    ctx.config.snippets, DEFAULT_DIRS)
+                    ctx.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 

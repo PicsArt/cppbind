@@ -111,11 +111,6 @@ comment:
     else: |
       {{_pure_comment}}
 
-clang_args:
-  inheritable: true
-  default: -D__ANDROID__
-  allowed_on: [ root, dir ]
-
 out_prj_dir:
   inheritable: true
   default: wr_out
@@ -190,4 +185,34 @@ cxx_base_dir:
 file_postfix:
   inheritable: true
   default: _gen
+  allowed_on: [ root ]
+
+snippets:
+  inheritable: true
+  default:
+    kotlin: snippets/kotlin/config.yaml
+    python: snippets/python/config.yaml
+    swift: snippets/swift/config.yaml
+  allowed_on: [ root ]
+
+extension:
+  inheritable: true
+  default:
+    kotlin: kt
+    python: py
+    swift: swift
+  allowed_on: [ root ]
+
+pybind_module:
+  inheritable: true
+  default:
+    python: example_lib
+    else: None
+  allowed_on: [ root ]
+
+c_wrapper_build_name:
+  inheritable: true
+  default:
+    swift: CWrapper
+    else: None
   allowed_on: [ root ]

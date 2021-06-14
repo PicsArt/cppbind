@@ -104,7 +104,7 @@ file:
        * Please do not change it manually.
        */
 
-      import {{config.c_wrapper_build_name}}
+      import {{c_wrapper_build_name}}
       public enum Exceptions {
       {% for cls, base_cls in helper.Exceptions.get_std_exc_tree() %}
           {{'public' if base_cls else 'open'}} class {{helper.Exceptions.get_exc_name(cls)}} : {{helper.Exceptions.get_exc_name(base_cls) if base_cls else 'Error'}} {

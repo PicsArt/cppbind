@@ -12,6 +12,7 @@ class NodeType(Enum):
     CLANG_NODE = 1
     DIRECTORY_NODE = 2
     ROOT_NODE = 3
+    FILE_NODE = 4
 
 
 class Node(ABC):
@@ -134,7 +135,6 @@ class DirectoryNode(Node):
     def full_displayname(self):
         return self.name
 
-
 class RootNode(Node):
     ROOT_KEY = '__root__'
 
@@ -168,32 +168,11 @@ class RootNode(Node):
         return self.name
 
 
-class ClangNode(Node):
+class ClangNode(Node, ABC):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, parent, children, pure_comment)
         self.clang_cursor = clang_cursor
-
-    @property
-    def type(self):
-        return NodeType.CLANG_NODE
-
-    def __eq__(self, other):
-        return self.full_displayname == other.full_displayname
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
-    def __hash__(self):
-        return hash(self.full_displayname)
-
-    @property
-    def kind_name(self):
-        assert self.clang_cursor, "cursor is not provided"
-        if self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT:
-            return "file"
-        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
-        return cl_kind
 
     @property
     def kind(self):
@@ -226,6 +205,38 @@ class ClangNode(Node):
     @property
     def line_number(self):
         return self.clang_cursor.extent.start.line
+
+
+class FileNode(ClangNode):
+
+    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+
+    @property
+    def type(self):
+        return NodeType.FILE_NODE
+
+    @property
+    def kind_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        assert self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT
+        return "file"
+
+
+class CXXNode(ClangNode):
+
+    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+
+    @property
+    def type(self):
+        return NodeType.CLANG_NODE
+
+    @property
+    def kind_name(self):
+        assert self.clang_cursor, "cursor is not provided"
+        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
+        return cl_kind
 
     @property
     def is_interface(self):

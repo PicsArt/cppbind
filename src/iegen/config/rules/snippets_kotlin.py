@@ -277,12 +277,16 @@ def preprocess_entry(context, builder, code_name):
     for fs, info in code_info.items():
         fscope_name, scope_name = fs
         file_scope = get_file(context, builder, fscope_name)
+        if not file_scope:
+            break
         parent_scope = file_scope[scope_name]
         preprocess_scope(context, parent_scope, info)
 
 
 def get_file(context, builder, fscope_name):
     file_info = SNIPPETS_ENGINE.get_file_info(fscope_name)
+    if not file_info:
+        return None
     file_name = file_info.get_file_name(context)
 
     return builder.get_file(file_name, init_func=lambda s: preprocess_scope(context, s, file_info))

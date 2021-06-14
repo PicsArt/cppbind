@@ -341,7 +341,7 @@ class SnippetsEngine:
         return self.code_infos.get(code_name, None)
 
     def get_file_info(self, file_name):
-        return self.file_infos[file_name]
+        return self.file_infos.get(file_name)
 
     def _load_actions(self, actionsInfo):
         def handle_file_action(infoDict):
@@ -388,6 +388,10 @@ class SnippetsEngine:
             if isinstance(info_map, str):
                 # redirection
                 info_map = codeInfoDict[info_map]
+
+            if info_map is None:
+                # allow empty rules
+                continue
 
             if not isinstance(info_map, dict):
                 raise Exception("Missing scopes section.")

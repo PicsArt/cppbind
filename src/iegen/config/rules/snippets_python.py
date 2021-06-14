@@ -257,11 +257,13 @@ def preprocess_entry(context, builder, code_name):
         code_info = SNIPPETS_ENGINE.get_code_info(f"{code_name}_{context['name']}")
 
     code_info = code_info or SNIPPETS_ENGINE.get_code_info(code_name)
-    for fs, info in code_info.items():
-        fscope_name, scope_name = fs
-        file_scope = get_file(context, builder, fscope_name)
-        parent_scope = file_scope[scope_name]
-        preprocess_scope(context, parent_scope, info)
+    # continue processing if not an empty rule
+    if code_info:
+        for fs, info in code_info.items():
+            fscope_name, scope_name = fs
+            file_scope = get_file(context, builder, fscope_name)
+            parent_scope = file_scope[scope_name]
+            preprocess_scope(context, parent_scope, info)
 
 
 def get_file(context, builder, fscope_name):

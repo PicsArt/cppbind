@@ -180,7 +180,6 @@ file:
       }
 
 package:
-  swift:
 
 enum:
   swift:

@@ -389,6 +389,10 @@ class SnippetsEngine:
                 # redirection
                 info_map = codeInfoDict[info_map]
 
+            if info_map is None:
+                # allow empty rules
+                continue
+
             if not isinstance(info_map, dict):
                 raise Exception("Missing scopes section.")
 

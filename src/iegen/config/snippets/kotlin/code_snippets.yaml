@@ -36,8 +36,6 @@ file:
       {{body}}
 
 package:
-  empty:
-    body:
 
 enum:
   kotlin: 

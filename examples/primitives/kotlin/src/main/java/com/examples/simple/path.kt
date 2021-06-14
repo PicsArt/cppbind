@@ -8,24 +8,21 @@ package com.examples.simple
 import alias.*
 
 
-open class Root
+open class Path
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
             System.loadLibrary("wrapper_jni");
         }
         
-        /**
-         * comments
-         * 
-         */
-        protected fun construct_helper(_path: String): Long {
-            val id = jConstructor(_path)
+        protected fun construct_helper(_value: String): Long {
+            val id = jConstructor(_value)
             return id
         }
 
         @JvmStatic
-        private external fun jConstructor(_path: String): Long
+        private external fun jConstructor(_value: String): Long
+
     }
     
     protected var id = _id
@@ -37,29 +34,22 @@ internal constructor(_id: Long) : AutoCloseable {
         return id;
     }
     
-    /**
-     * comments
-     * 
-     */
-    constructor(_path: String): this(construct_helper(_path)) {
+    constructor(_value: String): this(construct_helper(_value)) {
         //jSet_this(id, this)
     }
     
-    /**
-     * comments
-     * 
-     */
-    var path: String
+    val value: String
         get() {
-            val result = jPath(getObjId())
+            val result = jValue(getObjId())
             
             return result
         }
-        set(value) {
-            
-            jSetpath(getObjId(), value)
-        }
+    
+    override fun toString(): String {
+        val result = jTostring(getObjId())
         
+        return result
+    }
 
     override fun close() {
         if (id != 0L) {
@@ -76,8 +66,8 @@ internal constructor(_id: Long) : AutoCloseable {
     }
 
     ///// External wrapper functions ////////////
-    private external fun jPath(id: Long): String
-    private external fun jSetpath(id: Long, value: String): Unit
+    private external fun jTostring(id: Long): String
+    private external fun jValue(id: Long): String
     private external fun jSet_this(id: Long, self: Any): Unit
     private external fun jFinalize(id: Long): Unit
 }

@@ -198,19 +198,21 @@ enum:
 var_class_include: &var_class_include
     unique_content: |
       #include "{{prj_rel_file_name}}"
-      {{include_cxx|format_list('#include "{}"')|join('\n')}}
-      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
+      {{marker}}
+      {{include_cxx|format_list('#include "{}"')|join('\n' + marker)}}
+      {{marker}}
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n' + marker)}}
 
 var_template_method_include: &var_template_method_include
     unique_content: |
-      {{ctx.template_includes|format_list('#include "{}"')|join('\n')}}
+      {{ctx.template_includes|format_list('#include "{}"')|join('\n' + marker)}}
 
 
 class:
   swift:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join('\n')}}
+        {{include|format_list("import {}")|join('\n' + marker)}}
     body:
       scopes:
         - head
@@ -270,7 +272,7 @@ interface:
   swift:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join('\n')}}
+        {{include|format_list("import {}")|join('\n' +marker)}}
     body:
       scopes:
         - interface_head
@@ -508,7 +510,7 @@ property_getter:
               {{result_converter.snippet('result')|indent(8)}}
               return {{result_converter.converted_name('result')}}
             }
-            {% if gen_property_setter is defined %}
+            {%- if gen_property_setter %}
             {% set converter = rconverter.swift_to_sc %}
             set(value) {
               {{converter.snippet('value')|indent(8)}}
@@ -519,7 +521,7 @@ property_getter:
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{comment}}
-      var {{name}}: {{result_converter.target_type_name}} { get {% if gen_property_setter is defined %}set{% endif %} }
+      var {{name}}: {{result_converter.target_type_name}} { get {% if gen_property_setter %}set{% endif %} }
   cc:
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
@@ -534,7 +536,7 @@ property_getter:
           {{rconverter.cxx_to_c.snippet('result')|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
-      {%- if gen_property_setter is defined %}
+      {%- if gen_property_setter %}
       void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
@@ -551,7 +553,7 @@ property_getter:
     body:
       content: |
         {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself);
-        {%- if gen_property_setter is defined %}
+        {%- if gen_property_setter %}
         void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}});
         {% endif %}
 

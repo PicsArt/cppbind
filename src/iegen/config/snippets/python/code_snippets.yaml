@@ -313,6 +313,21 @@ var_template_method_include: &var_template_method_include
       {{template_includes|format_list('#include "{}"')|join('\n' + marker)}}
       {%- endif %}
 
+
+var_bind_method: &var_bind_method
+  converter:
+    unique_content: |
+      {%- for arg in args -%}
+      {%- set converter = arg.converter.python_to_pybind -%}
+      {%- set snippet = converter.snippet('arg') -%}
+      {%- if snippet -%}
+      {{marker}}
+      elif type_hint == '{{arg.converter.python.target_type_name}}':
+          {{snippet|indent}}
+          return {{converter.converted_name('arg')}}
+      {%- endif -%}
+      {%- endfor %}
+
 constructor:
   python:
     constructor_body: |
@@ -323,19 +338,7 @@ constructor:
                                        {%- endfor %}):
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
-  bind:
-    converter:
-      unique_content: |
-        {%- for arg in args -%}
-        {%- set converter = arg.converter.python_to_pybind -%}
-        {%- set snippet = converter.snippet('arg') -%}
-        {%- if snippet -%}
-        {{marker}}
-        elif type_hint == '{{arg.converter.python.target_type_name}}':
-            {{snippet|indent}}
-            return {{converter.converted_name('arg')}}
-        {%- endif -%}
-        {%- endfor %}
+  bind: *var_bind_method
   cxx:
     body: |
       {%- set comma = joiner(', ') %}
@@ -364,19 +367,7 @@ function:
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
-  bind:
-    converter:
-      unique_content: |
-        {%- for arg in args -%}
-        {%- set converter = arg.converter.python_to_pybind -%}
-        {%- set snippet = converter.snippet('arg') -%}
-        {%- if snippet -%}
-        {{marker}}
-        elif type_hint == '{{arg.converter.python.target_type_name}}':
-            {{snippet|indent}}
-            return {{converter.converted_name('arg')}}
-        {%- endif -%}
-        {%- endfor %}
+  bind: *var_bind_method
   cxx:
     body: |
       {%- if is_operator %}
@@ -403,6 +394,17 @@ function:
       {{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')|to_snake_case}});
     include: *var_template_method_include
 
+var_bind_getter: &var_bind_getter
+  converter:
+    unique_content: |
+      {%- set converter = rconverter.python_to_pybind -%}
+      {%- set snippet = converter.snippet('arg') -%}
+      {%- if snippet %}
+      {{marker}}
+      elif type_hint == '{{rconverter.python.target_type_name}}':
+          {{snippet|indent}}
+          return {{converter.converted_name('arg')}}
+      {%- endif %}
 
 property_getter:
   python:
@@ -420,17 +422,7 @@ property_getter:
           {{comment|string|indent}}
           pass
       {%- endif %}
-  bind:
-    converter:
-      unique_content: |
-        {%- set converter = rconverter.python_to_pybind -%}
-        {%- set snippet = converter.snippet('arg') -%}
-        {%- if snippet %}
-        {{marker}}
-        elif type_hint == '{{rconverter.python.target_type_name}}':
-            {{snippet|indent}}
-            return {{converter.converted_name('arg')}}
-        {%- endif %}
+  bind: *var_bind_getter
   cxx:
     body: |
       {%- set _name = name|to_snake_case -%}
@@ -464,17 +456,7 @@ getter:
           {{comment|string|indent}}
           pass
       {%- endif -%}
-  bind:
-    converter:
-      unique_content: |
-        {%- set converter = rconverter.python_to_pybind -%}
-        {%- set snippet = converter.snippet('arg') -%}
-        {%- if snippet %}
-        {{marker}}
-        elif type_hint == '{{rconverter.python.target_type_name}}':
-            {{snippet|indent}}
-            return {{converter.converted_name('arg')}}
-        {%- endif %}
+  bind: *var_bind_getter
   cxx:
     body: |
       {%- if ctx.node.is_function_template %}

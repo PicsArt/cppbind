@@ -16,6 +16,7 @@ from iegen.utils import load_from_paths
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
 LANGUAGE = 'kotlin'
+MARKER = 'unique_marker'
 
 
 def load_snippets_engine(path, main_target):
@@ -51,6 +52,7 @@ def make_def_context(ctx):
         config = ctx.config
         pat_sep = os.sep
         helper = iegen.converter
+        marker = MARKER
 
         date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
@@ -265,7 +267,7 @@ def preprocess_scope(context, scope, info):
     if info.snippet_tmpl:
         scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
-        scope.add_unique(*str(info.unique_make_snippet(context_scope)).splitlines())
+        scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(MARKER))
 
 
 def preprocess_entry(context, builder, code_name):

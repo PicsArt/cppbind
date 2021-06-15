@@ -326,7 +326,7 @@ var_bind_method: &var_bind_method
           {{snippet|indent}}
           return {{converter.converted_name('arg')}}
       {%- endif -%}
-      {%- endfor %}
+      {%- endfor -%}
 
 constructor:
   python:
@@ -399,11 +399,11 @@ var_bind_getter: &var_bind_getter
     unique_content: |
       {%- set converter = rconverter.python_to_pybind -%}
       {%- set snippet = converter.snippet('arg') -%}
-      {%- if snippet %}
+      {%- if snippet -%}
       {{marker}}elif type_hint == '{{rconverter.python.target_type_name}}':
           {{snippet|indent}}
           return {{converter.converted_name('arg')}}
-      {%- endif %}
+      {%- endif -%}
 
 property_getter:
   python:

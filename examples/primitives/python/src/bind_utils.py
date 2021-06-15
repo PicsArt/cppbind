@@ -117,6 +117,9 @@ class bind:
 
         @functools.wraps(self.fn.original_function)
         def _decorator(*args, **kwargs):
+            all_kwargs = _map_to_kwargs(self.fn, *args, **kwargs)
+            if not self.fn.is_overloaded:
+                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
             if inspect.isclass(instance):
                 # for python >= 3.9
                 # case of static method, e.g decorated with @classmethod
@@ -126,9 +129,8 @@ class bind:
                 else:
                     # instance is iegen generated cls
                     cls = instance
-                return cls.originals[self.fn.name].__get__(self.fn.name)(
-                    **_map_to_kwargs(self.fn, *args, **kwargs))
-            return self.cls.originals[self.fn.name](instance, **_map_to_kwargs(self.fn, *args, **kwargs))
+                return cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+            return self.cls.originals[self.fn.name](instance, **all_kwargs)
 
         return _decorator
 
@@ -153,29 +155,27 @@ class bind:
             else:
                 # the first argument is iegen generated cls
                 cls = args[0]
-            return cls.originals[self.fn.name].__get__(self.fn.name)(
-                **_map_to_kwargs(self.fn, *args[1:], **kwargs))
+            all_kwargs = _map_to_kwargs(self.fn, *args[1:], **kwargs)
+            if not self.fn.is_overloaded:
+                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
+            return cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
         original = cls.originals[self.fn.name]
         if isinstance(original, property):
             if len(args) == 2:
                 # setter
-                annotation = next(iter(inspect.getfullargspec(self.fn.original_function).annotations.values()))
-                # first is self, second is the value
-                value = _convert_arg(args[1], annotation)
-                return original.fset(args[0], value)
+                converted_args, _ = _convert_args_kwargs(self.fn, args[1])
+                return original.fset(args[0], *converted_args)
             else:
                 # getter
-                return original.fget(*args)
+                return original.fget(args[0])
 
 
 def _convert_arg(arg, type_hint):
     try:
         if False:
             pass
-        
-
         elif type_hint == 'int':
             python_to_pybind_arg = int(arg)
             return python_to_pybind_arg
@@ -193,18 +193,34 @@ def _convert_arg(arg, type_hint):
 
 def _map_to_kwargs(func, *args, **kwargs):
     all_kwargs = _get_default_args(func.original_function)
+    args_names, _ = _get_args_signature(func)
+    for ii, arg in enumerate(args):
+        arg_name = args_names[ii]
+        all_kwargs[arg_name] = arg
+    all_kwargs.update(kwargs)
+    return all_kwargs
+
+
+def _convert_args_kwargs(func, *args, **kwargs):
+    args_names, annotations = _get_args_signature(func)
+    converted_kwargs = {}
+    for k, v in kwargs.items():
+        converted_kwargs[k] = _convert_arg(v, annotations[k])
+    converted_args = []
+    for ii, arg in enumerate(args):
+        arg_name = args_names[ii]
+        annotation = annotations[arg_name]
+        converted_args.append(_convert_arg(arg, annotation))
+    return converted_args, converted_kwargs
+
+
+def _get_args_signature(func):
     signature = inspect.getfullargspec(func.original_function)
     annotations = signature.annotations
     args_names = signature.args
     'self' in args_names and args_names.remove('self')
     'cls' in args_names and args_names.remove('cls')
-    for ii, arg in enumerate(args):
-        arg_name = args_names[ii]
-        annotation = annotations[arg_name]
-        all_kwargs[arg_name] = arg if func.is_overloaded else _convert_arg(arg, annotation)
-    for k, v in kwargs.items():
-        all_kwargs[k] = v if func.is_overloaded else _convert_arg(v, annotations[k])
-    return all_kwargs
+    return args_names, annotations
 
 
 def _get_default_args(func):
@@ -214,4 +230,3 @@ def _get_default_args(func):
         for k, v in signature.parameters.items()
         if v.default is not inspect.Parameter.empty
     }
-

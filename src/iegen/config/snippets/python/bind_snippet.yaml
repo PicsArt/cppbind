@@ -162,16 +162,17 @@ content: |
                   **_map_to_kwargs(self.fn, *args[1:], **kwargs))
           # get the non pybind class
           cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
-          prop = cls.originals[self.fn.name]
-          if len(args) == 2:
-              # setter
-              annotation = next(iter(inspect.getfullargspec(self.fn.original_function).annotations.values()))
-              # first is self, second is the value
-              value = _convert_arg(args[1], annotation)
-              return prop.fset(args[0], value)
-          else:
-              # getter
-              return prop.fget(*args)
+          original = cls.originals[self.fn.name]
+          if isinstance(original, property):
+              if len(args) == 2:
+                  # setter
+                  annotation = next(iter(inspect.getfullargspec(self.fn.original_function).annotations.values()))
+                  # first is self, second is the value
+                  value = _convert_arg(args[1], annotation)
+                  return original.fset(args[0], value)
+              else:
+                  # getter
+                  return original.fget(*args)
 
 
   def _convert_arg(arg, type_hint):

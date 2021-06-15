@@ -24,8 +24,16 @@ public:
     Root(const std::string& _path) : path(_path) {};
 
     /**
-     * comments
-     *
+     * __API__
+     * gen: method
+     * throws: no_throw
+     * kotlin.name: updatePath
+     */
+    void setPath(const std::string& _path) {
+        path = _path;
+    };
+
+    /**
      * __API__
      * gen: property_setter
      */

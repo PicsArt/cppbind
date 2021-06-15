@@ -12,11 +12,11 @@ TAB_STR = '    '
 
 class Scope(object):
 
-    def __init__(self, *parts, name=None, tab=0, tab_str=None, file_scope=None, parts_spliter='\n'):
+    def __init__(self, *parts, name=None, tab=0, tab_str=None, file_scope=None, parts_splitter='\n'):
         self.file_scope = file_scope
         self.parts = []
         self.tab = tab
-        self.parts_spliter = parts_spliter
+        self.parts_splitter = parts_splitter
         self.tab_str = tab_str or TAB_STR
         self._name = name
         self.add(*parts)
@@ -30,8 +30,7 @@ class Scope(object):
         Adds text or scope to corresponding partition
         """
         return self.add(
-            *[part for part in list(dict.fromkeys([p.strip() for p in parts if p])) if part not in self.parts],
-            add_front=add_front)
+            *[part for part in list(dict.fromkeys(parts)) if part not in self.parts], add_front=add_front)
 
     def add(self, *parts, add_front=False):
         """
@@ -100,7 +99,7 @@ class Scope(object):
 
         lines = [
             (self.tab_str*self.tab)+s
-            for s in self.parts_spliter.join(str(p) for p in self.parts).splitlines(keepends=True)
+            for s in self.parts_splitter.join(str(p) for p in self.parts).splitlines(keepends=True)
         ]
 
         str_scope = ''.join(lines)

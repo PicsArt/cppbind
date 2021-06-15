@@ -61,10 +61,12 @@ var_class_cxx: &var_class_cxx
   include:
     unique_content: |
       #include "{{prj_rel_file_name}}"
-      {{marker}}
-      {{include_cxx|format_list('#include "{}"')|join('\n' + marker)}}
-      {{marker}}
-      {{ctx.template_includes|format_list('#include "{}"')|join('\n' + marker)}}
+      {%- if include_cxx -%}
+      {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
+      {%- endif -%}
+      {%- if ctx.template_includes -%}
+      {{marker}}{{ctx.template_includes|format_list('#include "{}"')|join_unique}}
+      {%- endif -%}
   body:
     content: |
       {%- if ctx.namespace %}
@@ -99,7 +101,7 @@ class:
   kotlin:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join('\n' + marker)}}
+        {{include|format_list("import {}")|join_unique}}
     body:
       scopes:
         - head
@@ -188,7 +190,7 @@ interface:
   kotlin:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join('\n' + marker)}}
+        {{include|format_list("import {}")|join_unique}}
     body:
       scopes:
         - head
@@ -260,10 +262,7 @@ interface:
 
 var_template_method_include: &var_template_method_include
     unique_content: |
-      {%- set template_includes = ctx.template_includes %}
-      {%- if template_includes %}
-      {{template_includes|format_list('#include "{}"')|join('\n' + marker)}}
-      {%- endif %}
+      {{ctx.template_includes|format_list('#include "{}"')|join_unique}}
 
 constructor:
   kotlin:

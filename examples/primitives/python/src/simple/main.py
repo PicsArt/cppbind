@@ -26,11 +26,16 @@ root = Root(path)
 assert root.path == path
 # [root-usage]
 
-# [path-usage]
+# [implicit-cast-example]
 path_obj = Path('/some/path')
 root_from_obj = Root(path_obj)
-root.path = path_obj
-# [path-usage]
+assert root_from_obj.path == path_obj.value
+another_path_obj = path_obj = Path('/some/other/path')
+root_from_obj.path = another_path_obj
+assert root_from_obj.path == another_path_obj.value
+root_from_obj.set_path(path_obj)
+assert root_from_obj.path == path_obj.value
+# [implicit-cast-example]
 
 # test for dir actions with current path
 pretty_print('{"first_name": "John", "last_name": "Doe"}')

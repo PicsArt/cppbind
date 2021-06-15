@@ -20,6 +20,7 @@ TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
 INIT_SECTION = 'init'
 ACTIONS_SECTION = 'actions'
+JINJA_UNIQUE_MARKER = '~!+marker#@~'
 
 
 class Snippet:
@@ -594,5 +595,10 @@ class SnippetsEngine:
         env.filters['to_snake_case'] = make_snake_case
 
         env.filters['to_camel_case'] = make_camel_case
+
+        def join_unique(inputs_):
+            return JINJA_UNIQUE_MARKER.join(inputs_)
+
+        env.filters['join_unique'] = join_unique
 
         self.jinja2_env = env

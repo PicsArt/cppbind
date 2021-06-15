@@ -1,18 +1,12 @@
 """
 """
 import argparse
-from iegen.utils import (
-    load_module_from_paths,
-    get_host_platform
-)
+from iegen.utils import load_module_from_paths, get_host_platform
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.parser.ieg_parser import CXXParser
 from iegen.builder.out_builder import Builder
 from iegen.ir.exec_rules import RunRule
-from iegen import (
-    default_config as default_config,
-    logging as logging
-)
+from iegen import default_config, logging
 from iegen.common.error import Error
 
 
@@ -25,10 +19,10 @@ class WrapperGenerator(object):
 
         logging.info(f"Start running wrapper generator for {', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
         for plat, lang in plat_lang_options:
-            self.run_for(plat, lang)
+            WrapperGenerator.run_for(plat, lang)
 
-    def run_for(self, platform, language):
-
+    @staticmethod
+    def run_for(platform, language):
         default_config_dirs = default_config.default_config_dirs
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
         lang_config = default_config.languages[language]
@@ -76,7 +70,7 @@ def run_package():
 
     plat_lang_options = []
     for option in args.languages:
-        if '.' in  option:
+        if '.' in option:
             plat, lang = option.split('.')
         else:
             plat, lang = get_host_platform(), option

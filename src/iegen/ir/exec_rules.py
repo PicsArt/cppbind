@@ -12,7 +12,24 @@ from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
 
 
-class Context(object):
+class BaseContext:
+    def __init__(self, runner):
+        self.runner = runner
+        self.node = runner.ir
+
+    def __getattr__(self, name):
+        val = self.node.args.get(name, None)
+        if val is None:
+            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
+    API has no '{name}' attribute for {self.node.displayname}.")
+        val = val.get(self.runner.platform, {}).get(self.runner.language, None)
+        if val is None:
+            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
+                                       attribute for language {self.runner.language}.")
+        return val
+
+
+class Context(BaseContext):
 
     def __init__(self, runner, node, template_ctx=None):
         if node.type == NodeType.CLANG_NODE:
@@ -97,14 +114,14 @@ class Context(object):
             search_api = self.node.api
             name = self.name
             search_names = {name}
-            oveloads = self.find_adjacents(search_names, search_api)
-            self._overloading_prefix = ''
-            for i, ctx in enumerate(oveloads):
+            overloads = self.find_adjacents(search_names, search_api)
+            _overloading_prefix = ''
+            for i, ctx in enumerate(overloads):
                 if ctx == self:
-                    self._overloading_prefix = f'_{i}' if i != 0 else ''
+                    _overloading_prefix = f'_{i}' if i != 0 else ''
                     break
 
-        return self._overloading_prefix
+        return _overloading_prefix
 
     @property
     def setter(self):
@@ -147,7 +164,8 @@ class Context(object):
     @property
     def ancestors(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
 
@@ -172,7 +190,8 @@ class Context(object):
     @property
     def base_types_specifier_cursor(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
         base_types_cursor = []
@@ -289,22 +308,6 @@ class Context(object):
     def template_names(self):
         return self.template_ctx['names'] if self.template_ctx else None
 
-    def __getattr__(self, name):
-        val = self.node.args.get(name, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
- API has no '{name}' attribute for {self.node.displayname}.")
-        val = val.get(self.runner.platform, {}).get(self.runner.language, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
-                                    attribute for language {self.runner.language}.")
-        return val
-
-
-class RootContext(Context):
-    def __init__(self, rule):
-        super().__init__(rule, rule.ir)
-
 
 class RunRule(object):
 
@@ -336,7 +339,7 @@ class RunRule(object):
         logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
-            func(RootContext(self), builder)
+            func(BaseContext(self), builder)
 
         # executes once for a type
         processed = dict()

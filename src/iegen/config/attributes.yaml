@@ -216,3 +216,30 @@ c_wrapper_build_name:
     swift: CWrapper
     else: None
   allowed_on: [ root ]
+
+clang_args:
+  inheritable: false
+  default:
+    - -D__ANDROID__
+  allowed_on: [ root ]
+  array: true
+
+src_glob:
+  inheritable: false
+  default:
+    - ./examples/example_cxx/**/*.h*
+  allowed_on: [ root ]
+  array: true
+
+src_exclude_glob:
+  inheritable: false
+  default: [ ]
+  allowed_on: [ root ]
+  array: true
+
+include_dirs:
+  inheritable: false
+  default:
+    - .
+  allowed_on: [ root ]
+  array: true

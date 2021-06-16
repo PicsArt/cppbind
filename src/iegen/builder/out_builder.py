@@ -2,10 +2,11 @@
 Builder module allows rule script to add source code blokes
 to generated output.
 """
-
-import os
 import copy
-from iegen import logging as logging
+import os
+
+from iegen import logging, current_datetime
+from iegen.builder import is_output_changed, OUTPUT_MODIFICATION_KEY
 
 TAB_STR = '    '
 
@@ -85,7 +86,7 @@ class Scope(object):
                     data.file_scope = self.file_scope
                     # also if name is not empty add to file_scope for lookup
                     if data.name:
-                        assert self.file_scope is not None,\
+                        assert self.file_scope is not None, \
                             "to be able to add name scope file_scope should be specified."
                         self.file_scope.register_scope(data, dept)
 
@@ -120,11 +121,18 @@ class File(Scope):
     def dump_output(self):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
-        with open(self.file_path, 'w+t') as f:
-            content = str(self)
-            if f.read() != content:
-                f.seek(0)
-                f.truncate()
+        content = str(self)
+        if os.path.exists(self.file_path):
+            with open(self.file_path, 'r+') as f:
+                old = f.read()
+                if is_output_changed(old, content):
+                    f.seek(0)
+                    f.truncate()
+                    content = content.replace(OUTPUT_MODIFICATION_KEY,
+                                              current_datetime())
+                    f.write(content)
+        else:
+            with open(self.file_path, 'w') as f:
                 f.write(content)
 
     def register_scope(self, scope, dept=-1):
@@ -159,7 +167,7 @@ class File(Scope):
         if scope is not None:
             return scope, dept
 
-        return self._lookup_scope_by_name(scope_name, dept-1)
+        return self._lookup_scope_by_name(scope_name, dept - 1)
 
     def _lookup_scope_dept(self, scope, dept=-1):
         if len(self.scope_stack) < -dept:
@@ -171,7 +179,7 @@ class File(Scope):
 
         if found_scope is scope:
             return found_dept
-        return self._lookup_scope_dept(scope, found_dept-1)
+        return self._lookup_scope_dept(scope, found_dept - 1)
 
 
 class Builder(object):
@@ -205,14 +213,14 @@ class Builder(object):
         self._current_dept += 1
         for fl in self._files.values():
             fl.add_scope_stack()
-            assert len(fl._scope_stack) == self._current_dept,\
+            assert len(fl._scope_stack) == self._current_dept, \
                 f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
 
     def pop_scope_stack(self):
         self._current_dept -= 1
         for fl in self._files.values():
             fl.pop_scope_stack()
-            assert len(fl._scope_stack) == self._current_dept,\
+            assert len(fl._scope_stack) == self._current_dept, \
                 f"dept imbalance at {self._current_dept}, got {len(fl._scope_stack)} for file {fl.name}"
 
     def clear_scope_stack(self):
@@ -230,7 +238,7 @@ class Builder(object):
                 if restoring_dept is None:
                     restoring_dept = len(fl._scope_stack)
                 else:
-                    assert restoring_dept == len(fl._scope_stack),\
+                    assert restoring_dept == len(fl._scope_stack), \
                         f"Scope imbalance for {file_name} scope dept is {len(fl._scope_stack)}"
             else:
                 logging.debug(f"Current scope is {self._current_dept}, {file_name} scope is {len(fl._scope_stack)}.")

@@ -2,6 +2,7 @@
 Processor module provides various processor for ieg parser
 """
 import copy
+import datetime
 import os
 from collections import OrderedDict
 from types import SimpleNamespace
@@ -9,7 +10,8 @@ from types import SimpleNamespace
 from git import Repo, GitError
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
-from iegen import default_config as default_config
+from iegen import default_config, DATETIME_FORMAT
+from iegen.builder import OUTPUT_MODIFICATION_KEY
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
@@ -217,6 +219,7 @@ class CXXIEGIRBuilder(object):
 
     def __update_internal_vars(self, node):
         sys_vars = {
+            '_output_modification_time': OUTPUT_MODIFICATION_KEY,
             'path': os.path,
             '_current_working_dir': os.getcwd(),
             '_pure_comment': '',
@@ -225,6 +228,7 @@ class CXXIEGIRBuilder(object):
         }
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
+                '_source_modification_time': self._get_modification_time(node.name),
                 '_is_operator': False,
                 '_object_name': node.name,
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0] if node.file_name else node.name,
@@ -232,12 +236,17 @@ class CXXIEGIRBuilder(object):
 
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
+                '_source_modification_time': self._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 
         self._sys_vars.update(sys_vars)
+
+    def _get_modification_time(self, path):
+        modification_time = datetime.datetime.fromtimestamp(os.stat(path).st_ctime)
+        return datetime.date.strftime(modification_time, DATETIME_FORMAT)
 
     def get_sys_vars(self):
         sys_vars = copy.copy(self._sys_vars)

@@ -1,5 +1,4 @@
 import copy
-import datetime
 import os
 import types
 
@@ -52,8 +51,6 @@ def make_def_context(ctx):
         path = os.path
         helper = converter
         marker = JINJA_UNIQUE_MARKER
-
-        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
         return locals()
 

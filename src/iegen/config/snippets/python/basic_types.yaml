@@ -16,7 +16,8 @@ bool:
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
-  python_to_pybind:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 int:
   python:
@@ -26,7 +27,8 @@ int:
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
-  python_to_pybind:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 unsigned int:
   long
@@ -39,13 +41,19 @@ short:
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
-  python_to_pybind:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 long:
   python:
     type_info: int
   pybind:
     type_info: int
+  cxx_to_pybind:
+  pybind_to_cxx:
+  pybind_to_python:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 long long:
   long
@@ -61,7 +69,8 @@ float:
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
-  python_to_pybind:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 double:
   python:
@@ -71,4 +80,5 @@ double:
   cxx_to_pybind:
   pybind_to_cxx:
   pybind_to_python:
-  python_to_pybind:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})

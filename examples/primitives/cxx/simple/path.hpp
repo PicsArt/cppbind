@@ -1,5 +1,5 @@
-#ifndef root_hpp
-#define root_hpp
+#ifndef path_hpp
+#define path_hpp
 
 #include <string>
 
@@ -9,35 +9,33 @@ namespace iegen::example {
  * __API__
  * gen: class
  * shared_ref: False
- * swift.package: simple
- * kotlin.package: simple
+ * package: simple
  * swift.include: CWrapper
  */
-struct Root {
+struct Path {
 public:
     /**
-     * comments
-     *
      * __API__
      * gen: constructor
      */
-    Root(const std::string& _path) : path(_path) {};
+    Path(const std::string& _value) : value(_value) {};
 
     /**
      * __API__
      * gen: method
      * throws: no_throw
-     * kotlin.name: updatePath
+     * python.name: __str__
      */
-    void setPath(const std::string& _path) {
-        path = _path;
-    };
+    const std::string& toString() {
+        return value;
+    }
 
     /**
      * __API__
-     * gen: property_setter
+     * gen: property_getter
+     *
      */
-     std::string path;
+     std::string value;
 };
 // [example]
 }

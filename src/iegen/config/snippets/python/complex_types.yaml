@@ -69,8 +69,9 @@ std::__cxx11::basic_string:
     type_info: str
   pybind_to_cxx:
   cxx_to_pybind:
-  python_to_pybind:
   pybind_to_python:
+  python_to_pybind: |
+    {{target_name}} = {{target_type_name}}({{name}})
 
 
 std::vector:
@@ -120,6 +121,37 @@ std::shared_ptr:
     type_info: "{{args_t[0]}}"
   pybind:
     type_info: "{{args_t[0]}}"
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+
+std::__ndk1::pair:
+  std::pair
+
+nlohmann::json:
+  custom:
+    pname: json
+  python:
+    type_info: dict
+  pybind:
+    type_info: dict
+  pybind_to_cxx:
+  cxx_to_pybind:
+  python_to_pybind:
+  pybind_to_python:
+
+json:
+  nlohmann::json
+
+std::pair:
+  custom:
+    pname: tuple
+  python:
+    type_info: tuple
+  pybind:
+    type_info: tuple
   pybind_to_cxx:
   cxx_to_pybind:
   python_to_pybind:

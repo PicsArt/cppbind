@@ -9,7 +9,7 @@ import iegen.converter.python as convert
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE
+from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
 from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
@@ -51,6 +51,7 @@ def make_def_context(ctx):
         config = ctx.config
         pat_sep = os.sep
         helper = iegen.converter
+        marker = JINJA_UNIQUE_MARKER
 
         date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
@@ -248,7 +249,7 @@ def preprocess_scope(context, scope, info):
     if info.snippet_tmpl:
         scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
-        scope.add_unique(*str(info.unique_make_snippet(context_scope)).splitlines())
+        scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 
 
 def preprocess_entry(context, builder, code_name):

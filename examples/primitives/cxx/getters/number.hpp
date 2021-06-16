@@ -28,6 +28,16 @@ class Number {
      */
     Number(const T& n): num(n) {}
 
+    /**
+     * __API__
+     * gen: method
+     * throws: no_throw
+     * python.name: __int__
+     */
+    int toInt() {
+        return (int)num;
+    }
+
      /**
      * __API__
      * gen: property_setter

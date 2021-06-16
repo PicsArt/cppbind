@@ -20,16 +20,21 @@ TYPE_SECTION = 'types'
 CODE_SECTION = 'codes'
 INIT_SECTION = 'init'
 ACTIONS_SECTION = 'actions'
+JINJA_UNIQUE_MARKER = '~!+marker#@~'
 
 
 class Snippet:
 
-    def __init__(self, context, template):
+    def __init__(self, context, template, marker=None):
         self.context = context
         self.template = template
+        self.marker = marker
 
     def __str__(self):
-        return self.template.render(self.context)
+        value = self.template.render(self.context)
+        if self.marker:
+            return value.replace(self.marker, '')
+        return value
 
 
 class Action:
@@ -271,11 +276,11 @@ class ScopeInfo:
         self.snippet_tmpl = snippet_tmpl
         self.unique_snippet_tmpl = unique_snippet_tmpl
 
-    def make_snippet(self, context):
-        return Snippet(context=context, template=self.snippet_tmpl)
+    def make_snippet(self, context, marker=JINJA_UNIQUE_MARKER):
+        return Snippet(context=context, template=self.snippet_tmpl, marker=marker)
 
-    def unique_make_snippet(self, context):
-        return Snippet(context=context, template=self.unique_snippet_tmpl)
+    def unique_make_snippet(self, context, marker=None):
+        return Snippet(context=context, template=self.unique_snippet_tmpl, marker=marker)
 
 
 class FileScopeInfo(ScopeInfo):
@@ -598,5 +603,10 @@ class SnippetsEngine:
         env.filters['to_snake_case'] = make_snake_case
 
         env.filters['to_camel_case'] = make_camel_case
+
+        def join_unique(inputs_):
+            return JINJA_UNIQUE_MARKER.join(inputs_)
+
+        env.filters['join_unique'] = join_unique
 
         self.jinja2_env = env

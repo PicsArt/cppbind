@@ -19,7 +19,7 @@ def make_kotlin_comment(pure_comment):
 
 def build_jni_func_cxx(ctx, builder):
 
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
 
     arg_scope.add(
         "\n"
@@ -94,7 +94,7 @@ def build_jni_func_cxx(ctx, builder):
 def build_jni_func(ctx, builder):
 
     file_scope = get_file(ctx, builder)
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
     arg_scope.add('id: Long')
 
     for arg in ctx.args:
@@ -120,7 +120,7 @@ def build_jni_func(ctx, builder):
 
 def build_jni_constructor_cxx(ctx, builder):
 
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
 
     arg_scope.add(
         "\n"
@@ -178,7 +178,7 @@ def build_jni_constructor_cxx(ctx, builder):
 def build_jni_constructor(ctx, builder):
 
     file_scope = get_file(ctx, builder)
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
 
     for arg in ctx.args:
         # lookup type, create argument list and conversion code
@@ -353,7 +353,7 @@ def gen_class(ctx, builder):
 def gen_constructor(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
 
     body = []
     jni_call_args = []
@@ -392,7 +392,7 @@ def gen_constructor(ctx, builder):
 def gen_method(ctx, builder):
     file_scope = get_file(ctx, builder)
 
-    arg_scope = Scope(tab=1, parts_spliter=',\n')
+    arg_scope = Scope(tab=1, parts_splitter=',\n')
 
     body = []
     jni_call_args = ['id']

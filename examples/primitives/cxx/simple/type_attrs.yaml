@@ -37,3 +37,34 @@ gen_actions:
     rule:
       gen:
       package: simple
+
+root: |
+  {%- set out_prj_dir = "." -%}
+  gen:
+  src_glob:
+    - cxx/**/*.h*
+  include_dirs:
+    - .
+  kotlin.clang_args:
+    - -D__ANDROID__
+  kotlin.file_postfix: ""
+  kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
+  kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
+  kotlin.package_prefix: com.examples
+  kotlin.src_exclude_glob:
+    - cxx/functionals/*.hpp
+    - cxx/optionals/*.h*
+    - cxx/getters/*template_getter.hpp
+  python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
+  python.file_postfix: _pygen
+  python.out_dir: {{path.join(out_prj_dir, "python/src")}}
+  python.package_prefix: ""
+  python.pybind_module: examples
+  swift.file_postfix: _swgen
+  swift.package_prefix: ""
+  swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
+  swift.out_dir:  {{path.join(out_prj_dir, "swift/src")}}
+  swift.src_exclude_glob:
+    - cxx/functionals/*.hpp
+    - cxx/optionals/*.h*
+    - cxx/getters/*template_getter.hpp

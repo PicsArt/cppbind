@@ -1,12 +1,14 @@
 """
 Common utils that can by used from different modules
 """
-import os
+import datetime
 import errno
+import importlib.util
+import os
 import re
 import sys
 
-import importlib.util
+from iegen import DATETIME_FORMAT
 
 
 def load_from_paths(loader, path_name, default_dirs):
@@ -76,3 +78,12 @@ def make_camel_case(string, sub_strings=None):
         return string
     init, *temp = string.split('_')
     return ''.join([init, *map(str.title, temp)])
+
+
+def current_datetime():
+    """
+    Returns formatted current date time in utc.
+    Returns:
+        str: Formatted result.
+    """
+    return datetime.date.strftime(datetime.datetime.utcnow(), DATETIME_FORMAT)

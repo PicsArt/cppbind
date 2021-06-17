@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from iegen import current_datetime
+from iegen.utils import current_datetime
 from iegen.builder import OUTPUT_MODIFICATION_KEY, is_output_changed
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder, Scope

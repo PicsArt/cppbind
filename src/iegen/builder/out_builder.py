@@ -5,7 +5,8 @@ to generated output.
 import copy
 import os
 
-from iegen import logging, current_datetime
+from iegen import logging
+from iegen.utils import current_datetime
 from iegen.builder import is_output_changed, OUTPUT_MODIFICATION_KEY
 
 TAB_STR = '    '
@@ -133,6 +134,8 @@ class File(Scope):
                     f.write(content)
         else:
             with open(self.file_path, 'w') as f:
+                content = content.replace(OUTPUT_MODIFICATION_KEY,
+                                          current_datetime())
                 f.write(content)
 
     def register_scope(self, scope, dept=-1):

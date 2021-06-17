@@ -16,7 +16,7 @@ from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.ir.ast import Node, RootNode
-from iegen.utils.clang import extract_pure_comment, get_full_displayname, join_type_parts
+from iegen.utils.clang import extract_pure_comment, join_type_parts
 
 
 class APIParser(object):
@@ -43,11 +43,10 @@ class APIParser(object):
             return raw_comment, None
         return extract_pure_comment(raw_comment, index), raw_comment[index + len(self.api_start_kw)::]
 
-    def parse_comments(self, raw_comment, ctx, location=None):
+    def parse_comments(self, api_section, ctx, location=None):
         """
         Parse comment to extract API command and its attributes
         """
-        pure_comment, api_section = self.separate_pure_and_api_comment(raw_comment)
         if api_section is None:
             return None, OrderedDict()
         api_section = JINJA_ENV.from_string(api_section).render(ctx)
@@ -75,15 +74,13 @@ class APIParser(object):
         except yaml.YAMLError as e:
             raise Exception(f"Error while scanning yaml style comments: {e}")
 
-        return self.parse_api_attrs(attrs, location, pure_comment)
+        return self.parse_api_attrs(attrs, location)
 
-    def parse_api(self, cursor, ctx=None):
-        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
-                                   line_number=cursor.extent.start.line)
-        if self.has_api(cursor.raw_comment):
-            return self.parse_comments(cursor.raw_comment, ctx, location)
+    def parse_api(self, name, api_section, location, ctx=None):
+        if api_section:
+            return self.parse_comments(api_section, ctx, location)
         else:
-            return self.parse_yaml_api(get_full_displayname(cursor), ctx, location)
+            return self.parse_yaml_api(name, ctx, location)
 
     def parse_yaml_api(self, name, ctx=None, location=None):
         ctx = ctx or {}
@@ -106,7 +103,7 @@ class APIParser(object):
             return attrs.file
         return None
 
-    def parse_api_attrs(self, attrs, location, pure_comment=None):
+    def parse_api_attrs(self, attrs, location):
         api = None
         attr_dict = OrderedDict()
         ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
@@ -164,7 +161,7 @@ class APIParser(object):
                                         location.file_name, location.line_number)
                         prev_priors[attr][(plat, lang)].append(prior)
 
-        return api, attr_dict, pure_comment
+        return api, attr_dict
 
     def parse_attr(self, attr_name, attr_value):
         attr_type = self.attributes[attr_name].get('type', None)

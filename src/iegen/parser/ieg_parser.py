@@ -30,32 +30,28 @@ class CXXParser(object):
         """
         return [tu for tu in self.parse_x()]
 
-    def parse_tu_x(self, **root_attrs):
+    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, **kwargs):
         """
         Parses cxx files and returns generator of TranslationUnit s
         """
         index = cli.Index.create()
 
         # build parser arguments
-        args = ['-x', 'c++', '--std=c++17'] + root_attrs['clang_args'] + ['-I' + includeDir.strip()
-                                                                          for includeDir in
-                                                                          root_attrs['include_dirs']]
-        files = root_attrs['src_glob']
-        excluded_files = root_attrs['src_exclude_glob']
-        # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')
-        # base_files = glob.glob(base_files, recursive=True)
+        args = ['-x', 'c++', '--std=c++17'] + clang_args + ['-I' + includeDir.strip()
+                                                            for includeDir in
+                                                            include_dirs]
 
-        logging.info("parsing files: {}".format(' '.join(files)))
+        logging.info("parsing files: {}".format(' '.join(src_glob)))
         # logging.info(f"parsing files: {base_files}")
 
         all_excluded_files = set()
-        for file in excluded_files:
+        for file in src_exclude_glob:
             abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
             all_excluded_files.update(abs_paths)
 
         # using list to keep files order constant
         all_files = []
-        for file in files:
+        for file in src_glob:
             files_glob = sorted(glob.glob(file.strip(), recursive=True))
             for fp in files_glob:
                 abs_fp = os.path.abspath(fp)
@@ -109,17 +105,8 @@ class CXXParser(object):
                 for descendant in self.cursor_walk(child):
                     yield descendant
 
-    def parse(self, processor):
-
-        if hasattr(processor, 'start_root'):
-            processor.start_root()
-
-        root_attrs = processor.get_root_attrs()
-
-        for tu in self.parse_tu_x(clang_args=root_attrs.clang_args,
-                                  include_dirs=root_attrs.include_dirs,
-                                  src_glob=root_attrs.src_glob,
-                                  src_exclude_glob=root_attrs.src_exclude_glob):
+    def parse(self, processor, root_ctx):
+        for tu in self.parse_tu_x(**root_ctx):
             tu_parent_dirs = self.__dirs_to_process(tu)
 
             # TODO:
@@ -142,8 +129,6 @@ class CXXParser(object):
                 if hasattr(processor, 'end_dir'):
                     processor.end_dir(dir_name)
 
-        if hasattr(processor, 'end_root'):
-            processor.end_root()
 
     def __dirs_to_process(self, tu):
         dirs_to_search = set()

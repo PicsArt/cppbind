@@ -7,12 +7,10 @@ from collections import OrderedDict
 from git import Repo, GitError
 from types import SimpleNamespace
 
-from iegen import default_config
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
 from iegen.ir.ast import RootNode
-from iegen.parser.ieg_api_parser import APIParser
-from iegen.builder.attr_mgr import AttributeManager, ALL_LANGUAGES, ALL_PLATFORMS
+from iegen.utils.clang import get_full_displayname
 
 
 class CXXPrintProcessor(object):
@@ -29,26 +27,26 @@ class CXXIEGIRBuilder(object):
     Class to build intermediate representation.
     """
 
-    def __init__(self, platform, language, attributes=None, api_start_kw=None, parser_config=None):
-        attributes = attributes or default_config.attributes
-        api_start_kw = api_start_kw or default_config.api_start_kw
-        self.attr_mgr = AttributeManager(self, attributes)
-        self.ieg_api_parser = APIParser(self.attr_mgr.attributes, api_start_kw, ALL_LANGUAGES, ALL_PLATFORMS, parser_config)
+    def __init__(self, ctx_mgr):
+        self.ctx_mgr = ctx_mgr
         self.ir = RootNode()
         self.node_stack = []
         self._sys_vars = {}
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
-        self.platform = platform
-        self.language = language
 
     def start_root(self):
         root_node = self.ir
         self.node_stack.append(root_node)
         self.__update_internal_vars(root_node)
         ctx = self.get_full_ctx()
-        self.attr_mgr.eval_root_attrs(root_node, ctx)
+        api, args = self.ctx_mgr.eval_root_attrs(root_node.name,
+                                                 root_node.kind_name,
+                                                 ctx)
+        root_node.api = api
+        root_node.args = args
+        return args
 
     def end_root(self):
         assert self.node_stack, "stack should not be empty"
@@ -58,11 +56,20 @@ class CXXIEGIRBuilder(object):
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
-            dir_node = DirectoryNode(dir_name, file_name=self.ieg_api_parser.yaml_api_file_name(dir_name))
+            dir_node = DirectoryNode(dir_name, file_name=self.ctx_mgr.ieg_api_parser.yaml_api_file_name(dir_name))
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
-            self.attr_mgr.eval_dir_attrs(dir_node, ctx)
+            location = SimpleNamespace(file_name=dir_node.file_name,
+                                       line_number=dir_node.line_number)
+            res = self.ctx_mgr.eval_fs_attrs(dir_name,
+                                             dir_node.kind_name,
+                                             ctx,
+                                             location)
+            if res:
+                api, args = res
+                dir_node.api = api
+                dir_node.args = args
         else:
             # directory is already processed
             dir_node = self._processed_dirs[dir_name]
@@ -85,9 +92,15 @@ class CXXIEGIRBuilder(object):
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
-
         ctx = self.get_full_ctx()
-        self.attr_mgr.eval_file_attrs(current_node, ctx, tu.spelling)
+
+        res = self.ctx_mgr.eval_fs_attrs(tu.spelling,
+                                         current_node.kind_name,
+                                         ctx)
+        if res:
+            api, args = res
+            current_node.api = api
+            current_node.args = args
 
     def end_tu(self, tu, *args, **kwargs):
         tu_node = self.node_stack.pop()
@@ -103,9 +116,24 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        ctx = self.get_full_ctx()
+        pure_comment = api_section = None
+        if self.ctx_mgr.ieg_api_parser.has_api(cursor.raw_comment):
+            pure_comment, api_section = self.ctx_mgr.ieg_api_parser.separate_pure_and_api_comment(cursor.raw_comment)
 
-        self.attr_mgr.eval_clang_attrs(current_node, cursor, ctx)
+        ctx = self.get_full_ctx(pure_comment)
+        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
+                                   line_number=cursor.extent.start.line)
+
+        res = self.ctx_mgr.eval_clang_attrs(get_full_displayname(cursor),
+                                            current_node.kind_name,
+                                            ctx,
+                                            location,
+                                            api_section)
+        if res:
+            api, args = res
+            current_node.api = api
+            current_node.args = args
+            current_node.pure_comment = pure_comment
 
     def get_parent_args(self):
         if len(self.node_stack) < 2:
@@ -175,44 +203,21 @@ class CXXIEGIRBuilder(object):
         node = self.node_stack.pop()
         if node.api or node.children:  # node has API call or child with API call
             parent_node = self.node_stack[-1]
-            if not node.api:
-                self.attr_mgr.process_attrs(node, None, None, None)
             parent_node.add_children(node)
         # cursor is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(node.full_displayname, None)
 
-    def get_ctx(self, pure_comment=None):
+    def get_full_ctx(self, pure_comment=None):
         ctx = self.get_sys_vars()
         if pure_comment is None:
             current_node = self.node_stack[-1]
             if current_node.type == NodeType.CLANG_NODE and current_node.clang_cursor.raw_comment:
-                pure_comment, _ = self.ieg_api_parser.separate_pure_and_api_comment(
+                pure_comment, _ = self.ctx_mgr.ieg_api_parser.separate_pure_and_api_comment(
                     current_node.clang_cursor.raw_comment)
                 if pure_comment:
                     ctx['_pure_comment'] = '\n'.join(pure_comment)
-        return ctx
 
-    def get_ctx_by_plat_lang(self, plat=None, lang=None, parent_args=None):
-        plat = plat or self.platform
-        lang = lang or self.language
-        parent_args = parent_args or self.get_parent_args()
-        ctx = {}
+        parent_args = self.get_parent_args()
         if parent_args:
-            for attr in parent_args:
-                val = parent_args[attr].get(plat, {}).get(lang)
-                if val is not None:
-                    ctx[attr] = val
+            ctx.update(parent_args)
         return ctx
-
-    def get_full_ctx(self):
-        ctx = self.get_ctx()
-        ctx.update(self.get_ctx_by_plat_lang())
-        return ctx
-
-    def get_root_attrs(self):
-        attrs = SimpleNamespace()
-        for attr in self.ir.args:
-            val = self.ir.args[attr].get(self.platform, {}).get(self.language)
-            if val:
-                setattr(attrs, attr, val)
-        return attrs

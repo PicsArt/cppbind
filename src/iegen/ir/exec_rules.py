@@ -22,10 +22,6 @@ class BaseContext:
         if val is None:
             raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
     API has no '{name}' attribute for {self.node.displayname}.")
-        val = val.get(self.runner.platform, {}).get(self.runner.language, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
-                                       attribute for language {self.runner.language}.")
         return val
 
 
@@ -254,7 +250,7 @@ class Context(BaseContext):
     @property
     def api_args(self):
         if not hasattr(self, '_api_args'):
-            self._api_args = {name: values[self.runner.platform][self.runner.language] for name, values in self.node.args.items()}
+            self._api_args = self.node.args
         return self._api_args
 
     @property
@@ -268,7 +264,7 @@ class Context(BaseContext):
         template_arg = self.node.args.get('template', None)
         includes = []
         if template_arg:
-            template_arg = itertools.chain(*template_arg[self.runner.platform][self.runner.language].values())
+            template_arg = itertools.chain(*template_arg.values())
             for t in template_arg:
                 ctx = self.find_by_type(t['type'])
                 if ctx:
@@ -380,10 +376,10 @@ class RunRule(object):
                                 template_arg = {}
                                 # if parent also has a template argument join with child´s
                                 if parent_template:
-                                    template_arg = template_arg.update(parent_template[self.platform][self.language])
-                                template_arg.update(child.args['template'][self.platform][self.language])
+                                    template_arg = template_arg.update(parent_template)
+                                template_arg.update(child.args['template'])
                                 all_possible_args = list(itertools.product(*template_arg.values()))
-                                template_keys = child.args['template'][self.platform][self.language].keys()
+                                template_keys = child.args['template'].keys()
                                 for i, combination in enumerate(all_possible_args):
                                     choice = [item['type'] for item in combination]
                                     choice_names = [item['name'] for item in combination if 'name' in item]

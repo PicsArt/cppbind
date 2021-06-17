@@ -8,6 +8,7 @@ from iegen.builder.out_builder import Builder
 from iegen.ir.exec_rules import RunRule
 from iegen import default_config, logging
 from iegen.common.error import Error
+from iegen.context_manager.ctx_mgr import ContextManager
 
 
 class WrapperGenerator(object):
@@ -27,14 +28,19 @@ class WrapperGenerator(object):
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
-        ir_builder = CXXIEGIRBuilder(platform=platform,
-                                     language=language,
-                                     attributes=default_config.attributes,
-                                     api_start_kw=default_config.api_start_kw,
-                                     parser_config=parser.config)
+
+        ctx_mgr = ContextManager(default_config.attributes,
+                                 parser,
+                                 platform,
+                                 language)
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+
+        root_ctx = ir_builder.start_root()
 
         logging.debug("Start parsing and building IR.")
-        parser.parse(ir_builder)
+        parser.parse(ir_builder, root_ctx)
+
+        ir_builder.end_root()
 
         if Error.has_error:
             raise Exception('Wrong attribute usage')

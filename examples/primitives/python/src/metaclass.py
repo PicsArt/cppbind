@@ -66,7 +66,7 @@ class OriginalMethodsMetaclass(type):
             originals_map.set(pybind_class, pybind_class.__dict__.copy())
         originals.update(pybind_originals)
         for attr in pybind_class.__dict__:
-            if attr in future_class_attrs and attr not in ('__new__', '__init__'):
+            if attr in future_class_attrs and attr != '__new__':
                 # replace pybind method with wrapper method
                 setattr(pybind_class, attr, future_class_attrs[attr])
         setattr(cls, 'originals', originals)

@@ -1,5 +1,5 @@
-#ifndef IEGENCORETESTUI_IEGENOBJECT_HPP
-#define IEGENCORETESTUI_IEGENOBJECT_HPP
+#ifndef IEGEN_BASE_OBJECT_HPP
+#define IEGEN_BASE_OBJECT_HPP
 
 #include <memory>
 #include<string>
@@ -25,6 +25,7 @@ public:
      * __API__
      * gen: method
      * throws: no_throw
+     * python.name: __str__
      */
     virtual std::string toString() const;
 
@@ -44,6 +45,7 @@ public:
      * __API__
      * gen: method
      * throws: no_throw
+     * python.name: __eq__
      */
     bool equals(std::shared_ptr<Object> other) const;
 
@@ -55,6 +57,7 @@ public:
      * __API__
      * gen: method
      * throws: no_throw
+     * python.name: __hash__
      */
     virtual std::size_t hash() const;
 
@@ -80,4 +83,4 @@ public:
 
 } // namespace iegen
 
-#endif // PICORETESTUI_PIOBJECT_HPP
+#endif // IEGEN_BASE_OBJECT_HPP

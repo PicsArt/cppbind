@@ -68,7 +68,7 @@ def make_clang_context(ctx):
 
         prj_rel_file_name = ctx.prj_rel_file_name
         template_includes = ctx.template_includes
-        comment = convert.make_comment(ctx.node.pure_comment)
+        comment = convert.make_comment(ctx.comment.splitlines())
 
         return locals()
 

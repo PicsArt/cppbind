@@ -106,17 +106,25 @@ project_link:
   default: '{{_get_git_repo_url(project_dir)}}'
   allowed_on: [ dir ]
 
+comment_extra_keyword:
+  inheritable: true
+  array: true
+  default: []
+  allowed_on: [ cxx, file_system, root ]
+
 comment:
   inheritable: false
   default:
     python: |
-      {{_pure_comment}}
+      {%- set regex = comment_extra_keyword|join('|') -%}
+      {{_pure_comment|replace_regex(regex, '')}}
       {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
       Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}
       <{{project_link}}/{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
       {%- endif %}
     else: |
-      {{_pure_comment}}
+      {%- set regex = comment_extra_keyword|join('|') -%}
+      {{_pure_comment|replace_regex(regex, '')}}
 
 banner_comment:
   inheritable: false

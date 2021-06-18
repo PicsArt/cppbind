@@ -7,6 +7,7 @@ namespace iegen::example {
 // [example]
 /**
  * Class holding task information.
+ * internal
  * __API__
  * gen: class
  * shared_ref: False

@@ -51,6 +51,7 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
         marker = JINJA_UNIQUE_MARKER
+        banner_logo = iegen.BANNER_LOGO
 
         return locals()
 

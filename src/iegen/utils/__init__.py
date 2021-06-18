@@ -8,7 +8,7 @@ import os
 import re
 import sys
 
-from iegen import DATETIME_FORMAT
+from iegen import DATETIME_FORMAT, BANNER_LOGO
 
 
 def load_from_paths(loader, path_name, default_dirs):
@@ -87,3 +87,26 @@ def current_datetime():
         str: Formatted result.
     """
     return datetime.date.strftime(datetime.datetime.utcnow(), DATETIME_FORMAT)
+
+
+def clear_iegen_generated_files(directory):
+    """
+    Traverses given directory and removes all files that contain IEGEN banner.
+    Args:
+        directory(str): Directory path.
+    """
+    # remove all spaces from banner logo
+    banner = re.sub(r'\s+', '', BANNER_LOGO)
+    for root, _, filenames in os.walk(directory):
+        for file in filenames:
+            remove = False
+            file_path = os.path.join(root, file)
+            with open(file_path, 'r') as f:
+                content = f.read()
+                # remove all *, / and spaces from banner
+                content = re.sub(r'[/*\s+]', '', content)
+                if banner in content:
+                    remove = True
+            remove and os.remove(file_path)
+        if not os.listdir(root):
+            os.remove(root)

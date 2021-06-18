@@ -142,10 +142,10 @@ out_dir:
     swift: '{{path.join(out_prj_dir, "swift")}}'
   allowed_on: [ root ]
 
-#cxx_base_out_dir:
-#  inheritable: true
-#  default: ./examples/example_cxx/
-#  allowed_on: [ root ]
+cxx_base_out_dir:
+  inheritable: true
+  default: null
+  allowed_on: [ root ]
 
 package_prefix:
   inheritable: true
@@ -215,14 +215,14 @@ pybind_module:
   inheritable: true
   default:
     python: example_lib
-    else: None
+    else: null
   allowed_on: [ root ]
 
 c_wrapper_build_name:
   inheritable: true
   default:
     swift: CWrapper
-    else: None
+    else: null
   allowed_on: [ root ]
 
 clang_args:

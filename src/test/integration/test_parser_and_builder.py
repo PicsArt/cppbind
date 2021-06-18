@@ -5,8 +5,8 @@ from unittest.mock import patch, MagicMock
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import NodeType, Node
-from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -14,26 +14,26 @@ CXX_INPUTS_REL_PATH = '../test_cxx_inputs'
 
 
 @patch('os.getcwd', lambda: SCRIPT_DIR)
-def test_parser_with_dir_api(parser_config):
+def test_parser_with_dir_api(parser_config, clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+
     dir_example_folder = 'dir_api_example'
-
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
-    config = copy.deepcopy(parser_config)
-    config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))
 
-    config.api_type_attributes_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
-    # load yaml file api
-    APIParser(attributes=default_config.attributes,
-              api_start_kw=default_config.attributes,
-              parser_config=config)
+    plat, lang = 'linux', 'python'
+    lang_config = default_config.languages[lang]
 
-    parser = CXXParser(parser_config=config)
+    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))]
 
-    processor = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                api_start_kw=default_config.api_start_kw,
-                                parser_config=config)
+    lang_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
+
+    parser = CXXParser(parser_config=parser_config)
+    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+
+    processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
-    parser.parse(processor)
+    processor.start_root()
+    parser.parse(processor, **clang_cfg)
 
     root = processor.ir
     dir_root = root.children[0]
@@ -48,27 +48,26 @@ def test_parser_with_dir_api(parser_config):
 
 
 @patch('os.getcwd', lambda: SCRIPT_DIR)
-def test_parser_with_file_api(parser_config):
+def test_parser_with_file_api(parser_config, clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+
     file_example_folder = 'file_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
-    config = copy.deepcopy(parser_config)
-    config.src_glob = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))
+    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))]
 
-    config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
-    # load yaml file api
-    APIParser(attributes=default_config.attributes,
-              api_start_kw=default_config.attributes,
-              parser_config=config)
+    plat, lang = 'linux', 'python'
+    lang_config = default_config.languages[lang]
 
-    parser = CXXParser(parser_config=config)
+    lang_config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
 
-    processor = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                api_start_kw=default_config.api_start_kw,
-                                parser_config=config)
+    parser = CXXParser(parser_config=parser_config)
+    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+    processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 
-    parser.parse(processor)
+    processor.start_root()
+    parser.parse(processor, **clang_cfg)
 
     root = processor.ir
     assert root.type is NodeType.ROOT_NODE

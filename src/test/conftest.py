@@ -35,7 +35,6 @@ def config():
     Fixture returns ieg config for test.
     """
     cnfg = copy.deepcopy(default_config)
-    get_parser_config(cnfg).src_glob = TEST_CXX_DIR + '/*.h'
 
     return cnfg
 
@@ -57,16 +56,20 @@ def attributes(config):
 
 
 @pytest.fixture(scope="session")
-def api_start_kw(config):
-    """
-    Fixture returns ieg attributes config for test.
-    """
-    return config.api_start_kw
-
-
-@pytest.fixture(scope="session")
 def out_dir():
     """
     Fixture returns out_dir for test files.
     """
     return TEST_OUT_DIR
+
+@pytest.fixture(scope="session")
+def clang_config():
+    """
+    Fixture returns clang config parameters for test files.
+    """
+    return {
+        'clang_args': ['-D__ANDROID__'],
+        'include_dirs': ['.'],
+        'src_glob': [TEST_CXX_DIR + '/*.h'],
+        'src_exclude_glob': []
+    }

@@ -80,11 +80,11 @@ class CXXParser(object):
             if not has_error:
                 yield tu
 
-    def parse_x(self):
+    def parse_x(self, **kwargs):
         """
         Pares cxx files and returns generator of cursors
         """
-        for tu in self.parse_tu_x():
+        for tu in self.parse_tu_x(**kwargs):
             for c in self.cursor_walk(tu.cursor):
                 yield c
 

@@ -20,7 +20,7 @@ genrule(
     cmd = """
         ln -s external/examples/iegen_config.cfg iegen_config.cfg
         ln -s external/examples/cxx cxx
-        $(location :run_iegen) python swift kotlin
+        $(location :run_iegen) run python swift kotlin
         tar -C ./ -cvf $(@D)/iegen_out.tar.gz python swift kotlin
     """,
     tools = [":run_iegen"],

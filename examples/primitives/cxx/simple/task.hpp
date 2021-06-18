@@ -7,7 +7,8 @@ namespace iegen::example {
 // [example]
 /**
  * Class holding task information.
- * internal
+ * \internal
+ * internal comment should not go to wrappers
  * __API__
  * gen: class
  * shared_ref: False

@@ -30,7 +30,6 @@ class WrapperGenerator(object):
         parser = CXXParser(parser_config=lang_config)
 
         ctx_mgr = ContextManager(default_config.attributes,
-                                 parser,
                                  platform,
                                  language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
@@ -38,7 +37,7 @@ class WrapperGenerator(object):
         root_ctx = ir_builder.start_root()
 
         logging.debug("Start parsing and building IR.")
-        parser.parse(ir_builder, root_ctx)
+        parser.parse(ir_builder, **root_ctx)
 
         ir_builder.end_root()
 

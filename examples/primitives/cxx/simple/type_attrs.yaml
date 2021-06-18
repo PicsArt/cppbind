@@ -41,6 +41,7 @@ gen_actions:
 root: |
   {%- set out_prj_dir = "." -%}
   gen:
+  out_prj_dir: {{out_prj_dir}}
   src_glob:
     - cxx/**/*.h*
   include_dirs:

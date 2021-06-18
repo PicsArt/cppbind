@@ -6,7 +6,12 @@ from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.ir.ast import Node
+from iegen.ir.ast import (
+    Node,
+    ROOT_KIND_NAME,
+    DIR_KIND_NAME,
+    FILE_KIND_NAME
+)
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -21,39 +26,43 @@ NODE_GROUP_ALIASES = {
 
 
 class ContextManager:
-    def __init__(self, attributes, parser, platform, language):
+    def __init__(self, attributes, platform, language):
         self.platform = platform
         self.language = language
         self.attributes = ContextManager.resolve_attr_aliases(attributes)
         self.ieg_api_parser = APIParser(default_config.attributes,
-                                        default_config.api_start_kw,
                                         ALL_LANGUAGES,
                                         ALL_PLATFORMS,
-                                        parser.config)
+                                        default_config.languages[self.language])
 
-    def eval_root_attrs(self, name, kind, ctx, location=None):
+    def eval_root_attrs(self, name, ctx, location=None):
         args = None
         api = Node.API_NONE
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
             api, args = parsed_api
-        return api, self.__process_attrs(kind, location, args, ctx)
+        return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
-    def eval_fs_attrs(self, name, kind, ctx, location=None):
+    def eval_dir_attrs(self, name, ctx, location=None):
+        api = args = None
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
             api, args = parsed_api
-            return api, self.__process_attrs(kind, location, args, ctx)
+        return api, self.__process_attrs(DIR_KIND_NAME, args, location, ctx)
 
-    def eval_clang_attrs(self, name, kind, ctx, location, api_section):
+    def eval_file_attrs(self, name, ctx, location=None):
+        parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
+        if parsed_api:
+            api, args = parsed_api
+            return api, self.__process_attrs(FILE_KIND_NAME, args, location, ctx)
+
+    def eval_clang_attrs(self, name, kind, api_section, ctx, location):
         parsed_api = self.ieg_api_parser.parse_api(name, api_section, location, ctx)
         if parsed_api:
             api, args = parsed_api
-            return api, self.__process_attrs(kind, location, args, ctx)
+            return api, self.__process_attrs(kind, args, location, ctx)
 
-        # current_node, args, api, pure_comment, ctx=None):
-
-    def __process_attrs(self, kind, location, args, ctx=None):
+    def __process_attrs(self, kind, args, location, ctx=None):
         ctx = ctx or OrderedDict()
         args = args or OrderedDict()
         location = location or SimpleNamespace()
@@ -145,3 +154,9 @@ class ContextManager:
                     attrs[key][field] = res
 
         return attrs
+
+    def has_yaml_api(self, name):
+        return name in self.ieg_api_parser.api_type_attributes
+
+    def get_yaml_api_file(self, name):
+        return self.ieg_api_parser.api_type_attributes[name].file

@@ -105,8 +105,8 @@ class CXXParser(object):
                 for descendant in self.cursor_walk(child):
                     yield descendant
 
-    def parse(self, processor, root_ctx):
-        for tu in self.parse_tu_x(**root_ctx):
+    def parse(self, processor, **kwargs):
+        for tu in self.parse_tu_x(**kwargs):
             tu_parent_dirs = self.__dirs_to_process(tu)
 
             # TODO:

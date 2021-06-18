@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
 from iegen.ir.ast import RootNode
+from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils.clang import get_full_displayname
 
 
@@ -41,9 +42,7 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(root_node)
         self.__update_internal_vars(root_node)
         ctx = self.get_full_ctx()
-        api, args = self.ctx_mgr.eval_root_attrs(root_node.name,
-                                                 root_node.kind_name,
-                                                 ctx)
+        api, args = self.ctx_mgr.eval_root_attrs(root_node.name, ctx)
         root_node.api = api
         root_node.args = args
         return args
@@ -56,20 +55,19 @@ class CXXIEGIRBuilder(object):
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
-            dir_node = DirectoryNode(dir_name, file_name=self.ctx_mgr.ieg_api_parser.yaml_api_file_name(dir_name))
+            file_name = None
+            if self.ctx_mgr.has_yaml_api(dir_name):
+                file_name = self.ctx_mgr.get_yaml_api_file(dir_name)
+
+            dir_node = DirectoryNode(dir_name, file_name=file_name)
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
             location = SimpleNamespace(file_name=dir_node.file_name,
                                        line_number=dir_node.line_number)
-            res = self.ctx_mgr.eval_fs_attrs(dir_name,
-                                             dir_node.kind_name,
-                                             ctx,
-                                             location)
-            if res:
-                api, args = res
-                dir_node.api = api
-                dir_node.args = args
+            api, args = self.ctx_mgr.eval_dir_attrs(dir_name, ctx, location)
+            dir_node.api = api
+            dir_node.args = args
         else:
             # directory is already processed
             dir_node = self._processed_dirs[dir_name]
@@ -94,9 +92,7 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
         ctx = self.get_full_ctx()
 
-        res = self.ctx_mgr.eval_fs_attrs(tu.spelling,
-                                         current_node.kind_name,
-                                         ctx)
+        res = self.ctx_mgr.eval_file_attrs(tu.spelling, ctx)
         if res:
             api, args = res
             current_node.api = api
@@ -117,8 +113,8 @@ class CXXIEGIRBuilder(object):
         self.__update_internal_vars(current_node)
 
         pure_comment = api_section = None
-        if self.ctx_mgr.ieg_api_parser.has_api(cursor.raw_comment):
-            pure_comment, api_section = self.ctx_mgr.ieg_api_parser.separate_pure_and_api_comment(cursor.raw_comment)
+        if APIParser.has_api(cursor.raw_comment):
+            pure_comment, api_section = APIParser.separate_pure_and_api_comment(cursor.raw_comment)
 
         ctx = self.get_full_ctx(pure_comment)
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
@@ -126,9 +122,9 @@ class CXXIEGIRBuilder(object):
 
         res = self.ctx_mgr.eval_clang_attrs(get_full_displayname(cursor),
                                             current_node.kind_name,
+                                            api_section,
                                             ctx,
-                                            location,
-                                            api_section)
+                                            location)
         if res:
             api, args = res
             current_node.api = api
@@ -212,10 +208,10 @@ class CXXIEGIRBuilder(object):
         if pure_comment is None:
             current_node = self.node_stack[-1]
             if current_node.type == NodeType.CLANG_NODE and current_node.clang_cursor.raw_comment:
-                pure_comment, _ = self.ctx_mgr.ieg_api_parser.separate_pure_and_api_comment(
+                pure_comment, _ = APIParser.separate_pure_and_api_comment(
                     current_node.clang_cursor.raw_comment)
-                if pure_comment:
-                    ctx['_pure_comment'] = '\n'.join(pure_comment)
+        if pure_comment:
+            ctx['_pure_comment'] = '\n'.join(pure_comment)
 
         parent_args = self.get_parent_args()
         if parent_args:

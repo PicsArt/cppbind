@@ -17,11 +17,15 @@ from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
 from iegen.ir.ast import Node, RootNode
 from iegen.utils.clang import extract_pure_comment, join_type_parts
+from iegen import default_config
 
 
 class APIParser(object):
+    API_START_KW = default_config.api_start_kw
+
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
+
     RULE_TITLE_KEY = 'gen_actions'
     RULE_RULE_KEY = 'rule'
     RULE_TYPE_KEY = 'type'
@@ -30,18 +34,18 @@ class APIParser(object):
     RULE_SUB_KEY = ':'
     RULE_ROOT_KEY = 'root'
 
-    def __init__(self, attributes, api_start_kw, languages=None, platforms=None, parser_config=None):
+    def __init__(self, attributes, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
-        self.api_start_kw = api_start_kw
         self.languages = list(languages or APIParser.ALL_LANGUAGES)
         self.platforms = platforms or APIParser.ALL_PLATFORMS
         self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
-    def separate_pure_and_api_comment(self, raw_comment, index=None):
-        index = index or raw_comment.find(self.api_start_kw)
+    @staticmethod
+    def separate_pure_and_api_comment(raw_comment, index=None):
+        index = index or raw_comment.find(APIParser.API_START_KW)
         if index == -1:
             return raw_comment, None
-        return extract_pure_comment(raw_comment, index), raw_comment[index + len(self.api_start_kw)::]
+        return extract_pure_comment(raw_comment, index), raw_comment[index + len(APIParser.API_START_KW)::]
 
     def parse_comments(self, api_section, ctx, location=None):
         """
@@ -97,11 +101,6 @@ class APIParser(object):
                     Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
                 return self.parse_api_attrs(api_attrs, location)
 
-    def yaml_api_file_name(self, name):
-        attrs = self.api_type_attributes.get(name)
-        if attrs:
-            return attrs.file
-        return None
 
     def parse_api_attrs(self, attrs, location):
         api = None
@@ -180,11 +179,12 @@ class APIParser(object):
         # default string type
         return attr_value
 
-    def has_api(self, raw_comment):
+    @staticmethod
+    def has_api(raw_comment):
         """
         Tests whether or not comment has API section.
         """
-        return raw_comment and self.api_start_kw in raw_comment
+        return raw_comment and APIParser.API_START_KW in raw_comment
 
     @staticmethod
     def get_priority(plat, lang):

@@ -32,8 +32,8 @@ file:
 
       from typing import *
 
-      from bind_utils import *
       import {{[pybind_module, package, file]|join('.')}} as {{'pybind_' + file + file_postfix}}
+      from bind_utils import *
       {{helper_includes|format_list('from {} import *')|join('\n')}}
       {%- if include %}
       {{include}}

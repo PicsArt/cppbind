@@ -1,14 +1,11 @@
 """
 Helper codes for kotlin conversion
 """
+from iegen.converter import make_doxygen_comment
 
 
 def make_comment(pure_comment):
-    nl = '\n * '
-    if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
-        return ""
-    return f"""/**{nl.join(pure_comment)}
- */"""
+    return make_doxygen_comment(pure_comment)
 
 
 def arg_str(type_name, name, default=None, **kwargs):

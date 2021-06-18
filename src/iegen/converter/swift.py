@@ -1,14 +1,11 @@
 """
 Helper codes for swift conversion
 """
+from iegen.converter import make_doxygen_comment
 
 
 def make_comment(pure_comment):
-    nl = '\n * '
-    if not pure_comment:
-        return ""
-    return f"""/**{nl.join(pure_comment)}
- */"""
+    return make_doxygen_comment(pure_comment)
 
 
 def get_c_func_name(hint_name):

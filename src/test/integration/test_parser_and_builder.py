@@ -1,6 +1,7 @@
 import copy
+import datetime
 import os
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXIEGIRBuilder
@@ -31,7 +32,7 @@ def test_parser_with_dir_api(parser_config):
     processor = CXXIEGIRBuilder(attributes=default_config.attributes,
                                 api_start_kw=default_config.api_start_kw,
                                 parser_config=config)
-
+    processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
     parser.parse(processor)
 
     root = processor.ir
@@ -65,6 +66,7 @@ def test_parser_with_file_api(parser_config):
     processor = CXXIEGIRBuilder(attributes=default_config.attributes,
                                 api_start_kw=default_config.api_start_kw,
                                 parser_config=config)
+    processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 
     parser.parse(processor)
 

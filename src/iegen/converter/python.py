@@ -57,11 +57,11 @@ def get_operator_name(spelling):
 
 
 def make_comment(pure_comment):
-    lines = [line for line in pure_comment.splitlines() if line]
     nl = '\n'
-    if not lines:
+    if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
         return ""
-    return f'"""{nl}{nl.join(lines)}{nl}"""'
+    start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl
+    return f'"""{start}{nl.join(pure_comment)}{nl}"""'
 
 
 def make_hashtag_comment(pure_comment):

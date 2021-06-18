@@ -1,5 +1,4 @@
 import copy
-import datetime
 import os
 import types
 from functools import partial
@@ -52,8 +51,6 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
         marker = JINJA_UNIQUE_MARKER
-
-        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
 
         return locals()
 
@@ -294,6 +291,7 @@ def get_file(context, builder, fscope_name):
 def gen_package(ctx, builder):
     context = make_package_context(ctx)
     preprocess_entry(context, builder, 'package')
+
 
 def gen_enum(ctx, builder):
     context = make_enum_context(ctx)

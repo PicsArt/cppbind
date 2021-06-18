@@ -100,3 +100,12 @@ class Exceptions:
             if name == exc[0]:
                 return True
         return False
+
+
+def make_doxygen_comment(pure_comment):
+    nl = '\n * '
+    if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
+        return ''
+    start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl
+    return f"""/**{start}{nl.join(pure_comment)}
+ */"""

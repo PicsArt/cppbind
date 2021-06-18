@@ -6,7 +6,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       package {{config.package_prefix}}.{{package}}
 
@@ -20,7 +20,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       #include "jni.h"
       #include <iostream>

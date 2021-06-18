@@ -8,15 +8,7 @@ import os
 import re
 import sys
 
-from iegen import DATETIME_FORMAT
-
-BANNER_LOGO = """
-,--.,------. ,----.   ,------.,--.  ,--. 
-|  ||  .---''  .-.|   |  .---'|  ,'.|  | 
-|  ||  `--, |  | .---.|  `--, |  |' '  | 
-|  ||  `---.'  '--'  ||  `---.|  | `   | 
-`--'`------' `------' `------'`--'  `--' 
-"""
+from iegen import DATETIME_FORMAT, BANNER_LOGO
 
 
 def load_from_paths(loader, path_name, default_dirs):

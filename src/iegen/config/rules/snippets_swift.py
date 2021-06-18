@@ -6,10 +6,10 @@ import clang.cindex as cli
 import iegen.converter as converter
 import iegen.converter.swift as convert
 import iegen.utils.clang as cutil
-from iegen import find_prj_dir
+from iegen import find_prj_dir, BANNER_LOGO
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE, JINJA_UNIQUE_MARKER
-from iegen.utils import load_from_paths, BANNER_LOGO
+from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -51,7 +51,7 @@ def make_def_context(ctx):
         path = os.path
         helper = converter
         marker = JINJA_UNIQUE_MARKER
-        banner = BANNER_LOGO + '\n' + ctx.banner_comment
+        banner_logo = BANNER_LOGO
 
         return locals()
 

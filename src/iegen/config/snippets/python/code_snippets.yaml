@@ -6,7 +6,7 @@ file:
       - include
       - code_fragment
     content: |
-      {{helper.python.make_comment(banner.split('\n'))}}
+      {{helper.python.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
       {{include}}
       {%- if code_fragment %}
       {{code_fragment}}
@@ -20,7 +20,7 @@ file:
       - body
       - include
     content: |
-      {{helper.python.make_comment(banner.split('\n'))}}
+      {{helper.python.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       from __future__ import annotations
 
@@ -41,7 +41,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
@@ -58,7 +58,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       {% set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
       #ifndef {{filename}}_hpp
@@ -77,7 +77,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       #include <pybind11/pybind11.h>
       #include "{{config.pybind_module.split('.')[-1] + config.file_postfix}}.hpp"
@@ -92,7 +92,7 @@ file:
     scopes:
       - include
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       {% set package = config.pybind_module.split('.')[-1] -%}
       #ifndef {{package + config.file_postfix}}_hpp
@@ -112,7 +112,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment(banner.split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
       {% set packages = config.pybind_module.split('.') %}
       {%- set package = packages[0] %}
       {%- set file = config.cxx_out_dir +pat_sep + [config.package_prefix, config.pybind_module.split('.')[-1] + config.file_postfix]|map('replace', '.', pat_sep)|path_join %}

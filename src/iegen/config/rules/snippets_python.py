@@ -9,7 +9,7 @@ import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
-from iegen.utils import load_from_paths, BANNER_LOGO
+from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -51,7 +51,8 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
         marker = JINJA_UNIQUE_MARKER
-        banner = BANNER_LOGO + '\n' + ctx.banner_comment
+        banner_logo = iegen.BANNER_LOGO
+
         return locals()
 
     context = make()

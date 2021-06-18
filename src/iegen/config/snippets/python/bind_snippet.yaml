@@ -1,5 +1,5 @@
 file_path: |
-  {{config.out_dir + pat_sep + [config.helpers_package_prefix, 'bind_utils']|map('replace', '.', pat_sep)|path_join}}.{{config.extension}}
+  {{out_dir + pat_sep + [helpers_package_prefix, 'bind_utils']|map('replace', '.', pat_sep)|path_join}}.{{extension}}
 scopes:
   - converter
 content: |

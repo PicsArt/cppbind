@@ -3,18 +3,17 @@
 import argparse
 import os
 
-from iegen import (
-    default_config as default_config,
-    logging as logging
-)
+from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
+from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     load_module_from_paths,
-    get_host_platform, clear_iegen_generated_files
+    get_host_platform,
+    clear_iegen_generated_files
 )
 
 
@@ -28,20 +27,26 @@ class WrapperGenerator(object):
         logging.info(
             f"Start running wrapper generator for {', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
         for plat, lang in plat_lang_options:
-            self.run_for(plat, lang)
+            WrapperGenerator.run_for(plat, lang)
 
-    def run_for(self, platform, language):
-
+    @staticmethod
+    def run_for(platform, language):
         default_config_dirs = default_config.default_config_dirs
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
-        ir_builder = CXXIEGIRBuilder(attributes=default_config.attributes,
-                                     api_start_kw=default_config.api_start_kw,
-                                     parser_config=parser.config)
+
+        ctx_mgr = ContextManager(default_config.attributes,
+                                 platform,
+                                 language)
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+
+        root_ctx = ir_builder.start_root()
 
         logging.debug("Start parsing and building IR.")
-        parser.parse(ir_builder)
+        parser.parse(ir_builder, **root_ctx)
+
+        ir_builder.end_root()
 
         if Error.has_error:
             raise Exception('Wrong attribute usage')

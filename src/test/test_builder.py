@@ -1,13 +1,9 @@
 import hashlib
 import os
 
-import pytest
-
 from iegen.utils import current_datetime
 from iegen.builder import OUTPUT_MODIFICATION_KEY, is_output_changed
-from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder, Scope
-from iegen.parser.ieg_parser import CXXParser
 
 
 def test_builder(out_dir):
@@ -32,32 +28,15 @@ def test_builder(out_dir):
         "Builder output has bean changed"
 
 
-# @pytest.mark.skip(reason="Due to dict test is not stable")
-@pytest.mark.skip(reason="Due to test contains file absolute pats that are differ from machine to machine")
-def test_build_ir(parser_config, attributes, api_start_kw):
-    parsser = CXXParser(parser_config=parser_config)
-    # print(config)
-
-    ir_builder = CXXIEGIRBuilder(attributes=attributes,
-                                 api_start_kw=api_start_kw)
-    parsser.parse(ir_builder)
-
-    ir = ir_builder.ir
-
-    print(ir)
-    assert hashlib.md5(repr(ir).encode()).hexdigest() == '19bbafbac23454676a1fbfaee8effdf4', \
-        "ir representation string has bean changed."
-
-
 def test_is_output_changed():
     old = """
-    some string %s next1 
+    some string %s next1
     %s next2
     next3
     """
 
     new = f"""
-    some string {OUTPUT_MODIFICATION_KEY} next1 
+    some string {OUTPUT_MODIFICATION_KEY} next1
     {OUTPUT_MODIFICATION_KEY} next2
     next3
     """

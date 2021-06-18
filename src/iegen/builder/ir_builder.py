@@ -5,32 +5,19 @@ import copy
 import datetime
 import os
 from collections import OrderedDict
+from git import Repo, GitError
 from types import SimpleNamespace
 
-from git import Repo, GitError
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
-
-from iegen import default_config, DATETIME_FORMAT
+from iegen import DATETIME_FORMAT
 from iegen.builder import OUTPUT_MODIFICATION_KEY
-from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
 from iegen.ir.ast import RootNode
 from iegen.parser.ieg_api_parser import APIParser
-
-ALL_LANGUAGES = sorted(list(default_config.languages))
-ALL_PLATFORMS = sorted(list(default_config.platforms))
-
-NODE_GROUP_ALIASES = {
-    'file_system': ('dir', 'file'),
-    'cxx': (
-        'class', 'class_template', 'struct', 'struct_template', 'constructor',
-        'function', 'function_template', 'cxx_method', 'enum', 'field'
-    )
-}
+from iegen.utils.clang import get_full_displayname
 
 
-class CXXPrintProcsessor(object):
+class CXXPrintProcessor(object):
 
     def __call__(self, cursor, *args, **kwargs):
         print(f'Found {cursor.kind} Display name {cursor.displayname} \
@@ -44,11 +31,8 @@ class CXXIEGIRBuilder(object):
     Class to build intermediate representation.
     """
 
-    def __init__(self, attributes=None, api_start_kw=None, parser_config=None):
-        attributes = attributes or default_config.attributes
-        api_start_kw = api_start_kw or default_config.api_start_kw
-        self.attributes = CXXIEGIRBuilder.process_attributes(attributes)
-        self.ieg_api_parser = APIParser(self.attributes, api_start_kw, ALL_LANGUAGES, ALL_PLATFORMS, parser_config)
+    def __init__(self, ctx_mgr):
+        self.ctx_mgr = ctx_mgr
         self.ir = RootNode()
         self.node_stack = []
         self._sys_vars = {}
@@ -59,11 +43,12 @@ class CXXIEGIRBuilder(object):
     def start_root(self):
         root_node = self.ir
         self.node_stack.append(root_node)
-        args = api = pure_comment = None
-        parsed_api = self.ieg_api_parser.parse_yaml_api(root_node.name)
-        if parsed_api:
-            api, args, pure_comment = parsed_api
-        self.__process_attrs(root_node, args, api, pure_comment)
+        self.__update_internal_vars(root_node)
+        ctx = self.get_full_ctx()
+        api, args = self.ctx_mgr.eval_root_attrs(root_node.name, ctx)
+        root_node.api = api
+        root_node.args = args
+        return args
 
     def end_root(self):
         assert self.node_stack, "stack should not be empty"
@@ -73,15 +58,19 @@ class CXXIEGIRBuilder(object):
 
     def start_dir(self, dir_name):
         if dir_name not in self._processed_dirs:
-            dir_node = DirectoryNode(dir_name, file_name=self.ieg_api_parser.yaml_api_file_name(dir_name))
+            file_name = None
+            if self.ctx_mgr.has_yaml_api(dir_name):
+                file_name = self.ctx_mgr.get_yaml_api_file(dir_name)
+
+            dir_node = DirectoryNode(dir_name, file_name=file_name)
             self.node_stack.append(dir_node)
             self.__update_internal_vars(dir_node)
-            args = api = pure_comment = None
             ctx = self.get_full_ctx()
-            parsed_api = self.ieg_api_parser.parse_yaml_api(dir_name, ctx)
-            if parsed_api:
-                api, args, pure_comment = parsed_api
-            self.__process_attrs(dir_node, args, api, pure_comment, ctx)
+            location = SimpleNamespace(file_name=dir_node.file_name,
+                                       line_number=dir_node.line_number)
+            api, args = self.ctx_mgr.eval_dir_attrs(dir_name, ctx, location)
+            dir_node.api = api
+            dir_node.args = args
         else:
             # directory is already processed
             dir_node = self._processed_dirs[dir_name]
@@ -104,13 +93,13 @@ class CXXIEGIRBuilder(object):
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
-
         ctx = self.get_full_ctx()
-        parsed_api = self.ieg_api_parser.parse_yaml_api(tu.spelling, ctx)
 
-        if parsed_api:
-            api, args, pure_comment = parsed_api
-            self.__process_attrs(current_node, args, api, pure_comment)
+        res = self.ctx_mgr.eval_file_attrs(tu.spelling, ctx)
+        if res:
+            api, args = res
+            current_node.api = api
+            current_node.args = args
 
     def end_tu(self, tu, *args, **kwargs):
         tu_node = self.node_stack.pop()
@@ -126,83 +115,26 @@ class CXXIEGIRBuilder(object):
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
 
-        ctx = self.get_full_ctx()
+        pure_comment = api_section = None
+        if APIParser.has_api(cursor.raw_comment):
+            pure_comment, api_section = APIParser.separate_pure_and_api_comment(cursor.raw_comment)
 
-        api_parser_result = self.ieg_api_parser.parse_api(cursor, ctx)
-        if not api_parser_result:
-            return
+        ctx = self.get_full_ctx(pure_comment)
+        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
+                                   line_number=cursor.extent.start.line)
 
-        api, args, pure_comment = api_parser_result
+        res = self.ctx_mgr.eval_clang_attrs(get_full_displayname(cursor),
+                                            current_node.kind_name,
+                                            api_section,
+                                            ctx,
+                                            location)
+        if res:
+            api, args = res
+            current_node.api = api
+            current_node.args = args
+            current_node.pure_comment = pure_comment
 
-        self.__process_attrs(current_node, args, api, pure_comment, ctx)
-
-    def __process_attrs(self, current_node, args, api, pure_comment, ctx=None):
-        args = args or OrderedDict()
-        context = ctx or self.get_full_ctx(pure_comment)
-
-        # add all missing attributes
-        for att_name, properties in self.attributes.items():
-            for plat in ALL_PLATFORMS + ["__all__"]:
-                for lang in ALL_LANGUAGES + ["__all__"]:
-                    att_val = args.get(
-                        att_name,
-                        {}
-                    ).get(plat, {}).get(lang, None)
-
-                    new_att_val = att_val
-                    node_kind = current_node.kind_name
-                    allowed = node_kind in properties["allowed_on"]
-                    if new_att_val is None:
-                        # check mandatory attribute existence
-                        if node_kind in properties["required_on"]:
-                            Error.error(f"Attribute '{att_name}' is mandatory attribute on {node_kind}.",
-                                        current_node.file_name,
-                                        current_node.line_number)
-                            break
-
-                        # inherit from parent or add default value
-                        if properties["inheritable"]:
-                            # directory based nodes may not have parent
-                            self._parent_args = self._get_parent_args()
-                            if self._parent_args:
-                                new_att_val = self._parent_args.get(
-                                    att_name,
-                                    {}
-                                ).get(plat, {}).get(lang, None)
-
-                        if allowed:
-                            if new_att_val is None:
-                                # use default value
-                                new_att_val = CXXIEGIRBuilder.get_attr_default_value(properties, plat, lang)
-                                if isinstance(new_att_val, str):
-                                    try:
-                                        new_att_val = JINJA_ENV.from_string(new_att_val).render(context)
-                                    except JinjaUndefinedError as e:
-                                        Error.critical(
-                                            f"Jinja evaluation error in attributes definition file {default_config.attr_file}: {e}")
-                    else:
-                        # attribute is set check weather or not it is allowed.
-                        if not allowed:
-                            Error.error(f"Attribute {att_name} is not allowed on {node_kind}.",
-                                        current_node.file_name,
-                                        current_node.line_number)
-                            break
-
-                    # now we need to process variables of value and set value
-                    if new_att_val is not None:
-                        if isinstance(new_att_val, str):
-                            # sys vars can have different types than string parse to get correct type
-                            new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
-                        # add attr to current node context so that it can be used for coming attributes
-                        CXXIEGIRBuilder._add_arg_to_ctx(att_name, new_att_val, plat, lang, context)
-                        args.setdefault(att_name, OrderedDict()).setdefault(plat, OrderedDict())[lang] = new_att_val
-
-        current_node.api = api
-        current_node.pure_comment = pure_comment
-        assert args is not None
-        current_node.args = args
-
-    def _get_parent_args(self):
+    def get_parent_args(self):
         if len(self.node_stack) < 2:
             return None
         direct_parent_name = self.node_stack[-2].full_displayname
@@ -218,14 +150,18 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
-        sys_vars = {
-            '_output_modification_time': OUTPUT_MODIFICATION_KEY,
-            'path': os.path,
-            '_current_working_dir': os.getcwd(),
-            '_pure_comment': '',
-            '_line_number': node.line_number,
-            '_file_full_name': node.file_name,
-        }
+        if node.type == NodeType.ROOT_NODE:
+            sys_vars = {'path': os.path}
+        else:
+            sys_vars = {
+                '_output_modification_time': OUTPUT_MODIFICATION_KEY,
+                'path': os.path,
+                '_current_working_dir': os.getcwd(),
+                '_pure_comment': '',
+                '_line_number': node.line_number,
+                '_file_full_name': node.file_name,
+            }
+
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_source_modification_time': self._get_modification_time(node.name),
@@ -273,77 +209,21 @@ class CXXIEGIRBuilder(object):
         node = self.node_stack.pop()
         if node.api or node.children:  # node has API call or child with API call
             parent_node = self.node_stack[-1]
-            if not node.api:
-                self.__process_attrs(node, None, None, None)
             parent_node.add_children(node)
         # cursor is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(node.full_displayname, None)
-
-    @staticmethod
-    def get_attr_default_value(prop, plat, lang):
-        def_val = prop.get("default")
-
-        if not isinstance(def_val, dict):
-            return def_val
-
-        if plat in def_val and lang in def_val:
-            Error.critical(
-                f"Conflict of attributes in {default_config.attr_file} attributes definiton file: {plat} and {lang}: "
-                f"only one of them must be defined separately, or they must be both specified")
-
-        for key in (plat + '.' + lang, plat, lang, 'else'):
-            if key in def_val:
-                return def_val[key]
 
     def get_full_ctx(self, pure_comment=None):
         ctx = self.get_sys_vars()
         if pure_comment is None:
             current_node = self.node_stack[-1]
             if current_node.type == NodeType.CLANG_NODE and current_node.clang_cursor.raw_comment:
-                pure_comment, _ = self.ieg_api_parser.separate_pure_and_api_comment(
+                pure_comment, _ = APIParser.separate_pure_and_api_comment(
                     current_node.clang_cursor.raw_comment)
-                if pure_comment:
-                    ctx['_pure_comment'] = '\n'.join(pure_comment)
-        parent_args = self._get_parent_args()
+        if pure_comment:
+            ctx['_pure_comment'] = '\n'.join(pure_comment)
+
+        parent_args = self.get_parent_args()
         if parent_args:
-            for attr_key, attr_val in parent_args.items():
-                for plat_key, plat_val in attr_val.items():
-                    for lang_key, val in plat_val.items():
-                        CXXIEGIRBuilder._add_arg_to_ctx(attr_key, val, plat_key, lang_key, ctx)
+            ctx.update(parent_args)
         return ctx
-
-    @staticmethod
-    def _add_arg_to_ctx(attr_key, attr_vay, plat_key, lang_key, ctx):
-        ctx.setdefault(plat_key, SimpleNamespace())
-        ctx.setdefault(lang_key, SimpleNamespace())
-        if not hasattr(ctx[plat_key], lang_key):
-            setattr(ctx[plat_key], lang_key, SimpleNamespace())
-        if plat_key != '__all__' and lang_key != '__all__':
-            setattr(getattr(ctx[plat_key], lang_key), attr_key, attr_vay)
-        elif plat_key == '__all__' and lang_key == '__all__':
-            ctx[attr_key] = attr_vay
-        elif plat_key == '__all__':
-            setattr(ctx[lang_key], attr_key, attr_vay)
-        else:
-            setattr(ctx[plat_key], attr_key, attr_vay)
-
-    @staticmethod
-    def process_attributes(attrs):
-        """
-        A function to replace node group aliases with their actual values list
-        """
-
-        for field in ['allowed_on', 'required_on']:
-            for key, val in attrs.items():
-                if not field in val:
-                    attrs[key][field] = NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else []
-                else:
-                    res = []
-                    for node in val[field]:
-                        if node in NODE_GROUP_ALIASES:
-                            res.extend(NODE_GROUP_ALIASES[node])
-                        else:
-                            res.append(node)
-                    attrs[key][field] = res
-
-        return attrs

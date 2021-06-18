@@ -1,7 +1,7 @@
 file:
   swift:
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - include
       - body
@@ -15,7 +15,7 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
@@ -24,13 +24,13 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(config.cxx_out_dir + pat_sep + [config.package_prefix, package]|map('replace', '.', pat_sep)|path_join, config.out_prj_dir)}}/c_{{file}}.h"
+      #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
       {{include}}
 
       {{body}}
   ch:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
       - include
@@ -54,7 +54,7 @@ file:
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
   exceptions_utils_swift:
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -83,13 +83,13 @@ file:
       }
   std_exceptions_swift:
     file_path: |
-      {{config.out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'std_exc_classes']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
       {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
-      import {{config.c_wrapper_build_name}}
+      import {{c_wrapper_build_name}}
       public enum Exceptions {
       {% for cls, base_cls in helper.Exceptions.get_std_exc_tree() %}
           {{'public' if base_cls else 'open'}} class {{helper.Exceptions.get_exc_name(cls)}} : {{helper.Exceptions.get_exc_name(base_cls) if base_cls else 'Error'}} {
@@ -118,7 +118,7 @@ file:
       }
   std_exceptions_header:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
+      {{cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
     content: |
@@ -138,7 +138,7 @@ file:
       #endif /* ifndef _C_std_exceptions_WRAPPER_ */
   std_exceptions_cpp:
     file_path: |
-      {{config.cxx_out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
     content: |
@@ -146,7 +146,7 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(config.cxx_out_dir + pat_sep + [config.package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join)}}.h"
+      #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, 'exception_helpers', 'c_std_exceptions']|map('replace', '.', pat_sep)|path_join)}}.h"
 
       void release_std_exception(void* _Nonnull cself) {
           delete dynamic_cast<std::exception*>(static_cast<std::exception*>(cself));

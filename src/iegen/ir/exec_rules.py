@@ -12,7 +12,20 @@ from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
 
 
-class Context(object):
+class BaseContext:
+    def __init__(self, runner):
+        self.runner = runner
+        self.node = runner.ir
+
+    def __getattr__(self, name):
+        val = self.node.args.get(name, None)
+        if val is None:
+            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
+    API has no '{name}' attribute for {self.node.displayname}.")
+        return val
+
+
+class Context(BaseContext):
 
     def __init__(self, runner, node, template_ctx=None):
         if node.type == NodeType.CLANG_NODE:
@@ -97,14 +110,14 @@ class Context(object):
             search_api = self.node.api
             name = self.name
             search_names = {name}
-            oveloads = self.find_adjacents(search_names, search_api)
-            self._overloading_prefix = ''
-            for i, ctx in enumerate(oveloads):
+            overloads = self.find_adjacents(search_names, search_api)
+            _overloading_prefix = ''
+            for i, ctx in enumerate(overloads):
                 if ctx == self:
-                    self._overloading_prefix = f'_{i}' if i != 0 else ''
+                    _overloading_prefix = f'_{i}' if i != 0 else ''
                     break
 
-        return self._overloading_prefix
+        return _overloading_prefix
 
     @property
     def setter(self):
@@ -147,7 +160,8 @@ class Context(object):
     @property
     def ancestors(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
 
@@ -172,7 +186,8 @@ class Context(object):
     @property
     def base_types_specifier_cursor(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
         base_types_cursor = []
@@ -229,13 +244,13 @@ class Context(object):
     @property
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
-            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.runner.config.out_prj_dir)
+            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.out_prj_dir)
         return self._prj_rel_file_name
 
     @property
     def api_args(self):
         if not hasattr(self, '_api_args'):
-            self._api_args = {name: values[self.runner.platform][self.runner.language] for name, values in self.node.args.items()}
+            self._api_args = self.node.args
         return self._api_args
 
     @property
@@ -249,12 +264,12 @@ class Context(object):
         template_arg = self.node.args.get('template', None)
         includes = []
         if template_arg:
-            template_arg = itertools.chain(*template_arg[self.runner.platform][self.runner.language].values())
+            template_arg = itertools.chain(*template_arg.values())
             for t in template_arg:
                 ctx = self.find_by_type(t['type'])
                 if ctx:
                     includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
-                                                    self.runner.config.out_prj_dir))
+                                                    self.out_prj_dir))
         return includes
 
     @property
@@ -289,17 +304,6 @@ class Context(object):
     def template_names(self):
         return self.template_ctx['names'] if self.template_ctx else None
 
-    def __getattr__(self, name):
-        val = self.node.args.get(name, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
- API has no '{name}' attribute for {self.node.displayname}.")
-        val = val.get(self.runner.platform, {}).get(self.runner.language, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid. API has no '{name}'\
-                                    attribute for language {self.runner.language}.")
-        return val
-
 
 class RunRule(object):
 
@@ -331,7 +335,7 @@ class RunRule(object):
         logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
-            func(self.config, builder)
+            func(BaseContext(self), builder)
 
         # executes once for a type
         processed = dict()
@@ -372,10 +376,10 @@ class RunRule(object):
                                 template_arg = {}
                                 # if parent also has a template argument join with child´s
                                 if parent_template:
-                                    template_arg = template_arg.update(parent_template[self.platform][self.language])
-                                template_arg.update(child.args['template'][self.platform][self.language])
+                                    template_arg = template_arg.update(parent_template)
+                                template_arg.update(child.args['template'])
                                 all_possible_args = list(itertools.product(*template_arg.values()))
-                                template_keys = child.args['template'][self.platform][self.language].keys()
+                                template_keys = child.args['template'].keys()
                                 for i, combination in enumerate(all_possible_args):
                                     choice = [item['type'] for item in combination]
                                     choice_names = [item['name'] for item in combination if 'name' in item]

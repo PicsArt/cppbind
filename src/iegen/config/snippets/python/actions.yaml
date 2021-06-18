@@ -4,19 +4,19 @@
       - "{{[helpers_dir, '**/*.py'] | path_join}}"
     copy_to: |
       {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
-      {{path.join(path.join(config.out_dir, config.helpers_package_prefix.replace('.', pat_sep)), file_rel_name)}}
+      {{path.join(path.join(out_dir, helpers_package_prefix.replace('.', pat_sep)), file_rel_name)}}
 
     variables:
       helper_includes: |
         {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
-        {{config.helpers_include_prefix}}{{'.' if config.helpers_include_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
+        {{helpers_include_prefix}}{{'.' if helpers_include_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
 - file:
     files_glob:
       - "{{[cxx_base_dir, '**/*.h*'] | path_join}}"
       - "{{[cxx_base_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {%- if config.cxx_base_out_dir is defined -%}
+      {%- if cxx_base_out_dir is defined -%}
         {%- set file_rel_name = path.relpath(file_name, cxx_base_dir) -%}
-        {{path.join(config.cxx_base_out_dir, file_rel_name)}}
+        {{path.join(cxx_base_out_dir, file_rel_name)}}
       {%- endif -%}

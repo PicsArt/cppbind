@@ -1,14 +1,20 @@
 """
 """
 import argparse
-from iegen.utils import load_module_from_paths, get_host_platform
-from iegen.builder.ir_builder import CXXIEGIRBuilder
-from iegen.parser.ieg_parser import CXXParser
-from iegen.builder.out_builder import Builder
-from iegen.ir.exec_rules import RunRule
+import os
+
 from iegen import default_config, logging
+from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
 from iegen.context_manager.ctx_mgr import ContextManager
+from iegen.ir.exec_rules import RunRule
+from iegen.parser.ieg_parser import CXXParser
+from iegen.utils import (
+    load_module_from_paths,
+    get_host_platform,
+    clear_iegen_generated_files
+)
 
 
 class WrapperGenerator(object):
@@ -18,7 +24,8 @@ class WrapperGenerator(object):
 
     def run(self, plat_lang_options):
 
-        logging.info(f"Start running wrapper generator for {', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
+        logging.info(
+            f"Start running wrapper generator for {', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
         for plat, lang in plat_lang_options:
             WrapperGenerator.run_for(plat, lang)
 
@@ -62,15 +69,7 @@ class WrapperGenerator(object):
         builder.dump_outputs()
 
 
-def run_package():
-    # run Wrapper Generator
-    parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
-    choices = [lang for lang in default_config.languages] +\
-              [plat + '.' + lang for plat in default_config.platforms for lang in default_config.languages]
-    parser.add_argument('languages', type=str, nargs='+',
-                        choices=choices,
-                        help='list of languages for which wrapper will be generated.')
-    args = parser.parse_args()
+def run(args):
     gen = WrapperGenerator()
 
     plat_lang_options = []
@@ -86,6 +85,34 @@ def run_package():
     except Exception as e:
         Error.error(e)
         exit(1)
+
+
+def clean(args):
+    if not os.path.isdir(args.dir):
+        raise ValueError(f'{args.dir} is not a valid directory.')
+    clear_iegen_generated_files(args.dir)
+
+
+def run_package():
+    # run Wrapper Generator
+    parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
+    choices = [lang for lang in default_config.languages] + \
+              [plat + '.' + lang for plat in default_config.platforms for lang in default_config.languages]
+
+    sub_parser = parser.add_subparsers()
+
+    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.')
+    run_parser.add_argument('languages', type=str, nargs='+',
+                            choices=choices,
+                            help='list of languages for which wrapper will be generated.')
+    run_parser.set_defaults(func=run)
+
+    clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.')
+    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.')
+    clean_parser.set_defaults(func=clean)
+
+    args = parser.parse_args()
+    args.func(args)
 
 
 if __name__ == "__main__":

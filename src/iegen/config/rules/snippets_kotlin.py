@@ -1,5 +1,4 @@
 import copy
-import datetime
 import os
 import types
 from functools import partial
@@ -8,7 +7,7 @@ import clang.cindex as cli
 import iegen
 import iegen.converter.kotlin as convert
 import iegen.utils.clang as cutil
-from iegen import find_prj_dir
+from iegen import find_prj_dir, BANNER_LOGO
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE, JINJA_UNIQUE_MARKER
 from iegen.utils import load_from_paths
@@ -61,8 +60,7 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
         marker = JINJA_UNIQUE_MARKER
-
-        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
+        banner_logo = BANNER_LOGO
 
         return locals()
 
@@ -303,6 +301,7 @@ def get_file(context, builder, fscope_name):
 def gen_package(ctx, builder):
     context = make_package_context(ctx)
     preprocess_entry(context, builder, 'package')
+
 
 def gen_enum(ctx, builder):
     context = make_enum_context(ctx)

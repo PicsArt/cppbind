@@ -140,6 +140,7 @@ class DirectoryNode(Node):
     def full_displayname(self):
         return self.name
 
+
 class RootNode(Node):
     ROOT_KEY = '__root__'
 

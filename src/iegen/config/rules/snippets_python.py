@@ -1,5 +1,4 @@
 import copy
-import datetime
 import os
 import types
 
@@ -60,8 +59,7 @@ def make_def_context(ctx):
         pat_sep = os.sep
         helper = iegen.converter
         marker = JINJA_UNIQUE_MARKER
-
-        date_time = datetime.date.strftime(datetime.datetime.now(), "%m/%d/%Y-%H:%M")
+        banner_logo = iegen.BANNER_LOGO
 
         return locals()
 
@@ -77,7 +75,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = convert.make_comment(ctx.comment)
+        comment = convert.make_comment(ctx.comment.splitlines())
 
         cxx_output_filepath = f'{os.sep}'.join([ctx.cxx_out_dir] + [item.replace('.', os.sep) for item in (
             ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.file_postfix)])

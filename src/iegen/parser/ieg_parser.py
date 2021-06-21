@@ -8,10 +8,7 @@ import re
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen import (
-    default_config as default_config,
-    logging as logging
-)
+from iegen import default_config, logging
 from iegen.common.error import Error
 from iegen.parser.filter import cxx_ieg_filter
 
@@ -27,38 +24,34 @@ class CXXParser(object):
         self.current_file = None
         self.filter = filter or cxx_ieg_filter
 
-    def parss_tu(self):
+    def parse_tu(self):
         """
-        Pares cxx files and returns list of TranslationUnit s
+        Parses cxx files and returns list of TranslationUnit s
         """
-        return [tu for tu in self.parss_x()]
+        return [tu for tu in self.parse_x()]
 
-    def parss_tu_x(self):
+    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, **kwargs):
         """
-        Pares cxx files and returns generator of TranslationUnit s
+        Parses cxx files and returns generator of TranslationUnit s
         """
         index = cli.Index.create()
 
         # build parser arguments
-        args = ['-x', 'c++', '--std=c++17'] + self.config.clang_args.split(',') + ['-I' + includeDir.strip()
-                                                                                   for includeDir in
-                                                                                   self.config.include_dirs.split(',')]
-        files = self.config.src_glob
-        excluded_files = self.config.src_exclude_glob
-        # base_files = os.path.join(find_prj_dir(self.config.cxx_base_dir), '**/*.h*')
-        # base_files = glob.glob(base_files, recursive=True)
+        args = ['-x', 'c++', '--std=c++17'] + clang_args + ['-I' + includeDir.strip()
+                                                            for includeDir in
+                                                            include_dirs]
 
-        logging.info("parsing files: {}".format(files.replace("\n", " ")))
+        logging.info("parsing files: {}".format(' '.join(src_glob)))
         # logging.info(f"parsing files: {base_files}")
 
         all_excluded_files = set()
-        for file in excluded_files.split(','):
+        for file in src_exclude_glob:
             abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
             all_excluded_files.update(abs_paths)
 
         # using list to keep files order constant
         all_files = []
-        for file in files.split(','):
+        for file in src_glob:
             files_glob = sorted(glob.glob(file.strip(), recursive=True))
             for fp in files_glob:
                 abs_fp = os.path.abspath(fp)
@@ -87,11 +80,11 @@ class CXXParser(object):
             if not has_error:
                 yield tu
 
-    def parss_x(self):
+    def parse_x(self, **kwargs):
         """
         Pares cxx files and returns generator of cursors
         """
-        for tu in self.parss_tu_x():
+        for tu in self.parse_tu_x(**kwargs):
             for c in self.cursor_walk(tu.cursor):
                 yield c
 
@@ -112,12 +105,8 @@ class CXXParser(object):
                 for descendant in self.cursor_walk(child):
                     yield descendant
 
-    def parse(self, processor):
-
-        if hasattr(processor, 'start_root'):
-            processor.start_root()
-
-        for tu in self.parss_tu_x():
+    def parse(self, processor, **kwargs):
+        for tu in self.parse_tu_x(**kwargs):
             tu_parent_dirs = self.__dirs_to_process(tu)
 
             # TODO:
@@ -140,8 +129,6 @@ class CXXParser(object):
                 if hasattr(processor, 'end_dir'):
                     processor.end_dir(dir_name)
 
-        if hasattr(processor, 'end_root'):
-            processor.end_root()
 
     def __dirs_to_process(self, tu):
         dirs_to_search = set()

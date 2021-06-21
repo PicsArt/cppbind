@@ -23,25 +23,34 @@ def load_snippets_engine(path, main_target):
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(config, *args, **kwargs):
+def gen_init(ctx, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
-
     # load snippets
 
-    def make_context(config):
-        # helper variables
-        cxx_helpers_dir = find_prj_dir(config.cxx_helpers_dir)
-        helpers_dir = find_prj_dir(config.helpers_dir)
-        # base variables
-        cxx_base_dir = find_prj_dir(config.cxx_base_dir)
-        return locals()
-
-    context = make_context(config)
+    context = make_root_context(ctx)
 
     load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    config.snippets, DEFAULT_DIRS)
+                    ctx.snippets, DEFAULT_DIRS)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
+
+
+def make_root_context(ctx):
+    def make():
+        # helper variables
+        cxx_helpers_dir = find_prj_dir(ctx.cxx_helpers_dir)
+        helpers_dir = find_prj_dir(ctx.helpers_dir)
+        out_dir = ctx.out_dir
+        helpers_package_prefix = ctx.helpers_package_prefix
+        helpers_out_dir = os.path.join(out_dir + helpers_package_prefix.replace('.', os.sep))
+        # base variables
+        cxx_base_dir = find_prj_dir(ctx.cxx_base_dir)
+        return locals()
+
+    context = {k: getattr(ctx, k) for k in ctx.node.args}
+    context.update(make())
+
+    return context
 
 
 def make_def_context(ctx):
@@ -109,7 +118,7 @@ def make_func_context(ctx):
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
                                              class_name,
                                              _suffix,
                                              method_name,
@@ -155,7 +164,7 @@ def make_class_context(ctx):
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
             get_jni_name = partial(convert.get_jni_func_name,
-                                   f'{ctx.config.package_prefix}.{ctx.package}',
+                                   f'{ctx.package_prefix}.{ctx.package}',
                                    ctx.name,
                                    template_suffix)
             has_non_abstract_base_class = False
@@ -215,7 +224,7 @@ def make_member_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.config.package_prefix}.{ctx.package}',
+            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
                                              class_name,
                                              owner_class.template_suffix,
                                              method_name,

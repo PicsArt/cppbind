@@ -15,6 +15,11 @@ class NodeType(Enum):
     FILE_NODE = 4
 
 
+ROOT_KIND_NAME = "root"
+DIR_KIND_NAME = "dir"
+FILE_KIND_NAME = "file"
+
+
 class Node(ABC):
     API_NONE = 'none'
 
@@ -125,7 +130,7 @@ class DirectoryNode(Node):
 
     @property
     def kind_name(self):
-        return "dir"
+        return DIR_KIND_NAME
 
     @property
     def displayname(self):
@@ -140,7 +145,7 @@ class RootNode(Node):
     ROOT_KEY = '__root__'
 
     def __init__(self):
-        super().__init__(None, None, None, None, None)
+        super().__init__(Node.API_NONE, None, None, None, None)
         self.name = RootNode.ROOT_KEY
 
     def __repr__(self):
@@ -162,7 +167,7 @@ class RootNode(Node):
 
     @property
     def kind_name(self):
-        return "root"
+        return ROOT_KIND_NAME
 
     @property
     def displayname(self):
@@ -221,7 +226,7 @@ class FileNode(ClangNode):
     def kind_name(self):
         assert self.clang_cursor, "cursor is not provided"
         assert self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT
-        return "file"
+        return FILE_KIND_NAME
 
 
 class CXXNode(ClangNode):

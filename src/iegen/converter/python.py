@@ -64,7 +64,7 @@ def make_comment(pure_comment):
     return f'"""{start}{nl.join(pure_comment)}{nl}"""'
 
 
-def make_hashtag_comment(pure_comment):
+def make_enum_case_comment(pure_comment):
     nl = '\n# '
     if not pure_comment:
         return ""

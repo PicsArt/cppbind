@@ -9,6 +9,7 @@ import re
 import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
+from iegen.common.config import config as default_config
 
 
 def load_from_paths(loader, path_name, default_dirs):
@@ -31,6 +32,14 @@ def load_module_from_path(module_name, path_name):
 def load_module_from_paths(module_name, path_name, default_dirs):
     return load_from_paths(lambda path: load_module_from_path(module_name, path),
                            path_name, default_dirs)
+
+
+def load_rule_module(language, rule):
+    module = load_module_from_paths(f"{language}.rule",
+                                    rule,
+                                    default_config.default_config_dirs)
+    module.set_language(language)
+    return module
 
 
 def get_host_platform():

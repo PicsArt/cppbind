@@ -19,28 +19,28 @@ from iegen.ir.ast import Node, NodeType
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
-from iegen.utils import load_module_from_paths
+from iegen.utils import load_rule_module
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
 
-def test_parser(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser(clang_config):
+    parser = CXXParser()
     processor = CXXPrintProcessor()
     for c in parser.parse_x(**clang_config):
         processor(c)
 
 
-def test_parser_processor(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser_processor(clang_config):
+    parser = CXXParser()
     processor = CXXPrintProcessor()
     parser.parse(processor, **clang_config)
 
 
-def test_parser_processor_cr_counter(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser_processor_cr_counter(clang_config):
+    parser = CXXParser()
     count = 0
     max_dept = 0
     dept = 0
@@ -193,12 +193,12 @@ def test_external_API_parser_positive(parser_config):
             assert False, "should not get error"
 
 
-def test_parser_errors(parser_config, clang_config):
+def test_parser_errors(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'negative')
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
 
     ctx_mgr = ContextManager(default_config.attributes, 'linux', 'swift')
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
@@ -211,11 +211,11 @@ def test_parser_errors(parser_config, clang_config):
         assert Error.has_error == True, "Must cause an error"
 
 
-def test_jinja_attrs(parser_config, clang_config):
+def test_jinja_attrs(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
 
     clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
 
@@ -229,18 +229,18 @@ def test_jinja_attrs(parser_config, clang_config):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
-def test_empty_gen_rule(parser_config, clang_config):
+def test_empty_gen_rule(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.languages[lang]
+    lang_config = default_config.defaults
 
     lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
     ctx_mgr = ContextManager(default_config.attributes, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
@@ -261,8 +261,8 @@ def test_empty_gen_rule(parser_config, clang_config):
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
-    lang_rule = load_module_from_paths(f"{lang}.rule", lang_config.rule, default_config.default_config_dirs)
-    run_rule = RunRule(ir, plat, lang, lang_config)
+    lang_rule = load_rule_module(lang, default_config.defaults.rule)
+    run_rule = RunRule(ir, plat, lang)
     builder = Builder()
 
     # check that empty gen rule doesn't crash the app
@@ -275,18 +275,18 @@ def test_empty_gen_rule(parser_config, clang_config):
         rmtree(os.path.join(working_dir, ir.args['out_dir']))
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
-def test_root_config(parser_config, clang_config):
+def test_root_config(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.languages[lang]
+    lang_config = default_config.defaults
 
     lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser(parser_config=default_config)
+    parser = CXXParser()
     ctx_mgr = ContextManager(default_config.attributes, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 

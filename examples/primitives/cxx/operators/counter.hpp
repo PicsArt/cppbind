@@ -6,7 +6,7 @@ namespace iegen::example {
 /**
  * An example for with overloaded methods.
  * __API__
- * gen: class
+ * action: gen_class
  * package: operators
  * swift.include: CWrapper
  */
@@ -15,7 +15,7 @@ public:
     /**
      * Counter constructor.
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
 	Counter(int count) : _count(count) {}
 
@@ -26,7 +26,7 @@ public:
     /**
      * Getter for count.
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
 	int count() const {
@@ -36,7 +36,7 @@ public:
     /**
      * Plus operator
      * __API__
-     * gen: method
+     * action: gen_method
      * kotlin.name: plus
      * throws: no_throw
      */
@@ -47,7 +47,7 @@ public:
     /**
      * Comparison operator for kotlin
      * __API__
-     * gen: method
+     * action: gen_method
      * kotlin.is_operator: True
      * kotlin.name: compareTo
      * throws: no_throw
@@ -60,7 +60,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * kotlin.name: gt
      * kotlin.is_operator: False
      * throws: no_throw
@@ -71,7 +71,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * kotlin.name: add
      * kotlin.is_operator: False
      * throws: no_throw

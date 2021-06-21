@@ -212,7 +212,7 @@ def make_member_context(ctx):
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
-        gen_property_setter = ctx.node.api == 'property_setter'
+        gen_property_setter = ctx.node.api == 'gen_property_setter'
 
         return locals()
 

@@ -8,20 +8,20 @@ namespace iegen::example {
 /**
  * Class Frame.
  * __API__
- * gen: class
+ * action: gen_class
  * package: enums
  * swift.include: CWrapper
  */
 struct Frame {
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Frame() {};
 
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     Color backgroundColor;
 

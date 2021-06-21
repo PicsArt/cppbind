@@ -1,7 +1,7 @@
-gen_actions:
+dir_vars:
   - dir: "."
-    rule:
-      gen: package
+    vars:
+      action: gen_package
       name: inputs
       python.code_fragment:
         - import json

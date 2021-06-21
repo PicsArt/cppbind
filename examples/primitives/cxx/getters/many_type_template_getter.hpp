@@ -6,14 +6,14 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  * swift.include: CWrapper
  */
 struct Foo  {
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     int value;
 
@@ -24,13 +24,13 @@ struct Foo  {
 
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  */
 struct Bar  {
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     int value;
 
@@ -42,7 +42,7 @@ struct Bar  {
  * An example class containing template getters that depend on more than one type.
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  */
 class ManyTypeTemplateGetter  {
@@ -51,7 +51,7 @@ class ManyTypeTemplateGetter  {
      * Default constructor.
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     ManyTypeTemplateGetter() {};
 
@@ -61,7 +61,7 @@ class ManyTypeTemplateGetter  {
      * E.g. for python will be foo_bar.
      *
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      * template:
      *   T:
@@ -84,7 +84,7 @@ class ManyTypeTemplateGetter  {
      * In this case we can specify name only for the first arguments, as for the second we have one option and this way all cases will be covered.
      *
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      * template:
      *   T:

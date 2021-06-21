@@ -13,7 +13,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: templates
  * python.include:
  *   - templates.stack_pygen
@@ -25,13 +25,13 @@ class StackUsage  {
     public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     StackUsage() {};
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     Project* firstItemOfSpecializedStack(iegen::example::Stack<Project>* p) {
@@ -40,7 +40,7 @@ class StackUsage  {
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * template:
      *   V:
      *     - type: iegen::example::Project

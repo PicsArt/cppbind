@@ -26,13 +26,17 @@ class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
 
-    RULE_TITLE_KEY = 'gen_actions'
-    RULE_RULE_KEY = 'rule'
-    RULE_TYPE_KEY = 'type'
-    RULE_DIR_KEY = 'dir'
-    RULE_FILE_KEY = 'file'
-    RULE_SUB_KEY = ':'
-    RULE_ROOT_KEY = 'root'
+    ROOT_SECTION_KEY = 'vars'
+    DIR_SECTION_KEY = 'dir_vars'
+    FILE_SECTION_KEY = 'file_vars'
+    TYPE_SECTION_KEY = 'type_vars'
+
+    VARS_RULE_KEY = 'vars'
+    TYPE_RULE_KEY = 'type'
+    DIR_RULE_KEY = 'dir'
+    FILE_RULE_KEY = 'file'
+    SUB_RULE_KEY = ':'
+
 
     def __init__(self, attributes, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
@@ -60,23 +64,28 @@ class APIParser(object):
         filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
 
         if not filtered:
-            raise Exception("API comments are empty")
-        comment_prefix = re.search(r'\s*\*?\s*gen:', filtered[0])
-        if not comment_prefix:
-            raise Exception("API comments must start with 'gen' attribute")
-        yaml_indent_cnt = comment_prefix.end() - len('gen:')
+            Error.critical("API comments are empty",
+                           getattr(location, 'file_name', None),
+                           getattr(location, 'line_number', None))
+
+        comment_prefix = re.search(r'\s*\*?\s*', filtered[0])
+        yaml_indent_cnt = comment_prefix.end()
 
         yaml_lines = []
         for line in filtered:
             if len(line) <= yaml_indent_cnt:
-                raise Exception("Invalid yaml format")
+                Error.critical("Invalid yaml format",
+                               getattr(location, 'file_name', None),
+                               getattr(location, 'line_number', None))
             yaml_lines.append(line[yaml_indent_cnt:])
         yaml_lines = '\n'.join(yaml_lines)
 
         try:
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
-            raise Exception(f"Error while scanning yaml style comments: {e}")
+            Error.critical("Error while scanning yaml style comments: {e}",
+                           getattr(location, 'file_name', None),
+                           getattr(location, 'line_number', None))
 
         return self.parse_api_attrs(attrs, location)
 
@@ -112,8 +121,9 @@ class APIParser(object):
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
-                # error
-                raise Exception({attr_key: value})
+                Error.critical({attr_key: value},
+                               getattr(location, 'file_name', None),
+                               getattr(location, 'line_number', None))
             platform, language, attr = m.groups()
 
             prior = APIParser.get_priority(platform, language)
@@ -128,13 +138,16 @@ class APIParser(object):
             else:
                 platform = self.platforms + ['__all__']
 
-            if api is None and attr == 'gen':
-                api = value or Node.API_NONE
+            if attr == 'action':
+                api = value
             else:
+                api = api or Node.API_NONE
                 # now check attribute
                 # attribute should be in attributes
                 if attr not in self.attributes:
-                    raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
+                    Error.critical(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.",
+                                   getattr(location, 'file_name', None),
+                                   getattr(location, 'line_number', None))
 
                 array = self.attributes[attr].get('array', False)
                 value = self.parse_attr(attr, value)
@@ -143,7 +156,9 @@ class APIParser(object):
                     if not isinstance(value, list):
                         value = [value]
                 elif isinstance(value, list):
-                    raise Exception(f"Wrong attribute type: {attr} cannot be array")
+                    Error.critical(f"Wrong attribute type: {attr} cannot be array",
+                                   getattr(location, 'file_name', None),
+                                   getattr(location, 'line_number', None))
 
                 attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
                 for plat in platform:
@@ -222,52 +237,44 @@ class APIParser(object):
 
     @staticmethod
     def update_api_type_attributes(attrs, current_file, api_type_attributes):
-        _title = APIParser.RULE_TITLE_KEY
-        _rule = APIParser.RULE_RULE_KEY
-        _sub = APIParser.RULE_SUB_KEY
-        _type = APIParser.RULE_TYPE_KEY
-        _root = APIParser.RULE_ROOT_KEY
-
-        def flatten_dict(src_dict, ancestors):
-            _type in src_dict and ancestors.append(src_dict[_type])
+        def flatten_dict(src_dict, section_key, ancestors):
+            APIParser.validate_section_keys(src_dict, section_key)
+            APIParser.TYPE_RULE_KEY in src_dict and ancestors.append(src_dict[APIParser.TYPE_RULE_KEY])
             try:
-                if _rule in src_dict:
-                    flat_key = APIParser._get_key(current_file=current_file, src_dict=src_dict, ancestors=ancestors)
+                if APIParser.VARS_RULE_KEY in src_dict:
+                    flat_key = APIParser._get_key(current_file=current_file,
+                                                  src_dict=src_dict,
+                                                  ancestors=ancestors)
                     if flat_key in api_type_attributes:
                         raise YamlKeyDuplicationError(
                             f"Definition with duplicate '{flat_key}' key in {current_file},\n"
                             f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
+                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[APIParser.VARS_RULE_KEY],
                                                                     file=current_file)
-                if _sub in src_dict:
-                    for sub in src_dict[_sub]:
-                        flatten_dict(sub, ancestors)
+                if APIParser.SUB_RULE_KEY in src_dict:
+                    for sub in src_dict[APIParser.SUB_RULE_KEY]:
+                        flatten_dict(sub, section_key, ancestors)
             finally:
-                _type in src_dict and ancestors.pop()
+                APIParser.TYPE_RULE_KEY in src_dict and ancestors.pop()
 
-        if _root in attrs:
+        if APIParser.ROOT_SECTION_KEY in attrs:
             if RootNode.ROOT_KEY in api_type_attributes:
-                raise YamlKeyDuplicationError(f"Redefinition of '{_root}' section in {current_file} file, "
+                raise YamlKeyDuplicationError(f"Redefinition of '{APIParser.ROOT_SECTION_KEY}' section in {current_file} file, "
                                               f"which must be uniquely specified only in one file.\n"
                                               f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
-            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_root],
+            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[APIParser.ROOT_SECTION_KEY],
                                                                      file=current_file)
 
-        if _title not in attrs:
-            return
-
-        for item in attrs[_title]:
-            flatten_dict(item, [])
+        for section_key in (APIParser.DIR_SECTION_KEY, APIParser.FILE_SECTION_KEY, APIParser.TYPE_SECTION_KEY):
+            if section_key in attrs:
+                for item in attrs[section_key]:
+                    flatten_dict(item, section_key, [])
 
     @staticmethod
     def _get_key(src_dict, current_file, ancestors):
-        assert (APIParser.RULE_TYPE_KEY in src_dict) + (APIParser.RULE_DIR_KEY in src_dict) + (
-                APIParser.RULE_FILE_KEY in src_dict) == 1, \
-            f'API should contain one of the keywords: {APIParser.RULE_TITLE_KEY},{APIParser.RULE_DIR_KEY},{APIParser.RULE_FILE_KEY}'
-
         # dir
-        if APIParser.RULE_DIR_KEY in src_dict:
-            dir_name = src_dict[APIParser.RULE_DIR_KEY]
+        if APIParser.DIR_RULE_KEY in src_dict:
+            dir_name = src_dict[APIParser.DIR_RULE_KEY]
             if os.path.isabs(dir_name):
                 # if an absolute path is specified then we assume it's absolute to current dir
                 return dir_name.replace('/', '', 1) or '.'
@@ -275,18 +282,30 @@ class APIParser(object):
                 return os.path.relpath(
                     os.path.abspath(os.path.join(os.path.dirname(current_file), dir_name)),
                     os.getcwd())
-        # type
-        elif APIParser.RULE_TYPE_KEY in src_dict:
-            return join_type_parts(ancestors)
         # file
-        else:
-            file_name = src_dict[APIParser.RULE_FILE_KEY]
+        elif APIParser.FILE_RULE_KEY in src_dict:
+            file_name = src_dict[APIParser.FILE_RULE_KEY]
             if os.path.isabs(file_name):
                 # if an absolute path is specified then we assume it's absolute to current dir
                 flat_key = file_name.replace('/', '', 1)
                 return os.path.join(flat_key, os.getcwd())
             else:
                 return os.path.abspath(os.path.join(os.path.dirname(current_file), file_name))
+        # type
+        elif APIParser.VARS_RULE_KEY in src_dict:
+            return join_type_parts(ancestors)
+
+    @classmethod
+    def validate_section_keys(cls, src_dict, section_key):
+        if section_key == cls.FILE_SECTION_KEY:
+            assert not (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict),\
+                f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key"
+        elif section_key == cls.DIR_SECTION_KEY:
+            assert not (cls.FILE_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict),\
+                f"API dir section definition can only contain '{cls.DIR_RULE_KEY}' key"
+        else:
+            assert not (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict),\
+                f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key"
 
     @staticmethod
     def eval_attr_template(attrs, ctx):

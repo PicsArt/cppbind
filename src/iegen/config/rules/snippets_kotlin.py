@@ -230,7 +230,7 @@ def make_member_context(ctx):
                                              method_name,
                                              args_type_name)
 
-        gen_property_setter = ctx.node.api == 'property_setter'
+        gen_property_setter = ctx.node.api == 'gen_property_setter'
 
         return locals()
 

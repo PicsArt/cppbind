@@ -8,7 +8,7 @@ namespace iegen::example {
 /**
  * Class holding task information.
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * package: simple
  * python.package: simple.task
@@ -20,7 +20,7 @@ public:
     /**
      * Task Constructor.
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      *
      */
     Task(const std::string& title) : _title(title) {};
@@ -28,7 +28,7 @@ public:
     /**
      * Get objects title.
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      *
      */

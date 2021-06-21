@@ -246,7 +246,7 @@ class CXXNode(ClangNode):
 
     @property
     def is_interface(self):
-        return self.api == 'interface'
+        return self.api == 'gen_interface'
 
     @property
     def is_template(self):

@@ -8,7 +8,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: templates
  * kotlin.include: com.examples.simple.*
  * python.include: simple
@@ -18,13 +18,13 @@ class TemplateMethods  {
     public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     TemplateMethods() {};
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * template:
      *   T:
@@ -38,7 +38,7 @@ class TemplateMethods  {
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * template:
      *   T:

@@ -17,7 +17,7 @@ class Teacher;
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * package: forward_decl
  * swift.include: CWrapper
@@ -27,14 +27,14 @@ class Student {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Student() {};
 
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addTeacher(Teacher* t) {
@@ -43,7 +43,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     const std::vector<Teacher*>& teachers() const {

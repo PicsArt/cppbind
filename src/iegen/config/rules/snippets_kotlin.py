@@ -173,7 +173,7 @@ def make_class_context(ctx):
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
+                has_non_abstract_base_class = not all([b.ctx.api == 'gen_interface' for b in base_types_converters])
 
             cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
@@ -229,8 +229,6 @@ def make_member_context(ctx):
                                              owner_class.template_suffix,
                                              method_name,
                                              args_type_name)
-
-        gen_property_setter = ctx.node.api == 'gen_property_setter'
 
         return locals()
 

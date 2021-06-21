@@ -65,7 +65,6 @@ class ContextManager:
     def __process_attrs(self, kind, args, location, ctx=None):
         ctx = ctx or OrderedDict()
         args = args or OrderedDict()
-        location = location or SimpleNamespace()
         res = OrderedDict()
 
         # add all missing attributes
@@ -78,8 +77,8 @@ class ContextManager:
                 # check mandatory attribute existence
                 if kind in properties["required_on"]:
                     Error.error(f"Attribute '{att_name}' is mandatory attribute on {kind}.",
-                                getattr(location, 'file_name', None),
-                                getattr(location, 'line_number', None))
+                                location.file_name if location else None,
+                                location.line_number if location else None)
                     break
 
                 # inherit from parent or add default value
@@ -102,8 +101,8 @@ class ContextManager:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
                     Error.error(f"Attribute {att_name} is not allowed on {kind}.",
-                                getattr(location, 'file_name', None),
-                                getattr(location, 'line_number', None))
+                                location.file_name if location else None,
+                                location.line_number if location else None)
                     break
 
             # now we need to process variables of value and set value

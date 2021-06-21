@@ -37,7 +37,6 @@ class APIParser(object):
     FILE_RULE_KEY = 'file'
     SUB_RULE_KEY = ':'
 
-
     def __init__(self, attributes, languages=None, platforms=None, parser_config=None):
         self.attributes = attributes
         self.languages = list(languages or APIParser.ALL_LANGUAGES)
@@ -65,8 +64,8 @@ class APIParser(object):
 
         if not filtered:
             Error.critical("API comments are empty",
-                           getattr(location, 'file_name', None),
-                           getattr(location, 'line_number', None))
+                           location.file_name if location else None,
+                           location.line_number if location else None)
 
         comment_prefix = re.search(r'\s*\*?\s*', filtered[0])
         yaml_indent_cnt = comment_prefix.end()
@@ -75,8 +74,8 @@ class APIParser(object):
         for line in filtered:
             if len(line) <= yaml_indent_cnt:
                 Error.critical("Invalid yaml format",
-                               getattr(location, 'file_name', None),
-                               getattr(location, 'line_number', None))
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             yaml_lines.append(line[yaml_indent_cnt:])
         yaml_lines = '\n'.join(yaml_lines)
 
@@ -84,8 +83,8 @@ class APIParser(object):
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
             Error.critical("Error while scanning yaml style comments: {e}",
-                           getattr(location, 'file_name', None),
-                           getattr(location, 'line_number', None))
+                           location.file_name if location else None,
+                           location.line_number if location else None)
 
         return self.parse_api_attrs(attrs, location)
 
@@ -122,8 +121,8 @@ class APIParser(object):
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
                 Error.critical({attr_key: value},
-                               getattr(location, 'file_name', None),
-                               getattr(location, 'line_number', None))
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             platform, language, attr = m.groups()
 
             prior = APIParser.get_priority(platform, language)
@@ -146,8 +145,8 @@ class APIParser(object):
                 # attribute should be in attributes
                 if attr not in self.attributes:
                     Error.critical(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.",
-                                   getattr(location, 'file_name', None),
-                                   getattr(location, 'line_number', None))
+                                   location.file_name if location else None,
+                                   location.line_number if location else None)
 
                 array = self.attributes[attr].get('array', False)
                 value = self.parse_attr(attr, value)
@@ -157,8 +156,8 @@ class APIParser(object):
                         value = [value]
                 elif isinstance(value, list):
                     Error.critical(f"Wrong attribute type: {attr} cannot be array",
-                                   getattr(location, 'file_name', None),
-                                   getattr(location, 'line_number', None))
+                                   location.file_name if location else None,
+                                   location.line_number if location else None)
 
                 attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
                 for plat in platform:
@@ -297,15 +296,12 @@ class APIParser(object):
 
     @classmethod
     def validate_section_keys(cls, src_dict, section_key):
-        if section_key == cls.FILE_SECTION_KEY:
-            assert not (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict),\
-                f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key"
-        elif section_key == cls.DIR_SECTION_KEY:
-            assert not (cls.FILE_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict),\
-                f"API dir section definition can only contain '{cls.DIR_RULE_KEY}' key"
-        else:
-            assert not (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict),\
-                f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key"
+        if section_key == cls.FILE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
+            Error.critical(f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key")
+        elif section_key == cls.DIR_SECTION_KEY and (cls.FILE_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
+            Error.critical(f"API dir section definition can only contain '{cls.DIR_RULE_KEY}' key")
+        elif section_key == cls.TYPE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict):
+            Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
 
     @staticmethod
     def eval_attr_template(attrs, ctx):

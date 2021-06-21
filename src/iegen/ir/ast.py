@@ -245,10 +245,6 @@ class CXXNode(ClangNode):
         return cl_kind
 
     @property
-    def is_interface(self):
-        return self.api == 'gen_interface'
-
-    @property
     def is_template(self):
         is_parent_template = self.parent and self.parent.type == NodeType.CLANG_NODE and self.parent.is_template
         return self.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,

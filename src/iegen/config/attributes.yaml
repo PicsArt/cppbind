@@ -103,7 +103,9 @@ project_link:
 comment_del_regex:
   inheritable: true
   array: true
-  default: []
+  default:
+    - '\s*\\internal([\s\S]*?)\\endinternal\s*'
+    - '\s*\\internal[\s\S]*'
   allowed_on: [ cxx, file_system, root ]
 
 comment:

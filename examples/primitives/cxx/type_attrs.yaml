@@ -4,6 +4,3 @@ gen_actions:
       gen:
       project_dir: '{{_current_working_dir}}'
       project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
-      comment_del_regex:
-        - '\s*\\internal([\s\S]*?)\\endinternal\s*'
-        - '\s*\\internal[\s\S]*'

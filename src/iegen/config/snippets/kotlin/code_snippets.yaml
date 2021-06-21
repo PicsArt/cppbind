@@ -289,7 +289,7 @@ constructor:
       private external fun jConstructor{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
   cxx:
     body: |
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) %}
+      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}

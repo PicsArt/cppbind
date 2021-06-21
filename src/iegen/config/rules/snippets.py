@@ -129,7 +129,7 @@ def make_func_context(ctx):
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
-            is_override = getattr(convert, 'is_override')(ctx) if hasattr(convert, 'get_is_override') else bool(
+            is_override = getattr(convert, 'is_override')(ctx) if hasattr(convert, 'is_override') else bool(
                 ctx.cursor.get_overriden_cursors())
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
@@ -227,6 +227,7 @@ def make_getter_context(ctx):
 
 def make_member_context(ctx):
     def make():
+        # helper variables
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
@@ -272,7 +273,7 @@ def preprocess_scope(context, scope, info):
         s = scope.create_scope(sname)
         context_scope[sname] = s
     if info.snippet_tmpl:
-        scope.add(info.make_snippet(context_scope, JINJA_UNIQUE_MARKER))
+        scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 

@@ -34,10 +34,10 @@ def load_module_from_paths(module_name, path_name, default_dirs):
                            path_name, default_dirs)
 
 
-def load_rule_module(language, rule):
+def load_rule_module(language, rule, default_dirs):
     module = load_module_from_paths(f"{language}.rule",
                                     rule,
-                                    default_config.default_config_dirs)
+                                    default_dirs)
     module.set_language(language)
     return module
 

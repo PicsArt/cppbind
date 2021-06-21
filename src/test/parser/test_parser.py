@@ -261,7 +261,7 @@ def test_empty_gen_rule(clang_config):
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
-    lang_rule = load_rule_module(lang, default_config.defaults.rule)
+    lang_rule = load_rule_module(lang, default_config.defaults.rule, default_config.default_config_dirs)
     run_rule = RunRule(ir, plat, lang)
     builder = Builder()
 

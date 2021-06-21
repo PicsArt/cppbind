@@ -55,7 +55,7 @@ class WrapperGenerator(object):
         run_rule = RunRule(ir, platform, language)
         # load rule modules
         logging.debug("Loading ruler scripts.")
-        lang_rule = load_rule_module(language, default_config.defaults.rule)
+        lang_rule = load_rule_module(language, default_config.defaults.rule, default_config.default_config_dirs)
         logging.debug("Creating builders and running rules on IR.")
         builder = Builder()
         run_rule.run(lang_rule, builder)
@@ -76,11 +76,11 @@ def run(args):
             plat, lang = get_host_platform(), option
         plat_lang_options.append((plat, lang))
 
-    # try:
-    gen.run(set(plat_lang_options))
-    # except Exception as e:
-    #     Error.error(e)
-    #     exit(1)
+    try:
+        gen.run(set(plat_lang_options))
+    except Exception as e:
+        Error.error(e)
+        exit(1)
 
 
 def clean(args):

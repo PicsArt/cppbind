@@ -6,6 +6,10 @@
 namespace iegen::example {
 // [example]
 /**
+ * \internal
+ * internal comment should not go to wrappers
+ * \endinternal
+ * Class Root
  * __API__
  * gen: class
  * shared_ref: False

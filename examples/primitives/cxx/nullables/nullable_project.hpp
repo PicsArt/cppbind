@@ -6,7 +6,7 @@
 
 #include "cxx/simple/task.hpp"
 
-namespace iegen::example {
+namespace iegen::example::nullable {
 // [example]
 /**
  * Class holding project information.

@@ -5,7 +5,7 @@ namespace iegen::example {
 /**
  * comments
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * package: example
  */
@@ -15,7 +15,7 @@ struct Item {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Item(const std::string& _value) : value(_value) {}
 
@@ -23,7 +23,7 @@ struct Item {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Item() : value("default value") {}
 
@@ -31,7 +31,7 @@ struct Item {
      * Error: missing required 'throws' attribute
      * comments
      * __API__
-     * gen: method
+     * action: gen_method
      *
      */
     std::string result() {
@@ -43,7 +43,7 @@ struct Item {
      * comments
      *
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     std::string value;
 };

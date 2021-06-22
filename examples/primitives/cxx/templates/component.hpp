@@ -15,7 +15,7 @@ namespace iegen::example {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: True
  * package: templates
  * kotlin.include: com.examples.simple.Root
@@ -28,7 +28,7 @@ public:
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      *
      */
     Component(const Root& parent, const std::string& name) : Addressable<Root>(parent, name){}

@@ -1,5 +1,4 @@
-gen_actions:
+file_vars:
   - file: "./example.h"
-    rule:
-      gen:
+    vars:
       package: test_cxx_inputs

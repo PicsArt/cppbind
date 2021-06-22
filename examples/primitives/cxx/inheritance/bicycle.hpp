@@ -7,7 +7,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
@@ -17,7 +17,7 @@ class Bicycle : public Vehicle {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Bicycle(int numberOfSeats) : Vehicle(numberOfSeats) {};
 };

@@ -7,7 +7,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * package: simple
  * swift.include: CWrapper
@@ -16,13 +16,13 @@ struct Path {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Path(const std::string& _value) : value(_value) {};
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * python.name: __str__
      */
@@ -32,7 +32,7 @@ public:
 
     /**
      * __API__
-     * gen: property_getter
+     * action: gen_property_getter
      *
      */
      std::string value;

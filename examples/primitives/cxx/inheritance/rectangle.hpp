@@ -6,7 +6,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: interface
+ * action: gen_interface
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
@@ -16,7 +16,7 @@ class Rectangle : public virtual Parallelogram {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Rectangle(double length, double width) : Parallelogram() {
         _length = length;
@@ -25,7 +25,7 @@ public:
 
     /**
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     double area() const override {
@@ -34,7 +34,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     double perimeter() const override {
@@ -43,7 +43,7 @@ public:
 
     /**
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     double length() const {
@@ -52,7 +52,7 @@ public:
 
     /**
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     double width() const {

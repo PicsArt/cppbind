@@ -393,7 +393,7 @@ property_getter:
       def {{_name}}(self) -> {{rconverter.python.target_type_name}}:
           {{comment|string|indent}}
           pass
-      {% if gen_property_setter %}
+      {% if ctx.action == 'gen_property_setter' %}
       @{{_name}}.setter
       @bind
       def {{_name}}(self, value: {{rconverter.python.target_type_name}}):
@@ -404,7 +404,7 @@ property_getter:
   cxx:
     body: |
       {%- set _name = name|to_snake_case -%}
-      {%- if gen_property_setter %}
+      {%- if ctx.action == 'gen_property_setter' %}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
       {%- else %}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});

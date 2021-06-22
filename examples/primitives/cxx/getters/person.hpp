@@ -12,7 +12,7 @@ namespace iegen::example {
 /**
  * This class contains a private string field and getter/setter methods for it.
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * package: getters
  * swift.include: CWrapper
@@ -21,13 +21,13 @@ class Person {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Person(const std::string& name, const std::string& email, int age) : _email(email), _age(age), _fullname(name) {}
 
     /**
      *__API__
-     * gen: setter
+     * action: gen_setter
      * throws: no_throw
      */
     void setFullName(const std::string& val) {
@@ -36,7 +36,7 @@ public:
 
     /**
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     const std::string& fullName() {
@@ -45,14 +45,14 @@ public:
 
     /**
      * __API__
-     * gen: property_getter
+     * action: gen_property_getter
      * name: email
      */
     std::string _email;
 
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      * name: age
      */
     int _age;

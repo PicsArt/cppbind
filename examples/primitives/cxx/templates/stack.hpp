@@ -19,7 +19,7 @@ namespace iegen::example {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * template:
  *   T:
  *     - type: iegen::example::Project
@@ -35,19 +35,19 @@ class Stack {
     public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Stack() {};
 
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Stack(T& st) {};
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void push(T* item) {
@@ -55,7 +55,7 @@ class Stack {
     };
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void pop() {
@@ -63,7 +63,7 @@ class Stack {
     };
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
      T* top() const {
@@ -71,7 +71,7 @@ class Stack {
      };
      /**
       * __API__
-      * gen: method
+      * action: gen_method
       * throws: no_throw
       */
      bool empty() const {

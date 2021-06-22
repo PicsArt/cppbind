@@ -43,7 +43,7 @@ def test_parser_with_dir_api(parser_config, clang_config):
     assert len(dir_root.children) == 1
     dir_node = dir_root.children[0]
     assert dir_node.type == NodeType.DIRECTORY_NODE
-    assert dir_node.api == 'package'
+    assert dir_node.api == 'gen_package'
     assert dir_node.name == f'{CXX_INPUTS_REL_PATH}/{dir_example_folder}'
 
 

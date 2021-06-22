@@ -23,9 +23,9 @@ class Error:
     def get_message(cls, msg, file, line, err_type):
         err_msg = err_type.upper() + ': '
         if file:
-            err_msg += f"file -> {file}"
+            err_msg += f"file -> {file}, "
             if line:
-                err_msg += f", line -> {line}, "
+                err_msg += f"line -> {line}, "
         err_msg += f"msg -> {msg}"
 
         return err_msg

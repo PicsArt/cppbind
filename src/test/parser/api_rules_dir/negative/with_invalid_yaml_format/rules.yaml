@@ -1,8 +1,8 @@
-gen_actions:
+type_vars:
   - type: "pi::video_engine::yaml_test::WithExternalAPIComments"
     ::
     - type: "retInt(int)"
   # invalid indentation
-  rule:
-      gen: method
+  vars:
+      action: gen_method
         throws: no_throw

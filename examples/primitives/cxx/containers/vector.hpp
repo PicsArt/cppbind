@@ -11,7 +11,7 @@ namespace iegen::example {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: containers
  * swift.include: CWrapper
  */
@@ -20,7 +20,7 @@ struct VectorItem {
      * comments
      *
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     int value;
 
@@ -28,7 +28,7 @@ struct VectorItem {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     VectorItem(int _value) : value(_value){};
 
@@ -38,7 +38,7 @@ struct VectorItem {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: containers
  */
 struct VectorExamples {
@@ -47,7 +47,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     VectorExamples() {};
 
@@ -55,7 +55,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addIntVector(const std::vector<int>& v){
@@ -68,7 +68,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addObjVector(const std::vector<VectorItem*>& v){
@@ -81,7 +81,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addStringVector(const std::vector<std::string>& v){
@@ -94,7 +94,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     const std::vector<std::string>& getStringVector(){
@@ -105,7 +105,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     const std::vector<VectorItem*>& getObjVector(){
@@ -116,7 +116,7 @@ struct VectorExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     const std::vector<int>& getIntVector(){

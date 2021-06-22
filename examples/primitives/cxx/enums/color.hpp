@@ -6,7 +6,7 @@ namespace iegen::example {
 /**
  * Color Enum.
  * __API__
- * gen: enum
+ * action: gen_enum
  * package: enums
  * swift.include: CWrapper
  */

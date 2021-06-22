@@ -5,7 +5,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: interface
+ * action: gen_interface
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
@@ -17,14 +17,14 @@ public:
 
     /**
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     virtual double area() const = 0;
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual double perimeter() const = 0;

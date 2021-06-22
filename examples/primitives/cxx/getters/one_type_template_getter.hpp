@@ -5,14 +5,14 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  * swift.include: CWrapper
  */
 struct SimpleItem  {
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     int value;
 
@@ -24,7 +24,7 @@ struct SimpleItem  {
  * An example class containing template getters that depend on the same type.
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  */
 class OneTypeTemplateGetter  {
@@ -33,7 +33,7 @@ class OneTypeTemplateGetter  {
      * Default constructor.
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     OneTypeTemplateGetter() {};
 
@@ -43,7 +43,7 @@ class OneTypeTemplateGetter  {
      * E.g. for python will be simple_item.
      *
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      * template:
      *   T:
@@ -61,7 +61,7 @@ class OneTypeTemplateGetter  {
      * thus this one will override the previous one or the code won´t compile.
      *
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      * template:
      *   T:

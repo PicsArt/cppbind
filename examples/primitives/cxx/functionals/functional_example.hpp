@@ -6,7 +6,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * package: functionals
  * swift.include: CWrapper
@@ -15,13 +15,13 @@ class FunctionalExamples {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     FunctionalExamples() {}
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     static std::function<int(int)> genFuncToIncrementResult(const std::function<int(int)> &f) {

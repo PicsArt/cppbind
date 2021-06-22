@@ -200,10 +200,6 @@ class Adapter:
     def set_original_type(self, clang_type):
         self.original_clang_type = clang_type
 
-    @property
-    def is_interface(self):
-        return self.ctx.node.is_interface if self.ctx else False
-
     def __getattr__(self, name):
         type_info = None
 

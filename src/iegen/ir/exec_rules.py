@@ -25,7 +25,7 @@ class BaseContext:
         return val
 
     @property
-    def api(self):
+    def action(self):
         return self.node.api
 
 

@@ -14,6 +14,7 @@ from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
 from iegen.common.yaml_process import YamlKeyDuplicationError
+from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import Node, NodeType
 from iegen.ir.exec_rules import RunRule
@@ -68,10 +69,9 @@ def test_parser_processor_cr_counter(parser_config, clang_config):
 
 
 @pytest.mark.parametrize(
-    "attributes, test_data, res_md5",
+    "test_data, res_md5",
     [
         (
-                'attributes',
                 """
                 /**
                 * comments
@@ -85,7 +85,6 @@ def test_parser_processor_cr_counter(parser_config, clang_config):
                 "53f66d25e3617697fe212416e97302df"
         ),
         (
-                'attributes',
                 """
                 /**
                 * commants
@@ -97,11 +96,11 @@ def test_parser_processor_cr_counter(parser_config, clang_config):
                 """,
                 "9e1abee91024c0f427a0f5f04732823b"
         )
-    ],
-    indirect=['attributes']
+    ]
 )
-def test_API_parser(attributes, test_data, res_md5):
-    parser = APIParser(attributes=attributes)
+def test_API_parser(test_data, res_md5):
+    ctx_desc = ContextDescriptor(default_config.languages['python'])
+    parser = APIParser(ctx_desc)
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section, {})
@@ -111,38 +110,33 @@ def test_API_parser(attributes, test_data, res_md5):
 
 
 @pytest.mark.parametrize(
-    "attributes, test_data",
+    "test_data",
     [
-        (
-                'attributes',
-                """
-                /**
-                * comments
-                *
-                * __API__
-                * kotlin.file: utils
-                dd
-                * swift_prefix: PI
-                */
-                """,
-        ),
-        (
-                'attributes',
-                """
-                /**
-                * commants
-                *
-                * __API__
-                * action: gen_class
-                * shared_ref
-                */
-                """,
-        )
-    ],
-    indirect=['attributes']
+        """
+        /**
+        * comments
+        *
+        * __API__
+        * kotlin.file: utils
+        dd
+        * swift_prefix: PI
+        */
+        """,
+
+        """
+        /**
+        * commants
+        *
+        * __API__
+        * action: gen_class
+        * shared_ref
+        */
+        """
+    ]
 )
-def test_API_parser_negative(attributes, test_data):
-    parser = APIParser(attributes=attributes)
+def test_API_parser_negative(test_data):
+    ctx_desc = ContextDescriptor(default_config.languages['python'])
+    parser = APIParser(ctx_desc)
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section, {})
@@ -158,7 +152,7 @@ def test_external_API_parser_negative(parser_config):
     for dir in os.listdir(api_rules_dir):
         config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            APIParser.build_api_type_attributes(config)
+            ContextDescriptor.build_api_ctx_map(config)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
         except Exception as e:
@@ -181,7 +175,7 @@ def test_external_API_parser_positive(parser_config):
     for dir, res_md5 in results.items():
         config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            res = APIParser.build_api_type_attributes(config)
+            res = ContextDescriptor.build_api_ctx_map(config)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -200,7 +194,9 @@ def test_parser_errors(parser_config, clang_config):
 
     parser = CXXParser(parser_config=parser_config)
 
-    ctx_mgr = ContextManager(default_config.attributes, 'linux', 'swift')
+    lang, plat = 'swift', 'linux'
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     for file in os.listdir(test_dir):
@@ -208,7 +204,7 @@ def test_parser_errors(parser_config, clang_config):
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
         parser.parse(ir_builder, **clang_cfg)
-        assert Error.has_error == True, "Must cause an error"
+        assert Error.has_error is True, "Must cause an error"
 
 
 def test_jinja_attrs(parser_config, clang_config):
@@ -219,7 +215,9 @@ def test_jinja_attrs(parser_config, clang_config):
 
     clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
 
-    ctx_mgr = ContextManager(default_config.attributes, 'linux', 'swift')
+    plat, lang = 'linux', 'swift'
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -241,7 +239,8 @@ def test_empty_gen_rule(parser_config, clang_config):
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser(parser_config=parser_config)
-    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -287,7 +286,8 @@ def test_root_config(parser_config, clang_config):
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser(parser_config=default_config)
-    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -309,8 +309,7 @@ def test_file_api_positive(parser_config):
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
     config.api_type_attributes_glob = api_rules_dir
 
-    api_parser = APIParser(attributes=default_config.attributes,
-                           parser_config=config)
+    api_parser = APIParser(ContextDescriptor(config))
 
     example_file_key = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
 
@@ -326,8 +325,7 @@ def test_dir_api_positive(parser_config):
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
     config.api_type_attributes_glob = api_rules_dir
 
-    api_parser = APIParser(attributes=default_config.attributes,
-                           parser_config=config)
+    api_parser = APIParser(ContextDescriptor(config))
 
     example_dir_key = os.path.relpath(
         os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())

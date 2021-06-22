@@ -68,3 +68,11 @@ vars: |
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
     - cxx/getters/*template_getter.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+  - prefix:
+      inheritable: true
+      default: prefix
+      allowed_on: [ class, class_template, struct, struct_template, enum ]

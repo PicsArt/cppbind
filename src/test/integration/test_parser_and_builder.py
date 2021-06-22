@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 
 from iegen import default_config
 from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import NodeType, Node
 from iegen.parser.ieg_parser import CXXParser
@@ -28,7 +29,8 @@ def test_parser_with_dir_api(parser_config, clang_config):
     lang_config.api_type_attributes_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
 
     parser = CXXParser(parser_config=parser_config)
-    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
     processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
@@ -62,7 +64,8 @@ def test_parser_with_file_api(parser_config, clang_config):
     lang_config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
 
     parser = CXXParser(parser_config=parser_config)
-    ctx_mgr = ContextManager(default_config.attributes, plat, lang)
+    ctx_desc = ContextDescriptor(default_config.languages[lang])
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
     processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 

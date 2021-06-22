@@ -2,8 +2,6 @@
 Implements ieg api parser on cxx comment
 """
 import distutils.util
-import glob
-import os
 import re
 from collections import defaultdict
 from collections import OrderedDict
@@ -14,9 +12,9 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.ir.ast import Node, RootNode
-from iegen.utils.clang import extract_pure_comment, join_type_parts
+from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.ir.ast import Node
+from iegen.utils.clang import extract_pure_comment
 from iegen import default_config
 
 
@@ -26,22 +24,11 @@ class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
 
-    ROOT_SECTION_KEY = 'vars'
-    DIR_SECTION_KEY = 'dir_vars'
-    FILE_SECTION_KEY = 'file_vars'
-    TYPE_SECTION_KEY = 'type_vars'
-
-    VARS_RULE_KEY = 'vars'
-    TYPE_RULE_KEY = 'type'
-    DIR_RULE_KEY = 'dir'
-    FILE_RULE_KEY = 'file'
-    SUB_RULE_KEY = ':'
-
-    def __init__(self, attributes, languages=None, platforms=None, parser_config=None):
-        self.attributes = attributes
+    def __init__(self, ctx_desc, languages=None, platforms=None):
+        self.ctx_desc = ctx_desc
+        self.attributes = self.ctx_desc.attributes
         self.languages = list(languages or APIParser.ALL_LANGUAGES)
         self.platforms = platforms or APIParser.ALL_PLATFORMS
-        self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
@@ -57,10 +44,10 @@ class APIParser(object):
         if api_section is None:
             return None, OrderedDict()
         api_section = JINJA_ENV.from_string(api_section).render(ctx)
-        SKIP_REGEXPR = r'^[\s*/]*$'
+        skip_regex = r'^[\s*/]*$'
 
         lines = api_section.splitlines()
-        filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
+        filtered = list(filter(lambda x: not re.match(skip_regex, x), lines))
 
         if not filtered:
             Error.critical("API comments are empty",
@@ -96,7 +83,7 @@ class APIParser(object):
 
     def parse_yaml_api(self, name, ctx=None, location=None):
         ctx = ctx or {}
-        attrs = self.api_type_attributes.get(name)
+        attrs = self.ctx_desc.api_ctx_map.get(name)
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
@@ -109,17 +96,15 @@ class APIParser(object):
                     Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
                 return self.parse_api_attrs(api_attrs, location)
 
-
     def parse_api_attrs(self, attrs, location):
-        api = None
         attr_dict = OrderedDict()
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        attr_key_regex = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
         api = Node.API_NONE
         for attr_key, value in attrs.items():
-            m = re.match(ATTR_KEY_REGEXPR, attr_key)
+            m = re.match(attr_key_regex, attr_key)
             if not m:
                 Error.critical({attr_key: value},
                                location.file_name if location else None,
@@ -210,97 +195,6 @@ class APIParser(object):
         if plat is None or lang is None:
             return 2
         return 3
-
-    @staticmethod
-    def build_api_type_attributes(parser_config):
-        if not hasattr(parser_config, 'api_type_attributes_glob'):
-            return {}
-
-        files = set()
-        for file in parser_config.api_type_attributes_glob.split(','):
-            files_glob = glob.glob(file.strip(), recursive=True)
-            for fp in files_glob:
-                files.add(os.path.abspath(fp))
-
-        api_type_attributes = {}
-        for current_file in list(files):
-            try:
-                attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
-            except yaml.YAMLError as e:
-                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
-
-            APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
-
-        return api_type_attributes
-
-    @staticmethod
-    def update_api_type_attributes(attrs, current_file, api_type_attributes):
-        def flatten_dict(src_dict, section_key, ancestors):
-            APIParser.validate_section_keys(src_dict, section_key)
-            APIParser.TYPE_RULE_KEY in src_dict and ancestors.append(src_dict[APIParser.TYPE_RULE_KEY])
-            try:
-                if APIParser.VARS_RULE_KEY in src_dict:
-                    flat_key = APIParser._get_key(current_file=current_file,
-                                                  src_dict=src_dict,
-                                                  ancestors=ancestors)
-                    if flat_key in api_type_attributes:
-                        raise YamlKeyDuplicationError(
-                            f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[APIParser.VARS_RULE_KEY],
-                                                                    file=current_file)
-                if APIParser.SUB_RULE_KEY in src_dict:
-                    for sub in src_dict[APIParser.SUB_RULE_KEY]:
-                        flatten_dict(sub, section_key, ancestors)
-            finally:
-                APIParser.TYPE_RULE_KEY in src_dict and ancestors.pop()
-
-        if APIParser.ROOT_SECTION_KEY in attrs:
-            if RootNode.ROOT_KEY in api_type_attributes:
-                raise YamlKeyDuplicationError(f"Redefinition of '{APIParser.ROOT_SECTION_KEY}' section in {current_file} file, "
-                                              f"which must be uniquely specified only in one file.\n"
-                                              f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
-            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[APIParser.ROOT_SECTION_KEY],
-                                                                     file=current_file)
-
-        for section_key in (APIParser.DIR_SECTION_KEY, APIParser.FILE_SECTION_KEY, APIParser.TYPE_SECTION_KEY):
-            if section_key in attrs:
-                for item in attrs[section_key]:
-                    flatten_dict(item, section_key, [])
-
-    @staticmethod
-    def _get_key(src_dict, current_file, ancestors):
-        # dir
-        if APIParser.DIR_RULE_KEY in src_dict:
-            dir_name = src_dict[APIParser.DIR_RULE_KEY]
-            if os.path.isabs(dir_name):
-                # if an absolute path is specified then we assume it's absolute to current dir
-                return dir_name.replace('/', '', 1) or '.'
-            else:
-                return os.path.relpath(
-                    os.path.abspath(os.path.join(os.path.dirname(current_file), dir_name)),
-                    os.getcwd())
-        # file
-        elif APIParser.FILE_RULE_KEY in src_dict:
-            file_name = src_dict[APIParser.FILE_RULE_KEY]
-            if os.path.isabs(file_name):
-                # if an absolute path is specified then we assume it's absolute to current dir
-                flat_key = file_name.replace('/', '', 1)
-                return os.path.join(flat_key, os.getcwd())
-            else:
-                return os.path.abspath(os.path.join(os.path.dirname(current_file), file_name))
-        # type
-        elif APIParser.VARS_RULE_KEY in src_dict:
-            return join_type_parts(ancestors)
-
-    @classmethod
-    def validate_section_keys(cls, src_dict, section_key):
-        if section_key == cls.FILE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
-            Error.critical(f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key")
-        elif section_key == cls.DIR_SECTION_KEY and (cls.FILE_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
-            Error.critical(f"API dir section definition can only contain '{cls.DIR_RULE_KEY}' key")
-        elif section_key == cls.TYPE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict):
-            Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
 
     @staticmethod
     def eval_attr_template(attrs, ctx):

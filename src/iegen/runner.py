@@ -7,6 +7,7 @@ from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
+from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_parser import CXXParser
@@ -22,7 +23,8 @@ class WrapperGenerator(object):
     def __init__(self):
         pass
 
-    def run(self, plat_lang_options):
+    @staticmethod
+    def run(plat_lang_options):
 
         logging.info(
             f"Start running wrapper generator for {', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
@@ -36,9 +38,8 @@ class WrapperGenerator(object):
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
 
-        ctx_mgr = ContextManager(default_config.attributes,
-                                 platform,
-                                 language)
+        ctx_desc = ContextDescriptor(default_config.languages[language])
+        ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         root_ctx = ir_builder.start_root()
@@ -70,8 +71,6 @@ class WrapperGenerator(object):
 
 
 def run(args):
-    gen = WrapperGenerator()
-
     plat_lang_options = []
     for option in args.languages:
         if '.' in option:
@@ -81,7 +80,7 @@ def run(args):
         plat_lang_options.append((plat, lang))
 
     try:
-        gen.run(set(plat_lang_options))
+        WrapperGenerator.run(set(plat_lang_options))
     except Exception as e:
         Error.error(e)
         exit(1)

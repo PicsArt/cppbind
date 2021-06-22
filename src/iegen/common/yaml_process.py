@@ -1,14 +1,20 @@
 """
 Helper module for processing yaml files
 """
-import os
 import copy
-import yaml
 import glob
+import os
+import yaml
+
+# wrong import
 import iegen.common as PROJECT_CONFIG_DIR
+# the corrected one, which currently leads to errors
+# from iegen.common import PROJECT_CONFIG_DIR
+
 
 class YamlKeyDuplicationError(Exception):
     pass
+
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""

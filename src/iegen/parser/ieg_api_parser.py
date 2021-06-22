@@ -117,6 +117,7 @@ class APIParser(object):
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
+        api = Node.API_NONE
         for attr_key, value in attrs.items():
             m = re.match(ATTR_KEY_REGEXPR, attr_key)
             if not m:
@@ -139,45 +140,38 @@ class APIParser(object):
 
             if attr == 'action':
                 api = value
-                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
-                for plat in platform:
-                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
-                    for lang in language:
+            # now check attribute
+            # attribute should be in attributes
+            if attr not in self.attributes:
+                Error.critical(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
+
+            array = self.attributes[attr].get('array', False)
+            value = self.parse_attr(attr, value)
+
+            if array:
+                if not isinstance(value, list):
+                    value = [value]
+            elif isinstance(value, list):
+                Error.critical(f"Wrong attribute type: {attr} cannot be array",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
+
+            attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
+            for plat in platform:
+                attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                for lang in language:
+                    curr_max_prior = max(prev_priors[attr][(plat, lang)])
+                    # overwrite the value only if the current option has higher priority than all previous ones.
+                    if prior > curr_max_prior:
                         attr_lang_dict[lang] = value
-            else:
-                api = api or Node.API_NONE
-                # now check attribute
-                # attribute should be in attributes
-                if attr not in self.attributes:
-                    Error.critical(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.",
-                                   location.file_name if location else None,
-                                   location.line_number if location else None)
-
-                array = self.attributes[attr].get('array', False)
-                value = self.parse_attr(attr, value)
-
-                if array:
-                    if not isinstance(value, list):
-                        value = [value]
-                elif isinstance(value, list):
-                    Error.critical(f"Wrong attribute type: {attr} cannot be array",
-                                   location.file_name if location else None,
-                                   location.line_number if location else None)
-
-                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
-                for plat in platform:
-                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
-                    for lang in language:
-                        curr_max_prior = max(prev_priors[attr][(plat, lang)])
-                        # overwrite the value only if the current option has higher priority than all previous ones.
-                        if prior > curr_max_prior:
-                            attr_lang_dict[lang] = value
-                        # If we have this case it means we have a conflict of options: plat.lang and lang.plat
-                        if prior in prev_priors[attr][(plat, lang)]:
-                            Error.error(f"Conflicting attributes: attributes like platform.attr and "
-                                        f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
-                                        location.file_name, location.line_number)
-                        prev_priors[attr][(plat, lang)].append(prior)
+                    # If we have this case it means we have a conflict of options: plat.lang and lang.plat
+                    if prior in prev_priors[attr][(plat, lang)]:
+                        Error.error(f"Conflicting attributes: attributes like platform.attr and "
+                                    f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
+                                    location.file_name, location.line_number)
+                    prev_priors[attr][(plat, lang)].append(prior)
 
         return api, attr_dict
 

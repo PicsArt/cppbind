@@ -1,3 +1,8 @@
+action:
+  inheritable: false
+  default: null
+  allowed_on: [ cxx, file_system ]
+
 prefix:
   inheritable: true
   default: null

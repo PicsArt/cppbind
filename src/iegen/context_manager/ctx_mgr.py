@@ -114,6 +114,9 @@ class ContextManager:
                 ctx[att_name] = new_att_val
                 res[att_name] = new_att_val
 
+        if 'action' in args:
+            res['action'] = args['action'][self.platform][self.language]
+
         assert res is not None
         return res
 

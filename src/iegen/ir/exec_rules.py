@@ -24,10 +24,6 @@ class BaseContext:
     API has no '{name}' attribute for {self.node.displayname}.")
         return val
 
-    @property
-    def action(self):
-        return self.node.api
-
 
 class Context(BaseContext):
 

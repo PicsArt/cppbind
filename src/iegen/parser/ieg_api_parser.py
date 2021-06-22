@@ -139,6 +139,11 @@ class APIParser(object):
 
             if attr == 'action':
                 api = value
+                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
+                for plat in platform:
+                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                    for lang in language:
+                        attr_lang_dict[lang] = value
             else:
                 api = api or Node.API_NONE
                 # now check attribute

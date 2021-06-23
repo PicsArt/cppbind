@@ -72,7 +72,9 @@ vars: |
 var_def:
   !join
   - !include variable_definitions.yaml
-  - prefix:
-      inheritable: true
-      default: prefix
-      allowed_on: [ class, class_template, struct, struct_template, enum ]
+  - clang_args:
+      inheritable: false
+      default:
+        - -D__ANDROID__
+      allowed_on: [ root ]
+      array: true

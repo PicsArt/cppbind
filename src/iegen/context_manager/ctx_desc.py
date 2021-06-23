@@ -31,10 +31,9 @@ class ContextDescriptor:
     FILE_RULE_KEY = 'file'
     SUB_RULE_KEY = ':'
 
-    def __init__(self, parser_config):
-        self.parser_config = parser_config
-        self.api_ctx_map = ContextDescriptor.build_api_ctx_map(parser_config)
-        self.attributes = ContextDescriptor.resolve_attr_aliases(self.get_var_def())
+    def __init__(self, context_def_glob):
+        self.ctx_def_map = ContextDescriptor.build_ctx_def_map(context_def_glob)
+        self.var_def = ContextDescriptor.resolve_attr_aliases(self.get_var_def())
 
     @staticmethod
     def resolve_attr_aliases(attrs):
@@ -58,29 +57,29 @@ class ContextDescriptor:
         return attrs
 
     @staticmethod
-    def build_api_ctx_map(parser_config):
-        if not hasattr(parser_config, 'api_type_attributes_glob'):
+    def build_ctx_def_map(context_def_glob):
+        if context_def_glob is None:
             return {}
 
         files = set()
-        for file in parser_config.api_type_attributes_glob.split(','):
+        for file in context_def_glob.split(','):
             files_glob = glob.glob(file.strip(), recursive=True)
             for fp in files_glob:
                 files.add(os.path.abspath(fp))
 
-        api_ctx_map = {}
+        ctx_def_map = {}
         for current_file in list(files):
             try:
                 attrs = load_yaml(current_file, dirs=[PROJECT_CONFIG_DIR])
             except yaml.YAMLError as e:
                 raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
 
-            ContextDescriptor.update_api_ctx_map(attrs, current_file, api_ctx_map)
+            ContextDescriptor.load_merge_ctx_def_map(attrs, current_file, ctx_def_map)
 
-        return api_ctx_map
+        return ctx_def_map
 
     @classmethod
-    def update_api_ctx_map(cls, attrs, current_file, api_ctx_map):
+    def load_merge_ctx_def_map(cls, attrs, current_file, ctx_def_map):
         def flatten_dict(src_dict, section_key, ancestors):
             cls.validate_section_keys(src_dict, section_key)
             cls.TYPE_RULE_KEY in src_dict and ancestors.append(src_dict[cls.TYPE_RULE_KEY])
@@ -89,11 +88,11 @@ class ContextDescriptor:
                     flat_key = cls._get_key(current_file=current_file,
                                             src_dict=src_dict,
                                             ancestors=ancestors)
-                    if flat_key in api_ctx_map:
+                    if flat_key in ctx_def_map:
                         raise YamlKeyDuplicationError(
                             f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                            f"which already has been previously defined in {api_ctx_map[flat_key].file}")
-                    api_ctx_map[flat_key] = SimpleNamespace(attr=src_dict[cls.VARS_RULE_KEY],
+                            f"which already has been previously defined in {ctx_def_map[flat_key].file}")
+                    ctx_def_map[flat_key] = SimpleNamespace(attr=src_dict[cls.VARS_RULE_KEY],
                                                             file=current_file)
                 if cls.SUB_RULE_KEY in src_dict:
                     for sub in src_dict[cls.SUB_RULE_KEY]:
@@ -102,11 +101,11 @@ class ContextDescriptor:
                 cls.TYPE_RULE_KEY in src_dict and ancestors.pop()
 
         if cls.ROOT_SECTION_KEY in attrs:
-            if RootNode.ROOT_KEY in api_ctx_map:
+            if RootNode.ROOT_KEY in ctx_def_map:
                 raise YamlKeyDuplicationError(f"Redefinition of '{cls.ROOT_SECTION_KEY}' section in {current_file} file, "
                                               f"which must be uniquely specified only in one file.\n"
-                                              f"It was previously defined in {api_ctx_map[RootNode.ROOT_KEY].file} file.")
-            api_ctx_map[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[cls.ROOT_SECTION_KEY],
+                                              f"It was previously defined in {ctx_def_map[RootNode.ROOT_KEY].file} file.")
+            ctx_def_map[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[cls.ROOT_SECTION_KEY],
                                                              file=current_file)
 
         for section in (cls.DIR_SECTION_KEY, cls.FILE_SECTION_KEY, cls.TYPE_SECTION_KEY):
@@ -115,7 +114,7 @@ class ContextDescriptor:
                     flatten_dict(item, section, [])
 
         if cls.VAR_DEF_SECTION_KEY in attrs:
-            api_ctx_map[cls.VAR_DEF_SECTION_KEY] = attrs[cls.VAR_DEF_SECTION_KEY]
+            ctx_def_map[cls.VAR_DEF_SECTION_KEY] = attrs[cls.VAR_DEF_SECTION_KEY]
 
     @classmethod
     def _get_key(cls, src_dict, current_file, ancestors):
@@ -152,4 +151,4 @@ class ContextDescriptor:
             Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
 
     def get_var_def(self):
-        return self.api_ctx_map.get(ContextDescriptor.VAR_DEF_SECTION_KEY, {})
+        return self.ctx_def_map.get(ContextDescriptor.VAR_DEF_SECTION_KEY, {})

@@ -58,7 +58,7 @@ class ContextManager:
         res = OrderedDict()
 
         # add all missing attributes
-        for att_name, properties in self.ctx_desc.attributes.items():
+        for att_name, properties in self.ctx_desc.var_def.items():
             att_val = args.get(att_name, {}).get(self.platform, {}).get(self.language)
 
             new_att_val = att_val
@@ -124,7 +124,7 @@ class ContextManager:
                 return def_val[key]
 
     def has_yaml_api(self, name):
-        return name in self.ctx_desc.api_ctx_map
+        return name in self.ctx_desc.ctx_def_map
 
     def get_yaml_api_file(self, name):
-        return self.ctx_desc.api_ctx_map[name].file
+        return self.ctx_desc.ctx_def_map[name].file

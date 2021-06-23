@@ -38,7 +38,7 @@ class WrapperGenerator(object):
         lang_config = default_config.languages[language]
         parser = CXXParser(parser_config=lang_config)
 
-        ctx_desc = ContextDescriptor(default_config.languages[language])
+        ctx_desc = ContextDescriptor(getattr(default_config.languages[language], 'context_def_glob', None))
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 

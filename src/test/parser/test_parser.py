@@ -79,10 +79,9 @@ def test_parser_processor_cr_counter(parser_config, clang_config):
                 * __API__
                 * action: gen_class
                 * kotlin.file: utils
-                * swift.prefix: PI
                 */
                 """,
-                "53f66d25e3617697fe212416e97302df"
+                "a9dd42fb3dd193871b8a49913180c08e"
         ),
         (
                 """
@@ -99,8 +98,7 @@ def test_parser_processor_cr_counter(parser_config, clang_config):
     ]
 )
 def test_API_parser(test_data, res_md5):
-    ctx_desc = ContextDescriptor(default_config.languages['python'])
-    parser = APIParser(ctx_desc)
+    parser = APIParser(ContextDescriptor(None))
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section, {})
@@ -119,7 +117,6 @@ def test_API_parser(test_data, res_md5):
         * __API__
         * kotlin.file: utils
         dd
-        * swift_prefix: PI
         */
         """,
 
@@ -135,8 +132,7 @@ def test_API_parser(test_data, res_md5):
     ]
 )
 def test_API_parser_negative(test_data):
-    ctx_desc = ContextDescriptor(default_config.languages['python'])
-    parser = APIParser(ctx_desc)
+    parser = APIParser(ContextDescriptor(None))
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section, {})
@@ -150,9 +146,9 @@ def test_external_API_parser_negative(parser_config):
     config = copy.deepcopy(parser_config)
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
     for dir in os.listdir(api_rules_dir):
-        config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        config.context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            ContextDescriptor.build_api_ctx_map(config)
+            ContextDescriptor.build_ctx_def_map(config.context_def_glob)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
         except Exception as e:
@@ -173,9 +169,9 @@ def test_external_API_parser_positive(parser_config):
     }
 
     for dir, res_md5 in results.items():
-        config.api_type_attributes_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        config.context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            res = ContextDescriptor.build_api_ctx_map(config)
+            res = ContextDescriptor.build_ctx_def_map(config.context_def_glob)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -195,8 +191,7 @@ def test_parser_errors(parser_config, clang_config):
     parser = CXXParser(parser_config=parser_config)
 
     lang, plat = 'swift', 'linux'
-    ctx_desc = ContextDescriptor(default_config.languages[lang])
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     for file in os.listdir(test_dir):
@@ -216,15 +211,14 @@ def test_jinja_attrs(parser_config, clang_config):
     clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
 
     plat, lang = 'linux', 'swift'
-    ctx_desc = ContextDescriptor(default_config.languages[lang])
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
 
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
-        assert name in str(ir_builder.ir), "Wrong evaluation of jinja attribute value"
+        assert name in str(ir_builder.ir), "Wrong evaluation of jinja variable value"
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(parser_config, clang_config):
@@ -235,12 +229,11 @@ def test_empty_gen_rule(parser_config, clang_config):
     lang, plat = 'python', 'linux'
     lang_config = default_config.languages[lang]
 
-    lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
+    context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser(parser_config=parser_config)
-    ctx_desc = ContextDescriptor(default_config.languages[lang])
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -254,10 +247,10 @@ def test_empty_gen_rule(parser_config, clang_config):
     assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
     assert dir_root.children[0].children[0].api == 'gen_class', 'wrong api type'
 
-    # check that 'package' inheritable attribute is inherited from dir to class
+    # check that 'package' inheritable variable is inherited from dir to class
     dir_pkg_value = dir_root.args['package']
     cls_pkg_value = dir_root.children[0].children[0].args['package']
-    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of variables doesn't work correctly"
 
     ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
     lang_rule = load_module_from_paths(f"{lang}.rule", lang_config.rule, default_config.default_config_dirs)
@@ -280,14 +273,12 @@ def test_root_config(parser_config, clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.languages[lang]
 
-    lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
+    context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser(parser_config=default_config)
-    ctx_desc = ContextDescriptor(default_config.languages[lang])
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -300,16 +291,14 @@ def test_root_config(parser_config, clang_config):
     assert root.children[0].children[0].children[0].api == 'gen_class', 'wrong class node api'
 
     root_clang_value = root.args['clang_args']
-    assert root_clang_value == ['clang_args'], "inheritance of attributes doesn't work correctly"
+    assert root_clang_value == ['clang_args'], "inheritance of variables doesn't work correctly"
 
 
-def test_file_api_positive(parser_config):
-    config = copy.deepcopy(parser_config)
+def test_file_api_positive():
     file_api_folder = 'file_api_example'
-    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
-    config.api_type_attributes_glob = api_rules_dir
+    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(config))
+    api_parser = APIParser(ContextDescriptor(context_def_glob))
 
     example_file_key = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
 
@@ -319,13 +308,11 @@ def test_file_api_positive(parser_config):
     assert args['package']['__all__']['__all__'] == 'test_cxx_inputs'
 
 
-def test_dir_api_positive(parser_config):
-    config = copy.deepcopy(parser_config)
+def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
-    api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
-    config.api_type_attributes_glob = api_rules_dir
+    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(config))
+    api_parser = APIParser(ContextDescriptor(context_def_glob))
 
     example_dir_key = os.path.relpath(
         os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())

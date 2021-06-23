@@ -26,7 +26,7 @@ class APIParser(object):
 
     def __init__(self, ctx_desc, languages=None, platforms=None):
         self.ctx_desc = ctx_desc
-        self.attributes = self.ctx_desc.attributes
+        self.var_def = self.ctx_desc.var_def
         self.languages = list(languages or APIParser.ALL_LANGUAGES)
         self.platforms = platforms or APIParser.ALL_PLATFORMS
 
@@ -39,7 +39,7 @@ class APIParser(object):
 
     def parse_comments(self, api_section, ctx, location=None):
         """
-        Parse comment to extract API command and its attributes
+        Parse comment to extract API command and its variables
         """
         if api_section is None:
             return None, OrderedDict()
@@ -83,7 +83,7 @@ class APIParser(object):
 
     def parse_yaml_api(self, name, ctx=None, location=None):
         ctx = ctx or {}
-        attrs = self.ctx_desc.api_ctx_map.get(name)
+        attrs = self.ctx_desc.ctx_def_map.get(name)
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
@@ -125,21 +125,20 @@ class APIParser(object):
 
             if attr == 'action':
                 api = value
-            # now check attribute
-            # attribute should be in attributes
-            if attr not in self.attributes:
-                Error.critical(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.",
+
+            if attr not in self.var_def:
+                Error.critical(f"Variable {attr} is not specified. It should be one of {set(self.var_def)}.",
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            array = self.attributes[attr].get('array', False)
+            array = self.var_def[attr].get('array', False)
             value = self.parse_attr(attr, value)
 
             if array:
                 if not isinstance(value, list):
                     value = [value]
             elif isinstance(value, list):
-                Error.critical(f"Wrong attribute type: {attr} cannot be array",
+                Error.critical(f"Wrong variable type: {attr} cannot be array",
                                location.file_name if location else None,
                                location.line_number if location else None)
 
@@ -153,7 +152,7 @@ class APIParser(object):
                         attr_lang_dict[lang] = value
                     # If we have this case it means we have a conflict of options: plat.lang and lang.plat
                     if prior in prev_priors[attr][(plat, lang)]:
-                        Error.error(f"Conflicting attributes: attributes like platform.attr and "
+                        Error.error(f"Conflicting variables definition: variables like platform.attr and "
                                     f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
                                     location.file_name, location.line_number)
                     prev_priors[attr][(plat, lang)].append(prior)
@@ -161,19 +160,19 @@ class APIParser(object):
         return api, attr_dict
 
     def parse_attr(self, attr_name, attr_value):
-        attr_type = self.attributes[attr_name].get('type', None)
-        if isinstance(self.attributes[attr_name].get('default'), bool) or attr_type == 'bool':
+        attr_type = self.var_def[attr_name].get('type', None)
+        if isinstance(self.var_def[attr_name].get('default'), bool) or attr_type == 'bool':
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':
             if not isinstance(attr_value, dict):
-                raise Exception(f"Wrong attribute type: {type(attr_value)}, it must be dictionary")
+                raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or not 'type' in attr:
                             raise Exception(
-                                f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
+                                f"Wrong template variable style: {attr_value}, template must have mandatory 'type' variable")
         # default string type
         return attr_value
 
@@ -187,7 +186,7 @@ class APIParser(object):
     @staticmethod
     def get_priority(plat, lang):
         """
-        A method to get priority of platform/language specific attribute:
+        A method to get priority of platform/language specific variable:
         Priorities sorted descending: platform.language.attr, [language|platform].attr, attr
         """
         if plat is None and lang is None:

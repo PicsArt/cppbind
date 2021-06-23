@@ -7,7 +7,7 @@ namespace iegen::example {
 /**
  * An example with overloaded methods.
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * swift.file: Utils
  * package: overloads
@@ -16,14 +16,14 @@ namespace iegen::example {
 struct Utils {
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Utils() {};
 
     /**
      * Sum two ints.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     static int sum(int first, int second) {
@@ -33,7 +33,7 @@ struct Utils {
     /**
      * Sum two floats.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     static float sum(float first, float second) {
@@ -43,7 +43,7 @@ struct Utils {
     /**
      * Concatenate with two strings.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     std::string concatenate(std::string first, std::string second) {
@@ -53,7 +53,7 @@ struct Utils {
     /**
      * Concatenate with three strings.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     std::string concatenate(std::string first, std::string second, std::string third) {

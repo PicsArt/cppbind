@@ -5,7 +5,7 @@ namespace test_api{
  * /brief testing enum
  * testing comments
  * __API__
- * gen: enum
+ * action: gen_enum
  * name: test
  */
 enum RoomType{rt_notspecified, rt_leavingroom, rt_bedroom};
@@ -14,7 +14,7 @@ enum RoomType{rt_notspecified, rt_leavingroom, rt_bedroom};
  * /brief testing
  * testing comments
  * __API__
- * gen: class
+ * action: gen_class
  * name: test
  */
 class Person {
@@ -23,7 +23,7 @@ class Person {
      * /brief testing
      * testing comments
      * __API__
-     * gen: method
+     * action: gen_method
      * name: test
      * throws: no_throw
      */

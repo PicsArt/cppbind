@@ -77,12 +77,12 @@ def test_parser_processor_cr_counter(clang_config):
                 * comments
                 *
                 * __API__
-                * gen: class
+                * action: gen_class
                 * kotlin.file: utils
                 * swift.prefix: PI
                 */
                 """,
-                "e78e907d4c03cd4ae3644d27a3ad7e00"
+                "53f66d25e3617697fe212416e97302df"
         ),
         (
                 'attributes',
@@ -91,11 +91,11 @@ def test_parser_processor_cr_counter(clang_config):
                 * commants
                 *
                 * __API__
-                * gen: class
+                * action: gen_class
                 * shared_ref: False
                 */
                 """,
-                "c4ef14239b668d5c4876742ca5f9da31"
+                "9e1abee91024c0f427a0f5f04732823b"
         )
     ],
     indirect=['attributes']
@@ -133,7 +133,7 @@ def test_API_parser(attributes, test_data, res_md5):
                 * commants
                 *
                 * __API__
-                * gen: class
+                * action: gen_class
                 * shared_ref
                 */
                 """,
@@ -171,11 +171,11 @@ def test_external_API_parser_positive(parser_config):
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
     config = copy.deepcopy(parser_config)
     results = {
-        'with_many_files': '61e1677833d942e27eae06854b3652e7',
-        'with_nested_cfg': 'cb6548fb573f46ddead383ade7a712a1',
-        'with_mixed_cfg': '61e1677833d942e27eae06854b3652e7',
-        'with_simple_cfg': 'e7cee96cb9c30a9a13621db5324122b6',
-        'with_jinja_expr': '292f69c0cbd4ea9447a3ab6dbeb2e6bf'
+        'with_many_files': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
+        'with_mixed_cfg': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
+        'with_jinja_expr': '7e3f74054ee36e9401d3028ca7856a4e'
     }
 
     for dir, res_md5 in results.items():
@@ -253,7 +253,7 @@ def test_empty_gen_rule(clang_config):
     # check that directory gen rule is empty
     assert dir_root.api == Node.API_NONE, 'wrong directory gen rule'
     assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
-    assert dir_root.children[0].children[0].api == 'class', 'wrong api type'
+    assert dir_root.children[0].children[0].api == 'gen_class', 'wrong api type'
 
     # check that 'package' inheritable attribute is inherited from dir to class
     dir_pkg_value = dir_root.args['package']
@@ -297,7 +297,7 @@ def test_root_config(clang_config):
     assert root.api == Node.API_NONE, 'wrong root gen rule'
     assert root.type == NodeType.ROOT_NODE, 'wrong root node kind'
     assert root.children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
-    assert root.children[0].children[0].children[0].api == 'class', 'wrong class node api'
+    assert root.children[0].children[0].children[0].api == 'gen_class', 'wrong class node api'
 
     root_clang_value = root.args['clang_args']
     assert root_clang_value == ['clang_args'], "inheritance of attributes doesn't work correctly"
@@ -334,6 +334,6 @@ def test_dir_api_positive(parser_config):
 
     api, args = api_parser.parse_yaml_api(example_dir_key, {})
 
-    assert api == 'package'
+    assert api == 'gen_package'
     assert args['name']['__all__']['__all__'] == 'inputs'
     assert args['code_fragment']['__all__']['python'] == ['import json']

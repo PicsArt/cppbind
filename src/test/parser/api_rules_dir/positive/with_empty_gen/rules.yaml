@@ -1,8 +1,9 @@
-gen_actions:
+dir_vars:
   - dir: "."
-    rule:
-      gen:
+    vars:
       package: example_pkg
+
+type_vars:
   - type: Example
-    rule:
-      gen: class
+    vars:
+      action: gen_class

@@ -8,7 +8,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: interface
+ * action: gen_interface
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
@@ -18,7 +18,7 @@ class Rhombus : public virtual Parallelogram {
 public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Rhombus(double diagonal1, double diagonal2) : Parallelogram() {
            _diagonal1 = diagonal1;

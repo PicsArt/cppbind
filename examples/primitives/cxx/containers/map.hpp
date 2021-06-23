@@ -11,7 +11,7 @@ namespace iegen::example {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: containers
  * swift.include: CWrapper
  */
@@ -20,7 +20,7 @@ struct MapItem {
      * comments
      *
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
     int value;
 
@@ -28,7 +28,7 @@ struct MapItem {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     MapItem(int _value) : value(_value){};
 
@@ -38,7 +38,7 @@ struct MapItem {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: containers
  */
 struct MapExamples {
@@ -47,7 +47,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     MapExamples() {};
 
@@ -55,7 +55,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addStringPair(const std::pair<std::string, std::string>& info) {
@@ -66,7 +66,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addIntMap(const std::map<int, int>& info) {
@@ -77,7 +77,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addStringMap(const std::map<std::string, std::string>& info) {
@@ -89,7 +89,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     std::unordered_map<std::string, std::string> getStringMap() {
@@ -100,7 +100,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     std::unordered_map<int, int> getIntMap() {
@@ -111,7 +111,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addMixedMap(const std::map<std::string, MapItem>& info) {
@@ -122,7 +122,7 @@ struct MapExamples {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     std::unordered_map<std::string, MapItem> getMixedMap() {

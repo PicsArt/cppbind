@@ -28,7 +28,7 @@ class Validator:
     def validate_bases(class_name, base_types_converters):
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.is_interface:
+            if not base_type.ctx.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')

@@ -11,7 +11,7 @@ namespace iegen::example {
 /**
  * Class holding project information.
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * package: simple
  * python.include: simple.task
@@ -22,14 +22,14 @@ public:
     /**
      * Project constructor.
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Project(const std::string& title) : _title(title) {};
 
     /**
      * Get project´s title.
      * __API__
-     * gen: getter
+     * action: gen_getter
      * throws: no_throw
      */
     std::string& title() {
@@ -40,7 +40,7 @@ public:
     /**
      * Add a task to project.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     void addTask(Task* task) {
@@ -50,7 +50,7 @@ public:
     /**
      * Get project´s tasks.
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     const std::vector<Task*>& tasks() const {

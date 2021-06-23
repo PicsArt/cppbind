@@ -10,7 +10,7 @@ namespace iegen::example {
 // [example]
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: getters
  * shared_ref: True
  * template:
@@ -24,13 +24,13 @@ class Number {
     public:
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Number(const T& n): num(n) {}
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * python.name: __int__
      */
@@ -40,7 +40,7 @@ class Number {
 
      /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
      T num;
 };

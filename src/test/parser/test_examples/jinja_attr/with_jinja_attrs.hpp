@@ -5,7 +5,7 @@ namespace Example {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: pkg
  * linux.swift.include: linux_CWrapper
  * mac.include: mac_CWrapper
@@ -17,7 +17,7 @@ class Car {
     * comments
     *
     * __API__
-    * gen: constructor
+    * action: gen_constructor
     */
     Car(int cost) : _cost(cost) {}
 
@@ -25,7 +25,7 @@ class Car {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws:
      *   - '{{package}}_exc_1'
      *   - '{{package}}_exc_2'
@@ -46,7 +46,7 @@ class Car {
      * comments
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * template:
      *   T:

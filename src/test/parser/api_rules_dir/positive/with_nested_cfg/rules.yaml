@@ -1,4 +1,4 @@
-gen_actions:
+type_vars:
   - type: pi
     ::
     - type: video_engine
@@ -8,5 +8,5 @@ gen_actions:
         - type: "WithExternalAPIComments"
           ::
           - type: "WithExternalAPIComments(std::string)"
-            rule:
-              gen: constructor
+            vars:
+              action: gen_constructor

@@ -116,7 +116,7 @@ class:
         internal constructor(_id: Long) {% if base_types_converters is defined -%}
                                               {%- set comma = joiner(', ') -%}
                                               : {% for base_type_converter in base_types_converters -%}
-                                                {{comma()}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.is_interface}}
+                                                {{comma()}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.ctx.action == 'gen_interface'}}
                                                 {%- endfor -%}
                                                 {%- if not has_non_abstract_base_class %}, AutoCloseable{% endif %}
                                             {%- else %}
@@ -332,7 +332,7 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {%- if ctx.parent_context.node.is_interface %}
+          {%- if ctx.parent_context.action == 'gen_interface' %}
           val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
@@ -358,7 +358,7 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {%- if ctx.parent_context.node.is_interface %}
+          {%- if ctx.parent_context.action == 'gen_interface' %}
           val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
           {%- else %}
           val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
@@ -406,7 +406,7 @@ function:
       {%- endif %}
       {%- endmacro %}
       {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.node.is_interface %}
+      {%- if ctx.parent_context.action == 'gen_interface' %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
@@ -444,9 +444,9 @@ property_getter:
       {%- if comment %}
       {{comment}}
       {%- endif %}
-      {{'var' if gen_property_setter else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
+      {{'var' if ctx.action == 'gen_property_setter' else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
           get() {
-              {%- if ctx.parent_context.node.is_interface %}
+              {%- if ctx.parent_context.action == 'gen_interface' %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
@@ -454,11 +454,11 @@ property_getter:
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
-          {%- if gen_property_setter %}
+          {%- if ctx.action == 'gen_property_setter' %}
           {%- set converter = rconverter.kotlin_to_jdk %}
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
-              {%- if ctx.parent_context.node.is_interface %}
+              {%- if ctx.parent_context.action == 'gen_interface' %}
               {{owner_class.name}}Helper{{owner_class.template_suffix}}.jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
               jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
@@ -467,14 +467,14 @@ property_getter:
           {% endif %}
     private_external: |
       private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if gen_property_setter %}
+      {%- if ctx.action == 'gen_property_setter' %}
       private external fun jSet{{name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
 
       @JvmStatic
       external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if gen_property_setter %}
+      {%- if ctx.action == 'gen_property_setter' %}
 
       @JvmStatic
       external fun jSet{{name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
@@ -483,7 +483,7 @@ property_getter:
     body: |
       {%- set func_name="j%s"|format(name|capitalize) %}
       {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.node.is_interface %}
+      {%- if ctx.parent_context.action == 'gen_interface' %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
@@ -508,7 +508,7 @@ property_getter:
           {{rconverter.cxx_to_jni.snippet('result')|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
-      {%- if gen_property_setter %}
+      {%- if ctx.action == 'gen_property_setter' %}
       {% set func_name="jSet%s"|format(name|lower) %}
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
@@ -543,7 +543,7 @@ getter:
       {%- endif %}
       {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
           get() {
-              {%- if ctx.parent_context.node.is_interface %}
+              {%- if ctx.parent_context.action == 'gen_interface' %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
               {%- else %}
               val result = j{{name|capitalize}}(getObjId())
@@ -560,7 +560,7 @@ getter:
           {%- else %}
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
-              {%- if ctx.parent_context.node.is_interface %}
+              {%- if ctx.parent_context.action == 'gen_interface' %}
               {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
               j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
@@ -586,7 +586,7 @@ getter:
     body: |
       {%- set func_name="j%s"|format(name|capitalize) %}
       {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.node.is_interface %}
+      {%- if ctx.parent_context.action == 'gen_interface' %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}

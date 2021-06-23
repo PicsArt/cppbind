@@ -12,7 +12,7 @@ namespace iegen::example {
 /**
  * Addressable is a base class for all the objects, that have abs path.
  * __API__
- * gen: interface
+ * action: gen_interface
  * template:
  *   T:
  *     - type: iegen::example::Root
@@ -27,7 +27,7 @@ struct Addressable {
   /**
     * comments
     * __API__
-    * gen: constructor
+    * action: gen_constructor
     */
   Addressable(const T& parent, const std::string& name);
 
@@ -36,7 +36,7 @@ struct Addressable {
     * @brief Get object's abs path based on parent's abs path and object's name
     * @return the abs path of the object
     * __API__
-    * gen: method
+    * action: gen_method
     * throws: no_throw
     */
   std::string absPath() const;

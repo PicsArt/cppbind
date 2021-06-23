@@ -87,8 +87,6 @@ def make_clang_context(ctx):
         prj_rel_file_name = ctx.prj_rel_file_name
         comment = LANGUAGE_HELPER_MODULE.make_comment(ctx.comment.split('\n'))
 
-        cxx_output_filepath = f'{os.sep}'.join([ctx.cxx_out_dir] + [item.replace('.', os.sep) for item in (
-            ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.file_postfix)])
         return locals()
 
     context = make_def_context(ctx)

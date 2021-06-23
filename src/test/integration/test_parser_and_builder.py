@@ -21,7 +21,7 @@ def test_parser_with_dir_api(parser_config, clang_config):
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
 
     plat, lang = 'linux', 'python'
-    lang_config = default_config.defaults
+    lang_config = default_config.application
 
     clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))]
 
@@ -57,7 +57,7 @@ def test_parser_with_file_api(parser_config, clang_config):
     clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))]
 
     plat, lang = 'linux', 'python'
-    lang_config = default_config.defaults
+    lang_config = default_config.application
 
     lang_config.api_type_attributes_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
 

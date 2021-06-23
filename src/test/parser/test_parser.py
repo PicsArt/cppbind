@@ -235,7 +235,7 @@ def test_empty_gen_rule(clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.defaults
+    lang_config = default_config.application
 
     lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
@@ -261,7 +261,7 @@ def test_empty_gen_rule(clang_config):
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of attributes doesn't work correctly"
 
     ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
-    lang_rule = load_rule_module(lang, default_config.defaults.rule, default_config.default_config_dirs)
+    lang_rule = load_rule_module(lang, default_config.application.rule, default_config.default_config_dirs)
     run_rule = RunRule(ir, plat, lang)
     builder = Builder()
 
@@ -281,7 +281,7 @@ def test_root_config(clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.defaults
+    lang_config = default_config.application
 
     lang_config.api_type_attributes_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]

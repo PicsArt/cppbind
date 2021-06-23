@@ -308,8 +308,8 @@ class SnippetsEngine:
 
     def load(self):
         dirs = []
-        if hasattr(config.defaults, 'custom_config_dir'):
-            dirs.append(config.defaults.custom_config_dir)
+        if hasattr(config.application, 'custom_config_dir'):
+            dirs.append(config.application.custom_config_dir)
 
         dataMap = load_yaml(self.path, dirs)
 

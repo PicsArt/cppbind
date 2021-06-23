@@ -1,28 +1,29 @@
 import copy
+import importlib
 import os
 import types
 
 import clang.cindex as cli
 import iegen
+import iegen.converter
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
 from iegen.utils import load_from_paths
-import importlib
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
-# variables should be set after loading this module
+# variables below should be set after loading this module by calling set_language function
 LANGUAGE = None
-convert = None
+LANGUAGE_HELPER_MODULE = None
 
 
 def set_language(language):
     global LANGUAGE
     LANGUAGE = language
-    global convert
-    convert = importlib.import_module(f'iegen.converter.{language}')
+    global LANGUAGE_HELPER_MODULE
+    LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
 def load_snippets_engine(path, main_target):
@@ -66,7 +67,7 @@ def make_def_context(ctx):
         # helper variables
         pat_sep = os.sep
         path = os.path
-        helper = iegen.converter
+        helper = LANGUAGE_HELPER_MODULE
         marker = JINJA_UNIQUE_MARKER
         banner_logo = iegen.BANNER_LOGO
 
@@ -84,7 +85,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = convert.make_comment(ctx.comment.split('\n'))
+        comment = LANGUAGE_HELPER_MODULE.make_comment(ctx.comment.split('\n'))
 
         cxx_output_filepath = f'{os.sep}'.join([ctx.cxx_out_dir] + [item.replace('.', os.sep) for item in (
             ctx.package_prefix, ctx.api_args['package'], ctx.api_args['file'] + ctx.file_postfix)])
@@ -129,8 +130,10 @@ def make_func_context(ctx):
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
-            is_override = getattr(convert, 'is_override')(ctx) if hasattr(convert, 'is_override') else bool(
-                ctx.cursor.get_overriden_cursors())
+            _overriden_cursors = ctx.cursor.get_overriden_cursors()
+            is_override = bool(_overriden_cursors)
+            if is_override:
+                first_overriden_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -154,10 +157,7 @@ def make_enum_context(ctx):
         cxx_type_name = ctx.node.type_name()
         for case in enum_cases:
             if case.comment:
-                make_comment = convert.make_comment
-                if hasattr(convert, 'make_enum_case_comment'):
-                    make_comment = getattr(convert, 'make_enum_case_comment')
-                case.comment = make_comment(case.comment)
+                case.comment = LANGUAGE_HELPER_MODULE.make_enum_case_comment(case.comment)
         return locals()
 
     context = make_clang_context(ctx)

@@ -1,12 +1,12 @@
 """
 Helper codes for python conversion
 """
+import os
 import re
 
-import clang.cindex as cli
-import os
 import iegen.utils.clang as cutil
 from iegen import logging
+from . import *
 
 OPERATOR_MAPPING = {
     '*': '__mul__',

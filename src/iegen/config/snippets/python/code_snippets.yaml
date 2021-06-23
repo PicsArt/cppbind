@@ -6,7 +6,7 @@ file:
       - include
       - code_fragment
     content: |
-      {{helper.python.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
       {{include}}
       {%- if code_fragment %}
       {{code_fragment}}
@@ -20,7 +20,7 @@ file:
       - body
       - include
     content: |
-      {{helper.python.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
 
       from __future__ import annotations
 
@@ -36,7 +36,7 @@ file:
       {{''}}
   cxx:
     file_path: |
-      {{cxx_output_filepath}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
@@ -54,7 +54,7 @@ file:
       {{body|string}}
   hpp:
     file_path: |
-      {{cxx_output_filepath}}.hpp
+      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - body
     content: |
@@ -117,7 +117,7 @@ file:
       {%- set package = packages[0] %}
       {%- set file = cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join %}
       #include <pybind11/pybind11.h>
-      #include "{{helper.python.cxx_rel_path(file, out_prj_dir)}}.hpp"
+      #include "{{helper.cxx_rel_path(file, out_prj_dir)}}.hpp"
 
       namespace py = pybind11;
       PYBIND11_MODULE({{package}}, m) {
@@ -127,7 +127,7 @@ file:
           py::module_ {{parent_module}} = parent.def_submodule("{{p}}", "{{p}}");
           parent = {{parent_module}};
           {%- endfor %}
-          bind{{helper.python.module_name_to_func_name(pybind_module)}}(parent);
+          bind{{helper.module_name_to_func_name(pybind_module)}}(parent);
       }
 
   bind: !include bind_snippet.yaml
@@ -155,7 +155,8 @@ package:
 var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
-      {{marker}}#include "{{helper.python.cxx_rel_path(cxx_output_filepath + '.hpp', out_prj_dir)}}"
+      {%- set cxx_output_filepath = cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join -%}
+      {{marker}}#include "{{helper.cxx_rel_path(cxx_output_filepath + '.hpp', out_prj_dir)}}"
 
 enum:
   python:
@@ -248,7 +249,7 @@ var_class: &var_class
         {%- if template_includes -%}
         {{marker}}{{template_includes|format_list('#include "{}"')|join_unique}}
         {%- endif -%}
-        {%- set decl_includes = helper.python.get_declaration_includes(ctx)|format_list('#include "{}"')|join_unique -%}
+        {%- set decl_includes = helper.get_declaration_includes(ctx)|format_list('#include "{}"')|join_unique -%}
         {%- if decl_includes -%}
         {{marker}}{{decl_includes}}
         {%- endif -%}
@@ -313,7 +314,7 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.get_default_value(arg)}}
                                        {%- endfor %}):
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -335,14 +336,14 @@ function:
       @classmethod
       {%- endif %}
       {%- if is_operator %}
-      {%- set _name = helper.python.get_operator_name(name) %}
+      {%- set _name = helper.get_operator_name(name) %}
       {%- else %}
       {%- set _name = name|to_snake_case %}
       {%- endif %}
       @bind
       def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
                                                           {%- for arg in args -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.python.get_default_value(arg)}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{arg.converter.python.target_type_name}}{{helper.get_default_value(arg)}}
                                                           {%- endfor %}) -> {{rconverter.python.target_type_name}}:
           {{comment|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -350,12 +351,12 @@ function:
   cxx:
     body: |
       {%- if is_operator %}
-      {%- set _name = helper.python.get_operator_name(name) -%}
+      {%- set _name = helper.get_operator_name(name) -%}
       {%- else -%}
       {%- set _name = name|to_snake_case -%}
       {%- endif %}
       {%- set comma = joiner(', ') -%}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.python.is_overloaded_cursor(ctx) -%}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.is_overloaded_cursor(ctx) -%}
       , py::overload_cast<
       {%- for arg in args -%}
       {{comma()}}{%- if arg.converter.ctx -%}

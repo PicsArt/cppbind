@@ -355,10 +355,11 @@ function:
     body: |
       {{comment}}
       {%- if is_operator %}
-      public static func {{helper.swift.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      public {{"static " if is_static}}{{"override " if is_override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      {% set override = is_override and first_overriden_context and not first_overriden_context.node.is_interface -%}
+      public {{"static " if is_static}}{{"override " if override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -368,10 +369,10 @@ function:
         {%- endfor %}
           var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
+          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
           {{rconverter.sc_to_swift.snippet('result')|indent}}
         {%- else %}
-          {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
+          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
         {%- endif %}
           if (err.is_err) {
               let err_type = Int(err.err_type)
@@ -400,7 +401,7 @@ function:
       func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}
   cc:
     body: |
-      {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
       {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
       {%- else -%}
@@ -463,7 +464,7 @@ function:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
         {%- else -%}

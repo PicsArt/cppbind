@@ -1,11 +1,15 @@
 """
 Helper codes for swift conversion
 """
-from iegen.converter import make_doxygen_comment
+from . import *
 
 
 def make_comment(pure_comment):
     return make_doxygen_comment(pure_comment)
+
+
+def make_enum_case_comment(pure_comment):
+    return make_comment(pure_comment)
 
 
 def get_c_func_name(hint_name):
@@ -48,13 +52,3 @@ def get_c_func_name(hint_name):
 def get_map_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
 
-
-def is_override(ctx):
-    overriden_cursors = ctx.cursor.get_overriden_cursors()
-
-    _is_override = bool(overriden_cursors)
-    if _is_override:
-        parent_ctx = ctx.find_by_type(overriden_cursors[0].lexical_parent.type.spelling)
-        if parent_ctx:
-            _is_override = not parent_ctx.node.is_interface
-    return _is_override

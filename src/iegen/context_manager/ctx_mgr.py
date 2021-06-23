@@ -33,7 +33,7 @@ class ContextManager:
         self.ieg_api_parser = APIParser(default_config.attributes,
                                         ALL_LANGUAGES,
                                         ALL_PLATFORMS,
-                                        default_config.defaults)
+                                        default_config.application)
 
     def eval_root_attrs(self, name, ctx, location=None):
         args = None

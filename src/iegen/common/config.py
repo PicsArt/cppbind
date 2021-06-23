@@ -70,12 +70,12 @@ class IEGConfig(object):
             cnfg.read(file_names)
 
         # self.cnfg = cnfg
-        self.defaults = types.SimpleNamespace(**{k: v for k, v in cnfg.defaults().items()})
+        self.application = types.SimpleNamespace(**{k: v for k, v in cnfg.items('APPLICATION')})
 
         self.default_config_dirs = DEFAULT_DIRS
 
-        self.languages = cnfg.getlist("LANGUAGE", "all_languages")
-        self.platforms = cnfg.getlist("PLATFORM", "all_platforms")
+        self.languages = cnfg.getlist("APPLICATION", "all_languages")
+        self.platforms = cnfg.getlist("APPLICATION", "all_platforms")
 
         self.attr_file = cnfg.get("API", "attributes")
 

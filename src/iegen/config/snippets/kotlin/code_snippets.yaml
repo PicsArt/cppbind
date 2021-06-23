@@ -15,8 +15,8 @@ file:
       {{body}}
   cxx:
     file_path: |
-      {{cxx_output_filepath}}.cpp
-    scopes: 
+      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+    scopes:
       - body
       - include
     content: |
@@ -66,10 +66,10 @@ var_class_cxx: &var_class_cxx
       using namespace {{ctx.namespace}};
       {%- endif %}
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
-      {%- set set_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jSet_this') %}
+      {%- set set_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jSet_this') %}
       extern "C" JNIEXPORT void {{set_name}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
       }
-      {%- set finalize_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
+      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
           {%- if root.shared_ref %}
           {%- if cxx_root_type_name != cxx_type_name %}
@@ -289,7 +289,7 @@ constructor:
       private external fun jConstructor{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
   cxx:
     body: |
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}
@@ -409,7 +409,7 @@ function:
       {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
           {%- set call_args = [] %}
           {{args_snippet(args, call_args)|indent(4)}}
@@ -486,7 +486,7 @@ property_getter:
       {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {%- if owner_class.root.shared_ref %}
@@ -510,7 +510,7 @@ property_getter:
       }
       {%- if gen_property_setter %}
       {% set func_name="jSet%s"|format(name|lower) %}
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           validateID(id);
           {%- if owner_class.root.shared_ref %}
@@ -589,7 +589,7 @@ getter:
       {%- if ctx.parent_context.node.is_interface %}
       {%- set class_name = owner_class.name + 'Helper' %}
       {%- endif %}
-      {%- set jni_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {%- if owner_class.root.shared_ref %}
@@ -613,7 +613,7 @@ getter:
       }
       {%- if setter_ctx is defined %}
       {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
-      {%- set jni_setter_name = helper.kotlin.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set jni_setter_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           validateID(id);
           {%- if owner_class.root.shared_ref %}

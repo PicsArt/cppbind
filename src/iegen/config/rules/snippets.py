@@ -70,7 +70,7 @@ def make_def_context(ctx):
         helper = LANGUAGE_HELPER_MODULE
         marker = JINJA_UNIQUE_MARKER
         banner_logo = iegen.BANNER_LOGO
-
+        new_line = iegen.converter.NEW_LINE
         return locals()
 
     context = make()
@@ -85,7 +85,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = LANGUAGE_HELPER_MODULE.make_comment(ctx.comment.split('\n'))
+        comment = ctx.comment
 
         return locals()
 
@@ -131,7 +131,7 @@ def make_func_context(ctx):
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
             is_override = bool(_overriden_cursors)
             if is_override:
-                first_overriden_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
+                original_definition_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -153,9 +153,6 @@ def make_enum_context(ctx):
         # helper variables
         enum_cases = ctx.enum_values
         cxx_type_name = ctx.node.type_name()
-        for case in enum_cases:
-            if case.comment:
-                case.comment = LANGUAGE_HELPER_MODULE.make_enum_case_comment(case.comment)
         return locals()
 
     context = make_clang_context(ctx)

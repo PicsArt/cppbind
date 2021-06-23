@@ -1,5 +1,6 @@
 import clang.cindex as cli
 
+NEW_LINE = '\n'
 
 class Validator:
     @staticmethod
@@ -103,7 +104,9 @@ class Exceptions:
 
 
 def make_doxygen_comment(pure_comment):
-    nl = '\n * '
+    if isinstance(pure_comment, str):
+        pure_comment = pure_comment.split(NEW_LINE)
+    nl = f'{NEW_LINE} * '
     if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
         return ''
     start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl

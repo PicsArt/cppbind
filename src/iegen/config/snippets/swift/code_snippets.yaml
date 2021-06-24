@@ -6,10 +6,10 @@ file:
       - include
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       import Foundation
-      {{helper_includes|format_list('import {}')|join('\n')}}
+      {{helper_includes|format_list('import {}')|join(new_line)}}
       {{include}}
 
       {{body}}
@@ -20,7 +20,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       #include <string.h>
       #include <memory>
@@ -35,12 +35,12 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       #ifndef _C_{{file}}_WRAPPER_
       #define _C_{{file}}_WRAPPER_
 
-      {{cxx_helper_includes|format_list('#include "{}"')|join('\n')}}
+      {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
       {{include}}
       #include <stdbool.h>
 
@@ -58,7 +58,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       public class ExceptionHandler {
 
@@ -87,7 +87,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       import {{c_wrapper_build_name}}
       public enum Exceptions {
@@ -122,7 +122,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       #ifndef _C_std_exceptions_WRAPPER_
       #define _C_std_exceptions_WRAPPER_
@@ -142,7 +142,7 @@ file:
     scopes:
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + '\n' + banner_comment).split('\n'))}}
+      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       #include <string.h>
       #include <memory>
@@ -167,7 +167,7 @@ enum:
      public enum {{name}}: CUnsignedInt{
         {%- for case in enum_cases -%}
         {%- if case.comment %}
-        {{case.comment|string|indent(2)}}
+        {{helper.make_enum_case_comment(case.comment)|string|indent(2)}}
         {%- endif %}
         case {{case.name}} = {{case.value}}
         {%- endfor %}
@@ -200,7 +200,7 @@ class:
         - body
         - private_external
       content: |
-        {{comment}}
+        {{helper.make_comment(comment)}}
         public class {{name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
@@ -262,7 +262,7 @@ interface:
         - properties
         - body
       content: |
-        {{comment}}
+        {{helper.make_comment(comment)}}
         public protocol {{interface_name}}{{template_suffix}} {% if base_types_converters is defined -%}
                               {%- set comma = joiner(', ') -%}
                               : {% for base_type_converter in base_types_converters -%}
@@ -318,7 +318,7 @@ interface:
 constructor:
   swift:
     head: |
-      {{comment}}
+      {{helper.make_comment(comment)}}
       public convenience init({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {
       {%- set call_args = [] %}
       {% for arg in args -%}
@@ -353,12 +353,13 @@ constructor:
 function:
   swift:
     body: |
-      {{comment}}
+      {{helper.make_comment(comment)}}
       {%- if is_operator %}
-      public static func {{helper.swift.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      public {{"static " if is_static}}{{"override " if is_override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
+      public {{"static " if is_static}}{{"override " if override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -368,10 +369,10 @@ function:
         {%- endfor %}
           var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
+          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
           {{rconverter.sc_to_swift.snippet('result')|indent}}
         {%- else %}
-          {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
+          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
         {%- endif %}
           if (err.is_err) {
               let err_type = Int(err.err_type)
@@ -396,11 +397,11 @@ function:
         {%- endif %}
       }
     interface_body: |
-      {{comment}}
+      {{helper.make_comment(comment)}}
       func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}
   cc:
     body: |
-      {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
       {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
       {%- else -%}
@@ -463,7 +464,7 @@ function:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} {{helper.swift.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
         {%- else -%}
@@ -483,7 +484,7 @@ property_getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{comment}}
+      {{helper.make_comment(comment)}}
       public var {{name}}: {{result_converter.target_type_name}} {
             get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
@@ -500,7 +501,7 @@ property_getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{comment}}
+      {{helper.make_comment(comment)}}
       var {{name}}: {{result_converter.target_type_name}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
   cc:
     body: |
@@ -541,7 +542,7 @@ getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{comment}}
+      {{helper.make_comment(comment)}}
       public var {{name}}: {{result_converter.target_type_name}} {
             get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
@@ -558,7 +559,7 @@ getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{comment}}
+      {{helper.make_comment(comment)}}
       var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:

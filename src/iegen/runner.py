@@ -12,7 +12,7 @@ from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
-    load_module_from_paths,
+    load_rule_module,
     get_host_platform,
     clear_iegen_generated_files
 )
@@ -33,12 +33,10 @@ class WrapperGenerator(object):
 
     @staticmethod
     def run_for(platform, language):
-        default_config_dirs = default_config.default_config_dirs
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
-        lang_config = default_config.languages[language]
-        parser = CXXParser(parser_config=lang_config)
+        parser = CXXParser()
 
-        ctx_desc = ContextDescriptor(getattr(default_config.languages[language], 'context_def_glob', None))
+        ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
@@ -55,12 +53,10 @@ class WrapperGenerator(object):
         ir = ir_builder.ir
         logging.debug("IR is ready.")
 
-        run_rule = RunRule(ir, platform, language, lang_config)
+        run_rule = RunRule(ir, platform, language)
         # load rule modules
         logging.debug("Loading ruler scripts.")
-        lang_rule = load_module_from_paths(f"{language}.rule",
-                                           lang_config.rule,
-                                           default_config_dirs)
+        lang_rule = load_rule_module(language, default_config.application.rule, default_config.default_config_dirs)
         logging.debug("Creating builders and running rules on IR.")
         builder = Builder()
         run_rule.run(lang_rule, builder)

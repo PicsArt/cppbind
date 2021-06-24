@@ -20,28 +20,28 @@ from iegen.ir.ast import Node, NodeType
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
-from iegen.utils import load_module_from_paths
+from iegen.utils import load_rule_module
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
 
-def test_parser(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser(clang_config):
+    parser = CXXParser()
     processor = CXXPrintProcessor()
     for c in parser.parse_x(**clang_config):
         processor(c)
 
 
-def test_parser_processor(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser_processor(clang_config):
+    parser = CXXParser()
     processor = CXXPrintProcessor()
     parser.parse(processor, **clang_config)
 
 
-def test_parser_processor_cr_counter(parser_config, clang_config):
-    parser = CXXParser(parser_config=parser_config)
+def test_parser_processor_cr_counter(clang_config):
+    parser = CXXParser()
     count = 0
     max_dept = 0
     dept = 0
@@ -142,13 +142,12 @@ def test_API_parser_negative(test_data):
         assert False, "should get error"
 
 
-def test_external_API_parser_negative(parser_config):
-    config = copy.deepcopy(parser_config)
+def test_external_API_parser_negative():
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
     for dir in os.listdir(api_rules_dir):
-        config.context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            ContextDescriptor.build_ctx_def_map(config.context_def_glob)
+            ContextDescriptor.build_ctx_def_map(context_def_glob)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
         except Exception as e:
@@ -157,9 +156,8 @@ def test_external_API_parser_negative(parser_config):
             assert False, "should get error"
 
 
-def test_external_API_parser_positive(parser_config):
+def test_external_API_parser_positive():
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
-    config = copy.deepcopy(parser_config)
     results = {
         'with_many_files': 'a63fb90fb3bed215e76b7338f3b9b902',
         'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
@@ -169,9 +167,9 @@ def test_external_API_parser_positive(parser_config):
     }
 
     for dir, res_md5 in results.items():
-        config.context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            res = ContextDescriptor.build_ctx_def_map(config.context_def_glob)
+            res = ContextDescriptor.build_ctx_def_map(context_def_glob)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -183,12 +181,12 @@ def test_external_API_parser_positive(parser_config):
             assert False, "should not get error"
 
 
-def test_parser_errors(parser_config, clang_config):
+def test_parser_errors(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'negative')
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
 
     lang, plat = 'swift', 'linux'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
@@ -202,11 +200,11 @@ def test_parser_errors(parser_config, clang_config):
         assert Error.has_error is True, "Must cause an error"
 
 
-def test_jinja_attrs(parser_config, clang_config):
+def test_jinja_attrs(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
 
     clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
 
@@ -221,18 +219,18 @@ def test_jinja_attrs(parser_config, clang_config):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja variable value"
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
-def test_empty_gen_rule(parser_config, clang_config):
+def test_empty_gen_rule(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.languages[lang]
+    lang_config = default_config.application
 
     context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser(parser_config=parser_config)
+    parser = CXXParser()
     ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
@@ -253,8 +251,8 @@ def test_empty_gen_rule(parser_config, clang_config):
     assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of variables doesn't work correctly"
 
     ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
-    lang_rule = load_module_from_paths(f"{lang}.rule", lang_config.rule, default_config.default_config_dirs)
-    run_rule = RunRule(ir, plat, lang, lang_config)
+    lang_rule = load_rule_module(lang, default_config.application.rule, default_config.default_config_dirs)
+    run_rule = RunRule(ir, plat, lang)
     builder = Builder()
 
     # check that empty gen rule doesn't crash the app
@@ -267,7 +265,7 @@ def test_empty_gen_rule(parser_config, clang_config):
         rmtree(os.path.join(working_dir, ir.args['out_dir']))
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
-def test_root_config(parser_config, clang_config):
+def test_root_config(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     working_dir = os.getcwd()
@@ -277,7 +275,7 @@ def test_root_config(parser_config, clang_config):
     context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser(parser_config=default_config)
+    parser = CXXParser()
     ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 

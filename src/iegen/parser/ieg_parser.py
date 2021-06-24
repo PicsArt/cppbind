@@ -19,8 +19,7 @@ class CXXParser(object):
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
                         cli.TranslationUnit.PARSE_INCOMPLETE
 
-    def __init__(self, filter=None, processor=None, parser_config=None):
-        self.config = parser_config or default_config.parser
+    def __init__(self, filter=None, processor=None):
         self.current_file = None
         self.filter = filter or cxx_ieg_filter
 

@@ -28,13 +28,6 @@ def local_setup():
     pass
 
 
-def get_parser_config(config):
-    """
-    Fixture returns ieg parser config for test.
-    """
-    return config.languages['kotlin']
-
-
 @pytest.fixture(scope="session")
 def config():
     """
@@ -50,7 +43,7 @@ def parser_config(config):
     """
     Fixture returns ieg parser config for test.
     """
-    return get_parser_config(config)
+    return config
 
 
 @pytest.fixture(scope="session")

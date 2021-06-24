@@ -13,9 +13,9 @@ from iegen.utils.clang import extract_pure_comment
 
 
 class BaseContext:
-    def __init__(self, runner):
+    def __init__(self, runner, node=None):
         self.runner = runner
-        self.node = runner.ir
+        self.node = node or runner.ir
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
@@ -28,11 +28,9 @@ class BaseContext:
 class Context(BaseContext):
 
     def __init__(self, runner, node, template_ctx=None):
+        super().__init__(runner, node)
         if node.type == NodeType.CLANG_NODE:
             assert node.clang_cursor, "cursor is not provided"
-        self.runner = runner
-        self.config = runner.config
-        self.node = node
         self.template_ctx = template_ctx
 
     @property
@@ -307,11 +305,10 @@ class Context(BaseContext):
 
 class RunRule(object):
 
-    def __init__(self, ir, platform, language, config):
+    def __init__(self, ir, platform, language):
         self.ir = ir
         self.language = language
         self.platform = platform
-        self.config = config
         # calling order should be such as that parent node processes first
         self.api_call_order = [
             # {'gen_class', 'gen_interface', 'gen_enum'},

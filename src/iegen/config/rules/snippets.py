@@ -1,20 +1,29 @@
 import copy
+import importlib
 import os
 import types
-from functools import partial
 
 import clang.cindex as cli
 import iegen
-import iegen.converter.kotlin as convert
+import iegen.converter
 import iegen.utils.clang as cutil
-from iegen import find_prj_dir, BANNER_LOGO
+from iegen import find_prj_dir
 from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE, JINJA_UNIQUE_MARKER
+from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
 from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
-LANGUAGE = 'kotlin'
+# variables below should be set after loading this module by calling set_language function
+LANGUAGE = None
+LANGUAGE_HELPER_MODULE = None
+
+
+def set_language(language):
+    global LANGUAGE
+    LANGUAGE = language
+    global LANGUAGE_HELPER_MODULE
+    LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
 def load_snippets_engine(path, main_target):
@@ -56,12 +65,12 @@ def make_root_context(ctx):
 def make_def_context(ctx):
     def make():
         # helper variables
-        config = ctx.config
         pat_sep = os.sep
-        helper = iegen.converter
+        path = os.path
+        helper = LANGUAGE_HELPER_MODULE
         marker = JINJA_UNIQUE_MARKER
-        banner_logo = BANNER_LOGO
-
+        banner_logo = iegen.BANNER_LOGO
+        new_line = iegen.converter.NEW_LINE
         return locals()
 
     context = make()
@@ -76,7 +85,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = convert.make_comment(ctx.comment.split('\n'))
+        comment = ctx.comment
 
         return locals()
 
@@ -114,18 +123,15 @@ def make_func_context(ctx):
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
         template_choice = ctx.template_choice
+        template_names = ctx.template_names
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             _suffix,
-                                             method_name,
-                                             args_type_name)
-
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
-            is_override = bool(ctx.cursor.get_overriden_cursors())
+            _overriden_cursors = ctx.cursor.get_overriden_cursors()
+            is_override = bool(_overriden_cursors)
+            if is_override:
+                original_definition_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -147,9 +153,6 @@ def make_enum_context(ctx):
         # helper variables
         enum_cases = ctx.enum_values
         cxx_type_name = ctx.node.type_name()
-        for case in enum_cases:
-            if case.comment:
-                case.comment = convert.make_comment(case.comment)
         return locals()
 
     context = make_clang_context(ctx)
@@ -163,13 +166,13 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            get_jni_name = partial(convert.get_jni_func_name,
-                                   f'{ctx.package_prefix}.{ctx.package}',
-                                   ctx.name,
-                                   template_suffix)
             has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
-
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
+                                                             template_choice=ctx.template_choice,
+                                                             search_name=ctx.node.full_displayname
+                                                             if ctx.cursor.type.kind == cli.TypeKind.INVALID
+                                                             else None)
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
@@ -219,16 +222,10 @@ def make_getter_context(ctx):
 
 def make_member_context(ctx):
     def make():
+        # helper variables
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-
-        def get_jni_name(method_name, class_name=owner_class.name, args_type_name=None):
-            return convert.get_jni_func_name(f'{ctx.package_prefix}.{ctx.package}',
-                                             class_name,
-                                             owner_class.template_suffix,
-                                             method_name,
-                                             args_type_name)
 
         return locals()
 
@@ -269,7 +266,7 @@ def preprocess_scope(context, scope, info):
         s = scope.create_scope(sname)
         context_scope[sname] = s
     if info.snippet_tmpl:
-        scope.add(info.make_snippet(context_scope, JINJA_UNIQUE_MARKER))
+        scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 
@@ -324,7 +321,6 @@ def gen_constructor(ctx, builder):
 def gen_method(ctx, builder):
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
-    return
 
 
 def gen_getter(ctx, builder):
@@ -334,13 +330,11 @@ def gen_getter(ctx, builder):
 
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
-    return
 
 
 def gen_property_getter(ctx, builder):
     context = make_member_context(ctx)
     preprocess_entry(context, builder, 'property_getter')
-    return
 
 
 def gen_property_setter(ctx, builder):

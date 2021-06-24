@@ -1,12 +1,12 @@
 """
 Helper codes for python conversion
 """
+import os
 import re
 
-import clang.cindex as cli
-import os
 import iegen.utils.clang as cutil
 from iegen import logging
+from . import *
 
 OPERATOR_MAPPING = {
     '*': '__mul__',
@@ -57,15 +57,16 @@ def get_operator_name(spelling):
 
 
 def make_comment(pure_comment):
-    nl = '\n'
+    if isinstance(pure_comment, str):
+        pure_comment = pure_comment.split(NEW_LINE)
     if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
         return ""
-    start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl
-    return f'"""{start}{nl.join(pure_comment)}{nl}"""'
+    start = '' if not pure_comment[0] or pure_comment[0].isspace() else NEW_LINE
+    return f'"""{start}{NEW_LINE.join(pure_comment)}{NEW_LINE}"""'
 
 
-def make_hashtag_comment(pure_comment):
-    nl = '\n# '
+def make_enum_case_comment(pure_comment):
+    nl = f'{NEW_LINE}# '
     if not pure_comment:
         return ""
     return f'# {nl.join([c for c in pure_comment if c])}'

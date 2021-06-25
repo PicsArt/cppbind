@@ -126,5 +126,8 @@ class ContextManager:
     def has_yaml_api(self, name):
         return name in self.ctx_desc.ctx_def_map
 
-    def get_yaml_api_file(self, name):
+    def get_api_def_filename(self, name):
+        """
+        Method to get yaml config file name in which file/dir api is defined
+        """
         return self.ctx_desc.ctx_def_map[name].file

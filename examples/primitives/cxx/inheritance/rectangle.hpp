@@ -10,7 +10,6 @@ namespace iegen::example {
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
- * python.include: inheritance.parallelogram_pygen
  */
 class Rectangle : public virtual Parallelogram {
 public:

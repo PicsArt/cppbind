@@ -25,8 +25,6 @@ namespace iegen::example {
  *     - type: iegen::example::Project
  *     - type: iegen::example::Task
  * package: templates
- * kotlin.include: com.examples.simple.*
- * python.include: simple
  * swift.include: CWrapper
  */
 template <class T>

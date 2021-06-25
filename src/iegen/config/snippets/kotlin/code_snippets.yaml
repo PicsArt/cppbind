@@ -91,12 +91,27 @@ var_class_cxx: &var_class_cxx
       }
       {%- endif %}
 
+var_class_kotlin_include: &var_class_kotlin_include
+  unique_content: |
+    {{include|format_list("import {}")|join_unique}}
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx and type_ctx.package != current_ctx.package -%}
+    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- if base_types_converters is defined -%}
+    {%- for base in base_types_converters -%}
+    {{gen_import(base, ctx)}}
+    {%- endfor -%}
+    {%- endif -%}
 
 class:
   kotlin:
-    include:
-      unique_content: |
-        {{include|format_list("import {}")|join_unique}}
+    include: *var_class_kotlin_include
     body:
       scopes:
         - head
@@ -183,9 +198,7 @@ class:
 
 interface:
   kotlin:
-    include:
-      unique_content: |
-        {{include|format_list("import {}")|join_unique}}
+    include: *var_class_kotlin_include
     body:
       scopes:
         - head
@@ -255,12 +268,32 @@ interface:
         }
   cxx: *var_class_cxx
 
-var_template_method_include: &var_template_method_include
+var_template_method_cxx_include: &var_template_method_cxx_include
     unique_content: |
       {{ctx.template_includes|format_list('#include "{}"')|join_unique}}
 
+
+var_method_kotlin_include: &var_method_kotlin_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx and type_ctx.package != current_ctx.package -%}
+    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- for arg in args -%}
+    {{gen_import(arg.converter, ctx)}}
+    {%- endfor -%}
+    {%- if rconverter is defined -%}
+    {{gen_import(rconverter, ctx)}}
+    {%- endif -%}
+
 constructor:
   kotlin:
+    include: *var_method_kotlin_include
     head: |
       {%- if comment %}
       {{helper.make_comment(comment)}}
@@ -311,10 +344,11 @@ constructor:
           {%- endif %}
           {%- endif %}
       }
-    include: *var_template_method_include
+    include: *var_template_method_cxx_include
 
 function:
   kotlin:
+    include: *var_method_kotlin_include
     body: |
       {%- set comma = joiner(', ') -%}
       {%- if not is_static %}
@@ -435,10 +469,24 @@ function:
           {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(4)}}
           {%- endif %}
       }
-    include: *var_template_method_include
+    include: *var_template_method_cxx_include
+
+var_getter_kotlin_include: &var_getter_kotlin_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx and type_ctx.package != current_ctx.package -%}
+    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {{gen_import(rconverter, ctx)}}
 
 property_getter:
   kotlin:
+    include: *var_getter_kotlin_include
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if comment %}
@@ -536,6 +584,7 @@ property_getter:
 
 getter:
   kotlin:
+    include: *var_getter_kotlin_include
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if comment %}

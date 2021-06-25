@@ -18,8 +18,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: True
  * package: templates
- * kotlin.include: com.examples.simple.Root
- * python.include: templates.addressable_pygen
  * swift.include: CWrapper
  */
 class Component : public Addressable<Root> {

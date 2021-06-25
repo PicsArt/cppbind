@@ -60,7 +60,7 @@ class CXXIEGIRBuilder(object):
         if dir_name not in self._processed_dirs:
             file_name = None
             if self.ctx_mgr.has_yaml_api(dir_name):
-                file_name = self.ctx_mgr.get_yaml_api_file(dir_name)
+                file_name = self.ctx_mgr.get_api_def_filename(dir_name)
 
             dir_node = DirectoryNode(dir_name, file_name=file_name)
             self.node_stack.append(dir_node)

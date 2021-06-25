@@ -2,9 +2,15 @@
 Module contains common fixtures used in iegen related tests
 """
 import copy
-
 import pytest
+import os
+import yaml
+
+from unittest.mock import Mock
+
+from iegen import PROJECT_CONFIG_DIR
 from iegen.common.config import config as default_config
+from iegen.context_manager.ctx_desc import ContextDescriptor
 from . import TEST_CXX_DIR, TEST_OUT_DIR
 
 
@@ -41,14 +47,6 @@ def parser_config(config):
 
 
 @pytest.fixture(scope="session")
-def attributes(config):
-    """
-    Fixture returns ieg attributes config for test.
-    """
-    return config.attributes
-
-
-@pytest.fixture(scope="session")
 def out_dir():
     """
     Fixture returns out_dir for test files.
@@ -67,3 +65,6 @@ def clang_config():
         'src_glob': [TEST_CXX_DIR + '/*.h'],
         'src_exclude_glob': []
     }
+
+
+ContextDescriptor.get_var_def = Mock(return_value=yaml.load(open(os.path.join(PROJECT_CONFIG_DIR, "variable_definitions.yaml")), Loader=yaml.SafeLoader))

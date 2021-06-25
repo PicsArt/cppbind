@@ -358,7 +358,7 @@ function:
       public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      {% set override = is_override and original_definition_context and not original_definition_context.action == 'gen_interface' -%}
+      {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
       public {{"static " if is_static}}{{"override " if override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}

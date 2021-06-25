@@ -68,3 +68,13 @@ vars: |
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
     - cxx/getters/*template_getter.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+  - clang_args:
+      inheritable: false
+      default:
+        - -D__ANDROID__
+      allowed_on: [ root ]
+      array: true

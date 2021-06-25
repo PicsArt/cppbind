@@ -69,7 +69,6 @@ class IEGConfig(object):
         if file_names is not None:
             cnfg.read(file_names)
 
-        # self.cnfg = cnfg
         self.application = types.SimpleNamespace(**{k: v for k, v in cnfg.items('APPLICATION')})
 
         self.default_config_dirs = DEFAULT_DIRS
@@ -77,9 +76,6 @@ class IEGConfig(object):
         self.languages = cnfg.getlist("APPLICATION", "all_languages")
         self.platforms = cnfg.getlist("APPLICATION", "all_platforms")
 
-        self.attr_file = cnfg.get("API", "attributes")
-
-        self.attributes = load_yaml_file(self.attr_file)
         self.api_start_kw = cnfg.get("API", "parser_start")
 
         self.logging = types.SimpleNamespace()

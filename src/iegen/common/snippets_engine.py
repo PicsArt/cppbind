@@ -1,4 +1,3 @@
-import re
 import types
 import os
 import glob
@@ -7,8 +6,6 @@ import copy
 from jinja2 import Environment, BaseLoader, StrictUndefined
 import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen.common.yaml_process import load_yaml
-from iegen.common.config import config
 from iegen import logging as logging
 from iegen import converter
 from iegen.utils import make_camel_case, make_snake_case
@@ -16,10 +13,6 @@ from iegen.utils import make_camel_case, make_snake_case
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
 FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
-TYPE_SECTION = 'types'
-CODE_SECTION = 'codes'
-INIT_SECTION = 'init'
-ACTIONS_SECTION = 'actions'
 JINJA_UNIQUE_MARKER = '~!+marker#@~'
 
 
@@ -234,7 +227,7 @@ class TypeInfoCollector:
         return Adapter(clang_type=clang_type, ctx=ref_ctx, type_info_collector=self, template_choice=template_choice)
 
 
-class TargetTypeInof:
+class TargetTypeInfo:
 
     def __init__(self, name, target_type_info):
         self.target_type_info = target_type_info
@@ -244,7 +237,7 @@ class TargetTypeInof:
         return self.target_type_info.render(context)
 
 
-class TypeConvertorInfo(TargetTypeInof):
+class TypeConvertorInfo(TargetTypeInfo):
 
     def __init__(self, snippet_tmpl, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -293,9 +286,8 @@ class FileScopeInfo(ScopeInfo):
 
 class SnippetsEngine:
 
-    def __init__(self, path, main_target):
-        self.path = path
-        self.main_target = main_target
+    def __init__(self, ctx_desc):
+        self.ctx_desc = ctx_desc
         self.type_infos = {}
         self.file_infos = {}
         self.code_infos = {}
@@ -303,15 +295,9 @@ class SnippetsEngine:
         self._init_jinja_env()
 
     def load(self):
-        dirs = []
-        if hasattr(config.application, 'custom_config_dir'):
-            dirs.append(config.application.custom_config_dir)
-
-        dataMap = load_yaml(self.path, dirs)
-
-        self._load_actions(dataMap[INIT_SECTION][ACTIONS_SECTION])
-        self._load_code_info(dataMap[CODE_SECTION])
-        self._load_type_info(dataMap[TYPE_SECTION])
+        self._load_actions(self.ctx_desc.get_action_snippets())
+        self._load_code_info(self.ctx_desc.get_code_snippets())
+        self._load_type_info(self.ctx_desc.get_type_converter_snippets())
 
     def do_actions(self, context):
         variables = {}
@@ -343,17 +329,17 @@ class SnippetsEngine:
     def get_file_info(self, file_name):
         return self.file_infos.get(file_name)
 
-    def _load_actions(self, actionsInfo):
-        def handle_file_action(infoDict):
-            glob_tmpls = infoDict['files_glob']
+    def _load_actions(self, actions_info):
+        def handle_file_action(info_dict):
+            glob_tmpls = info_dict['files_glob']
             if not isinstance(glob_tmpls, list):
                 glob_tmpls = [glob_tmpls]
             glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in glob_tmpls]
 
-            copy_to_tmpl = infoDict.get('copy_to', None)
+            copy_to_tmpl = info_dict.get('copy_to', None)
             copy_to_tmpl = copy_to_tmpl and self.jinja2_env.from_string(copy_to_tmpl)
 
-            variables = infoDict.get('variables', {})
+            variables = info_dict.get('variables', {})
             variables_tmpl = {}
             for var_name, var_tmpl in variables.items():
                 var_tmpl = self.jinja2_env.from_string(var_tmpl)
@@ -361,33 +347,33 @@ class SnippetsEngine:
 
             self.action_infos.append(FileAction(glob_tmpls, copy_to_tmpl, variables_tmpl))
 
-        def handle_default(infoDict):
+        def handle_default(info_dict):
             raise Exception("undefined actions.")
 
         actions_map = {
             'file': handle_file_action
         }
         # load into structures
-        for action_info in actionsInfo:
+        for action_info in actions_info:
             for action_name, action_data in action_info.items():
                 try:
                     actions_map.get(action_name, handle_default)(action_data)
                 except Exception as e:
                     raise Exception(f"Error in action {action_name}. Error {str(e)}")
 
-    def _load_code_info(self, codeInfoDict):
+    def _load_code_info(self, code_info_dict):
         # load into structures
-        self._load_file_info(codeInfoDict['file'])
-        del codeInfoDict['file']
+        self._load_file_info(code_info_dict['file'])
+        del code_info_dict['file']
         # remove variables since they are used for placeholders
-        variables = [key for key in codeInfoDict if key.startswith('var')]
+        variables = [key for key in code_info_dict if key.startswith('var')]
         for key in variables:
-            del codeInfoDict[key]
+            del code_info_dict[key]
 
-        for code_name, info_map in codeInfoDict.items():
+        for code_name, info_map in code_info_dict.items():
             if isinstance(info_map, str):
                 # redirection
-                info_map = codeInfoDict[info_map]
+                info_map = code_info_dict[info_map]
 
             if info_map is None:
                 # allow empty rules
@@ -398,7 +384,7 @@ class SnippetsEngine:
 
             self.code_infos[code_name] = self._load_code_structure_info(code_name, info_map)
 
-    def _load_code_structure_info(self, code_name, codeInfoDict):
+    def _load_code_structure_info(self, code_name, code_info_dict):
         def scope_walk(info_map, scopes=None):
             scopes = scopes or tuple()
             if not isinstance(info_map, dict):
@@ -415,7 +401,7 @@ class SnippetsEngine:
 
         scope_infos = {}
 
-        for scopes, info in scope_walk(codeInfoDict):
+        for scopes, info in scope_walk(code_info_dict):
             try:
                 snippet = info['content']
                 snippet = snippet and self.jinja2_env.from_string(snippet)
@@ -432,9 +418,9 @@ class SnippetsEngine:
 
         return scope_infos
 
-    def _load_file_info(self, codeInfoDict):
+    def _load_file_info(self, code_info_dict):
         # load into structures
-        for file_name, info_map in codeInfoDict.items():
+        for file_name, info_map in code_info_dict.items():
             try:
                 file_path = self.jinja2_env.from_string(info_map['file_path'])
                 snippet = info_map.get('content', None)
@@ -446,12 +432,12 @@ class SnippetsEngine:
             self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], info_map.get('scopes', []),
                                                        snippet, unique_snippet)
 
-    def _load_type_info(self, typeInfoDict):
+    def _load_type_info(self, type_info_dict):
         # load into structures
-        for type_name, info_map in typeInfoDict.items():
+        for type_name, info_map in type_info_dict.items():
             if isinstance(info_map, str):
                 # redirection
-                info_map = typeInfoDict[info_map]
+                info_map = type_info_dict[info_map]
 
             if not isinstance(info_map, dict):
                 raise Exception("Missing type information")
@@ -483,7 +469,7 @@ class SnippetsEngine:
                         target_type_info = self.jinja2_env.from_string(info['type_info'])
                     except Exception as e:
                         raise Exception(f"Error in type info {type_name}, in converter {name}. Error {str(e)}")
-                    target_info = TargetTypeInof(name=name, target_type_info=target_type_info)
+                    target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
                     target_types[name] = target_info
 
             self.type_infos[type_name] = TypeInfoCollector(name=type_name, target_type_infos=target_types,

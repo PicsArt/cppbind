@@ -36,8 +36,8 @@ class WrapperGenerator(object):
         logging.info(f"Start running wrapper generator for {language} language for {platform} platform.")
         parser = CXXParser()
 
-        ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
-        ctx_mgr = ContextManager(ctx_desc, platform, language)
+        ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None), platform, language)
+        ctx_mgr = ContextManager(ctx_desc)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         root_ctx = ir_builder.start_root()
@@ -53,7 +53,7 @@ class WrapperGenerator(object):
         ir = ir_builder.ir
         logging.debug("IR is ready.")
 
-        run_rule = RunRule(ir, platform, language)
+        run_rule = RunRule(ir, ctx_desc, platform, language)
         # load rule modules
         logging.debug("Loading ruler scripts.")
         lang_rule = load_rule_module(language, default_config.application.rule, default_config.default_config_dirs)

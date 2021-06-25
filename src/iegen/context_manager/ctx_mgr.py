@@ -17,10 +17,8 @@ ALL_PLATFORMS = sorted(list(default_config.platforms))
 
 
 class ContextManager:
-    def __init__(self, ctx_desc, platform, language):
+    def __init__(self, ctx_desc):
         self.ctx_desc = ctx_desc
-        self.platform = platform
-        self.language = language
         self.ieg_api_parser = APIParser(ctx_desc,
                                         ALL_LANGUAGES,
                                         ALL_PLATFORMS)
@@ -59,7 +57,7 @@ class ContextManager:
 
         # add all missing attributes
         for att_name, properties in self.ctx_desc.var_def.items():
-            att_val = args.get(att_name, {}).get(self.platform, {}).get(self.language)
+            att_val = args.get(att_name, {}).get(self.ctx_desc.platform, {}).get(self.ctx_desc.language)
 
             new_att_val = att_val
             allowed = kind in properties["allowed_on"]
@@ -80,7 +78,7 @@ class ContextManager:
                 if allowed:
                     if new_att_val is None:
                         # use default value
-                        new_att_val = ContextManager.get_attr_default_value(properties, self.platform, self.language)
+                        new_att_val = ContextManager.get_attr_default_value(properties, self.ctx_desc.platform, self.ctx_desc.language)
                         if isinstance(new_att_val, str):
                             try:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)

@@ -26,8 +26,8 @@ def test_parser_with_dir_api(clang_config):
     context_def_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
 
     parser = CXXParser()
-    ctx_desc = ContextDescriptor(context_def_glob)
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_desc = ContextDescriptor(context_def_glob, plat, lang)
+    ctx_mgr = ContextManager(ctx_desc)
 
     processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
@@ -59,8 +59,8 @@ def test_parser_with_file_api(clang_config):
     context_def_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
 
     parser = CXXParser()
-    ctx_desc = ContextDescriptor(context_def_glob)
-    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+    ctx_desc = ContextDescriptor(context_def_glob, plat, lang)
+    ctx_mgr = ContextManager(ctx_desc)
     processor = CXXIEGIRBuilder(ctx_mgr)
     processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 

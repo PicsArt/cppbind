@@ -205,14 +205,6 @@ file_postfix:
   default: _gen
   allowed_on: [ root ]
 
-snippets:
-  inheritable: true
-  default:
-    kotlin: snippets/kotlin/config.yaml
-    python: snippets/python/config.yaml
-    swift: snippets/swift/config.yaml
-  allowed_on: [ root ]
-
 extension:
   inheritable: true
   default:

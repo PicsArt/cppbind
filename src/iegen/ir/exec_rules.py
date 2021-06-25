@@ -305,8 +305,9 @@ class Context(BaseContext):
 
 class RunRule(object):
 
-    def __init__(self, ir, platform, language):
+    def __init__(self, ir, ctx_desc, platform, language):
         self.ir = ir
+        self.ctx_desc = ctx_desc
         self.language = language
         self.platform = platform
         # calling order should be such as that parent node processes first
@@ -332,7 +333,7 @@ class RunRule(object):
         logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
-            func(BaseContext(self), builder)
+            func(BaseContext(self), self.ctx_desc)
 
         # executes once for a type
         processed = dict()

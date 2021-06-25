@@ -78,3 +78,34 @@ var_def:
         - -D__ANDROID__
       allowed_on: [ root ]
       array: true
+
+rules:
+  kotlin.code_snippets:
+    !join
+    - !include kotlin/code_snippets.yaml
+  python.code_snippets:
+    !join
+    - !include python/code_snippets.yaml
+  swift.code_snippets:
+    !join
+    - !include swift/code_snippets.yaml
+
+  kotlin.type_converters:
+    !join
+    - !include "kotlin/*_types.yaml"
+  python.type_converters:
+    !join
+    - !include "python/*_types.yaml"
+  swift.type_converters:
+    !join
+    - !include "swift/*_types.yaml"
+
+  kotlin.actions:
+    !join
+    - !include kotlin/actions.yaml
+  python.actions:
+    !join
+    - !include python/actions.yaml
+  swift.actions:
+    !join
+    - !include swift/actions.yaml

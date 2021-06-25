@@ -8,9 +8,7 @@ import iegen
 import iegen.converter
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
-from iegen.common.config import DEFAULT_DIRS
 from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
-from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -26,20 +24,19 @@ def set_language(language):
     LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
-def load_snippets_engine(path, main_target):
+def load_snippets_engine(ctx_desc):
     global SNIPPETS_ENGINE
-    SNIPPETS_ENGINE = SnippetsEngine(path, main_target)
+    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc)
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(ctx, *args, **kwargs):
+def gen_init(ctx, ctx_desc, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
     context = make_root_context(ctx)
 
-    load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    ctx.snippets, DEFAULT_DIRS)
+    load_snippets_engine(ctx_desc)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 

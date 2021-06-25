@@ -1,6 +1,7 @@
 """
 Helper module for processing yaml files
 """
+import collections
 import copy
 import glob
 import os
@@ -10,6 +11,31 @@ import yaml
 import iegen.common as PROJECT_CONFIG_DIR
 # the corrected one, which currently leads to errors
 # from iegen.common import PROJECT_CONFIG_DIR
+
+
+class YamlInfoNode(collections.abc.MutableMapping):
+    def __init__(self, value, line_num=None, file=None):
+        self.value = value
+        self.line_number = line_num
+        self.file = file
+
+    def __getitem__(self, key):
+        return self.value[key]
+
+    def __setitem__(self, key, val):
+        self.value[key] = val
+
+    def __delitem__(self, key):
+        del self.value[key]
+
+    def __iter__(self):
+        return iter(self.value)
+
+    def __len__(self):
+        return len(self.value)
+
+    def __contains__(self, item):
+        return item in self.value
 
 
 class YamlKeyDuplicationError(Exception):
@@ -31,6 +57,12 @@ class MyLoader(yaml.SafeLoader):
         self.dirs = [self._root, PROJECT_CONFIG_DIR]
 
         super().__init__(stream)
+
+    def construct_mapping(self, node, deep=False):
+        mapping = super().construct_mapping(node, deep)
+        line_num = node.start_mark.line + 1
+        file = node.start_mark.name
+        return YamlInfoNode(mapping, line_num, file)
 
 
 class UniqueKeyLoader(yaml.SafeLoader):

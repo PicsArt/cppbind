@@ -9,7 +9,6 @@ import re
 import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
-from iegen.common.config import config as default_config
 
 
 def load_from_paths(loader, path_name, default_dirs):

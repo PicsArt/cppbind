@@ -5,7 +5,6 @@ import os
 import re
 
 import iegen.utils.clang as cutil
-from iegen import logging
 from . import *
 
 OPERATOR_MAPPING = {
@@ -75,26 +74,6 @@ def make_enum_case_comment(pure_comment):
 def is_overloaded_cursor(ctx):
     return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
-
-
-def get_declaration_includes(ctx):
-    includes = []
-    _get_declaration_includes(ctx, ctx.cursor, includes)
-    if includes:
-        logging.debug(f"Including forward declaration headers {includes} for {ctx.name}")
-    return includes
-
-
-def _get_declaration_includes(ctx, cursor, includes):
-    if cursor.kind == cli.CursorKind.NAMESPACE:
-        for child in cursor.get_children():
-            if cutil.is_declaration(child):
-                ref_ctx = ctx.find_by_type(child.type)
-                if ref_ctx:
-                    includes.append(os.path.relpath(ref_ctx.cursor.location.file.name,
-                                                    ctx.out_prj_dir))
-    if cursor.lexical_parent:
-        _get_declaration_includes(ctx, cursor.lexical_parent, includes)
 
 
 def get_default_value(arg):

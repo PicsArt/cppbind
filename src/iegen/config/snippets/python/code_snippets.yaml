@@ -259,13 +259,19 @@ var_class: &var_class
     include:
       unique_content: |
         #include "{{prj_rel_file_name}}"
-        {%- set template_includes = ctx.template_includes -%}
-        {%- if template_includes -%}
-        {{marker}}{{template_includes|format_list('#include "{}"')|join_unique}}
+        {%- macro gen_import(converter, current_ctx) -%}
+        {%- set type_ctx = converter.ctx -%}
+        {%- if type_ctx and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
+        {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
         {%- endif -%}
-        {%- set decl_includes = helper.get_declaration_includes(ctx)|format_list('#include "{}"')|join_unique -%}
-        {%- if decl_includes -%}
-        {{marker}}{{decl_includes}}
+        {%- for tmpl_arg_converter in converter.template_args -%}
+        {{gen_import(tmpl_arg_converter, current_ctx)}}
+        {%- endfor -%}
+        {%- endmacro -%}
+        {%- if base_types_converters is defined -%}
+        {%- for base in base_types_converters -%}
+        {{gen_import(base, ctx)}}
+        {%- endfor -%}
         {%- endif -%}
         {%- if include_cxx -%}
         {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
@@ -302,12 +308,6 @@ class: *var_class
 
 interface: *var_class
 
-var_template_method_include: &var_template_method_include
-    unique_content: |
-      {%- set template_includes = ctx.template_includes|format_list('#include "{}"')|join_unique -%}
-      {%- if template_includes -%}
-      {{template_includes}}
-      {%- endif %}
 
 var_bind_method: &var_bind_method
   converter:
@@ -340,6 +340,24 @@ var_method_python_include: &var_method_python_include
     {{gen_import(rconverter, ctx)}}
     {%- endif -%}
 
+var_method_cxx_include: &var_method_cxx_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx-%}
+    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- for arg in args -%}
+    {{gen_import(arg.converter, ctx)}}
+    {%- endfor -%}
+    {%- if rconverter is defined -%}
+    {{gen_import(rconverter, ctx)}}
+    {%- endif -%}
+
 constructor:
   python:
     include: *var_method_python_include
@@ -353,13 +371,13 @@ constructor:
           pass
   bind: *var_bind_method
   cxx:
+    include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
                                                                                    {{comma()}}{{arg.converter.python.cxx_type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')|to_snake_case}});
 
-    include: *var_template_method_include
 
 
 function:
@@ -384,6 +402,7 @@ function:
           pass
   bind: *var_bind_method
   cxx:
+    include: *var_method_cxx_include
     body: |
       {%- if is_operator %}
       {%- set _name = helper.get_operator_name(name) -%}
@@ -407,7 +426,6 @@ function:
       <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
       {%- endif -%}
       {{', ' if args}}{{args|format_list('py::arg("{arg.name}")', 'arg')|join(', ')|to_snake_case}});
-    include: *var_template_method_include
 
 var_bind_getter: &var_bind_getter
   converter:
@@ -426,6 +444,19 @@ var_getter_python_include: &var_getter_python_include
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
     {{marker}}import {{type_ctx.package_prefix + '.' if type_ctx.package_prefix}}{{type_ctx.package}}.{{type_ctx.file + type_ctx.file_postfix}} as {{type_ctx.file}}
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {{gen_import(rconverter, ctx)}}
+
+var_getter_cxx_include: &var_getter_cxx_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx -%}
+    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
     {{gen_import(tmpl_arg_converter, current_ctx)}}
@@ -453,6 +484,7 @@ property_getter:
       {%- endif %}
   bind: *var_bind_getter
   cxx:
+    include: *var_getter_cxx_include
     body: |
       {%- set _name = name|to_snake_case -%}
       {%- if ctx.action == 'gen_property_setter' %}
@@ -489,6 +521,7 @@ getter:
       {%- endif -%}
   bind: *var_bind_getter
   cxx:
+    include: *var_getter_cxx_include
     body: |
       {%- if ctx.node.is_function_template %}
       {%- set _name = overloading_prefix|to_snake_case  %}

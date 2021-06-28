@@ -5,12 +5,12 @@
 #include <memory>
 
 
-namespace iegen::example {
+namespace iegen::example::nullable {
 // [example]
 
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * swift.file: Utils
  * package: nullables
@@ -19,20 +19,20 @@ namespace iegen::example {
 struct NumberInt {
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     NumberInt(int val_) : value(val_) {}
 
     /**
      * __API__
-     * gen: property_getter
+     * action: gen_property_getter
      */
     int value;
 };
 
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: false
  * swift.file: Utils
  * package: nullables
@@ -41,13 +41,13 @@ struct NumberInt {
 struct NumberDouble {
     /**
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     NumberDouble(double val_) : value(val_) {}
 
     /**
      * __API__
-     * gen: property_getter
+     * action: gen_property_getter
      */
     double value;
 };
@@ -56,7 +56,7 @@ struct NumberDouble {
 /**
  * An example with nullable arguments.
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: true
  * swift.file: Utils
  * package: nullables
@@ -68,7 +68,7 @@ struct Utils {
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * nullable_arg:
      *   - first
@@ -86,7 +86,7 @@ struct Utils {
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * nullable_arg:
      *   - first
@@ -100,7 +100,7 @@ struct Utils {
             }
             return second;
         }
-        return nullptr;
+        return std::shared_ptr<NumberInt>(nullptr);
     }
 };
 // [example]

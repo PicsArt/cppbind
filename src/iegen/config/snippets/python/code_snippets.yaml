@@ -249,10 +249,6 @@ var_class: &var_class
         {%- if template_includes -%}
         {{marker}}{{template_includes|format_list('#include "{}"')|join_unique}}
         {%- endif -%}
-        {%- set decl_includes = helper.get_declaration_includes(ctx)|format_list('#include "{}"')|join_unique -%}
-        {%- if decl_includes -%}
-        {{marker}}{{decl_includes}}
-        {%- endif -%}
         {%- if include_cxx -%}
         {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
         {%- endif -%}

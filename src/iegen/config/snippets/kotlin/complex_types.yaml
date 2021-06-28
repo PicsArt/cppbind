@@ -277,7 +277,7 @@ std::shared_ptr:
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
     if ({{name}} == 0) {
-        {{target_name}} = nullptr;
+        {{target_name}} = std::shared_ptr<{{pointee}}>(nullptr);
     } else {
         {%- if pointee_base != pointee %}
         auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
@@ -291,8 +291,8 @@ std::shared_ptr:
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
-    if ({{name}} == nullptr) {
-        {{target_name}} = reinterpret_cast<jlong>(nullptr);
+    if (!{{name}}) {
+        {{target_name}} = 0;
     } else {
         {%- if pointee_base != pointee %}
         std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{pointee_base}}>({{name}});

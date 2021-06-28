@@ -6,8 +6,12 @@
 namespace iegen::example {
 // [example]
 /**
+ * \internal
+ * internal comment should not go to wrappers
+ * \endinternal
+ * Class Root
  * __API__
- * gen: class
+ * action: gen_class
  * shared_ref: False
  * swift.package: simple
  * kotlin.package: simple
@@ -19,13 +23,13 @@ public:
      * comments
      *
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
     Root(const std::string& _path) : path(_path) {};
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      * kotlin.name: updatePath
      */
@@ -35,7 +39,7 @@ public:
 
     /**
      * __API__
-     * gen: property_setter
+     * action: gen_property_setter
      */
      std::string path;
 };

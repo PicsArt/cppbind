@@ -13,9 +13,9 @@ from iegen.utils.clang import extract_pure_comment
 
 
 class BaseContext:
-    def __init__(self, runner):
+    def __init__(self, runner, node=None):
         self.runner = runner
-        self.node = runner.ir
+        self.node = node or runner.ir
 
     def __getattr__(self, name):
         val = self.node.args.get(name, None)
@@ -28,11 +28,9 @@ class BaseContext:
 class Context(BaseContext):
 
     def __init__(self, runner, node, template_ctx=None):
+        super().__init__(runner, node)
         if node.type == NodeType.CLANG_NODE:
             assert node.clang_cursor, "cursor is not provided"
-        self.runner = runner
-        self.config = runner.config
-        self.node = node
         self.template_ctx = template_ctx
 
     @property
@@ -121,10 +119,10 @@ class Context(BaseContext):
 
     @property
     def setter(self):
-        if self.node.api != 'getter':
+        if self.node.api != 'gen_getter':
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
-        search_api = 'setter'
+        search_api = 'gen_setter'
         name = self.name
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
@@ -134,10 +132,10 @@ class Context(BaseContext):
 
     @property
     def getter(self):
-        if self.node.api != 'setter':
+        if self.node.api != 'gen_setter':
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
-        search_api = 'getter'
+        search_api = 'gen_getter'
         name = self.name
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
@@ -307,18 +305,17 @@ class Context(BaseContext):
 
 class RunRule(object):
 
-    def __init__(self, ir, platform, language, config):
+    def __init__(self, ir, platform, language):
         self.ir = ir
         self.language = language
         self.platform = platform
-        self.config = config
         # calling order should be such as that parent node processes first
         self.api_call_order = [
-            # {'class', 'interface', 'enum'},
-            # {'constructor'},
-            # {'method'},
-            # {'getter'},
-            # {'setter'},
+            # {'gen_class', 'gen_interface', 'gen_enum'},
+            # {'gen_constructor'},
+            # {'gen_method'},
+            # {'gen_getter'},
+            # {'gen_setter'},
             {}
         ]
 
@@ -409,9 +406,8 @@ class RunRule(object):
         api = node.api
         if api == Node.API_NONE:
             return
-        att_name = "gen_" + api
-        logging.debug(f"Call API: {api} on {node.displayname}")
-        func = getattr(rule, att_name)
+        logging.debug(f"Call API: {api.lstrip('gen_')} on {node.displayname}")
+        func = getattr(rule, api)
         context = self.get_context(node.full_displayname)
         # set current template context to generate code based on correct template choice
         context.set_template_ctx(template_ctx)

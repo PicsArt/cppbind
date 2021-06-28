@@ -2,8 +2,6 @@
 Implements ieg api parser on cxx comment
 """
 import distutils.util
-import glob
-import os
 import re
 from collections import defaultdict
 from collections import OrderedDict
@@ -14,9 +12,9 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader, YamlKeyDuplicationError
-from iegen.ir.ast import Node, RootNode
-from iegen.utils.clang import extract_pure_comment, join_type_parts
+from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.ir.ast import Node
+from iegen.utils.clang import extract_pure_comment
 from iegen import default_config
 
 
@@ -26,19 +24,11 @@ class APIParser(object):
     ALL_LANGUAGES = ['swift', 'java', 'python', 'kotlin']
     ALL_PLATFORMS = ['android', 'ios', 'linux', 'mac', 'win']
 
-    RULE_TITLE_KEY = 'gen_actions'
-    RULE_RULE_KEY = 'rule'
-    RULE_TYPE_KEY = 'type'
-    RULE_DIR_KEY = 'dir'
-    RULE_FILE_KEY = 'file'
-    RULE_SUB_KEY = ':'
-    RULE_ROOT_KEY = 'root'
-
-    def __init__(self, attributes, languages=None, platforms=None, parser_config=None):
-        self.attributes = attributes
+    def __init__(self, ctx_desc, languages=None, platforms=None):
+        self.ctx_desc = ctx_desc
+        self.var_def = self.ctx_desc.var_def
         self.languages = list(languages or APIParser.ALL_LANGUAGES)
         self.platforms = platforms or APIParser.ALL_PLATFORMS
-        self.api_type_attributes = APIParser.build_api_type_attributes(parser_config)
 
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
@@ -49,34 +39,39 @@ class APIParser(object):
 
     def parse_comments(self, api_section, ctx, location=None):
         """
-        Parse comment to extract API command and its attributes
+        Parse comment to extract API command and its variables
         """
         if api_section is None:
             return None, OrderedDict()
         api_section = JINJA_ENV.from_string(api_section).render(ctx)
-        SKIP_REGEXPR = r'^[\s*/]*$'
+        skip_regex = r'^[\s*/]*$'
 
         lines = api_section.splitlines()
-        filtered = list(filter(lambda x: not re.match(SKIP_REGEXPR, x), lines))
+        filtered = list(filter(lambda x: not re.match(skip_regex, x), lines))
 
         if not filtered:
-            raise Exception("API comments are empty")
-        comment_prefix = re.search(r'\s*\*?\s*gen:', filtered[0])
-        if not comment_prefix:
-            raise Exception("API comments must start with 'gen' attribute")
-        yaml_indent_cnt = comment_prefix.end() - len('gen:')
+            Error.critical("API comments are empty",
+                           location.file_name if location else None,
+                           location.line_number if location else None)
+
+        comment_prefix = re.search(r'\s*\*?\s*', filtered[0])
+        yaml_indent_cnt = comment_prefix.end()
 
         yaml_lines = []
         for line in filtered:
             if len(line) <= yaml_indent_cnt:
-                raise Exception("Invalid yaml format")
+                Error.critical("Invalid yaml format",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             yaml_lines.append(line[yaml_indent_cnt:])
         yaml_lines = '\n'.join(yaml_lines)
 
         try:
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
         except yaml.YAMLError as e:
-            raise Exception(f"Error while scanning yaml style comments: {e}")
+            Error.critical("Error while scanning yaml style comments: {e}",
+                           location.file_name if location else None,
+                           location.line_number if location else None)
 
         return self.parse_api_attrs(attrs, location)
 
@@ -88,7 +83,7 @@ class APIParser(object):
 
     def parse_yaml_api(self, name, ctx=None, location=None):
         ctx = ctx or {}
-        attrs = self.api_type_attributes.get(name)
+        attrs = self.ctx_desc.ctx_def_map.get(name)
         if attrs:
             api_attrs = attrs.attr
             if api_attrs:
@@ -101,19 +96,19 @@ class APIParser(object):
                     Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
                 return self.parse_api_attrs(api_attrs, location)
 
-
     def parse_api_attrs(self, attrs, location):
-        api = None
         attr_dict = OrderedDict()
-        ATTR_KEY_REGEXPR = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        attr_key_regex = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: defaultdict(lambda: [0]))
+        api = Node.API_NONE
         for attr_key, value in attrs.items():
-            m = re.match(ATTR_KEY_REGEXPR, attr_key)
+            m = re.match(attr_key_regex, attr_key)
             if not m:
-                # error
-                raise Exception({attr_key: value})
+                Error.critical({attr_key: value},
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             platform, language, attr = m.groups()
 
             prior = APIParser.get_priority(platform, language)
@@ -128,54 +123,56 @@ class APIParser(object):
             else:
                 platform = self.platforms + ['__all__']
 
-            if api is None and attr == 'gen':
-                api = value or Node.API_NONE
-            else:
-                # now check attribute
-                # attribute should be in attributes
-                if attr not in self.attributes:
-                    raise Exception(f"Attribute {attr} is not specified. It should be one of {set(self.attributes)}.")
+            if attr == 'action':
+                api = value
 
-                array = self.attributes[attr].get('array', False)
-                value = self.parse_attr(attr, value)
+            if attr not in self.var_def:
+                Error.critical(f"Variable {attr} is not specified. It should be one of {set(self.var_def)}.",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
 
-                if array:
-                    if not isinstance(value, list):
-                        value = [value]
-                elif isinstance(value, list):
-                    raise Exception(f"Wrong attribute type: {attr} cannot be array")
+            array = self.var_def[attr].get('array', False)
+            value = self.parse_attr(attr, value)
 
-                attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
-                for plat in platform:
-                    attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
-                    for lang in language:
-                        curr_max_prior = max(prev_priors[attr][(plat, lang)])
-                        # overwrite the value only if the current option has higher priority than all previous ones.
-                        if prior > curr_max_prior:
-                            attr_lang_dict[lang] = value
-                        # If we have this case it means we have a conflict of options: plat.lang and lang.plat
-                        if prior in prev_priors[attr][(plat, lang)]:
-                            Error.error(f"Conflicting attributes: attributes like platform.attr and "
-                                        f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
-                                        location.file_name, location.line_number)
-                        prev_priors[attr][(plat, lang)].append(prior)
+            if array:
+                if not isinstance(value, list):
+                    value = [value]
+            elif isinstance(value, list):
+                Error.critical(f"Wrong variable type: {attr} cannot be array",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
+
+            attr_plat_dict = attr_dict.setdefault(attr, OrderedDict())
+            for plat in platform:
+                attr_lang_dict = attr_plat_dict.setdefault(plat, OrderedDict())
+                for lang in language:
+                    curr_max_prior = max(prev_priors[attr][(plat, lang)])
+                    # overwrite the value only if the current option has higher priority than all previous ones.
+                    if prior > curr_max_prior:
+                        attr_lang_dict[lang] = value
+                    # If we have this case it means we have a conflict of options: plat.lang and lang.plat
+                    if prior in prev_priors[attr][(plat, lang)]:
+                        Error.error(f"Conflicting variables definition: variables like platform.attr and "
+                                    f"language.attr cannot be defined together: {lang + '.' + attr, plat + '.' + attr}",
+                                    location.file_name, location.line_number)
+                    prev_priors[attr][(plat, lang)].append(prior)
 
         return api, attr_dict
 
     def parse_attr(self, attr_name, attr_value):
-        attr_type = self.attributes[attr_name].get('type', None)
-        if isinstance(self.attributes[attr_name].get('default'), bool) or attr_type == 'bool':
+        attr_type = self.var_def[attr_name].get('type', None)
+        if isinstance(self.var_def[attr_name].get('default'), bool) or attr_type == 'bool':
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':
             if not isinstance(attr_value, dict):
-                raise Exception(f"Wrong attribute type: {type(attr_value)}, it must be dictionary")
+                raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or not 'type' in attr:
                             raise Exception(
-                                f"Wrong template attribute style: {attr_value}, template must have mandatory 'type' attribute")
+                                f"Wrong template variable style: {attr_value}, template must have mandatory 'type' variable")
         # default string type
         return attr_value
 
@@ -189,7 +186,7 @@ class APIParser(object):
     @staticmethod
     def get_priority(plat, lang):
         """
-        A method to get priority of platform/language specific attribute:
+        A method to get priority of platform/language specific variable:
         Priorities sorted descending: platform.language.attr, [language|platform].attr, attr
         """
         if plat is None and lang is None:
@@ -197,96 +194,6 @@ class APIParser(object):
         if plat is None or lang is None:
             return 2
         return 3
-
-    @staticmethod
-    def build_api_type_attributes(parser_config):
-        if not hasattr(parser_config, 'api_type_attributes_glob'):
-            return {}
-
-        files = set()
-        for file in parser_config.api_type_attributes_glob.split(','):
-            files_glob = glob.glob(file.strip(), recursive=True)
-            for fp in files_glob:
-                files.add(os.path.abspath(fp))
-
-        api_type_attributes = {}
-        for current_file in list(files):
-            try:
-                attrs = yaml.load(open(current_file), Loader=UniqueKeyLoader)
-            except yaml.YAMLError as e:
-                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
-
-            APIParser.update_api_type_attributes(attrs, current_file, api_type_attributes)
-
-        return api_type_attributes
-
-    @staticmethod
-    def update_api_type_attributes(attrs, current_file, api_type_attributes):
-        _title = APIParser.RULE_TITLE_KEY
-        _rule = APIParser.RULE_RULE_KEY
-        _sub = APIParser.RULE_SUB_KEY
-        _type = APIParser.RULE_TYPE_KEY
-        _root = APIParser.RULE_ROOT_KEY
-
-        def flatten_dict(src_dict, ancestors):
-            _type in src_dict and ancestors.append(src_dict[_type])
-            try:
-                if _rule in src_dict:
-                    flat_key = APIParser._get_key(current_file=current_file, src_dict=src_dict, ancestors=ancestors)
-                    if flat_key in api_type_attributes:
-                        raise YamlKeyDuplicationError(
-                            f"Definition with duplicate '{flat_key}' key in {current_file},\n"
-                            f"which already has been previously defined in {api_type_attributes[flat_key].file}")
-                    api_type_attributes[flat_key] = SimpleNamespace(attr=src_dict[_rule],
-                                                                    file=current_file)
-                if _sub in src_dict:
-                    for sub in src_dict[_sub]:
-                        flatten_dict(sub, ancestors)
-            finally:
-                _type in src_dict and ancestors.pop()
-
-        if _root in attrs:
-            if RootNode.ROOT_KEY in api_type_attributes:
-                raise YamlKeyDuplicationError(f"Redefinition of '{_root}' section in {current_file} file, "
-                                              f"which must be uniquely specified only in one file.\n"
-                                              f"It was previously defined in {api_type_attributes[RootNode.ROOT_KEY].file} file.")
-            api_type_attributes[RootNode.ROOT_KEY] = SimpleNamespace(attr=attrs[_root],
-                                                                     file=current_file)
-
-        if _title not in attrs:
-            return
-
-        for item in attrs[_title]:
-            flatten_dict(item, [])
-
-    @staticmethod
-    def _get_key(src_dict, current_file, ancestors):
-        assert (APIParser.RULE_TYPE_KEY in src_dict) + (APIParser.RULE_DIR_KEY in src_dict) + (
-                APIParser.RULE_FILE_KEY in src_dict) == 1, \
-            f'API should contain one of the keywords: {APIParser.RULE_TITLE_KEY},{APIParser.RULE_DIR_KEY},{APIParser.RULE_FILE_KEY}'
-
-        # dir
-        if APIParser.RULE_DIR_KEY in src_dict:
-            dir_name = src_dict[APIParser.RULE_DIR_KEY]
-            if os.path.isabs(dir_name):
-                # if an absolute path is specified then we assume it's absolute to current dir
-                return dir_name.replace('/', '', 1) or '.'
-            else:
-                return os.path.relpath(
-                    os.path.abspath(os.path.join(os.path.dirname(current_file), dir_name)),
-                    os.getcwd())
-        # type
-        elif APIParser.RULE_TYPE_KEY in src_dict:
-            return join_type_parts(ancestors)
-        # file
-        else:
-            file_name = src_dict[APIParser.RULE_FILE_KEY]
-            if os.path.isabs(file_name):
-                # if an absolute path is specified then we assume it's absolute to current dir
-                flat_key = file_name.replace('/', '', 1)
-                return os.path.join(flat_key, os.getcwd())
-            else:
-                return os.path.abspath(os.path.join(os.path.dirname(current_file), file_name))
 
     @staticmethod
     def eval_attr_template(attrs, ctx):

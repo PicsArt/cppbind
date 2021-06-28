@@ -4,7 +4,7 @@ std::string:
 
 $Object:
   swift:
-    type_info: "{{type_ctx.interface_name if type_ctx.node.is_interface else type_name}}{{template_suffix}}"
+    type_info: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
   c:
     type_info: "void* _Nonnull"
   sc:

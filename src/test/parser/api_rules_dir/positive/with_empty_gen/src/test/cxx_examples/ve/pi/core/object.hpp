@@ -10,7 +10,7 @@ namespace iegen {
  * comments
  *
  * __API__
- * gen: class
+ * action: gen_class
  * package: extra
  * shared_ref: True
  * swift.include: CWrapper
@@ -23,7 +23,7 @@ public:
      * String representation for mainly debug porpoises
      * @return class name and object address
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual std::string toString() const;
@@ -32,7 +32,7 @@ public:
      * Human readable class name
      * @return class name
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual std::string className() const;
@@ -42,7 +42,7 @@ public:
      * @param other is the second one
      * @return is equals two objects
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     bool equals(std::shared_ptr<Object> other) const;
@@ -53,7 +53,7 @@ public:
      * Hash for object. Used in wrappers (java, obj-c, python) to define the hash function
      * @return hash of the object
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual std::size_t hash() const;
@@ -62,7 +62,7 @@ public:
      * Detailed string representation only for debug porpoises
      * @return object state as string
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual std::string debugInfo() const;
@@ -71,7 +71,7 @@ public:
      * The object's size in bytes
      * @return bytes count
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
     virtual size_t bytesCount() const;

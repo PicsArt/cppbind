@@ -11,7 +11,7 @@ namespace iegen::example {
 
 /**
  * __API__
- * gen: class
+ * action: gen_class
  * package: optionals
  * swift.include: CWrapper
  * python.include:
@@ -25,7 +25,7 @@ public:
     /**
      * constructor
      * __API__
-     * gen: constructor
+     * action: gen_constructor
      */
 	Optionals()  {}
 
@@ -33,7 +33,7 @@ public:
     /**
      *
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	Task* optionalPtrWithNullptrDefault(Task* task = nullptr) {
@@ -42,7 +42,7 @@ public:
 
 	/**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	int optionalIntWithDefault(int val = 5) {
@@ -52,7 +52,7 @@ public:
 	/**
      * @param[in] optionalStr string with default value
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	std::string optionalStringWithDefault(std::string optionalStr = "abc") {
@@ -61,7 +61,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	char optionalCharWithDefault(char symbol = ',') {
@@ -70,7 +70,7 @@ public:
 
     /**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	Task* optionalPtrWithNullDefault(Task* task = NULL) {
@@ -79,7 +79,7 @@ public:
 
 	/**
      * __API__
-     * gen: method
+     * action: gen_method
      * throws: no_throw
      */
 	Color optionalEnumWithDefault(Color c = Color::Red) {

@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
-from types import SimpleNamespace
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
@@ -16,24 +15,15 @@ from iegen.ir.ast import (
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
 
-NODE_GROUP_ALIASES = {
-    'file_system': ('dir', 'file'),
-    'cxx': (
-        'class', 'class_template', 'struct', 'struct_template', 'constructor',
-        'function', 'function_template', 'cxx_method', 'enum', 'field'
-    )
-}
-
 
 class ContextManager:
-    def __init__(self, attributes, platform, language):
+    def __init__(self, ctx_desc, platform, language):
+        self.ctx_desc = ctx_desc
         self.platform = platform
         self.language = language
-        self.attributes = ContextManager.resolve_attr_aliases(attributes)
-        self.ieg_api_parser = APIParser(default_config.attributes,
+        self.ieg_api_parser = APIParser(ctx_desc,
                                         ALL_LANGUAGES,
-                                        ALL_PLATFORMS,
-                                        default_config.languages[self.language])
+                                        ALL_PLATFORMS)
 
     def eval_root_attrs(self, name, ctx, location=None):
         args = None
@@ -65,11 +55,10 @@ class ContextManager:
     def __process_attrs(self, kind, args, location, ctx=None):
         ctx = ctx or OrderedDict()
         args = args or OrderedDict()
-        location = location or SimpleNamespace()
         res = OrderedDict()
 
         # add all missing attributes
-        for att_name, properties in self.attributes.items():
+        for att_name, properties in self.ctx_desc.var_def.items():
             att_val = args.get(att_name, {}).get(self.platform, {}).get(self.language)
 
             new_att_val = att_val
@@ -78,8 +67,8 @@ class ContextManager:
                 # check mandatory attribute existence
                 if kind in properties["required_on"]:
                     Error.error(f"Attribute '{att_name}' is mandatory attribute on {kind}.",
-                                getattr(location, 'file_name', None),
-                                getattr(location, 'line_number', None))
+                                location.file_name if location else None,
+                                location.line_number if location else None)
                     break
 
                 # inherit from parent or add default value
@@ -97,13 +86,13 @@ class ContextManager:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
                             except JinjaUndefinedError as e:
                                 Error.critical(
-                                    f"Jinja evaluation error in attributes definition file {default_config.attr_file}: {e}")
+                                    f"Jinja evaluation error in attributes definition file: {e}")
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
                     Error.error(f"Attribute {att_name} is not allowed on {kind}.",
-                                getattr(location, 'file_name', None),
-                                getattr(location, 'line_number', None))
+                                location.file_name if location else None,
+                                location.line_number if location else None)
                     break
 
             # now we need to process variables of value and set value
@@ -127,36 +116,18 @@ class ContextManager:
 
         if plat in def_val and lang in def_val:
             Error.critical(
-                f"Conflict of attributes in {default_config.attr_file} attributes definiton file: {plat} and {lang}: "
+                f"Conflict of attributes in attributes definition file: {plat} and {lang}: "
                 f"only one of them must be defined separately, or they must be both specified")
 
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:
                 return def_val[key]
 
-    @staticmethod
-    def resolve_attr_aliases(attrs):
-        """
-        A function to replace node group aliases with their actual values list
-        """
-
-        for field in ['allowed_on', 'required_on']:
-            for key, val in attrs.items():
-                if field not in val:
-                    attrs[key][field] = NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else []
-                else:
-                    res = []
-                    for node in val[field]:
-                        if node in NODE_GROUP_ALIASES:
-                            res.extend(NODE_GROUP_ALIASES[node])
-                        else:
-                            res.append(node)
-                    attrs[key][field] = res
-
-        return attrs
-
     def has_yaml_api(self, name):
-        return name in self.ieg_api_parser.api_type_attributes
+        return name in self.ctx_desc.ctx_def_map
 
-    def get_yaml_api_file(self, name):
-        return self.ieg_api_parser.api_type_attributes[name].file
+    def get_api_def_filename(self, name):
+        """
+        Method to get yaml config file name in which file/dir api is defined
+        """
+        return self.ctx_desc.ctx_def_map[name].file

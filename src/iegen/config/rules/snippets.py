@@ -1,19 +1,29 @@
 import copy
+import importlib
 import os
 import types
 
 import clang.cindex as cli
-import iegen.converter as converter
-import iegen.converter.swift as convert
+import iegen
+import iegen.converter
 import iegen.utils.clang as cutil
-from iegen import find_prj_dir, BANNER_LOGO
+from iegen import find_prj_dir
 from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine, ENUM_INFO_TYPE, OBJECT_INFO_TYPE, JINJA_UNIQUE_MARKER
+from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
 from iegen.utils import load_from_paths
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
-LANGUAGE = 'swift'
+# variables below should be set after loading this module by calling set_language function
+LANGUAGE = None
+LANGUAGE_HELPER_MODULE = None
+
+
+def set_language(language):
+    global LANGUAGE
+    LANGUAGE = language
+    global LANGUAGE_HELPER_MODULE
+    LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
 def load_snippets_engine(path, main_target):
@@ -55,13 +65,12 @@ def make_root_context(ctx):
 def make_def_context(ctx):
     def make():
         # helper variables
-        config = ctx.config
         pat_sep = os.sep
         path = os.path
-        helper = converter
+        helper = LANGUAGE_HELPER_MODULE
         marker = JINJA_UNIQUE_MARKER
-        banner_logo = BANNER_LOGO
-
+        banner_logo = iegen.BANNER_LOGO
+        new_line = iegen.converter.NEW_LINE
         return locals()
 
     context = make()
@@ -76,8 +85,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        template_includes = ctx.template_includes
-        comment = convert.make_comment(ctx.node.pure_comment)
+        comment = ctx.comment
 
         return locals()
 
@@ -101,7 +109,8 @@ def make_func_context(ctx):
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
-                type=arg.type
+                type=arg.type,
+                nullable=arg.name in ctx.api_args['nullable_arg']
             ) for arg in ctx.args
         ]
 
@@ -114,16 +123,15 @@ def make_func_context(ctx):
         # capturing suffix since we use single context with different template choice
         _suffix = owner_class.template_suffix
         template_choice = ctx.template_choice
+        template_names = ctx.template_names
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
-            overriden_cursors = ctx.cursor.get_overriden_cursors()
-            is_override = bool(overriden_cursors)
+            _overriden_cursors = ctx.cursor.get_overriden_cursors()
+            is_override = bool(_overriden_cursors)
             if is_override:
-                parent_ctx = ctx.find_by_type(overriden_cursors[0].lexical_parent.type.spelling)
-                if parent_ctx:
-                    is_override = not parent_ctx.node.is_interface
+                original_definition_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -144,9 +152,7 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
-        for case in enum_cases:
-            if case.comment:
-                case.comment = convert.make_comment(case.comment)
+        cxx_type_name = ctx.node.type_name()
         return locals()
 
     context = make_clang_context(ctx)
@@ -170,7 +176,7 @@ def make_class_context(ctx):
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all([b.is_interface for b in base_types_converters])
+                has_non_abstract_base_class = not all([b.ctx.action == 'gen_interface' for b in base_types_converters])
 
             cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
@@ -181,7 +187,7 @@ def make_class_context(ctx):
         return context
 
     context = _make(ctx)
-    ancestors = [types.SimpleNamespace(**_make(ancesstor)) for ancesstor in ctx.ancestors]
+    ancestors = [types.SimpleNamespace(**_make(ancestor)) for ancestor in ctx.ancestors]
     root = types.SimpleNamespace(**_make(ctx.root))
     context.update(dict(ancestors=ancestors, root=root))
     return context
@@ -220,8 +226,6 @@ def make_member_context(ctx):
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-
-        gen_property_setter = ctx.node.api == 'property_setter'
 
         return locals()
 

@@ -57,7 +57,7 @@ class IEGConfig(object):
 
     def __init__(self, file_names=None):
         """
-        initilizes conifg
+        initializes config
 
         loads default config as well as config provided by user
         Args:
@@ -69,21 +69,13 @@ class IEGConfig(object):
         if file_names is not None:
             cnfg.read(file_names)
 
-        # self.cnfg = cnfg
-        self.defaults = cnfg.defaults()
+        self.application = types.SimpleNamespace(**{k: v for k, v in cnfg.items('APPLICATION')})
 
         self.default_config_dirs = DEFAULT_DIRS
 
-        # load language parameters
-        self.languages = {}
-        for lang in cnfg.getlist("LANGUAGE", "all_languages"):
-            self.languages[lang] = self.__load_language(cnfg, lang)
+        self.languages = cnfg.getlist("APPLICATION", "all_languages")
+        self.platforms = cnfg.getlist("APPLICATION", "all_platforms")
 
-        self.platforms = cnfg.getlist("PLATFORM", "all_platforms")
-
-        self.attr_file = cnfg.get("API", "attributes")
-
-        self.attributes = load_yaml_file(self.attr_file)
         self.api_start_kw = cnfg.get("API", "parser_start")
 
         self.logging = types.SimpleNamespace()
@@ -91,11 +83,6 @@ class IEGConfig(object):
 
     def __repr__(self):
         return f"IEG_Config({repr(self.__dict__)})"
-
-    def __load_language(self, cnfg, lang):
-        lang_section = cnfg.items(lang.upper())
-        lang_config = types.SimpleNamespace(**{k: v for k, v in lang_section})
-        return lang_config
 
 
 config = IEGConfig(["~/iegen_config.cfg", "iegen_config.cfg"])

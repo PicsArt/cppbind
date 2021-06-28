@@ -1,5 +1,6 @@
 import clang.cindex as cli
 
+NEW_LINE = '\n'
 
 class Validator:
     @staticmethod
@@ -28,7 +29,7 @@ class Validator:
     def validate_bases(class_name, base_types_converters):
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.is_interface:
+            if not base_type.ctx.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
@@ -103,7 +104,9 @@ class Exceptions:
 
 
 def make_doxygen_comment(pure_comment):
-    nl = '\n * '
+    if isinstance(pure_comment, str):
+        pure_comment = pure_comment.split(NEW_LINE)
+    nl = f'{NEW_LINE} * '
     if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
         return ''
     start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl

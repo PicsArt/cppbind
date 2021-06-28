@@ -200,10 +200,6 @@ class Adapter:
     def set_original_type(self, clang_type):
         self.original_clang_type = clang_type
 
-    @property
-    def is_interface(self):
-        return self.ctx.node.is_interface if self.ctx else False
-
     def __getattr__(self, name):
         type_info = None
 
@@ -308,9 +304,8 @@ class SnippetsEngine:
 
     def load(self):
         dirs = []
-        lang_config = config.languages[self.main_target]
-        if hasattr(lang_config, 'custom_config_dir'):
-            dirs.append(lang_config.custom_config_dir)
+        if hasattr(config.application, 'custom_config_dir'):
+            dirs.append(config.application.custom_config_dir)
 
         dataMap = load_yaml(self.path, dirs)
 

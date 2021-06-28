@@ -1,4 +1,4 @@
-gen_actions:
+type_vars:
   - type: pi
     ::
     - type: video_engine
@@ -7,6 +7,6 @@ gen_actions:
         ::
         # entry with this key is already defined in ./rules_1.yaml file
         - type: "retInt(int)"
-          rule:
-            gen: method
+          vars:
+            action: gen_method
             throws: no_throw

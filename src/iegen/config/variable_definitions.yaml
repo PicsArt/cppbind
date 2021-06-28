@@ -1,7 +1,7 @@
-prefix:
-  inheritable: true
+action:
+  inheritable: false
   default: null
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ cxx, file_system ]
 
 file:
   inheritable: true
@@ -100,17 +100,27 @@ project_link:
   default: '{{_get_git_repo_url(project_dir)}}'
   allowed_on: [ dir ]
 
+comment_del_regex:
+  inheritable: true
+  array: true
+  default:
+    - '\s*\\internal([\s\S]*?)\\endinternal\s*'
+    - '\s*\\internal[\s\S]*'
+  allowed_on: [ cxx, file_system, root ]
+
 comment:
   inheritable: false
   default:
     python: |
-      {{_pure_comment}}
+      {%- set regex = comment_del_regex|join('|') -%}
+      {{_pure_comment|replace_regex(regex, '')}}
       {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
       Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}
       <{{project_link}}/{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
       {%- endif %}
     else: |
-      {{_pure_comment}}
+      {%- set regex = comment_del_regex|join('|') -%}
+      {{_pure_comment|replace_regex(regex, '')}}
 
 banner_comment:
   inheritable: false
@@ -227,8 +237,7 @@ c_wrapper_build_name:
 
 clang_args:
   inheritable: false
-  default:
-    - -D__ANDROID__
+  default: []
   allowed_on: [ root ]
   array: true
 

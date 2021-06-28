@@ -1,8 +1,8 @@
 # three ways to describe directory actions
-gen_actions:
+dir_vars:
   - dir: "."
-    rule:
-      gen: package
+    vars:
+      action: gen_package
       name: simple
       python.code_fragment:
         - import json
@@ -12,8 +12,8 @@ gen_actions:
               print(json.dumps(parsed, indent=4, sort_keys=True))
 
   - dir: "/cxx/overloads"
-    rule:
-      gen: package
+    vars:
+      action: gen_package
       name: overloads
       python.code_fragment:
         - import json
@@ -23,8 +23,8 @@ gen_actions:
               print(json.dumps(parsed, indent=4, sort_keys=True))
 
   - dir: "../operators"
-    rule:
-      gen: package
+    vars:
+      action: gen_package
       name: operators
       python.code_fragment:
         - import json
@@ -33,14 +33,13 @@ gen_actions:
               parsed = json.loads(json_str)
               print(json.dumps(parsed, indent=4, sort_keys=True))
 
+file_vars:
   - file: "./root.hpp"
-    rule:
-      gen:
+    vars:
       package: simple
 
-root: |
+vars: |
   {%- set out_prj_dir = "." -%}
-  gen:
   out_prj_dir: {{out_prj_dir}}
   src_glob:
     - cxx/**/*.h*
@@ -72,3 +71,13 @@ root: |
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
     - cxx/getters/*template_getter.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+  - clang_args:
+      inheritable: false
+      default:
+        - -D__ANDROID__
+      allowed_on: [ root ]
+      array: true

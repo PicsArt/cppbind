@@ -294,7 +294,7 @@ constructor:
           {%- set call_args = [] -%}
           {%- for arg in args -%}
           {% set converter = arg.converter.jni_to_cxx %}
-          {{converter.snippet(arg.name)|indent(4)}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent(4)}}
           {%- do call_args.append(converter.converted_name(arg.name)) -%}
           {%- endfor %}
           {%- if not owner_class.root.shared_ref %}
@@ -390,7 +390,7 @@ function:
       {%- macro args_snippet(args, call_args) %}
       {%- for arg in args -%}
       {%- set converter = arg.converter.jni_to_cxx %}
-      {{converter.snippet(arg.name)}}
+      {{converter.snippet(arg.name, nullable=arg.nullable)}}
       {%- do call_args.append(converter.converted_name(arg.name))%}
       {% endfor %}
       {%- endmacro %}
@@ -399,7 +399,7 @@ function:
       auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
                                           <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                           {%- endif -%}({{call_args|join(', ')}});
-      {{rconverter.cxx_to_jni.snippet('result')}}
+      {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)}}
       return {{rconverter.cxx_to_jni.converted_name('result')}};
       {%- else %}
       this_object->{{cxx_name}}({{call_args|join(', ')}});
@@ -505,7 +505,7 @@ property_getter:
           {%- endif %}
           {%- endif %}
           auto result = this_object->{{cxx_name}};
-          {{rconverter.cxx_to_jni.snippet('result')|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- if ctx.action == 'gen_property_setter' %}
@@ -529,7 +529,7 @@ property_getter:
           {%- endif %}
           {%- endif %}
           {% set converter = rconverter.jni_to_cxx %}
-          {{converter.snippet('value')|indent(4)}}
+          {{converter.snippet('value', nullable=nullable_return)|indent(4)}}
           this_object->{{cxx_name}} = {{converter.converted_name('value')}};
       }
       {% endif %}
@@ -608,7 +608,7 @@ getter:
           {%- endif %}
           {%- endif %}
           auto result = this_object->{{cxx_name}}();
-          {{rconverter.cxx_to_jni.snippet('result')|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- if setter_ctx is defined %}
@@ -632,7 +632,7 @@ getter:
           {%- endif %}
           {%- endif %}
           {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
-          {{converter.snippet(setter_ctx.args[0].name)|indent(4)}}
+          {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
           this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}

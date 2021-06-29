@@ -12,7 +12,7 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.common.yaml_process import UniqueKeyLoader, yaml_info_struct_to_dict
 from iegen.ir.ast import Node
 from iegen.utils.clang import extract_pure_comment
 from iegen import default_config
@@ -85,16 +85,14 @@ class APIParser(object):
         ctx = ctx or {}
         attrs = self.ctx_desc.ctx_def_map.get(name)
         if attrs:
-            api_attrs = attrs.attr
-            if api_attrs:
-                # for dir api pass yaml file path
-                location = location or SimpleNamespace(file_name=attrs.file,
-                                                       line_number=None)
-                try:
-                    api_attrs = APIParser.eval_attr_template(api_attrs, ctx)
-                except JinjaUndefinedError as e:
-                    Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
-                return self.parse_api_attrs(api_attrs, location)
+            # for dir api pass yaml file path
+            location = location or SimpleNamespace(file_name=attrs.file,
+                                                   line_number=None)
+            try:
+                api_attrs = APIParser.eval_attr_template(attrs, ctx)
+            except JinjaUndefinedError as e:
+                Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
+            return self.parse_api_attrs(api_attrs, location)
 
     def parse_api_attrs(self, attrs, location):
         attr_dict = OrderedDict()
@@ -161,6 +159,7 @@ class APIParser(object):
 
     def parse_attr(self, attr_name, attr_value):
         attr_type = self.var_def[attr_name].get('type', None)
+
         if isinstance(self.var_def[attr_name].get('default'), bool) or attr_type == 'bool':
             return bool(distutils.util.strtobool(str(attr_value)))
 
@@ -197,6 +196,6 @@ class APIParser(object):
 
     @staticmethod
     def eval_attr_template(attrs, ctx):
-        if isinstance(attrs, dict):
-            return yaml.load(JINJA_ENV.from_string(yaml.dump(attrs)).render(ctx), Loader=UniqueKeyLoader)
-        return yaml.load(JINJA_ENV.from_string(attrs).render(ctx), Loader=UniqueKeyLoader)
+        if attrs.isinstance(str):
+            return yaml.load(JINJA_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
+        return yaml.load(JINJA_ENV.from_string(yaml.dump(yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)

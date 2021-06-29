@@ -3,6 +3,7 @@ import os
 import glob
 import shutil
 import copy
+from collections.abc import MutableMapping
 from jinja2 import Environment, BaseLoader, StrictUndefined
 import clang.cindex as cli
 import iegen.utils.clang as cutil
@@ -133,7 +134,7 @@ class Converter:
             #         arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
             #     arg in self.template_args]
 
-            custom = types.SimpleNamespace(**self.custom)
+            custom = self.custom
 
             cxx_type_name = self.original_clang_type.spelling
 
@@ -174,13 +175,14 @@ class Converter:
 
         context = make()
         del context['self']
+
         return context
 
 
 class Adapter:
 
     def __init__(self, clang_type, ctx, type_info_collector, **kwargs):
-        self.type_info_colector = type_info_collector
+        self.type_info_collector = type_info_collector
         self.clang_type = clang_type
         self.ctx = ctx
         self.original_clang_type = clang_type
@@ -194,12 +196,10 @@ class Adapter:
         self.original_clang_type = clang_type
 
     def __getattr__(self, name):
-        type_info = None
-
-        if '_to_' in name and name in self.type_info_colector.converters:
-            type_info = self.type_info_colector.converters[name]
-        elif name in self.type_info_colector.target_type_infos:
-            type_info = self.type_info_colector.target_type_infos[name]
+        if '_to_' in name and name in self.type_info_collector.converters:
+            type_info = self.type_info_collector.converters[name]
+        elif name in self.type_info_collector.target_type_infos:
+            type_info = self.type_info_collector.target_type_infos[name]
         else:
             return super().__getattribute__(name)
 
@@ -207,7 +207,7 @@ class Adapter:
                          original_clang_type=self.original_clang_type,
                          template_args=self.template_args,
                          target_lang=name,
-                         custom=self.type_info_colector.custom,
+                         custom=self.type_info_collector.custom,
                          ctx=self.ctx,
                          type_converter=type_info,
                          **self.kwargs)
@@ -332,17 +332,17 @@ class SnippetsEngine:
     def _load_actions(self, actions_info):
         def handle_file_action(info_dict):
             glob_tmpls = info_dict['files_glob']
-            if not isinstance(glob_tmpls, list):
-                glob_tmpls = [glob_tmpls]
+            if not glob_tmpls.isinstance(list):
+                glob_tmpls = [glob_tmpls.value]
             glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in glob_tmpls]
 
             copy_to_tmpl = info_dict.get('copy_to', None)
-            copy_to_tmpl = copy_to_tmpl and self.jinja2_env.from_string(copy_to_tmpl)
+            copy_to_tmpl = copy_to_tmpl and self.jinja2_env.from_string(copy_to_tmpl.value)
 
             variables = info_dict.get('variables', {})
             variables_tmpl = {}
             for var_name, var_tmpl in variables.items():
-                var_tmpl = self.jinja2_env.from_string(var_tmpl)
+                var_tmpl = self.jinja2_env.from_string(var_tmpl.value)
                 variables_tmpl[var_name] = var_tmpl
 
             self.action_infos.append(FileAction(glob_tmpls, copy_to_tmpl, variables_tmpl))
@@ -371,15 +371,15 @@ class SnippetsEngine:
             del code_info_dict[key]
 
         for code_name, info_map in code_info_dict.items():
-            if isinstance(info_map, str):
+            if info_map.isinstance(str):
                 # redirection
                 info_map = code_info_dict[info_map]
 
-            if info_map is None:
+            if info_map.value is None:
                 # allow empty rules
                 continue
 
-            if not isinstance(info_map, dict):
+            if not isinstance(info_map, MutableMapping):
                 raise Exception("Missing scopes section.")
 
             self.code_infos[code_name] = self._load_code_structure_info(code_name, info_map)
@@ -387,9 +387,9 @@ class SnippetsEngine:
     def _load_code_structure_info(self, code_name, code_info_dict):
         def scope_walk(info_map, scopes=None):
             scopes = scopes or tuple()
-            if not isinstance(info_map, dict):
+            if not info_map.isinstance(MutableMapping):
                 # leaf node
-                yield (scopes, dict(content=info_map, unique_content=None, scopes=[]))
+                yield scopes, dict(content=info_map, unique_content=None, scopes=[])
             elif 'content' in info_map or 'unique_content' in info_map:
                 yield (scopes, dict(content=info_map.get('content', None),
                                     unique_content=info_map.get('unique_content', None),
@@ -404,17 +404,16 @@ class SnippetsEngine:
         for scopes, info in scope_walk(code_info_dict):
             try:
                 snippet = info['content']
-                snippet = snippet and self.jinja2_env.from_string(snippet)
+                snippet = snippet and self.jinja2_env.from_string(snippet.value)
                 unique_snippet = info['unique_content']
-                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet)
+                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
             except Exception as e:
                 raise Exception(f"Error in code snippets {code_name}, in scope {':'.join(scopes)}. Error {str(e)}")
             scope_infos[scopes] = ScopeInfo(name=code_name,
                                             parent_scopes=scopes,
                                             scopes=info['scopes'],
                                             snippet_tmpl=snippet,
-                                            unique_snippet_tmpl=unique_snippet,
-                                            )
+                                            unique_snippet_tmpl=unique_snippet)
 
         return scope_infos
 
@@ -422,11 +421,11 @@ class SnippetsEngine:
         # load into structures
         for file_name, info_map in code_info_dict.items():
             try:
-                file_path = self.jinja2_env.from_string(info_map['file_path'])
+                file_path = self.jinja2_env.from_string(info_map['file_path'].value)
                 snippet = info_map.get('content', None)
-                snippet = snippet and self.jinja2_env.from_string(snippet)
+                snippet = snippet and self.jinja2_env.from_string(snippet.value)
                 unique_snippet = info_map.get('unique_content', None)
-                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet)
+                unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
             except Exception as e:
                 raise Exception(f"Error in code file {file_name} snippets. Error {str(e)}")
             self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], info_map.get('scopes', []),
@@ -435,38 +434,39 @@ class SnippetsEngine:
     def _load_type_info(self, type_info_dict):
         # load into structures
         for type_name, info_map in type_info_dict.items():
-            if isinstance(info_map, str):
+            if info_map.isinstance(str):
                 # redirection
-                info_map = type_info_dict[info_map]
+                info_map = type_info_dict[info_map.value]
 
-            if not isinstance(info_map, dict):
+            if not isinstance(info_map, MutableMapping):
                 raise Exception("Missing type information")
 
             custom = {}
             target_types = {}
             type_converters = {}
             for name, info in info_map.items():
-                target_info = None
                 if '_to_' in name:
                     # converter
                     index = name.rfind('_to_')
                     target_lang = name[index + 4:]
                     target_lang_info = info_map.get(target_lang, {'type_info': '{{cxx_type_name}}'})
                     try:
-                        target_type_info = self.jinja2_env.from_string(target_lang_info['type_info'])
-                        snippet_tmpl = info and self.jinja2_env.from_string(info)
+                        tmpl = target_lang_info['type_info']
+                        target_type_info = self.jinja2_env.from_string(tmpl if not isinstance(tmpl, MutableMapping) else tmpl.value)
+                        snippet_tmpl = info and self.jinja2_env.from_string(info.value)
                     except Exception as e:
                         raise Exception(f"Error in code snippets for {type_name}, in converter {name}. Error {str(e)}")
-                    target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl, name=name,
+                    target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
+                                                    name=name,
                                                     target_type_info=target_type_info)
                     type_converters[name] = target_info
                 elif name == 'custom':
                     # primitive type info
-                    custom = info
+                    custom = types.SimpleNamespace(**{k: v.value for k, v in info.items()})
                 else:
                     # type info
                     try:
-                        target_type_info = self.jinja2_env.from_string(info['type_info'])
+                        target_type_info = self.jinja2_env.from_string(info['type_info'].value)
                     except Exception as e:
                         raise Exception(f"Error in type info {type_name}, in converter {name}. Error {str(e)}")
                     target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)

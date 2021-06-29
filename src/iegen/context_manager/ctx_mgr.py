@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections.abc import MutableMapping
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common import JINJA_ENV
@@ -78,7 +79,7 @@ class ContextManager:
                 if allowed:
                     if new_att_val is None:
                         # use default value
-                        new_att_val = ContextManager.get_attr_default_value(properties, self.ctx_desc.platform, self.ctx_desc.language)
+                        new_att_val = ContextManager.get_attr_default_value(att_name, properties, self.ctx_desc.platform, self.ctx_desc.language)
                         if isinstance(new_att_val, str):
                             try:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
@@ -106,11 +107,11 @@ class ContextManager:
         return res
 
     @staticmethod
-    def get_attr_default_value(prop, plat, lang):
+    def get_attr_default_value(att_name, prop, plat, lang):
         def_val = prop.get("default")
 
-        if not isinstance(def_val, dict):
-            return def_val
+        if not def_val.isinstance(MutableMapping):
+            return def_val.value
 
         if plat in def_val and lang in def_val:
             Error.critical(
@@ -119,7 +120,7 @@ class ContextManager:
 
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:
-                return def_val[key]
+                return def_val[key].value
 
     def has_yaml_api(self, name):
         return name in self.ctx_desc.ctx_def_map

@@ -1,11 +1,12 @@
 """
 Helper module for processing yaml files
 """
-import collections
 import copy
 import glob
 import os
 import yaml
+
+from collections.abc import MutableMapping
 
 # wrong import
 import iegen.common as PROJECT_CONFIG_DIR
@@ -13,7 +14,7 @@ import iegen.common as PROJECT_CONFIG_DIR
 # from iegen.common import PROJECT_CONFIG_DIR
 
 
-class YamlInfoNode(collections.abc.MutableMapping):
+class YamlInfoNode(MutableMapping):
     def __init__(self, value, line_num=None, file=None):
         self.value = value
         self.line_number = line_num
@@ -37,6 +38,15 @@ class YamlInfoNode(collections.abc.MutableMapping):
     def __contains__(self, item):
         return item in self.value
 
+    def isinstance(self, cls):
+        return isinstance(self.value, cls)
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __eq__(self, other):
+        return self.value == other
+
 
 class YamlKeyDuplicationError(Exception):
     pass
@@ -58,11 +68,18 @@ class MyLoader(yaml.SafeLoader):
 
         super().__init__(stream)
 
+    def construct_yaml_map(self, node):
+        yield self.construct_mapping(node)
+
     def construct_mapping(self, node, deep=False):
-        mapping = super().construct_mapping(node, deep)
-        line_num = node.start_mark.line + 1
-        file = node.start_mark.name
-        return YamlInfoNode(mapping, line_num, file)
+        mapping = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            value = self.construct_object(value_node, deep=deep)
+            mapping[key] = YamlInfoNode(value,
+                                        key_node.start_mark.line + 1,
+                                        key_node.start_mark.name)
+        return mapping
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
@@ -79,7 +96,7 @@ class UniqueKeyLoader(yaml.SafeLoader):
 def join_nodes(rdata, edata):
     if rdata is None:
         rdata = copy.copy(edata)
-    elif isinstance(rdata, dict):
+    elif isinstance(rdata, MutableMapping):
         rdata.update(edata)
     else:
         rdata += edata
@@ -164,8 +181,20 @@ yaml.add_constructor('!include', construct_include, MyLoader)
 
 yaml.add_constructor('!join', construct_join, MyLoader)
 
+MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
+
 
 def load_yaml(file_path, dirs=None):
     MyLoader.custom_dirs = dirs or []
     with open(file_path) as f:
         return yaml.load(f, MyLoader)
+
+
+def yaml_info_struct_to_dict(struct):
+    if isinstance(struct, YamlInfoNode) and struct.isinstance(dict) or isinstance(struct, dict):
+        return {k: yaml_info_struct_to_dict(v) for k, v in struct.items()}
+    if isinstance(struct, YamlInfoNode) and struct.isinstance(list) or isinstance(struct, list):
+        return [yaml_info_struct_to_dict(i) for i in struct]
+    if isinstance(struct, YamlInfoNode):
+        return struct.value
+    return struct

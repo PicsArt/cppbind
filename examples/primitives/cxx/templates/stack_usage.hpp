@@ -15,10 +15,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: templates
- * python.include:
- *   - templates.stack_pygen
- *   - simple.project_pygen
- * kotlin.include: com.examples.simple.*
  * swift.include: CWrapper
  */
 class StackUsage  {

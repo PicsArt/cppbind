@@ -18,8 +18,8 @@ setup(
     name='iegen',
     version="0.0.1",
     description="Image Engine Wrapper Generator.",
-    packages=find_packages('src/.') + ['clang'],
-    package_dir={'clang': '3pty/clang', '': 'src'},
+    packages=find_packages('src/.', exclude=['test*']),
+    package_dir={'': 'src'},
     # this is hack need to find proper way
     package_data={'iegen': [os.path.relpath(f, 'src/iegen/')
                             for f in glob.glob('src/iegen/config/**/*', recursive=True)]},

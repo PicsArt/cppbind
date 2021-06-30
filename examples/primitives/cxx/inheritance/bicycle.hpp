@@ -11,7 +11,6 @@ namespace iegen::example {
  * shared_ref: False
  * package: inheritance
  * swift.include: CWrapper
- * python.include: inheritance.vehicle_pygen
  */
 class Bicycle : public Vehicle {
 public:

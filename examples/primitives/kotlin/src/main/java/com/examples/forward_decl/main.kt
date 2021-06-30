@@ -1,6 +1,7 @@
 package com.examples.forward_decl
 
-import com.examples.forward_decl.*
+import com.examples.forward_decl.teacher.Teacher
+import com.examples.forward_decl.student.Student
 
 class ForwardDeclsApp {
 

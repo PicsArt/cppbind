@@ -18,8 +18,6 @@ namespace iegen::example {
  *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
- * kotlin.include: com.examples.simple.Root
- * python.include: simple.root_pygen
  * swift.include: CWrapper
  */
 template <typename T>

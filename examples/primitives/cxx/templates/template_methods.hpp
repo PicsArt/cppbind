@@ -10,8 +10,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: templates
- * kotlin.include: com.examples.simple.*
- * python.include: simple
  * swift.include: CWrapper
  */
 class TemplateMethods  {

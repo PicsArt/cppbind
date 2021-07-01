@@ -17,6 +17,7 @@ from iegen.ir.ast import Node, NodeType
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
 
+
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
@@ -168,6 +169,7 @@ def test_external_API_parser_positive():
         context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
             res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
+            print(res)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -178,6 +180,24 @@ def test_external_API_parser_positive():
 
         except Exception:
             assert False, "should not get error"
+
+
+def test_external_API_merging_positive():
+    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
+    api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
+
+    expected_res = {
+        'code_snippets': {},
+        'type_converters': {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
+        'actions': []
+    }
+
+    context_def_glob = os.path.join(api_rules_dir, 'with_snippets_rules', '*.yaml')
+    try:
+        res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
+        assert expected_res == res, "External API parser results has bean changed."
+    except Exception:
+        assert False, "should not get error"
 
 
 def test_parser_errors(clang_config):

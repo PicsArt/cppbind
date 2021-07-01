@@ -16,7 +16,7 @@ import iegen.common as PROJECT_CONFIG_DIR
 
 class YamlNode(MutableMapping):
     """
-    Class which inherits MutableMapping to act like a dict while keeping additional information.
+    Class which implements MutableMapping interface to act like a dict while keeping additional information.
     This is implemented to be able to keep each yaml node line and file information while loading yaml files.
     """
     def __init__(self, value, line_num=None, file=None):

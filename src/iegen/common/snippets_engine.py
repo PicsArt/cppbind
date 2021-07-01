@@ -451,10 +451,11 @@ class SnippetsEngine:
                     # converter
                     index = name.rfind('_to_')
                     target_lang = name[index + 4:]
-                    target_lang_info = info_map.get(target_lang, {'type_info': '{{cxx_type_name}}'})
+                    tmpl = '{{cxx_type_name}}'
+                    if target_lang in info_map:
+                        tmpl = info_map[target_lang]['type_info'].value
                     try:
-                        tmpl = target_lang_info['type_info']
-                        target_type_info = self.jinja2_env.from_string(tmpl if not isinstance(tmpl, MutableMapping) else tmpl.value)
+                        target_type_info = self.jinja2_env.from_string(tmpl)
                         snippet_tmpl = info and self.jinja2_env.from_string(info.value)
                     except Exception as e:
                         raise Exception(f"Error in code snippets for {type_name}, in converter {name}. Error {str(e)}")

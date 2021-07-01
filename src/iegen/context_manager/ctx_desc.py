@@ -190,8 +190,10 @@ class ContextDescriptor:
                     if val.isinstance(dict) and rules_map[key].isinstance(dict):
                         merge_rules(val, rules_map[key], path)
                     else:
-                        Error.critical(f"Redefinition of '{'.'.join(path)}' key section in line {val.line_number} of {val.file} file,\n"
-                                       f"which already has been defined in line {rules_map[key].line_number} of {rules_map[key].file} file")
+                        raise YamlKeyDuplicationError(f"Redefinition of '{'.'.join(path)}' key section in line "
+                                                      f"{val.line_number} of {val.file} file,\n"
+                                                      f"which already has been defined in line "
+                                                      f"{rules_map[key].line_number} of {rules_map[key].file} file")
                 else:
                     rules_map[key] = val
                 path.pop()

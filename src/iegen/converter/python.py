@@ -5,7 +5,6 @@ import os
 import re
 
 import iegen.utils.clang as cutil
-from iegen import logging
 from . import *
 
 OPERATOR_MAPPING = {
@@ -77,32 +76,12 @@ def is_overloaded_cursor(ctx):
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
-def get_declaration_includes(ctx):
-    includes = []
-    _get_declaration_includes(ctx, ctx.cursor, includes)
-    if includes:
-        logging.debug(f"Including forward declaration headers {includes} for {ctx.name}")
-    return includes
-
-
-def _get_declaration_includes(ctx, cursor, includes):
-    if cursor.kind == cli.CursorKind.NAMESPACE:
-        for child in cursor.get_children():
-            if cutil.is_declaration(child):
-                ref_ctx = ctx.find_by_type(child.type)
-                if ref_ctx:
-                    includes.append(os.path.relpath(ref_ctx.cursor.location.file.name,
-                                                    ctx.out_prj_dir))
-    if cursor.lexical_parent:
-        _get_declaration_includes(ctx, cursor.lexical_parent, includes)
-
-
 def get_default_value(arg):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
             return f' = None'
         elif pointee.kind == cli.TypeKind.ENUM:
-            return f' = {arg.converter.python.target_type_name}.{arg.default}'
+            return f' = {arg.converter.ctx.file}.{arg.converter.python.target_type_name}.{arg.default}'
         return f' = {arg.default}'
     return ''

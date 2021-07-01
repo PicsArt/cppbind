@@ -176,16 +176,23 @@ enum:
 var_class_include: &var_class_include
     unique_content: |
       #include "{{prj_rel_file_name}}"
+      {%- macro gen_import(converter, current_ctx) -%}
+      {%- set type_ctx = converter.ctx -%}
+      {%- if type_ctx and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
+      {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+      {%- endif -%}
+      {%- for tmpl_arg_converter in converter.template_args -%}
+      {{gen_import(tmpl_arg_converter, current_ctx)}}
+      {%- endfor -%}
+      {%- endmacro -%}
+      {%- if base_types_converters is defined -%}
+      {%- for base in base_types_converters -%}
+      {{gen_import(base, ctx)}}
+      {%- endfor -%}
+      {%- endif -%}
       {%- if include_cxx -%}
       {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
       {%- endif -%}
-      {%- if ctx.template_includes -%}
-      {{marker}}{{ctx.template_includes|format_list('#include "{}"')|join_unique}}
-      {%- endif -%}
-
-var_template_method_include: &var_template_method_include
-    unique_content: |
-      {{ctx.template_includes|format_list('#include "{}"')|join_unique}}
 
 
 class:
@@ -315,6 +322,24 @@ interface:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
 
+var_method_cxx_include: &var_method_cxx_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx-%}
+    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- for arg in args -%}
+    {{gen_import(arg.converter, ctx)}}
+    {%- endfor -%}
+    {%- if rconverter is defined -%}
+    {{gen_import(rconverter, ctx)}}
+    {%- endif -%}
+
 constructor:
   swift:
     head: |
@@ -329,6 +354,7 @@ constructor:
           self.init(create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
       }
   cc:
+    include: *var_method_cxx_include
     body: |
       {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}){
         {%- set call_args = [] -%}
@@ -344,7 +370,6 @@ constructor:
           return static_cast<{{owner_class.root.cxx_type_name}}*>(this_object);
           {%- endif %}
       }
-    include: *var_template_method_include
   ch:
     body:
       content: |
@@ -400,6 +425,7 @@ function:
       {{helper.make_comment(comment)}}
       func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}
   cc:
+    include: *var_method_cxx_include
     body: |
       {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
@@ -460,7 +486,6 @@ function:
           return result;
           {%- endif %}
       }
-    include: *var_template_method_include
   ch:
     body:
       content: |
@@ -479,6 +504,18 @@ function:
   std_exceptions_cpp:
     body:
 
+var_getter_cxx_include: &var_getter_cxx_include
+  unique_content: |
+    {%- macro gen_import(converter, current_ctx) -%}
+    {%- set type_ctx = converter.ctx -%}
+    {%- if type_ctx -%}
+    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- endif -%}
+    {%- for tmpl_arg_converter in converter.template_args -%}
+    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {{gen_import(rconverter, ctx)}}
 
 property_getter:
   swift:
@@ -504,6 +541,7 @@ property_getter:
       {{helper.make_comment(comment)}}
       var {{name}}: {{result_converter.target_type_name}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
   cc:
+    include: *var_getter_cxx_include
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}
@@ -563,6 +601,7 @@ getter:
       var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:
+    include: *var_getter_cxx_include
     body: |
       {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
           {%- if owner_class.root.shared_ref %}

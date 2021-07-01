@@ -275,21 +275,49 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
+    {{target_type_name}} {{target_name}};
+    {%- if nullable %}
+    if ({{name}} == 0) {
+        {{target_name}} = std::shared_ptr<{{pointee}}>(nullptr);
+    } else {
+        {%- if pointee_base != pointee %}
+        auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+        {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+        {%- else %}
+        {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+        {%- endif %}
+    }
+    {%- else %}
     {%- if pointee_base != pointee %}
     auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-    {{target_type_name}} {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
     {%- else %}
-    {{target_type_name}} {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+    {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+    {%- endif %}
     {%- endif %}
   cxx_to_jni: |
     {# TODO: won´t work if arg[0] itself is a template type #}
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
+    {{target_type_name}} {{target_name}};
+    {%- if nullable %}
+    if (!{{name}}) {
+        {{target_name}} = 0;
+    } else {
+        {%- if pointee_base != pointee %}
+        std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{pointee_base}}>({{name}});
+        {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+        {%- else %}
+        {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
+        {%- endif %}
+    }
+    {%- else %}
     {%- if pointee_base != pointee %}
     std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{pointee_base}}>({{name}});
-    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
     {%- else %}
-    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
+    {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
+    {%- endif %}
     {%- endif %}
   kotlin_to_jdk: |
     {{args[0].snippet(name, nullable=nullable)|indent}}

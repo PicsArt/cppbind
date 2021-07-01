@@ -20,8 +20,8 @@ class Student;
  * action: gen_class
  * shared_ref: False
  * package: forward_decl
+ * kotlin.package: forward_decl.teacher
  * swift.include: CWrapper
- * include_cxx: cxx/forward_decl/student.hpp
  */
 class Teacher {
 public:

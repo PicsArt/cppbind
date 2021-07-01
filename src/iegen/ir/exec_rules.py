@@ -252,25 +252,6 @@ class Context(BaseContext):
         return self._api_args
 
     @property
-    def template_includes(self):
-        """
-        Returns list of generated cxx imports based on template arguments values.
-
-        Returns:
-            list(str): List containing includes.
-        """
-        template_arg = self.node.args.get('template', None)
-        includes = []
-        if template_arg:
-            template_arg = itertools.chain(*template_arg.values())
-            for t in template_arg:
-                ctx = self.find_by_type(t['type'])
-                if ctx:
-                    includes.append(os.path.relpath(ctx.node.clang_cursor.location.file.name,
-                                                    self.out_prj_dir))
-        return includes
-
-    @property
     def template_type_parameters(self):
         return [child.type.spelling for child in self.cursor.get_children() if
                 child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]

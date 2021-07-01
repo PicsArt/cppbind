@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
@@ -92,7 +93,7 @@ def run_package():
     choices = [lang for lang in default_config.languages] + \
               [plat + '.' + lang for plat in default_config.platforms for lang in default_config.languages]
 
-    sub_parser = parser.add_subparsers()
+    sub_parser = parser.add_subparsers(required=True)
 
     run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.')
     run_parser.add_argument('languages', type=str, nargs='+',
@@ -104,7 +105,8 @@ def run_package():
     clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.')
     clean_parser.set_defaults(func=clean)
 
-    args = parser.parse_args()
+    # print help if nothing is passed
+    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
     args.func(args)
 
 

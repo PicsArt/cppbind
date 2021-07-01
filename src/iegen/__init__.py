@@ -18,7 +18,7 @@ BANNER_LOGO = """
 
 LOGGING_FORMAT = '%(asctime)s:(%(levelname)s) %(message)s'
 DATETIME_FORMAT = '%m/%d/%Y-%H:%M'
-DATETIME_REGEX = r'^(0[1-9]|1[0-2])/([1-9]|[12][0-9]|3[0-1])/(20[0-9][0-9])-([01][0-9]|2[0-4]):([012345][0-9])'
+DATETIME_REGEX = r'^(0[1-9]|1[0-2])/([012][0-9]|3[0-1])/(20[0-9][0-9])-([01][0-9]|2[0-4]):([012345][0-9])'
 
 log_kwargs = {}
 if default_config.logging.log_file:

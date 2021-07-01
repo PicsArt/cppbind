@@ -5,11 +5,12 @@ import pytest
 import types
 import yaml
 
+from collections import OrderedDict
 from unittest.mock import patch
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error
-from iegen.common.yaml_process import YamlKeyDuplicationError
+from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import Node, NodeType
@@ -74,7 +75,7 @@ def test_parser_processor_cr_counter(clang_config):
                 * kotlin.file: utils
                 */
                 """,
-                "a9dd42fb3dd193871b8a49913180c08e"
+                "968fa15c9d1d04262b9edc7bbcf37fb7"
         ),
         (
                 """
@@ -86,7 +87,7 @@ def test_parser_processor_cr_counter(clang_config):
                 * shared_ref: False
                 */
                 """,
-                "9e1abee91024c0f427a0f5f04732823b"
+                "b64b94a831d388a32509fd7c296faa5c"
         )
     ]
 )
@@ -154,14 +155,27 @@ def test_external_API_parser_negative():
 def test_external_API_parser_positive():
     ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
-    dirs = (
-        'with_many_files', 'with_nested_cfg', 'with_mixed_cfg', 'with_simple_cfg', 'with_jinja_expr'
-    )
 
-    for dir in dirs:
+    results = {
+        'with_many_files': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
+        'with_mixed_cfg': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
+        'with_jinja_expr': '7e3f74054ee36e9401d3028ca7856a4e'
+    }
+
+    for dir, res_md5 in results.items():
         context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
         try:
-            ctx_desc.build_ctx_def_map(context_def_glob)
+            res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
+
+            ordered_res = OrderedDict()
+            for key in sorted(res.keys()):
+                ordered_res[key] = res[key]
+
+            assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5,\
+                "External API parser results has bean changed."
+
         except Exception:
             assert False, "should not get error"
 
@@ -275,14 +289,14 @@ def test_file_api_positive():
     api, args = api_parser.parse_yaml_api(example_file_key, {})
 
     assert api == Node.API_NONE
-    assert args['package']['__all__']['__all__'] == 'test_cxx_inputs'
+    assert args['package'] == 'test_cxx_inputs'
 
 
 def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
     context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'swift'))
+    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'python'))
 
     example_dir_key = os.path.relpath(
         os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
@@ -290,5 +304,5 @@ def test_dir_api_positive():
     api, args = api_parser.parse_yaml_api(example_dir_key, {})
 
     assert api == 'gen_package'
-    assert args['name']['__all__']['__all__'] == 'inputs'
-    assert args['code_fragment']['__all__']['python'] == ['import json']
+    assert args['name'] == 'inputs'
+    assert args['code_fragment'] == ['import json']

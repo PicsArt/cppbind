@@ -18,6 +18,9 @@ ALL_PLATFORMS = sorted(list(default_config.platforms))
 
 
 class ContextManager:
+    """
+    A class for evaluating current context variables using current context to assign the result to the current node.
+    """
     def __init__(self, ctx_desc):
         self.ctx_desc = ctx_desc
         self.ieg_api_parser = APIParser(ctx_desc,
@@ -52,15 +55,17 @@ class ContextManager:
             return api, self.__process_attrs(kind, args, location, ctx)
 
     def __process_attrs(self, kind, args, location, ctx=None):
+        """
+        Evaluate/calculate current context variables values by its' kind and current context.
+        """
         ctx = ctx or OrderedDict()
         args = args or OrderedDict()
         res = OrderedDict()
 
         # add all missing attributes
         for att_name, properties in self.ctx_desc.var_def.items():
-            att_val = args.get(att_name, {}).get(self.ctx_desc.platform, {}).get(self.ctx_desc.language)
+            new_att_val = args.get(att_name)
 
-            new_att_val = att_val
             allowed = kind in properties["allowed_on"]
             if new_att_val is None:
                 # check mandatory attribute existence
@@ -79,7 +84,7 @@ class ContextManager:
                 if allowed:
                     if new_att_val is None:
                         # use default value
-                        new_att_val = ContextManager.get_attr_default_value(att_name, properties, self.ctx_desc.platform, self.ctx_desc.language)
+                        new_att_val = ContextManager.get_attr_default_value(properties, self.ctx_desc.platform, self.ctx_desc.language)
                         if isinstance(new_att_val, str):
                             try:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
@@ -97,17 +102,19 @@ class ContextManager:
             # now we need to process variables of value and set value
             if new_att_val is not None:
                 if isinstance(new_att_val, str):
-                    # sys vars can have different types than string parse to get correct type
+                    # sys vars can have different types than string, so we need to parse it to get correct type
                     new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
                 # add attr to current node context so that it can be used for coming attributes
                 ctx[att_name] = new_att_val
                 res[att_name] = new_att_val
 
-        assert res is not None
         return res
 
     @staticmethod
-    def get_attr_default_value(att_name, prop, plat, lang):
+    def get_attr_default_value(prop, plat, lang):
+        """
+        Retrieve language/platform specific default value for current variable.
+        """
         def_val = prop.get("default")
 
         if not def_val.isinstance(MutableMapping):
@@ -123,6 +130,9 @@ class ContextManager:
                 return def_val[key].value
 
     def has_yaml_api(self, name):
+        """
+        Check whether current name is present in context definition map
+        """
         return name in self.ctx_desc.ctx_def_map
 
     def get_api_def_filename(self, name):

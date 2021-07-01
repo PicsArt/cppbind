@@ -1,5 +1,3 @@
-"""
-"""
 import argparse
 import os
 
@@ -12,9 +10,9 @@ from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
-    load_rule_module,
+    clear_iegen_generated_files,
     get_host_platform,
-    clear_iegen_generated_files
+    load_rule_module
 )
 
 

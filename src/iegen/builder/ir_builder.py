@@ -11,8 +11,13 @@ from types import SimpleNamespace
 from iegen import DATETIME_FORMAT
 from iegen.builder import OUTPUT_MODIFICATION_KEY
 from iegen.common.error import Error
-from iegen.ir.ast import DirectoryNode, CXXNode, NodeType, FileNode
-from iegen.ir.ast import RootNode
+from iegen.ir.ast import (
+    CXXNode,
+    DirectoryNode,
+    FileNode,
+    NodeType,
+    RootNode
+)
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils.clang import get_full_displayname
 
@@ -41,6 +46,9 @@ class CXXIEGIRBuilder(object):
         self._parent_arg_mapping = {}
 
     def start_root(self):
+        """
+        Create root node and eval its context.
+        """
         root_node = self.ir
         self.node_stack.append(root_node)
         self.__update_internal_vars(root_node)
@@ -57,6 +65,9 @@ class CXXIEGIRBuilder(object):
         assert len(self.node_stack) == 0, "stack should be empty"
 
     def start_dir(self, dir_name):
+        """
+        Create directory node and eval its context.
+        """
         if dir_name not in self._processed_dirs:
             file_name = None
             if self.ctx_mgr.has_yaml_api(dir_name):
@@ -89,6 +100,9 @@ class CXXIEGIRBuilder(object):
         self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
+        """
+        Create file node and eval its context.
+        """
         current_node = FileNode(tu.cursor)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
@@ -111,6 +125,9 @@ class CXXIEGIRBuilder(object):
         self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
     def start_cursor(self, cursor, *args, **kwargs):
+        """
+        Create a node wrapper for current cursor and eval its context.
+        """
         current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
         self.__update_internal_vars(current_node)
@@ -135,6 +152,9 @@ class CXXIEGIRBuilder(object):
             current_node.pure_comment = pure_comment
 
     def get_parent_args(self):
+        """
+        Get context from the nearest parent which has API.
+        """
         if len(self.node_stack) < 2:
             return None
         direct_parent_name = self.node_stack[-2].full_displayname
@@ -150,6 +170,9 @@ class CXXIEGIRBuilder(object):
         return parent_args
 
     def __update_internal_vars(self, node):
+        """
+        Update internal variables depending current node type.
+        """
         if node.type == NodeType.ROOT_NODE:
             sys_vars = {'path': os.path}
         else:
@@ -181,10 +204,14 @@ class CXXIEGIRBuilder(object):
         self._sys_vars.update(sys_vars)
 
     def _get_modification_time(self, path):
+        """Get last modification time of current file"""
         modification_time = datetime.datetime.fromtimestamp(os.stat(path).st_ctime)
         return datetime.date.strftime(modification_time, DATETIME_FORMAT)
 
     def get_sys_vars(self):
+        """
+        Get system variables and add git repo url of project directory.
+        """
         sys_vars = copy.copy(self._sys_vars)
 
         def _get_git_repo_url(project_dir=None):
@@ -214,6 +241,9 @@ class CXXIEGIRBuilder(object):
         self._parent_arg_mapping.pop(node.full_displayname, None)
 
     def get_full_ctx(self, pure_comment=None):
+        """
+        Construct full context: system variables + pure comment + parent context
+        """
         ctx = self.get_sys_vars()
         if pure_comment is None:
             current_node = self.node_stack[-1]

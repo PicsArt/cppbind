@@ -19,6 +19,10 @@ NODE_GROUP_ALIASES = {
 
 
 class ContextDescriptor:
+    """
+    A class to read/load/merge yaml config files and calc/eval context variables
+    """
+
     ROOT_SECTION_KEY = 'vars'
     DIR_SECTION_KEY = 'dir_vars'
     FILE_SECTION_KEY = 'file_vars'
@@ -64,6 +68,9 @@ class ContextDescriptor:
         return attrs
 
     def build_ctx_def_map(self, context_def_glob):
+        """
+        A method for iterating over yaml config files and building context definition map by loading/merging yaml files.
+        """
         if context_def_glob is None:
             return {}
 
@@ -90,6 +97,9 @@ class ContextDescriptor:
         return ctx_def_map
 
     def load_merge_ctx_def_map(self, attrs, ctx_def_map):
+        """
+        A method for loading/merging yaml config files corresponding sections.
+        """
         cls = self.__class__
 
         def flatten_dict(src_dict, section_key, ancestors):
@@ -134,6 +144,10 @@ class ContextDescriptor:
 
     @classmethod
     def _get_key(cls, src_dict, ancestors):
+        """
+        A method to construct a key from loaded yaml config file's current section.
+        """
+
         # dir
         if cls.DIR_RULE_KEY in src_dict:
             dir_name = src_dict[cls.DIR_RULE_KEY].value
@@ -158,6 +172,9 @@ class ContextDescriptor:
             return join_type_parts(ancestors)
 
     def load_merge_rules(self, attrs, ctx_def_map):
+        """
+        A method for loading/merging snippets related sections from yaml config files.
+        """
         def merge_rules(rules, rules_map, path):
             """
             Method to merge current tree with global one and report errors
@@ -202,6 +219,9 @@ class ContextDescriptor:
 
     @classmethod
     def validate_section_keys(cls, src_dict, section_key):
+        """
+        A method to validate current section and raise an error in case of disallowed key usages in the section.
+        """
         if section_key == cls.FILE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
             Error.critical(f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key")
         elif section_key == cls.DIR_SECTION_KEY and (cls.FILE_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
@@ -210,13 +230,17 @@ class ContextDescriptor:
             Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
 
     def get_var_def(self):
+        """Get variable definitions section"""
         return self.ctx_def_map.get(ContextDescriptor.VAR_DEF_SECTION_KEY, {})
 
     def get_code_snippets(self):
+        """Get final code snippets section"""
         return self.ctx_def_map.get(ContextDescriptor.CODE_SNIPPETS_KEY, {})
 
     def get_type_converter_snippets(self):
+        """Get type converter snippets section"""
         return self.ctx_def_map.get(ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY, {})
 
     def get_action_snippets(self):
+        """Get action snippets section"""
         return self.ctx_def_map.get(ContextDescriptor.ACTION_SNIPPETS_KEY, [])

@@ -1,10 +1,12 @@
-import types
-import os
-import glob
-import shutil
 import copy
+import glob
+import os
+import shutil
+
 from collections.abc import MutableMapping
 from jinja2 import Environment, BaseLoader, StrictUndefined
+from types import SimpleNamespace
+
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import logging as logging
@@ -389,11 +391,11 @@ class SnippetsEngine:
             scopes = scopes or tuple()
             if not info_map.isinstance(MutableMapping):
                 # leaf node
-                yield scopes, dict(content=info_map, unique_content=None, scopes=[])
+                yield scopes, SimpleNamespace(content=info_map, unique_content=None, scopes=[])
             elif 'content' in info_map or 'unique_content' in info_map:
-                yield (scopes, dict(content=info_map.get('content', None),
-                                    unique_content=info_map.get('unique_content', None),
-                                    scopes=info_map.get('scopes', [])))
+                yield (scopes, SimpleNamespace(content=info_map.get('content', None),
+                                               unique_content=info_map.get('unique_content', None),
+                                               scopes=info_map.get('scopes', [])))
             else:
                 for scope, child_info_map in info_map.items():
                     for d in scope_walk(child_info_map, scopes + tuple([scope])):
@@ -403,15 +405,15 @@ class SnippetsEngine:
 
         for scopes, info in scope_walk(code_info_dict):
             try:
-                snippet = info['content']
+                snippet = info.content
                 snippet = snippet and self.jinja2_env.from_string(snippet.value)
-                unique_snippet = info['unique_content']
+                unique_snippet = info.unique_content
                 unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
             except Exception as e:
                 raise Exception(f"Error in code snippets {code_name}, in scope {':'.join(scopes)}. Error {str(e)}")
             scope_infos[scopes] = ScopeInfo(name=code_name,
                                             parent_scopes=scopes,
-                                            scopes=info['scopes'],
+                                            scopes=info.scopes,
                                             snippet_tmpl=snippet,
                                             unique_snippet_tmpl=unique_snippet)
 
@@ -462,7 +464,7 @@ class SnippetsEngine:
                     type_converters[name] = target_info
                 elif name == 'custom':
                     # primitive type info
-                    custom = types.SimpleNamespace(**{k: v.value for k, v in info.items()})
+                    custom = SimpleNamespace(**{k: v.value for k, v in info.items()})
                 else:
                     # type info
                     try:

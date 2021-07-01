@@ -14,7 +14,11 @@ import iegen.common as PROJECT_CONFIG_DIR
 # from iegen.common import PROJECT_CONFIG_DIR
 
 
-class YamlInfoNode(MutableMapping):
+class YamlNode(MutableMapping):
+    """
+    Class which inherits MutableMapping to act like a dict while keeping additional information.
+    This is implemented to be able to keep each yaml node line and file information while loading yaml files.
+    """
     def __init__(self, value, line_num=None, file=None):
         self.value = value
         self.line_number = line_num
@@ -39,6 +43,9 @@ class YamlInfoNode(MutableMapping):
         return item in self.value
 
     def isinstance(self, cls):
+        """
+        Method to check current node real value type.
+        """
         return isinstance(self.value, cls)
 
     def __bool__(self):
@@ -49,6 +56,9 @@ class YamlInfoNode(MutableMapping):
 
 
 class YamlKeyDuplicationError(Exception):
+    """
+    Exception subclass to raise duplication errors when a key is redefined in yaml file.
+    """
     pass
 
 
@@ -69,20 +79,30 @@ class MyLoader(yaml.SafeLoader):
         super().__init__(stream)
 
     def construct_yaml_map(self, node):
+        """
+        Original class is responsible for constructing yaml loader result nodes.
+        In this overridden version dict is being replaced with custom class object.
+        """
         yield self.construct_mapping(node)
 
     def construct_mapping(self, node, deep=False):
+        """
+        Original method is overridden to be able to get a custom class object instead of dict when loading yaml.
+        """
         mapping = {}
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
             value = self.construct_object(value_node, deep=deep)
-            mapping[key] = YamlInfoNode(value,
-                                        key_node.start_mark.line + 1,
-                                        key_node.start_mark.name)
+            mapping[key] = YamlNode(value,
+                                    key_node.start_mark.line + 1,
+                                    key_node.start_mark.name)
         return mapping
 
 
 class UniqueKeyLoader(yaml.SafeLoader):
+    """
+    Custom yaml loader to raise an error when duplicate key is found in yaml file.
+    """
     def construct_mapping(self, node, deep=False):
         mapping = []
         for key_node, value_node in node.value:
@@ -181,6 +201,7 @@ yaml.add_constructor('!include', construct_include, MyLoader)
 
 yaml.add_constructor('!join', construct_join, MyLoader)
 
+# add additional constructor to force MyLoader loader call our custom construct_yaml_map method when constructing nodes.
 MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
 
 
@@ -191,10 +212,13 @@ def load_yaml(file_path, dirs=None):
 
 
 def yaml_info_struct_to_dict(struct):
-    if isinstance(struct, YamlInfoNode) and struct.isinstance(dict) or isinstance(struct, dict):
+    """
+    A function to rebuild dict from nested YamlNode object.
+    """
+    if isinstance(struct, YamlNode) and struct.isinstance(dict) or isinstance(struct, dict):
         return {k: yaml_info_struct_to_dict(v) for k, v in struct.items()}
-    if isinstance(struct, YamlInfoNode) and struct.isinstance(list) or isinstance(struct, list):
+    if isinstance(struct, YamlNode) and struct.isinstance(list) or isinstance(struct, list):
         return [yaml_info_struct_to_dict(i) for i in struct]
-    if isinstance(struct, YamlInfoNode):
+    if isinstance(struct, YamlNode):
         return struct.value
     return struct

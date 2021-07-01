@@ -1,6 +1,7 @@
 from iegen import logging
 from traceback import extract_stack, format_list
 
+
 class Error:
     has_error = False
 

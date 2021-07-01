@@ -7,19 +7,17 @@ import os
 import re
 
 import clang.cindex as cli
-import iegen.utils.clang as cutil
-from iegen import default_config, logging
+from iegen import logging
 from iegen.common.error import Error
 from iegen.parser.filter import cxx_ieg_filter
+import iegen.utils.clang as cutil
 
 
-class CXXParser(object):
-    """
-    """
+class CXXParser:
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
                         cli.TranslationUnit.PARSE_INCOMPLETE
 
-    def __init__(self, filter=None, processor=None):
+    def __init__(self, filter=None):
         self.current_file = None
         self.filter = filter or cxx_ieg_filter
 
@@ -41,7 +39,6 @@ class CXXParser(object):
                                                             include_dirs]
 
         logging.info("parsing files: {}".format(' '.join(src_glob)))
-        # logging.info(f"parsing files: {base_files}")
 
         all_excluded_files = set()
         for file in src_exclude_glob:
@@ -106,7 +103,7 @@ class CXXParser(object):
 
     def parse(self, processor, **kwargs):
         for tu in self.parse_tu_x(**kwargs):
-            tu_parent_dirs = self.__dirs_to_process(tu)
+            tu_parent_dirs = CXXParser.__dirs_to_process(tu)
 
             # TODO:
             # currently we are not parsing the entire directory tree at once instead for each file we
@@ -128,8 +125,8 @@ class CXXParser(object):
                 if hasattr(processor, 'end_dir'):
                     processor.end_dir(dir_name)
 
-
-    def __dirs_to_process(self, tu):
+    @staticmethod
+    def __dirs_to_process(tu):
         dirs_to_search = set()
 
         root = tu.spelling
@@ -154,7 +151,7 @@ class CXXParser(object):
             logging.debug(f"Filtering forward declaration cursor: {cursor}")
             return
 
-        if self.is_implementation(cursor):
+        if CXXParser.is_implementation(cursor):
             logging.debug(f"Filtering implementation cursor: {cursor}")
             return
 
@@ -176,7 +173,8 @@ class CXXParser(object):
             for child in cursor.get_children():
                 self._process_cursor(child, processor)
 
-    def is_implementation(self, cursor):
+    @staticmethod
+    def is_implementation(cursor):
         if cursor.lexical_parent and cursor.semantic_parent:
             return cursor.lexical_parent != cursor.semantic_parent
         return False

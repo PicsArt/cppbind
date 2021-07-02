@@ -42,10 +42,6 @@ def is_first_overload(ctx):
     return is_first
 
 
-def module_name_to_func_name(pybind_module):
-    return ''.join([part.capitalize() for part in re.split('[_.]', pybind_module)])
-
-
 def cxx_rel_path(filepath, cxx_filepath):
     return os.path.relpath(filepath, cxx_filepath)
 

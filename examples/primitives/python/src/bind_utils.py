@@ -1,6 +1,7 @@
 import functools
 import importlib
 import inspect
+import re
 
 __all__ = ['bind']
 
@@ -13,6 +14,16 @@ class Function:
     def __init__(self, original_function, is_overloaded=False):
         self.original_function = original_function
         self.is_overloaded = is_overloaded
+        self._init_args_signature()
+
+    def _init_args_signature(self):
+        signature = inspect.getfullargspec(self.original_function)
+        annotations = signature.annotations
+        args_names = signature.args
+        'self' in args_names and args_names.remove('self')
+        'cls' in args_names and args_names.remove('cls')
+        self.args_names = args_names
+        self.annotations = annotations
 
     @property
     def classname(self):
@@ -129,10 +140,17 @@ class bind:
                 else:
                     # instance is iegen generated cls
                     cls = instance
-                return cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
-            return self.cls.originals[self.fn.name](instance, **all_kwargs)
+                res = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+                self._validate_return_value(res)
+                return res
+            res = self.cls.originals[self.fn.name](instance, **all_kwargs)
+            self._validate_return_value(res)
+            return res
 
         return _decorator
+
+    def _validate_return_value(self, result):
+        'return' in self.fn.annotations and _validate_arg(self.fn, 'return', result, self.fn.annotations['return'])
 
     def __set_name__(self, owner, name):
         # set methods class
@@ -158,7 +176,9 @@ class bind:
             all_kwargs = _map_to_kwargs(self.fn, *args[1:], **kwargs)
             if not self.fn.is_overloaded:
                 _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
-            return cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+            result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+            self._validate_return_value(result)
+            return result
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
         original = cls.originals[self.fn.name]
@@ -169,21 +189,26 @@ class bind:
                 return original.fset(args[0], *converted_args)
             else:
                 # getter
-                return original.fget(args[0])
+                result = original.fget(args[0])
+                self._validate_return_value(result)
+                return result
+
+
+def _is_optional(type_hint):
+    return re.match('Optional[[a-zA-Z.]+]', type_hint) is not None
+
+
+def _validate_arg(func, arg_name, arg_value, type_hint):
+    if type_hint is not 'None' and not _is_optional(type_hint) and arg_value is None:
+        raise ValueError(f'{func.classname}.{func.name}\'s {arg_name} value cannot be None.')
 
 
 def _convert_arg(arg, type_hint):
     try:
-        if False:
-            pass
+        if _is_optional(type_hint) and arg is None:
+            return arg
         elif type_hint == 'int':
             python_to_pybind_arg = int(arg)
-            return python_to_pybind_arg
-        elif type_hint == 'float':
-            python_to_pybind_arg = float(arg)
-            return python_to_pybind_arg
-        elif type_hint == 'str':
-            python_to_pybind_arg = str(arg)
             return python_to_pybind_arg
         return arg
     except TypeError:
@@ -193,7 +218,7 @@ def _convert_arg(arg, type_hint):
 
 def _map_to_kwargs(func, *args, **kwargs):
     all_kwargs = _get_default_args(func.original_function)
-    args_names, _ = _get_args_signature(func)
+    args_names = func.args_names
     for ii, arg in enumerate(args):
         arg_name = args_names[ii]
         all_kwargs[arg_name] = arg
@@ -202,25 +227,18 @@ def _map_to_kwargs(func, *args, **kwargs):
 
 
 def _convert_args_kwargs(func, *args, **kwargs):
-    args_names, annotations = _get_args_signature(func)
+    annotations = func.annotations
     converted_kwargs = {}
     for k, v in kwargs.items():
+        _validate_arg(func, k, v, annotations[k])
         converted_kwargs[k] = _convert_arg(v, annotations[k])
     converted_args = []
     for ii, arg in enumerate(args):
-        arg_name = args_names[ii]
+        arg_name = func.args_names[ii]
         annotation = annotations[arg_name]
+        _validate_arg(func, arg_name, arg, annotation)
         converted_args.append(_convert_arg(arg, annotation))
     return converted_args, converted_kwargs
-
-
-def _get_args_signature(func):
-    signature = inspect.getfullargspec(func.original_function)
-    annotations = signature.annotations
-    args_names = signature.args
-    'self' in args_names and args_names.remove('self')
-    'cls' in args_names and args_names.remove('cls')
-    return args_names, annotations
 
 
 def _get_default_args(func):

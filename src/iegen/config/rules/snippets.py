@@ -110,7 +110,7 @@ def make_func_context(ctx):
                 default=arg.default,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.api_args['nullable_arg']
+                nullable=arg.name in ctx.api_args['nullable_arg'] or arg.default in ('nullptr', 'NULL')
             ) for arg in ctx.args
         ]
 

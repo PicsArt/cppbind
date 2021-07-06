@@ -199,7 +199,7 @@ def _is_optional(type_hint):
 
 
 def _validate_arg(func, arg_name, arg_value, type_hint):
-    if type_hint is not None and not _is_optional(type_hint) and arg_value is None:
+    if type_hint != 'None' and not _is_optional(type_hint) and arg_value is None:
         raise ValueError(f'{func.classname}.{func.name}\'s {arg_name} value cannot be None.')
 
 

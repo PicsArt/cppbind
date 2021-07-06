@@ -198,7 +198,7 @@ class ContextDescriptor:
                 # keep current key path (list of parent keys) to use in error message
                 path.append(key)
                 if key in rules_map:
-                    if val.isinstance(dict) and rules_map[key].isinstance(dict):
+                    if val.is_of_type(dict) and rules_map[key].is_of_type(dict):
                         merge_rules(val, rules_map[key], path)
                     else:
                         raise YamlKeyDuplicationError(f"Redefinition of '{'.'.join(path)}' "

@@ -9,8 +9,8 @@ JINJA_ENV = Environment(loader=BaseLoader(), undefined=StrictUndefined)
 
 
 # jinja filters
-def replace_regex(input_, pattern, repl):
-    return re.sub(pattern, repl, input_)
+def replace_regex(input_, pattern, repl, count=0):
+    return re.sub(pattern, repl, input_, count)
 
 
 JINJA_ENV.filters['replace_regex'] = replace_regex

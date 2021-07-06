@@ -130,7 +130,7 @@ class ContextManager:
         """
         def_val = prop.get("default")
 
-        if not def_val.isinstance(MutableMapping):
+        if not def_val.is_of_type(MutableMapping):
             return def_val.value
 
         if plat in def_val and lang in def_val:

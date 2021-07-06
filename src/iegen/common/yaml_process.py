@@ -44,7 +44,7 @@ class YamlNode(MutableMapping):
     def __contains__(self, item):
         return item in self.value
 
-    def isinstance(self, cls):
+    def is_of_type(self, cls):
         """
         Method to check current node real value type.
         """
@@ -54,6 +54,12 @@ class YamlNode(MutableMapping):
         return bool(self.value)
 
     def __eq__(self, other):
+        """
+        This method is overloaded, to avoid usage of 'value' property
+        when comparing YamlNode object with other simple object
+        """
+        if isinstance(other, YamlNode):
+            return self == other
         return self.value == other
 
 
@@ -220,9 +226,9 @@ def yaml_info_struct_to_dict(struct):
     """
     A function to rebuild dict from nested YamlNode object.
     """
-    if isinstance(struct, YamlNode) and struct.isinstance(dict) or isinstance(struct, dict):
+    if isinstance(struct, YamlNode) and struct.is_of_type(dict) or isinstance(struct, dict):
         return {k: yaml_info_struct_to_dict(v) for k, v in struct.items()}
-    if isinstance(struct, YamlNode) and struct.isinstance(list) or isinstance(struct, list):
+    if isinstance(struct, YamlNode) and struct.is_of_type(list) or isinstance(struct, list):
         return [yaml_info_struct_to_dict(i) for i in struct]
     if isinstance(struct, YamlNode):
         return struct.value

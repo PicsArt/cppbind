@@ -345,7 +345,7 @@ class SnippetsEngine:
     def _load_actions(self, actions_info):
         def handle_file_action(info_dict):
             glob_tmpls = info_dict['files_glob']
-            if not glob_tmpls.isinstance(list):
+            if not glob_tmpls.is_of_type(list):
                 glob_tmpls = [glob_tmpls.value]
             glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in glob_tmpls]
 
@@ -384,7 +384,7 @@ class SnippetsEngine:
             del code_info_dict[key]
 
         for code_name, info_map in code_info_dict.items():
-            if info_map.isinstance(str):
+            if info_map.is_of_type(str):
                 # redirection
                 info_map = code_info_dict[info_map]
 
@@ -400,7 +400,7 @@ class SnippetsEngine:
     def _load_code_structure_info(self, code_name, code_info_dict):
         def scope_walk(info_map, scopes=None):
             scopes = scopes or tuple()
-            if not info_map.isinstance(MutableMapping):
+            if not info_map.is_of_type(MutableMapping):
                 # leaf node
                 yield scopes, SimpleNamespace(content=info_map, unique_content=None, scopes=[])
             elif 'content' in info_map or 'unique_content' in info_map:
@@ -452,7 +452,7 @@ class SnippetsEngine:
     def _load_type_info(self, type_info_dict):
         # load into structures
         for type_name, info_map in type_info_dict.items():
-            if info_map.isinstance(str):
+            if info_map.is_of_type(str):
                 # redirection
                 info_map = type_info_dict[info_map.value]
 

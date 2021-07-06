@@ -224,7 +224,7 @@ class APIParser:
         """
 
         # if the whole section is pure string, we just need to eval it
-        if attrs.isinstance(str):
+        if attrs.is_of_type(str):
             return yaml.load(JINJA_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
         # if the section is not a string, i.e. values can contain jinja expressions,
         # we need to dump it to the string, then evaluate it.

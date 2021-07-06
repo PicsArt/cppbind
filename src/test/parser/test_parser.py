@@ -1,12 +1,13 @@
 import copy
 import hashlib
 import os
-import pytest
 import types
-import yaml
 
 from collections import OrderedDict
 from unittest.mock import patch
+
+import pytest
+import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error
@@ -92,7 +93,7 @@ def test_parser_processor_cr_counter(clang_config):
         )
     ]
 )
-def test_API_parser(test_data, res_md5):
+def test_api_parser(test_data, res_md5):
     parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
@@ -126,7 +127,7 @@ def test_API_parser(test_data, res_md5):
         """
     ]
 )
-def test_API_parser_negative(test_data):
+def test_api_parser_negative(test_data):
     parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
@@ -137,23 +138,23 @@ def test_API_parser_negative(test_data):
         assert False, "should get error"
 
 
-def test_external_API_parser_negative():
+def test_external_api_parser_negative():
     ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
 
-    for dir in os.listdir(api_rules_dir):
-        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+    for dir_ in os.listdir(api_rules_dir):
+        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
         try:
             ctx_desc.build_ctx_def_map(context_def_glob)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
-        except Exception as e:
-            assert False, f"unexpected exception: {e}"
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
         else:
             assert False, "should get error"
 
 
-def test_external_API_parser_positive():
+def test_external_api_parser_positive():
     ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
 
@@ -165,8 +166,8 @@ def test_external_API_parser_positive():
         'with_jinja_expr': '7e3f74054ee36e9401d3028ca7856a4e'
     }
 
-    for dir, res_md5 in results.items():
-        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+    for dir_, res_md5 in results.items():
+        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
         try:
             res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
             print(res)
@@ -182,7 +183,7 @@ def test_external_API_parser_positive():
             assert False, "should not get error"
 
 
-def test_external_API_merging_positive():
+def test_external_api_merging_positive():
     ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
 
@@ -267,7 +268,8 @@ def test_empty_gen_rule(clang_config):
     # check that 'package' inheritable variable is inherited from dir to class
     dir_pkg_value = dir_root.args['package']
     cls_pkg_value = dir_root.children[0].children[0].args['package']
-    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of variables doesn't work correctly"
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg',\
+        "inheritance of variables doesn't work correctly"
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
@@ -300,11 +302,13 @@ def test_root_config(clang_config):
 
 def test_file_api_positive():
     file_api_folder = 'file_api_example'
-    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
+    context_def_glob = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
 
     api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'swift'))
 
-    example_file_key = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
+    example_file_key = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
 
     api, args = api_parser.parse_yaml_api(example_file_key, {})
 
@@ -314,12 +318,13 @@ def test_file_api_positive():
 
 def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
-    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
+    context_def_glob = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
     api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'python'))
 
-    example_dir_key = os.path.relpath(
-        os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
+    example_dir_key = os.path.relpath(os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
 
     api, args = api_parser.parse_yaml_api(example_dir_key, {})
 

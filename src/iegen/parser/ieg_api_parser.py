@@ -3,12 +3,13 @@ Implements ieg api parser on cxx comment
 """
 import distutils.util
 import re
-import yaml
 
 from collections import defaultdict
 from collections import OrderedDict
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 from types import SimpleNamespace
+
+from jinja2.exceptions import UndefinedError as JinjaUndefinedError
+import yaml
 
 from iegen import default_config
 from iegen.common import JINJA_ENV
@@ -18,7 +19,7 @@ from iegen.ir.ast import Node
 from iegen.utils.clang import extract_pure_comment
 
 
-class APIParser(object):
+class APIParser:
     """
     A class which is responsible for parsing/validating API annotation section.
     """
@@ -37,12 +38,14 @@ class APIParser(object):
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
         """
-        A method to separate user defined 'api' related and not related parts from the whole pure doxygen comment.
+        A method to separate user defined 'api' related and not related parts
+        from the whole pure doxygen comment.
         """
         index = index or raw_comment.find(APIParser.API_START_KW)
         if index == -1:
             return raw_comment, None
-        return extract_pure_comment(raw_comment, index), raw_comment[index + len(APIParser.API_START_KW)::]
+        return (extract_pure_comment(raw_comment, index),
+                raw_comment[index + len(APIParser.API_START_KW)::])
 
     def parse_comments(self, api_section, ctx, location=None):
         """
@@ -76,16 +79,21 @@ class APIParser(object):
         try:
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
             return self.parse_api_attrs(attrs, location)
-        except yaml.YAMLError as e:
-            Error.critical("Error while scanning yaml style comments: {e}",
+        except yaml.YAMLError as err:
+            Error.critical(f"Error while scanning yaml style comments: {err}",
                            location.file_name if location else None,
                            location.line_number if location else None)
 
+        return None
+
     def parse_api(self, name, api_section, location, ctx=None):
+        """
+        Parse api annotations: either comments in source file
+        or in separate yaml config files.
+        """
         if api_section:
             return self.parse_comments(api_section, ctx, location)
-        else:
-            return self.parse_yaml_api(name, ctx, location)
+        return self.parse_yaml_api(name, ctx, location)
 
     def parse_yaml_api(self, name, ctx=None, location=None):
         """
@@ -99,9 +107,12 @@ class APIParser(object):
                                                    line_number=None)
             try:
                 api_attrs = APIParser.eval_attr_template(attrs, ctx)
-            except JinjaUndefinedError as e:
-                Error.critical(f"Jinja evaluation error: {e}", location.file_name, location.line_number)
+            except JinjaUndefinedError as err:
+                Error.critical(f"Jinja evaluation error: {err}",
+                               location.file_name, location.line_number)
             return self.parse_api_attrs(api_attrs, location)
+
+        return None
 
     def parse_api_attrs(self, attrs, location):
         """
@@ -118,12 +129,12 @@ class APIParser(object):
         prev_priors = defaultdict(lambda: [0])
         api = Node.API_NONE
         for attr_key, value in attrs.items():
-            m = re.match(attr_key_regex, attr_key)
-            if not m:
+            match = re.match(attr_key_regex, attr_key)
+            if not match:
                 Error.critical({attr_key: value},
                                location.file_name if location else None,
                                location.line_number if location else None)
-            platform, language, attr = m.groups()
+            platform, language, attr = match.groups()
 
             if (language and language != curr_lang) or (platform and platform != curr_plat):
                 continue
@@ -134,7 +145,8 @@ class APIParser(object):
                 api = value
 
             if attr not in self.var_def:
-                Error.critical(f"Variable {attr} is not specified. It should be one of {set(self.var_def)}.",
+                Error.critical(f"Variable {attr} is not specified. "
+                               f"It should be one of {set(self.var_def)}.",
                                location.file_name if location else None,
                                location.line_number if location else None)
 
@@ -150,13 +162,15 @@ class APIParser(object):
                                location.line_number if location else None)
 
             curr_max_prior = max(prev_priors[attr])
-            # overwrite the value only if the current option has higher priority than all previous ones.
+            # overwrite the value only if the current option
+            # has higher priority than all previous ones.
             if prior > curr_max_prior:
                 attr_dict[attr] = value
             # If we have this case it means we have a conflict of options: plat.lang and lang.plat
             if prior in prev_priors[attr]:
                 Error.error(f"Conflicting variables definition: variables like platform.attr and "
-                            f"language.attr cannot be defined together: {curr_lang + '.' + attr, curr_plat + '.' + attr}",
+                            f"language.attr cannot be defined together: "
+                            f"{curr_lang + '.' + attr, curr_plat + '.' + attr}",
                             location.file_name, location.line_number)
             prev_priors[attr].append(prior)
 
@@ -179,7 +193,8 @@ class APIParser(object):
                     for attr in attrs:
                         if not isinstance(attr, dict) or not 'type' in attr:
                             raise Exception(
-                                f"Wrong template variable style: {attr_value}, template must have mandatory 'type' variable")
+                                f"Wrong template variable style: {attr_value}, "
+                                f"template must have mandatory 'type' variable")
         # default string type
         return attr_value
 
@@ -211,5 +226,7 @@ class APIParser(object):
         # if the whole section is pure string, we just need to eval it
         if attrs.isinstance(str):
             return yaml.load(JINJA_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
-        # if the section is not a string, i.e. values can contain jinja expressions, we need to dump it to the string, then evaluate it.
-        return yaml.load(JINJA_ENV.from_string(yaml.dump(yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)
+        # if the section is not a string, i.e. values can contain jinja expressions,
+        # we need to dump it to the string, then evaluate it.
+        return yaml.load(JINJA_ENV.from_string(yaml.dump(
+            yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)

@@ -22,7 +22,8 @@ def test_parser_with_dir_api(clang_config):
 
     plat, lang = 'linux', 'python'
 
-    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))]
+    clang_cfg['src_glob'] = [os.path.abspath(
+        os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, dir_example_folder, '*.h'))]
     context_def_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
 
     parser = CXXParser()
@@ -30,7 +31,7 @@ def test_parser_with_dir_api(clang_config):
     ctx_mgr = ContextManager(ctx_desc)
 
     processor = CXXIEGIRBuilder(ctx_mgr)
-    processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
+    CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
     processor.start_root()
     parser.parse(processor, **clang_cfg)
 
@@ -53,7 +54,8 @@ def test_parser_with_file_api(clang_config):
     file_example_folder = 'file_api_example'
 
     api_rules_dir = os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH))
-    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))]
+    clang_cfg['src_glob'] = [os.path.abspath(
+        os.path.join(SCRIPT_DIR, CXX_INPUTS_REL_PATH, file_example_folder, '*.h'))]
 
     plat, lang = 'linux', 'python'
     context_def_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
@@ -62,7 +64,7 @@ def test_parser_with_file_api(clang_config):
     ctx_desc = ContextDescriptor(context_def_glob, plat, lang)
     ctx_mgr = ContextManager(ctx_desc)
     processor = CXXIEGIRBuilder(ctx_mgr)
-    processor._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
+    CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 
     processor.start_root()
     parser.parse(processor, **clang_cfg)

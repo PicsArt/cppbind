@@ -1,3 +1,7 @@
+"""
+Module is responsible for context variables evaluating for current node.
+"""
+
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
@@ -19,7 +23,8 @@ ALL_PLATFORMS = sorted(list(default_config.platforms))
 
 class ContextManager:
     """
-    A class for evaluating current context variables using current context to assign the result to the current node.
+    A class for evaluating current context variables
+    using current context to assign the result to the current node.
     """
     def __init__(self, ctx_desc):
         self.ctx_desc = ctx_desc
@@ -28,6 +33,7 @@ class ContextManager:
                                         ALL_PLATFORMS)
 
     def eval_root_attrs(self, name, ctx, location=None):
+        """Eval context variables for root node"""
         args = None
         api = Node.API_NONE
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
@@ -36,6 +42,7 @@ class ContextManager:
         return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
     def eval_dir_attrs(self, name, ctx, location=None):
+        """Eval context variables for dir node"""
         api = args = None
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
@@ -43,16 +50,20 @@ class ContextManager:
         return api, self.__process_attrs(DIR_KIND_NAME, args, location, ctx)
 
     def eval_file_attrs(self, name, ctx, location=None):
+        """Eval context variables for file node"""
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
             api, args = parsed_api
             return api, self.__process_attrs(FILE_KIND_NAME, args, location, ctx)
+        return None
 
     def eval_clang_attrs(self, name, kind, api_section, ctx, location):
+        """Eval context variables for clang node"""
         parsed_api = self.ieg_api_parser.parse_api(name, api_section, location, ctx)
         if parsed_api:
             api, args = parsed_api
             return api, self.__process_attrs(kind, args, location, ctx)
+        return None
 
     def __process_attrs(self, kind, args, location, ctx=None):
         """
@@ -84,13 +95,14 @@ class ContextManager:
                 if allowed:
                     if new_att_val is None:
                         # use default value
-                        new_att_val = ContextManager.get_attr_default_value(properties, self.ctx_desc.platform, self.ctx_desc.language)
+                        new_att_val = ContextManager.get_attr_default_value(
+                            properties, self.ctx_desc.platform, self.ctx_desc.language)
                         if isinstance(new_att_val, str):
                             try:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
-                            except JinjaUndefinedError as e:
+                            except JinjaUndefinedError as err:
                                 Error.critical(
-                                    f"Jinja evaluation error in attributes definition file: {e}")
+                                    f"Jinja evaluation error in attributes definition file: {err}")
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
@@ -102,7 +114,8 @@ class ContextManager:
             # now we need to process variables of value and set value
             if new_att_val is not None:
                 if isinstance(new_att_val, str):
-                    # sys vars can have different types than string, so we need to parse it to get correct type
+                    # vars can have different types than string,
+                    # so we need to parse it to get correct type
                     new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
                 # add attr to current node context so that it can be used for coming attributes
                 ctx[att_name] = new_att_val
@@ -128,6 +141,8 @@ class ContextManager:
         for key in (plat + '.' + lang, plat, lang, 'else'):
             if key in def_val:
                 return def_val[key].value
+
+        return None
 
     def has_yaml_api(self, name):
         """

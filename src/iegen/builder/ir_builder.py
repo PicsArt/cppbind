@@ -5,8 +5,9 @@ import copy
 import datetime
 import os
 from collections import OrderedDict
-from git import Repo, GitError
 from types import SimpleNamespace
+
+from git import Repo, GitError
 
 from iegen import DATETIME_FORMAT
 from iegen.builder import OUTPUT_MODIFICATION_KEY
@@ -22,8 +23,8 @@ from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils.clang import get_full_displayname
 
 
-class CXXPrintProcessor(object):
-
+class CXXPrintProcessor:
+    """Class to show an information about a cursor"""
     def __call__(self, cursor, *args, **kwargs):
         print(f'Found {cursor.kind} Display name {cursor.displayname} \
               [line={cursor.location.line}, \
@@ -31,7 +32,7 @@ class CXXPrintProcessor(object):
               f'Comments {cursor.raw_comment} Brief Comments {cursor.brief_comment}')
 
 
-class CXXIEGIRBuilder(object):
+class CXXIEGIRBuilder:
     """
     Class to build intermediate representation.
     """
@@ -187,15 +188,16 @@ class CXXIEGIRBuilder(object):
 
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
-                '_source_modification_time': self._get_modification_time(node.name),
+                '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.name),
                 '_is_operator': False,
                 '_object_name': node.name,
-                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0] if node.file_name else node.name,
+                '_file_name': os.path.splitext(os.path.basename(
+                    node.file_name))[0] if node.file_name else node.name,
             })
 
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
-                '_source_modification_time': self._get_modification_time(node.file_name),
+                '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
@@ -203,7 +205,8 @@ class CXXIEGIRBuilder(object):
 
         self._sys_vars.update(sys_vars)
 
-    def _get_modification_time(self, path):
+    @staticmethod
+    def _get_modification_time(path):
         """Get last modification time of current file"""
         modification_time = datetime.datetime.fromtimestamp(os.stat(path).st_ctime)
         return datetime.date.strftime(modification_time, DATETIME_FORMAT)
@@ -227,6 +230,7 @@ class CXXIEGIRBuilder(object):
                     Error.warning(
                         f'Could not find a git repository under: {project_dir}.')
                     return ''
+            return None
 
         sys_vars['_get_git_repo_url'] = _get_git_repo_url
 

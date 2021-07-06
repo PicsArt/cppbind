@@ -7,7 +7,7 @@ import types
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen import logging as logging
+from iegen import logging
 from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
 
@@ -71,7 +71,8 @@ class Context(BaseContext):
                             val = val.spelling
             return val
 
-        # for function templates Cursor.get_arguments returns an empty array, using Type.argument_types instead
+        # for function templates Cursor.get_arguments returns an empty array,
+        # using Type.argument_types instead
         if self.node.is_function_template:
             for i, arg_type in enumerate(self.node.clang_cursor.type.argument_types()):
                 arg_params = types.SimpleNamespace(name=f'arg{i}',
@@ -93,15 +94,18 @@ class Context(BaseContext):
     @property
     def result_type(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD,
+                                               cli.CursorKind.FUNCTION_DECL,
                                                cli.CursorKind.FUNCTION_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.returns is invalid.")
         return self.node.clang_cursor.result_type
 
     @property
     def overloading_prefix(self):
-        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_DECL,
-                                               cli.CursorKind.CONSTRUCTOR, cli.CursorKind.FUNCTION_TEMPLATE]:
+        if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD,
+                                               cli.CursorKind.FUNCTION_DECL,
+                                               cli.CursorKind.CONSTRUCTOR,
+                                               cli.CursorKind.FUNCTION_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         if not hasattr(self, '_overloading_prefix'):
@@ -146,7 +150,8 @@ class Context(BaseContext):
     @property
     def base_types(self):
 
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_DECL,
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.base_type is invalid.")
 
@@ -170,7 +175,7 @@ class Context(BaseContext):
                     yield _base
                 yield base
 
-        _ancestors = [b for b in walk(self.base_types)]
+        _ancestors = list(walk(self.base_types))
 
         return _ancestors
 
@@ -242,7 +247,8 @@ class Context(BaseContext):
     @property
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
-            self._prj_rel_file_name = os.path.relpath(self.cursor.location.file.name, self.out_prj_dir)
+            self._prj_rel_file_name = os.path.relpath(
+                self.cursor.location.file.name, self.out_prj_dir)
         return self._prj_rel_file_name
 
     @property
@@ -284,7 +290,7 @@ class Context(BaseContext):
         return self.template_ctx['names'] if self.template_ctx else None
 
 
-class RunRule(object):
+class RunRule:
 
     def __init__(self, ir, ctx_desc, platform, language):
         self.ir = ir
@@ -323,16 +329,16 @@ class RunRule(object):
 
             def _run_recursive(node, template_ctx=None):
                 stack_added = False
-                node_key = self.__node_key(node, template_ctx)
+                node_key = RunRule.__node_key(node, template_ctx)
                 if node.api and (not calling_api or node.api in calling_api) and node_key not in processed:
                     ancestor = node.ancestor_with_api
-                    ancestor_key = self.__node_key(ancestor, template_ctx)
+                    ancestor_key = RunRule.__node_key(ancestor, template_ctx)
                     if ancestor_key in processed:
                         # for already called api resume builders scope stack
                         logging.debug(f"Restoring stack for {ancestor.displayname}.")
                         builder.restore_stacks(processed[ancestor_key])
                         logging.debug(
-                            f"Restored stack {self.__str_stacks(processed[ancestor_key])}."
+                            f"Restored stack {RunRule.__str_stacks(processed[ancestor_key])}."
                         )
                     # allocate scope
                     if node.type == NodeType.CLANG_NODE:
@@ -343,14 +349,15 @@ class RunRule(object):
                     self.call_api(rule, node, builder, template_ctx)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node_key] = builder.capture_stacks()
-                    logging.debug(f"Captured stack {self.__str_stacks(processed[node_key])}.")
+                    logging.debug(f"Captured stack {RunRule.__str_stacks(processed[node_key])}.")
 
                 if node.children:
                     logging.debug(f"Processing children for {node.displayname}.")
                     for child in node.children:
                         if child.type == NodeType.CLANG_NODE:
                             # check if the node is template and generate code for each combination of template args
-                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.FUNCTION_TEMPLATE]:
+                            if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
+                                                           cli.CursorKind.FUNCTION_TEMPLATE]:
                                 parent_template = node.args.get('template', None)
                                 template_arg = {}
                                 # if parent also has a template argument join with child´s
@@ -359,7 +366,7 @@ class RunRule(object):
                                 template_arg.update(child.args['template'])
                                 all_possible_args = list(itertools.product(*template_arg.values()))
                                 template_keys = child.args['template'].keys()
-                                for i, combination in enumerate(all_possible_args):
+                                for _, combination in enumerate(all_possible_args):
                                     choice = [item['type'] for item in combination]
                                     choice_names = [item['name'] for item in combination if 'name' in item]
                                     _template_choice = dict(zip(template_keys, choice))
@@ -375,7 +382,8 @@ class RunRule(object):
                     builder.pop_scope_stack()
 
             # create common scope for entire ir
-            # we have to add this scope to be able to allow write into single file from multiple roots
+            # we have to add this scope to be able to allow
+            # write into single file from multiple roots
             # since we do not have gen api for file
             # we register file and add one scope
             builder.add_scope_stack()
@@ -412,13 +420,15 @@ class RunRule(object):
         for node in self.ir.walk():
             self.create_context(node)
 
-    def __node_key(self, node, template_ctx):
+    @staticmethod
+    def __node_key(node, template_ctx):
         node_key = (node,)
         if node and node.type == NodeType.CLANG_NODE and node.is_template:
             node_key = (node, json.dumps(template_ctx))
         return node_key
 
-    def __str_stacks(self, capture_data):
+    @staticmethod
+    def __str_stacks(capture_data):
         # first lang stack data
         stack_data = capture_data
         return f"{[s.keys() for fs in stack_data.values() for s in fs]}"

@@ -80,8 +80,8 @@ def get_default_value(arg):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
-            return f' = None'
-        elif pointee.kind == cli.TypeKind.ENUM:
+            return ' = None'
+        if pointee.kind == cli.TypeKind.ENUM:
             return f' = {arg.converter.ctx.file}.{arg.converter.python.target_type_name}.{arg.default}'
         return f' = {arg.default}'
     return ''

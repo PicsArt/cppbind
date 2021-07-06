@@ -8,7 +8,12 @@ import iegen
 import iegen.converter
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
-from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
+from iegen.common.snippets_engine import (
+    ENUM_INFO_TYPE,
+    JINJA_UNIQUE_MARKER,
+    OBJECT_INFO_TYPE,
+    SnippetsEngine
+)
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -102,7 +107,9 @@ def make_func_context(ctx):
     def make():
         args = [
             types.SimpleNamespace(
-                converter=SNIPPETS_ENGINE.build_type_converter(ctx, arg.type, template_choice=ctx.template_choice),
+                converter=SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                               arg.type,
+                                                               template_choice=ctx.template_choice),
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
@@ -124,11 +131,13 @@ def make_func_context(ctx):
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
-        if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
+        if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD,
+                               cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
             is_override = bool(_overriden_cursors)
             if is_override:
-                original_definition_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
+                original_definition_context = ctx.find_by_type(
+                    _overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
@@ -173,7 +182,7 @@ def make_class_context(ctx):
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all([b.ctx.action == 'gen_interface' for b in base_types_converters])
+                has_non_abstract_base_class = not all((b.ctx.action == 'gen_interface' for b in base_types_converters))
 
             cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()

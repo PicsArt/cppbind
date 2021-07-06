@@ -1,15 +1,20 @@
+"""
+This module is responsible for loading, processing code, types, actions snippets
+"""
+
 import copy
 import glob
 import os
 import shutil
 
 from collections.abc import MutableMapping
-from jinja2 import Environment, BaseLoader, StrictUndefined
 from types import SimpleNamespace
+
+from jinja2 import Environment, BaseLoader, StrictUndefined
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen import logging as logging
+from iegen import logging
 from iegen import converter
 from iegen.utils import make_camel_case, make_snake_case
 
@@ -20,7 +25,9 @@ JINJA_UNIQUE_MARKER = '~!+marker#@~'
 
 
 class Snippet:
-
+    """
+    Class represents a snippet with template and own context
+    """
     def __init__(self, context, template, marker=None):
         self.context = context
         self.template = template
@@ -34,7 +41,7 @@ class Snippet:
 
 
 class Action:
-
+    """Base class for any action subclass"""
     def __init__(self, kind_name):
         self.kind_name = kind_name
 
@@ -43,6 +50,7 @@ class Action:
 
 
 class FileAction(Action):
+    """Class represents file actions"""
 
     def __init__(self, glob_tmpls, copy_to_tmpl, variables_tmpl):
         super().__init__('file_action')
@@ -115,7 +123,8 @@ class Converter:
 
     @property
     def cxx_type_name(self):
-        return cutil.replace_template_choice(self.original_clang_type.spelling, self.template_choice)
+        return cutil.replace_template_choice(
+            self.original_clang_type.spelling, self.template_choice)
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
@@ -127,14 +136,14 @@ class Converter:
 
             args_t = [arg.target_type_name for arg in args]
             args_t_bases = [
-                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_type_name
-                for arg in args]
+                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling
+                if arg.ctx else arg.target_type_name for arg in args]
 
             # # NOTE template(not specialized) base is not considered
             # args_bases = [
             #     cutil.get_base_cursor(
-            #         arg.ctx.cursor).type.get_canonical().spelling if arg.ctx else arg.target_clang_type.spelling for
-            #     arg in self.template_args]
+            #         arg.ctx.cursor).type.get_canonical().spelling
+            #         if arg.ctx else arg.target_clang_type.spelling for arg in self.template_args]
 
             custom = self.custom
 
@@ -226,7 +235,10 @@ class TypeInfoCollector:
         self.custom = custom
 
     def make_converter(self, clang_type, ref_ctx, template_choice=None):
-        return Adapter(clang_type=clang_type, ctx=ref_ctx, type_info_collector=self, template_choice=template_choice)
+        return Adapter(clang_type=clang_type,
+                       ctx=ref_ctx,
+                       type_info_collector=self,
+                       template_choice=template_choice)
 
 
 class TargetTypeInfo:
@@ -251,8 +263,7 @@ class TypeConvertorInfo(TargetTypeInfo):
                                             target_name=self.converted_name(name),
                                             target_type_name=self.target_type_name(context),
                                             **context)
-        else:
-            return ""
+        return ""
 
     def converted_name(self, name):
         return f'{self.name}_{name}' if self.snippet_tmpl else name
@@ -360,8 +371,8 @@ class SnippetsEngine:
             for action_name, action_data in action_info.items():
                 try:
                     actions_map.get(action_name, handle_default)(action_data)
-                except Exception as e:
-                    raise Exception(f"Error in action {action_name}. Error {str(e)}")
+                except Exception as err:
+                    raise Exception(f"Error in action {action_name}. Error {str(err)}") from err
 
     def _load_code_info(self, code_info_dict):
         # load into structures
@@ -409,8 +420,9 @@ class SnippetsEngine:
                 snippet = snippet and self.jinja2_env.from_string(snippet.value)
                 unique_snippet = info.unique_content
                 unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
-            except Exception as e:
-                raise Exception(f"Error in code snippets {code_name}, in scope {':'.join(scopes)}. Error {str(e)}")
+            except Exception as err:
+                raise Exception(f"Error in code snippets {code_name}, "
+                                f"in scope {':'.join(scopes)}. Error {str(err)}") from err
             scope_infos[scopes] = ScopeInfo(name=code_name,
                                             parent_scopes=scopes,
                                             scopes=info.scopes,
@@ -428,10 +440,14 @@ class SnippetsEngine:
                 snippet = snippet and self.jinja2_env.from_string(snippet.value)
                 unique_snippet = info_map.get('unique_content', None)
                 unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
-            except Exception as e:
-                raise Exception(f"Error in code file {file_name} snippets. Error {str(e)}")
-            self.file_infos[file_name] = FileScopeInfo(file_path, [file_name], info_map.get('scopes', []),
-                                                       snippet, unique_snippet)
+            except Exception as err:
+                raise Exception(f"Error in code file {file_name} snippets. "
+                                f"Error {str(err)}") from err
+            self.file_infos[file_name] = FileScopeInfo(file_path,
+                                                       [file_name],
+                                                       info_map.get('scopes', []),
+                                                       snippet,
+                                                       unique_snippet)
 
     def _load_type_info(self, type_info_dict):
         # load into structures
@@ -457,8 +473,9 @@ class SnippetsEngine:
                     try:
                         target_type_info = self.jinja2_env.from_string(tmpl)
                         snippet_tmpl = info and self.jinja2_env.from_string(info.value)
-                    except Exception as e:
-                        raise Exception(f"Error in code snippets for {type_name}, in converter {name}. Error {str(e)}")
+                    except Exception as err:
+                        raise Exception(f"Error in code snippets for {type_name}, "
+                                        f"in converter {name}. Error {str(err)}") from err
                     target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
                                                     name=name,
                                                     target_type_info=target_type_info)
@@ -470,13 +487,16 @@ class SnippetsEngine:
                     # type info
                     try:
                         target_type_info = self.jinja2_env.from_string(info['type_info'].value)
-                    except Exception as e:
-                        raise Exception(f"Error in type info {type_name}, in converter {name}. Error {str(e)}")
+                    except Exception as err:
+                        raise Exception(f"Error in type info {type_name}, "
+                                        f"in converter {name}. Error {str(err)}") from err
                     target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
                     target_types[name] = target_info
 
-            self.type_infos[type_name] = TypeInfoCollector(name=type_name, target_type_infos=target_types,
-                                                           converters=type_converters, custom=custom)
+            self.type_infos[type_name] = TypeInfoCollector(name=type_name,
+                                                           target_type_infos=target_types,
+                                                           converters=type_converters,
+                                                           custom=custom)
 
     def _create_type_info(self, ctx, search_name, clang_type, template_args=None, template_choice=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
@@ -493,77 +513,95 @@ class SnippetsEngine:
             # type info for given type is not available
             return None
 
-        type_converter = type_converter.make_converter(clang_type, ref_ctx, template_choice=template_choice)
+        type_converter = type_converter.make_converter(clang_type,
+                                                       ref_ctx,
+                                                       template_choice=template_choice)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])
 
         return type_converter
 
-    def _build_type_converter(self, ctx, clang_type,
+    def _build_type_converter(self,
+                              ctx,
+                              clang_type,
                               lookup_type=None,
                               template_choice=None,
-                              search_name=None
-                              ):
+                              search_name=None):
         template_choice = template_choice or {}
 
         lookup_type = lookup_type or clang_type
 
         search_name = search_name or cutil._get_unqualified_type_name(lookup_type.spelling)
         search_name = template_choice.get(search_name, search_name)
-        logging.debug(f"Creating type converter for {search_name} and template choice {template_choice}")
-        type_info = self._create_type_info(ctx, search_name, clang_type=clang_type, template_choice=template_choice)
+        logging.debug(f"Creating type converter for {search_name} "
+                      f"and template choice {template_choice}")
+        type_info = self._create_type_info(ctx,
+                                           search_name,
+                                           clang_type=clang_type,
+                                           template_choice=template_choice)
 
         if type_info is None:
             pointee_type = cutil.get_pointee_type(lookup_type)
             if pointee_type != lookup_type:
-                return self._build_type_converter(ctx, clang_type, pointee_type, template_choice=template_choice)
-            else:
-                if lookup_type.kind == cli.TypeKind.FUNCTIONPROTO:
-                    tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
-                                 for arg_type in lookup_type.argument_types()]
-                    tmpl_args.append(
-                        self._build_type_converter(ctx, lookup_type.get_result(), template_choice=template_choice))
+                return self._build_type_converter(ctx,
+                                                  clang_type,
+                                                  pointee_type,
+                                                  template_choice=template_choice)
+            if lookup_type.kind == cli.TypeKind.FUNCTIONPROTO:
+                tmpl_args = [self._build_type_converter(ctx,
+                                                        arg_type,
+                                                        template_choice=template_choice)
+                             for arg_type in lookup_type.argument_types()]
+                tmpl_args.append(
+                    self._build_type_converter(ctx,
+                                               lookup_type.get_result(),
+                                               template_choice=template_choice))
 
-                    type_info = self._create_type_info(ctx, FUNCTION_PROTO_INFO_TYPE,
-                                                       clang_type=clang_type,
-                                                       template_args=tmpl_args,
-                                                       template_choice=template_choice)
-                    return type_info
+                type_info = self._create_type_info(ctx, FUNCTION_PROTO_INFO_TYPE,
+                                                   clang_type=clang_type,
+                                                   template_args=tmpl_args,
+                                                   template_choice=template_choice)
+                return type_info
 
-                # covers template parameter and template argument cases,
-                # e.g. a::Stack<T> and a::Stack<Project>
-                # might be a template typedef so get the canonical type and then proceed
-                elif cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
-                    tmpl_args = [self._build_type_converter(ctx, arg_type, template_choice=template_choice)
-                                 for arg_type in cutil.template_argument_types(lookup_type)]
+            # covers template parameter and template argument cases,
+            # e.g. a::Stack<T> and a::Stack<Project>
+            # might be a template typedef so get the canonical type and then proceed
+            if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
+                tmpl_args = [self._build_type_converter(ctx,
+                                                        arg_type,
+                                                        template_choice=template_choice)
+                             for arg_type in cutil.template_argument_types(lookup_type)]
 
-                    # for the case when all arguments are exposed for example a::Stack<Project> then the canonical will
-                    # return type with spelling equal to a::Stack<b::Project>
-                    # this won´t work if theres an unexposed argument e.g.T,
-                    # for example for the case a::Stack<T>, the  canonical will remove namespaces and return
-                    # type with spelling equal to 'Stack<type-parameter-0-0>'
-                    canonical_clang_type = all(
-                        (not cutil.is_unexposed(arg.original_clang_type) for arg in tmpl_args))
-                    if canonical_clang_type:
-                        clang_type = cutil.get_canonical_type(clang_type)
-                        lookup_type = cutil.get_canonical_type(lookup_type)
+                # for the case when all arguments are exposed
+                # for example a::Stack<Project> then the canonical will
+                # return type with spelling equal to a::Stack<b::Project>
+                # this won´t work if theres an unexposed argument e.g.T,
+                # for example for the case a::Stack<T>, the canonical
+                # will remove namespaces and return
+                # type with spelling equal to 'Stack<type-parameter-0-0>'
+                canonical_clang_type = all(
+                    (not cutil.is_unexposed(arg.original_clang_type) for arg in tmpl_args))
+                if canonical_clang_type:
+                    clang_type = cutil.get_canonical_type(clang_type)
+                    lookup_type = cutil.get_canonical_type(lookup_type)
 
-                    type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
-                                                       clang_type=clang_type,
-                                                       template_args=tmpl_args,
-                                                       template_choice=template_choice)
-                    return type_info
-                else:
-                    canonical_type = cutil.get_canonical_type(lookup_type)
-                    if canonical_type != lookup_type:
-                        return self._build_type_converter(ctx, clang_type, canonical_type,
-                                                          template_choice=template_choice)
+                type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
+                                                   clang_type=clang_type,
+                                                   template_args=tmpl_args,
+                                                   template_choice=template_choice)
+                return type_info
+
+            canonical_type = cutil.get_canonical_type(lookup_type)
+            if canonical_type != lookup_type:
+                return self._build_type_converter(ctx, clang_type, canonical_type,
+                                                  template_choice=template_choice)
 
         return type_info
 
     def _init_jinja_env(self):
-        env = Environment(loader=BaseLoader(), undefined=StrictUndefined,
+        env = Environment(loader=BaseLoader(),
+                          undefined=StrictUndefined,
                           extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
 
         def path_join(inputs_):
@@ -574,13 +612,13 @@ class SnippetsEngine:
         def format_list(inputs_, format_string, arg_name=None):
             if arg_name is not None:
                 return [format_string.format(**{arg_name: data}) for data in inputs_]
-            else:
-                return [format_string.format(data) for data in inputs_]
+            return [format_string.format(data) for data in inputs_]
 
         env.filters['format_list'] = format_list
 
         def _any(inputs_, attribute=None):
-            return any([d for d in inputs_]) if attribute is None else any([getattr(d, attribute) for d in inputs_])
+            return any((d for d in inputs_)) if attribute is None else \
+                any((getattr(d, attribute) for d in inputs_))
 
         env.filters['any'] = _any
 

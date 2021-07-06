@@ -14,18 +14,21 @@ import iegen.utils.clang as cutil
 
 
 class CXXParser:
+    """
+    Class is responsible for source cxx files parsing and cursor returning
+    """
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
                         cli.TranslationUnit.PARSE_INCOMPLETE
 
-    def __init__(self, filter=None):
+    def __init__(self, filter_=None):
         self.current_file = None
-        self.filter = filter or cxx_ieg_filter
+        self.filter = filter_ or cxx_ieg_filter
 
     def parse_tu(self):
         """
         Parses cxx files and returns list of TranslationUnit s
         """
-        return [tu for tu in self.parse_x()]
+        return list(self.parse_x())
 
     def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, **kwargs):
         """
@@ -42,15 +45,16 @@ class CXXParser:
 
         all_excluded_files = set()
         for file in src_exclude_glob:
-            abs_paths = (os.path.abspath(fp) for fp in glob.glob(file.strip(), recursive=True))
+            abs_paths = (os.path.abspath(file_path)
+                         for file_path in glob.glob(file.strip(), recursive=True))
             all_excluded_files.update(abs_paths)
 
         # using list to keep files order constant
         all_files = []
         for file in src_glob:
             files_glob = sorted(glob.glob(file.strip(), recursive=True))
-            for fp in files_glob:
-                abs_fp = os.path.abspath(fp)
+            for file_path in files_glob:
+                abs_fp = os.path.abspath(file_path)
                 if abs_fp not in all_excluded_files:
                     all_files.append(abs_fp)
 
@@ -81,8 +85,8 @@ class CXXParser:
         Pares cxx files and returns generator of cursors
         """
         for tu in self.parse_tu_x(**kwargs):
-            for c in self.cursor_walk(tu.cursor):
-                yield c
+            for cursor in self.cursor_walk(tu.cursor):
+                yield cursor
 
     def cursor_walk(self, cursor):
         """
@@ -102,12 +106,16 @@ class CXXParser:
                     yield descendant
 
     def parse(self, processor, **kwargs):
+        """
+        Method parses all translation units
+        """
         for tu in self.parse_tu_x(**kwargs):
             tu_parent_dirs = CXXParser.__dirs_to_process(tu)
 
             # TODO:
-            # currently we are not parsing the entire directory tree at once instead for each file we
-            # are going from root to leaf, if there are already processed dirs then we are retrieving them from the dict
+            # currently we are not parsing the entire directory tree at once,
+            # instead for each file we are going from root to leaf,
+            # if there are already processed dirs then we are retrieving them from the dict,
             # later we may construct the whole source directory tree and then build the ir tree
             for dir_name in tu_parent_dirs:
                 if hasattr(processor, 'start_dir'):

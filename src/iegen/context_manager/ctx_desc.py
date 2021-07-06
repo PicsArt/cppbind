@@ -1,3 +1,7 @@
+"""
+Module is responsible for yaml config files loading, merging and context variables forming.
+"""
+
 import glob
 import os
 import yaml
@@ -69,7 +73,8 @@ class ContextDescriptor:
 
     def build_ctx_def_map(self, context_def_glob):
         """
-        A method for iterating over yaml config files and building context definition map by loading/merging yaml files.
+        A method for iterating over yaml config files and
+        building context definition map by loading/merging yaml files.
         """
         if context_def_glob is None:
             return {}
@@ -77,8 +82,8 @@ class ContextDescriptor:
         files = set()
         for file in context_def_glob.split(','):
             files_glob = glob.glob(file.strip(), recursive=True)
-            for fp in files_glob:
-                files.add(os.path.abspath(fp))
+            for file_path in files_glob:
+                files.add(os.path.abspath(file_path))
 
         dirs = [PROJECT_CONFIG_DIR]
         if hasattr(config.application, 'custom_config_dir'):
@@ -88,8 +93,8 @@ class ContextDescriptor:
         for current_file in list(files):
             try:
                 attrs = load_yaml(current_file, dirs=[PROJECT_CONFIG_DIR])
-            except yaml.YAMLError as e:
-                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {e}")
+            except yaml.YAMLError as err:
+                raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {err}")
 
             if attrs:
                 self.load_merge_ctx_def_map(attrs, ctx_def_map)
@@ -104,31 +109,37 @@ class ContextDescriptor:
 
         def flatten_dict(src_dict, section_key, ancestors):
             cls.validate_section_keys(src_dict, section_key)
-            cls.TYPE_RULE_KEY in src_dict and ancestors.append(src_dict[cls.TYPE_RULE_KEY].value)
+            if cls.TYPE_RULE_KEY in src_dict:
+                ancestors.append(src_dict[cls.TYPE_RULE_KEY].value)
             try:
                 if cls.VARS_RULE_KEY in src_dict:
-                    flat_key = cls._get_key(src_dict=src_dict,
-                                            ancestors=ancestors)
+                    flat_key = ContextDescriptor._get_key(src_dict=src_dict,
+                                                          ancestors=ancestors)
                     if flat_key in ctx_def_map:
                         raise YamlKeyDuplicationError(
-                            f"Definition with duplicate '{flat_key}' key in line {src_dict[cls.VARS_RULE_KEY].line_number} "
+                            f"Definition with duplicate '{flat_key}' key "
+                            f"in line {src_dict[cls.VARS_RULE_KEY].line_number} "
                             f"of {src_dict[cls.VARS_RULE_KEY].file} file,\n"
-                            f"which already has been previously defined in line {ctx_def_map[flat_key].line_number} "
+                            f"which already has been previously defined "
+                            f"in line {ctx_def_map[flat_key].line_number} "
                             f"of {ctx_def_map[flat_key].file} file")
                     ctx_def_map[flat_key] = src_dict[cls.VARS_RULE_KEY]
                 if cls.SUB_RULE_KEY in src_dict:
                     for sub in src_dict[cls.SUB_RULE_KEY]:
                         flatten_dict(sub, section_key, ancestors)
             finally:
-                cls.TYPE_RULE_KEY in src_dict and ancestors.pop()
+                if cls.TYPE_RULE_KEY in src_dict:
+                    ancestors.pop()
 
         if cls.ROOT_SECTION_KEY in attrs:
             root_section = attrs[cls.ROOT_SECTION_KEY]
             if RootNode.ROOT_KEY in ctx_def_map:
-                raise YamlKeyDuplicationError(f"Redefinition of '{cls.ROOT_SECTION_KEY}' section in line "
-                                              f"{root_section.line_number} of {root_section.file} file, "
-                                              f"which must be uniquely specified only in one file.\n"
-                                              f"It was previously defined in line {ctx_def_map[RootNode.ROOT_KEY].line_number} "
+                raise YamlKeyDuplicationError(f"Redefinition of '{cls.ROOT_SECTION_KEY}' "
+                                              f"section in line {root_section.line_number} "
+                                              f"of {root_section.file} file, which must be "
+                                              f"uniquely specified only in one file.\n"
+                                              f"It was previously defined in line "
+                                              f"{ctx_def_map[RootNode.ROOT_KEY].line_number} "
                                               f"of {ctx_def_map[RootNode.ROOT_KEY].file} file.")
             ctx_def_map[RootNode.ROOT_KEY] = attrs[cls.ROOT_SECTION_KEY]
 
@@ -154,22 +165,22 @@ class ContextDescriptor:
             if os.path.isabs(dir_name):
                 # if an absolute path is specified then we assume it's absolute to current dir
                 return dir_name.replace('/', '', 1) or '.'
-            else:
-                return os.path.relpath(
-                    os.path.abspath(os.path.join(os.path.dirname(src_dict[cls.DIR_RULE_KEY].file), dir_name)),
-                    os.getcwd())
+            return os.path.relpath(
+                os.path.abspath(os.path.join(os.path.dirname(
+                    src_dict[cls.DIR_RULE_KEY].file), dir_name)),
+                os.getcwd())
         # file
-        elif cls.FILE_RULE_KEY in src_dict:
+        if cls.FILE_RULE_KEY in src_dict:
             file_name = src_dict[cls.FILE_RULE_KEY].value
             if os.path.isabs(file_name):
                 # if an absolute path is specified then we assume it's absolute to current dir
                 flat_key = file_name.replace('/', '', 1)
                 return os.path.join(flat_key, os.getcwd())
-            else:
-                return os.path.abspath(os.path.join(os.path.dirname(src_dict[cls.FILE_RULE_KEY].file), file_name))
+            return os.path.abspath(os.path.join(os.path.dirname(
+                src_dict[cls.FILE_RULE_KEY].file), file_name))
+
         # type
-        elif cls.VARS_RULE_KEY in src_dict:
-            return join_type_parts(ancestors)
+        return join_type_parts(ancestors)
 
     def load_merge_rules(self, attrs, ctx_def_map):
         """
@@ -190,10 +201,12 @@ class ContextDescriptor:
                     if val.isinstance(dict) and rules_map[key].isinstance(dict):
                         merge_rules(val, rules_map[key], path)
                     else:
-                        raise YamlKeyDuplicationError(f"Redefinition of '{'.'.join(path)}' key section in line "
-                                                      f"{val.line_number} of {val.file} file,\n"
+                        raise YamlKeyDuplicationError(f"Redefinition of '{'.'.join(path)}' "
+                                                      f"key section in line {val.line_number} "
+                                                      f"of {val.file} file,\n"
                                                       f"which already has been defined in line "
-                                                      f"{rules_map[key].line_number} of {rules_map[key].file} file")
+                                                      f"{rules_map[key].line_number} of "
+                                                      f"{rules_map[key].file} file")
                 else:
                     rules_map[key] = val
                 path.pop()
@@ -222,7 +235,8 @@ class ContextDescriptor:
     @classmethod
     def validate_section_keys(cls, src_dict, section_key):
         """
-        A method to validate current section and raise an error in case of disallowed key usages in the section.
+        A method to validate current section and raise an error
+        in case of disallowed key usages in the section.
         """
         if section_key == cls.FILE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.TYPE_RULE_KEY in src_dict):
             Error.critical(f"API file section definition can only contain '{cls.FILE_RULE_KEY}' key")

@@ -436,9 +436,8 @@ function:
       {%- set comma = joiner(', ') %}
       {{rconverter.c.target_type_name}}{% if helper.is_iegen_type(rconverter) %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
-      {{owner_class.converter.c.target_type_name}} _Nonnull cself,
-      {%- endif -%}
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if helper.is_iegen_type(arg.converter) %}{{' _Nullable' if arg.nullable else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{',' if args}} ErrorObj* _Nonnull err){
+      {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if helper.is_iegen_type(arg.converter) %}{{' _Nullable' if arg.nullable else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err){
         {%- set call_args = [] %}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
@@ -498,9 +497,8 @@ function:
         {%- set comma = joiner(', ') %}
         {{rconverter.c.target_type_name}}{% if helper.is_iegen_type(rconverter) %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
-        {{owner_class.converter.c.target_type_name}} _Nonnull cself,
-        {%- endif -%}
-        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if helper.is_iegen_type(arg.converter) %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{',' if args}} ErrorObj* _Nonnull err);
+        {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if helper.is_iegen_type(arg.converter) %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
   exceptions_utils_swift:
     body:
   std_exceptions_swift:

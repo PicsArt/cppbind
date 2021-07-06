@@ -1,0 +1,47 @@
+name: iegen-publish
+on:
+  release:
+    types: [published]
+
+jobs:
+  iegen-publish:
+    runs-on: [self-hosted, macos]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v2.3.4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GH_TOKEN }}
+          submodules: recursive
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.1
+        with:
+          maven-version: 3.6.3
+
+      - name: Setup maven settings
+        uses: s4u/maven-settings-action@v2.4.0
+        with:
+          servers: '[{"id": "Nexus", "username": "${{ secrets.NEXUS_USER }}", "password": "${{ secrets.NEXUS_PASSWORD }}"}]'
+
+      - name: Set version name for release
+        if: github.event_name == 'release'
+        run: |
+          VERSION_NAME=${GITHUB_REF##*/}
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          sed -i '' -r "s/version=\"0.0.1\"/version=\"$VERSION\"/g" setup.py
+
+      - name: Build
+        run: python setup.py bdist_wheel
+        env:
+          CC: clang
+
+      - name: Publish
+        run: twine upload iegen/dist/*.whl -u davitsamvelyan -p pNRfyKzxdRWpYZ9j --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
+        env:
+          CC: clang
+
+      - name: Set env of the run url
+        if: always()
+        run: echo "RUN_URL=https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> $GITHUB_ENV
+

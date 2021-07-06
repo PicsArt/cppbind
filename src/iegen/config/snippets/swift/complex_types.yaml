@@ -6,7 +6,7 @@ $Object:
   swift:
     type_info: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
   c:
-    type_info: "void* _Nonnull"
+    type_info: "void*"
   sc:
     type_info: "UnsafeMutableRawPointer"
   c_to_cxx: |
@@ -18,10 +18,14 @@ $Object:
     {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
     auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
-  swift_to_sc:
-    let {{target_name}} = {{name}}.cself
-  sc_to_swift:
+  swift_to_sc: |
+    let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
+  sc_to_swift: |
+    {%- if nullable is defined and nullable -%}
+    let {{target_name}} = {{name}} == nil ? nil : {{type_name}}{{template_suffix}}({{name}}!{% if is_value_type%}, true{%endif%})
+    {%- else -%}
     let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    {%- endif -%}
 
 $Enum:
   swift:
@@ -213,18 +217,18 @@ std::shared_ptr:
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
     std::shared_ptr<{{pointee}}> {{target_name}};
-    auto baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(baseptr);
+    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
-    std::shared_ptr<{{pointee_base}}> baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
-    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(baseptr));
+    std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
+    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
   swift_to_sc: |
-    {{args[0].snippet(name)|indent}}
+    {{args[0].snippet(name, nullable=nullable)|indent}}
   sc_to_swift: |
-    {{args[0].snippet(name)|indent}}
+    {{args[0].snippet(name, nullable=nullable)|indent}}
 
 
 std::pair:

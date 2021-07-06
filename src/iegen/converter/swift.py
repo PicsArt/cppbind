@@ -52,3 +52,8 @@ def get_c_func_name(hint_name):
 def get_map_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
 
+
+def is_iegen_type(type_converter):
+    is_shared_ptr = 'shared_ptr' in type_converter.original_clang_type.spelling and type_converter.template_args[
+        0].ctx is not None
+    return type_converter.ctx is not None or is_shared_ptr

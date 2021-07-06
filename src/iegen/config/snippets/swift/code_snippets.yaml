@@ -221,7 +221,7 @@ class:
             public let owner : Bool
 
             // internal main initializer
-            internal required init(_ _cself: {{converter.sc.target_type_name}} , _ _owner: Bool = false) {
+            internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
               self.cself = _cself
               self.owner = _owner
             }
@@ -242,7 +242,7 @@ class:
         {%- if ctx.namespace %}
         using namespace {{ctx.namespace}};
         {%- endif %}
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself) {
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nullable cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
@@ -252,7 +252,7 @@ class:
   ch:
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nullable cself);
 
 
 interface:
@@ -310,7 +310,7 @@ interface:
     body:
       content: |
         using namespace {{ctx.namespace}};
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself){
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nullable cself){
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
@@ -320,7 +320,7 @@ interface:
   ch:
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} cself);
+        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nullable cself);
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
@@ -344,11 +344,12 @@ constructor:
   swift:
     head: |
       {{helper.make_comment(comment)}}
-      public convenience init({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {
+      {%- set comma = joiner(', ') %}
+      public convenience init({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {
       {%- set call_args = [] %}
       {% for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
       {%- do call_args.append(converter.converted_name(arg.name)) %}
       {%- endfor %}
           self.init(create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
@@ -356,11 +357,13 @@ constructor:
   cc:
     include: *var_method_cxx_include
     body: |
-      {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}){
+      {%- set comma = joiner(', ') %}
+      {{owner_class.converter.c.target_type_name}} _Nonnull create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+      {%- if helper.is_iegen_type(arg.converter) %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}){
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {% set converter = arg.converter.c_to_cxx %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name)) -%}
         {% endfor %}
           auto this_object = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
@@ -373,29 +376,32 @@ constructor:
   ch:
     body:
       content: |
-        {{owner_class.converter.c.target_type_name}} create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}});
+        {%- set comma = joiner(', ') %}
+        {{owner_class.converter.c.target_type_name}} _Nonnull create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+        {%- if helper.is_iegen_type(arg.converter) %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
 
 function:
   swift:
     body: |
       {{helper.make_comment(comment)}}
+      {%- set comma = joiner(', ') %}
       {%- if is_operator %}
-      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{args|format_list(", {arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
-      public {{"static " if is_static}}{{"override " if override}}func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}} {
+      public {{"static " if is_static}}{{"override " if override}}func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {%- endfor %}
           var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
           let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
-          {{rconverter.sc_to_swift.snippet('result')|indent}}
+          {{rconverter.sc_to_swift.snippet('result', nullable=nullable_return)|indent}}
         {%- else %}
           {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args|length > 0}}&err);
         {%- endif %}
@@ -423,20 +429,20 @@ function:
       }
     interface_body: |
       {{helper.make_comment(comment)}}
-      func {{name}}({{args|format_list("{arg.name}: {arg.converter.swift.target_type_name}", 'arg')|join(', ')}}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}
+      func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}}}}
   cc:
     include: *var_method_cxx_include
     body: |
-      {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {%- set comma = joiner(', ') %}
+      {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
-      {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
-      {%- else -%}
-      {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}{{', ' if args|length > 0}}ErrorObj* _Nonnull err
-      {%- endif %}){
+      {{owner_class.converter.c.target_type_name}} _Nonnull cself,
+      {%- endif -%}
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if helper.is_iegen_type(arg.converter) %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{',' if args}} ErrorObj* _Nonnull err){
         {%- set call_args = [] %}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
-          {{converter.snippet(arg.name)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {% endfor %}
         {%- if not is_static %}
@@ -453,7 +459,7 @@ function:
           try {
             const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}{%- if ctx.node.is_function_template -%}
                                                                       <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
-            {{rconverter.cxx_to_c.snippet('result')|indent}}
+            {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
             return {{rconverter.cxx_to_c.converted_name('result')}};
           }
         {%- else %}
@@ -489,12 +495,12 @@ function:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {%- set comma = joiner(', ') %}
+        {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
-        {{owner_class.converter.c.target_type_name}} cself {{args|format_list(", {arg.converter.c.target_type_name} {arg.name}", 'arg')|join}}, ErrorObj* _Nonnull err
-        {%- else -%}
-        {{args|format_list("{arg.converter.c.target_type_name} {arg.name}", 'arg')|join(', ')}}{{', ' if args|length > 0}}ErrorObj* _Nonnull err
-        {%- endif %});
+        {{owner_class.converter.c.target_type_name}} _Nonnull cself,
+        {%- endif -%}
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if helper.is_iegen_type(arg.converter) %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{',' if args}} ErrorObj* _Nonnull err);
   exceptions_utils_swift:
     body:
   std_exceptions_swift:
@@ -522,16 +528,16 @@ property_getter:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
-      public var {{name}}: {{result_converter.target_type_name}} {
+      public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
             get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
-              {{result_converter.snippet('result')|indent(8)}}
+              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
             }
             {%- if ctx.action == 'gen_property_setter' %}
             {% set converter = rconverter.swift_to_sc %}
             set(value) {
-              {{converter.snippet('value')|indent(8)}}
+              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself, {{converter.converted_name('value')}})
             }
             {% endif %}
@@ -539,11 +545,11 @@ property_getter:
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
-      var {{name}}: {{result_converter.target_type_name}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
+      var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
   cc:
     include: *var_getter_cxx_include
     body: |
-      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself){
+      {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -552,11 +558,11 @@ property_getter:
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
           auto result = c_to_cxx_cself->{{cxx_name}};
-          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if ctx.action == 'gen_property_setter' %}
-      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}}){
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -564,16 +570,16 @@ property_getter:
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
-          {{rconverter.c_to_cxx.snippet(name)|indent}}
+          {{rconverter.c_to_cxx.snippet(name, nullable=nullable_return)|indent}}
           c_to_cxx_cself->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
       }
       {% endif %}
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself);
+        {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
         {%- if ctx.action == 'gen_property_setter' %}
-        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}} {{name}});
+        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{name}});
         {% endif %}
 
 getter:
@@ -581,16 +587,16 @@ getter:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
-      public var {{name}}: {{result_converter.target_type_name}} {
+      public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
             get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
-              {{result_converter.snippet('result')|indent(8)}}
+              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
             }
             {% if setter_ctx is defined %}
             {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
             set(value) {
-              {{converter.snippet('value')|indent(8)}}
+              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}(cself, {{converter.converted_name('value')}})
             }
             {% endif %}
@@ -598,12 +604,12 @@ getter:
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
-      var {{name}}: {{result_converter.target_type_name}} { get{% if setter_ctx is defined %} set{% endif %}
+      var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:
     include: *var_getter_cxx_include
     body: |
-      {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself){
+      {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -612,12 +618,12 @@ getter:
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
           auto result = c_to_cxx_cself->{{cxx_name}}();
-          {{rconverter.cxx_to_c.snippet('result')|indent}}
+          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if setter_ctx is defined %}
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
-      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{setter_ctx.args[0].converter.c.target_type_name}} {{setter_ctx.args[0].name}}){
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter_ctx.args[0].converter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{setter_ctx.args[0].name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -625,15 +631,15 @@ getter:
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
-          {{converter.snippet(setter_ctx.args[0].name)|indent}}
+          {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent}}
           c_to_cxx_cself->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself);
+        {{rconverter.c.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
         {%- if setter_ctx is defined %}
         {% set converter = setter_ctx.args[0].converter.c %}
-        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}} {{setter_ctx.args[0].name}});
+        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{converter.target_type_name}} {% if helper.is_iegen_type(rconverter) %}{{'_Nullable' if nullable_return else '_Nonnull'}}{% endif %} {{setter_ctx.args[0].name}});
         {% endif %}

@@ -12,7 +12,8 @@ namespace iegen::example::nullable {
  * __API__
  * action: gen_class
  * shared_ref: true
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NumInt
  * package: nullables
  * swift.include: CWrapper
  */
@@ -34,7 +35,8 @@ struct NumberInt {
  * __API__
  * action: gen_class
  * shared_ref: false
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NumDouble
  * package: nullables
  * swift.include: CWrapper
  */
@@ -58,7 +60,8 @@ struct NumberDouble {
  * __API__
  * action: gen_class
  * shared_ref: true
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NullableUtils
  * package: nullables
  * kotlin.include:
  *  - com.examples.simple.Task

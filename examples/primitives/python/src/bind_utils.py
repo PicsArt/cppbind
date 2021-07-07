@@ -20,8 +20,10 @@ class Function:
         signature = inspect.getfullargspec(self.original_function)
         annotations = signature.annotations
         args_names = signature.args
-        'self' in args_names and args_names.remove('self')
-        'cls' in args_names and args_names.remove('cls')
+        if 'self' in args_names:
+            args_names.remove('self')
+        if 'cls' in args_names:
+            args_names.remove('cls')
         self.args_names = args_names
         self.annotations = annotations
 
@@ -150,7 +152,8 @@ class bind:
         return _decorator
 
     def _validate_return_value(self, result):
-        'return' in self.fn.annotations and _validate_arg(self.fn, 'return', result, self.fn.annotations['return'])
+        if 'return' in self.fn.annotations:
+            _validate_arg(self.fn, 'return', result, self.fn.annotations['return'])
 
     def __set_name__(self, owner, name):
         # set methods class
@@ -194,25 +197,27 @@ class bind:
                 return result
 
 
+_optionals = {}
+
+
 def _is_optional(type_hint):
-    return re.match('Optional[[a-zA-Z.]+]', type_hint) is not None
+    global _optionals
+    if type_hint in _optionals:
+        return _optionals[type_hint]
+    is_opt = re.match('Optional[[_a-zA-Z][_a-zA-Z0-9]+.?[_a-zA-Z0-9]+]', type_hint) is not None
+    _optionals[type_hint] = is_opt
+    return is_opt
 
 
 def _validate_arg(func, arg_name, arg_value, type_hint):
-    if type_hint != 'None' and not _is_optional(type_hint) and arg_value is None:
+    if arg_value is None and type_hint != 'None' and not _is_optional(type_hint):
         raise ValueError(f'{func.classname}.{func.name}\'s {arg_name} value cannot be None.')
 
 
 def _convert_arg(arg, type_hint):
     try:
-        if _is_optional(type_hint) and arg is None:
+        if arg is None and _is_optional(type_hint):
             return arg
-        elif type_hint == 'int':
-            python_to_pybind_arg = int(arg)
-            return python_to_pybind_arg
-        elif type_hint == 'float':
-            python_to_pybind_arg = float(arg)
-            return python_to_pybind_arg
         elif type_hint == 'str':
             python_to_pybind_arg = str(arg)
             return python_to_pybind_arg

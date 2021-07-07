@@ -9,17 +9,15 @@ import re
 import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
-from iegen.common.config import config as default_config
 
 
 def load_from_paths(loader, path_name, default_dirs):
-    for d in default_dirs:
+    for dir_ in default_dirs:
         try:
-            return loader(os.path.join(d, path_name))
+            return loader(os.path.join(dir_, path_name))
         except FileNotFoundError:
             continue
-    else:
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path_name)
+    raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path_name)
 
 
 def load_module_from_path(module_name, path_name):
@@ -57,7 +55,8 @@ def get_host_platform():
 def make_snake_case(string, sub_strings=None):
     """
     Returns snake cased version of input string if sub_strings is None.
-    If sub_strings is specified then only replaces all sub_string occurrences with their snake cased version.
+    If sub_strings is specified then only replaces all sub_string
+    occurrences with their snake cased version.
     Args:
         string(str): String to replace
         sub_strings(list): List of sub_strings to be replaced with their snake cased version.
@@ -74,7 +73,8 @@ def make_snake_case(string, sub_strings=None):
 def make_camel_case(string, sub_strings=None):
     """
     Returns camel cased version of input string if sub_strings is None.
-    If sub_strings is specified then only replaces all sub_string occurrences with their camel cased version.
+    If sub_strings is specified then only replaces all sub_string
+    occurrences with their camel cased version.
     Args:
         string(str): String to replace
         sub_strings(list): List of sub_strings to be replaced with their camel cased version.
@@ -110,12 +110,13 @@ def clear_iegen_generated_files(directory):
         for file in filenames:
             remove = False
             file_path = os.path.join(root, file)
-            with open(file_path, 'r') as f:
-                content = f.read()
+            with open(file_path, 'r') as file:
+                content = file.read()
                 # remove all *, / and spaces from banner
                 content = re.sub(r'[/*\s+]', '', content)
                 if banner in content:
                     remove = True
-            remove and os.remove(file_path)
+            if remove:
+                os.remove(file_path)
         if not os.listdir(root):
             os.remove(root)

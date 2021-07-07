@@ -9,7 +9,8 @@ OUTPUT_MODIFICATION_KEY = str(uuid.uuid1())
 def is_output_changed(old, new):
     """
     Compares iegen generated old code with new one.
-    It's assumed that to each occurrence of OUTPUT_MODIFICATION_KEY in new code corresponds a datetime in old one.
+    It's assumed that to each occurrence of OUTPUT_MODIFICATION_KEY
+    in new code corresponds a datetime in old one.
     Args:
         old(str): Iegen generated old code.
         new(str): Iegen generated new code.

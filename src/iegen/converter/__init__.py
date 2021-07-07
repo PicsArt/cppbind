@@ -18,7 +18,8 @@ class Validator:
         roots = _get_roots(cursor)
         if len(roots) > 1 and not all((roots[0].type == root.type for root in roots)):
             raise TypeError(
-                f'Type {cursor.spelling} has more than one root - [{", ".join(map(lambda root: root.spelling, roots))}].')
+                f'Type {cursor.spelling} has more than one root - '
+                f'[{", ".join(map(lambda root: root.spelling, roots))}].')
 
     @staticmethod
     def validate_ancestors(ancestors):

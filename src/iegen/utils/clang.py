@@ -3,8 +3,9 @@ Helper functions working with clang
 """
 import re
 
-import clang.cindex as cli
 from itertools import chain
+
+import clang.cindex as cli
 
 
 def get_pointee_type(clang_type):
@@ -26,9 +27,9 @@ def template_argument_types(clang_type):
 
 def template_type_name(clang_type):
     name = get_unqualified_type_name(clang_type)
-    end_indx = name.find('<')
-    if end_indx != -1:
-        return name[:end_indx].strip()
+    end_idx = name.find('<')
+    if end_idx != -1:
+        return name[:end_idx].strip()
     return name
 
 
@@ -55,7 +56,7 @@ def get_semantic_ancestors(cursor):
     ancestors = []
     _cursor = cursor.semantic_parent
 
-    while (_cursor):
+    while _cursor:
         ancestors.append(_cursor)
         _cursor = _cursor.semantic_parent
 
@@ -87,8 +88,7 @@ def is_final_cursor(cursor):
             (c.kind for c in cursor.get_children()),
             (c.kind for c in cursor.semantic_parent.get_children())
         )
-    else:
-        return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
+    return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
 
 
 def get_base_cursor(cursor):
@@ -104,8 +104,7 @@ def get_base_cursor(cursor):
              base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER]
     if bases:
         return get_base_cursor(bases[0].get_definition())
-    else:
-        return cursor
+    return cursor
 
 
 def extract_pure_comment(raw_comment, end_index=None):
@@ -113,20 +112,24 @@ def extract_pure_comment(raw_comment, end_index=None):
     Returns pure comment(without API part).
     Args:
         raw_comment(str): Doxygen comment.
-        end_index(int): Index to where to consider, if not specified then will consider the whole string.
+        end_index(int): Index to where to consider,
+                        if not specified then will consider the whole string.
     Returns:
         str: Characters removed type_name.
     """
     end_index = end_index or len(raw_comment) - 1
-    return [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()[:-1]]
+    return [comment_line.lstrip('/* ') for comment_line
+            in raw_comment[:end_index].splitlines()[:-1]]
 
 
 def replace_template_choice(type_name, template_choice):
     """
-    Return type name with replaced template arguments e.g. for a::Foo<T,V> will return a::Foo<Project,int>.
+    Return type name with replaced template arguments,
+    e.g. for a::Foo<T,V> will return a::Foo<Project,int>.
     Args:
         type_name(str): Type name. e.g. a::Foo<T,V>
-        template_choice (dict): Containing template current value, e.g. {"T": "a::Project", "V": "int"}
+        template_choice (dict): Containing template current value,
+                                e.g. {"T": "a::Project", "V": "int"}
     Returns:
         str: Replaced type_name.
     """
@@ -148,8 +151,8 @@ def is_declaration(cursor):
         bool: True if the cursor is forward declaration and False otherwise.
     """
     # todo check also function
-    return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL, cli.CursorKind.STRUCT_DECL,
-                           cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
+    return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
+                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
 
 
 def is_unexposed(clang_type):
@@ -166,7 +169,7 @@ def is_unexposed(clang_type):
         return True
     if clang_type.kind == cli.TypeKind.POINTER:
         return is_unexposed(get_pointee_type(clang_type))
-    elif is_template(clang_type):
+    if is_template(clang_type):
         for arg_type in template_argument_types(clang_type):
             _is_unexposed = is_unexposed(arg_type)
             if _is_unexposed:

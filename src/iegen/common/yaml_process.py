@@ -59,7 +59,7 @@ class YamlNode(MutableMapping):
         when comparing YamlNode object with other simple object
         """
         if isinstance(other, YamlNode):
-            return self == other
+            return self.value == other.value
         return self.value == other
 
 

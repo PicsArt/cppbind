@@ -15,6 +15,7 @@ class Function:
         self.original_function = original_function
         self.is_overloaded = is_overloaded
         self._init_args_signature()
+        self._init_optionals()
 
     def _init_args_signature(self):
         signature = inspect.getfullargspec(self.original_function)
@@ -26,6 +27,22 @@ class Function:
             args_names.remove('cls')
         self.args_names = args_names
         self.annotations = annotations
+
+    def _init_optionals(self):
+        self.optionals = {}
+        for arg_name, type_hint in self.annotations.items():
+            is_opt = re.match(r'Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]', type_hint) is not None
+            self.optionals[arg_name] = is_opt
+
+    def validate_arg_value(self, arg_name, arg_value):
+        if arg_value is None and not self.optionals[arg_name]:
+            raise ValueError(f'{self.classname}.{self.name}\'s {arg_name} argument cannot be None.')
+
+    def validate_return_value(self, value):
+        if 'return' in self.annotations:
+            # for void functions return type hint is 'None' so returning None is correct
+            if value is None and self.annotations['return'] != 'None' and not self.optionals['return']:
+                raise ValueError(f'{self.classname}.{self.name}\'s return value cannot be None.')
 
     @property
     def classname(self):
@@ -142,18 +159,14 @@ class bind:
                 else:
                     # instance is iegen generated cls
                     cls = instance
-                res = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
-                self._validate_return_value(res)
-                return res
-            res = self.cls.originals[self.fn.name](instance, **all_kwargs)
-            self._validate_return_value(res)
-            return res
+                result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+                self.fn.validate_return_value(result)
+                return result
+            result = self.cls.originals[self.fn.name](instance, **all_kwargs)
+            self.fn.validate_return_value(result)
+            return result
 
         return _decorator
-
-    def _validate_return_value(self, result):
-        if 'return' in self.fn.annotations:
-            _validate_arg(self.fn, 'return', result, self.fn.annotations['return'])
 
     def __set_name__(self, owner, name):
         # set methods class
@@ -180,7 +193,7 @@ class bind:
             if not self.fn.is_overloaded:
                 _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
             result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
-            self._validate_return_value(result)
+            self.fn.validate_return_value(result)
             return result
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
@@ -193,30 +206,13 @@ class bind:
             else:
                 # getter
                 result = original.fget(args[0])
-                self._validate_return_value(result)
+                self.fn.validate_return_value(result)
                 return result
-
-
-_optionals = {}
-
-
-def _is_optional(type_hint):
-    global _optionals
-    if type_hint in _optionals:
-        return _optionals[type_hint]
-    is_opt = re.match('Optional[[_a-zA-Z][_a-zA-Z0-9]+.?[_a-zA-Z0-9]+]', type_hint) is not None
-    _optionals[type_hint] = is_opt
-    return is_opt
-
-
-def _validate_arg(func, arg_name, arg_value, type_hint):
-    if arg_value is None and type_hint != 'None' and not _is_optional(type_hint):
-        raise ValueError(f'{func.classname}.{func.name}\'s {arg_name} value cannot be None.')
 
 
 def _convert_arg(arg, type_hint):
     try:
-        if arg is None and _is_optional(type_hint):
+        if arg is None:
             return arg
         if type_hint == 'int':
             python_to_pybind_arg = int(arg)
@@ -247,13 +243,13 @@ def _convert_args_kwargs(func, *args, **kwargs):
     annotations = func.annotations
     converted_kwargs = {}
     for k, v in kwargs.items():
-        _validate_arg(func, k, v, annotations[k])
+        func.validate_arg_value(k, v)
         converted_kwargs[k] = _convert_arg(v, annotations[k])
     converted_args = []
     for ii, arg in enumerate(args):
         arg_name = func.args_names[ii]
         annotation = annotations[arg_name]
-        _validate_arg(func, arg_name, arg, annotation)
+        func.validate_arg_value(arg_name, arg)
         converted_args.append(_convert_arg(arg, annotation))
     return converted_args, converted_kwargs
 

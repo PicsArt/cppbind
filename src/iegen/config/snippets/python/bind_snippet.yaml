@@ -35,10 +35,10 @@ content: |
           self.annotations = annotations
 
       def _init_optionals(self):
-          self.optionals = {}
+          self.optionals = set()
           for arg_name, type_hint in self.annotations.items():
-              is_opt = re.match(r'Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]', type_hint) is not None
-              self.optionals[arg_name] = is_opt
+              if re.match(r'^Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]$', type_hint) is not None:
+                  self.optionals.add(arg_name)
 
       def _init_default_args(self):
           signature = inspect.signature(self.original_function)
@@ -49,13 +49,13 @@ content: |
           }
 
       def validate_arg_value(self, arg_name, arg_value):
-          if arg_value is None and not self.optionals[arg_name]:
+          if arg_value is None and arg_name not in self.optionals:
               raise ValueError(f'{self.classname}.{self.name}\'s {arg_name} argument cannot be None.')
 
       def validate_return_value(self, value):
           if 'return' in self.annotations:
               # for void functions return type hint is 'None' so returning None is correct
-              if value is None and self.annotations['return'] != 'None' and not self.optionals['return']:
+              if value is None and self.annotations['return'] != 'None' and 'return' not in self.optionals:
                   raise ValueError(f'{self.classname}.{self.name}\'s return value cannot be None.')
 
       @property

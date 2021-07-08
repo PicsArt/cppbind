@@ -23,8 +23,7 @@ FILE_KIND_NAME = "file"
 class Node(ABC):
     API_NONE = 'none'
 
-    def __init__(self, api=None, args=None,
-                 parent=None, children=None, pure_comment=None):
+    def __init__(self, api=None, args=None, parent=None, children=None, pure_comment=None):
         self.api = api
         self.pure_comment = pure_comment
         self.args = args or OrderedDict()
@@ -97,8 +96,6 @@ class Node(ABC):
         return root_node
 
     def walk_preorder(self):
-        """
-        """
 
         # processor current node
         yield self
@@ -152,8 +149,6 @@ class RootNode(Node):
         return f"RootNode({self.__dict__})"
 
     def walk(self):
-        """
-        """
         for node in self.walk_preorder():
             yield node
 
@@ -262,21 +257,23 @@ class CXXNode(ClangNode):
         Returns:
             str: Type name.
         """
-        # in case of a template class - cursor type is TypeKind.INVALID, that´s why cant get type spelling from the
+        # in case of a template class - cursor type is TypeKind.INVALID,
+        # that´s why cant get type spelling from the
         # cursor using this approach instead
-        # for example for the type a::Stack<T> full_displayname=a::Stack, spelling=Stack, displayname=Stack<T>
+        # for example for the type a::Stack<T> full_displayname=a::Stack,
+        # spelling=Stack, displayname=Stack<T>
         template_choice = template_choice or {}
         if self.is_template:
             cxx_type_name = self.full_displayname.replace(self.spelling, self.displayname)
             return cutil.replace_template_choice(cxx_type_name, template_choice)
-        else:
-            return self.clang_cursor.type.spelling
+        return self.clang_cursor.type.spelling
 
     def root_type_name(self, template_choice=None):
         """
         Returns cxx root type name for node with the given template choice(if template).
         Args:
-            template_choice (dict): Containing template current value, e.g. {"T": "a::Project", "V": "int"}
+            template_choice (dict): Containing template current value,
+                                    e.g. {"T": "a::Project", "V": "int"}
         Returns:
             str: Root type name.
         """
@@ -286,7 +283,8 @@ class CXXNode(ClangNode):
         # getting canonical to get full name(with namespace) in case of template bases
         cxx_root_type_name = _root_cursor.type.get_canonical().spelling
 
-        # in case of a template class - cursor type is TypeKind.INVALID, that´s why cant get type spelling from the
+        # in case of a template class - cursor type is TypeKind.INVALID,
+        # that´s why cant get type spelling from the
         if self.is_template:
             # if has no base get its type name with current choice
             if self.clang_cursor == _root_cursor:

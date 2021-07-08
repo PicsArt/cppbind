@@ -6,13 +6,13 @@ import copy
 import os
 
 from iegen import logging
-from iegen.utils import current_datetime
 from iegen.builder import is_output_changed, OUTPUT_MODIFICATION_KEY
+from iegen.utils import current_datetime
 
 TAB_STR = '    '
 
 
-class Scope(object):
+class Scope:
 
     def __init__(self, *parts, name=None, tab=0, tab_str=None, file_scope=None, parts_splitter='\n'):
         self.file_scope = file_scope
@@ -32,7 +32,8 @@ class Scope(object):
         Adds text or scope to corresponding partition
         """
         return self.add(
-            *[part for part in list(dict.fromkeys(parts)) if part not in self.parts], add_front=add_front)
+            *[part for part in list(dict.fromkeys(parts))
+              if part not in self.parts], add_front=add_front)
 
     def add(self, *parts, add_front=False):
         """
@@ -50,7 +51,8 @@ class Scope(object):
         scope = self.file_scope.lookup_scope(scope_name)
 
         if scope is None and create:
-            logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
+            logging.debug(f"Creating Scope {scope_name},"
+                          f"current depth is {len(self.file_scope._scope_stack)}.")
             scope = Scope(name=scope_name, file_scope=self.file_scope)
             if add_as_part:
                 self.add(scope)
@@ -62,7 +64,8 @@ class Scope(object):
         return scope
 
     def create_scope(self, scope_name):
-        logging.debug(f"Creating Scope {scope_name}, current depth is {len(self.file_scope._scope_stack)}.")
+        logging.debug(f"Creating Scope {scope_name}, "
+                      f"current depth is {len(self.file_scope._scope_stack)}.")
         scope = Scope(name=scope_name, file_scope=self.file_scope)
         self._register_scopes(scope)
         return scope
@@ -152,7 +155,7 @@ class File(Scope):
         self.scope_stack[-1] = {}
 
     def lookup_scope(self, scope_name):
-        scope, dept = self._lookup_scope_by_name(scope_name)
+        scope, _ = self._lookup_scope_by_name(scope_name)
         return scope
 
     @property
@@ -185,14 +188,14 @@ class File(Scope):
         return self._lookup_scope_dept(scope, found_dept - 1)
 
 
-class Builder(object):
+class Builder:
 
     def __init__(self):
         self._current_dept = 0
         self._files = dict()
 
     def dump_outputs(self):
-        for name, fl in self._files.items():
+        for _, fl in self._files.items():
             fl.dump_output()
 
     def get_file(self, file_name, file_path=None, create=True, init_func=None):
@@ -202,9 +205,10 @@ class Builder(object):
         assert file_scope is None or file_scope.name == file_name
 
         if file_scope is None and create:
-            logging.debug(f"Creating File Scope {file_path}, current depth is {self._current_dept}.")
+            logging.debug(f"Creating File Scope {file_path}, "
+                          f"current depth is {self._current_dept}.")
             file_scope = File(file_path, name=file_name)
-            for i in range(self._current_dept):
+            for _ in range(self._current_dept):
                 file_scope.add_scope_stack()
             self._files[file_path] = file_scope
             if init_func:
@@ -244,7 +248,8 @@ class Builder(object):
                     assert restoring_dept == len(fl._scope_stack), \
                         f"Scope imbalance for {file_name} scope dept is {len(fl._scope_stack)}"
             else:
-                logging.debug(f"Current scope is {self._current_dept}, {file_name} scope is {len(fl._scope_stack)}.")
+                logging.debug(f"Current scope is {self._current_dept}, "
+                              f"{file_name} scope is {len(fl._scope_stack)}.")
 
         if restoring_dept is not None:
             self._current_dept = restoring_dept

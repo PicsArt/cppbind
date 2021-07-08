@@ -15,6 +15,7 @@ class Function:
         self.original_function = original_function
         self.is_overloaded = is_overloaded
         self._init_args_signature()
+        self._init_default_args()
         self._init_optionals()
 
     def _init_args_signature(self):
@@ -33,6 +34,14 @@ class Function:
         for arg_name, type_hint in self.annotations.items():
             is_opt = re.match(r'Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]', type_hint) is not None
             self.optionals[arg_name] = is_opt
+
+    def _init_default_args(self):
+        signature = inspect.signature(self.original_function)
+        self.defaults = {
+            k: v.default
+            for k, v in signature.parameters.items()
+            if v.default is not inspect.Parameter.empty
+        }
 
     def validate_arg_value(self, arg_name, arg_value):
         if arg_value is None and not self.optionals[arg_name]:
@@ -149,7 +158,7 @@ class bind:
         def _decorator(*args, **kwargs):
             all_kwargs = _map_to_kwargs(self.fn, *args, **kwargs)
             if not self.fn.is_overloaded:
-                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
+                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
             if inspect.isclass(instance):
                 # for python >= 3.9
                 # case of static method, e.g decorated with @classmethod
@@ -191,7 +200,7 @@ class bind:
                 cls = args[0]
             all_kwargs = _map_to_kwargs(self.fn, *args[1:], **kwargs)
             if not self.fn.is_overloaded:
-                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
+                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
             result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
             self.fn.validate_return_value(result)
             return result
@@ -201,7 +210,7 @@ class bind:
         if isinstance(original, property):
             if len(args) == 2:
                 # setter
-                converted_args, _ = _convert_args_kwargs(self.fn, args[1])
+                converted_args, _ = _validate_and_convert_args_kwargs(self.fn, args[1])
                 return original.fset(args[0], *converted_args)
             else:
                 # getter
@@ -230,7 +239,7 @@ def _convert_arg(arg, type_hint):
 
 
 def _map_to_kwargs(func, *args, **kwargs):
-    all_kwargs = _get_default_args(func.original_function)
+    all_kwargs = func.defaults
     args_names = func.args_names
     for ii, arg in enumerate(args):
         arg_name = args_names[ii]
@@ -239,7 +248,7 @@ def _map_to_kwargs(func, *args, **kwargs):
     return all_kwargs
 
 
-def _convert_args_kwargs(func, *args, **kwargs):
+def _validate_and_convert_args_kwargs(func, *args, **kwargs):
     annotations = func.annotations
     converted_kwargs = {}
     for k, v in kwargs.items():
@@ -253,11 +262,3 @@ def _convert_args_kwargs(func, *args, **kwargs):
         converted_args.append(_convert_arg(arg, annotation))
     return converted_args, converted_kwargs
 
-
-def _get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }

@@ -218,7 +218,13 @@ def _convert_arg(arg, type_hint):
     try:
         if arg is None and _is_optional(type_hint):
             return arg
-        elif type_hint == 'str':
+        if type_hint == 'int':
+            python_to_pybind_arg = int(arg)
+            return python_to_pybind_arg
+        if type_hint == 'float':
+            python_to_pybind_arg = float(arg)
+            return python_to_pybind_arg
+        if type_hint == 'str':
             python_to_pybind_arg = str(arg)
             return python_to_pybind_arg
         return arg

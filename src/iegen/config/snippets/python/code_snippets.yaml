@@ -316,7 +316,7 @@ var_bind_method: &var_bind_method
       {%- set converter = arg.converter.python_to_pybind -%}
       {%- set snippet = converter.snippet('arg') -%}
       {%- if snippet -%}
-      {{marker}}elif type_hint == '{{arg.converter.python.target_type_name}}':
+      {{marker}}if type_hint == '{{arg.converter.python.target_type_name}}':
           {{snippet|indent}}
           return {{converter.converted_name('arg')}}
       {%- endif -%}
@@ -416,11 +416,7 @@ function:
       {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.is_overloaded_cursor(ctx) -%}
       , py::overload_cast<
       {%- for arg in args -%}
-      {{comma()}}{%- if arg.converter.ctx -%}
-      {{arg.converter.python.cxx_type_name}}
-      {%- else -%}
-      {{arg.type.spelling}}
-      {%- endif -%}
+      {{comma()}}{{arg.converter.python.cxx_type_name}}
       {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
       {%- else -%}
       , &{{owner_class.cxx_type_name}}::{{cxx_name}}
@@ -436,7 +432,7 @@ var_bind_getter: &var_bind_getter
       {%- set converter = rconverter.python_to_pybind -%}
       {%- set snippet = converter.snippet('arg') -%}
       {%- if snippet -%}
-      {{marker}}elif type_hint == '{{rconverter.python.target_type_name}}':
+      {{marker}}if type_hint == '{{rconverter.python.target_type_name}}':
           {{snippet|indent}}
           return {{converter.converted_name('arg')}}
       {%- endif -%}

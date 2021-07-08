@@ -1,7 +1,8 @@
 """
 Helper codes for swift conversion
 """
-from clang.cindex import TypeKind
+import clang.cindex as cli
+import iegen.utils.clang as cutil
 from . import *
 
 
@@ -54,8 +55,15 @@ def get_map_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
 
 
-def is_iegen_type(type_converter):
-    is_pointer_type = type_converter.ctx is not None and type_converter.original_clang_type.kind != TypeKind.ENUM
-    is_shared_ptr_type = 'shared_ptr' in type_converter.original_clang_type.spelling and type_converter.template_args[
-        0].ctx is not None
-    return is_pointer_type or is_shared_ptr_type
+def _is_pointer(type_converter):
+    return type_converter.ctx is not None and type_converter.ctx.cursor.kind in [cli.CursorKind.STRUCT_DECL,
+                                                                                 cli.CursorKind.CLASS_DECL,
+                                                                                 cli.CursorKind.CLASS_TEMPLATE]
+
+
+def is_type_pointer(type_converter):
+    if cutil.is_template(type_converter.original_clang_type):
+        type_name = cutil.template_type_name(type_converter.original_clang_type)
+        if type_name == 'std::shared_ptr':
+            return _is_pointer(type_converter.template_args[0])
+    return _is_pointer(type_converter)

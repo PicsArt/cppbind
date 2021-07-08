@@ -7,8 +7,6 @@ let n2 = NumInt(val_: 2)
 var res1 = NullableUtils.max(first: n1, second: n2)
 assert(res1!.value == n2.value)
 
-
-
 let d1 = NumDouble(val_: 1.0)
 let d2 = NumDouble(val_: 2.0)
 

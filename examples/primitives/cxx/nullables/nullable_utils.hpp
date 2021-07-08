@@ -6,7 +6,7 @@
 
 
 namespace iegen::example::nullable {
-// [example]
+// [example-helpers]
 
 /**
  * __API__
@@ -53,8 +53,9 @@ struct NumberDouble {
      */
     double value;
 };
+// [example-helpers]
 
-
+// [example]
 /**
  * An example with nullable arguments.
  * __API__
@@ -63,8 +64,6 @@ struct NumberDouble {
  * swift.file: NullableUtils
  * swift.name: NullableUtils
  * package: nullables
- * kotlin.include:
- *  - com.examples.simple.Task
  * swift.include: CWrapper
  */
 struct Utils {

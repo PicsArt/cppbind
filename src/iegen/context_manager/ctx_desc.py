@@ -6,8 +6,6 @@ import glob
 import os
 import yaml
 
-from iegen.common import PROJECT_CONFIG_DIR
-from iegen.common.config import config
 from iegen.common.error import Error
 from iegen.common.yaml_process import load_yaml, YamlKeyDuplicationError
 from iegen.ir.ast import RootNode
@@ -85,14 +83,10 @@ class ContextDescriptor:
             for file_path in files_glob:
                 files.add(os.path.abspath(file_path))
 
-        dirs = [PROJECT_CONFIG_DIR]
-        if hasattr(config.application, 'custom_config_dir'):
-            dirs.append(config.application.custom_config_dir)
-
         ctx_def_map = {}
         for current_file in list(files):
             try:
-                attrs = load_yaml(current_file, dirs=[PROJECT_CONFIG_DIR])
+                attrs = load_yaml(current_file)
             except yaml.YAMLError as err:
                 raise yaml.YAMLError(f"Wrong yaml format: {current_file}: {err}")
 

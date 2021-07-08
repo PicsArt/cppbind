@@ -3,7 +3,7 @@ Filter module decides which clang cursor needs to be processed and which one nee
 """
 
 
-class CXXParserFilter(object):
+class CXXParserFilter:
     """
     Simple filter implementation to skip unnecessary records for AST of clang.
     """

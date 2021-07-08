@@ -15,15 +15,43 @@ class Function:
         self.original_function = original_function
         self.is_overloaded = is_overloaded
         self._init_args_signature()
+        self._init_default_args()
+        self._init_optionals()
 
     def _init_args_signature(self):
         signature = inspect.getfullargspec(self.original_function)
         annotations = signature.annotations
         args_names = signature.args
-        'self' in args_names and args_names.remove('self')
-        'cls' in args_names and args_names.remove('cls')
+        if 'self' in args_names:
+            args_names.remove('self')
+        if 'cls' in args_names:
+            args_names.remove('cls')
         self.args_names = args_names
         self.annotations = annotations
+
+    def _init_optionals(self):
+        self.optionals = set()
+        for arg_name, type_hint in self.annotations.items():
+            if re.match(r'^Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]$', type_hint) is not None:
+                self.optionals.add(arg_name)
+
+    def _init_default_args(self):
+        signature = inspect.signature(self.original_function)
+        self.defaults = {
+            k: v.default
+            for k, v in signature.parameters.items()
+            if v.default is not inspect.Parameter.empty
+        }
+
+    def validate_arg_value(self, arg_name, arg_value):
+        if arg_value is None and arg_name not in self.optionals:
+            raise ValueError(f'{self.classname}.{self.name}\'s {arg_name} argument cannot be None.')
+
+    def validate_return_value(self, value):
+        if 'return' in self.annotations:
+            # for void functions return type hint is 'None' so returning None is correct
+            if value is None and self.annotations['return'] != 'None' and 'return' not in self.optionals:
+                raise ValueError(f'{self.classname}.{self.name}\'s return value cannot be None.')
 
     @property
     def classname(self):
@@ -130,7 +158,7 @@ class bind:
         def _decorator(*args, **kwargs):
             all_kwargs = _map_to_kwargs(self.fn, *args, **kwargs)
             if not self.fn.is_overloaded:
-                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
+                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
             if inspect.isclass(instance):
                 # for python >= 3.9
                 # case of static method, e.g decorated with @classmethod
@@ -140,17 +168,14 @@ class bind:
                 else:
                     # instance is iegen generated cls
                     cls = instance
-                res = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
-                self._validate_return_value(res)
-                return res
-            res = self.cls.originals[self.fn.name](instance, **all_kwargs)
-            self._validate_return_value(res)
-            return res
+                result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+                self.fn.validate_return_value(result)
+                return result
+            result = self.cls.originals[self.fn.name](instance, **all_kwargs)
+            self.fn.validate_return_value(result)
+            return result
 
         return _decorator
-
-    def _validate_return_value(self, result):
-        'return' in self.fn.annotations and _validate_arg(self.fn, 'return', result, self.fn.annotations['return'])
 
     def __set_name__(self, owner, name):
         # set methods class
@@ -175,9 +200,9 @@ class bind:
                 cls = args[0]
             all_kwargs = _map_to_kwargs(self.fn, *args[1:], **kwargs)
             if not self.fn.is_overloaded:
-                _, all_kwargs = _convert_args_kwargs(self.fn, **all_kwargs)
+                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
             result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
-            self._validate_return_value(result)
+            self.fn.validate_return_value(result)
             return result
         # get the non pybind class
         cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
@@ -185,35 +210,26 @@ class bind:
         if isinstance(original, property):
             if len(args) == 2:
                 # setter
-                converted_args, _ = _convert_args_kwargs(self.fn, args[1])
+                converted_args, _ = _validate_and_convert_args_kwargs(self.fn, args[1])
                 return original.fset(args[0], *converted_args)
             else:
                 # getter
                 result = original.fget(args[0])
-                self._validate_return_value(result)
+                self.fn.validate_return_value(result)
                 return result
-
-
-def _is_optional(type_hint):
-    return re.match('Optional[[a-zA-Z.]+]', type_hint) is not None
-
-
-def _validate_arg(func, arg_name, arg_value, type_hint):
-    if type_hint is not None and not _is_optional(type_hint) and arg_value is None:
-        raise ValueError(f'{func.classname}.{func.name}\'s {arg_name} value cannot be None.')
 
 
 def _convert_arg(arg, type_hint):
     try:
-        if _is_optional(type_hint) and arg is None:
+        if arg is None:
             return arg
-        elif type_hint == 'int':
+        if type_hint == 'int':
             python_to_pybind_arg = int(arg)
             return python_to_pybind_arg
-        elif type_hint == 'float':
+        if type_hint == 'float':
             python_to_pybind_arg = float(arg)
             return python_to_pybind_arg
-        elif type_hint == 'str':
+        if type_hint == 'str':
             python_to_pybind_arg = str(arg)
             return python_to_pybind_arg
         return arg
@@ -223,7 +239,7 @@ def _convert_arg(arg, type_hint):
 
 
 def _map_to_kwargs(func, *args, **kwargs):
-    all_kwargs = _get_default_args(func.original_function)
+    all_kwargs = func.defaults
     args_names = func.args_names
     for ii, arg in enumerate(args):
         arg_name = args_names[ii]
@@ -232,25 +248,17 @@ def _map_to_kwargs(func, *args, **kwargs):
     return all_kwargs
 
 
-def _convert_args_kwargs(func, *args, **kwargs):
+def _validate_and_convert_args_kwargs(func, *args, **kwargs):
     annotations = func.annotations
     converted_kwargs = {}
     for k, v in kwargs.items():
-        _validate_arg(func, k, v, annotations[k])
+        func.validate_arg_value(k, v)
         converted_kwargs[k] = _convert_arg(v, annotations[k])
     converted_args = []
     for ii, arg in enumerate(args):
         arg_name = func.args_names[ii]
         annotation = annotations[arg_name]
-        _validate_arg(func, arg_name, arg, annotation)
+        func.validate_arg_value(arg_name, arg)
         converted_args.append(_convert_arg(arg, annotation))
     return converted_args, converted_kwargs
 
-
-def _get_default_args(func):
-    signature = inspect.signature(func)
-    return {
-        k: v.default
-        for k, v in signature.parameters.items()
-        if v.default is not inspect.Parameter.empty
-    }

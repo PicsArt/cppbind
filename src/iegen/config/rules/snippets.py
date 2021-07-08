@@ -8,9 +8,13 @@ import iegen
 import iegen.converter
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
-from iegen.common.config import DEFAULT_DIRS
-from iegen.common.snippets_engine import SnippetsEngine, OBJECT_INFO_TYPE, ENUM_INFO_TYPE, JINJA_UNIQUE_MARKER
-from iegen.utils import load_from_paths
+from iegen.common.error import Error
+from iegen.common.snippets_engine import (
+    ENUM_INFO_TYPE,
+    JINJA_UNIQUE_MARKER,
+    OBJECT_INFO_TYPE,
+    SnippetsEngine
+)
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -26,20 +30,19 @@ def set_language(language):
     LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
-def load_snippets_engine(path, main_target):
+def load_snippets_engine(ctx_desc):
     global SNIPPETS_ENGINE
-    SNIPPETS_ENGINE = SnippetsEngine(path, main_target)
+    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc)
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(ctx, *args, **kwargs):
+def gen_init(ctx, ctx_desc, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
     context = make_root_context(ctx)
 
-    load_from_paths(lambda path: load_snippets_engine(path, LANGUAGE),
-                    ctx.snippets, DEFAULT_DIRS)
+    load_snippets_engine(ctx_desc)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 
@@ -105,12 +108,14 @@ def make_func_context(ctx):
     def make():
         args = [
             types.SimpleNamespace(
-                converter=SNIPPETS_ENGINE.build_type_converter(ctx, arg.type, template_choice=ctx.template_choice),
+                converter=SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                               arg.type,
+                                                               template_choice=ctx.template_choice),
                 name=arg.name,
                 default=arg.default,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.api_args['nullable_arg'] or arg.default in ('nullptr', 'NULL')
+                nullable=arg.name in ctx.nullable_arg or arg.default in ('nullptr', 'NULL')
             ) for arg in ctx.args
         ]
 
@@ -127,18 +132,19 @@ def make_func_context(ctx):
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
-        if ctx.cursor.kind in [cutil.cli.CursorKind.CXX_METHOD, cutil.cli.CursorKind.FUNCTION_TEMPLATE]:
+        if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
             is_override = bool(_overriden_cursors)
             if is_override:
-                original_definition_context = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
+                original_definition_context = ctx.find_by_type(
+                    _overriden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()
         is_open = not cutil.is_final_cursor(ctx.cursor)
-        is_public = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PUBLIC
-        is_protected = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PROTECTED
-        is_private = ctx.cursor.access_specifier == cutil.cli.AccessSpecifier.PRIVATE
+        is_public = ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC
+        is_protected = ctx.cursor.access_specifier == cli.AccessSpecifier.PROTECTED
+        is_private = ctx.cursor.access_specifier == cli.AccessSpecifier.PRIVATE
         access_specifier = ctx.cursor.access_specifier.name.lower()
 
         return locals()
@@ -176,7 +182,7 @@ def make_class_context(ctx):
             if ctx.base_types:
                 base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                          for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all([b.ctx.action == 'gen_interface' for b in base_types_converters])
+                has_non_abstract_base_class = not all((b.ctx.action == 'gen_interface' for b in base_types_converters))
 
             cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()
@@ -314,25 +320,25 @@ def gen_interface(ctx, builder):
 
 
 def gen_constructor(ctx, builder):
+    _validate_nullable_args(ctx)
     context = make_constructor_context(ctx)
     preprocess_entry(context, builder, 'constructor')
 
 
 def gen_method(ctx, builder):
+    _validate_nullable_args(ctx)
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
 
 
 def gen_getter(ctx, builder):
-    assert not ctx.args, "getter should not have arguments"
-    if ctx.setter:
-        assert len(ctx.setter.args) == 1, "Setter should have one argument."
-
+    _validate_getter(ctx)
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
 
 
 def gen_property_getter(ctx, builder):
+    _validate_property_getter(ctx)
     context = make_member_context(ctx)
     preprocess_entry(context, builder, 'property_getter')
 
@@ -343,3 +349,37 @@ def gen_property_setter(ctx, builder):
 
 def gen_setter(ctx, builder):
     return
+
+
+def _validate_nullable_args(ctx):
+    args = [arg.name for arg in ctx.args]
+    incorrect_args = [arg for arg in ctx.nullable_arg if arg not in args]
+    if incorrect_args:
+        Error.critical(
+            f'{", ".join(incorrect_args)} arguments are marked as nullable but '
+            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} does not have such arguments.')
+
+
+def _validate_getter(ctx):
+    if ctx.args:
+        Error.critical(
+            f'Getter should not have arguments: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
+    if ctx.setter:
+        if len(ctx.setter.args) != 1:
+            Error.critical(
+                f'Setter should have one argument: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
+
+        _validate_nullable_args(ctx.setter)
+
+        have_diff_nullability = len(ctx.setter.nullable_arg) == 0 ^ ctx.nullable_return is False
+        if have_diff_nullability:
+            Error.critical(
+                f'Setter argument and getter return value should have the same nullability:'
+                f' {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
+
+
+def _validate_property_getter(ctx):
+    if ctx.cursor.access_specifier != cli.AccessSpecifier.PUBLIC:
+        Error.critical(
+            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} is not a public field.'
+            f'Make it public or remove iegen API.')

@@ -23,7 +23,7 @@ assert res2 is None
 try:
     Utils.check_nonnull_arg(None)
 except ValueError as e:
-    assert str(e) == "Utils.check_nonnull_arg's number value cannot be None."
+    assert str(e) == "Utils.check_nonnull_arg's number argument cannot be None."
 
 try:
     Utils.check_nonnull_return()
@@ -45,7 +45,7 @@ except ValueError as e:
 try:
     utils.non_null = None
 except ValueError as e:
-    assert str(e) == "Utils.non_null's value value cannot be None."
+    assert str(e) == "Utils.non_null's value argument cannot be None."
 
 
 # nullable property getter/setter
@@ -58,6 +58,6 @@ assert utils.num_double.value == d2.value
 try:
     utils.num_int = None
 except ValueError as e:
-    assert str(e) == "Utils.num_int's value value cannot be None."
+    assert str(e) == "Utils.num_int's value argument cannot be None."
 
 # [nullables-usage]

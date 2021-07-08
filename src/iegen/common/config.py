@@ -1,11 +1,15 @@
+"""
+Config parser module
+"""
+
 import configparser
 import os
+import sys
 import types
-import yaml
+
 from ctypes.util import find_library
 
 import clang.cindex as cli
-from iegen.common.yaml_process import MyLoader, load_yaml
 from iegen.common import PROJECT_CONFIG_DIR
 
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
@@ -16,20 +20,11 @@ clang_lib = find_library('clang-12') or find_library('clang-9') or find_library(
 
 if clang_lib is None:
     print("clang dev is not installed. Please read README.md")
-    exit(1)
+    sys.exit(1)
 
 # setting clang library file.
 # in feature we might  consider to have path optionally defined in config
 cli.Config.set_library_file(clang_lib)
-
-
-def load_yaml_file(x):
-    for p in DEFAULT_DIRS:
-        file_name = os.path.join(p, x)
-        if os.path.isfile(file_name):
-            return load_yaml(file_name)
-    with open(x, 'x') as yml_file:
-        load_yaml(yml_file)
 
 
 def read_config(config_file=None):
@@ -42,15 +37,17 @@ def read_config(config_file=None):
 
     config = configparser.ConfigParser(
         converters={
-            'list': lambda x: [i.strip() for i in x.split(',')],
-            'yaml': lambda x: yaml.load(x, MyLoader),
+            'list': lambda x: [i.strip() for i in x.split(',')]
         }
     )
-    config.read_file(open(config_file))
+
+    with open(config_file) as file:
+        config.read_file(file)
+
     return config
 
 
-class IEGConfig(object):
+class IEGConfig:
     """
     Loads IEG config file into structure
     """
@@ -69,7 +66,7 @@ class IEGConfig(object):
         if file_names is not None:
             cnfg.read(file_names)
 
-        self.application = types.SimpleNamespace(**{k: v for k, v in cnfg.items('APPLICATION')})
+        self.application = types.SimpleNamespace(**dict(cnfg.items('APPLICATION')))
 
         self.default_config_dirs = DEFAULT_DIRS
 

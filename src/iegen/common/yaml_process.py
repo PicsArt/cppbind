@@ -4,21 +4,75 @@ Helper module for processing yaml files
 import copy
 import glob
 import os
+
+from collections.abc import MutableMapping
+
 import yaml
 
-# wrong import
-import iegen.common as PROJECT_CONFIG_DIR
-# the corrected one, which currently leads to errors
-# from iegen.common import PROJECT_CONFIG_DIR
+from iegen.common.config import config, PROJECT_CONFIG_DIR
+
+
+class YamlNode(MutableMapping):
+    """
+    Class which implements MutableMapping interface to act like a dict
+    while keeping additional information. This is implemented to be able to keep
+    each yaml node line and file information while loading yaml files.
+    """
+    def __init__(self, value, line_num=None, file=None):
+        self.value = value
+        self.line_number = line_num
+        self.file = file
+
+    def __getitem__(self, key):
+        return self.value[key]
+
+    def __setitem__(self, key, val):
+        self.value[key] = val
+
+    def __delitem__(self, key):
+        del self.value[key]
+
+    def __iter__(self):
+        return iter(self.value)
+
+    def __len__(self):
+        return len(self.value)
+
+    def __contains__(self, item):
+        return item in self.value
+
+    def is_of_type(self, cls):
+        """
+        Method to check current node real value type.
+        """
+        return isinstance(self.value, cls)
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __eq__(self, other):
+        """
+        This method is overloaded, to avoid usage of 'value' property
+        when comparing YamlNode object with other simple object
+        """
+        if isinstance(other, YamlNode):
+            return self.value == other.value
+        return self.value == other
 
 
 class YamlKeyDuplicationError(Exception):
-    pass
+    """
+    Exception subclass to raise duplication errors when a key is redefined in yaml file.
+    """
 
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
-    custom_dirs = []
+
+    # the list of directories where included yaml files need to be searched
+    custom_dirs = [PROJECT_CONFIG_DIR]
+    if hasattr(config.application, 'custom_config_dir'):
+        custom_dirs.append(config.application.custom_config_dir)
 
     def __init__(self, stream):
         """Initialise MyLoader."""
@@ -28,15 +82,39 @@ class MyLoader(yaml.SafeLoader):
         except AttributeError:
             self._root = os.path.curdir
 
-        self.dirs = [self._root, PROJECT_CONFIG_DIR]
+        self.dirs = [self._root]
 
         super().__init__(stream)
 
+    def construct_yaml_map(self, node):
+        """
+        Original class is responsible for constructing yaml loader result nodes.
+        In this overridden version dict is being replaced with custom class object.
+        """
+        yield self.construct_mapping(node)
+
+    def construct_mapping(self, node, deep=False):
+        """
+        Original method is overridden to be able to get a custom class object
+        instead of dict when loading yaml.
+        """
+        mapping = {}
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            value = self.construct_object(value_node, deep=deep)
+            mapping[key] = YamlNode(value,
+                                    key_node.start_mark.line + 1,
+                                    key_node.start_mark.name)
+        return mapping
+
 
 class UniqueKeyLoader(yaml.SafeLoader):
+    """
+    Custom yaml loader to raise an error when duplicate key is found in yaml file.
+    """
     def construct_mapping(self, node, deep=False):
         mapping = []
-        for key_node, value_node in node.value:
+        for key_node, _ in node.value:
             key = self.construct_object(key_node, deep=deep)
             if key in mapping:
                 raise YamlKeyDuplicationError(f"Yaml error: duplicate key: {key}")
@@ -45,9 +123,10 @@ class UniqueKeyLoader(yaml.SafeLoader):
 
 
 def join_nodes(rdata, edata):
+    """Join nodes defined after the !join constructor"""
     if rdata is None:
         rdata = copy.copy(edata)
-    elif isinstance(rdata, dict):
+    elif isinstance(rdata, MutableMapping):
         rdata.update(edata)
     else:
         rdata += edata
@@ -76,17 +155,18 @@ def construct_include(loader, node):
         if os.path.isabs(filename):
             filenames = [filename]
         else:
-            filenames = [os.path.abspath(os.path.join(f"{path}/**/", filename)) for path in search_dirs]
+            filenames = [os.path.abspath(os.path.join(f"{path}/**/", filename))
+                         for path in search_dirs]
         extension = os.path.splitext(filename)[1].lstrip('.')
 
         rdata = None
 
         for filename in filenames:
-            for fn in glob.glob(filename, recursive=True):
+            for file_path in glob.glob(filename, recursive=True):
                 sub_yaml = None
-                with open(fn, 'r') as f:
+                with open(file_path, 'r') as file:
                     if extension in ('yaml', 'yml'):
-                        sub_yaml = yaml.load(f, MyLoader)
+                        sub_yaml = yaml.load(file, MyLoader)
                         if sub_node is not None:
                             for nselect in sub_node:
                                 if isinstance(sub_yaml, list):
@@ -113,8 +193,7 @@ def construct_join(loader, node):
     def construct_object(node, deep=False):
         if isinstance(node, yaml.MappingNode):
             return loader.construct_mapping(node, deep)
-        else:
-            return original(node, deep)
+        return original(node, deep)
 
     loader.construct_object = construct_object
     try:
@@ -132,8 +211,25 @@ yaml.add_constructor('!include', construct_include, MyLoader)
 
 yaml.add_constructor('!join', construct_join, MyLoader)
 
+# add additional constructor to force MyLoader loader
+# to call our custom construct_yaml_map method when constructing nodes.
+MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
 
-def load_yaml(file_path, dirs=None):
-    MyLoader.custom_dirs = dirs or []
-    with open(file_path) as f:
-        return yaml.load(f, MyLoader)
+
+def load_yaml(file_path):
+    """Load yaml file in specific dirs using MyLoader custom loader"""
+    with open(file_path) as file:
+        return yaml.load(file, MyLoader)
+
+
+def yaml_info_struct_to_dict(struct):
+    """
+    A function to rebuild dict from nested YamlNode object.
+    """
+    if isinstance(struct, YamlNode) and struct.is_of_type(dict) or isinstance(struct, dict):
+        return {k: yaml_info_struct_to_dict(v) for k, v in struct.items()}
+    if isinstance(struct, YamlNode) and struct.is_of_type(list) or isinstance(struct, list):
+        return [yaml_info_struct_to_dict(i) for i in struct]
+    if isinstance(struct, YamlNode):
+        return struct.value
+    return struct

@@ -35,12 +35,12 @@ jobs:
         shell: bash
         run: |
           VERSION_NAME=${GITHUB_REF##*/}
-          VERSION_NAME=0.0.1
+          VERSION_NAME=0.0.3
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           sed -i -r "s/version=\"[0-9]*\.[0-9]*\.[0-9]*\"/version=\"$VERSION_NAME\"/g" setup.py
 
       - name: Build
-        run: python3 setup.py bdist_wheel
+        run: python3 setup.py # bdist_wheel
         env:
           CC: clang
 

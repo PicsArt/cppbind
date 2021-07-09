@@ -25,7 +25,6 @@ namespace iegen::example {
  *     - type: iegen::example::Project
  *     - type: iegen::example::Task
  * package: templates
- * swift.include: CWrapper
  */
 template <class T>
 class Stack {

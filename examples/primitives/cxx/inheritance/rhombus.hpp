@@ -11,7 +11,6 @@ namespace iegen::example {
  * action: gen_interface
  * shared_ref: False
  * package: inheritance
- * swift.include: CWrapper
  */
 class Rhombus : public virtual Parallelogram {
 public:

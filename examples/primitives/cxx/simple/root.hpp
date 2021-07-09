@@ -15,7 +15,6 @@ namespace iegen::example {
  * shared_ref: False
  * swift.package: simple
  * kotlin.package: simple
- * swift.include: CWrapper
  */
 struct Root {
 public:

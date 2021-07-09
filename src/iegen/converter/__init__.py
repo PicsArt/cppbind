@@ -2,19 +2,27 @@ import clang.cindex as cli
 
 NEW_LINE = '\n'
 
+
 class Validator:
+    """
+    Class to validate some constraints on variables
+    """
+
     @staticmethod
     def shared_ref_set(type_ctx):
+        """Check whether shared_ref variable is set"""
         if not type_ctx.root.shared_ref:
             raise Exception("Root must have an attribute \"shared_ref: True\"")
 
     @staticmethod
     def shared_ref_unset(type_ctx):
+        """Check whether shared_ref variable is false"""
         if type_ctx.root.shared_ref:
             raise Exception("Root has an invalid attribute \"shared_ref: True\"")
 
     @staticmethod
     def validate_single_root(cursor):
+        """Validate that the cursor has only a single base root"""
         roots = _get_roots(cursor)
         if len(roots) > 1 and not all((roots[0].type == root.type for root in roots)):
             raise TypeError(
@@ -23,11 +31,13 @@ class Validator:
 
     @staticmethod
     def validate_ancestors(ancestors):
+        """Ensure that all ancestors has the same value for shared_ref variable"""
         if ancestors and not all(item.shared_ref == ancestors[0].shared_ref for item in ancestors[1:]):
             raise TypeError('All ancestors must have the same value for shared_ref.')
 
     @staticmethod
     def validate_bases(class_name, base_types_converters):
+        """Ensure the class has only one non abstract base"""
         non_abstract_bases = 0
         for base_type in base_types_converters:
             if not base_type.ctx.action == 'gen_interface':
@@ -52,12 +62,18 @@ def _get_roots(cursor):
 
 
 class Exceptions:
+    """
+    Helper class for exceptions
+    """
+
     @staticmethod
     def can_throw(throws):
+        """Check whether the node has list of throwable exceptions"""
         return "no_throw" not in throws
 
     @staticmethod
     def get_std_exc_tree():
+        """For saving C++ std exceptions classes hierarchy"""
         return [
             ("std::exception", ""),
             ("std::runtime_error", "std::exception"),
@@ -77,6 +93,7 @@ class Exceptions:
 
     @staticmethod
     def is_std_custom_exc(ctx):
+        """Check whether the given class is derived from C++ std exceptions"""
         std_exc_list = [row[0] for row in Exceptions.get_std_exc_tree()]
         for cursor in list(ctx.cursor.get_children()):
             if cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER and cursor.spelling in std_exc_list:
@@ -85,10 +102,12 @@ class Exceptions:
 
     @staticmethod
     def has_exc_base(ctx):
+        """Check whether current class has a base class which is exception class"""
         return any(base.is_exception for base in ctx.ancestors)
 
     @staticmethod
     def get_exc_name(name):
+        """Returns mangled name of class to use in target language"""
         if not name.startswith("std::"):
             return name.split("::")[-1]
 

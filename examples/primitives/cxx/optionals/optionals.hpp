@@ -13,7 +13,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: optionals
- * swift.include: CWrapper
  */
 class Optionals {
 

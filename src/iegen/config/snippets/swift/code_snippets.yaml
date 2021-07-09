@@ -9,6 +9,7 @@ file:
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       import Foundation
+      import {{c_wrapper_lib_name}}
       {{helper_includes|format_list('import {}')|join(new_line)}}
       {{include}}
 
@@ -89,7 +90,7 @@ file:
     content: |
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
-      import {{c_wrapper_build_name}}
+      import {{c_wrapper_lib_name}}
       public enum Exceptions {
       {% for cls, base_cls in helper.Exceptions.get_std_exc_tree() %}
           {{'public' if base_cls else 'open'}} class {{helper.Exceptions.get_exc_name(cls)}} : {{helper.Exceptions.get_exc_name(base_cls) if base_cls else 'Error'}} {
@@ -175,10 +176,12 @@ enum:
 
 var_class_include: &var_class_include
     unique_content: |
+      {%- if ctx.is_proj_type -%}
       #include "{{prj_rel_file_name}}"
+      {%- endif -%}
       {%- macro gen_import(converter, current_ctx) -%}
       {%- set type_ctx = converter.ctx -%}
-      {%- if type_ctx and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
+      {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
       {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
       {%- endif -%}
       {%- for tmpl_arg_converter in converter.template_args -%}
@@ -213,8 +216,9 @@ class:
                               : {% for base_type_converter in base_types_converters -%}
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
-                                {% endif %}{%- if helper.Exceptions.is_std_custom_exc(ctx) or (ctx.is_exception and not helper.Exceptions.has_exc_base(ctx)) -%}
-                                {{', ' if base_types_converters is defined and base_types_converters|length > 0 else ' : '}}{{'Exceptions.StdException ' if helper.Exceptions.is_std_custom_exc(ctx) else 'Error '}}
+                                {% endif %}{{(', ' if base_types_converters is defined and base_types_converters|length > 0 else ': ') + ctx.bases_list|join(', ') if ctx.bases_list|length > 0}}
+                                {%- if helper.Exceptions.is_std_custom_exc(ctx) or (ctx.is_exception and not helper.Exceptions.has_exc_base(ctx)) -%}
+                                {{', ' if base_types_converters is defined and base_types_converters|length > 0 or ctx.bases_list|length > 0 else ' : '}}{{'Exceptions.StdException ' if helper.Exceptions.is_std_custom_exc(ctx) else 'Error '}}
                                 {%- endif %} {
             {% if not has_non_abstract_base_class and not helper.Exceptions.is_std_custom_exc(ctx)%}
             public let cself : {{converter.sc.target_type_name}}
@@ -275,7 +279,7 @@ interface:
                               : {% for base_type_converter in base_types_converters -%}
                                 {{comma()}}{{base_type_converter.swift.target_type_name}}
                                 {%- endfor -%}
-                                {% endif %} {
+                                {% endif %}{{(', ' if base_types_converters is defined and base_types_converters|length > 0 else ': ') + ctx.bases_list|join(', ') if ctx.bases_list|length > 0}} {
 
             {% if not base_types_converters is defined %}
             var cself : {{converter.sc.target_type_name}} { get }
@@ -326,7 +330,7 @@ var_method_cxx_include: &var_method_cxx_include
   unique_content: |
     {%- macro gen_import(converter, current_ctx) -%}
     {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx-%}
+    {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
@@ -508,7 +512,7 @@ var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
     {%- macro gen_import(converter, current_ctx) -%}
     {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx -%}
+    {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}

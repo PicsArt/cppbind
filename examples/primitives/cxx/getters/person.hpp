@@ -15,7 +15,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: true
  * package: getters
- * swift.include: CWrapper
  */
 class Person {
 public:

@@ -10,7 +10,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: False
  * package: inheritance
- * swift.include: CWrapper
  */
 class Bicycle : public Vehicle {
 public:

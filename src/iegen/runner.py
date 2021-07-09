@@ -17,7 +17,8 @@ from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     clear_iegen_generated_files,
     get_host_platform,
-    load_rule_module
+    load_rule_module,
+    copy_yaml_config_template
 )
 
 
@@ -105,6 +106,11 @@ def clean(args):
     clear_iegen_generated_files(args.dir)
 
 
+def init(args):
+    """Creates an initial iegen config file which contains default values."""
+    copy_yaml_config_template()
+
+
 def run_package():
     """
     Command line arguments parser
@@ -126,6 +132,9 @@ def run_package():
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.')
     clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.')
     clean_parser.set_defaults(func=clean)
+
+    init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.')
+    init_parser.set_defaults(func=init)
 
     # print help if nothing is passed
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])

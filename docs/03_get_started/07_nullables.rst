@@ -21,7 +21,7 @@ In the above example you can find also constructor taking nullable argument and 
     and `setNullable` tagged with gen_setter having nullable argument.
 
 In this example we use two helper structures `NumberInt` and `NumberDouble`. Note that first one is marked as shared_ref = True,
-and the second one as shared_ref = True. Both cases are similar.
+and the second one as shared_ref = False. Both cases are similar.
 Here is the code for them.
 
 .. literalinclude:: /../examples/primitives/cxx/nullables/nullable_utils.hpp
@@ -34,7 +34,7 @@ Now let's take a look at generated wrappers.
 .. tabs::
     .. tab:: kotlin
 
-        Kotlin has a support for nullable types. As you can see arguments that were marked as nullable have **?** with their data type. The same is fot return values.
+        Kotlin has a support for nullable types. As you can see arguments that were marked as nullable have **?** with their data type. The same is for return values.
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
            :language: kotlin

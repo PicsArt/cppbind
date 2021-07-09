@@ -18,7 +18,6 @@ namespace iegen::example {
  *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
- * swift.include: CWrapper
  */
 template <typename T>
 struct Addressable {

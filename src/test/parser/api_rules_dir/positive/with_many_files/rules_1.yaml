@@ -20,4 +20,3 @@ type_vars:
     vars:
       action: gen_class
       package: yaml_test
-      swift.include: CWrapper

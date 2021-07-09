@@ -9,6 +9,7 @@ file:
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       import Foundation
+      import {{c_wrapper_lib_name}}
       {{helper_includes|format_list('import {}')|join(new_line)}}
       {{include}}
 
@@ -266,6 +267,7 @@ var_method_cxx_include: &var_method_cxx_include
     {%- if rconverter is defined -%}
     {{gen_import(rconverter, ctx)}}
     {%- endif -%}
+
 constructor:
   swift:
     head: |

@@ -159,11 +159,11 @@ def test_external_api_parser_positive():
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
 
     results = {
-        'with_many_files': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_many_files': 'a176d1e4fee490bdd04f0749e654c836',
         'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
-        'with_mixed_cfg': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_mixed_cfg': 'a176d1e4fee490bdd04f0749e654c836',
         'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
-        'with_jinja_expr': '7e3f74054ee36e9401d3028ca7856a4e'
+        'with_jinja_expr': '46060b5c7a6b72174f7729e6ce2f1ca0'
     }
 
     for dir_, res_md5 in results.items():

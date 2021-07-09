@@ -226,12 +226,12 @@ pybind_module:
     else: null
   allowed_on: [ root ]
 
-c_wrapper_build_name:
+c_wrapper_lib_name:
   inheritable: true
   default:
     swift: CWrapper
     else: null
-  allowed_on: [ root ]
+  allowed_on: [ root, file_system ]
 
 clang_args:
   inheritable: false

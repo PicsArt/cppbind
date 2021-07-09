@@ -1,0 +1,100 @@
+- type: "std::exception"
+  vars: |
+    swift.action: gen_class
+    swift.name: StdException
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+    swift.bases_list:
+      - Error
+    {% if c_wrapper_build_name is defined -%}
+    swift.include: "{{c_wrapper_build_name}}"
+    {%- endif -%}
+
+- type: "std::exception::what()"
+  vars:
+    swift.action: gen_method
+    throws: no_throw
+
+- type: "std::runtime_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdRuntimeError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::logic_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdLogicError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::bad_alloc"
+  vars:
+    swift.action: gen_class
+    swift.name: StdBadAlloc
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::bad_cast"
+  vars:
+    swift.action: gen_class
+    swift.name: StdBadCast
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::bad_typeid"
+  vars:
+    swift.action: gen_class
+    swift.name: StdBadTypeId
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::overflow_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdOverflowError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::range_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdRangeError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::underflow_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdUnderflowError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::invalid_argument"
+  vars:
+    swift.action: gen_class
+    swift.name: StdInvalidArgument
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::length_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdLengthError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::out_of_range"
+  vars:
+    swift.action: gen_class
+    swift.name: StdOutOfRange
+    swift.package: exception_helpers
+    swift.file: std_exc_classes
+
+- type: "std::domain_error"
+  vars:
+    swift.action: gen_class
+    swift.name: StdDomainError
+    swift.package: exception_helpers
+    swift.file: std_exc_classes

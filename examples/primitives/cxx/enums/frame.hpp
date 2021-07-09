@@ -10,7 +10,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: enums
- * swift.include: CWrapper
  */
 struct Frame {
     /**

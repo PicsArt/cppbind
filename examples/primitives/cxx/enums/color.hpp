@@ -8,7 +8,6 @@ namespace iegen::example {
  * __API__
  * action: gen_enum
  * package: enums
- * swift.include: CWrapper
  */
 enum class Color {
     /**

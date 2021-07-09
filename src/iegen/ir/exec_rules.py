@@ -252,6 +252,12 @@ class Context(BaseContext):
         return self._prj_rel_file_name
 
     @property
+    def is_proj_type(self):
+        """Check whether the given type is user's type or is the type from standard/3pty lib"""
+        return os.path.abspath(self.cursor.location.file.name).startswith(
+            os.path.abspath(self.out_prj_dir) + os.path.sep)
+
+    @property
     def api_args(self):
         if not hasattr(self, '_api_args'):
             self._api_args = self.node.args

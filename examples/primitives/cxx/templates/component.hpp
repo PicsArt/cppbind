@@ -18,7 +18,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: True
  * package: templates
- * swift.include: CWrapper
  */
 class Component : public Addressable<Root> {
 public:

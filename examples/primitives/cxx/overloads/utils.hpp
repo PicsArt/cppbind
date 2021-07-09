@@ -11,7 +11,6 @@ namespace iegen::example {
  * shared_ref: true
  * swift.file: Utils
  * package: overloads
- * swift.include: CWrapper
  */
 struct Utils {
     /**

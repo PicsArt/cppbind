@@ -10,7 +10,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: False
  * package: simple
- * swift.include: CWrapper
  */
 struct Path {
 public:

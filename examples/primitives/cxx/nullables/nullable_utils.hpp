@@ -14,7 +14,6 @@ namespace iegen::example::nullable {
  * shared_ref: true
  * swift.file: Utils
  * package: nullables
- * swift.include: CWrapper
  */
 struct NumberInt {
     /**
@@ -36,7 +35,6 @@ struct NumberInt {
  * shared_ref: false
  * swift.file: Utils
  * package: nullables
- * swift.include: CWrapper
  */
 struct NumberDouble {
     /**
@@ -62,7 +60,6 @@ struct NumberDouble {
  * package: nullables
  * kotlin.include:
  *  - com.examples.simple.Task
- * swift.include: CWrapper
  */
 struct Utils {
 

@@ -13,7 +13,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: containers
- * swift.include: CWrapper
  */
 struct MapItem {
     /**

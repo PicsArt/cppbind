@@ -3,10 +3,27 @@ on:
   release:
     types: [published]
 
+#   will be removed after tests
+  push:
+    branches: [publish]
+
 jobs:
   iegen-publish:
-    runs-on: [self-hosted, macos]
+    runs-on: [self-hosted]
     steps:
+      - name: Setup Python 3.9
+        if: matrix.python-version == '3.9'
+        run: |
+          sudo add-apt-repository ppa:deadsnakes/ppa
+          sudo apt update
+          sudo apt install python3.9 python3.9-dev python3.9-venv
+          python3.9 -m venv $HOME/venv-python3.9
+          echo "VIRTUAL_ENV=$HOME/venv-python3.9" >> $GITHUB_ENV
+          echo "$HOME/venv-python3.9/bin" >> $GITHUB_PATH
+      
+      - name: Add PYTHON_BIN_PATH to ENV
+        run : echo "PYTHON_BIN_PATH=`which python3`" >> $GITHUB_ENV
+        
       - name: Checkout branch
         uses: actions/checkout@v2.3.4
         with:
@@ -14,20 +31,11 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           submodules: recursive
 
-      - name: Set up Maven
-        uses: stCarolas/setup-maven@v4.1
-        with:
-          maven-version: 3.6.3
-
-      - name: Setup maven settings
-        uses: s4u/maven-settings-action@v2.4.0
-        with:
-          servers: '[{"id": "Nexus", "username": "${{ secrets.NEXUS_USER }}", "password": "${{ secrets.NEXUS_PASSWORD }}"}]'
-
       - name: Set version name for release
-        if: github.event_name == 'release'
+#         if: github.event_name == 'release'
         run: |
           VERSION_NAME=${GITHUB_REF##*/}
+          VERSION_NAME=test
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           sed -i '' -r "s/version=\"[0-9]*\.[0-9]*\.[0-9]*\"/version=\"$VERSION\"/g" setup.py
 
@@ -37,7 +45,7 @@ jobs:
           CC: clang
 
       - name: Publish
-        run: twine upload iegen/dist/*.whl -u davitsamvelyan -p pNRfyKzxdRWpYZ9j --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
+        run: twine upload iegen/dist/*.whl -u ${{ secrets.NEXUS3_USERNAME }} -p ${{ secrets.NEXUS3_PASSWORD }} --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
         env:
           CC: clang
 

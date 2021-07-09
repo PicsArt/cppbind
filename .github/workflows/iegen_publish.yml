@@ -33,6 +33,7 @@ jobs:
 
       - name: Set version name for release
 #         if: github.event_name == 'release'
+        shell: bash
         run: |
           VERSION_NAME=${GITHUB_REF##*/}
           VERSION_NAME=test

@@ -53,25 +53,3 @@ def get_c_func_name(hint_name):
 
 def get_map_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
-
-
-def _is_generated_type(type_converter):
-    """
-    Returns whether the type_converter is a converter for iegen generated type or not.
-    Can be a pointer type or not a pointer.
-    """
-    return type_converter.ctx is not None and type_converter.ctx.cursor.kind in [cli.CursorKind.STRUCT_DECL,
-                                                                                 cli.CursorKind.CLASS_DECL,
-                                                                                 cli.CursorKind.CLASS_TEMPLATE]
-
-
-def is_type_pointer(type_converter):
-    """
-     Returns True if the type_converter is a converter for iegen generated type(regular pointer or a shared_pointer type)
-     and False otherwise.
-     """
-    if cutil.is_template(type_converter.original_clang_type):
-        type_name = cutil.template_type_name(type_converter.original_clang_type)
-        if type_name == 'std::shared_ptr':
-            return _is_generated_type(type_converter.template_args[0])
-    return _is_generated_type(type_converter)

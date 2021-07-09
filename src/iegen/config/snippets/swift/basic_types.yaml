@@ -1,4 +1,6 @@
 void:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Void
   c:
@@ -11,6 +13,8 @@ void:
   sc_to_swift:
 
 bool:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Bool
   c:
@@ -23,6 +27,8 @@ bool:
   sc_to_swift:
 
 int:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Int
   c:
@@ -37,6 +43,8 @@ int:
     let {{target_name}} = Int({{name}})
 
 unsigned int:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: UInt
   c:
@@ -51,6 +59,8 @@ unsigned int:
     let {{target_name}} = UInt({{name}})
 
 short:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Short
   c:
@@ -63,6 +73,8 @@ short:
   sc_to_swift:
 
 long:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: CLong
   c:
@@ -75,6 +87,8 @@ long:
   sc_to_swift:
 
 long long:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: CLongLong
   c:
@@ -87,6 +101,8 @@ long long:
   sc_to_swift:
 
 unsigned long:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: CUnsignedLong
   c:
@@ -99,6 +115,8 @@ unsigned long:
   sc_to_swift:
 
 float:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Float
   c:
@@ -111,6 +129,8 @@ float:
   sc_to_swift:
 
 double:
+  custom:
+    is_pointer_type: False
   swift:
     type_info: Double
   c:

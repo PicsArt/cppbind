@@ -1,42 +1,8 @@
-# three ways to describe directory actions
 dir_vars:
   - dir: "."
     vars:
-      action: gen_package
-      name: simple
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-  - dir: "/cxx/overloads"
-    vars:
-      action: gen_package
-      name: overloads
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-  - dir: "../operators"
-    vars:
-      action: gen_package
-      name: operators
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-file_vars:
-  - file: "./root.hpp"
-    vars:
-      package: simple
+      project_dir: '{{_current_working_dir}}'
+      project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
 
 vars: |
   {%- set out_prj_dir = "." -%}

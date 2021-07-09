@@ -22,12 +22,6 @@ vars: |
 var_def:
   !join
   - !include variable_definitions.yaml
-  - clang_args:
-      inheritable: false
-      default:
-        - -D__ANDROID__
-      allowed_on: [ root ]
-      array: true
 
 rules:
   kotlin.code_snippets:

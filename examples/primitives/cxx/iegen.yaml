@@ -26,8 +26,7 @@ vars: |
   python.out_dir: {{path.join(out_prj_dir, "python/src")}}
   python.package_prefix: ""
   python.pybind_module: examples
-  python.src_exclude_glob:
-    - cxx/nullables/*.hpp
+  python.src_exclude_glob: []
   swift.file_postfix: _swgen
   swift.package_prefix: ""
   swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}

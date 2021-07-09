@@ -9,10 +9,7 @@ from collections.abc import MutableMapping
 
 import yaml
 
-# wrong import
-import iegen.common as PROJECT_CONFIG_DIR
-# the corrected one, which currently leads to errors
-# from iegen.common import PROJECT_CONFIG_DIR
+from iegen.common.config import config, PROJECT_CONFIG_DIR
 
 
 class YamlNode(MutableMapping):
@@ -71,7 +68,11 @@ class YamlKeyDuplicationError(Exception):
 
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
-    custom_dirs = []
+
+    # the list of directories where included yaml files need to be searched
+    custom_dirs = [PROJECT_CONFIG_DIR]
+    if hasattr(config.application, 'custom_config_dir'):
+        custom_dirs.append(config.application.custom_config_dir)
 
     def __init__(self, stream):
         """Initialise MyLoader."""
@@ -81,7 +82,7 @@ class MyLoader(yaml.SafeLoader):
         except AttributeError:
             self._root = os.path.curdir
 
-        self.dirs = [self._root, PROJECT_CONFIG_DIR]
+        self.dirs = [self._root]
 
         super().__init__(stream)
 
@@ -215,9 +216,8 @@ yaml.add_constructor('!join', construct_join, MyLoader)
 MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
 
 
-def load_yaml(file_path, dirs=None):
+def load_yaml(file_path):
     """Load yaml file in specific dirs using MyLoader custom loader"""
-    MyLoader.custom_dirs = dirs or []
     with open(file_path) as file:
         return yaml.load(file, MyLoader)
 

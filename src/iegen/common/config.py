@@ -9,10 +9,7 @@ import types
 
 from ctypes.util import find_library
 
-import yaml
-
 import clang.cindex as cli
-from iegen.common.yaml_process import MyLoader, load_yaml
 from iegen.common import PROJECT_CONFIG_DIR
 
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
@@ -30,15 +27,6 @@ if clang_lib is None:
 cli.Config.set_library_file(clang_lib)
 
 
-def load_yaml_file(file):
-    for path in DEFAULT_DIRS:
-        file_name = os.path.join(path, file)
-        if os.path.isfile(file_name):
-            return load_yaml(file_name)
-    with open(file, 'x') as yml_file:
-        load_yaml(yml_file)
-
-
 def read_config(config_file=None):
     """
     creates and loads config file.
@@ -49,8 +37,7 @@ def read_config(config_file=None):
 
     config = configparser.ConfigParser(
         converters={
-            'list': lambda x: [i.strip() for i in x.split(',')],
-            'yaml': lambda x: yaml.load(x, MyLoader),
+            'list': lambda x: [i.strip() for i in x.split(',')]
         }
     )
 

@@ -24,6 +24,16 @@ assert(res2?.value == d2.value)
 res2 = Utils.max(null, d2)
 assert(res2 == null)
 
+// nullable getter/setter
+val utils = Utils(d1)
+assert(utils.nullable?.value == d1.value)
+utils.nullable = null
+
+// nullable property getter/setter
+assert(utils.numDouble == null)
+utils.numDouble = d2
+assert(utils.numDouble?.value == d2.value)
+
 // [nullables-usage]
 }
 

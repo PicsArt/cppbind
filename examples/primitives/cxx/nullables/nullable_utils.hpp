@@ -68,6 +68,14 @@ struct Utils {
 
     /**
      * __API__
+     * action: gen_constructor
+     * nullable_arg:
+     *   - num
+     */
+    Utils(NumberDouble* num) : numDouble(num) {}
+
+    /**
+     * __API__
      * action: gen_method
      * throws: no_throw
      * nullable_arg:
@@ -102,6 +110,77 @@ struct Utils {
         }
         return std::shared_ptr<NumberInt>(nullptr);
     }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    static void checkNonnullArg(NumberDouble* number) {
+
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    static NumberDouble* checkNonnullReturn() {
+        return nullptr;
+    }
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     * nullable_return: True
+     */
+    NumberDouble* nullable() {
+        return numDouble;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     * nullable_arg: num
+     */
+    void setNullable(NumberDouble* num) {
+        numDouble = num;
+    }
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    NumberDouble* nonNull() {
+        return numDouble;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     */
+    void setNonNull(NumberDouble* num) {
+        numDouble = num;
+    }
+
+    /**
+     * __API__
+     * action: gen_property_setter
+     * nullable_return: True
+     */
+    NumberDouble* numDouble;
+
+    /**
+     * __API__
+     * action: gen_property_setter
+     * nullable_return: False
+     */
+    std::shared_ptr<NumberInt> numInt;
+
 };
 // [example]
 }

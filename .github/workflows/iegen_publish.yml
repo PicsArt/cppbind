@@ -3,10 +3,6 @@ on:
   release:
     types: [published]
 
-#   will be removed after tests
-  push:
-    branches: [publish]
-
 jobs:
   iegen-publish:
     runs-on: [self-hosted]
@@ -38,7 +34,6 @@ jobs:
         shell: bash
         run: |
           VERSION_NAME=${GITHUB_REF##*/}
-          VERSION_NAME=0.0.3
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
           sed -i -r "s/version=\"[0-9]*\.[0-9]*\.[0-9]*\"/version=\"$VERSION_NAME\"/g" setup.py
 

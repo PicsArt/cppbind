@@ -30,6 +30,9 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           submodules: recursive
 
+      - name: Install requirements
+        run : pip3 install -r src/requirements.txt
+
       - name: Set version name for release
 #         if: github.event_name == 'release'
         shell: bash

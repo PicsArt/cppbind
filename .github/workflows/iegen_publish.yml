@@ -48,7 +48,7 @@ jobs:
           CC: clang
 
       - name: Publish
-        run: twine upload iegen/dist/*.whl -u ${{ secrets.NEXUS3_USERNAME }} -p ${{ secrets.NEXUS3_PASSWORD }} --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
+        run: twine upload dist/*.whl -u ${{ secrets.NEXUS3_USERNAME }} -p ${{ secrets.NEXUS3_PASSWORD }} --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
         env:
           CC: clang
 

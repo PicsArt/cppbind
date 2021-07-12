@@ -193,6 +193,8 @@ def construct_join(loader, node):
     def construct_object(node, deep=False):
         if isinstance(node, yaml.MappingNode):
             return loader.construct_mapping(node, deep)
+        if isinstance(node, yaml.SequenceNode):
+            return loader.construct_sequence(node, deep)
         return original(node, deep)
 
     loader.construct_object = construct_object

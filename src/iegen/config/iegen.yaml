@@ -18,6 +18,9 @@ vars: |
   swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
   swift.out_dir:  {{path.join(out_prj_dir, "swift/src")}}
 
+type_vars:
+  !join
+  - !include std_exc_api.yaml
 
 var_def:
   !join

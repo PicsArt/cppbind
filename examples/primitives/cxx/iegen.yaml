@@ -1,3 +1,7 @@
+type_vars:
+  !join
+  - !include std_exc_api.yaml
+
 dir_vars:
   - dir: "."
     vars:

@@ -6,9 +6,11 @@ import errno
 import importlib.util
 import os
 import re
+import shutil
 import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
+from iegen.common import YAML_CONFIG_TEMPLATE_PATH
 
 
 def load_from_paths(loader, path_name, default_dirs):
@@ -120,3 +122,10 @@ def clear_iegen_generated_files(directory):
                 os.remove(file_path)
         if not os.listdir(root):
             os.remove(root)
+
+
+def copy_yaml_config_template():
+    """
+    Copies iegen yaml config template file containing default values into current directory.
+    """
+    shutil.copy(YAML_CONFIG_TEMPLATE_PATH, os.getcwd())

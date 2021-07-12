@@ -75,7 +75,7 @@ char *:
   swift:
     type_info: String
   c:
-    type_info: const char * _Nullable
+    type_info: const char *
   sc:
     type_info: UnsafePointer<CChar>?
   c_to_cxx: 

@@ -261,4 +261,3 @@ def _validate_and_convert_args_kwargs(func, *args, **kwargs):
         func.validate_arg_value(arg_name, arg)
         converted_args.append(_convert_arg(arg, annotation))
     return converted_args, converted_kwargs
-

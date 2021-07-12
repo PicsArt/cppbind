@@ -15,7 +15,6 @@ namespace iegen::example::nullable {
  * swift.file: NullableUtils
  * swift.name: NumInt
  * package: nullables
- * swift.include: CWrapper
  */
 struct NumberInt {
     /**
@@ -38,7 +37,6 @@ struct NumberInt {
  * swift.file: NullableUtils
  * swift.name: NumDouble
  * package: nullables
- * swift.include: CWrapper
  */
 struct NumberDouble {
     /**
@@ -64,7 +62,6 @@ struct NumberDouble {
  * swift.file: NullableUtils
  * swift.name: NullableUtils
  * package: nullables
- * swift.include: CWrapper
  */
 struct Utils {
 

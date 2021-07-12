@@ -17,7 +17,6 @@ namespace iegen::example {
  *   T:
  *     - type: int
  *     - type: double
- * swift.include: CWrapper
  */
 template <class T>
 class Number {

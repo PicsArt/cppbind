@@ -10,7 +10,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: templates
- * swift.include: CWrapper
  */
 class TemplateMethods  {
     public:

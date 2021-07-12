@@ -78,6 +78,12 @@ throws:
   allowed_on: [ function, function_template, cxx_method ]
   required_on: [ function, function_template, cxx_method ]
 
+bases_list:
+  inheritable: false
+  array: true
+  default: [ ]
+  allowed_on: [ class, class_template, struct, struct_template ]
+
 nullable_return:
   inheritable: false
   default: false
@@ -220,12 +226,12 @@ pybind_module:
     else: null
   allowed_on: [ root ]
 
-c_wrapper_build_name:
+c_wrapper_lib_name:
   inheritable: true
   default:
     swift: CWrapper
     else: null
-  allowed_on: [ root ]
+  allowed_on: [ root, file_system ]
 
 clang_args:
   inheritable: false

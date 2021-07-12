@@ -47,6 +47,5 @@ def get_jni_func_name(package_name, class_name, template_suffix, method_name, ar
         class_name += fix_name(template_suffix)
     if args_type_name is None or any((a not in args_type_signature for a in args_type_name)):
         return f'Java_{package_name}_{class_name}_{method_name}'
-    else:
-        return f'Java_{package_name}_{class_name}_{method_name}__\
+    return f'Java_{package_name}_{class_name}_{method_name}__\
 {"".join([args_type_signature[arg] for arg in args_type_name])}'

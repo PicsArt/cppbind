@@ -21,7 +21,6 @@ class Teacher;
  * shared_ref: False
  * package: forward_decl
  * kotlin.package: forward_decl.student
- * swift.include: CWrapper
  */
 class Student {
 public:

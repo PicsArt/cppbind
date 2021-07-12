@@ -1,5 +1,0 @@
-dir_vars:
-  - dir: "."
-    vars:
-      project_dir: '{{_current_working_dir}}'
-      project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'

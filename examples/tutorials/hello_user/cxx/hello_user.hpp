@@ -5,7 +5,6 @@
  * __API__
  * action: gen_class
  * package: hello
- * swift.include: CWrapper
  */
 struct UserInfo {
 
@@ -40,7 +39,6 @@ struct UserInfo {
  * __API__
  * action: gen_class
  * package: hello
- * swift.include: CWrapper
  */
 class Host {
 public:

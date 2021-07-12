@@ -4,7 +4,7 @@ std::string:
 
 $Object:
   custom:
-    is_pointer_type: True
+    is_c_pointer_type: True
   swift:
     type_info: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
   c:
@@ -31,7 +31,7 @@ $Object:
 
 $Enum:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: "{{type_name}}"
   c:
@@ -49,7 +49,7 @@ $Enum:
 
 std::__cxx11::basic_string:
   custom:
-    is_pointer_type: True
+    is_c_pointer_type: True
   swift:
     type_info: String
   c:
@@ -71,7 +71,7 @@ std::__cxx11::basic_string:
 
 char *:
   custom:
-    is_pointer_type: True
+    is_c_pointer_type: True
   swift:
     type_info: String
   c:
@@ -87,7 +87,7 @@ char *:
 
 std::vector:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: "Array<{{args_t[0]}}>"
   c:
@@ -140,7 +140,7 @@ std::vector:
 
 std::map:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: "Dictionary<{{args_t[0]}}, {{args_t[1]}}>"
   c:
@@ -219,7 +219,7 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    is_pointer_type: True
+    is_c_pointer_type: True
   swift:
     type_info: "{{args_t[0]}}"
   c:
@@ -247,7 +247,7 @@ std::shared_ptr:
 
 std::pair:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: "({{args_t[0]}}, {{args_t[1]}})"
   c:

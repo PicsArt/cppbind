@@ -1,6 +1,6 @@
 void:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Void
   c:
@@ -14,7 +14,7 @@ void:
 
 bool:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Bool
   c:
@@ -28,7 +28,7 @@ bool:
 
 int:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Int
   c:
@@ -44,7 +44,7 @@ int:
 
 unsigned int:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: UInt
   c:
@@ -60,7 +60,7 @@ unsigned int:
 
 short:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Short
   c:
@@ -74,7 +74,7 @@ short:
 
 long:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: CLong
   c:
@@ -88,7 +88,7 @@ long:
 
 long long:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: CLongLong
   c:
@@ -102,7 +102,7 @@ long long:
 
 unsigned long:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: CUnsignedLong
   c:
@@ -116,7 +116,7 @@ unsigned long:
 
 float:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Float
   c:
@@ -130,7 +130,7 @@ float:
 
 double:
   custom:
-    is_pointer_type: False
+    is_c_pointer_type: False
   swift:
     type_info: Double
   c:

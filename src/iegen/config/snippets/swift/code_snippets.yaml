@@ -359,7 +359,7 @@ constructor:
     body: |
       {%- set comma = joiner(', ') %}
       {{owner_class.converter.c.target_type_name}} _Nonnull create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-      {%- if arg.converter.c.custom.is_pointer_type %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}){
+      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}){
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {% set converter = arg.converter.c_to_cxx %}
@@ -378,7 +378,7 @@ constructor:
       content: |
         {%- set comma = joiner(', ') %}
         {{owner_class.converter.c.target_type_name}} _Nonnull create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-        {%- if arg.converter.c.custom.is_pointer_type %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
+        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
 
 function:
   swift:
@@ -434,10 +434,10 @@ function:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
       {%- if not is_static -%}
       {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_pointer_type %}{{' _Nullable' if arg.nullable else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err){
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.nullable else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err){
         {%- set call_args = [] %}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
@@ -495,10 +495,10 @@ function:
     body:
       content: |
         {%- set comma = joiner(', ') %}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}(
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
-        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_pointer_type %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
   exceptions_utils_swift:
     body:
   std_exceptions_swift:
@@ -547,7 +547,7 @@ property_getter:
   cc:
     include: *var_getter_cxx_include
     body: |
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -560,7 +560,7 @@ property_getter:
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if ctx.action == 'gen_property_setter' %}
-      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{name}}){
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -575,9 +575,9 @@ property_getter:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
         {%- if ctx.action == 'gen_property_setter' %}
-        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{name}});
+        void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{name}});
         {% endif %}
 
 getter:
@@ -607,7 +607,7 @@ getter:
   cc:
     include: *var_getter_cxx_include
     body: |
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -621,7 +621,7 @@ getter:
       }
       {%- if setter_ctx is defined %}
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
-      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter_ctx.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}}){
+      void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter_ctx.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -636,9 +636,9 @@ getter:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
         {%- if setter_ctx is defined %}
         {% set converter = setter_ctx.args[0].converter.c %}
         void _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{converter.target_type_name}}
-        {%- if rconverter.c.custom.is_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}});
+        {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}});
         {% endif %}

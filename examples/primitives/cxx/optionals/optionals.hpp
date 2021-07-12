@@ -13,7 +13,6 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: optionals
- * swift.include: CWrapper
  */
 class Optionals {
 
@@ -28,10 +27,10 @@ public:
 
 
     /**
-     *
      * __API__
      * action: gen_method
      * throws: no_throw
+     * nullable_return: True
      */
 	Task* optionalPtrWithNullptrDefault(Task* task = nullptr) {
 	    return task;
@@ -69,6 +68,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * nullable_return: True
      */
 	Task* optionalPtrWithNullDefault(Task* task = NULL) {
 	    return task;

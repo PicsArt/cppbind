@@ -1,0 +1,6 @@
+rules:
+  type_converters:
+    a:
+      f:
+        g:
+          h: 1

@@ -462,7 +462,7 @@ function:
       {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)}}
       return {{rconverter.cxx_to_jni.converted_name('result')}};
       {%- else %}
-      this_object->{{cxx_name}}({{call_args|join(', ')}});
+      {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
       {%- endif %}
       {%- endmacro %}
       {%- set class_name = owner_class.name %}

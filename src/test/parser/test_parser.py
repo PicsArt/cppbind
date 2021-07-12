@@ -2,25 +2,21 @@ import copy
 import hashlib
 import os
 import types
-import yaml
-from collections import OrderedDict
-from shutil import rmtree
 
-import pytest
+from collections import OrderedDict
 from unittest.mock import patch
 
-from iegen import default_config
+import pytest
+import yaml
+
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
-from iegen.builder.out_builder import Builder
 from iegen.common.error import Error
-from iegen.common.yaml_process import YamlKeyDuplicationError
+from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import Node, NodeType
-from iegen.ir.exec_rules import RunRule
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
-from iegen.utils import load_rule_module
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -81,7 +77,7 @@ def test_parser_processor_cr_counter(clang_config):
                 * kotlin.file: utils
                 */
                 """,
-                "a9dd42fb3dd193871b8a49913180c08e"
+                "968fa15c9d1d04262b9edc7bbcf37fb7"
         ),
         (
                 """
@@ -93,12 +89,12 @@ def test_parser_processor_cr_counter(clang_config):
                 * shared_ref: False
                 */
                 """,
-                "9e1abee91024c0f427a0f5f04732823b"
+                "b64b94a831d388a32509fd7c296faa5c"
         )
     ]
 )
-def test_API_parser(test_data, res_md5):
-    parser = APIParser(ContextDescriptor(None))
+def test_api_parser(test_data, res_md5):
+    parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section, {})
@@ -131,8 +127,8 @@ def test_API_parser(test_data, res_md5):
         """
     ]
 )
-def test_API_parser_negative(test_data):
-    parser = APIParser(ContextDescriptor(None))
+def test_api_parser_negative(test_data):
+    parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section, {})
@@ -142,43 +138,67 @@ def test_API_parser_negative(test_data):
         assert False, "should get error"
 
 
-def test_external_API_parser_negative():
+def test_external_api_parser_negative():
+    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
-    for dir in os.listdir(api_rules_dir):
-        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+
+    for dir_ in os.listdir(api_rules_dir):
+        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
         try:
-            ContextDescriptor.build_ctx_def_map(context_def_glob)
+            ctx_desc.build_ctx_def_map(context_def_glob)
         except (YamlKeyDuplicationError, yaml.YAMLError):
             pass
-        except Exception as e:
-            assert False, f"unexpected exception: {e}"
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
         else:
             assert False, "should get error"
 
 
-def test_external_API_parser_positive():
+def test_external_api_parser_positive():
+    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
+
     results = {
-        'with_many_files': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_many_files': 'a176d1e4fee490bdd04f0749e654c836',
         'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
-        'with_mixed_cfg': 'a63fb90fb3bed215e76b7338f3b9b902',
+        'with_mixed_cfg': 'a176d1e4fee490bdd04f0749e654c836',
         'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
-        'with_jinja_expr': '7e3f74054ee36e9401d3028ca7856a4e'
+        'with_jinja_expr': '46060b5c7a6b72174f7729e6ce2f1ca0'
     }
 
-    for dir, res_md5 in results.items():
-        context_def_glob = os.path.join(api_rules_dir, dir, '*.yaml')
+    for dir_, res_md5 in results.items():
+        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
         try:
-            res = ContextDescriptor.build_ctx_def_map(context_def_glob)
+            res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
+            print(res)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
-                ordered_res[key] = res[key].attr
+                ordered_res[key] = res[key]
 
-            assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5, \
+            assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5,\
                 "External API parser results has bean changed."
+
         except Exception:
             assert False, "should not get error"
+
+
+def test_external_api_merging_positive():
+    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
+    api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
+
+    expected_res = {
+        'code_snippets': {},
+        'type_converters': {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
+        'actions': []
+    }
+
+    context_def_glob = os.path.join(api_rules_dir, 'with_snippets_rules', '*.yaml')
+    try:
+        res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
+        assert expected_res == res, "External API parser results has bean changed."
+    except Exception:
+        assert False, "should not get error"
 
 
 def test_parser_errors(clang_config):
@@ -189,7 +209,7 @@ def test_parser_errors(clang_config):
     parser = CXXParser()
 
     lang, plat = 'swift', 'linux'
-    ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     for file in os.listdir(test_dir):
@@ -209,7 +229,7 @@ def test_jinja_attrs(clang_config):
     clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
 
     plat, lang = 'linux', 'swift'
-    ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -225,13 +245,13 @@ def test_empty_gen_rule(clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-    lang_config = default_config.application
 
     context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser()
-    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
+    ctx_desc = ContextDescriptor(context_def_glob, plat, lang)
+    ctx_mgr = ContextManager(ctx_desc)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -248,21 +268,9 @@ def test_empty_gen_rule(clang_config):
     # check that 'package' inheritable variable is inherited from dir to class
     dir_pkg_value = dir_root.args['package']
     cls_pkg_value = dir_root.children[0].children[0].args['package']
-    assert dir_pkg_value == cls_pkg_value == 'example_pkg', "inheritance of variables doesn't work correctly"
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg',\
+        "inheritance of variables doesn't work correctly"
 
-    ir.args['out_dir'] = os.path.join(working_dir, 'example_out_dir')
-    lang_rule = load_rule_module(lang, default_config.application.rule, default_config.default_config_dirs)
-    run_rule = RunRule(ir, plat, lang)
-    builder = Builder()
-
-    # check that empty gen rule doesn't crash the app
-    try:
-        run_rule.run(lang_rule, builder)
-    except AttributeError:
-        assert False, "empty gen rule should not get error"
-    else:
-        # remove generated new directory
-        rmtree(os.path.join(working_dir, ir.args['out_dir']))
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
 def test_root_config(clang_config):
@@ -276,7 +284,7 @@ def test_root_config(clang_config):
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
     parser = CXXParser()
-    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
+    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob, plat, lang))
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -294,29 +302,32 @@ def test_root_config(clang_config):
 
 def test_file_api_positive():
     file_api_folder = 'file_api_example'
-    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
+    context_def_glob = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(context_def_glob))
+    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'swift'))
 
-    example_file_key = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
+    example_file_key = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
 
     api, args = api_parser.parse_yaml_api(example_file_key, {})
 
     assert api == Node.API_NONE
-    assert args['package']['__all__']['__all__'] == 'test_cxx_inputs'
+    assert args['package'] == 'test_cxx_inputs'
 
 
 def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
-    context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
+    context_def_glob = os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(context_def_glob))
+    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'python'))
 
-    example_dir_key = os.path.relpath(
-        os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
+    example_dir_key = os.path.relpath(os.path.abspath(
+        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
 
     api, args = api_parser.parse_yaml_api(example_dir_key, {})
 
     assert api == 'gen_package'
-    assert args['name']['__all__']['__all__'] == 'inputs'
-    assert args['code_fragment']['__all__']['python'] == ['import json']
+    assert args['name'] == 'inputs'
+    assert args['code_fragment'] == ['import json']

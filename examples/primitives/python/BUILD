@@ -146,6 +146,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "nullables",
+    srcs = ["src/nullables/main.py"],
+    main = "src/nullables/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

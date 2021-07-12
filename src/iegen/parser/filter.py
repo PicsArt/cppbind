@@ -2,11 +2,17 @@
 Filter module decides which clang cursor needs to be processed and which one needs to be skipped.
 """
 
+import clang.cindex as cli
 
-class CXXParserFilter(object):
+
+class CXXParserFilter:
     """
     Simple filter implementation to skip unnecessary records for AST of clang.
     """
+
+    DISALLOWED_CXX_KINDS = [
+        cli.CursorKind.CXX_BASE_SPECIFIER
+    ]
 
     def __init__(self, include_files=None):
 
@@ -45,7 +51,7 @@ class CXXParserFilter(object):
             True if cursor needs to be processed
 
         """
-        if self.filter_by_file(node):
+        if self.filter_by_file(node) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
             return True
 
         return False

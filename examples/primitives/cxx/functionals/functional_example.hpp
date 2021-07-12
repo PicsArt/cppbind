@@ -9,7 +9,6 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: true
  * package: functionals
- * swift.include: CWrapper
  */
 class FunctionalExamples {
 public:

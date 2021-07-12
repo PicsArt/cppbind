@@ -20,7 +20,6 @@ type_vars:
     vars: |
       action: gen_class
       package: yaml_test
-      swift.include: CWrapper
 
   - type: "pi::video_engine::yaml_test::WithExternalAPIComments::max(const T &, const T &)"
     vars: |

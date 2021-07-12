@@ -42,10 +42,6 @@ def is_first_overload(ctx):
     return is_first
 
 
-def module_name_to_func_name(pybind_module):
-    return ''.join([part.capitalize() for part in re.split('[_.]', pybind_module)])
-
-
 def cxx_rel_path(filepath, cxx_filepath):
     return os.path.relpath(filepath, cxx_filepath)
 
@@ -80,8 +76,8 @@ def get_default_value(arg):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
-            return f' = None'
-        elif pointee.kind == cli.TypeKind.ENUM:
+            return ' = None'
+        if pointee.kind == cli.TypeKind.ENUM:
             return f' = {arg.converter.ctx.file}.{arg.converter.python.target_type_name}.{arg.default}'
         return f' = {arg.default}'
     return ''

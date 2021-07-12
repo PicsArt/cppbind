@@ -1,42 +1,8 @@
-# three ways to describe directory actions
 dir_vars:
   - dir: "."
     vars:
-      action: gen_package
-      name: simple
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-  - dir: "/cxx/overloads"
-    vars:
-      action: gen_package
-      name: overloads
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-  - dir: "../operators"
-    vars:
-      action: gen_package
-      name: operators
-      python.code_fragment:
-        - import json
-        - >
-          def pretty_print(json_str):
-              parsed = json.loads(json_str)
-              print(json.dumps(parsed, indent=4, sort_keys=True))
-
-file_vars:
-  - file: "./root.hpp"
-    vars:
-      package: simple
+      project_dir: '{{_current_working_dir}}'
+      project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
 
 vars: |
   {%- set out_prj_dir = "." -%}
@@ -60,8 +26,7 @@ vars: |
   python.out_dir: {{path.join(out_prj_dir, "python/src")}}
   python.package_prefix: ""
   python.pybind_module: examples
-  python.src_exclude_glob:
-    - cxx/nullables/*.hpp
+  python.src_exclude_glob: []
   swift.file_postfix: _swgen
   swift.package_prefix: ""
   swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
@@ -81,3 +46,34 @@ var_def:
         - -D__ANDROID__
       allowed_on: [ root ]
       array: true
+
+rules:
+  kotlin.code_snippets:
+    !join
+    - !include kotlin/code_snippets.yaml
+  python.code_snippets:
+    !join
+    - !include python/code_snippets.yaml
+  swift.code_snippets:
+    !join
+    - !include swift/code_snippets.yaml
+
+  kotlin.type_converters:
+    !join
+    - !include "kotlin/*_types.yaml"
+  python.type_converters:
+    !join
+    - !include "python/*_types.yaml"
+  swift.type_converters:
+    !join
+    - !include "swift/*_types.yaml"
+
+  kotlin.actions:
+    !join
+    - !include kotlin/actions.yaml
+  python.actions:
+    !join
+    - !include python/actions.yaml
+  swift.actions:
+    !join
+    - !include swift/actions.yaml

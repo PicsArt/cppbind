@@ -72,29 +72,15 @@ class Exceptions:
         return "no_throw" not in throws
 
     @staticmethod
-    def get_std_exc_tree():
-        """For saving C++ std exceptions classes hierarchy"""
-        return [
-            ("std::exception", ""),
-            ("std::runtime_error", "std::exception"),
-            ("std::logic_error", "std::exception"),
-            ("std::bad_alloc", "std::exception"),
-            ("std::bad_cast", "std::exception"),
-            ("std::bad_typeid", "std::exception"),
-            ("std::bad_exception", "std::exception"),
-            ("std::overflow_error", "std::runtime_error"),
-            ("std::range_error", "std::runtime_error"),
-            ("std::underflow_error", "std::runtime_error"),
-            ("std::invalid_argument", "std::logic_error"),
-            ("std::length_error", "std::logic_error"),
-            ("std::out_of_range", "std::logic_error"),
-            ("std::domain_error", "std::logic_error")
-        ]
-
-    @staticmethod
     def is_std_custom_exc(ctx):
         """Check whether the given class is derived from C++ std exceptions"""
-        std_exc_list = [row[0] for row in Exceptions.get_std_exc_tree()]
+        std_exc_list = (
+            "std::exception", "std::runtime_error", "std::logic_error", "std::bad_alloc",
+            "std::bad_cast", "std::bad_typeid", "std::bad_exception", "std::overflow_error",
+            "std::range_error", "std::underflow_error", "std::invalid_argument", "std::length_error",
+            "std::out_of_range", "std::domain_error"
+        )
+
         for cursor in list(ctx.cursor.get_children()):
             if cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER and cursor.spelling in std_exc_list:
                 return True

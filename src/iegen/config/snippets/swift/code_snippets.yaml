@@ -118,7 +118,11 @@ var_class_include: &var_class_include
       {%- endfor -%}
       {%- endif -%}
       {%- if include_cxx -%}
-      {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
+      {%- set cxx_includes = [] -%}
+      {%- for include in include_cxx -%}
+          {%- do cxx_includes.append("#include " + (include if include.startswith('<') and include.endswith('>') else '"{}"'.format(include))) -%}
+      {%- endfor -%}
+      {{marker}}{{cxx_includes|join_unique}}
       {%- endif -%}
 
 

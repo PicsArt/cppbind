@@ -274,11 +274,8 @@ var_class: &var_class
         {%- endfor -%}
         {%- endif -%}
         {%- if include_cxx -%}
-        {%- set cxx_includes = [] -%}
-        {%- for include in include_cxx -%}
-            {%- do cxx_includes.append("#include " + (include if include.startswith('<') and include.endswith('>') else '"{}"'.format(include))) -%}
-        {%- endfor -%}
-        {{marker}}{{cxx_includes|join_unique}}
+        {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
+        {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
         {%- endif -%}
     body:
       scopes:

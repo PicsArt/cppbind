@@ -276,7 +276,7 @@ std::shared_ptr:
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
-    {%- if nullable %}
+    {%- if nullable is defined and nullable %}
     if ({{name}} == 0) {
         {{target_name}} = std::shared_ptr<{{pointee}}>(nullptr);
     } else {
@@ -300,7 +300,7 @@ std::shared_ptr:
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
-    {%- if nullable %}
+    {%- if nullable is defined and nullable %}
     if (!{{name}}) {
         {{target_name}} = 0;
     } else {

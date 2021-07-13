@@ -1,18 +1,14 @@
-/*
- * This is an example with forward declaration. Currently as we do not have include mechanism based on argument and base
- * types we should manually specify c++ include for wrappers in the API.
- */
-
 #ifndef teacher_hpp
 #define teacher_hpp
 
 #include <vector>
+#include <memory>
 
 namespace iegen::example {
 // [example]
 // forward declaration
 class Student;
-
+typedef std::shared_ptr<Student> StudentRef;
 /**
  * comments
  *
@@ -35,7 +31,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    void addStudent(Student* s) {
+    void addStudent(StudentRef s) {
         _students.push_back(s);
     }
 
@@ -44,12 +40,12 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    const std::vector<Student*>& students() const {
+    const std::vector<StudentRef>& students() const {
         return _students;
     };
 
 private:
-    std::vector<Student*> _students;
+    std::vector<StudentRef> _students;
 };
 // [example]
 }

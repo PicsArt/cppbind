@@ -1,8 +1,3 @@
-/*
- * This is an example with forward declaration. Currently as we do not have include mechanism based on argument and base
- * types we should manually specify c++ include for wrappers in the API.
- */
-
 #ifndef student_hpp
 #define student_hpp
 
@@ -18,7 +13,7 @@ class Teacher;
  *
  * __API__
  * action: gen_class
- * shared_ref: False
+ * shared_ref: True
  * package: forward_decl
  * kotlin.package: forward_decl.student
  */

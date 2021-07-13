@@ -72,12 +72,13 @@ def is_overloaded_cursor(ctx):
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
-def get_default_value(arg):
+def get_default_value(arg, use_module_name=True):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
             return ' = None'
         if pointee.kind == cli.TypeKind.ENUM:
-            return f' = {arg.converter.ctx.file}.{arg.converter.python.target_type_name}.{arg.default}'
+            module_name = f'{arg.converter.ctx.file}.' if use_module_name else ''
+            return f' = {module_name}{arg.converter.python.target_type_name}.{arg.default}'
         return f' = {arg.default}'
     return ''

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from git import Repo, GitError
 
-from iegen import DATETIME_FORMAT
+from iegen import DATETIME_FORMAT, logging
 from iegen.builder import OUTPUT_MODIFICATION_KEY
 from iegen.common.error import Error
 from iegen.ir.ast import (
@@ -131,6 +131,11 @@ class CXXIEGIRBuilder:
         """
         current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
+
+        if not self.ctx_mgr.ieg_api_parser.has_api(cursor.raw_comment) and not self.ctx_mgr.has_yaml_api(
+                get_full_displayname(cursor)):
+            return
+
         self.__update_internal_vars(current_node)
 
         pure_comment = api_section = None
@@ -223,6 +228,7 @@ class CXXIEGIRBuilder:
                     repo = Repo(project_dir)
                     url = next(repo.remote().urls).replace('.git', '')
                     branch = repo.active_branch.name
+                    logging.info(f'Found a git repo under {project_dir}')
                     return f'{url}/tree/{branch}/'
                 except (GitError, TypeError):
                     # not a git repo leave variable empty

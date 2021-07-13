@@ -232,6 +232,9 @@ var_class: &var_class
                                   {{comma()}}{{base_type_converter.ctx.file + '.' if base_type_converter.ctx}}{{base_type_converter.python.target_type_name}}
                                   {%- endfor -%}
                                   {%- endif -%}
+                                  {%- if ctx.bases_list|length > 0 -%}
+                                  {{(', ' if base_types_converters is defined else '') + ctx.bases_list|join(', ')}}
+                                  {%- endif -%}
                        {{comma()}}metaclass=OriginalMethodsMetaclass):
             {%- if comment %}
             {{helper.make_comment(comment)|string|indent}}

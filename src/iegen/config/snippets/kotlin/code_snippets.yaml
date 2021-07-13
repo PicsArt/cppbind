@@ -147,6 +147,9 @@ class:
                                                 {%- if not has_non_abstract_base_class %}, AutoCloseable{% endif %}
                                             {%- else %}
                                             {%- if not has_non_abstract_base_class %}: AutoCloseable{% endif %}
+                                            {%- endif %}
+                                            {%- if ctx.bases_list|length > 0 -%}
+                                                {{(', ' if base_types_converters is defined or not has_non_abstract_base_class else ': ') + bases_list|join(', ')}}
                                             {%- endif %} {
             companion object {
                 {%- if not has_non_abstract_base_class %}
@@ -223,7 +226,8 @@ interface:
         {{helper.make_comment(comment)}}
         {%- endif %}
         interface I{{name}}{{template_suffix}} {% if base_types_converters is defined -%}
-              : {{base_types_converters|join(',', attribute='kotlin.target_type_name')}} {% endif %}{
+              : {{base_types_converters|join(',', attribute='kotlin.target_type_name')}} {% endif %}{%- if ctx.bases_list|length > 0 -%}
+                {{(', ' if base_types_converters is defined else ': ') + bases_list|join(', ')}}{%- endif -%}{
             {%- if base_types_converters is not defined %}
             fun getObjId(): Long
             {%- endif %}

@@ -225,17 +225,15 @@ var_class: &var_class
         - properties
         - body
       content: |
-        {% set comma = joiner(', ')  %}
+        {%- set bases_list = [] -%}
+        {%- if base_types_converters is defined -%}
+          {%- for base_type_converter in base_types_converters -%}
+              {%- do bases_list.append((base_type_converter.ctx.file + '.' if base_type_converter.ctx else '') + base_type_converter.python.target_type_name) -%}
+          {%- endfor -%}
+        {%- endif -%}
+        {%- do bases_list.extend(ctx.bases_list) %}
 
-        class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
-                                  {% for base_type_converter in base_types_converters -%}
-                                  {{comma()}}{{base_type_converter.ctx.file + '.' if base_type_converter.ctx}}{{base_type_converter.python.target_type_name}}
-                                  {%- endfor -%}
-                                  {%- endif -%}
-                                  {%- if ctx.bases_list|length > 0 -%}
-                                  {{(', ' if base_types_converters is defined else '') + ctx.bases_list|join(', ')}}
-                                  {%- endif -%}
-                       {{comma()}}metaclass=OriginalMethodsMetaclass):
+        class {{name}}{{template_suffix}}({{bases_list|join(', ')}}{{', ' if bases_list|length > 0}}metaclass=OriginalMethodsMetaclass):
             {%- if comment %}
             {{helper.make_comment(comment)|string|indent}}
             {%- endif %}

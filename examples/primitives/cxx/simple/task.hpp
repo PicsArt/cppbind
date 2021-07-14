@@ -2,7 +2,10 @@
 #define task_hpp
 
 #include <string>
+
 #include <stdexcept>
+#include <new>
+#include <typeinfo>
 
 namespace iegen::example {
 // [example]

@@ -5,6 +5,7 @@ This module is responsible for loading, processing code, types, actions snippets
 import copy
 import glob
 import os
+import re
 import shutil
 
 from collections.abc import MutableMapping
@@ -630,5 +631,10 @@ class SnippetsEngine:
             return JINJA_UNIQUE_MARKER.join(inputs_)
 
         env.filters['join_unique'] = join_unique
+
+        def match_regexp(input_, *patterns):
+            return any(re.match(pattern, input_) for pattern in patterns)
+
+        env.tests['match_regexp'] = match_regexp
 
         self.jinja2_env = env

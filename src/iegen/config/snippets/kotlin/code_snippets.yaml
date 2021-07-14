@@ -69,7 +69,8 @@ var_class_cxx: &var_class_cxx
       {%- endfor -%}
       {%- endif -%}
       {%- if include_cxx -%}
-      {{marker}}{{include_cxx|format_list('#include "{}"')|join_unique}}
+      {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
+      {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
       {%- endif -%}
   body:
     content: |

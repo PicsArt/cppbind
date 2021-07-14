@@ -203,7 +203,7 @@ var_class: &var_class
         {{marker}}from abc import abstractmethod
         {%- endif -%}
         {%- if include -%}
-        {{include|format_list("from {} import *")|join_unique}}
+        {{marker}}{{include|format_list("from {} import *")|join_unique}}
         {%- endif -%}
         {%- macro gen_import(converter, current_ctx) -%}
         {%- set type_ctx = converter.ctx -%}
@@ -229,7 +229,8 @@ var_class: &var_class
 
         class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
                                   {% for base_type_converter in base_types_converters -%}
-                                  {{comma()}}{{base_type_converter.ctx.file + '.' if base_type_converter.ctx}}{{base_type_converter.python.target_type_name}}
+                                  {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
+                                  {{comma()}}{{base_type_package}}{{base_type_converter.python.target_type_name}}
                                   {%- endfor -%}
                                   {%- endif -%}
                        {{comma()}}metaclass=OriginalMethodsMetaclass):
@@ -366,7 +367,7 @@ constructor:
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg)}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg, arg_package != '')}}
                                        {%- endfor %}):
           {{helper.make_comment(comment)|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -399,7 +400,7 @@ function:
                                                           {%- set rtype_package = rconverter.ctx.file + '.' if rconverter.ctx and (rconverter.ctx.file != file or rconverter.ctx.package != package) else '' -%}
                                                           {%- for arg in args -%}
                                                           {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg)}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg, arg_package != '')}}
                                                           {%- endfor %}) -> {{'Optional[' if nullable_return}}{{rtype_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
           {{helper.make_comment(comment)|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass

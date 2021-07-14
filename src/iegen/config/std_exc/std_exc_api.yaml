@@ -9,6 +9,10 @@
     {% if c_wrapper_build_name is defined -%}
     swift.include: "{{c_wrapper_build_name}}"
     {%- endif -%}
+    swift.include_cxx:
+      - <stdexcept>
+      - <new>
+      - <typeinfo>
 
 - type: "std::exception::what()"
   vars:

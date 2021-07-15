@@ -2,12 +2,16 @@
 #define optionals_h
 
 #include <string>
+#include <memory>
 #include <complex>
 #include "cxx/enums/color.hpp"
 #include "cxx/simple/task.hpp"
+#include "cxx/getters/person.hpp"
 
 
 namespace iegen::example {
+// forward declaration
+class Project;
 
 /**
  * __API__
@@ -40,6 +44,25 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * nullable_return: True
+     */
+	Project* optionalFDPtrWithNullptrDefault(Project* project = nullptr) {
+	    return project;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * nullable_return: True
+     */
+	const std::shared_ptr<Person>& optionalSharedPtrWithNullptrDefault(const std::shared_ptr<Person>& person = nullptr) {
+	    return person;
+	}
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
      */
 	int optionalIntWithDefault(int val = 5) {
 	    return val;
@@ -62,16 +85,6 @@ public:
      */
 	char optionalCharWithDefault(char symbol = ',') {
         return symbol;
-	}
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     * nullable_return: True
-     */
-	Task* optionalPtrWithNullDefault(Task* task = NULL) {
-	    return task;
 	}
 
 	/**

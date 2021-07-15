@@ -2,8 +2,8 @@
 * This is an example for template property getter/setter.
 */
 
-#ifndef overload_hpp
-#define overload_hpp
+#ifndef number_hpp
+#define number_hpp
 #include <string>
 
 namespace iegen::example {

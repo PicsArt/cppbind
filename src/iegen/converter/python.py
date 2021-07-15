@@ -75,8 +75,10 @@ def is_overloaded_cursor(ctx):
 def get_default_value(arg, use_module_name=True):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
-        if arg.default in ('nullptr', 'NULL'):
+        if arg.default == 'nullptr':
             return ' = None'
+        if arg.default == 'NULL':
+            return f' = 0'
         if pointee.kind == cli.TypeKind.ENUM:
             module_name = f'{arg.converter.ctx.file}.' if use_module_name else ''
             return f' = {module_name}{arg.converter.python.target_type_name}.{arg.default}'
@@ -88,8 +90,8 @@ def get_pybind_default_value(arg):
     if arg.default:
         pointee = cutil.get_pointee_type(arg.cursor.type)
         if arg.default in ('nullptr', 'NULL'):
-            return f' = static_cast<{arg.converter.python.cxx_type_name}>({arg.default})'
-        elif pointee.kind == cli.TypeKind.ENUM:
+            return f' = {arg.default}'
+        if pointee.kind == cli.TypeKind.ENUM:
             return f' = {pointee.spelling}::{arg.default}'
         return f' = {arg.default}'
     return ''

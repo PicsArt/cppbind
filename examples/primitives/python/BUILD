@@ -124,8 +124,8 @@ py_test(
 
 py_test(
     name = "overloads",
-    srcs = ["src/operators/main.py"],
-    main = "src/operators/main.py",
+    srcs = ["src/overloads/main.py"],
+    main = "src/overloads/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

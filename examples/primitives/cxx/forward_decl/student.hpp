@@ -2,6 +2,7 @@
 #define student_hpp
 
 #include <vector>
+#include <string>
 
 namespace iegen::example {
 // [example]
@@ -9,8 +10,6 @@ namespace iegen::example {
 class Teacher;
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * shared_ref: True
@@ -23,7 +22,13 @@ public:
      * __API__
      * action: gen_constructor
      */
-    Student() {};
+    Student(const std::string& st_name) : name(st_name) {};
+
+    /**
+     * __API__
+     * action: gen_constructor
+     */
+    Student(const std::vector<Teacher*>& teachers) : _teachers(teachers) {};
 
 
     /**
@@ -43,6 +48,13 @@ public:
     const std::vector<Teacher*>& teachers() const {
         return _teachers;
     };
+
+    /**
+     * __API__
+     * action: gen_property_setter
+     */
+    std::string name;
+
 
 private:
     std::vector<Teacher*> _teachers;

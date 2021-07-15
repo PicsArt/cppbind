@@ -1,6 +1,12 @@
 import Wrapper
 
-// [overload-usage]
-assert(Utils.sum(first: 1, second: 2) == 3)
-assert(Utils.sum(first: 2.0, second: 3.0) == 6.0)
-// [overload-usage]
+// [operators-usage]
+let counter1 = Counter(count: 1)
+let counter2 = Counter(count: 2)
+let counter = counter1 + counter2
+assert(counter.count == 3)
+assert(counter2 > counter1)
+counter1 += counter2
+assert(counter1.count == 3)
+assert(counter1 > counter2)
+// [operators-usage]

@@ -9,9 +9,8 @@ namespace iegen::example {
 // forward declaration
 class Student;
 typedef std::shared_ptr<Student> StudentRef;
+
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * shared_ref: False

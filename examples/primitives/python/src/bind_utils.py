@@ -156,9 +156,10 @@ class bind:
 
         @functools.wraps(self.fn.original_function)
         def _decorator(*args, **kwargs):
-            all_kwargs = _map_to_kwargs(self.fn, *args, **kwargs)
+            all_args = args
+            all_kwargs = kwargs
             if not self.fn.is_overloaded:
-                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
+                all_args, all_kwargs = _validate_and_convert_args_kwargs(self.fn, *args, **kwargs)
             if inspect.isclass(instance):
                 # for python >= 3.9
                 # case of static method, e.g decorated with @classmethod
@@ -168,10 +169,10 @@ class bind:
                 else:
                     # instance is iegen generated cls
                     cls = instance
-                result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+                result = cls.originals[self.fn.name].__get__(self.fn.name)(*all_args, **all_kwargs)
                 self.fn.validate_return_value(result)
                 return result
-            result = self.cls.originals[self.fn.name](instance, **all_kwargs)
+            result = self.cls.originals[self.fn.name](instance, *all_args, **all_kwargs)
             self.fn.validate_return_value(result)
             return result
 
@@ -198,10 +199,12 @@ class bind:
             else:
                 # the first argument is iegen generated cls
                 cls = args[0]
-            all_kwargs = _map_to_kwargs(self.fn, *args[1:], **kwargs)
+            # do not use cls
+            all_args = args[1:]
+            all_kwargs = kwargs
             if not self.fn.is_overloaded:
-                _, all_kwargs = _validate_and_convert_args_kwargs(self.fn, **all_kwargs)
-            result = cls.originals[self.fn.name].__get__(self.fn.name)(**all_kwargs)
+                all_args, all_kwargs = _validate_and_convert_args_kwargs(self.fn, *all_args, **all_kwargs)
+            result = cls.originals[self.fn.name].__get__(self.fn.name)(*all_args, **all_kwargs)
             self.fn.validate_return_value(result)
             return result
         # get the non pybind class
@@ -226,26 +229,16 @@ def _convert_arg(arg, type_hint):
         if type_hint == 'int':
             python_to_pybind_arg = int(arg)
             return python_to_pybind_arg
-        if type_hint == 'float':
-            python_to_pybind_arg = float(arg)
-            return python_to_pybind_arg
         if type_hint == 'str':
             python_to_pybind_arg = str(arg)
+            return python_to_pybind_arg
+        if type_hint == 'float':
+            python_to_pybind_arg = float(arg)
             return python_to_pybind_arg
         return arg
     except TypeError:
         raise TypeError(
             f'To cast {type(arg)} to {type_hint} please provide a __{type_hint}__ method for {type(arg)}.')
-
-
-def _map_to_kwargs(func, *args, **kwargs):
-    all_kwargs = func.defaults
-    args_names = func.args_names
-    for ii, arg in enumerate(args):
-        arg_name = args_names[ii]
-        all_kwargs[arg_name] = arg
-    all_kwargs.update(kwargs)
-    return all_kwargs
 
 
 def _validate_and_convert_args_kwargs(func, *args, **kwargs):

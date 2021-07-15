@@ -1,5 +1,5 @@
 file:
-  kotlin: 
+  kotlin:
     file_path: |
       {{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
     scopes: 
@@ -63,11 +63,9 @@ var_class_cxx: &var_class_cxx
       {{gen_import(tmpl_arg_converter, current_ctx)}}
       {%- endfor -%}
       {%- endmacro -%}
-      {%- if base_types_converters is defined -%}
       {%- for base in base_types_converters -%}
       {{gen_import(base, ctx)}}
       {%- endfor -%}
-      {%- endif -%}
       {%- if include_cxx -%}
       {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
       {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
@@ -115,11 +113,9 @@ var_class_kotlin_include: &var_class_kotlin_include
     {{gen_import(tmpl_arg_converter, current_ctx)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {%- if base_types_converters is defined -%}
     {%- for base in base_types_converters -%}
     {{gen_import(base, ctx)}}
     {%- endfor -%}
-    {%- endif -%}
 
 class:
   kotlin:
@@ -132,23 +128,16 @@ class:
         - companion
         - private_external
       content: |
-        {%- set bases = base_types_converters if base_types_converters is defined else [] -%}
+        {%- set base_interfaces = base_types_converters|selectattr('ctx.action', 'eq', 'gen_interface')|map(attribute='kotlin.target_type_name')|list -%}
+        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + ctx.bases_list + (['AutoCloseable'] if not base_types_converters or not has_non_abstract_base_class else []) -%}
         {%- do helper.Validator.validate_single_root(cursor) -%}
-        {%- do helper.Validator.validate_bases(name, bases) -%}
+        {%- do helper.Validator.validate_bases(name, base_types_converters) -%}
         {%- do helper.Validator.validate_ancestors(ancestors) -%}
         {%- if comment %}
         {{helper.make_comment(comment)}}
         {%- endif %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
-        internal constructor(_id: Long) {% if base_types_converters is defined -%}
-                                              {%- set comma = joiner(', ') -%}
-                                              : {% for base_type_converter in base_types_converters -%}
-                                                {{comma()}}{{base_type_converter.kotlin.target_type_name}}{{'(_id)' if not base_type_converter.ctx.action == 'gen_interface'}}
-                                                {%- endfor -%}
-                                                {%- if not has_non_abstract_base_class %}, AutoCloseable{% endif %}
-                                            {%- else %}
-                                            {%- if not has_non_abstract_base_class %}: AutoCloseable{% endif %}
-                                            {%- endif %} {
+        internal constructor(_id: Long){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             companion object {
                 {%- if not has_non_abstract_base_class %}
                 init {
@@ -160,7 +149,7 @@ class:
             {% if not has_non_abstract_base_class %}
             protected var id = _id
             {%- endif %}
-            {% if base_types_converters is defined -%}
+            {% if base_types_converters -%}
             {{'override '}}
             {%- else %}
             {{'open '}}
@@ -219,13 +208,13 @@ interface:
         - companion
         - interface_external
       content: |
+        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + ctx.bases_list -%}
         {%- do helper.Validator.validate_single_root(cursor) -%}
         {%- if comment %}
         {{helper.make_comment(comment)}}
         {%- endif %}
-        interface I{{name}}{{template_suffix}} {% if base_types_converters is defined -%}
-              : {{base_types_converters|join(',', attribute='kotlin.target_type_name')}} {% endif %}{
-            {%- if base_types_converters is not defined %}
+        interface I{{name}}{{template_suffix}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
+            {%- if not base_types_converters %}
             fun getObjId(): Long
             {%- endif %}
             {{properties|string|indent}}

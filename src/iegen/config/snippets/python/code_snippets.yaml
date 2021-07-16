@@ -367,7 +367,15 @@ constructor:
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg, arg_package != '')}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
+                                       {%- if arg.default -%}
+                                       {%- if arg.is_enum -%} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                       {%- else -%}
+                                       {%- if arg.default in ['nullptr', 'NULL'] %} = None
+                                       {%- else %} = {{arg.default}}
+                                       {%- endif %}
+                                       {%- endif %}
+                                       {%- endif -%}
                                        {%- endfor %}):
           {{helper.make_comment(comment)|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -381,7 +389,12 @@ constructor:
                                                                                    {%- endfor -%}>(){{', ' if args}}
                                                                                     {%- set comma = joiner(', ') -%}
                                                                                     {%- for arg in args -%}
-                                                                                    {{comma()}}py::arg("{{arg.name|to_snake_case}}"){{helper.get_pybind_default_value(arg)}}
+                                                                                    {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+                                                                                    {%- if arg.default -%}
+                                                                                    {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
+                                                                                    {%- else %} = {{arg.default}}
+                                                                                    {%- endif -%}
+                                                                                    {%- endif -%}
                                                                                     {%- endfor -%});
 
 
@@ -404,7 +417,15 @@ function:
                                                           {%- set rtype_package = rconverter.ctx.file + '.' if rconverter.ctx and (rconverter.ctx.file != file or rconverter.ctx.package != package) else '' -%}
                                                           {%- for arg in args -%}
                                                           {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}{{helper.get_default_value(arg, arg_package != '')}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
+                                                          {%- if arg.default -%}
+                                                          {%- if arg.is_enum -%} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                                          {%- else -%}
+                                                          {%- if arg.default in ['nullptr', 'NULL'] %} = None
+                                                          {%- else %} = {{arg.default}}
+                                                          {%- endif %}
+                                                          {%- endif %}
+                                                          {%- endif -%}
                                                           {%- endfor %}) -> {{'Optional[' if nullable_return}}{{rtype_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
           {{helper.make_comment(comment)|string|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -432,7 +453,12 @@ function:
       {{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
-      {{comma()}}py::arg("{{arg.name|to_snake_case}}"){{helper.get_pybind_default_value(arg)}}
+      {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+      {%- if arg.default -%}
+      {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
+      {%- else %} = {{arg.default}}
+      {%- endif -%}
+      {%- endif -%}
       {%- endfor -%});
 
 var_bind_getter: &var_bind_getter

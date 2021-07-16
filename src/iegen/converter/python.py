@@ -2,9 +2,7 @@
 Helper codes for python conversion
 """
 import os
-import re
 
-import iegen.utils.clang as cutil
 from . import *
 
 OPERATOR_MAPPING = {
@@ -70,28 +68,3 @@ def make_enum_case_comment(pure_comment):
 def is_overloaded_cursor(ctx):
     return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
-
-
-def get_default_value(arg, use_module_name=True):
-    if arg.default:
-        pointee = cutil.get_pointee_type(arg.cursor.type)
-        if arg.default == 'nullptr':
-            return ' = None'
-        if arg.default == 'NULL':
-            return f' = 0'
-        if pointee.kind == cli.TypeKind.ENUM:
-            module_name = f'{arg.converter.ctx.file}.' if use_module_name else ''
-            return f' = {module_name}{arg.converter.python.target_type_name}.{arg.default}'
-        return f' = {arg.default}'
-    return ''
-
-
-def get_pybind_default_value(arg):
-    if arg.default:
-        pointee = cutil.get_pointee_type(arg.cursor.type)
-        if arg.default in ('nullptr', 'NULL'):
-            return f' = {arg.default}'
-        if pointee.kind == cli.TypeKind.ENUM:
-            return f' = {pointee.spelling}::{arg.default}'
-        return f' = {arg.default}'
-    return ''

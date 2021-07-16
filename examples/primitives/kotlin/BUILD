@@ -123,6 +123,22 @@ kt_jvm_test(
     main_class = "com.examples.nullables.NullablesApp",
 )
 
+kt_jvm_test(
+    name = "shared_ptr",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.shared_ptr.SharedPtrApp",
+)
+
+kt_jvm_test(
+    name = "misc",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni.so"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.misc.MiscApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

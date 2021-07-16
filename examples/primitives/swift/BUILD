@@ -68,13 +68,31 @@ swift_test(
 
 swift_test(
     name = "operators",
-    srcs = ["src/templates/main.swift"],
+    srcs = ["src/operators/main.swift"],
     deps = [":sw_examples_library"],
 )
 
 swift_test(
     name = "overloads",
     srcs = ["src/templates/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "shared_ptr",
+    srcs = ["src/shared_ptr/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "exceptions",
+    srcs = ["src/exceptions/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
+    name = "misc",
+    srcs = ["src/misc/main.swift"],
     deps = [":sw_examples_library"],
 )
 

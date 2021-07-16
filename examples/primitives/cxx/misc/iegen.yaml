@@ -1,0 +1,60 @@
+type_vars:
+  - type: "iegen::example::WithExternalAPIComments"
+    ::
+    - type: "retInt(int)"
+      vars:
+        action: gen_method
+        throws: no_throw
+
+    - type: "str()"
+      vars:
+        action: gen_getter
+        throws: no_throw
+
+    - type: "setStr(const std::string &)"
+      vars:
+        action: gen_setter
+        throws: no_throw
+
+  - type: "iegen::example::WithExternalAPIComments"
+    vars:
+      action: gen_class
+      package: misc
+
+  - type: "iegen::example::WithExternalAPIComments::max(const T &, const T &)"
+    vars:
+      action: gen_method
+      throws: no_throw
+      template:
+        T:
+          - type: int
+          - type: std::string
+
+  - type: iegen
+    ::
+    - type: example
+      ::
+      - type: "WithExternalAPIComments"
+        ::
+        - type: "WithExternalAPIComments(std::string)"
+          vars:
+            action: gen_constructor
+
+  - type: "iegen::example::Adder"
+    vars:
+      action: gen_class
+      package: misc
+      template:
+        T:
+          - type: int
+          - type: double
+
+  - type: "iegen::example::Adder<T>::add(T, T)"
+    vars:
+      action: gen_method
+      throws: no_throw
+
+  - type: "iegen::example::color"
+    vars:
+      action: gen_enum
+      package: misc

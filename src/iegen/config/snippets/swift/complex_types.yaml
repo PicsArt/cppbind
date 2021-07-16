@@ -3,10 +3,12 @@ std::string:
   std::__cxx11::basic_string
 
 $Object:
+  custom:
+    is_c_pointer_type: True
   swift:
     type_info: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
   c:
-    type_info: "void* _Nonnull"
+    type_info: "void*"
   sc:
     type_info: "UnsafeMutableRawPointer"
   c_to_cxx: |
@@ -18,12 +20,23 @@ $Object:
     {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
     auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
-  swift_to_sc:
-    let {{target_name}} = {{name}}.cself
-  sc_to_swift:
+  swift_to_sc: |
+    let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
+  sc_to_swift: |
+    {%- if nullable is defined and nullable -%}
+    let {{target_name}}: {{type_name}}{{template_suffix}}?
+    if let {{name}} = {{name}} {
+        {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    } else {
+        {{target_name}} = nil
+    }
+    {%- else -%}
     let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    {%- endif -%}
 
 $Enum:
+  custom:
+    is_c_pointer_type: False
   swift:
     type_info: "{{type_name}}"
   c:
@@ -40,10 +53,12 @@ $Enum:
     let {{target_name}} = {{target_type_name}}(rawValue: {{name}})!
 
 std::__cxx11::basic_string:
+  custom:
+    is_c_pointer_type: True
   swift:
     type_info: String
   c:
-    type_info: char* _Nonnull
+    type_info: char*
   sc:
     type_info: UnsafeMutablePointer<CChar>
   c_to_cxx: |
@@ -60,10 +75,12 @@ std::__cxx11::basic_string:
     }
 
 char *:
+  custom:
+    is_c_pointer_type: True
   swift:
     type_info: String
   c:
-    type_info: const char * _Nullable
+    type_info: const char *
   sc:
     type_info: UnsafePointer<CChar>?
   c_to_cxx: 
@@ -71,9 +88,11 @@ char *:
   swift_to_sc: |
     let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8)
   sc_to_swift: |
-    let {{target_name}} = String(cString: {{name}}!)
+    let {{target_name}} = String(cString: {{name}}{{'!' if nullable is defined and nullable}})
 
 std::vector:
+  custom:
+    is_c_pointer_type: False
   swift:
     type_info: "Array<{{args_t[0]}}>"
   c:
@@ -125,6 +144,8 @@ std::vector:
 
 
 std::map:
+  custom:
+    is_c_pointer_type: False
   swift:
     type_info: "Dictionary<{{args_t[0]}}, {{args_t[1]}}>"
   c:
@@ -202,6 +223,8 @@ std::unordered_map:
 
 
 std::shared_ptr:
+  custom:
+    is_c_pointer_type: True
   swift:
     type_info: "{{args_t[0]}}"
   c:
@@ -213,21 +236,23 @@ std::shared_ptr:
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
     std::shared_ptr<{{pointee}}> {{target_name}};
-    auto baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(baseptr);
+    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee_base = args_t_bases[0] %}
     {{target_type_name}} {{target_name}};
-    std::shared_ptr<{{pointee_base}}> baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
-    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(baseptr));
+    std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
+    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
   swift_to_sc: |
-    {{args[0].snippet(name)|indent}}
+    {{args[0].snippet(name, nullable=nullable)|indent}}
   sc_to_swift: |
-    {{args[0].snippet(name)|indent}}
+    {{args[0].snippet(name, nullable=nullable)|indent}}
 
 
 std::pair:
+  custom:
+    is_c_pointer_type: False
   swift:
     type_info: "({{args_t[0]}}, {{args_t[1]}})"
   c:

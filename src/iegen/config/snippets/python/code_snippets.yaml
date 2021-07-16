@@ -366,7 +366,7 @@ constructor:
                                        {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                        {%- if arg.default -%}
-                                       {%- if arg.is_enum -%} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                       {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                        {%- else -%}
                                        {%- if arg.default in ['nullptr', 'NULL'] %} = None
                                        {%- else %} = {{arg.default}}
@@ -416,7 +416,7 @@ function:
                                                           {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                                           {%- if arg.default -%}
-                                                          {%- if arg.is_enum -%} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                                           {%- else -%}
                                                           {%- if arg.default in ['nullptr', 'NULL'] %} = None
                                                           {%- else %} = {{arg.default}}

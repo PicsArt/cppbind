@@ -174,17 +174,15 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            has_non_abstract_base_class = False
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
             converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
                                                              template_choice=ctx.template_choice,
                                                              search_name=ctx.node.full_displayname
                                                              if ctx.cursor.type.kind == cli.TypeKind.INVALID
                                                              else None)
-            if ctx.base_types:
-                base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
-                                         for base_type in ctx.base_types]
-                has_non_abstract_base_class = not all((b.ctx.action == 'gen_interface' for b in base_types_converters))
+            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
+                                     for base_type in ctx.base_types]
+            has_non_abstract_base_class = not all(b.ctx.action == 'gen_interface' for b in base_types_converters)
 
             cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
             is_abstract = ctx.cursor.is_abstract_record()

@@ -1,6 +1,8 @@
 """
 Helper codes for swift conversion
 """
+import clang.cindex as cli
+import iegen.utils.clang as cutil
 from . import *
 
 

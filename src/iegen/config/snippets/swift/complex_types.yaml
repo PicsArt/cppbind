@@ -24,7 +24,12 @@ $Object:
     let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
   sc_to_swift: |
     {%- if nullable is defined and nullable -%}
-    let {{target_name}} = {{name}} == nil ? nil : {{type_name}}{{template_suffix}}({{name}}!{% if is_value_type%}, true{%endif%})
+    let {{target_name}}: {{type_name}}{{template_suffix}}?
+    if let {{name}} = {{name}} {
+        {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    } else {
+        {{target_name}} = nil
+    }
     {%- else -%}
     let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
     {%- endif -%}
@@ -83,7 +88,7 @@ char *:
   swift_to_sc: |
     let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8)
   sc_to_swift: |
-    let {{target_name}} = String(cString: {{name}}!)
+    let {{target_name}} = String(cString: {{name}}{{'!' if nullable is defined and nullable}})
 
 std::vector:
   custom:

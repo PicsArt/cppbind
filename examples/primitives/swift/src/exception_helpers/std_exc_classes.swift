@@ -61,17 +61,17 @@ public class StdBadCast : StdException {
 }
 
 public class StdBadTypeId : StdException {
-
-
-
-
+    
+    
+    
+    
 }
 
 public class StdBadAlloc : StdException {
-
-
-
-
+    
+    
+    
+    
 }
 
 public class StdLogicError : StdException {

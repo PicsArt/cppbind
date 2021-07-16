@@ -12,10 +12,10 @@
 #include <string.h>
 #include <memory>
 #include "swift/wrappers/exception_helpers/c_std_exc_classes.h"
-#include <exception>
 #include <stdexcept>
 #include <new>
 #include <typeinfo>
+
 
 
 using namespace std;

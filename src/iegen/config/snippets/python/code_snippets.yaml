@@ -214,26 +214,24 @@ var_class: &var_class
         {{gen_import(tmpl_arg_converter, current_ctx)}}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- if base_types_converters is defined -%}
         {%- for base in base_types_converters -%}
         {{gen_import(base, ctx)}}
         {%- endfor -%}
-        {%- endif -%}
     body:
       scopes:
         - constructor_body
         - properties
         - body
       content: |
-        {% set comma = joiner(', ')  %}
+        {%- set bases_specifiers = [] -%}
+        {%- for base_type_converter in base_types_converters -%}
+          {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
+          {%- do bases_specifiers.append(base_type_package + base_type_converter.python.target_type_name) -%}
+        {%- endfor -%}
+        {%- do bases_specifiers.extend(ctx.bases_list) -%}
+        {%- do bases_specifiers.append('metaclass=OriginalMethodsMetaclass') %}
 
-        class {{name}}{{template_suffix}}({%- if base_types_converters is defined -%}
-                                  {% for base_type_converter in base_types_converters -%}
-                                  {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
-                                  {{comma()}}{{base_type_package}}{{base_type_converter.python.target_type_name}}
-                                  {%- endfor -%}
-                                  {%- endif -%}
-                       {{comma()}}metaclass=OriginalMethodsMetaclass):
+        class {{name}}{{template_suffix}}({{bases_specifiers|join(', ')}}):
             {%- if comment %}
             {{helper.make_comment(comment)|string|indent}}
             {%- endif %}
@@ -269,11 +267,9 @@ var_class: &var_class
         {{gen_import(tmpl_arg_converter, current_ctx)}}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- if base_types_converters is defined -%}
         {%- for base in base_types_converters -%}
         {{gen_import(base, ctx)}}
         {%- endfor -%}
-        {%- endif -%}
         {%- if include_cxx -%}
         {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
         {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
@@ -291,7 +287,7 @@ var_class: &var_class
             py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
                                           , std::shared_ptr<{{cxx_type_name}}>
                                          {%- endif %}
-                                         {%- if base_types_converters is defined -%},
+                                         {%- if base_types_converters -%},
                                          {%- for base_type in base_types_converters -%}
                                          {{comma()}}{{base_type.python.cxx_type_name}}
                                          {%- endfor -%}

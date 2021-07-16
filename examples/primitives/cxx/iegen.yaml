@@ -40,7 +40,6 @@ vars: |
   swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
   swift.out_dir:  {{path.join(out_prj_dir, "swift/src")}}
   swift.src_exclude_glob:
-    - cxx/nullables/*.hpp
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
     - cxx/getters/*template_getter.hpp

@@ -6,13 +6,14 @@
 
 
 namespace iegen::example::nullable {
-// [example]
+// [example-helpers]
 
 /**
  * __API__
  * action: gen_class
  * shared_ref: true
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NumInt
  * package: nullables
  */
 struct NumberInt {
@@ -33,7 +34,8 @@ struct NumberInt {
  * __API__
  * action: gen_class
  * shared_ref: false
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NumDouble
  * package: nullables
  */
 struct NumberDouble {
@@ -49,17 +51,17 @@ struct NumberDouble {
      */
     double value;
 };
+// [example-helpers]
 
-
+// [example]
 /**
  * An example with nullable arguments.
  * __API__
  * action: gen_class
  * shared_ref: true
- * swift.file: Utils
+ * swift.file: NullableUtils
+ * swift.name: NullableUtils
  * package: nullables
- * kotlin.include:
- *  - com.examples.simple.Task
  */
 struct Utils {
 

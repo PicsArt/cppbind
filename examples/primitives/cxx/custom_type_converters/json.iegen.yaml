@@ -1,6 +1,8 @@
 rules:
   swift.type_converters:
     nlohmann::json:
+      custom:
+        is_c_pointer_type: False
       swift:
         type_info: String
       c:

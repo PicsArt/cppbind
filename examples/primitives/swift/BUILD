@@ -96,6 +96,12 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "nullables",
+    srcs = ["src/nullables/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

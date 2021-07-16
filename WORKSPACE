@@ -123,25 +123,6 @@ load(
 
 swift_rules_extra_dependencies()
 
-new_git_repository (
-    name = "nlohmann_json",
-    remote = "https://github.com/nlohmann/json.git",
-    tag = "v3.9.1",
-    build_file_content = """
-cc_library(
-    name = "json",
-    hdrs = glob(["include/**/*.hpp"]),
-    includes = ["include"],
-    visibility = ["//visibility:public"]
-)
-"""
-)
-
-bind (
-    name = "json",
-    actual = "@nlohmann_json//:json",
-)
-
 # ----------------------------------------------kotlin---------------------------------------------------
 rules_kotlin_version = "legacy-1.3.0"
 

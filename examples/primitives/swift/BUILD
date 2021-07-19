@@ -62,7 +62,7 @@ swift_test(
 
 swift_test(
     name = "getters",
-    srcs = ["src/enums/main.swift"],
+    srcs = ["src/getters/main.swift"],
     deps = [":sw_examples_library"],
 )
 
@@ -74,7 +74,7 @@ swift_test(
 
 swift_test(
     name = "overloads",
-    srcs = ["src/templates/main.swift"],
+    srcs = ["src/overloads/main.swift"],
     deps = [":sw_examples_library"],
 )
 

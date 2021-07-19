@@ -1,3 +1,5 @@
+import Wrapper
+
 // [number-usage]
 let intNum = NumberInt(n: 5)
 let doubleNum = NumberDouble(n: 1.0)

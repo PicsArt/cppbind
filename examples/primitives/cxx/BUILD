@@ -6,6 +6,9 @@ cc_library(
         "**/*.h",
     ]),
     visibility = ["//visibility:public"],
+    deps = [
+        "@nlohmann_json//:json"
+    ],
 )
 
 filegroup(

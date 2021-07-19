@@ -44,7 +44,14 @@ class ContainersApp {
             assert(objVec[1].value == 1)
             // [vector-usage]
 
+            // [json-usage]
+            val jsonUsage = JsonExamples()
+            val jsonVal = "{\n    \"pi\": 3.14,\n    \"status\": true\n}"
+            assert(jsonUsage.getSimpleJsonExample() == jsonVal)
+            jsonUsage.setJson(jsonVal)
+            assert(jsonUsage.getJson() == jsonVal)
+            // [json-usage]
        }
-
     }
+
 }

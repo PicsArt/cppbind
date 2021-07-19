@@ -1,0 +1,46 @@
+rules:
+  kotlin.type_converters:
+    iegen::example::Size:
+      custom:
+        pname: SizeF
+      kotlin:
+        type_info: Point2D.Double
+      jni:
+        type_info: jdoubleArray
+      jdk:
+        type_info: DoubleArray
+      jni_to_cxx: |
+        jdouble *elems = env->GetDoubleArrayElements({{name}}, 0);
+        jdouble width_{{name}} = elems[0];
+        jdouble height_{{name}} = elems[1];
+        env->ReleaseDoubleArrayElements({{name}}, elems, 0);
+        {{target_type_name}} {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}});
+      cxx_to_jni: |
+        jdouble width_{{name}} = {{name}}.width;
+        jdouble height_{{name}} = {{name}}.height;
+        {{target_type_name}} {{target_name}} = env->NewDoubleArray(2);
+        jdouble carray[] = {width_{{name}}, height_{{name}}};
+        env->SetDoubleArrayRegion({{target_name}}, 0 , 2, carray);
+      kotlin_to_jdk: |
+        val width_{{name}} = {{name}}.getX()
+        val height_{{name}} = {{name}}.getY()
+        val {{target_name}} = {{target_type_name}}(2)
+        {{target_name}}.set(0, width_{{name}})
+        {{target_name}}.set(1, height_{{name}})
+      jdk_to_kotlin: |
+        val width_{{name}} = {{name}}[0]
+        val height_{{name}} = {{name}}[1]
+        val {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}})
+
+  python.type_converters:
+    iegen::example::Size:
+      custom:
+        pname: SizeF
+      python:
+        type_info: SizeF
+      pybind:
+        type_info: SizeF
+      pybind_to_cxx:
+      cxx_to_pybind:
+      python_to_pybind:
+      pybind_to_python:

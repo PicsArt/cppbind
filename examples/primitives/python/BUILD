@@ -17,6 +17,7 @@ py_library(
     srcs = glob(["src/**/*.py"]),
     data = [
         "examples.so",
+        "buffer.so"
     ],
     imports = [
         ".",
@@ -24,6 +25,16 @@ py_library(
     ],
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
+)
+
+# third party buffer
+pybind_extension(
+    name = "buffer",
+    srcs = ["wrappers/misc/buffer.cpp"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//cxx:cc_examples_library",
+    ],
 )
 
 py_test(
@@ -150,6 +161,30 @@ py_test(
     name = "nullables",
     srcs = ["src/nullables/main.py"],
     main = "src/nullables/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "shared_ptr",
+    srcs = ["src/shared_ptr/main.py"],
+    main = "src/shared_ptr/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "misc",
+    srcs = ["src/misc/main.py"],
+    main = "src/misc/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

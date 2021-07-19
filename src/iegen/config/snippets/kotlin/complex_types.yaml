@@ -334,49 +334,49 @@ std::pair:
   jdk:
     type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
   jni_to_cxx: |
-    jclass pairClass = env->FindClass("kotlin/Pair");
+    jclass pairClass_{{name}} = env->FindClass("kotlin/Pair");
 
-    jfieldID firstID = env->GetFieldID(pairClass, "first", "Ljava/lang/Object;");
-    jfieldID secondID = env->GetFieldID(pairClass, "second", "Ljava/lang/Object;");
+    jfieldID firstID_{{name}} = env->GetFieldID(pairClass_{{name}}, "first", "Ljava/lang/Object;");
+    jfieldID secondID_{{name}} = env->GetFieldID(pairClass_{{name}}, "second", "Ljava/lang/Object;");
 
-    auto firstObject = env->GetObjectField({{name}}, firstID);
-    auto secondObject = env->GetObjectField({{name}}, secondID);
+    auto firstObject_{{name}} = env->GetObjectField({{name}}, firstID_{{name}});
+    auto secondObject_{{name}} = env->GetObjectField({{name}}, secondID_{{name}});
     {%- set tmp_first = '_' + target_name %}
     {%- set extract_first = 'iegen::extract{}'.format(args[0].custom.pname) %}
     {%- set extract_second = 'iegen::extract{}'.format(args[1].custom.pname) %}
-    auto first = {{extract_first}}(env, firstObject);
-    auto second = {{extract_second}}(env, secondObject);
-    {{args[0].snippet('first')}}
-    {{args[1].snippet('second')}}
-    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first')}}, {{args[1].converted_name('second')}});
+    auto first_{{name}} = {{extract_first}}(env, firstObject_{{name}});
+    auto second_{{name}} = {{extract_second}}(env, secondObject_{{name}});
+    {{args[0].snippet('first_{}'.format(name))}}
+    {{args[1].snippet('second_{}'.format(name))}}
+    {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}});
   cxx_to_jni: |
-    auto first = {{name}}.first;
-    auto second = {{name}}.second;
-    {{args[0].snippet('first')}}
-    {{args[1].snippet('second')}}
+    auto first_{{name}} = {{name}}.first;
+    auto second_{{name}} = {{name}}.second;
+    {{args[0].snippet('first_{}'.format(name))}}
+    {{args[1].snippet('second_{}'.format(name))}}
     {%- if args[0].custom.pname != 'Object' %}
-    jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first')}});
+    jobject {{name}}_first = iegen::{{args[0].custom.pname|lower}}ToObject(env, {{args[0].converted_name('first_{}'.format(name))}});
     {%- else %}
-    jobject {{name}}_first = {{args[0].converted_name('first')}};
+    jobject {{name}}_first = {{args[0].converted_name('first_{}'.format(name))}};
     {%- endif %}
     {%- if args[1].custom.pname != 'Object' %}
-    jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second')}});
+    jobject {{name}}_second = iegen::{{args[1].custom.pname|lower}}ToObject(env, {{args[1].converted_name('second_{}'.format(name))}});
     {%- else %}
-    jobject {{name}}_second = {{args[1].converted_name('second')}};
+    jobject {{name}}_second = {{args[1].converted_name('second_{}'.format(name))}};
     {%- endif %}
     {{target_type_name}} {{target_name}} = iegen::make_jni_object_pair(env, {{name}}_first, {{name}}_second);
   kotlin_to_jdk: |
-    val first = {{name}}.first
-    val second = {{name}}.second
-    {{args[0].snippet('first')|indent}}
-    {{args[1].snippet('second')|indent}}
-    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+    val first_{{name}} = {{name}}.first
+    val second_{{name}} = {{name}}.second
+    {{args[0].snippet('first_{}'.format(name))|indent}}
+    {{args[1].snippet('second_{}'.format(name))|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first_{}'.format(name))}}, {{args[0].converted_name('second_{}'.format(name))}})
   jdk_to_kotlin: |
-    val first  = {{name}}.first
-    val second  = {{name}}.second
-    {{args[0].snippet('first')|indent}}
-    {{args[1].snippet('second')|indent}}
-    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first')}}, {{args[0].converted_name('second')}})
+    val first_{{name}} = {{name}}.first
+    val second_{{name}} = {{name}}.second
+    {{args[0].snippet('first_{}'.format(name))|indent}}
+    {{args[1].snippet('second_{}'.format(name))|indent}}
+    val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first_{}'.format(name))}}, {{args[0].converted_name('second_{}'.format(name))}})
 
 std::__ndk1::pair:
   std::pair

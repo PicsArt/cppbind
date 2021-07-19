@@ -25,7 +25,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 pytest
         if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
-        sudo apt-get install -y libclang-9-dev
+        sudo apt-get install -y libclang-9-dev nlohmann-json3-dev
         python setup.py install develop
     - name: Lint with flake8
       run: |

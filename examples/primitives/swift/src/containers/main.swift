@@ -36,3 +36,30 @@ assert(objVec.count == 2)
 assert(objVec[1].value == 1)
 // [vector-usage]
 
+// [pair-usage]
+let pairUsage = PairExamples()
+assert(pairUsage.getStringPair() == ("first", "second"))
+
+let p1 = (1, 5)
+let p2 = (2, -3)
+assert(pairUsage.sumIntPairs(p1: p1, p2: p2) == (p1.0 + p2.0, p1.1 + p2.1))
+
+let nestedPair = (("a", "b"), ("c", "d"))
+pairUsage.setNestedPair(p: nestedPair)
+
+let resultPair = pairUsage.getNestedPair()
+assert(nestedPair.0 == resultPair.0 && nestedPair.1 == resultPair.1)
+// [pair-usage]
+
+// [json-usage]
+let jsonUsage = JsonExamples()
+assert(jsonUsage.getSimpleJsonExample() == "{\"pi\":3.14,\"status\":true}")
+
+var jsonList = [String]()
+jsonList.append("{\"name\":\"John\",\"status\":false}")
+jsonList.append("{\"a\":\"b\",\"list\":[0,1,2],\"object\":{\"key\":\"value\"}}")
+for json in jsonList {
+    jsonUsage.setJson(j: json)
+    assert(jsonUsage.getJson() == json)
+}
+// [json-usage]

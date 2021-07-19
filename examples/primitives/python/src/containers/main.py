@@ -1,5 +1,6 @@
 from containers.map_pygen import MapItem, MapExamples
 from containers.vector_pygen import VectorItem, VectorExamples
+from containers.pair_pygen import PairExamples
 
 # [map-usage]
 mapusages = MapExamples()
@@ -35,3 +36,17 @@ objVec = vectorusages.get_obj_vector()
 assert len(objVec) == 2
 assert objVec[1].value == 1
 # [vector-usage]
+
+# [pair-usage]
+pair_usage = PairExamples()
+assert pair_usage.get_string_pair() == ("first", "second")
+
+p1 = (1, 5)
+p2 = (2, -3)
+assert pair_usage.sum_int_pairs(p1, p2) == (p1[0] + p2[0], p1[1] + p2[1])
+
+nested_pair = (("a", "b"), ("c", "d"))
+pair_usage.set_nested_pair(nested_pair)
+result_pair = pair_usage.get_nested_pair()
+assert result_pair == nested_pair
+# [pair-usage]

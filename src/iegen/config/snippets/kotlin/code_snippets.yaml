@@ -75,7 +75,7 @@ var_class_cxx: &var_class_cxx
   body:
     unique_content: |
       {%- if ctx.namespace %}
-      {{marker}}using namespace {{ctx.namespace}};{{marker}}
+      using namespace {{ctx.namespace}};{{marker}}
       {%- endif %}
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
       {%- set set_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jSet_this') %}

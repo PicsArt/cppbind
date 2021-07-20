@@ -91,7 +91,7 @@ $Enum:
   jdk_to_kotlin:
     val {{target_name}} = {{target_type_name}}.getByValue({{name}})!!
 
-char *:
+const char *:
   custom:
     pname: "Object"
   kotlin:
@@ -101,9 +101,13 @@ char *:
   jdk:
     type_info: String
   jni_to_cxx: |
-    {{target_type_name}} {{target_name}} = env->GetStringUTFChars({{name}}, NULL);
-    // TODO release after using
-    //env->ReleaseStringUTFChars({{name}}, {{target_name}});
+    auto deleter = [&env, &{{name}}]({{target_type_name}} ptr) {
+        env->ReleaseStringUTFChars({{name}}, ptr);
+    };
+    std::unique_ptr<{{cxx_pointee_name}}, decltype(deleter)> {{target_name}}_unique_ptr(
+                                                                  env->GetStringUTFChars({{name}}, NULL),
+                                                                  deleter);
+    {{target_type_name}} {{target_name}} = {{target_name}}_unique_ptr.get()
   cxx_to_jni: |
     {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}});
   jdk_to_kotlin:

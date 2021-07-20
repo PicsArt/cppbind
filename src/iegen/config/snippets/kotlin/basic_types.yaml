@@ -114,3 +114,18 @@ double:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
+char:
+  custom:
+    pname: "Char"
+  kotlin:
+    type_info: Char
+  jni:
+    type_info: jbyte
+  jdk:
+    type_info: Char
+  jni_to_cxx: |
+    char {{target_name}} = (char){{name}};
+  cxx_to_jni: |
+    {{target_type_name}} {{target_name}} = (jbyte){{name}};
+  kotlin_to_jdk:
+  jdk_to_kotlin:

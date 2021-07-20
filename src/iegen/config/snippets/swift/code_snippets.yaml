@@ -18,6 +18,7 @@ file:
     file_path: |
       {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
+      - namespace
       - body
       - include
     content: |
@@ -27,6 +28,7 @@ file:
       #include <memory>
       #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
       {{include}}
+      {{namespace}}
 
       {{body}}
   ch:
@@ -159,11 +161,13 @@ class:
         }
   cc:
     include: *var_class_include
-    body:
+    namespace:
       unique_content: |
         {%- if ctx.namespace %}
-        using namespace {{ctx.namespace}};{{marker}}
+        using namespace {{ctx.namespace}};
         {%- endif %}
+    body:
+      content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -225,9 +229,11 @@ interface:
         }
   cc:
     include: *var_class_include
-    body:
+    namespace:
       unique_content: |
-        using namespace {{ctx.namespace}};{{marker}}
+        using namespace {{ctx.namespace}};
+    body:
+      content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);

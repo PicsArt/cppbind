@@ -17,6 +17,7 @@ file:
     file_path: |
       {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
+      - namespace
       - body
       - include
     content: |
@@ -26,6 +27,7 @@ file:
       #include <iostream>
       {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
       {{include}}
+      {{namespace}}
 
       {{body}}
 
@@ -72,11 +74,13 @@ var_class_cxx: &var_class_cxx
       {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
       {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
       {%- endif -%}
-  body:
+  namespace:
     unique_content: |
       {%- if ctx.namespace %}
-      using namespace {{ctx.namespace}};{{marker}}
+      using namespace {{ctx.namespace}};
       {%- endif %}
+  body:
+    content: |
       {%- if has_non_abstract_base_class is not defined or not has_non_abstract_base_class %}
       {%- set set_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jSet_this') %}
       extern "C" JNIEXPORT void {{set_name}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){

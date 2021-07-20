@@ -231,7 +231,9 @@ interface:
     include: *var_class_include
     namespace:
       unique_content: |
+        {%- if ctx.namespace %}
         using namespace {{ctx.namespace}};
+        {%- endif %}
     body:
       content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){

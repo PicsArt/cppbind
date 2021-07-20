@@ -160,9 +160,9 @@ class:
   cc:
     include: *var_class_include
     body:
-      content: |
+      unique_content: |
         {%- if ctx.namespace %}
-        using namespace {{ctx.namespace}};
+        {{marker}}using namespace {{ctx.namespace}};{{marker}}
         {%- endif %}
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself) {
             {%- if root.shared_ref %}
@@ -226,8 +226,8 @@ interface:
   cc:
     include: *var_class_include
     body:
-      content: |
-        using namespace {{ctx.namespace}};
+      unique_content: |
+        {{marker}}using namespace {{ctx.namespace}};{{marker}}
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);

@@ -64,9 +64,47 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-	int optionalIntWithDefault(int val = 5) {
-	    return val;
+	int optionalIntWithDefault(int value = 5) {
+	    return value;
 	}
+
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	long optionalLongWithDefault(long value = 7) {
+	    return value;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	double optionalDoubleWithDefault(double value = 9.0) {
+	    return value;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	float optionalFloatWithDefault(float value = 11.0) {
+	    return value;
+	}
+
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	bool optionalBoolWithDefault(bool value = true) {
+	    return value;
+	}
+
 
 	/**
      * @param[in] optionalStr string with default value
@@ -85,6 +123,15 @@ public:
      */
 	char optionalCharWithDefault(char symbol = ',') {
         return symbol;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	const char* optionalCharPointerWithDefault(const char* optionalStr = "def") {
+        return optionalStr;
 	}
 
 	/**

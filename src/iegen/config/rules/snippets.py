@@ -117,6 +117,9 @@ def make_func_context(ctx):
                 type=arg.type,
                 nullable=arg.name in ctx.nullable_arg or arg.default in ('nullptr', 'NULL'),
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
+                is_bool=arg.type.kind == cli.TypeKind.BOOL,
+                is_long=arg.type.kind == cli.TypeKind.LONG,
+                is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
                 pointee_type=cutil.get_pointee_type(arg.type)
             ) for arg in ctx.args
         ]

@@ -369,7 +369,7 @@ constructor:
                                        {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                        {%- else -%}
                                        {%- if arg.default in ['nullptr', 'NULL'] %} = None
-                                       {%- else %} = {{arg.default}}
+                                       {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                        {%- endif %}
                                        {%- endif %}
                                        {%- endif -%}
@@ -419,7 +419,7 @@ function:
                                                           {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                                           {%- else -%}
                                                           {%- if arg.default in ['nullptr', 'NULL'] %} = None
-                                                          {%- else %} = {{arg.default}}
+                                                          {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                                           {%- endif %}
                                                           {%- endif %}
                                                           {%- endif -%}

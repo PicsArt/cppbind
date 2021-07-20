@@ -23,7 +23,6 @@ vars: |
   kotlin.package_prefix: com.examples
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
-    - cxx/optionals/*.h*
     - cxx/getters/*template_getter.hpp
     - cxx/exceptions/*.h*
     - cxx/containers/pair.hpp

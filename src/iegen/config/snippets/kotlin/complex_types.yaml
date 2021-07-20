@@ -290,9 +290,9 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    {{target_type_name}} {{target_name}};
+    std::shared_ptr<{{pointee}}> {{target_name}};
     {%- if nullable is defined and nullable %}
-    if ({{name}} == 0) {
+    if (!{{name}}) {
         {{target_name}} = std::shared_ptr<{{pointee}}>(nullptr);
     } else {
         {%- if pointee_base != pointee %}

@@ -154,6 +154,6 @@ private:
     std::map<int, std::map<int, int>> nestedMap;
 };
 
-} // namespace pi::video_engine::model
+}
 
 #endif /* containers_h */

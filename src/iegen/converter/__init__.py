@@ -91,15 +91,6 @@ class Exceptions:
         """Check whether current class has a base class which is exception class"""
         return any(base.is_exception for base in ctx.ancestors)
 
-    @staticmethod
-    def get_exc_name(ctx, name):
-        """Returns name of exception class to use in target language"""
-        return ctx.runner.get_context(name).name
-
-    @staticmethod
-    def get_std_exc_pkg_name(ctx):
-        return ctx.runner.get_context("std::exception").package
-
 
 def make_doxygen_comment(pure_comment):
     if isinstance(pure_comment, str):

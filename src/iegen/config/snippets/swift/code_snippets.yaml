@@ -57,7 +57,7 @@ file:
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
   exceptions_utils_swift:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, helper.Exceptions.get_std_exc_pkg_name(ctx), 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, ctx.lookup_ctx_by_name("std::exception").package, 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -337,7 +337,7 @@ function:
               {%- if helper.Exceptions.can_throw(throws) %}
               {%- for exc_type in throws %}
                   case({{loop.index}}):
-                      throw {{helper.Exceptions.get_exc_name(ctx, exc_type)}}(err.err_ptr, true)
+                      throw {{ctx.lookup_ctx_by_name(exc_type).name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in throws %}

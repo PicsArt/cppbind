@@ -91,16 +91,6 @@ class Exceptions:
         """Check whether current class has a base class which is exception class"""
         return any(base.is_exception for base in ctx.ancestors)
 
-    @staticmethod
-    def get_exc_name(name):
-        """Returns mangled name of class to use in target language"""
-        if not name.startswith("std::"):
-            return name.split("::")[-1]
-
-        name = name.replace("::", "_")
-        components = name.split("_")
-        return ''.join(x.title() for x in components)
-
 
 def make_doxygen_comment(pure_comment):
     if isinstance(pure_comment, str):

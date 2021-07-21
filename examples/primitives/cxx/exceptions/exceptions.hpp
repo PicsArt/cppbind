@@ -218,8 +218,8 @@ class Exc {
      *   - std::length_error
      *   - iegen::example::SystemError
      */
-    static int getByKey(const std::map<int, int>& m, int key) {
-        return m.at(key);
+    static int getByKey(const std::map<int, int>& m, int k) {
+        return m.at(k);
     }
     /**
      * comments

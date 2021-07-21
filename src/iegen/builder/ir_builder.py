@@ -98,7 +98,7 @@ class CXXIEGIRBuilder:
                 parent_node = self.node_stack[-1]
                 if node not in parent_node.children:
                     parent_node.add_children(node)
-        self._processed_dirs[dir_name] = node
+            self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
         """

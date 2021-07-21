@@ -342,7 +342,7 @@ function:
               {%- endif %}
               {%- if not 'std::exception' in throws %}
                   case({{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}}):
-                      let exc_obj = StdException(err.err_ptr, true)
+                      let exc_obj = {{ctx.lookup_ctx_by_name("std::exception").name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:

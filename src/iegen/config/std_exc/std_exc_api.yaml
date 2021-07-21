@@ -1,104 +1,120 @@
 - type: "std::exception"
   vars: |
-    swift.action: gen_class
-    swift.name: StdException
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdException
+    package: exception_helpers
+    file: std_exc_classes
     swift.bases_list:
       - Error
+    kotlin.bases_list:
+      - Exception()
     {% if c_wrapper_build_name is defined -%}
     swift.include: "{{c_wrapper_build_name}}"
     {%- endif -%}
-    swift.include_cxx:
+    include_cxx:
       - <stdexcept>
       - <new>
       - <typeinfo>
 
 - type: "std::exception::what()"
   vars:
-    swift.action: gen_method
+    action: gen_method
+    python.action:
     throws: no_throw
 
 - type: "std::runtime_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdRuntimeError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdRuntimeError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::logic_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdLogicError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdLogicError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::bad_alloc"
   vars:
-    swift.action: gen_class
-    swift.name: StdBadAlloc
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdBadAlloc
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::bad_cast"
   vars:
-    swift.action: gen_class
-    swift.name: StdBadCast
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdBadCast
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::bad_typeid"
   vars:
-    swift.action: gen_class
-    swift.name: StdBadTypeId
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdBadTypeId
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::overflow_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdOverflowError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdOverflowError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::range_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdRangeError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdRangeError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::underflow_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdUnderflowError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdUnderflowError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::invalid_argument"
   vars:
-    swift.action: gen_class
-    swift.name: StdInvalidArgument
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdInvalidArgument
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::length_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdLengthError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdLengthError
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::out_of_range"
   vars:
-    swift.action: gen_class
-    swift.name: StdOutOfRange
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdOutOfRange
+    package: exception_helpers
+    file: std_exc_classes
 
 - type: "std::domain_error"
   vars:
-    swift.action: gen_class
-    swift.name: StdDomainError
-    swift.package: exception_helpers
-    swift.file: std_exc_classes
+    action: gen_class
+    python.action:
+    name: StdDomainError
+    package: exception_helpers
+    file: std_exc_classes

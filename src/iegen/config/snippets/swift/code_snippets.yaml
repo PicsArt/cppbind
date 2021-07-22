@@ -18,6 +18,7 @@ file:
     file_path: |
       {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
+      - namespace
       - body
       - include
     content: |
@@ -27,6 +28,7 @@ file:
       #include <memory>
       #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
       {{include}}
+      {{namespace}}
 
       {{body}}
   ch:
@@ -55,7 +57,7 @@ file:
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
   exceptions_utils_swift:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
+      {{out_dir + pat_sep + [package_prefix, ctx.lookup_ctx_by_name("std::exception").package, 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - body
     content: |
@@ -159,11 +161,13 @@ class:
         }
   cc:
     include: *var_class_include
-    body:
-      content: |
+    namespace:
+      unique_content: |
         {%- if ctx.namespace %}
         using namespace {{ctx.namespace}};
         {%- endif %}
+    body:
+      content: |
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself) {
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -225,9 +229,13 @@ interface:
         }
   cc:
     include: *var_class_include
+    namespace:
+      unique_content: |
+        {%- if ctx.namespace %}
+        using namespace {{ctx.namespace}};
+        {%- endif %}
     body:
       content: |
-        using namespace {{ctx.namespace}};
         void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
@@ -323,13 +331,13 @@ function:
         {%- else %}
           {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
         {%- endif %}
-          if (err.is_err) {
-              let err_type = Int(err.err_type)
+          let err_type = Int(err.err_type)
+          if (err_type != 0) {
               switch(err_type) {
               {%- if helper.Exceptions.can_throw(throws) %}
               {%- for exc_type in throws %}
                   case({{loop.index}}):
-                      throw {{helper.Exceptions.get_exc_name(exc_type)}}(err.err_ptr, true)
+                      throw {{ctx.lookup_ctx_by_name(exc_type).name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in throws %}
@@ -387,7 +395,6 @@ function:
         {%- if helper.Exceptions.can_throw(throws) %}
           {%- for exc_type in throws -%}
           catch (const {{exc_type}}& e) {
-              err->is_err = true;
               err->err_type = {{loop.index}};
               err->err_ptr = new {{exc_type}}(e);
           }
@@ -395,13 +402,12 @@ function:
           {%- endif %}
           {%- if not 'std::exception' in throws %}
           catch (const std::exception& e) {
-              err->is_err = true;
               err->err_type = {{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}};
               err->err_ptr = new std::exception(e);
           }
           {%- endif %}
           catch (...) {
-              err->is_err = true;
+              err->err_type = -1;
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
@@ -417,6 +423,8 @@ function:
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
         {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
+  exceptions_utils_swift:
+    body:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |

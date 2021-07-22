@@ -296,6 +296,9 @@ class Context(BaseContext):
     def template_names(self):
         return self.template_ctx['names'] if self.template_ctx else None
 
+    def lookup_ctx_by_name(self, name):
+        return self.runner.get_context(name)
+
 
 class RunRule:
 
@@ -418,7 +421,6 @@ class RunRule:
         return None
 
     def get_context(self, type_name):
-
         return self.all_contexts.get(type_name, None)
 
     def allocate_all_contexts(self):

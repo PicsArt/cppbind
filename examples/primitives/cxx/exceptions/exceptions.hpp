@@ -4,8 +4,11 @@
 #include <map>
 #include <string>
 #include <exception>
+#include <stdexcept>
+#include <new>
+#include <typeinfo>
 
-namespace pi::video_engine::errors {
+namespace iegen::example {
 
 /**
  * comments
@@ -163,7 +166,7 @@ class SimpleChildException : public SimpleBaseException {
 
 }
 
-namespace pi::video_engine::exceptions {
+namespace iegen::exceptions {
 /**
  * comments
  *
@@ -213,7 +216,7 @@ class Exc {
      *   - std::out_of_range
      *   - std::invalid_argument
      *   - std::length_error
-     *   - pi::video_engine::errors::SystemError
+     *   - iegen::example::SystemError
      */
     static int getByKey(const std::map<int, int>& m, int key) {
         return m.at(key);
@@ -235,7 +238,6 @@ class Exc {
      * __API__
      * action: gen_method
      * throws: std::out_of_range
-     *
      */
      static Integer* returnInteger(bool do_throw) {
         if (do_throw) {
@@ -252,23 +254,23 @@ class Exc {
      * action: gen_method
      * throws:
      *   - std::runtime_error
-     *   - pi::video_engine::errors::FileError
-     *   - pi::video_engine::errors::SystemError
-     *   - pi::video_engine::errors::SimpleChildException
-     *   - pi::video_engine::errors::SimpleBaseException
+     *   - iegen::example::FileError
+     *   - iegen::example::SystemError
+     *   - iegen::example::SimpleChildException
+     *   - iegen::example::SimpleBaseException
      *   - std::exception
      */
     static void raiseErrorByType(const std::string& err_type) {
         if (err_type.compare("system") == 0) {
-            throw pi::video_engine::errors::SystemError("system error");
+            throw iegen::example::SystemError("system error");
         } else if (err_type.compare("file") == 0) {
-            throw pi::video_engine::errors::FileError("file error");
+            throw iegen::example::FileError("file error");
         } else if (err_type.compare("runtime") == 0) {
             throw std::runtime_error("runtime error");
         } else if (err_type.compare("simple_child") == 0) {
-            throw pi::video_engine::errors::SimpleChildException(100);
+            throw iegen::example::SimpleChildException(100);
         } else if (err_type.compare("simple_base") == 0) {
-            throw pi::video_engine::errors::SimpleBaseException(200);
+            throw iegen::example::SimpleBaseException(200);
         } else {
             throw std::invalid_argument("inv_arg");
         }

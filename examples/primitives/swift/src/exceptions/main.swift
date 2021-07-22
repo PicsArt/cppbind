@@ -1,10 +1,10 @@
 import Wrapper
 
-let result = try? Exc.getByKey(m: [1 : 1], k: 0)
+let result = try? Exc.getByKey(m: [1 : 1], key: 0)
 assert(result == nil)
 
 do {
-   let _ = try Exc.getByKey(m: [1 : 1], k: 0)
+   let _ = try Exc.getByKey(m: [1 : 1], key: 0)
 } catch let err as StdOutOfRange {
    assert(err.what() == "map::at")
 } catch {

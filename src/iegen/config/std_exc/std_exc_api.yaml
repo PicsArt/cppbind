@@ -5,10 +5,7 @@
     name: StdException
     package: exception_helpers
     file: std_exc_classes
-    swift.bases_list:
-      - Error
-    kotlin.bases_list:
-      - Exception()
+    is_exception: True
     {% if c_wrapper_build_name is defined -%}
     swift.include: "{{c_wrapper_build_name}}"
     {%- endif -%}

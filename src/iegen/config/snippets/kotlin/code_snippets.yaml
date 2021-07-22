@@ -147,7 +147,7 @@ class:
             companion object {
                 {%- if not has_non_abstract_base_class %}
                 init {
-                    System.loadLibrary("wrapper_jni");
+                    System.loadLibrary("{{c_wrapper_lib_name}}");
                 }
                 {%- endif %}
                 {{companion|string|indent(8)}}
@@ -238,7 +238,7 @@ interface:
         internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {
-                    System.loadLibrary("wrapper_jni");
+                    System.loadLibrary("{{c_wrapper_lib_name}}");
                 }
                 {{companion|string|indent(8)}}
             }

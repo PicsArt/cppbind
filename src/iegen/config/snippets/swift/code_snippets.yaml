@@ -324,6 +324,7 @@ function:
         {%- endif %}
       }
     interface_body: |
+      {%- set comma = joiner(', ') -%}
       {{helper.make_comment(comment)}}
       func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}}
   cc:

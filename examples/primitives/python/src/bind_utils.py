@@ -235,6 +235,9 @@ def _convert_arg(arg, type_hint):
         if type_hint == 'float':
             python_to_pybind_arg = float(arg)
             return python_to_pybind_arg
+        if type_hint == 'bool':
+            python_to_pybind_arg = bool(arg)
+            return python_to_pybind_arg
         return arg
     except TypeError:
         raise TypeError(

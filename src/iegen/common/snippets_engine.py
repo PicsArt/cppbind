@@ -41,6 +41,9 @@ class Snippet:
             return value.replace(self.marker, '')
         return value
 
+    def __bool__(self):
+        return str(self) != ''
+
 
 class Action:
     """Base class for any action subclass"""

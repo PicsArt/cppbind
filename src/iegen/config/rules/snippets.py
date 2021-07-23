@@ -117,6 +117,9 @@ def make_func_context(ctx):
                 type=arg.type,
                 nullable=arg.name in ctx.nullable_arg or arg.default in ('nullptr', 'NULL'),
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
+                is_bool=arg.type.kind == cli.TypeKind.BOOL,
+                is_long=arg.type.kind == cli.TypeKind.LONG,
+                is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
                 pointee_type=cutil.get_pointee_type(arg.type)
             ) for arg in ctx.args
         ]
@@ -272,7 +275,9 @@ def preprocess_scope(context, scope, info):
         s = scope.create_scope(sname)
         context_scope[sname] = s
     if info.snippet_tmpl:
-        scope.add(info.make_snippet(context_scope))
+        snippet = info.make_snippet(context_scope)
+        if snippet:
+            scope.add(snippet)
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 

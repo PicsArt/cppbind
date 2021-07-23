@@ -276,7 +276,7 @@ def preprocess_scope(context, scope, info):
         context_scope[sname] = s
     if info.snippet_tmpl:
         snippet = info.make_snippet(context_scope)
-        if str(snippet) != '':
+        if snippet:
             scope.add(snippet)
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))

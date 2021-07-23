@@ -15,7 +15,11 @@ struct SimpleItem  {
      */
     int value;
 
-    SimpleItem() : value(0){};
+    /**
+     * __API__
+     * action: gen_constructor
+     */
+    SimpleItem(int v = 0) : value(v) {};
 
 };
 
@@ -34,7 +38,7 @@ class OneTypeTemplateGetter  {
      * __API__
      * action: gen_constructor
      */
-    OneTypeTemplateGetter() {};
+    OneTypeTemplateGetter(int v = 0) : value(v) {};
 
     /**
      * Template getter example with return type from one template argument.
@@ -50,7 +54,25 @@ class OneTypeTemplateGetter  {
      */
     template <typename T>
     T* item() const {
-       return new T();
+       return new T(value);
+    }
+
+    /**
+     * Template setter example.
+     * Corresponding getter name is used here.
+     *
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     * template:
+     *   T:
+     *     - type: iegen::example::SimpleItem
+     */
+    template <typename T>
+    void setItem(T* item) {
+        if constexpr (std::is_same<T, SimpleItem>::value) {
+            value = item->value;
+        }
     }
 
     /**
@@ -69,8 +91,33 @@ class OneTypeTemplateGetter  {
      */
     template <typename T>
     T* itemWithType() const {
-       return new T();
+        return new T(value);
     }
+
+    /**
+     * Template setter example.
+     * Corresponding getter name is used here.
+     *
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     * template:
+     *   T:
+     *     - type: iegen::example::SimpleItem
+     *       name: simple_item_with_type
+     */
+    template <typename T>
+    void setItemWithType(T* item) {
+        if constexpr (std::is_same<T, SimpleItem>::value) {
+            value = item->value;
+        }
+    }
+
+    /**
+     * __API__
+     * action: gen_property_setter
+     */
+    int value;
 };
 // [example]
 }

@@ -16,7 +16,7 @@ struct Foo  {
      */
     int value;
 
-    Foo() : value(0){};
+    Foo(int v = 0) : value(v) {};
 
 };
 
@@ -33,7 +33,7 @@ struct Bar  {
      */
     int value;
 
-    Bar() : value(0){};
+    Bar(int v = 0) : value(v) {};
 
 };
 
@@ -52,7 +52,7 @@ class ManyTypeTemplateGetter  {
      * __API__
      * action: gen_constructor
      */
-    ManyTypeTemplateGetter() {};
+    ManyTypeTemplateGetter(int v = 0) : value(v) {};
 
     /**
      * Template getter example with return type from more than one template argument.
@@ -69,9 +69,9 @@ class ManyTypeTemplateGetter  {
      *     - type: iegen::example::Bar
      */
     template <typename T, typename U>
-    std::pair<T, U> pair() const {
-        T t;
-        U u;
+    std::pair<T*, U*> pair() const {
+        T* t = new T(value);
+        U* u = new U(value);
         return std::make_pair(t, u);
     }
 
@@ -95,11 +95,17 @@ class ManyTypeTemplateGetter  {
      *     - type: iegen::example::Bar
      */
     template <typename T, typename U>
-    std::pair<T, U> pairWithType() const {
-        T t;
-        U u;
+    std::pair<T*, U*> pairWithType() const {
+        T* t = new T(value);
+        U* u = new U(value);
         return std::make_pair(t, u);
     }
+
+    /**
+     * __API__
+     * action: gen_property_setter
+     */
+    int value;
 };
 // [example]
 }

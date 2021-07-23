@@ -24,10 +24,14 @@ assert (person.full_name == "Jane Doe")
 # [person-usage]
 
 
-# [one-template-get-usage]
+# [template-get-usage]
 one_getter = OneTypeTemplateGetter()
 assert one_getter.simple_item.value == 0
 assert one_getter.simple_item_with_type.value == 0
+
+simple_item = SimpleItem(8)
+one_getter.simple_item = simple_item
+assert one_getter.simple_item.value == 8
 
 many_type_getter = ManyTypeTemplateGetter()
 foo_bar1 = many_type_getter.foo_bar
@@ -40,4 +44,4 @@ assert foo_bar2[1].value == 0
 assert isinstance(bar_bar[0], Bar)
 assert isinstance(bar_bar[1], Bar)
 
-# [one-template-get-usage]
+# [template-get-usage]

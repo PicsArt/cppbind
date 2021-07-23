@@ -16,7 +16,7 @@ Let's assume we have a class with two template methods:
 
 For all templates we specify **template** attribute in **__API__**.
 It's value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
-contain either strings(all possible types) or objects with **name** and **type** keys. We will see example with **name** and it's usage later.
+contain either strings(all possible types) or objects with **name** and **type** keys. We will see an example with **name** and it's usage later.
 Now let's see how kotlin wrappers look like:
 
 .. note::
@@ -126,3 +126,79 @@ Notice that in third one we haven't specified namespace and it does not have an 
 .. note::
     We can have a type inherited for specialized Stack, e.g ``class TaskList : public Stack<Task>``.
     But currently iegen does not support types inherited from template Stack e.g. ``class TaskList<T> : public Stack<T>``.
+
+
+Template Getters/Setters
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now let's see how **name** is used for template getters/setters.
+
+.. literalinclude:: /../examples/primitives/cxx/getters/one_type_template_getter.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+
+In the above example we have a template getter/setter for **item**. Notice that **T** parameter we specified only **type**.
+In this case the name of the property for the target language will be constructed from type parameter. For this example it'll be **simple_item** for python and
+simpleItem for swift and kotlin.
+There's also another getter/setter in this example with the name **itemWithType**. The important thing to notice here is that both **item** and **itemWithType**
+can be of similar type thus we have to specify **name** property for parameter **T** for one of them otherwise we would have two properties with the same name.
+Here we used **simple_item_with_type** as a name which means for python we will have **simple_item_with_type** as a property and for kotlin and swift **simpleItemWithType**.
+
+Let's see generated api for the target languages.
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/one_type_template_getter.kt
+           :language: kotlin
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/one_type_template_getter.py
+           :language: py
+
+Now let's also go through an example with multiple template parameters.
+
+.. literalinclude:: /../examples/primitives/cxx/getters/many_type_template_getter.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+Here we have **pairWithType** with two template parameters **T** and **U**. In this case names of each combination of template parameters are joined and
+used as a property name for the target language.
+So you should make sure that names combination is unique.
+Here we specify name only for **T** as we can achieve uniqueness this way. We could also write the api in another way
+
+.. code-block:: yaml
+
+     T:
+        - type: iegen::example::Foo
+          name: foo
+        - type: iegen::example::Bar
+          name: bar
+     U:
+        - type: iegen::example::Bar
+          name: bar_pair
+
+
+The result will be the same for both cases and we will have the same names for generated properties, i.e. **fooBarPair**, **barBarPair** for kotlin and swift and
+**foo_bar_pair**, **bar_bar_pair** for python.
+
+And the usage examples
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/main.kt
+           :language: kotlin
+           :start-after: [template-get-usage]
+           :end-before: [template-get-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/main.py
+           :language: py
+           :start-after: [template-get-usage]
+           :end-before: [template-get-usage]

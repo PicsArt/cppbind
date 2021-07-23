@@ -1,4 +1,3 @@
-
 - file:
     files_glob: 
       - "{{[helpers_dir, '**/*.py'] | path_join}}"

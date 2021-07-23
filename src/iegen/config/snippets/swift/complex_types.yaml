@@ -104,18 +104,18 @@ std::vector:
 
     auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
 
-    for (size_t _i = 0; _i < {{name}}.size; ++_i) {
-        auto& value_{{name}} = data_{{name}}[_i];
+    for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
+        auto& value_{{name}} = data_{{name}}[_i_{{name}}];
         {{args[0].snippet('value_{}'.format(name))|indent}}
         {{target_name}}.emplace_back({{args[0].converted_name('value_{}'.format(name))}});
     }
   cxx_to_c: |
     auto _data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
     {{target_type_name}} {{target_name}} = { _data_{{target_name}}, (long long){{name}}.size() };
-    for (int _i = 0; _i < {{name}}.size(); ++_i) {
-      auto& value_{{name}} = {{name}}[_i];
+    for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
+      auto& value_{{name}} = {{name}}[_i_{{name}}];
       {{args[0].snippet('value_{}'.format(name))|indent}}
-      _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}};
+      _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
     }
   swift_to_sc: |
     let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
@@ -126,9 +126,9 @@ std::vector:
     {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
     {{target_name}}.size = Int64({{name}}.count)
     for _i in 0..<{{name}}.count {
-      let value = {{name}}[_i];
-      {{args[0].snippet('value')|indent}}
-      _data_{{target_name}}[_i] = {{args[0].converted_name('value')}};
+      let value_{{name}} = {{name}}[_i];
+      {{args[0].snippet('value_{}'.format(name))|indent}}
+      _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}};
     }
   sc_to_swift: |
     let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
@@ -155,9 +155,9 @@ std::map:
   c_to_cxx: |
     {{cxx_pointee_unqualified_name}} {{target_name}};
 
-    for (size_t _i = 0; _i < {{name}}.size; ++_i) {
-        auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i];
-        auto vtmp_{{name}} = reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.values)[_i];
+    for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
+        auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
+        auto vtmp_{{name}} = reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.values)[_i_{{name}}];
         {{args[0].snippet('ktmp_{}'.format(name))|indent}}
         {{args[1].snippet('vtmp_{}'.format(name))|indent}}
         {{target_name}}.insert({ {{args[0].converted_name('ktmp_{}'.format(name))}}, {{args[1].converted_name('vtmp_{}'.format(name))}} });
@@ -168,14 +168,14 @@ std::map:
     auto _v_data_{{target_name}} = new {{args_converters[1].c.target_type_name}} [{{name}}.size()];
     {{target_type_name}} {{target_name}} = { _k_data_{{target_name}}, _v_data_{{target_name}}, (long long){{name}}.size() };
     size_t _i_{{name}} = 0;
-    for (auto& value : {{name}}) {
-        const auto& key = value.first;
-        const auto& val = value.second;
+    for (auto& value_{{name}} : {{name}}) {
+        const auto& key_{{name}} = value_{{name}}.first;
+        const auto& val_{{name}} = value_{{name}}.second;
         {
-          {{args[0].snippet('key')|indent}}
-          {{args[1].snippet('val')|indent}}
-          _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key')}};
-          _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val')}};
+          {{args[0].snippet('key_{}'.format(name))|indent}}
+          {{args[1].snippet('val_{}'.format(name))|indent}}
+          _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}};
+          _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}};
           _i_{{name}} += 1;
         }
     }
@@ -192,11 +192,11 @@ std::map:
     {{target_name}}.values = UnsafeMutableRawPointer(_val_{{target_name}})
     {{target_name}}.size = Int64({{name}}.count)
     var _i_{{name}} = 0
-    for (key, val) in {{name}} {
-        {{args[0].snippet('key')|indent}}
-        {{args[1].snippet('val')|indent}}
-        _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key')}}
-        _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val')}}
+    for (key_{{name}}, val_{{name}}) in {{name}} {
+        {{args[0].snippet('key_{}'.format(name))|indent}}
+        {{args[1].snippet('val_{}'.format(name))|indent}}
+        _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
+        _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
         _i_{{name}} += 1
     }
   sc_to_swift: |
@@ -207,9 +207,9 @@ std::map:
       _tmp_k_{{name}}_data.deallocate()
       _tmp_v_{{name}}_data.deallocate()
     } 
-    for _i in 0..<Int({{name}}.size) {
-      let key_{{name}} = _tmp_k_{{name}}_data[_i];
-      let value_{{name}} = _tmp_v_{{name}}_data[_i];
+    for _i_{{name}} in 0..<Int({{name}}.size) {
+      let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}];
+      let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}];
       do {
         {{args[0].snippet('key_{}'.format(name))|indent}}
         {{args[1].snippet('value_{}'.format(name))|indent}}

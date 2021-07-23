@@ -230,6 +230,7 @@ c_wrapper_lib_name:
   inheritable: true
   default:
     swift: CWrapper
+    kotlin: wrapper_jni
     else: null
   allowed_on: [ root, file_system ]
 

@@ -12,8 +12,6 @@
 #ifndef __C_HELPERS_H_
 #define __C_HELPERS_H_
 
-#include <stdbool.h>
-
 typedef struct _CDataArray{
     void* data;
     long long size;
@@ -31,7 +29,6 @@ typedef struct _CDataMap{
 } CDataMap;
 
 typedef struct _ErrorObj {
-    bool is_err;
     int err_type;
     void * err_ptr;
 } ErrorObj;

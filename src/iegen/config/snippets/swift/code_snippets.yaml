@@ -10,7 +10,6 @@ file:
 
       import Foundation
       import {{c_wrapper_lib_name}}
-      {{helper_includes|format_list('import {}')|join(new_line)}}
       {{include}}
 
       {{body}}
@@ -55,35 +54,6 @@ file:
       }
       #endif
       #endif /* ifndef _C_{{file}}_WRAPPER_ */
-  exceptions_utils_swift:
-    file_path: |
-      {{out_dir + pat_sep + [package_prefix, 'exception_helpers', 'utils']|map('replace', '.', pat_sep)|path_join}}.swift
-    scopes:
-      - body
-    content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
-
-      public class ExceptionHandler {
-
-          static var uncaughtExceptionHandler = defaultHandler;
-
-          static func defaultHandler(_ err_msg: String) {
-              print("Uncaught exception is found: \(err_msg)")
-              fatalError("Unexpected Exception")
-          }
-
-          static func handleUncaughtException(_ err_msg : String) {
-              uncaughtExceptionHandler(err_msg)
-          }
-
-          public static func setUncaughtExceptionHandler(_ handler: @escaping (String) -> Void) {
-              uncaughtExceptionHandler = handler;
-          }
-
-          public static func unsetUncaughtExceptionHandler() {
-              uncaughtExceptionHandler = defaultHandler;
-          }
-      }
 
 package:
 
@@ -331,18 +301,18 @@ function:
         {%- else %}
           {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
         {%- endif %}
-          if (err.is_err) {
-              let err_type = Int(err.err_type)
+          let err_type = Int(err.err_type)
+          if (err_type != 0) {
               switch(err_type) {
               {%- if helper.Exceptions.can_throw(throws) %}
               {%- for exc_type in throws %}
                   case({{loop.index}}):
-                      throw {{helper.Exceptions.get_exc_name(exc_type)}}(err.err_ptr, true)
+                      throw {{ctx.lookup_ctx_by_name(exc_type).name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in throws %}
                   case({{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}}):
-                      let exc_obj = StdException(err.err_ptr, true)
+                      let exc_obj = {{ctx.lookup_ctx_by_name("std::exception").name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -395,7 +365,6 @@ function:
         {%- if helper.Exceptions.can_throw(throws) %}
           {%- for exc_type in throws -%}
           catch (const {{exc_type}}& e) {
-              err->is_err = true;
               err->err_type = {{loop.index}};
               err->err_ptr = new {{exc_type}}(e);
           }
@@ -403,13 +372,12 @@ function:
           {%- endif %}
           {%- if not 'std::exception' in throws %}
           catch (const std::exception& e) {
-              err->is_err = true;
               err->err_type = {{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}};
               err->err_ptr = new std::exception(e);
           }
           {%- endif %}
           catch (...) {
-              err->is_err = true;
+              err->err_type = -1;
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}

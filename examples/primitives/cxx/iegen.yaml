@@ -24,7 +24,6 @@ vars: |
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
-    - cxx/exceptions/*.h*
     - cxx/containers/pair.hpp
   python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
   python.file_postfix: _pygen
@@ -36,8 +35,8 @@ vars: |
     - cxx/containers/json.hpp
   swift.file_postfix: _swgen
   swift.package_prefix: ""
-  swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
-  swift.out_dir:  {{path.join(out_prj_dir, "swift/src")}}
+  swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
+  swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*

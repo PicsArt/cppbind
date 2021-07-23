@@ -29,6 +29,7 @@ class Snippet:
     """
     Class represents a snippet with template and own context
     """
+
     def __init__(self, context, template, marker=None):
         self.context = context
         self.template = template
@@ -43,6 +44,7 @@ class Snippet:
 
 class Action:
     """Base class for any action subclass"""
+
     def __init__(self, kind_name):
         self.kind_name = kind_name
 
@@ -533,7 +535,7 @@ class SnippetsEngine:
 
         lookup_type = lookup_type or clang_type
 
-        search_name = search_name or cutil._get_unqualified_type_name(lookup_type.spelling)
+        search_name = search_name or lookup_type.spelling
         search_name = template_choice.get(search_name, search_name)
         logging.debug(f"Creating type converter for {search_name} "
                       f"and template choice {template_choice}")
@@ -543,6 +545,13 @@ class SnippetsEngine:
                                            template_choice=template_choice)
 
         if type_info is None:
+            unqualified_name = cutil._get_unqualified_type_name(lookup_type.spelling)
+            if unqualified_name != search_name:
+                return self._build_type_converter(ctx,
+                                                  clang_type,
+                                                  lookup_type,
+                                                  template_choice,
+                                                  search_name=unqualified_name)
             pointee_type = cutil.get_pointee_type(lookup_type)
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx,

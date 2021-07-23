@@ -1,4 +1,3 @@
-
 - file:
     files_glob:
       "{{[cxx_helpers_dir, '**/*.h*'] | path_join}}"

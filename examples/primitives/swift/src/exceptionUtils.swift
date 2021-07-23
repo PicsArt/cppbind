@@ -30,3 +30,4 @@ public class ExceptionHandler {
         uncaughtExceptionHandler = defaultHandler;
     }
 }
+

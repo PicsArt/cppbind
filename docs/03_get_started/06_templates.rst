@@ -139,7 +139,7 @@ Now let's see how **name** is used for template getters/setters.
    :end-before: [example]
 
 
-In the above example we have a template getter/setter for **item**. Notice that **T** parameter we specified only **type**.
+In the above example we have a template getter/setter for **item**. Notice that for parameter **T** we have specified only **type** property.
 In this case the name of the property for the target language will be constructed from type parameter. For this example it'll be **simple_item** for python and
 simpleItem for swift and kotlin.
 There's also another getter/setter in this example with the name **itemWithType**. The important thing to notice here is that both **item** and **itemWithType**

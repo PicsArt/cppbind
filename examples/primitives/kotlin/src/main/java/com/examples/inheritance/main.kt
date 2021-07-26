@@ -24,6 +24,17 @@ assert(square.area == 25.0)
 assert(square.length == 5.0)
 assert(square.perimeter() == 20.0)
 // [multi-inheritance-usage]
+
+
+// other test cases
+val gf = GeometricFigure(square)
+assert(gf.parallelogram.getObjId() == square.getObjId())
+gf.parallelogram = rhombus
+assert(gf.parallelogram.getObjId() == rhombus.getObjId())
+
+val mv = MyVehicle(bicycle)
+mv.vehicle = bicycle
+
 }
 
 class InheritanceApp {

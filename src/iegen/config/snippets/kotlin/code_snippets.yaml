@@ -325,7 +325,18 @@ constructor:
       {{helper.make_comment(comment)}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
-      constructor({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
+      constructor({%- for arg in args -%}
+      {{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- set target_type = arg.converter.kotlin.target_type_name -%}
+      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default}}
+      {%- else -%}
+      {%- if arg.default in ['nullptr', 'NULL'] %} = null
+      {%- else %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
           //jSet_this(id, this)
       }
     companion: |
@@ -381,7 +392,18 @@ function:
       {%- if comment %}
       {{helper.make_comment(comment)}}
       {%- endif %}
-      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
+      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
+      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- set target_type = arg.converter.kotlin.target_type_name -%}
+      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default}}
+      {%- else -%}
+      {%- if arg.default in ['nullptr', 'NULL'] %} = null
+      {%- else %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = ['getObjId()'] -%}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}

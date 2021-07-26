@@ -62,6 +62,7 @@ class Context(BaseContext):
                     cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
                     cli.CursorKind.GNU_NULL_EXPR,
                     cli.CursorKind.NULL_STMT,
+                    cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                 ]:
                     if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
                         val = 'NULL'

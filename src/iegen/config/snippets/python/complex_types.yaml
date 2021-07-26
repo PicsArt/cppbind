@@ -78,7 +78,7 @@ std::vector:
   custom:
     pname: list
   python:
-    type_info: list
+    type_info: List[{{args_t[0]}}]
   pybind:
     type_info: list
   pybind_to_cxx:

@@ -837,7 +837,7 @@ getter:
           void* err_ptr = nullptr;
           try {
               auto result = this_object->{{cxx_name}}{{template_args}}();
-              {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
+              {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
           {{gen_exc_try_block()}}

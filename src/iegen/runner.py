@@ -91,12 +91,12 @@ def run(args):
         else:
             plat, lang = get_host_platform(), option
         plat_lang_options.append((plat, lang))
-
-    try:
-        WrapperGenerator.run(set(plat_lang_options))
-    except Exception as err:
-        Error.error(err)
-        sys.exit(1)
+    #
+    # try:
+    WrapperGenerator.run(set(plat_lang_options))
+    # except Exception as err:
+    #     Error.error(err)
+    #     sys.exit(1)
 
 
 def clean(args):

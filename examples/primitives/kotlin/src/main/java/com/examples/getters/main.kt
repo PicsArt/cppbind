@@ -25,24 +25,18 @@ assert(person.fullName == "Jane Doe")
 
 
 // [template-get-usage]
-val oneTypeGetter = OneTypeTemplateGetter(7)
-assert(oneTypeGetter.simpleItem.value == 7)
-assert(oneTypeGetter.simpleItemWithType.value == 7)
-val value: Int = 8
-val simpleItem = SimpleItem(value)
-oneTypeGetter.simpleItem = simpleItem
-assert(oneTypeGetter.simpleItem.value == 8)
+val apple1 = Apple()
+val apple2 = Apple()
+val papple1 = Pineapple()
+val papple2 = Pineapple()
+val fruits = Fruits(listOf(apple1, apple2, papple1, papple2))
 
-val manyTypeGetter = ManyTypeTemplateGetter(5)
-val fooBar1 = manyTypeGetter.fooBar
-val fooBar2 = manyTypeGetter.fooBarPair
-val barBar = manyTypeGetter.barBarPair
-assert(fooBar1.first.value == 5)
-assert(fooBar1.second.value == 5)
-assert(fooBar2.first.value == 5)
-assert(fooBar2.second.value == 5)
-assert(barBar.first.value == 5)
-assert(barBar.second.value == 5)
+assert(fruits.apples.size == 2)
+assert(fruits.pineapple.size == 2)
+val applesPineapples = fruits.applesWithPineapples
+assert(applesPineapples.size == 4)
+assert(applesPineapples[0].type == FruitType.Apple)
+assert(applesPineapples[3].type == FruitType.Pineapple)
 
 // [template-get-usage]
 

@@ -40,7 +40,7 @@ vars: |
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
-    - cxx/getters/*template_getter.hpp
+    - cxx/getters/fruit.hpp
     - cxx/misc/size_buffer.hpp
 
 var_def:

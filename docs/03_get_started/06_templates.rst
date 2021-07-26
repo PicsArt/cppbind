@@ -133,58 +133,46 @@ Template Getters/Setters
 
 Now let's see how **name** is used for template getters/setters.
 
-.. literalinclude:: /../examples/primitives/cxx/getters/one_type_template_getter.hpp
+.. literalinclude:: /../examples/primitives/cxx/getters/fruits.hpp
    :language: cpp
    :start-after: [example]
    :end-before: [example]
 
 
-In the above example we have a template getter/setter for **item**. Notice that for parameter **T** we have specified only **type** property.
-In this case the name of the property for the target language will be constructed from type parameter. For this example it'll be **simple_item** for python and
-simpleItem for swift and kotlin.
-There's also another getter/setter in this example with the name **itemWithType**. The important thing to notice here is that both **item** and **itemWithType**
-can be of similar type thus we have to specify **name** property for parameter **T** for one of them otherwise we would have two properties with the same name.
-Here we used **simple_item_with_type** as a name which means for python we will have **simple_item_with_type** as a property and for kotlin and swift **simpleItemWithType**.
+In the above example we have a template getter **fruits**. Here we have specified two possible types for parameter **T** Apple and Pineapple.
+Notice that **name** is specified only for Apple. This means that it'll be used as a property name in the target language. In the case of Pineapple
+it's **type** will be used as no **name** is specified.
+For the all tree target languages we will have apples and pineapple correspondingly.
+In the above example we have another template getter **allFruits** with two parameters **T** and **U**. Notice we have used name for both **T** and **U**.
+In case of multiple parameters for each combination of parameters names(or types of no name is specified) are joined.
+For this example it'll be **applesWithPineapples** for kotlin and swift, apples_with_pineapples
+for python. Notice that the name is snake cased or camel cased depending on the target language.
+The API for this getter could also be written in the following way
 
-Let's see generated api for the target languages.
+.. code-block:: yaml
+     T:
+       - type: iegen::example::Apple
+         name: applesWithPineapples
+     U:
+       - type: iegen::example::Pineapple
+
+The result will be the same.
+
+If no name is specified then type names are being joined and converted to snake case or camel case.
+For this example we would have applePineapple or apple_pineapple.
+
+Let's see the generated APIs for the target languages.
 
 .. tabs::
     .. tab:: kotlin
 
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/one_type_template_getter.kt
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
            :language: kotlin
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/one_type_template_getter.py
+        .. literalinclude:: /../examples/primitives/python/src/getters/fruits.py
            :language: py
-
-Now let's also go through an example with multiple template parameters.
-
-.. literalinclude:: /../examples/primitives/cxx/getters/many_type_template_getter.hpp
-   :language: cpp
-   :start-after: [example]
-   :end-before: [example]
-
-Here we have **pairWithType** with two template parameters **T** and **U**. In this case names of each combination of template parameters are joined and
-used as a property name for the target language.
-So you should make sure that names combination is unique.
-Here we specify name only for **T** as we can achieve uniqueness this way. We could also write the api in another way
-
-.. code-block:: yaml
-
-     T:
-        - type: iegen::example::Foo
-          name: foo
-        - type: iegen::example::Bar
-          name: bar
-     U:
-        - type: iegen::example::Bar
-          name: bar_pair
-
-
-The result will be the same for both cases and we will have the same names for generated properties, i.e. **fooBarPair**, **barBarPair** for kotlin and swift and
-**foo_bar_pair**, **bar_bar_pair** for python.
 
 And the usage examples
 

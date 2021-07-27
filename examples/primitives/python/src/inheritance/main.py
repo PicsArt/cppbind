@@ -1,4 +1,11 @@
-from inheritance import Bicycle, Rectangle, Rhombus, Square
+from inheritance import (
+    Bicycle,
+    Rectangle,
+    Rhombus,
+    Square,
+    GeometricFigure,
+    MyVehicle
+)
 
 # [simple-inheritance-usage]
 bicycle = Bicycle(1)
@@ -20,3 +27,12 @@ assert square.area == 25.0
 assert square.length == 5.0
 assert square.perimeter() == 20
 # [multi-inheritance-usage]
+
+# other test cases
+gf = GeometricFigure(square)
+assert gf.parallelogram == square
+gf.parallelogram = rhombus
+assert gf.parallelogram == rhombus
+
+mv = MyVehicle(bicycle)
+mv.vehicle = bicycle

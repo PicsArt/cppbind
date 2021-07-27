@@ -54,7 +54,6 @@ val root = Root(path)
 val addressableRoot = AddressableRoot(root, name)
 assert(addressableRoot.absPath() == path + name)
 val component = Component(root, name)
-assert(component is IAddressableRoot)
 assert(component.absPath() == path + name)
 // [addressable-examples]
 

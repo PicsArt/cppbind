@@ -16,7 +16,7 @@ Let's assume we have a class with two template methods:
 
 For all templates we specify **template** attribute in **__API__**.
 It's value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
-contain either strings(all possible types) or objects with **name** and **type** keys. We will see example with **name** and it's usage later.
+contain either strings(all possible types) or objects with **name** and **type** keys. We will see an example with **name** and it's usage later.
 Now let's see how kotlin wrappers look like:
 
 .. note::
@@ -126,3 +126,67 @@ Notice that in third one we haven't specified namespace and it does not have an 
 .. note::
     We can have a type inherited for specialized Stack, e.g ``class TaskList : public Stack<Task>``.
     But currently iegen does not support types inherited from template Stack e.g. ``class TaskList<T> : public Stack<T>``.
+
+
+Template Getters/Setters
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Now let's see how **name** is used for template getters/setters.
+
+.. literalinclude:: /../examples/primitives/cxx/getters/fruits.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+
+In the above example we have a template getter **fruits**. Here we have specified two possible types for parameter **T** Apple and Pineapple.
+Notice that **name** is specified only for Apple. This means that it'll be used as a property name in the target language. In the case of Pineapple
+it's **type** will be used as no **name** is specified.
+For the all tree target languages we will have apples and pineapple correspondingly.
+In the above example we have another template getter **allFruits** with two parameters **T** and **U**. Notice we have used name for both **T** and **U**.
+In case of multiple parameters for each combination of parameters names(or types of no name is specified) are joined.
+For this example it'll be **applesWithPineapples** for kotlin and swift, apples_with_pineapples
+for python. Notice that the name is snake cased or camel cased depending on the target language.
+The API for this getter could also be written in the following way
+
+.. code-block:: yaml
+     T:
+       - type: iegen::example::Apple
+         name: applesWithPineapples
+     U:
+       - type: iegen::example::Pineapple
+
+The result will be the same.
+
+If no name is specified then type names are being joined and converted to snake case or camel case.
+For this example we would have applePineapple or apple_pineapple.
+
+Let's see the generated APIs for the target languages.
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
+           :language: kotlin
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/fruits.py
+           :language: py
+
+And the usage examples
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/main.kt
+           :language: kotlin
+           :start-after: [template-get-usage]
+           :end-before: [template-get-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/main.py
+           :language: py
+           :start-after: [template-get-usage]
+           :end-before: [template-get-usage]

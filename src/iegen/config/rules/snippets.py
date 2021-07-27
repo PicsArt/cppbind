@@ -130,10 +130,10 @@ def make_func_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         overloading_prefix = ctx.overloading_prefix
-        # capturing suffix since we use single context with different template choice
-        _suffix = owner_class.template_suffix
+        # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_names = ctx.template_names
+
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 

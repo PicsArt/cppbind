@@ -6,7 +6,7 @@ namespace iegen::example {
 /**
  * __API__
  * action: gen_class
- * shared_ref: False
+ * shared_ref: True
  * package: inheritance
  */
 class Vehicle {

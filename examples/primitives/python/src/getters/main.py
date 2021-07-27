@@ -1,5 +1,4 @@
-from getters.many_type_template_getter_pygen import *
-from getters.one_type_template_getter_pygen import *
+from getters.fruits_pygen import *
 from getters.person_pygen import *
 from getters.number_pygen import *
 
@@ -24,20 +23,17 @@ assert (person.full_name == "Jane Doe")
 # [person-usage]
 
 
-# [one-template-get-usage]
-one_getter = OneTypeTemplateGetter()
-assert one_getter.simple_item.value == 0
-assert one_getter.simple_item_with_type.value == 0
+# [template-get-usage]
+apple1 = Apple()
+apple2 = Apple()
+papple1 = Pineapple()
+papple2 = Pineapple()
+fruits = Fruits([apple1, apple2, papple1, papple2])
 
-many_type_getter = ManyTypeTemplateGetter()
-foo_bar1 = many_type_getter.foo_bar
-foo_bar2 = many_type_getter.foo_bar_pair
-bar_bar = many_type_getter.bar_bar_pair
-assert isinstance(foo_bar1[0], Foo)
-assert isinstance(foo_bar1[1], Bar)
-assert foo_bar2[0].value == 0
-assert foo_bar2[1].value == 0
-assert isinstance(bar_bar[0], Bar)
-assert isinstance(bar_bar[1], Bar)
-
-# [one-template-get-usage]
+assert len(fruits.apples) == 2
+assert len(fruits.pineapple) == 2
+apples_pineapples = fruits.apples_with_pineapples
+assert len(apples_pineapples) == 4
+assert apples_pineapples[0].type == FruitType.Apple
+assert apples_pineapples[3].type == FruitType.Pineapple
+# [template-get-usage]

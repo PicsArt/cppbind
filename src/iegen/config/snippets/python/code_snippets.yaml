@@ -188,8 +188,7 @@ enum:
           py::enum_<{{cxx_type_name}}>(m, "{{name}}")
               {%- for case in enum_cases %}
               .value("{{case.name}}", {{cxx_type_name}}::{{case.name}})
-              {%- endfor %}
-              .export_values();
+              {%- endfor -%};
       }
     include:
       unique_content: |
@@ -296,8 +295,8 @@ var_class: &var_class
             py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
                                           , std::shared_ptr<{{cxx_type_name}}>
                                          {%- endif %}
-                                         {%- if base_types_converters -%},
-                                         {%- for base_type in base_types_converters -%}
+                                         {%- if base_types_converters -%}
+                                         , {% for base_type in base_types_converters -%}
                                          {{comma()}}{{base_type.python.cxx_type_name}}
                                          {%- endfor -%}
                                          {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
@@ -540,9 +539,10 @@ getter:
     properties: |
       {%- set rctx = rconverter.ctx -%}
       {%- if ctx.node.is_function_template %}
-      {%- set _name = overloading_prefix|to_snake_case %}
       {%- if template_names %}
       {%- set _name = template_names|join|to_snake_case %}
+      {%- else %}
+      {%- set _name = overloading_prefix|to_snake_case %}
       {%- endif %}
       {%- else %}
       {%- set _name = name|to_snake_case %}
@@ -555,9 +555,9 @@ getter:
           pass
       {%- if setter_ctx is defined %}
 
-      @{{_name}}{{overloading_prefix if ctx.node.is_function_template}}.setter
+      @{{_name}}.setter
       @bind
-      def {{_name}}{{overloading_prefix if ctx.node.is_function_template}}(self, value: {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}):
+      def {{_name}}(self, value: {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}):
           {{helper.make_comment(comment)|string|indent}}
           pass
       {%- endif -%}
@@ -573,10 +573,13 @@ getter:
       {%- else %}
       {%- set _name = name|to_snake_case %}
       {%- endif %}
-      {% if setter_ctx is defined %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}});
+      {%- if ctx.node.is_function_template -%}
+      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{%- if ctx.node.is_function_template -%}
-                                                                                                                                                          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                                                                                                                                          {%- endif %});
+      {%- set template_args = '' %}
+      {%- endif %}
+      {% if setter_ctx is defined %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{{template_args}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}}{{template_args}});
+      {%- else %}
+      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{{template_args}});
       {%- endif %}

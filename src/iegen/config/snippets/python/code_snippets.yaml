@@ -163,7 +163,7 @@ enum:
     body: |
       {% set m = 'pybind_' + file + file_postfix %}
 
-      class {{name}}(metaclass=EnumMetaclass):
+      class {{name}}({{ctx.bases_list|join(', ')}}{{', ' if ctx.bases_list}}metaclass=EnumMetaclass):
           {{helper.make_comment(comment)|string|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}

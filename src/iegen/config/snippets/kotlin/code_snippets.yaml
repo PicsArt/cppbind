@@ -41,7 +41,7 @@ package:
 enum:
   kotlin: 
     body: |
-      enum class {{name}}(val value: Int) {
+      enum class {{name}}(val value: Int){{': ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}
           {{comma()}}

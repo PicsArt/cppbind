@@ -9,6 +9,11 @@ Here is Color enum definition:
    :start-after: [example]
    :end-before: [example]
 
+As we can see in the above example we can extend enums logic by using **code_fragment** variable.
+Code fragments defined with this variable are appended to the enum definition.
+Particularly in this example we added custom conversion from enum to string for all tree languages.
+Notice that for swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
+
 And the Frame struct using it:
 
 .. literalinclude:: /../examples/primitives/cxx/enums/frame.hpp

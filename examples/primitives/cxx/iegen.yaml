@@ -39,7 +39,7 @@ vars: |
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*
-    - cxx/getters/fruit.hpp
+    - cxx/getters/fruits.hpp
     - cxx/misc/size_buffer.hpp
 
 var_def:

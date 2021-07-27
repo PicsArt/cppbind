@@ -60,14 +60,17 @@ package:
 enum:
   swift:
     body: |
+      public enum {{name}}: CUnsignedInt{{', ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
+          {%- for case in enum_cases -%}
+          {%- if case.comment %}
+          {{helper.make_enum_case_comment(case.comment)|string|indent(4)}}
+          {%- endif %}
+          case {{case.name}} = {{case.value}}
+          {%- endfor %}
+          {%- if code_fragment %}
 
-     public enum {{name}}: CUnsignedInt{
-        {%- for case in enum_cases -%}
-        {%- if case.comment %}
-        {{helper.make_enum_case_comment(case.comment)|string|indent(2)}}
-        {%- endif %}
-        case {{case.name}} = {{case.value}}
-        {%- endfor %}
+          {{code_fragment|join(2 * new_line)|indent(4)}}
+          {%- endif %}
       }
 
 var_class_include: &var_class_include

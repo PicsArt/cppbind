@@ -82,7 +82,7 @@ bases_list:
   inheritable: false
   array: true
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 nullable_return:
   inheritable: false

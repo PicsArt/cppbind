@@ -289,8 +289,8 @@ var_class: &var_class
             py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|any('shared_ref') -%}
                                           , std::shared_ptr<{{cxx_type_name}}>
                                          {%- endif %}
-                                         {%- if base_types_converters -%},
-                                         {%- for base_type in base_types_converters -%}
+                                         {%- if base_types_converters -%}
+                                         , {% for base_type in base_types_converters -%}
                                          {{comma()}}{{base_type.python.cxx_type_name}}
                                          {%- endfor -%}
                                          {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});

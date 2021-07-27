@@ -1,11 +1,11 @@
-from .color_pygen import Color
-from .frame_pygen import Frame
+from enums.color_pygen import Color
+from enums.frame_pygen import Frame
 
 # [color-usage]
-assert Color.Red.rawValue == 1
-assert Color.Blue.rawValue == 20
+assert Color.Red.value == 1
+assert Color.Blue.value == 20
+assert Color.Green.value == 2
 frame = Frame()
-frame.backgroundColor = Color.Red
-assert frame.backgroundColor == Color.Red
-
+frame.background_color = Color.Red
+assert frame.background_color == Color.Red
 # [color-usage]

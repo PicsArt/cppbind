@@ -742,16 +742,25 @@ getter:
               }
       {%- endmacro -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
+      {%- if ctx.node.is_function_template %}
+      {%- if template_names %}
+      {%- set _name = template_names|join|to_camel_case %}
+      {%- else %}
+      {%- set _name = overloading_prefix[0]|lower + overloading_prefix[1:]|to_camel_case %}
+      {%- endif %}
+      {%- else %}
+      {%- set _name = name|to_camel_case %}
+      {%- endif %}
       {%- if comment %}
       {{helper.make_comment(comment)}}
       {%- endif %}
-      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
+      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined else 'val'}} {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
           get() {
               val err = ErrorObj()
               {%- if ctx.parent_context.action == 'gen_interface' %}
               val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId(), err)
               {%- else %}
-              val result = j{{name|capitalize}}(getObjId(), err)
+              val result = j{{name|capitalize}}{{overloading_prefix}}(getObjId(), err)
               {%- endif %}
               {{gen_exc_when_block()}}
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
@@ -770,25 +779,25 @@ getter:
               {%- if ctx.parent_context.action == 'gen_interface' %}
               {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}}, err)
               {%- else %}
-              j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}}, err)
+              j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(getObjId(), {{converter.converted_name('value')}}, err)
               {%- endif %}
               {{gen_exc_when_block()}}
           }
           {%- endif %}
           {%- endif %}
     private_external: |
-      private external fun j{{name|capitalize}}(id: Long, __err_obj__: ErrorObj): {{rconverter.jdk.target_type_name}}
+      private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long, __err_obj__: ErrorObj): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.name|capitalize}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}, __err_obj__: ErrorObj): Unit
+      private external fun j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}, __err_obj__: ErrorObj): Unit
       {%- endif %}
     interface_external: |
 
       @JvmStatic
-      external fun j{{name|capitalize}}(id: Long, __err_obj__: ErrorObj): {{rconverter.jdk.target_type_name}}
+      external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long, __err_obj__: ErrorObj): {{rconverter.jdk.target_type_name}}
       {%- if setter_ctx is defined %}
 
       @JvmStatic
-      external fun j{{setter_ctx.name|capitalize}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}, __err_obj__: ErrorObj): Unit
+      external fun j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}, __err_obj__: ErrorObj): Unit
       {%- endif %}
   cxx:
     include: *var_getter_cxx_include
@@ -818,10 +827,15 @@ getter:
           env->SetIntField(err_obj, typeId_field_id, err_type_id);
           env->SetLongField(err_obj, ptrId_field_id, reinterpret_cast<jobjectid>(err_ptr));
       {%- endmacro -%}
-      {%- set func_name="j%s"|format(name|capitalize) %}
+      {%- set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
       {%- set class_name = owner_class.name %}
       {%- if ctx.parent_context.action == 'gen_interface' %}
       {%- set class_name = owner_class.name + 'Helper' %}
+      {%- endif %}
+      {%- if ctx.node.is_function_template -%}
+      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
+      {%- else %}
+      {%- set template_args = '' %}
       {%- endif %}
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, jobject err_obj){
@@ -844,9 +858,9 @@ getter:
           int err_type_id = 0;
           void* err_ptr = nullptr;
           try {
-            auto result = this_object->{{cxx_name}}();
-            {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
-            return {{rconverter.cxx_to_jni.converted_name('result')}};
+              auto result = this_object->{{cxx_name}}{{template_args}}();
+              {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(8)}}
+              return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
           {{gen_exc_try_block()}}
 
@@ -854,7 +868,7 @@ getter:
           return result;
       }
       {%- if setter_ctx is defined %}
-      {% set func_name="j%s"|format(setter_ctx.name|capitalize) %}
+      {% set func_name="j%s%s"|format(setter_ctx.name|capitalize, overloading_prefix) %}
       {%- set jni_setter_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}, jobject err_obj){
           validateID(id);
@@ -878,7 +892,7 @@ getter:
           int err_type_id = 0;
           void* err_ptr = nullptr;
           try {
-            this_object->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+              this_object->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
           }
           {{gen_exc_try_block()}}
       }

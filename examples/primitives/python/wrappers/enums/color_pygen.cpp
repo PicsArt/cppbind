@@ -21,6 +21,5 @@ void bindIegenExampleColor(py::module& m) {
     py::enum_<iegen::example::Color>(m, "Color")
         .value("Red", iegen::example::Color::Red)
         .value("Green", iegen::example::Color::Green)
-        .value("Blue", iegen::example::Color::Blue)
-        .export_values();
+        .value("Blue", iegen::example::Color::Blue);
 }

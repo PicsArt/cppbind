@@ -40,7 +40,7 @@ code_fragment:
   inheritable: false
   array: true
   default: []
-  allowed_on: [ dir, file ]
+  allowed_on: [ dir, file, enum ]
 
 include_cxx:
   inheritable: false

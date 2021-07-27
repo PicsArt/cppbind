@@ -163,7 +163,7 @@ enum:
     body: |
       {% set m = 'pybind_' + file + file_postfix %}
 
-      class {{name}}({{m}}.{{name}}):
+      class {{name}}(metaclass=EnumMetaclass):
           {{helper.make_comment(comment)|string|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
@@ -171,6 +171,13 @@ enum:
           {%- endif %}
           {{case.name}} = {{m}}.{{name}}.{{case.name}}
           {%- endfor %}
+
+          def __int__(self):
+              return self.value
+          {%- if code_fragment %}
+
+          {{code_fragment|join(2 * new_line)|indent(4)}}
+          {%- endif %}
   python_init:
     include:
       unique_content: |

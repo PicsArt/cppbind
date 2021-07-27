@@ -7,6 +7,10 @@ namespace iegen::example {
  * Color Enum.
  * __API__
  * action: gen_enum
+ * python.code_fragment:
+ *   - >
+ *    def __str__(self):
+ *        return str(self.value)
  * package: enums
  */
 enum class Color {

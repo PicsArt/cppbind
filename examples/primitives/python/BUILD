@@ -16,8 +16,8 @@ py_library(
     name = "py_examples_library",
     srcs = glob(["src/**/*.py"]),
     data = [
+        "buffer.so",
         "examples.so",
-        "buffer.so"
     ],
     imports = [
         ".",
@@ -185,6 +185,18 @@ py_test(
     name = "misc",
     srcs = ["src/misc/main.py"],
     main = "src/misc/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
+    name = "enums",
+    srcs = ["src/enums/main.py"],
+    main = "src/enums/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

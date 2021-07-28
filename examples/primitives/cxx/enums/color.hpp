@@ -8,6 +8,21 @@ namespace iegen::example {
  * __API__
  * action: gen_enum
  * package: enums
+ * python.code_fragment:
+ *   - >
+ *    def __str__(self):
+ *        return str(self.value)
+ * kotlin.code_fragment:
+ *   - >
+ *    override fun toString(): String {
+ *        return this.value.toString()
+ *    }
+ * swift.bases_list: CustomStringConvertible
+ * swift.code_fragment:
+ *   - >
+ *    public var description: String {
+ *        return "\(self.rawValue)"
+ *    }
  */
 enum class Color {
     /**

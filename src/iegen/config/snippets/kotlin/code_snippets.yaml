@@ -41,7 +41,7 @@ package:
 enum:
   kotlin: 
     body: |
-      enum class {{name}}(val value: Int) {
+      enum class {{name}}(val value: Int){{': ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}
           {{comma()}}
@@ -55,6 +55,10 @@ enum:
               private val values = values();
               fun getByValue(value: Int) = values.firstOrNull { it.value == value }
           }
+          {%- if code_fragment %}
+
+          {{code_fragment|join(2 * new_line)|indent(4)}}
+          {%- endif %}
       }
 
 var_class_cxx: &var_class_cxx

@@ -14,7 +14,7 @@ import importlib
 import os
 import sys
 
-__all__ = ['OriginalMethodsMetaclass']
+__all__ = ['OriginalMethodsMetaclass', 'EnumMetaclass']
 
 
 class PyBindOriginals:
@@ -45,7 +45,25 @@ class PyBindOriginals:
             self.originals_map[pybind_class] = originals
 
 
-class OriginalMethodsMetaclass(type):
+class MetaclassBase(type):
+    """
+    Base class for OriginalMethodsMetaclass and EnumMetaclass.
+    """
+
+    def __instancecheck__(self, instance):
+        """
+        This is responsible for correct instance check for wrapper class.
+        As for wrapper´s an instance of pybind class is returned then we need this to return true for wrapper instances.
+        """
+        # get the wrapper´s module
+        module = importlib.import_module(self.__module__)
+        # get pybind´s corresponding module
+        pybind_module = getattr(module, 'pybind_' + _find_module(self))
+        # check if wrapper instance is instance of pybind type
+        return isinstance(instance, getattr(pybind_module, self.__name__))
+
+
+class OriginalMethodsMetaclass(MetaclassBase):
     """
     Metaclass for all wrappers. This type is responsible for adding originals(dictionary which contains pybind´s
     original methods) to wrapper. It also replaces pybind´s methods with wrappers methods. So that instead of pybind´s
@@ -85,17 +103,30 @@ class OriginalMethodsMetaclass(type):
         setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
         type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
 
-    def __instancecheck__(self, instance):
+
+class EnumMetaclass(MetaclassBase):
+    """
+    Metaclass for all enum wrappers. This type is responsible setting user added methods to pybind enum type.
+    Also defines __new__ for the wrapper enum to create an instance of pybind enum.
+    """
+
+    def __init__(cls, future_class_name, future_class_parents, future_class_attrs):
         """
-        This is responsible for correct instance check for wrapper class.
-        As for wrapper´s an instance of pybind class is returned then we need this to return true for wrapper instances.
+        Replaces sets user defined methods to pybind type.
+        And defines __new__ for the wrapper enum to create an instance of pybind enum.
         """
         # get the wrapper´s module
-        module = importlib.import_module(self.__module__)
+        module = importlib.import_module(future_class_attrs['__module__'])
         # get pybind´s corresponding module
-        pybind_module = getattr(module, 'pybind_' + _find_module(self))
-        # check if wrapper instance is instance of pybind type
-        return isinstance(instance, getattr(pybind_module, self.__name__))
+        pybind_module = getattr(module, 'pybind_' + _find_module(cls))
+        pybind_class = getattr(pybind_module, future_class_name)
+        for attr in pybind_class.__dict__:
+            if attr in future_class_attrs and attr not in ('__doc__', '__qualname__', '__module__', '__new__'):
+                # replace pybind method with wrapper method
+                setattr(pybind_class, attr, future_class_attrs[attr])
+        # set __new__ to return pybind instance
+        setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
+        type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
 
 
 def _new_object(pybind_type, cls, *args, **kwargs):

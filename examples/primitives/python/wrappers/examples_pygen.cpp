@@ -14,6 +14,8 @@
 
 namespace py = pybind11;
 void bindExamples(py::module& m) {
+    auto py_module = py::module_::import("buffer");
+
     py::module_ containers = m.def_submodule("containers", "containers");
 
     py::module_ containers_map = containers.def_submodule("map", "map");

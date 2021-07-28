@@ -34,6 +34,18 @@ class SizeUsage {
         double new_height = n * size.height;
         return SizeF(new_width, new_height);
     }
+
+    /**
+     * comments
+     *
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    static void test(const SizeF& resolution = SizeF(1.0, 2.0)) {
+
+    }
+
 };
 
 /**

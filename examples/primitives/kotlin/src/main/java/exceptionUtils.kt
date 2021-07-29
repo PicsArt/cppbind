@@ -22,6 +22,7 @@ public class ExceptionHandler {
             exitProcess(1)
         }
 
+        @JvmStatic
         fun handleUncaughtException(errMsg: String) {
             uncaughtExceptionHandler(errMsg)
         }
@@ -35,9 +36,3 @@ public class ExceptionHandler {
         }
     }
 }
-
-public class ErrorObj {
-    val typeId: Int = 0
-    val ptrId: Long = 0
-}
-

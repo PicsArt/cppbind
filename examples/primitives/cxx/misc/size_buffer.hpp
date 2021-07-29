@@ -2,9 +2,10 @@
 #define third_party_types_usage_example_h
 
 #include <string>
+#include <cmath>
 #include "buffer.hpp"
 
-typedef iegen::example::Size<double> SizeF;
+typedef iegen::example::Size<float> SizeF;
 
 namespace iegen::example {
 
@@ -30,8 +31,8 @@ class SizeUsage {
     * throws: no_throw
     */
     static SizeF multiplyBy(SizeF size, int n) {
-        double new_width = n * size.width;
-        double new_height = n * size.height;
+        float new_width = n * size.width;
+        float new_height = n * size.height;
         return SizeF(new_width, new_height);
     }
 
@@ -42,8 +43,12 @@ class SizeUsage {
      * action: gen_method
      * throws: no_throw
      */
-    static void test(const SizeF& resolution = SizeF(1.0, 2.0)) {
-
+    static SizeF doubleSizeF(const SizeF& resolution = SizeF(NAN, NAN)) {
+        if (std::isnan(resolution.width) | std::isnan(resolution.height)) {
+            return {NAN, NAN};
+        } else {
+            return SizeF((float)resolution.width * 2, (float)resolution.height * 2);
+        }
     }
 
 };

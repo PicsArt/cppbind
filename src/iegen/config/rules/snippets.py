@@ -112,7 +112,7 @@ def make_func_context(ctx):
                                                                arg.type,
                                                                template_choice=ctx.template_choice),
                 name=arg.name,
-                default=arg.default,
+                default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
                 nullable=arg.name in ctx.nullable_arg or arg.default in ('nullptr', 'NULL'),
@@ -120,6 +120,7 @@ def make_func_context(ctx):
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
                 is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
+                is_obj=arg.default.kind == cli.CursorKind.CALL_EXPR,
                 pointee_type=cutil.get_pointee_type(arg.type)
             ) for arg in ctx.args
         ]

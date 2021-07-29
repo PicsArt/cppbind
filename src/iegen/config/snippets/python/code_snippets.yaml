@@ -27,7 +27,7 @@ file:
       from typing import *
 
       import {{[pybind_module, package, file]|join('.')}} as {{'pybind_' + file + file_postfix}}
-      from bind_utils import *
+      from {{helpers_package_prefix + '.' if helpers_package_prefix}}bind_utils import *
       {{helper_includes|format_list('from {} import *')|join(new_line)}}
       {%- if include %}
       {{include}}
@@ -107,7 +107,7 @@ file:
       #endif
   pybind_package:
     file_path: |
-      {{cxx_out_dir + pat_sep + [pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
     gen: false
     scopes:
       - body
@@ -376,7 +376,7 @@ constructor:
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                        {%- else -%}
-                                       {%- if arg.default in ['nullptr', 'NULL'] %} = None
+                                       {%- if arg.default in ['nullptr', 'NULL'] or arg.is_obj %} = None
                                        {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                        {%- endif %}
                                        {%- endif %}
@@ -397,7 +397,10 @@ constructor:
                                                                                     {{comma()}}py::arg("{{arg.name|to_snake_case}}")
                                                                                     {%- if arg.default -%}
                                                                                     {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
+                                                                                    {%- else -%}
+                                                                                    {%- if arg.default in ['nullptr', 'NULL'] %} = nullptr
                                                                                     {%- else %} = {{arg.default}}
+                                                                                    {%- endif -%}
                                                                                     {%- endif -%}
                                                                                     {%- endif -%}
                                                                                     {%- endfor -%});
@@ -426,7 +429,7 @@ function:
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
                                                           {%- else -%}
-                                                          {%- if arg.default in ['nullptr', 'NULL'] %} = None
+                                                          {%- if arg.default in ['nullptr', 'NULL'] or arg.is_obj%} = None
                                                           {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                                           {%- endif %}
                                                           {%- endif %}
@@ -461,7 +464,10 @@ function:
       {{comma()}}py::arg("{{arg.name|to_snake_case}}")
       {%- if arg.default -%}
       {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
+      {%- else -%}
+      {%- if arg.default in ['nullptr', 'NULL'] %} = nullptr
       {%- else %} = {{arg.default}}
+      {%- endif -%}
       {%- endif -%}
       {%- endif -%}
       {%- endfor -%});

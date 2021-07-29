@@ -5,6 +5,10 @@ type_vars:
 dir_vars:
   - dir: "."
     vars:
+      python.action: gen_package
+      python.name: ''
+      python.code_fragment:
+        - from buffer import *
       project_dir: '{{_current_working_dir}}'
       project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
 
@@ -27,7 +31,7 @@ vars: |
   python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
   python.file_postfix: _pygen
   python.out_dir: {{path.join(out_prj_dir, "python/src")}}
-  python.package_prefix: ""
+  python.package_prefix: examples_lib
   python.pybind_module: examples
   python.src_exclude_glob:
     - cxx/exceptions/*.h*

@@ -46,6 +46,7 @@ class Context(BaseContext):
             # todo implementation is odd for now
             assert param_var.kind == cli.CursorKind.PARM_DECL
             val = None
+            kind = None
             if cutil.get_pointee_type(param_var.type).kind == cli.TypeKind.ENUM:
                 for def_curs in param_var.walk_preorder():
                     if def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
@@ -64,13 +65,19 @@ class Context(BaseContext):
                     cli.CursorKind.NULL_STMT,
                     cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                 ]:
+                    kind = def_curs.kind
                     if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
                         val = 'NULL'
                     else:
                         val = next(def_curs.get_tokens(), None)
                         if val:
                             val = val.spelling
-            return val
+                elif def_curs.kind == cli.CursorKind.CALL_EXPR:
+                    val = ''.join([token.spelling for token in def_curs.get_tokens() if token.spelling != '='])
+                    kind = cli.CursorKind.CALL_EXPR
+                    # value is retrieved break to not override it
+                    break
+            return kind, val
 
         # for function templates Cursor.get_arguments returns an empty array,
         # using Type.argument_types instead
@@ -83,11 +90,11 @@ class Context(BaseContext):
                 _args.append(arg_params)
         else:
             for arg_c in self.node.clang_cursor.get_arguments():
-                def_val = get_default(arg_c)
+                kind, val = get_default(arg_c)
                 arg_params = types.SimpleNamespace(name=arg_c.spelling,
                                                    type=arg_c.type,
                                                    cursor=arg_c,
-                                                   default=def_val)
+                                                   default=types.SimpleNamespace(kind=kind, value=val))
                 _args.append(arg_params)
 
         return _args

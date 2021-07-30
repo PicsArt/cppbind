@@ -15,9 +15,10 @@ from iegen.common import YAML_CONFIG_TEMPLATE_PATH
 
 
 class DefaultValueKind(enum.IntEnum):
-    OBJECT = 1
+    CALL_EXPR = 1
     ENUM = 2
-    PRIMITIVE = 3
+    LITERAL = 3
+    NULL_PTR = 4
 
 
 def load_from_paths(loader, path_name, default_dirs):

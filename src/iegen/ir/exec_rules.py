@@ -48,12 +48,6 @@ class Context(BaseContext):
             assert param_var.kind == cli.CursorKind.PARM_DECL
             val = None
             kind = None
-            if cutil.get_pointee_type(param_var.type).kind == cli.TypeKind.ENUM:
-                for def_curs in param_var.walk_preorder():
-                    if def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
-                        for token in def_curs.get_tokens():
-                            if token.cursor.kind == cli.CursorKind.DECL_REF_EXPR and token.kind != cli.TokenKind.PUNCTUATION:
-                                return DefaultValueKind.ENUM, token.spelling
             for def_curs in param_var.walk_preorder():
                 if def_curs.kind in [
                     cli.CursorKind.INTEGER_LITERAL,
@@ -61,26 +55,33 @@ class Context(BaseContext):
                     cli.CursorKind.IMAGINARY_LITERAL,
                     cli.CursorKind.STRING_LITERAL,
                     cli.CursorKind.CHARACTER_LITERAL,
-                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
-                    cli.CursorKind.GNU_NULL_EXPR,
-                    cli.CursorKind.NULL_STMT,
                     cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                 ]:
-                    kind = DefaultValueKind.PRIMITIVE
-                    if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
-                        val = 'NULL'
-                    else:
-                        val = next(def_curs.get_tokens(), None)
-                        if val:
-                            val = val.spelling
+                    kind = DefaultValueKind.LITERAL
+                    val = next(def_curs.get_tokens(), None)
+                    if val:
+                        val = val.spelling
+                elif def_curs.kind in [
+                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
+                    cli.CursorKind.GNU_NULL_EXPR,
+                    cli.CursorKind.NULL_STMT]:
+                    val = 'nullptr'
+                    kind = DefaultValueKind.NULL_PTR
+                elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
+                    val = ''.join([token.spelling for token in def_curs.get_tokens()])
+                    kind = DefaultValueKind.ENUM
                 elif def_curs.kind == cli.CursorKind.CALL_EXPR:
+                    kind = DefaultValueKind.CALL_EXPR
                     tokens = list(def_curs.get_tokens())
                     val = ''.join([token.spelling for token in tokens if token.spelling != '='])
-                    if len(tokens) == 1 and tokens[0].kind == cli.TokenKind.LITERAL:
-                        # std::string case
-                        kind = DefaultValueKind.PRIMITIVE
-                    else:
-                        kind = DefaultValueKind.OBJECT
+
+                    if len(tokens) == 1:
+                        if tokens[0].kind == cli.TokenKind.LITERAL:
+                            # std::string case
+                            kind = DefaultValueKind.LITERAL
+                        elif val == 'nullptr':
+                            # std::shared_ptr case
+                            kind = DefaultValueKind.NULL_PTR
                     # value is retrieved break to not override it
                     break
             return kind, val

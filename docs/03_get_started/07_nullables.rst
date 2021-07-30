@@ -1,5 +1,8 @@
+Nullable and Default Values
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Nullable Types
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 Let's take a look at the following example.
 
@@ -38,18 +41,14 @@ Now let's take a look at generated wrappers.
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
            :language: kotlin
-           :start-after: [nullables-usage]
-           :end-before: [nullables-usage]
 
     .. tab:: python
 
         For python nullable arguments and return values are marked as Optional.
         And as for python everything is nullable iegen does additional checks to not allow passing nullable values where non nulls are expected.
 
-        .. literalinclude:: /../examples/primitives/python/src/nullables/nullable_utils_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
             :language: py
-            :start-after: [nullables-usage]
-            :end-before: [nullables-usage]
 
     .. tab:: swift
 
@@ -58,8 +57,6 @@ Now let's take a look at generated wrappers.
 
         .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
            :language: swift
-           :start-after: [nullables-usage]
-           :end-before: [nullables-usage]
 
 Now let's see some usage examples for generated wrappers.
 
@@ -68,17 +65,81 @@ Now let's see some usage examples for generated wrappers.
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/main.kt
            :language: kotlin
+           :start-after: [nullables-usage]
+           :end-before: [nullables-usage]
 
     .. tab:: python
 
         As you can see here `ValueError` is thrown when None is passed but expected value is not Optional.
         The same is for return values.
 
-        .. literalinclude:: /../examples/primitives/python/src/nullables/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/main.py
             :language: py
+            :start-after: [nullables-usage]
+            :end-before: [nullables-usage]
 
     .. tab:: swift
 
         .. literalinclude:: /../examples/primitives/swift/src/nullables/main.swift
-           :language: swift
+            :language: swift
+            :start-after: [nullables-usage]
+            :end-before: [nullables-usage]
+
+Default Values
+~~~~~~~~~~~~~~
+
+Let's take a look at the following example.
+
+.. literalinclude:: /../examples/primitives/cxx/optionals/optionals.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+In this example all methods are getting optional values of different types and returning them.
+Default values are supported in the following cases:
+* For primitive types e.g. int, long, char etc.
+* For char*, std::string.
+* For enums.
+* If the default value is **nullptr** or **NULL**.
+
+These are the cases supported for all languages.
+
+Callable expressions(for example **Task("MyTask")**) are supported only for python. Note that in this case the default value in generated
+python api will be **None**. But under the hood the actual default value will be used.
+
+Let's now see the generated bindings:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/optionals/optionals.kt
+           :language: kotlin
+
+    .. tab:: python
+
+        Notice that the default value for **optional_by_val_with_default_complex_value** and **optional_ref_with_default_complex_value** is **None**.
+        But if user does not specify a value for task argument then the default value from the original code i.e. **Task("MyTask")** will be used.
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/optionals/optionals_pygen.py
+            :language: py
+
+And here's the usage:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/optionals/main.kt
+           :language: kotlin
+           :start-after: [optionals-usage]
+           :end-before: [optionals-usage]
+
+    .. tab:: python
+
+        As we can see here we did not pass anything to methods **optional_ref_with_default_complex_value** and
+        **optional_by_val_with_default_complex_value** but the default Task("MyTask") is returned.
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/optionals/main.py
+            :language: py
+            :start-after: [optionals-usage]
+            :end-before: [optionals-usage]
 

@@ -10,6 +10,7 @@
 
 
 namespace iegen::example {
+// [example]
 // forward declaration
 class Project;
 
@@ -172,6 +173,7 @@ public:
 	}
 
 };
+// [example]
 }
 
 #endif

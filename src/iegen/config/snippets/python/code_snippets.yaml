@@ -374,10 +374,10 @@ constructor:
                                        {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                        {%- if arg.default -%}
-                                       {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                       {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
                                        {%- else -%}
-                                       {%- if arg.default in ['nullptr', 'NULL'] or arg.default_is_obj %} = None
-                                       {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                       {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                       {%- else %} = None
                                        {%- endif %}
                                        {%- endif %}
                                        {%- endif -%}
@@ -395,13 +395,7 @@ constructor:
                                                                                     {%- set comma = joiner(', ') -%}
                                                                                     {%- for arg in args -%}
                                                                                     {{comma()}}py::arg("{{arg.name|to_snake_case}}")
-                                                                                    {%- if arg.default -%}
-                                                                                    {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
-                                                                                    {%- else -%}
-                                                                                    {%- if arg.default in ['nullptr', 'NULL'] %} = nullptr
-                                                                                    {%- else %} = {{arg.default}}
-                                                                                    {%- endif -%}
-                                                                                    {%- endif -%}
+                                                                                    {%- if arg.default %} = {{arg.default}}
                                                                                     {%- endif -%}
                                                                                     {%- endfor -%});
 
@@ -427,10 +421,10 @@ function:
                                                           {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                                           {%- if arg.default -%}
-                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default}}
+                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
                                                           {%- else -%}
-                                                          {%- if arg.default in ['nullptr', 'NULL'] or arg.default_is_obj %} = None
-                                                          {%- else %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                                          {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                                          {%- else %} = None
                                                           {%- endif %}
                                                           {%- endif %}
                                                           {%- endif -%}
@@ -462,13 +456,7 @@ function:
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}py::arg("{{arg.name|to_snake_case}}")
-      {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.pointee_type.spelling}}::{{arg.default}}
-      {%- else -%}
-      {%- if arg.default in ['nullptr', 'NULL'] %} = nullptr
-      {%- else %} = {{arg.default}}
-      {%- endif -%}
-      {%- endif -%}
+      {%- if arg.default %} = {{arg.default}}
       {%- endif -%}
       {%- endfor -%});
 

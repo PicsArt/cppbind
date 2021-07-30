@@ -13,7 +13,7 @@
 #define IEGEN_BASE_OBJECT_HPP
 
 #include <memory>
-#include<string>
+#include <string>
 
 namespace iegen {
 
@@ -30,12 +30,22 @@ public:
     virtual ~Object() = default;
 
     /**
-     * String representation for mainly debug porpoises
+     * String representation for mainly debug purposes
      * @return class name and object address
      * __API__
      * action: gen_method
      * throws: no_throw
      * python.name: __str__
+     */
+    virtual std::string toReprString() const;
+
+    /**
+     * String representation for user readability
+     * @return result of toReprString by default
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * python.name: __repr__
      */
     virtual std::string toString() const;
 

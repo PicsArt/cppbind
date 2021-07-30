@@ -11,6 +11,7 @@ dir_vars:
 vars: |
   {%- set out_prj_dir = "." -%}
   out_prj_dir: {{out_prj_dir}}
+  cxx_base_out_dir: {{path.join(out_prj_dir, "cxx/extra")}}
   src_glob:
     - cxx/**/*.h*
   include_dirs:

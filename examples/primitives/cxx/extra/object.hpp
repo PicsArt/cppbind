@@ -33,7 +33,7 @@ public:
      * String representation for mainly debug purposes
      * @return class name and object address
      * __API__
-     * action: gen_method
+     * python.action: gen_method
      * throws: no_throw
      * python.name: __str__
      */

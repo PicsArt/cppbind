@@ -150,6 +150,7 @@ for python. Notice that the name is snake cased or camel cased depending on the 
 The API for this getter could also be written in the following way
 
 .. code-block:: yaml
+
      T:
        - type: iegen::example::Apple
          name: applesWithPineapples
@@ -171,7 +172,7 @@ Let's see the generated APIs for the target languages.
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/fruits.py
+        .. literalinclude:: /../examples/primitives/python/src/getters/fruits_pygen.py
            :language: py
 
 And the usage examples

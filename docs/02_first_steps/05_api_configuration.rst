@@ -46,7 +46,7 @@ Everything above __API__ tag is considered as a pure comment.
 
 Let's now go through the list of attributes.
 
-.. literalinclude:: /../src/iegen/config/attributes.yaml
+.. literalinclude:: /../src/iegen/config/variable_definitions.yaml
    :language: yaml
 
 * **file** - File name of the generated file. If not specified then the original file name will be used.

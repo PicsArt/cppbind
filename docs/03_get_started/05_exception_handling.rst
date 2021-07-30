@@ -1,0 +1,123 @@
+Exception handling
+^^^^^^^^^^^^^^^^^^
+
+We support exception handling by catching thrown exception object in source language and rethrowing it in target language.
+User has to mention the list of possible thrown exception classes for each method. For this purpose we have **throws** variable,
+which must contain throwable exceptions. The definition of that list variable looks like:
+
+.. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
+    :language: cpp
+    :start-after: [throw-example]
+    :end-before: [throw-example]
+
+**throws** variable is mandatory for methods and functions (also for getters and setters). If a method doesn't throw
+any exception, user must set the value of parameter to special **no_throw** value. This is made as a requirement to ensure
+that the user hasn't forgotten about throw ability of method. The example of empty exception list looks like:
+
+.. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
+    :language: cpp
+    :start-after: [no-throw-example]
+    :end-before: [no-throw-example]
+
+.. note::
+    The order of exception classes in exception list is important. We preserve initially defined order when catching/rethrowing
+    exceptions, so in case of hierarchical connections between some of classes from the list, user need to define child classes before
+    parent ones. Otherwise child class exception maybe caught by parent and it would lead to inconsistencies.
+
+.. note::
+    The exception list defined for swift getters/setters is ignored, since the language doesn't let us to throw an exception
+    from gettter/setter. So user need only to set **throws** variable to **no_throw** value.
+
+In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
+In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions
+binding for target language. We define binding rules for std::exception classes hierarchy and iegen tool generates wrappers for us.
+We define rules in yaml config file, which looks like:
+
+.. literalinclude:: /../src/iegen/config/std_exc/std_exc_api.yaml
+    :language: yaml
+    :end-before: "std::logic_error"
+
+User defined exception classes can be derived from std:exception hierarchy. In this case the class is automatically throwable in
+target language. In case the user wants a class not to be derived from std::exception, but to be throwable in target language,
+**is_exception** variable must be set to **True** (default value is **False**).
+
+.. note::
+    User defined exception classes must have copy constructor, since we copy exception object before rethrowing it in
+    target language. We need this since original exception object is being deleted after its lifetime is ended.
+
+In case we catch an exception not from user defined list, we report unexpected exception and call uncaught exception handler callback.
+We define exception utility package which includes **ExceptionHandler** class to handle uncaught exception case.
+Default handler aborts program execution immediately, but we give the user API to set his own callback, which
+will be called after unhandled exception is detected. The mentioned package looks like:
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../src/iegen/config/std_helpers/kotlin/exceptionUtils.kt
+                :language: kotlin
+
+        .. tab:: swift
+
+            .. literalinclude:: /../src/iegen/config/std_helpers/swift/exceptionUtils.swift
+                :language: swift
+
+Also we always catch std::exception before catching all exceptions to have more informative error message when exception
+class is derived from std::exception.
+
+Let's have a look to generated wrapper codes:
+
+Wrapper codes when **throws** exception list is not empty:
+
+.. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp
+                :language: cpp
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
+                :language: swift
+
+        .. tab:: python
+            .. note::
+                For generating python wrappers we use **pybind** tool, which already has support for exception handling.
+                Pybind translates c++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
+                Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
+                on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
+                is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement
+                keeps API annotations style convenient between all target languages.
+
+Wrapper codes when exception list is empty (throws=True):
+
+.. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/wrappers/com/examples/exceptions/no_throw_exceptions.cpp
+                :language: cpp
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
+                :language: swift
+
+.. note::
+    For kotlin we rethrow caught exception from C wrapper via JNI special functions. That's why in example it's
+    shown C code.
+
+After generating wrappers for target language we can call methods which can throw an exception, and test results with catch blocks:
+
+.. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/main.kt
+                :language: kotlin
+                :start-after: [exceptions-usage]
+                :end-before: [exceptions-usage]
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/exceptions/main.swift
+                :language: swift
+                :start-after: [exceptions-usage]
+                :end-before: [exceptions-usage]

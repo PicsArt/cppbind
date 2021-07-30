@@ -6,6 +6,7 @@ import types
 import clang.cindex as cli
 import iegen
 import iegen.converter
+from iegen.utils import DefaultValueKind
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.error import Error
@@ -115,12 +116,12 @@ def make_func_context(ctx):
                 default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.nullable_arg or arg.default in ('nullptr', 'NULL'),
+                nullable=arg.name in ctx.nullable_arg or arg.default.value in ('nullptr', 'NULL'),
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
                 is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
-                is_obj=arg.default.kind == cli.CursorKind.CALL_EXPR,
+                default_is_obj=arg.default.kind == DefaultValueKind.OBJECT,
                 pointee_type=cutil.get_pointee_type(arg.type)
             ) for arg in ctx.args
         ]

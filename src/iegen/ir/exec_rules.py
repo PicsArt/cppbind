@@ -10,6 +10,7 @@ import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
+from iegen.utils import DefaultValueKind
 
 
 class BaseContext:
@@ -52,7 +53,7 @@ class Context(BaseContext):
                     if def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
                         for token in def_curs.get_tokens():
                             if token.cursor.kind == cli.CursorKind.DECL_REF_EXPR and token.kind != cli.TokenKind.PUNCTUATION:
-                                return token.spelling
+                                return DefaultValueKind.ENUM, token.spelling
             for def_curs in param_var.walk_preorder():
                 if def_curs.kind in [
                     cli.CursorKind.INTEGER_LITERAL,
@@ -65,7 +66,7 @@ class Context(BaseContext):
                     cli.CursorKind.NULL_STMT,
                     cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                 ]:
-                    kind = def_curs.kind
+                    kind = DefaultValueKind.PRIMITIVE
                     if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
                         val = 'NULL'
                     else:
@@ -73,8 +74,13 @@ class Context(BaseContext):
                         if val:
                             val = val.spelling
                 elif def_curs.kind == cli.CursorKind.CALL_EXPR:
-                    val = ''.join([token.spelling for token in def_curs.get_tokens() if token.spelling != '='])
-                    kind = cli.CursorKind.CALL_EXPR
+                    tokens = list(def_curs.get_tokens())
+                    val = ''.join([token.spelling for token in tokens if token.spelling != '='])
+                    if len(tokens) == 1 and tokens[0].kind == cli.TokenKind.LITERAL:
+                        # std::string case
+                        kind = DefaultValueKind.PRIMITIVE
+                    else:
+                        kind = DefaultValueKind.OBJECT
                     # value is retrieved break to not override it
                     break
             return kind, val
@@ -86,7 +92,7 @@ class Context(BaseContext):
                 arg_params = types.SimpleNamespace(name=f'arg{i}',
                                                    type=arg_type,
                                                    cursor=None,
-                                                   default=None)
+                                                   default=types.SimpleNamespace(kind=None, value=None))
                 _args.append(arg_params)
         else:
             for arg_c in self.node.clang_cursor.get_arguments():

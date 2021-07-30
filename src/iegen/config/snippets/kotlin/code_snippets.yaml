@@ -164,6 +164,7 @@ class:
             {% if not has_non_abstract_base_class %}
             protected var id = _id
             {%- endif %}
+            {%- if has_abstract_base_class or not base_types_converters %}
             {% if base_types_converters -%}
             {{'override '}}
             {%- else %}
@@ -175,6 +176,7 @@ class:
                 }
                 return id;
             }
+            {%- endif -%}
             {%- if head %}
             {{head|string|indent}}
             {%- endif %}

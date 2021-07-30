@@ -4,26 +4,26 @@ rules:
       custom:
         pname: SizeF
       kotlin:
-        type_info: Point2D.Double
+        type_info: Point2D.Float
       jni:
-        type_info: jdoubleArray
+        type_info: jfloatArray
       jdk:
-        type_info: DoubleArray
+        type_info: FloatArray
       jni_to_cxx: |
-        jdouble *elems = env->GetDoubleArrayElements({{name}}, 0);
-        jdouble width_{{name}} = elems[0];
-        jdouble height_{{name}} = elems[1];
-        env->ReleaseDoubleArrayElements({{name}}, elems, 0);
-        {{target_type_name}} {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}});
+        jfloat *elems = env->GetFloatArrayElements({{name}}, 0);
+        jfloat width_{{name}} = elems[0];
+        jfloat height_{{name}} = elems[1];
+        env->ReleaseFloatArrayElements({{name}}, elems, 0);
+        {{target_type_name}} {{target_name}} = {{cxx_pointee_unqualified_name}}(width_{{name}}, height_{{name}});
       cxx_to_jni: |
-        jdouble width_{{name}} = {{name}}.width;
-        jdouble height_{{name}} = {{name}}.height;
-        {{target_type_name}} {{target_name}} = env->NewDoubleArray(2);
-        jdouble carray[] = {width_{{name}}, height_{{name}}};
-        env->SetDoubleArrayRegion({{target_name}}, 0 , 2, carray);
+        jfloat width_{{name}} = {{name}}.width;
+        jfloat height_{{name}} = {{name}}.height;
+        {{target_type_name}} {{target_name}} = env->NewFloatArray(2);
+        jfloat carray[] = {width_{{name}}, height_{{name}}};
+        env->SetFloatArrayRegion({{target_name}}, 0 , 2, carray);
       kotlin_to_jdk: |
-        val width_{{name}} = {{name}}.getX()
-        val height_{{name}} = {{name}}.getY()
+        val width_{{name}} = {{name}}.getX().toFloat()
+        val height_{{name}} = {{name}}.getY().toFloat()
         val {{target_name}} = {{target_type_name}}(2)
         {{target_name}}.set(0, width_{{name}})
         {{target_name}}.set(1, height_{{name}})

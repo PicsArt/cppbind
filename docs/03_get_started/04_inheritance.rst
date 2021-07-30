@@ -43,10 +43,10 @@ Iegen will generate two classes one inherited from the other:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/vehicle_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/vehicle_pygen.py
            :language: py
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/bicycle_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/bicycle_pygen.py
            :language: py
 
     .. tab:: swift
@@ -69,7 +69,7 @@ Now we can use them:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/main.py
            :language: py
            :start-after: [simple-inheritance-usage]
            :end-before: [simple-inheritance-usage]
@@ -138,17 +138,17 @@ Here are the generated wrappers:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/parallelogram_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/parallelogram_pygen.py
            :language: py
 
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/rectangle_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rectangle_pygen.py
            :language: py
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/rhombus_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rhombus_pygen.py
            :language: py
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/square_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/square_pygen.py
            :language: py
 
 
@@ -181,7 +181,7 @@ Now we are ready to use them:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/inheritance/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/main.py
            :language: py
            :start-after: [multi-inheritance-usage]
            :end-before: [multi-inheritance-usage]

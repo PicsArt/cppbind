@@ -10,6 +10,7 @@ import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
 from iegen.utils.clang import extract_pure_comment
+from iegen.utils import DefaultValueKind
 
 
 class BaseContext:
@@ -46,12 +47,7 @@ class Context(BaseContext):
             # todo implementation is odd for now
             assert param_var.kind == cli.CursorKind.PARM_DECL
             val = None
-            if cutil.get_pointee_type(param_var.type).kind == cli.TypeKind.ENUM:
-                for def_curs in param_var.walk_preorder():
-                    if def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
-                        for token in def_curs.get_tokens():
-                            if token.cursor.kind == cli.CursorKind.DECL_REF_EXPR and token.kind != cli.TokenKind.PUNCTUATION:
-                                return token.spelling
+            kind = None
             for def_curs in param_var.walk_preorder():
                 if def_curs.kind in [
                     cli.CursorKind.INTEGER_LITERAL,
@@ -59,18 +55,36 @@ class Context(BaseContext):
                     cli.CursorKind.IMAGINARY_LITERAL,
                     cli.CursorKind.STRING_LITERAL,
                     cli.CursorKind.CHARACTER_LITERAL,
-                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
-                    cli.CursorKind.GNU_NULL_EXPR,
-                    cli.CursorKind.NULL_STMT,
                     cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                 ]:
-                    if def_curs.kind == cli.CursorKind.GNU_NULL_EXPR:
-                        val = 'NULL'
-                    else:
-                        val = next(def_curs.get_tokens(), None)
-                        if val:
-                            val = val.spelling
-            return val
+                    kind = DefaultValueKind.LITERAL
+                    val = next(def_curs.get_tokens(), None)
+                    if val:
+                        val = val.spelling
+                elif def_curs.kind in [
+                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
+                    cli.CursorKind.GNU_NULL_EXPR,
+                    cli.CursorKind.NULL_STMT]:
+                    val = 'nullptr'
+                    kind = DefaultValueKind.NULL_PTR
+                elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
+                    val = ''.join([token.spelling for token in def_curs.get_tokens()])
+                    kind = DefaultValueKind.ENUM
+                elif def_curs.kind == cli.CursorKind.CALL_EXPR:
+                    kind = DefaultValueKind.CALL_EXPR
+                    tokens = list(def_curs.get_tokens())
+                    val = ''.join([token.spelling for token in tokens if token.spelling != '='])
+
+                    if len(tokens) == 1:
+                        if tokens[0].kind == cli.TokenKind.LITERAL:
+                            # std::string case
+                            kind = DefaultValueKind.LITERAL
+                        elif val == 'nullptr':
+                            # std::shared_ptr case
+                            kind = DefaultValueKind.NULL_PTR
+                    # value is retrieved break to not override it
+                    break
+            return kind, val
 
         # for function templates Cursor.get_arguments returns an empty array,
         # using Type.argument_types instead
@@ -79,15 +93,15 @@ class Context(BaseContext):
                 arg_params = types.SimpleNamespace(name=f'arg{i}',
                                                    type=arg_type,
                                                    cursor=None,
-                                                   default=None)
+                                                   default=types.SimpleNamespace(kind=None, value=None))
                 _args.append(arg_params)
         else:
             for arg_c in self.node.clang_cursor.get_arguments():
-                def_val = get_default(arg_c)
+                kind, val = get_default(arg_c)
                 arg_params = types.SimpleNamespace(name=arg_c.spelling,
                                                    type=arg_c.type,
                                                    cursor=arg_c,
-                                                   default=def_val)
+                                                   default=types.SimpleNamespace(kind=kind, value=val))
                 _args.append(arg_params)
 
         return _args

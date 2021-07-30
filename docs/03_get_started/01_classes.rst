@@ -26,7 +26,7 @@ Generated code for the target language looks as follows.
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/simple/task/task_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/task/task_pygen.py
             :language: py
 
     .. tab:: swift
@@ -46,7 +46,7 @@ Now we are able to use them.
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/simple/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/main.py
             :language: python
             :start-after: [task-usage]
             :end-before: [task-usage]
@@ -80,7 +80,7 @@ Here are the generated wrappers:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/simple/project_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/project_pygen.py
             :language: py
 
     .. tab:: swift
@@ -101,7 +101,7 @@ And the usage example:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/simple/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/main.py
             :language: py
             :start-after: [project-usage]
             :end-before: [project-usage]

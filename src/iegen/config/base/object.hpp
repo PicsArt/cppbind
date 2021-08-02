@@ -35,7 +35,7 @@ public:
      * __API__
      * python.action: gen_method
      * throws: no_throw
-     * python.name: __str__
+     * python.name: __repr__
      */
     virtual std::string toReprString() const;
 
@@ -45,7 +45,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
-     * python.name: __repr__
+     * python.name: __str__
      */
     virtual std::string toString() const;
 

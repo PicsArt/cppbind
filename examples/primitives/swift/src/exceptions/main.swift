@@ -14,16 +14,17 @@ do {
 }
 
 do {
-    let n = try MiscExc.returnInteger(do_throw: false)
-    assert(n.value == 1)
+    let _ = try MiscExc.returnInteger(do_throw: true)
+    assert(false)
+} catch is StdOutOfRange {
 } catch {
     assert(false)
 }
 
 do {
-    let _ = try MiscExc.returnInteger(do_throw: true)
-    assert(false)
-} catch is StdOutOfRange {
+    try MiscExc.raiseErrorByType(err_type: "simple_child")
+} catch let err as SimpleChildException {
+    assert(err.errNum() == 100)
 } catch {
     assert(false)
 }
@@ -83,9 +84,8 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "simple_child")
-} catch let err as SimpleChildException {
-    assert(err.errNum() == 100)
+    let n = try MiscExc.returnInteger(do_throw: false)
+    assert(n.value == 1)
 } catch {
     assert(false)
 }

@@ -32,17 +32,18 @@ class ExceptionsApp {
             }
 
             try {
-                val n = MiscExc.returnInteger(false)
-                assert(n.value == 1)
+                MiscExc.returnInteger(true)
+                assert(false)
+            } catch (e: StdOutOfRange) {
+                assert(e.what() == "error")
             } catch (e: Exception) {
                 assert(false)
             }
 
             try {
-                MiscExc.returnInteger(true)
-                assert(false)
-            } catch (e: StdOutOfRange) {
-                assert(e.what() == "error")
+                MiscExc.raiseErrorByType("simple_child")
+            } catch (e: SimpleChildException) {
+                assert(e.errNum() == 100)
             } catch (e: Exception) {
                 assert(false)
             }
@@ -84,17 +85,16 @@ class ExceptionsApp {
             }
 
             try {
-                MiscExc.raiseErrorByType("runtime")
-            } catch (e: StdException) {
-                assert(e.what() == "runtime error")
+                val n = MiscExc.returnInteger(false)
+                assert(n.value == 1)
             } catch (e: Exception) {
                 assert(false)
             }
 
             try {
-                MiscExc.raiseErrorByType("simple_child")
-            } catch (e: SimpleChildException) {
-                assert(e.errNum() == 100)
+                MiscExc.raiseErrorByType("runtime")
+            } catch (e: StdException) {
+                assert(e.what() == "runtime error")
             } catch (e: Exception) {
                 assert(false)
             }

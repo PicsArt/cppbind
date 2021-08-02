@@ -71,8 +71,8 @@ Wrapper codes when **throws** exception list is not empty:
 .. tabs::
         .. tab:: kotlin
 
-            .. literalinclude:: /../examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp
-                :language: cpp
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
+                :language: kotlin
 
         .. tab:: swift
 
@@ -93,17 +93,17 @@ Wrapper codes when exception list is empty (throws=True):
 .. tabs::
         .. tab:: kotlin
 
-            .. literalinclude:: /../examples/primitives/kotlin/wrappers/com/examples/exceptions/no_throw_exceptions.cpp
-                :language: cpp
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
+                :language: kotlin
+
+            .. note::
+                For kotlin we rethrow caught exception from C wrapper via JNI special functions. It means that exception handling section of code is written in C wrapper file.
+                `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C wrapper file.
 
         .. tab:: swift
 
             .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
                 :language: swift
-
-.. note::
-    For kotlin we rethrow caught exception from C wrapper via JNI special functions. That's why in example it's
-    shown C code.
 
 After generating wrappers for target language we can call methods which can throw an exception, and test results with catch blocks:
 
@@ -121,3 +121,7 @@ After generating wrappers for target language we can call methods which can thro
                 :language: swift
                 :start-after: [exceptions-usage]
                 :end-before: [exceptions-usage]
+
+.. note::
+    In the last usage example you can notice that we called custom exception class method when an exception was caught. When custom exception class and its methods have API annotations,
+    we have corresponding bindings and thus we can use class methods.

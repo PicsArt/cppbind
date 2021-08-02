@@ -11,7 +11,7 @@ fun logger(errMsg: String) : Unit {
 
 fun genUncaughtExceptions() {
     ExceptionHandler.setUncaughtExceptionHandler({errMsg -> logger(errMsg)})
-    Exc.noop()
+    NoThrowExc.noop()
     ExceptionHandler.unsetUncaughtExceptionHandler()
 }
 
@@ -24,7 +24,7 @@ class ExceptionsApp {
             // [exceptions-usage]
 
             try {
-                Exc.getByKey(mapOf(1 to 1), 0)
+                ThrowExc.getByKey(mapOf(1 to 1), 0)
             } catch (e: StdOutOfRange) {
                 assert(e.what() == "map::at")
             } catch (e: Exception) {
@@ -32,14 +32,7 @@ class ExceptionsApp {
             }
 
             try {
-                val n = Exc.returnInteger(false)
-                assert(n.value == 1)
-            } catch (e: Exception) {
-                assert(false)
-            }
-
-            try {
-                Exc.returnInteger(true)
+                MiscExc.returnInteger(true)
                 assert(false)
             } catch (e: StdOutOfRange) {
                 assert(e.what() == "error")
@@ -47,10 +40,20 @@ class ExceptionsApp {
                 assert(false)
             }
 
+            try {
+                MiscExc.raiseErrorByType("simple_child")
+            } catch (e: SimpleChildException) {
+                assert(e.errNum() == 100)
+            } catch (e: Exception) {
+                assert(false)
+            }
+
+            // [exceptions-usage]
+
             genUncaughtExceptions()
 
             try {
-                Exc.raiseErrorByType("system")
+                MiscExc.raiseErrorByType("system")
             } catch (e: SystemError) {
                 assert(e.what() == "system error")
             } catch (e: Exception) {
@@ -58,7 +61,7 @@ class ExceptionsApp {
             }
 
             try {
-                Exc.raiseErrorByType("file")
+                MiscExc.raiseErrorByType("file")
             } catch (e: FileError) {
                 assert(e.what() == "file error")
             } catch (e: Exception) {
@@ -66,7 +69,7 @@ class ExceptionsApp {
             }
 
             try {
-               Exc.raiseErrorByType("file")
+               MiscExc.raiseErrorByType("file")
             } catch (e: SystemError) {
                 assert(e.what() == "file error")
             } catch (e: Exception) {
@@ -74,7 +77,7 @@ class ExceptionsApp {
             }
 
             try {
-                Exc.raiseErrorByType("runtime")
+                MiscExc.raiseErrorByType("runtime")
             } catch (e: StdRuntimeError) {
                 assert(e.what() == "runtime error")
             } catch (e: Exception) {
@@ -82,7 +85,14 @@ class ExceptionsApp {
             }
 
             try {
-                Exc.raiseErrorByType("runtime")
+                val n = MiscExc.returnInteger(false)
+                assert(n.value == 1)
+            } catch (e: Exception) {
+                assert(false)
+            }
+
+            try {
+                MiscExc.raiseErrorByType("runtime")
             } catch (e: StdException) {
                 assert(e.what() == "runtime error")
             } catch (e: Exception) {
@@ -90,15 +100,7 @@ class ExceptionsApp {
             }
 
             try {
-                Exc.raiseErrorByType("simple_child")
-            } catch (e: SimpleChildException) {
-                assert(e.errNum() == 100)
-            } catch (e: Exception) {
-                assert(false)
-            }
-
-            try {
-                Exc.raiseErrorByType("simple_base")
+                MiscExc.raiseErrorByType("simple_base")
             } catch (e: SimpleBaseException) {
                 assert(e.errNum() == 200)
             } catch (e: Exception) {
@@ -106,14 +108,12 @@ class ExceptionsApp {
             }
 
             try {
-                Exc.raiseErrorByType("")
+                MiscExc.raiseErrorByType("")
             } catch (e: StdException) {
                 assert(e.what() == "std::exception")
             } catch (e: Exception) {
                 assert(false)
             }
-
-            // [exceptions-usage]
 
        }
     }

@@ -20,7 +20,7 @@ class MiscApp {
             // [external-yaml-usage]
 
             // [size-usage]
-            val sizeInfo = Point2D.Double(10.0, 20.0)
+            val sizeInfo = Point2D.Float(10.0F, 20.0F)
             val resultSizeInfo = SizeUsage.multiplyBy(sizeInfo, 5)
             assert(resultSizeInfo.x == 5 * sizeInfo.x && resultSizeInfo.y == 5 * sizeInfo.y)
             // [size-usage]

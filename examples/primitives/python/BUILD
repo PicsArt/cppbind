@@ -30,7 +30,7 @@ py_library(
 # third party buffer
 pybind_extension(
     name = "buffer",
-    srcs = ["wrappers/misc/buffer.cpp"],
+    srcs = ["wrappers/examples_lib/misc/buffer.cpp"],
     visibility = ["//visibility:public"],
     deps = [
         "//cxx:cc_examples_library",
@@ -39,8 +39,8 @@ pybind_extension(
 
 py_test(
     name = "simple",
-    srcs = ["src/simple/main.py"],
-    main = "src/simple/main.py",
+    srcs = ["src/examples_lib/simple/main.py"],
+    main = "src/examples_lib/simple/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -51,8 +51,8 @@ py_test(
 
 py_test(
     name = "getters",
-    srcs = ["src/getters/main.py"],
-    main = "src/getters/main.py",
+    srcs = ["src/examples_lib/getters/main.py"],
+    main = "src/examples_lib/getters/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -63,8 +63,8 @@ py_test(
 
 py_test(
     name = "functionals",
-    srcs = ["src/functionals/main.py"],
-    main = "src/functionals/main.py",
+    srcs = ["src/examples_lib/functionals/main.py"],
+    main = "src/examples_lib/functionals/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -75,8 +75,8 @@ py_test(
 
 py_test(
     name = "inheritance",
-    srcs = ["src/inheritance/main.py"],
-    main = "src/inheritance/main.py",
+    srcs = ["src/examples_lib/inheritance/main.py"],
+    main = "src/examples_lib/inheritance/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -87,8 +87,8 @@ py_test(
 
 py_test(
     name = "templates",
-    srcs = ["src/templates/main.py"],
-    main = "src/templates/main.py",
+    srcs = ["src/examples_lib/templates/main.py"],
+    main = "src/examples_lib/templates/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -99,8 +99,8 @@ py_test(
 
 py_test(
     name = "containers",
-    srcs = ["src/containers/main.py"],
-    main = "src/containers/main.py",
+    srcs = ["src/examples_lib/containers/main.py"],
+    main = "src/examples_lib/containers/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -111,8 +111,8 @@ py_test(
 
 py_test(
     name = "forward_decl",
-    srcs = ["src/forward_decl/main.py"],
-    main = "src/forward_decl/main.py",
+    srcs = ["src/examples_lib/forward_decl/main.py"],
+    main = "src/examples_lib/forward_decl/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -123,8 +123,8 @@ py_test(
 
 py_test(
     name = "operators",
-    srcs = ["src/operators/main.py"],
-    main = "src/operators/main.py",
+    srcs = ["src/examples_lib/operators/main.py"],
+    main = "src/examples_lib/operators/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -135,8 +135,8 @@ py_test(
 
 py_test(
     name = "overloads",
-    srcs = ["src/overloads/main.py"],
-    main = "src/overloads/main.py",
+    srcs = ["src/examples_lib/overloads/main.py"],
+    main = "src/examples_lib/overloads/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -147,8 +147,8 @@ py_test(
 
 py_test(
     name = "optionals",
-    srcs = ["src/optionals/main.py"],
-    main = "src/optionals/main.py",
+    srcs = ["src/examples_lib/optionals/main.py"],
+    main = "src/examples_lib/optionals/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -159,8 +159,8 @@ py_test(
 
 py_test(
     name = "nullables",
-    srcs = ["src/nullables/main.py"],
-    main = "src/nullables/main.py",
+    srcs = ["src/examples_lib/nullables/main.py"],
+    main = "src/examples_lib/nullables/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -171,8 +171,8 @@ py_test(
 
 py_test(
     name = "shared_ptr",
-    srcs = ["src/shared_ptr/main.py"],
-    main = "src/shared_ptr/main.py",
+    srcs = ["src/examples_lib/shared_ptr/main.py"],
+    main = "src/examples_lib/shared_ptr/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -183,8 +183,8 @@ py_test(
 
 py_test(
     name = "misc",
-    srcs = ["src/misc/main.py"],
-    main = "src/misc/main.py",
+    srcs = ["src/examples_lib/misc/main.py"],
+    main = "src/examples_lib/misc/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -195,8 +195,8 @@ py_test(
 
 py_test(
     name = "extra",
-    srcs = ["src/extra/main.py"],
-    main = "src/extra/main.py",
+    srcs = ["src/examples_lib/extra/main.py"],
+    main = "src/examples_lib/extra/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -207,8 +207,8 @@ py_test(
 
 py_test(
     name = "enums",
-    srcs = ["src/enums/main.py"],
-    main = "src/enums/main.py",
+    srcs = ["src/examples_lib/enums/main.py"],
+    main = "src/examples_lib/enums/main.py",
     python_version = "PY3",
     srcs_version = "PY3",
     visibility = ["//visibility:public"],

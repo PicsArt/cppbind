@@ -11,12 +11,10 @@
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: custom_std_exceptions
  */
 class SystemError : public std::exception {
     public:
@@ -51,19 +49,15 @@ class SystemError : public std::exception {
 };
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: custom_std_exceptions
  */
 class FileError : public SystemError {
     public:
     FileError() {};
-        /**
-    * comments
-    *
+    /**
     * __API__
     * action: gen_constructor
     */
@@ -84,12 +78,10 @@ class FileError : public SystemError {
         std::string message;
 };
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: custom_exceptions
  * is_exception: True
  */
 class SimpleBaseException {
@@ -102,16 +94,14 @@ class SimpleBaseException {
 
     virtual ~SimpleBaseException() = default;
     /**
-    * comments
-    *
     * __API__
     * action: gen_constructor
     */
     SimpleBaseException(const int err_num) :
         err_num(err_num) {};
+
+    // [no-throw-example]
     /**
-    * comments
-    *
     * __API__
     * action: gen_method
     * throws: no_throw
@@ -119,18 +109,17 @@ class SimpleBaseException {
     virtual int errNum() {
         return err_num;
     }
+    // [no-throw-example]
 
     private:
         int err_num;
 };
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: custom_exceptions
  */
 class SimpleChildException : public SimpleBaseException {
     public:
@@ -163,23 +152,58 @@ class SimpleChildException : public SimpleBaseException {
     private:
         int err_num;
 };
-
 }
 
 namespace iegen::exceptions {
-/**
- * comments
- *
+ /**
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: throw_exceptions
+ */
+class ThrowExc {
+    public:
+    // [throw-example]
+    /**
+     * __API__
+     * action: gen_method
+     * throws:
+     *   - std::out_of_range
+     *   - iegen::example::SystemError
+     */
+    static int getByKey(const std::map<int, int>& m, int key) {
+        return m.at(key);
+    }
+    // [throw-example]
+};
+
+ /**
+ * __API__
+ * action: gen_class
+ * package: exceptions
+ * file: no_throw_exceptions
+ */
+class NoThrowExc {
+    public:
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    static void noop() {
+        throw(1);
+    }
+};
+
+/**
+ * __API__
+ * action: gen_class
+ * package: exceptions
+ * file: misc_exceptions
  */
 class Integer {
     public:
     /**
-    * comments
-    *
     * __API__
     * action: gen_constructor
     */
@@ -197,44 +221,16 @@ class Integer {
     private:
         int _n;
 };
- /**
- * comments
- *
+
+/**
  * __API__
  * action: gen_class
  * package: exceptions
- * file: exceptions
+ * file: misc_exceptions
  */
-class Exc {
+class MiscExc {
     public:
-    /**
-     * comments
-     *
-     * __API__
-     * action: gen_method
-     * throws:
-     *   - std::out_of_range
-     *   - std::invalid_argument
-     *   - std::length_error
-     *   - iegen::example::SystemError
-     */
-    static int getByKey(const std::map<int, int>& m, int key) {
-        return m.at(key);
-    }
-    /**
-     * comments
-     *
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     *
-     */
-    static void noop() {;
-        throw(1);
-    }
      /**
-     * comments
-     *
      * __API__
      * action: gen_method
      * throws: std::out_of_range
@@ -248,7 +244,6 @@ class Exc {
         }
      }
     /**
-     * comments
      *
      * __API__
      * action: gen_method

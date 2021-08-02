@@ -2,6 +2,7 @@
 Common utils that can by used from different modules
 """
 import datetime
+import enum
 import errno
 import importlib.util
 import os
@@ -11,6 +12,13 @@ import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
 from iegen.common import YAML_CONFIG_TEMPLATE_PATH
+
+
+class DefaultValueKind(enum.IntEnum):
+    CALL_EXPR = 1
+    ENUM = 2
+    LITERAL = 3
+    NULL_PTR = 4
 
 
 def load_from_paths(loader, path_name, default_dirs):

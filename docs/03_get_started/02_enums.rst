@@ -44,12 +44,12 @@ And the Frame struct using it:
 
         Here is the generated python code for Color:
 
-        .. literalinclude:: /../examples/primitives/python/src/enums/color_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/color_pygen.py
            :language: py
 
         And for Frame:
 
-        .. literalinclude:: /../examples/primitives/python/src/enums/frame_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/frame_pygen.py
            :language: py
 
     .. tab:: swift
@@ -78,7 +78,7 @@ Now we are ready to use them:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/enums/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/main.py
            :language: py
            :start-after: [color-usage]
            :end-before: [color-usage]

@@ -334,11 +334,10 @@ constructor:
       constructor({%- for arg in args -%}
       {{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
-      {%- set target_type = arg.converter.kotlin.target_type_name -%}
-      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default}}
+      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default.split('::')|last}}
       {%- else -%}
-      {%- if arg.default in ['nullptr', 'NULL'] %} = null
-      {%- else %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- if arg.is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- elif arg.is_null_ptr %} = null
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -401,11 +400,10 @@ function:
       {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
-      {%- set target_type = arg.converter.kotlin.target_type_name -%}
-      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default}}
+      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default.split('::')|last}}
       {%- else -%}
-      {%- if arg.default in ['nullptr', 'NULL'] %} = null
-      {%- else %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- if arg.is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- elif arg.is_null_ptr %} = null
       {%- endif %}
       {%- endif %}
       {%- endif -%}

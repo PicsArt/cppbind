@@ -70,12 +70,12 @@ class CXXParser:
             for diagnostic in tu.diagnostics:
                 if diagnostic.severity in (cli.Diagnostic.Error, cli.Diagnostic.Fatal):
                     Error.error(diagnostic.spelling,
-                                file_name,
+                                diagnostic.location.file,
                                 diagnostic.location.line)
                     has_error = True
                 else:
                     Error.warning(diagnostic.spelling,
-                                  file_name,
+                                  diagnostic.location.file,
                                   diagnostic.location.line)
             if not has_error:
                 yield tu

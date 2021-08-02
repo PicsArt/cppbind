@@ -10,6 +10,7 @@
 
 
 namespace iegen::example {
+// [example]
 // forward declaration
 class Project;
 
@@ -37,6 +38,16 @@ public:
      * nullable_return: True
      */
 	Task* optionalPtrWithNullptrDefault(Task* task = nullptr) {
+	    return task;
+	}
+
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * nullable_return: True
+     */
+	Task* optionalPtrWithNullDefault(Task* task = NULL) {
 	    return task;
 	}
 
@@ -143,7 +154,26 @@ public:
 	    return c;
 	}
 
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	const Task& optionalRefWithDefaultComplexValue(const Task& task = Task("MyTask")) {
+	    return task;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	Task optionalByValWithDefaultComplexValue(Task task = Task("MyTask")) {
+	    return task;
+	}
+
 };
+// [example]
 }
 
 #endif

@@ -34,7 +34,7 @@ Now let's see how kotlin wrappers look like:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/templates/template_methods_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/template_methods_pygen.py
            :language: py
 
     .. tab:: swift
@@ -57,7 +57,7 @@ Now we can use them, here are the examples:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/templates/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/main.py
            :language: py
            :start-after: [template-funcs-examples]
            :end-before: [template-funcs-examples]
@@ -95,7 +95,7 @@ Let's take a look at generated wrappers:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/templates/stack_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/stack_pygen.py
            :language: py
 
     .. tab:: swift
@@ -172,7 +172,7 @@ Let's see the generated APIs for the target languages.
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/fruits_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py
            :language: py
 
 And the usage examples
@@ -187,7 +187,7 @@ And the usage examples
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/main.py
            :language: py
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]

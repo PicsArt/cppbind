@@ -21,7 +21,7 @@ Here is the wrapper code:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/overloads/utils_pygen.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/utils_pygen.py
            :language: py
 
     .. tab:: swift
@@ -46,7 +46,7 @@ We are ready to use it:
 
     .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/python/src/overloads/main.py
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/main.py
            :language: py
            :start-after: [overload-usage]
            :end-before: [overload-usage]

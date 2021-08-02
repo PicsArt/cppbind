@@ -630,10 +630,20 @@ class SnippetsEngine:
         env.filters['format_list'] = format_list
 
         def _any(inputs_, attribute=None):
-            return any((d for d in inputs_)) if attribute is None else \
-                any((getattr(d, attribute) for d in inputs_))
+            return any(d for d in inputs_) if attribute is None else \
+                any(getattr(d, attribute) for d in inputs_)
+
+        def any_is(inputs_, value, attribute=None):
+            return any(d == value for d in inputs_) if attribute is None else \
+                any(getattr(d, attribute) == value for d in inputs_)
+
+        def all_are(inputs_, value, attribute=None):
+            return all(d == value for d in inputs_) if attribute is None else \
+                all(getattr(d, attribute) == value for d in inputs_)
 
         env.filters['any'] = _any
+        env.filters['any_is'] = any_is
+        env.filters['all_are'] = all_are
 
         env.filters['to_snake_case'] = make_snake_case
 

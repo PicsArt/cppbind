@@ -113,7 +113,7 @@ class:
                                 {%- if ctx.is_exception and not helper.Exceptions.has_exc_base(ctx) -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
                                 {%- endif %} {
-            {% if not has_non_abstract_base_class and not helper.Exceptions.is_std_custom_exc(ctx)%}
+            {% if base_types_converters|map(attribute='ctx.action')|all_are('gen_interface') and not helper.Exceptions.is_std_custom_exc(ctx)%}
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 

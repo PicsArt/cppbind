@@ -4,9 +4,13 @@
 #include <map>
 #include <string>
 #include <exception>
+
+// [std-exceptions-includes]
 #include <stdexcept>
 #include <new>
 #include <typeinfo>
+// [std-exceptions-includes]
+
 
 namespace iegen::example {
 

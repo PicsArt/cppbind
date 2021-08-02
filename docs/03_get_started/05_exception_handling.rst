@@ -37,6 +37,15 @@ We define rules in yaml config file, which looks like:
     :language: yaml
     :end-before: "std::logic_error"
 
+To be able to generate bindings for standard exception classes, we need clang to parse the standard header files where those classes are defined.
+For that purpose we need to have some mandatory includes in one of compiled files. C++ standard exceptions are defined in 3 different headers, so
+we need to include them:
+
+.. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
+    :language: cpp
+    :start-after: [std-exceptions-includes]
+    :end-before: [std-exceptions-includes]
+
 User defined exception classes can be derived from std:exception hierarchy. In this case the class is automatically throwable in
 target language. In case the user wants a class not to be derived from std::exception, but to be throwable in target language,
 **is_exception** variable must be set to **True** (default value is **False**).

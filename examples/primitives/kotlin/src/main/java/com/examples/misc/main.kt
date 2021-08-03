@@ -19,14 +19,6 @@ class MiscApp {
             assert(color.RED.ordinal == 0)
             // [external-yaml-usage]
 
-            // [object-usage]
-            val objUsage = ObjectUsage()
-            assert(objUsage.className() == "iegen::example::ObjectUsage")
-            assert(objUsage.equals(objUsage) == true)
-            assert(objUsage.bytesCount().toInt() == 8)
-            assert(objUsage.toString().endsWith("iegen::example::ObjectUsage>"))
-            // [object-usage]
-
             // [size-usage]
             val sizeInfo = Point2D.Float(10.0F, 20.0F)
             val resultSizeInfo = SizeUsage.multiplyBy(sizeInfo, 5)

@@ -18,12 +18,3 @@ assert(AdderInt.add(a: 1, b: 2) == 3)
 assert(AdderDouble.add(a: 1.5, b: 2.5) == 4.0)
 assert(color.RED.rawValue == 0)
 // [external-yaml-usage]
-
-
-// [object-usage]
-let objUsage = ObjectUsage()
-assert(objUsage.className() == "iegen::example::ObjectUsage")
-assert(objUsage.equals(other: objUsage) == true)
-assert(objUsage.bytesCount() == 8)
-assert(objUsage.toString().hasSuffix("iegen::example::ObjectUsage>"))
-// [object-usage]

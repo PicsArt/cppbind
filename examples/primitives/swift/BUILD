@@ -97,6 +97,12 @@ swift_test(
 )
 
 swift_test(
+    name = "extra",
+    srcs = ["src/extra/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
     name = "nullables",
     srcs = ["src/nullables/main.swift"],
     deps = [":sw_examples_library"],

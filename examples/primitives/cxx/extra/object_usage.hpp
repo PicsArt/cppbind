@@ -3,14 +3,14 @@
 
 #include "object.hpp"
 
-namespace iegen::example {
+namespace iegen {
 
 /**
  * comments
  *
  * __API__
  * action: gen_class
- * package: misc
+ * package: extra
  */
 class ObjectUsage : public Object {
 public:

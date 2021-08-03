@@ -194,6 +194,18 @@ py_test(
 )
 
 py_test(
+    name = "extra",
+    srcs = ["src/examples_lib/extra/main.py"],
+    main = "src/examples_lib/extra/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
     name = "enums",
     srcs = ["src/examples_lib/enums/main.py"],
     main = "src/examples_lib/enums/main.py",

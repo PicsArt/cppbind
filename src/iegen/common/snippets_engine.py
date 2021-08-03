@@ -3,6 +3,7 @@ This module is responsible for loading, processing code, types, actions snippets
 """
 
 import copy
+import filecmp
 import glob
 import os
 import re
@@ -89,7 +90,8 @@ class FileAction(Action):
                 target_file = self.copy_to_tmpl.render(context)
                 if target_file:
                     os.makedirs(os.path.dirname(target_file), exist_ok=True)
-                    shutil.copyfile(file_name, target_file)
+                    if not os.path.isfile(target_file) or not filecmp.cmp(file_name, target_file):
+                        shutil.copyfile(file_name, target_file)
 
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():

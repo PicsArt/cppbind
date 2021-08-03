@@ -230,7 +230,7 @@ interface:
         {%- if comment %}
         {{helper.make_comment(comment)}}
         {%- endif %}
-        interface I{{name}}{{template_suffix}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
+        interface {{interface_name}}{{template_suffix}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             {%- if not base_types_converters %}
             fun getObjId(): Long
             {%- endif %}
@@ -246,7 +246,7 @@ interface:
         {%-endif %}
         {% do helper.Validator.validate_ancestors(ancestors) %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
-        internal constructor(_id: Long) : I{{name}}{{template_suffix}}, AutoCloseable {
+        internal constructor(_id: Long) : {{interface_name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {
                     System.loadLibrary("{{c_wrapper_lib_name}}");

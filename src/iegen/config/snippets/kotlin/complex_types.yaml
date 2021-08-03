@@ -20,7 +20,7 @@ $Object:
   custom:
     pname: Long
   kotlin:
-    type_info: "{{'I' if type_ctx.action == 'gen_interface'}}{{type_name}}{{template_suffix}}"
+    type_info: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
   jni:
     type_info: jobjectid
   jdk:

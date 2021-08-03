@@ -1,13 +1,15 @@
 """
 Module is responsible for context variables evaluating for current node.
 """
-
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
+import yaml
+
 from iegen.common import JINJA_ENV
 from iegen.common.error import Error
+from iegen.common.yaml_process import UniqueKeyLoader
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
@@ -16,6 +18,7 @@ from iegen.ir.ast import (
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
+from iegen.utils import get_var_real_type
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -97,12 +100,17 @@ class ContextManager:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
-                        if isinstance(new_att_val, str):
+
+                        actual_type = get_var_real_type(properties.get('type'))
+                        if actual_type is str or isinstance(new_att_val, str) or \
+                                (actual_type and not isinstance(new_att_val, actual_type)):
                             try:
                                 new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
                             except JinjaUndefinedError as err:
                                 Error.critical(
                                     f"Jinja evaluation error in attributes definition file: {err}")
+                        if actual_type and actual_type is not str and not isinstance(new_att_val, actual_type):
+                            new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:

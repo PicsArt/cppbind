@@ -137,3 +137,19 @@ def copy_yaml_config_template():
     Copies iegen yaml config template file containing default values into current directory.
     """
     shutil.copy(YAML_CONFIG_TEMPLATE_PATH, os.getcwd())
+
+
+def get_var_real_type(type_name):
+    """
+    Returns real type of variable using 'type' parameter of variable property
+    """
+    if type_name == 'bool':
+        return bool
+    if type_name == 'dict':
+        return dict
+    if type_name == 'array':
+        return list
+    if type_name == 'str':
+        return str
+
+    return None

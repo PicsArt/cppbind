@@ -237,7 +237,8 @@ class MiscExc {
      /**
      * __API__
      * action: gen_method
-     * throws: std::out_of_range
+     * throws:
+     *   - std::out_of_range
      */
      static Integer* returnInteger(bool do_throw) {
         if (do_throw) {

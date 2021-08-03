@@ -55,7 +55,7 @@ var_def:
       default:
         - -D__ANDROID__
       allowed_on: [ root ]
-      array: true
+      type: array
 
 rules:
   kotlin.code_snippets:

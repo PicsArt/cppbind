@@ -150,7 +150,7 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            array = self.var_def[attr].get('array', False)
+            array = self.var_def[attr].get('type') == 'array'
             value = self.parse_attr(attr, value)
 
             if array:

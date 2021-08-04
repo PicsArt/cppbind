@@ -143,13 +143,6 @@ def get_var_real_type(type_name):
     """
     Returns real type of variable using 'type' parameter of variable property
     """
-    if type_name == 'bool':
-        return bool
-    if type_name == 'dict':
-        return dict
-    if type_name == 'array':
-        return list
-    if type_name == 'str':
-        return str
-
-    return None
+    if type_name is None:
+        return None
+    return eval(type_name.value)

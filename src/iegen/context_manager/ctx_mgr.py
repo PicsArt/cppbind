@@ -101,16 +101,20 @@ class ContextManager:
                         new_att_val = ContextManager.get_attr_default_value(
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
 
-                        actual_type = get_var_real_type(properties.get('type'))
-                        if actual_type is str or isinstance(new_att_val, str) or \
-                                (actual_type and not isinstance(new_att_val, actual_type)):
-                            try:
-                                new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
-                            except JinjaUndefinedError as err:
-                                Error.critical(
-                                    f"Jinja evaluation error in attributes definition file: {err}")
-                        if actual_type and actual_type is not str and not isinstance(new_att_val, actual_type):
-                            new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
+                        # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
+                        actual_type = get_var_real_type(properties.get('type')) or type(new_att_val)
+                        # if 'type' is not defined and default value is null, actual_type still can be None
+                        if actual_type:
+                            # we evaluate jinja expression when type is str, or when we have type mismatch
+                            if actual_type is str or not isinstance(new_att_val, actual_type):
+                                try:
+                                    new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
+                                except JinjaUndefinedError as err:
+                                    Error.critical(
+                                        f"Jinja evaluation error in attributes definition file: {err}")
+                                # we load evaluated result to yaml we have type mismatch but type is not str
+                                if actual_type is not str:
+                                    new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:

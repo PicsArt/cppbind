@@ -20,31 +20,31 @@ package:
 
 name:
   inheritable: false
-  type: string
+  type: str
   default: '{{_object_name}}'
   allowed_on: [ cxx, file_system ]
 
 interface_name:
   inheritable: false
-  type: string
+  type: str
   default: 'I{{_object_name}}'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:
   inheritable: false
-  type: array
+  type: list
   default: [ ]
   allowed_on: [ dir, file, class, class_template, struct, struct_template, enum ]
 
 code_fragment:
   inheritable: false
-  type: array
+  type: list
   default: []
   allowed_on: [ dir, file, enum ]
 
 include_cxx:
   inheritable: false
-  type: array
+  type: list
   default: [ ]
   allowed_on: [ class, class_template, struct, struct_template ]
 
@@ -74,13 +74,13 @@ is_exception:
 
 throws:
   inheritable: false
-  type: array
+  type: list
   allowed_on: [ function, function_template, cxx_method ]
   required_on: [ function, function_template, cxx_method ]
 
 bases_list:
   inheritable: false
-  type: array
+  type: list
   default: [ ]
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
@@ -93,7 +93,7 @@ nullable_return:
 nullable_arg:
   inheritable: false
   default: [ ]
-  type: array
+  type: list
   allowed_on: [ cxx_method, constructor, function, function_template ]
 
 project_dir:
@@ -108,7 +108,7 @@ project_link:
 
 comment_del_regex:
   inheritable: true
-  type: array
+  type: list
   default:
     - '\s*\\internal([\s\S]*?)\\endinternal\s*'
     - '\s*\\internal[\s\S]*'
@@ -238,24 +238,24 @@ clang_args:
   inheritable: false
   default: []
   allowed_on: [ root ]
-  type: array
+  type: list
 
 src_glob:
   inheritable: false
   default:
     - ./examples/example_cxx/**/*.h*
   allowed_on: [ root ]
-  type: array
+  type: list
 
 src_exclude_glob:
   inheritable: false
   default: [ ]
   allowed_on: [ root ]
-  type: array
+  type: list
 
 include_dirs:
   inheritable: false
   default:
     - .
   allowed_on: [ root ]
-  type: array
+  type: list

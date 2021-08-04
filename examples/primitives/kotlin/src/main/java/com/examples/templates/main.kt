@@ -51,7 +51,7 @@ assert(pairRootPrj.second.title == prj1.title)
 val path = "/path/to/root/"
 val name = "root_name"
 val root = Root(path)
-val addressableRoot = AddressableRoot(root, name)
+val addressableRoot = Addressable_implRoot(root, name)
 assert(addressableRoot.absPath() == path + name)
 val component = Component(root, name)
 assert(component.absPath() == path + name)

@@ -27,7 +27,15 @@ name:
 interface_name:
   inheritable: false
   type: string
-  default: 'I{{_object_name}}'
+  default:
+    kotlin: 'I{{_object_name}}'
+    swift: '{{_object_name}}'
+  allowed_on: [ class, class_template, struct, struct_template ]
+
+interface_class_name:
+  inheritable: false
+  type: string
+  default: '{{_object_name}}_impl'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:
@@ -223,7 +231,6 @@ pybind_module:
   inheritable: true
   default:
     python: example_lib
-    else: null
   allowed_on: [ root ]
 
 c_wrapper_lib_name:
@@ -231,7 +238,6 @@ c_wrapper_lib_name:
   default:
     swift: CWrapper
     kotlin: wrapper_jni
-    else: null
   allowed_on: [ root, file_system ]
 
 clang_args:

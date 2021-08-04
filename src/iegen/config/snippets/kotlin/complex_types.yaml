@@ -68,9 +68,9 @@ $Object:
     val {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.getObjId(){{' ?: 0L' if nullable is defined and nullable}}
   jdk_to_kotlin: |
     {%- if nullable is defined and nullable -%}
-    val {{target_name}} = if ({{name}} == 0L) null else {{target_type_name[1:] if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
+    val {{target_name}} = if ({{name}} == 0L) null else {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
     {%- else -%}
-    val {{target_name}} = {{target_type_name[1:] if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
+    val {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
     {%- endif -%}
 
 $Enum:

@@ -12,6 +12,7 @@ import sys
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
 from iegen.common import YAML_CONFIG_TEMPLATE_PATH
+from iegen.common.error import Error
 
 
 class DefaultValueKind(enum.IntEnum):
@@ -145,4 +146,20 @@ def get_var_real_type(type_name):
     """
     if type_name is None:
         return None
-    return eval(type_name.value)
+
+    primitive_types = [int, float, str, bool, list, tuple, set, dict]
+
+    try:
+        res = eval(type_name.value)
+    except (NameError, SyntaxError, TypeError) as err:
+        Error.critical(f"'{type_name.value}' cannot be used as a value for 'type' "
+                       f"parameter since it's not python primitive type: {err}",
+                       type_name.file,
+                       type_name.line_number)
+
+    if res not in primitive_types:
+        Error.critical(f"'{res}' cannot be used as a value for 'type' parameter since it's not python primitive type",
+                       type_name.file,
+                       type_name.line_number)
+
+    return res

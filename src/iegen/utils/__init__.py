@@ -147,8 +147,6 @@ def get_var_real_type(type_name):
     if type_name is None:
         return None
 
-    primitive_types = [int, float, str, bool, list, tuple, set, dict]
-
     try:
         res = eval(type_name.value)
     except (NameError, SyntaxError, TypeError) as err:
@@ -157,7 +155,7 @@ def get_var_real_type(type_name):
                        type_name.file,
                        type_name.line_number)
 
-    if res not in primitive_types:
+    if not isinstance(res, type):
         Error.critical(f"'{res}' cannot be used as a value for 'type' parameter since it's not python primitive type",
                        type_name.file,
                        type_name.line_number)

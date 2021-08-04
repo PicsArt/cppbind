@@ -180,11 +180,12 @@ class CXXIEGIRBuilder:
         Update internal variables depending current node type.
         """
         if node.type == NodeType.ROOT_NODE:
-            sys_vars = {'path': os.path}
+            sys_vars = {'path': os.path, 'getenv': os.getenv}
         else:
             sys_vars = {
                 '_output_modification_time': OUTPUT_MODIFICATION_KEY,
                 'path': os.path,
+                'getenv': os.getenv,
                 '_current_working_dir': os.getcwd(),
                 '_pure_comment': '',
                 '_line_number': node.line_number,

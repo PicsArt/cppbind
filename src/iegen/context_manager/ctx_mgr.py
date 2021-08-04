@@ -6,7 +6,6 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
-from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
@@ -16,6 +15,7 @@ from iegen.ir.ast import (
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
+from iegen.utils import JINJA2_ENV
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -99,7 +99,7 @@ class ContextManager:
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
                         if isinstance(new_att_val, str):
                             try:
-                                new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
+                                new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
                             except JinjaUndefinedError as err:
                                 Error.critical(
                                     f"Jinja evaluation error in attributes definition file: {err}")

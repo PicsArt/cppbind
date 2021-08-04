@@ -12,10 +12,10 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 import yaml
 
 from iegen import default_config
-from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader, yaml_info_struct_to_dict
 from iegen.ir.ast import Node
+from iegen.utils import JINJA2_ENV
 from iegen.utils.clang import extract_pure_comment
 
 
@@ -53,7 +53,7 @@ class APIParser:
         """
         if api_section is None:
             return None, OrderedDict()
-        api_section = JINJA_ENV.from_string(api_section).render(ctx)
+        api_section = JINJA2_ENV.from_string(api_section).render(ctx)
         skip_regex = r'^[\s*/]*$'
 
         lines = api_section.splitlines()
@@ -225,8 +225,8 @@ class APIParser:
 
         # if the whole section is pure string, we just need to eval it
         if attrs.is_of_type(str):
-            return yaml.load(JINJA_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
+            return yaml.load(JINJA2_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
         # if the section is not a string, i.e. values can contain jinja expressions,
         # we need to dump it to the string, then evaluate it.
-        return yaml.load(JINJA_ENV.from_string(yaml.dump(
+        return yaml.load(JINJA2_ENV.from_string(yaml.dump(
             yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)

@@ -6,24 +6,21 @@ import copy
 import filecmp
 import glob
 import os
-import re
 import shutil
 
 from collections.abc import MutableMapping
 from types import SimpleNamespace
 
-from jinja2 import Environment, BaseLoader, StrictUndefined
-
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import logging
 from iegen import converter
-from iegen.utils import make_camel_case, make_snake_case
+from iegen.common import JINJA_UNIQUE_MARKER
+from iegen.utils import JINJA2_ENV
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
 FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
-JINJA_UNIQUE_MARKER = '~!+marker#@~'
 
 
 class Snippet:
@@ -313,7 +310,7 @@ class SnippetsEngine:
         self.file_infos = {}
         self.code_infos = {}
         self.action_infos = []
-        self._init_jinja_env()
+        self.jinja2_env = JINJA2_ENV
 
     def load(self):
         self._load_actions(self.ctx_desc.get_action_snippets())
@@ -613,36 +610,3 @@ class SnippetsEngine:
                                                   template_choice=template_choice)
 
         return type_info
-
-    def _init_jinja_env(self):
-        env = Environment(loader=BaseLoader(),
-                          undefined=StrictUndefined,
-                          extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
-
-        def path_join(inputs_):
-            return os.path.join(*inputs_)
-
-        env.filters['path_join'] = path_join
-
-        def format_list(inputs_, format_string, arg_name=None):
-            if arg_name is not None:
-                return [format_string.format(**{arg_name: data}) for data in inputs_]
-            return [format_string.format(data) for data in inputs_]
-
-        env.filters['format_list'] = format_list
-
-        env.filters['to_snake_case'] = make_snake_case
-
-        env.filters['to_camel_case'] = make_camel_case
-
-        def join_unique(inputs_):
-            return JINJA_UNIQUE_MARKER.join(inputs_)
-
-        env.filters['join_unique'] = join_unique
-
-        def match_regexp(input_, *patterns):
-            return any(re.match(pattern, input_) for pattern in patterns)
-
-        env.tests['match_regexp'] = match_regexp
-
-        self.jinja2_env = env

@@ -10,8 +10,10 @@ import re
 import shutil
 import sys
 
+from jinja2 import BaseLoader, Environment, StrictUndefined
+
 from iegen import DATETIME_FORMAT, BANNER_LOGO
-from iegen.common import YAML_CONFIG_TEMPLATE_PATH
+from iegen.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 
 
 class DefaultValueKind(enum.IntEnum):
@@ -137,3 +139,44 @@ def copy_yaml_config_template():
     Copies iegen yaml config template file containing default values into current directory.
     """
     shutil.copy(YAML_CONFIG_TEMPLATE_PATH, os.getcwd())
+
+
+def init_jinja_env():
+    """
+    Function with initializes jinja environment with custom filters/tests
+    """
+
+    def path_join(inputs_):
+        return os.path.join(*inputs_)
+
+    def format_list(inputs_, format_string, arg_name=None):
+        if arg_name is not None:
+            return [format_string.format(**{arg_name: data}) for data in inputs_]
+        return [format_string.format(data) for data in inputs_]
+
+    def join_unique(inputs_):
+        return JINJA_UNIQUE_MARKER.join(inputs_)
+
+    def match_regexp(input_, *patterns):
+        return any(re.match(pattern, input_) for pattern in patterns)
+
+    def replace_regex(input_, pattern, repl, count=0):
+        return re.sub(pattern, repl, input_, count)
+
+    env = Environment(loader=BaseLoader(),
+                      undefined=StrictUndefined,
+                      extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
+
+    env.filters['path_join'] = path_join
+    env.filters['format_list'] = format_list
+    env.filters['to_snake_case'] = make_snake_case
+    env.filters['to_camel_case'] = make_camel_case
+    env.filters['join_unique'] = join_unique
+    env.filters['replace_regex'] = replace_regex
+
+    env.tests['match_regexp'] = match_regexp
+
+    return env
+
+
+JINJA2_ENV = init_jinja_env()

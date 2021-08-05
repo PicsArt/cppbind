@@ -28,14 +28,14 @@ interface_name:
   inheritable: false
   type: string
   default:
-    kotlin: 'I{{_object_name}}'
-    swift: '{{_object_name}}'
+    kotlin: 'I{{name}}'
+    swift: '{{name}}'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 interface_class_name:
   inheritable: false
   type: string
-  default: '{{_object_name}}Impl'
+  default: '{{name}}Impl'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:

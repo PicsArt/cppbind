@@ -53,7 +53,7 @@ class APIParser:
         """
         if api_section is None:
             return None, OrderedDict()
-        api_section = JINJA_ENV.from_string(api_section).render(ctx)
+
         skip_regex = r'^[\s*/]*$'
 
         lines = api_section.splitlines()
@@ -74,7 +74,8 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
             yaml_lines.append(line[yaml_indent_cnt:])
-        yaml_lines = '\n'.join(yaml_lines)
+
+        yaml_lines = JINJA_ENV.from_string('\n'.join(yaml_lines)).render(ctx)
 
         try:
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)

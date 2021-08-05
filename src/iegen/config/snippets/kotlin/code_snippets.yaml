@@ -245,7 +245,7 @@ interface:
         }
         {%-endif %}
         {% do helper.Validator.validate_ancestors(ancestors) %}
-        {{'open ' if is_open}}class {{name}}{{template_suffix}}
+        {{'open ' if is_open}}class {{interface_class_name}}{{template_suffix}}
         internal constructor(_id: Long) : {{interface_name}}{{template_suffix}}, AutoCloseable {
             companion object {
                 init {
@@ -365,7 +365,7 @@ constructor:
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
+      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.interface_class_name if owner_class.action == 'gen_interface' else owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}

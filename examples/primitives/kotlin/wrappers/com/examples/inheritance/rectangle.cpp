@@ -25,7 +25,7 @@ extern "C" JNIEXPORT void Java_com_examples_inheritance_Rectangle_jFinalize(JNIE
     iegen::example::Rectangle* this_object = dynamic_cast<iegen::example::Rectangle*>(baseptr);
     delete this_object;
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_inheritance_Rectangle_jConstructor(JNIEnv* env, jobject obj, jdouble length, jdouble width){
+extern "C" JNIEXPORT jobjectid Java_com_examples_inheritance_RectangleImpl_jConstructor(JNIEnv* env, jobject obj, jdouble length, jdouble width){
     
     
     iegen::example::Parallelogram* baseptr = new iegen::example::Rectangle(length, width);

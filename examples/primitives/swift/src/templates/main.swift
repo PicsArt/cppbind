@@ -49,7 +49,7 @@ assert(pairRootPrj.1.title == prj1.title)
 let path = "/path/to/root/"
 let name = "root_name"
 let root = Root(_path: path)
-let addressableRoot = AddressableRoot(parent: root, name: name)
+let addressableRoot = AddressableImplRoot(parent: root, name: name)
 assert(addressableRoot.absPath() == path + name)
 let component = Component(parent: root, name: name)
 // assert(component is IAddressableRoot)

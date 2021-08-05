@@ -24,7 +24,7 @@ extern "C" JNIEXPORT void Java_com_examples_templates_AddressableRoot_jFinalize(
     auto this_object = *reinterpret_cast<std::shared_ptr<iegen::example::Addressable<iegen::example::Root>>*>(id);
     delete &this_object;
 }
-extern "C" JNIEXPORT jobjectid Java_com_examples_templates_AddressableRoot_jConstructor(JNIEnv* env, jobject obj, jobjectid parent, jstring name){
+extern "C" JNIEXPORT jobjectid Java_com_examples_templates_AddressableImplRoot_jConstructor(JNIEnv* env, jobject obj, jobjectid parent, jstring name){
     
     auto& jni_to_cxx_parent = * reinterpret_cast<iegen::example::Root*>(parent);
     jstring jjni_to_cxx_nameStr = (jstring)name;

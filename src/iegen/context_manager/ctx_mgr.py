@@ -103,7 +103,8 @@ class ContextManager:
                         # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
                         actual_type = get_var_real_type(properties.get('type')) or type(new_att_val)
                         # if 'type' is not defined and default value is null, actual_type still can be None
-                        if actual_type:
+                        # we still check new_att_val since for some languages/platforms it can be null
+                        if actual_type and new_att_val:
                             # we evaluate jinja expression when type is str, or when we have type mismatch
                             if actual_type is str or not isinstance(new_att_val, actual_type):
                                 try:

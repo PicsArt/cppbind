@@ -35,7 +35,7 @@ interface_name:
 interface_class_name:
   inheritable: false
   type: string
-  default: '{{_object_name}}_impl'
+  default: '{{_object_name}}Impl'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 include:

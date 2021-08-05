@@ -6,13 +6,13 @@ assert(bicycle.numberOfSeats == 1)
 // [simple-inheritance-usage]
 
 // [multi-inheritance-usage]
-let rectangle = Rectangle_impl(length: 4.0, width: 2.0)
+let rectangle = RectangleImpl(length: 4.0, width: 2.0)
 assert(rectangle.area == 8.0)
 assert(rectangle.length == 4.0)
 print(rectangle.perimeter())
 assert(rectangle.perimeter() == 12.0)
 
-let rhombus = Rhombus_impl(diagonal1: 5.0, diagonal2: 6.0)
+let rhombus = RhombusImpl(diagonal1: 5.0, diagonal2: 6.0)
 assert(rhombus.area == 15.0)
 
 let square = Square(side: 5.0)

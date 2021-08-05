@@ -47,7 +47,7 @@ include:
 code_fragment:
   inheritable: false
   type: list
-  default: []
+  default: [ ]
   allowed_on: [ dir, file, enum ]
 
 include_cxx:

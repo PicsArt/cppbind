@@ -16,7 +16,7 @@ assert(rectangle.area == 8.0)
 assert(rectangle.length == 4.0)
 assert(rectangle.perimeter() == 12.0)
 
-val rhombus = RhombusImpl(5.0, 6.0)
+val rhombus = RhombusFigureImpl(5.0, 6.0)
 assert(rhombus.area == 15.0)
 
 val square = Square(5.0)

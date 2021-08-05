@@ -53,7 +53,7 @@ class APIParser:
         """
         if api_section is None:
             return None, OrderedDict()
-        api_section = JINJA2_ENV.from_string(api_section).render(ctx)
+
         skip_regex = r'^[\s*/]*$'
 
         lines = api_section.splitlines()
@@ -74,7 +74,8 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
             yaml_lines.append(line[yaml_indent_cnt:])
-        yaml_lines = '\n'.join(yaml_lines)
+
+        yaml_lines = JINJA2_ENV.from_string('\n'.join(yaml_lines)).render(ctx)
 
         try:
             attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
@@ -150,7 +151,7 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            array = self.var_def[attr].get('array', False)
+            array = self.var_def[attr].get('type') == 'list'
             value = self.parse_attr(attr, value)
 
             if array:
@@ -180,7 +181,7 @@ class APIParser:
         """
         Evaluate the value of variable depending on its type.
         """
-        attr_type = self.var_def[attr_name].get('type', None)
+        attr_type = self.var_def[attr_name].get('type')
 
         if isinstance(self.var_def[attr_name].get('default'), bool) or attr_type == 'bool':
             return bool(distutils.util.strtobool(str(attr_value)))
@@ -191,7 +192,7 @@ class APIParser:
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
-                        if not isinstance(attr, dict) or not 'type' in attr:
+                        if not isinstance(attr, dict) or 'type' not in attr:
                             raise Exception(
                                 f"Wrong template variable style: {attr_value}, "
                                 f"template must have mandatory 'type' variable")

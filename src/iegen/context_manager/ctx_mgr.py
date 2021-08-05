@@ -1,12 +1,14 @@
 """
 Module is responsible for context variables evaluating for current node.
 """
-
 from collections import OrderedDict
 from collections.abc import MutableMapping
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
+import yaml
+
 from iegen.common.error import Error
+from iegen.common.yaml_process import UniqueKeyLoader
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
@@ -15,7 +17,7 @@ from iegen.ir.ast import (
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
-from iegen.utils import JINJA2_ENV
+from iegen.utils import get_var_real_type, JINJA2_ENV
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -97,12 +99,21 @@ class ContextManager:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
-                        if isinstance(new_att_val, str):
-                            try:
-                                new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
-                            except JinjaUndefinedError as err:
-                                Error.critical(
-                                    f"Jinja evaluation error in attributes definition file: {err}")
+
+                        # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
+                        actual_type = get_var_real_type(properties.get('type')) or type(new_att_val)
+                        # if 'type' is not defined and default value is null, actual_type still can be None
+                        if actual_type:
+                            # we evaluate jinja expression when type is str, or when we have type mismatch
+                            if actual_type is str or not isinstance(new_att_val, actual_type):
+                                try:
+                                    new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
+                                except JinjaUndefinedError as err:
+                                    Error.critical(
+                                        f"Jinja evaluation error in attributes definition file: {err}")
+                                # we load evaluated result to yaml we have type mismatch but type is not str
+                                if actual_type is not str:
+                                    new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:

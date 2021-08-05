@@ -14,6 +14,7 @@ from jinja2 import BaseLoader, Environment, StrictUndefined
 
 from iegen import DATETIME_FORMAT, BANNER_LOGO
 from iegen.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
+from iegen.common.error import Error
 
 
 class DefaultValueKind(enum.IntEnum):
@@ -139,6 +140,29 @@ def copy_yaml_config_template():
     Copies iegen yaml config template file containing default values into current directory.
     """
     shutil.copy(YAML_CONFIG_TEMPLATE_PATH, os.getcwd())
+
+
+def get_var_real_type(type_name):
+    """
+    Returns real type of variable using 'type' parameter of variable property
+    """
+    if type_name is None:
+        return None
+
+    try:
+        res = eval(type_name.value)
+    except (NameError, SyntaxError, TypeError) as err:
+        Error.critical(f"'{type_name.value}' cannot be used as a value for 'type' "
+                       f"parameter since it's not python primitive type: {err}",
+                       type_name.file,
+                       type_name.line_number)
+
+    if not isinstance(res, type):
+        Error.critical(f"'{res}' cannot be used as a value for 'type' parameter since it's not python primitive type",
+                       type_name.file,
+                       type_name.line_number)
+
+    return res
 
 
 def init_jinja_env():

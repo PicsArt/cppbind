@@ -170,7 +170,6 @@ def test_external_api_parser_positive():
         context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
         try:
             res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
-            print(res)
 
             ordered_res = OrderedDict()
             for key in sorted(res.keys()):
@@ -237,6 +236,7 @@ def test_jinja_attrs(clang_config):
 
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja variable value"
+
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(clang_config):

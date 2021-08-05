@@ -519,7 +519,7 @@ function:
       catch (...) {
             jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Excepiton"));
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
       }
 
       {% if rconverter.jni.target_type_name != 'void' -%}
@@ -767,7 +767,7 @@ getter:
           catch (...) {
               jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Excepiton"));
+              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
           }
       {%- endmacro -%}
       {%- set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}

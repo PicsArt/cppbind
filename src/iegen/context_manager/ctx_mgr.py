@@ -7,7 +7,6 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 import yaml
 
-from iegen.common import JINJA_ENV
 from iegen.common.error import Error
 from iegen.common.yaml_process import UniqueKeyLoader
 from iegen import default_config
@@ -18,7 +17,7 @@ from iegen.ir.ast import (
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
-from iegen.utils import get_var_real_type
+from iegen.utils import get_var_real_type, JINJA2_ENV
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -109,7 +108,7 @@ class ContextManager:
                             # we evaluate jinja expression when type is str, or when we have type mismatch
                             if actual_type is str or not isinstance(new_att_val, actual_type):
                                 try:
-                                    new_att_val = JINJA_ENV.from_string(new_att_val).render(ctx)
+                                    new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
                                 except JinjaUndefinedError as err:
                                     Error.critical(
                                         f"Jinja evaluation error in attributes definition file: {err}")

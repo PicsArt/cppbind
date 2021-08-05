@@ -11,6 +11,7 @@ namespace iegen::example {
  * action: gen_interface
  * shared_ref: False
  * package: inheritance
+ * name: RhombusFigure
  */
 class Rhombus : public virtual Parallelogram {
 public:

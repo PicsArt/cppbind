@@ -24,14 +24,14 @@ $Object:
     let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
   sc_to_swift: |
     {%- if nullable is defined and nullable -%}
-    let {{target_name}}: {{type_name}}{{template_suffix}}?
+    let {{target_name}}: {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}?
     if let {{name}} = {{name}} {
-        {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+        {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
     } else {
         {{target_name}} = nil
     }
     {%- else -%}
-    let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    let {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
     {%- endif -%}
 
 $Enum:

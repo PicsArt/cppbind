@@ -183,7 +183,7 @@ interface:
             {{properties|string|indent}}
             {{body|string|indent}}
         }
-        public class {{name}}{{template_suffix}} : {{interface_name}}{{template_suffix}} {
+        public class {{interface_class_name}}{{template_suffix}} : {{interface_name}}{{template_suffix}} {
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 
@@ -194,7 +194,7 @@ interface:
             }
             deinit {
               if owner {
-                release_{{name}}{{template_suffix}}(cself)
+                release_{{interface_class_name}}{{template_suffix}}(cself)
               }
             }
 
@@ -209,7 +209,7 @@ interface:
         {%- endif %}
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){
+        void release_{{interface_class_name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.shared_ref %}
             delete static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(cself);
             {%- else %}
@@ -219,7 +219,7 @@ interface:
   ch:
     body:
       content: |
-        void release_{{name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself);
+        void release_{{interface_class_name}}{{template_suffix}}({{converter.c.target_type_name}} _Nonnull cself);
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |

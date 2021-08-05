@@ -1,7 +1,7 @@
 from examples_lib.inheritance import (
     Bicycle,
     Rectangle,
-    Rhombus,
+    RhombusFigure,
     Square,
     GeometricFigure,
     MyVehicle
@@ -19,7 +19,7 @@ assert rectangle.area == 8.0
 assert rectangle.length == 4.0
 assert rectangle.perimeter() == 12.0
 
-rhombus = Rhombus(diagonal1=5.0, diagonal2=6.0)
+rhombus = RhombusFigure(diagonal1=5.0, diagonal2=6.0)
 assert rhombus.area == 15.0
 
 square = Square(side=5.0)

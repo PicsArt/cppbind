@@ -63,7 +63,8 @@ def clang_config():
         'clang_args': ['-D__ANDROID__'],
         'include_dirs': ['.'],
         'src_glob': [TEST_CXX_DIR + '/*.h'],
-        'src_exclude_glob': []
+        'src_exclude_glob': [],
+        'extra_headers': []
     }
 
 

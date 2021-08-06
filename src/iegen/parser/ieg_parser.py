@@ -19,6 +19,7 @@ class CXXParser:
     """
     CLANG_DEF_OPTIONS = cli.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES | \
                         cli.TranslationUnit.PARSE_INCOMPLETE
+    EXTRA_INCLUDES_FILE_NAME = "extra_includes.cpp"
 
     def __init__(self, filter_=None):
         self.current_file = None
@@ -30,7 +31,7 @@ class CXXParser:
         """
         return list(self.parse_x())
 
-    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, **kwargs):
+    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, extra_headers, **kwargs):
         """
         Parses cxx files and returns generator of TranslationUnit s
         """
@@ -61,20 +62,34 @@ class CXXParser:
         logging.debug(f"parsing found files: {all_files}")
         logging.debug(f"Clang args: {args}")
 
+        # push extra_headers virtual file name also in list to have corresponding tu for that headers
+        unsaved_files = None
+        if extra_headers:
+            all_files.insert(0, CXXParser.EXTRA_INCLUDES_FILE_NAME)
+            extra_includes = "\n".join(f"#include <{header}>" for header in extra_headers)
+            unsaved_files = [(CXXParser.EXTRA_INCLUDES_FILE_NAME, extra_includes)]
+
         for file_name in all_files:
-            logging.info(f"parsing file {file_name}")
+            if file_name != CXXParser.EXTRA_INCLUDES_FILE_NAME:
+                logging.info(f"parsing file {file_name}")
             self.current_file = file_name
-            tu = index.parse(path=file_name, args=args, options=CXXParser.CLANG_DEF_OPTIONS)
+            tu = index.parse(path=file_name,
+                             args=args,
+                             unsaved_files=unsaved_files,
+                             options=CXXParser.CLANG_DEF_OPTIONS)
 
             has_error = False
             for diagnostic in tu.diagnostics:
+                extra_include_error_msg = "Error in extra includes definition: "
+                diagnostic_error_msg = (extra_include_error_msg if
+                                        file_name == CXXParser.EXTRA_INCLUDES_FILE_NAME else '') + diagnostic.spelling
                 if diagnostic.severity in (cli.Diagnostic.Error, cli.Diagnostic.Fatal):
-                    Error.error(diagnostic.spelling,
+                    Error.error(diagnostic_error_msg,
                                 diagnostic.location.file,
                                 diagnostic.location.line)
                     has_error = True
                 else:
-                    Error.warning(diagnostic.spelling,
+                    Error.warning(diagnostic_error_msg,
                                   diagnostic.location.file,
                                   diagnostic.location.line)
             if not has_error:
@@ -135,6 +150,9 @@ class CXXParser:
 
     @staticmethod
     def __dirs_to_process(tu):
+        if not os.path.isfile(tu.spelling):
+            return []
+
         dirs_to_search = set()
 
         root = tu.spelling

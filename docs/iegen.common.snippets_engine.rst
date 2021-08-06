@@ -25,7 +25,7 @@ iegen.common.snippets\_engine
       ScopeInfo
       Snippet
       SnippetsEngine
-      TargetTypeInof
+      TargetTypeInfo
       TypeConvertorInfo
       TypeInfoCollector
    

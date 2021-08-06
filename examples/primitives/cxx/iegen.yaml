@@ -20,6 +20,10 @@ vars: |
     - cxx/**/*.h*
   include_dirs:
     - .
+  extra_headers:
+    - stdexcept
+    - new
+    - typeinfo
   kotlin.clang_args:
     - -D__ANDROID__
   kotlin.file_postfix: ""

@@ -30,7 +30,7 @@ class CXXParser:
         """
         return list(self.parse_x())
 
-    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, **kwargs):
+    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, extra_headers, **kwargs):
         """
         Parses cxx files and returns generator of TranslationUnit s
         """
@@ -40,6 +40,11 @@ class CXXParser:
         args = ['-x', 'c++', '--std=c++17'] + clang_args + ['-I' + includeDir.strip()
                                                             for includeDir in
                                                             include_dirs]
+
+        if extra_headers:
+            tu = CXXParser.gen_extra_tu(index, extra_headers, args)
+            if tu:
+                yield tu
 
         logging.info("parsing files: {}".format(' '.join(src_glob)))
 
@@ -79,6 +84,16 @@ class CXXParser:
                                   diagnostic.location.line)
             if not has_error:
                 yield tu
+
+    @staticmethod
+    def gen_extra_tu(index, extra_headers, args):
+        extra_includes = "\n".join(f"#include <{header}>" for header in extra_headers)
+
+        tu = index.parse(path="tmp_dummy.cpp",
+                         args=args,
+                         unsaved_files=[("tmp_dummy.cpp", extra_includes)],
+                         options=CXXParser.CLANG_DEF_OPTIONS)
+        return tu
 
     def parse_x(self, **kwargs):
         """
@@ -135,6 +150,9 @@ class CXXParser:
 
     @staticmethod
     def __dirs_to_process(tu):
+        if not os.path.isfile(tu.spelling):
+            return []
+
         dirs_to_search = set()
 
         root = tu.spelling

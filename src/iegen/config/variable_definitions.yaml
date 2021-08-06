@@ -265,3 +265,9 @@ include_dirs:
     - .
   allowed_on: [ root ]
   type: list
+
+extra_headers:
+  inheritable: false
+  default: [ ]
+  allowed_on: [ root ]
+  type: list

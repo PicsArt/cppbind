@@ -18,7 +18,7 @@ iegen.builder.ir\_builder
    .. autosummary::
    
       CXXIEGIRBuilder
-      CXXPrintProcsessor
+      CXXPrintProcessor
    
    
 

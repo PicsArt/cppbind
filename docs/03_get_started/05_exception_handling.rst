@@ -42,14 +42,11 @@ We define rules in yaml config file, which looks like:
     the header files where std exceptions are defined. Those header files are included via **include_cxx** variable (which you can see in above-mentioned example).
     Here are the required includes:
 
-.. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
-    :language: cpp
-    :start-after: [std-exceptions-includes]
-    :end-before: [std-exceptions-includes]
+.. code-block:: cpp
 
-.. note::
-    To be able to generate bindings for standard exception classes, we need clang to parse the standard header files where those classes are defined.
-    Currently for that purpose we need to have above-mentioned includes also in one of the compiled files.
+    #include <stdexcept>
+    #include <new>
+    #include <typeinfo>
 
 User defined exception classes can be derived from std:exception hierarchy. In this case the class is automatically throwable in
 target language. In case the user wants a class not to be derived from std::exception, but to be throwable in target language,

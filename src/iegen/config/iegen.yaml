@@ -4,6 +4,10 @@ vars: |
   src_glob:
     - ./**/*.h*
   src_exclude_glob: []
+  extra_headers:
+    - stdexcept
+    - new
+    - typeinfo
   package_prefix: ""
   include_dirs:
     - .

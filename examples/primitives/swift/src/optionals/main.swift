@@ -16,7 +16,7 @@ assert(op.optionalStringWithDefault() == "abc")
 // // TODO add char converter
 // assert(op.optionalCharWithDefault() == ',')
 assert(op.optionalCharPointerWithDefault() == "def")
-// assert(op.optionalSharedPtrWithNullptrDefault() == nil)
+assert(op.optionalSharedPtrWithNullptrDefault() == nil)
 assert(op.optionalEnumWithDefault() == Color.Red)
 //
 // // non default value assertions

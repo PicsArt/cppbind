@@ -24,14 +24,14 @@ $Object:
     let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
   sc_to_swift: |
     {%- if nullable is defined and nullable -%}
-    let {{target_name}}: {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}?
+    let {{target_name}}: {{type_name}}{{template_suffix}}?
     if let {{name}} = {{name}} {
-        {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+        {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
     } else {
         {{target_name}} = nil
     }
     {%- else -%}
-    let {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
+    let {{target_name}} = {{type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
     {%- endif -%}
 
 $Enum:
@@ -235,15 +235,31 @@ std::shared_ptr:
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    std::shared_ptr<{{pointee}}> {{target_name}};
+    {%- set is_nullable = nullable is defined and nullable %}
+    std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
+    {%- if is_nullable %}
+    if ({{name}}) {
+        auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+        {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    }
+    {%- else %}
     auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
     {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {%- endif %}
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee_base = args_t_bases[0] %}
-    {{target_type_name}} {{target_name}};
+    {%- set is_nullable = nullable is defined and nullable %}
+    {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+    {%- if is_nullable %}
+    if ({{name}}) {
+        std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
+        {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    }
+    {%- else %}
     std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
     {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    {%- endif %}
   swift_to_sc: |
     {{args[0].snippet(name, nullable=nullable)|indent}}
   sc_to_swift: |

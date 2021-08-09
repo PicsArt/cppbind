@@ -294,11 +294,10 @@ std::shared_ptr:
   jni_to_cxx: |
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    std::shared_ptr<{{pointee}}> {{target_name}};
-    {%- if nullable is defined and nullable %}
-    if (!{{name}}) {
-        {{target_name}} = std::shared_ptr<{{pointee}}>(nullptr);
-    } else {
+    {%- set is_nullable = nullable is defined and nullable %}
+    std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
+    {%- if is_nullable%}
+    if ({{name}}) {
         {%- if pointee_base != pointee %}
         auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
         {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
@@ -318,11 +317,10 @@ std::shared_ptr:
     {# TODO: won´t work if arg[0] itself is a template type #}
     {%- set pointee = args[0].cxx_type_name %}
     {%- set pointee_base = args_t_bases[0] %}
-    {{target_type_name}} {{target_name}};
-    {%- if nullable is defined and nullable %}
-    if (!{{name}}) {
-        {{target_name}} = 0;
-    } else {
+    {%- set is_nullable = nullable is defined and nullable %}
+    {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
+    {%- if is_nullable %}
+    if ({{name}}) {
         {%- if pointee_base != pointee %}
         std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{pointee_base}}>({{name}});
         {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));

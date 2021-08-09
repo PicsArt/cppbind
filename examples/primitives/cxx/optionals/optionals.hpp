@@ -130,6 +130,7 @@ public:
     /**
      * \internal
      * TODO add swift action after char support for swift
+     * __API__
      * python.action: gen_method
      * kotlin.action: gen_method
      * throws: no_throw

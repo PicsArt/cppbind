@@ -510,7 +510,6 @@ function:
       {%- endif %}
       {%- if not 'std::exception' in throws %}
       catch (const std::exception& e) {
-            err_ptr = new std::exception(e);
             jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
@@ -758,7 +757,6 @@ getter:
           {%- endif %}
           {%- if not 'std::exception' in throws %}
           catch (const std::exception& e) {
-              err_ptr = new std::exception(e);
               jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));

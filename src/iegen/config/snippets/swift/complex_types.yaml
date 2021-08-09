@@ -86,7 +86,7 @@ char *:
   c_to_cxx: 
   cxx_to_c: 
   swift_to_sc: |
-    let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8)
+    let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8){{'!' if nullable is not defined or not nullable}}
   sc_to_swift: |
     let {{target_name}} = String(cString: {{name}}{{'!' if nullable is defined and nullable}})
 

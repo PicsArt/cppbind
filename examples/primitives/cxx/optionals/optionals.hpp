@@ -128,8 +128,10 @@ public:
 	}
 
     /**
-     * __API__
-     * action: gen_method
+     * \internal
+     * TODO add swift action after char support for swift
+     * python.action: gen_method
+     * kotlin.action: gen_method
      * throws: no_throw
      */
 	char optionalCharWithDefault(char symbol = ',') {

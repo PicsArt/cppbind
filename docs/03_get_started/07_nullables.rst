@@ -97,10 +97,10 @@ Let's take a look at the following example.
 
 In this example each method takes a single optional argument and returns it.
 Default values are supported in the following cases:
-* For primitive types e.g. int, long, char etc.
-* For char*, std::string.
-* For enums.
-* If the default value is **nullptr** or **NULL**.
+    * For primitive types e.g. int, long, char etc.
+    * For char*, std::string.
+    * For enums.
+    * If the default value is **nullptr** or **NULL**.
 
 These are the cases supported for all languages.
 

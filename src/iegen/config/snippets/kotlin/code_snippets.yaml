@@ -91,9 +91,6 @@ var_class_cxx: &var_class_cxx
   body:
     content: |
       {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
-      {%- set set_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jSet_this') %}
-      extern "C" JNIEXPORT void {{set_name}}(JNIEnv* env, jobject obj, jobjectid id, jobject self){
-      }
       {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
           {%- if root.shared_ref %}
@@ -208,7 +205,6 @@ class:
             {{private_external|string|indent}}
             {%- endif %}
             {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
-            private external fun jSet_this(id: Long, self: Any): Unit
             private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
@@ -281,7 +277,6 @@ interface:
             }
             {% endif %}
             ///// External wrapper functions ////////////
-            private external fun jSet_this(id: Long, self: Any): Unit
             private external fun jFinalize(id: Long): Unit
         }
   cxx: *var_class_cxx
@@ -342,7 +337,6 @@ constructor:
       {%- endif %}
       {%- endif -%}
       {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
-          //jSet_this(id, this)
       }
     companion: |
       {%- if comment %}
@@ -482,7 +476,9 @@ function:
       {% endfor %}
       {%- endmacro %}
       {% macro call_code(prefix, call_args) -%}
+      {%- if helper.Exceptions.can_throw(throws) %}
       void* err_ptr = nullptr;
+      {%- endif -%}
       {% if rconverter.jni.target_type_name != 'void' %}
       try {
         auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
@@ -796,7 +792,9 @@ getter:
           {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
           {%- endif %}
           {%- endif %}
+          {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;
+          {%- endif -%}
           try {
               auto result = this_object->{{cxx_name}}{{template_args}}();
               {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(8)}}
@@ -829,7 +827,9 @@ getter:
           {%- endif %}
           {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
           {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
+          {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;
+          {%- endif -%}
           try {
               this_object->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
           }

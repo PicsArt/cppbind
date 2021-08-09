@@ -17,8 +17,7 @@ vars: |
   out_prj_dir: {{out_prj_dir}}
   cxx_base_out_dir: {{path.join(out_prj_dir, "cxx/extra")}}
   src_glob:
-    - cxx/**/optionals.h*
-    - cxx/**/project.h*
+    - cxx/**/*.h*
   include_dirs:
     - .
   extra_headers:

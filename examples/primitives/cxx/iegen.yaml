@@ -20,12 +20,16 @@ vars: |
     - cxx/**/*.h*
   include_dirs:
     - .
+  mac.include_dirs:
+    - .
+    - /usr/local/opt/nlohmann-json/include
   extra_headers:
     - stdexcept
     - new
     - typeinfo
-  kotlin.clang_args:
-    - -D__ANDROID__
+  mac.clang_args:
+    - --target=x86_64-none-linux-android
+    - --sysroot=/tmp/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
   kotlin.file_postfix: ""
   kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
   kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}

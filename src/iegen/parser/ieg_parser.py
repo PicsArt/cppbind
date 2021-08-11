@@ -42,6 +42,9 @@ class CXXParser:
                                                             for includeDir in
                                                             include_dirs]
 
+        logging.debug(f"Clang path: {cutil.get_libclang_full_path()}")
+        logging.debug(f"Clang args: {args}")
+
         logging.info("parsing files: {}".format(' '.join(src_glob)))
 
         all_excluded_files = set()
@@ -59,8 +62,7 @@ class CXXParser:
                 if abs_fp not in all_excluded_files:
                     all_files.append(abs_fp)
 
-        logging.debug(f"parsing found files: {all_files}")
-        logging.debug(f"Clang args: {args}")
+        # logging.debug(f"parsing found files: {all_files}")
 
         # push extra_headers virtual file name also in list to have corresponding tu for that headers
         unsaved_files = None
@@ -108,7 +110,7 @@ class CXXParser:
         cursor_walk ast recursively by filtering using filter
         """
         if self.filter.filter_cursor(cursor):
-            logging.debug(f"Filtering cursor: {cursor}")
+            logging.debug(f"Filtering cursor: {cursor.spelling}")
             return
 
         # processor current cursor
@@ -170,15 +172,15 @@ class CXXParser:
     def _process_cursor(self, cursor, processor):
 
         if self.filter.filter_cursor(cursor):
-            logging.debug(f"Filtering cursor: {cursor}")
+            # logging.debug(f"Filtering cursor: {cursor.spelling}")
             return
 
         if cutil.is_declaration(cursor):
-            logging.debug(f"Filtering forward declaration cursor: {cursor}")
+            # logging.debug(f"Filtering forward declaration cursor: {cursor.spelling}")
             return
 
         if CXXParser.is_implementation(cursor):
-            logging.debug(f"Filtering implementation cursor: {cursor}")
+            # logging.debug(f"Filtering implementation cursor: {cursor.spelling}")
             return
 
         # process current cursor

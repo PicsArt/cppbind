@@ -27,9 +27,16 @@ vars: |
     - stdexcept
     - new
     - typeinfo
-  mac.clang_args:
+  kotlin.clang_args:
+    - -D__ANDROID__
+  mac.kotlin.clang_args:
+    - -D__ANDROID__
     - --target=x86_64-none-linux-android
-    - --sysroot=/tmp/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+    - --sysroot={{getenv('NDK_PATH')}}
+  mac.swift.clang_args:
+    - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  mac.python.clang_args:
+    - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   kotlin.file_postfix: ""
   kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
   kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}

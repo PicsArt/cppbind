@@ -2,22 +2,22 @@
 std::string:
   std::__cxx11::basic_string
 
-std::__ndk1::pair:
+std::__1::pair:
   std::pair
 
-std::__ndk1::shared_ptr:
+std::__1::shared_ptr:
   std::shared_ptr
 
-std::__ndk1::vector:
+std::__1::vector:
   std::vector
 
-std::__ndk1::map:
+std::__1::map:
   std::map
 
-std::__ndk1::unordered_map:
+std::__1::unordered_map:
   std::map
 
-std::__ndk1::basic_string:
+std::__1::basic_string:
   std::__cxx11::basic_string
 
 $Object:

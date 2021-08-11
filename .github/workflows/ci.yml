@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ master, I203-ci-mac]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -33,6 +34,9 @@ jobs:
           unzip android-ndk-r22-darwin-x86_64.zip
           rm android-ndk-r22-darwin-x86_64.zip
           mv android-ndk-r22 /tmp/android-ndk
+          # make a symbolic link to libclang to overcome SIP issue
+          ln -s /Library/Developer/CommandLineTools/usr/lib/libclang.dylib  /usr/local/lib
+
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -40,12 +44,13 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-
-      - name: Run bazel tests
+      - name: Run unit tests
         run: |
-          # make a symbolic link to libclang to overcome SIP issue
-          ln -s /Library/Developer/CommandLineTools/usr/lib/libclang.dylib  /usr/local/lib
-          bazel test //... --test_output=streamed
+          pytest ./src/test/
+
+      - name: Run comparison tests
+        run: |
+          bazel test //... --action_env=NDK_PATH=/tmp/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot  --test_output=streamed
 
   build_ubuntu:
 
@@ -57,13 +62,15 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
           sudo apt-get install -y libclang-9-dev nlohmann-json3-dev
-          python setup.py install develop
+          python setup.py install
+
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
@@ -71,10 +78,10 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Test with pytest
+      - name: Run unit tests
         run: |
           pytest ./src/test/
 
-      - name: Run bazel tests
+      - name: Run comparison tests
         run: |
           bazel test //... --test_output=streamed

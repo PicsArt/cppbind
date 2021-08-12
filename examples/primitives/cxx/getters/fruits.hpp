@@ -141,6 +141,21 @@ class Fruits  {
         return _fruits;
     }
 
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     * template:
+     *   T:
+     *     - type: iegen::example::Apple
+     *   U:
+     *     - type: iegen::example::Pineapple
+     */
+    template <typename T, typename U>
+    void setAllFruits(const std::vector<Fruit*> & fruits) {
+        _fruits = fruits;
+    }
+
 
 private:
     std::vector<Fruit*> _fruits;

@@ -34,6 +34,7 @@ assert len(fruits.apples) == 2
 assert len(fruits.pineapple) == 2
 apples_pineapples = fruits.apples_with_pineapples
 assert len(apples_pineapples) == 4
-assert apples_pineapples[0].type == FruitType.Apple
-assert apples_pineapples[3].type == FruitType.Pineapple
+fruits.applesWithPineapples = [papple1, papple2, apple1, apple2]
+assert apples_pineapples[0].type == FruitType.Pineapple
+assert apples_pineapples[3].type == FruitType.Apple
 # [template-get-usage]

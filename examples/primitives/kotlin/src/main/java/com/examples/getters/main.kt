@@ -33,10 +33,12 @@ val fruits = Fruits(listOf(apple1, apple2, papple1, papple2))
 
 assert(fruits.apples.size == 2)
 assert(fruits.pineapple.size == 2)
-val applesPineapples = fruits.applesWithPineapples
+var applesPineapples = fruits.applesWithPineapples
 assert(applesPineapples.size == 4)
-assert(applesPineapples[0].type == FruitType.Apple)
-assert(applesPineapples[3].type == FruitType.Pineapple)
+fruits.applesWithPineapples = listOf(papple1, papple2, apple1, apple2)
+applesPineapples = fruits.applesWithPineapples
+assert(applesPineapples[0].type == FruitType.Pineapple)
+assert(applesPineapples[3].type == FruitType.Apple)
 
 // [template-get-usage]
 

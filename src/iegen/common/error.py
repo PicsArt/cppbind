@@ -51,3 +51,9 @@ class Error:
             traceback_list = format_list(traceback_stack)
             traceback_list.pop()
             logging.debug(''.join(traceback_list))
+
+
+class IEGAttrError(Exception):
+    """
+    Exception class to raise errors in case of wrong iegen api attribute usage
+    """

@@ -9,7 +9,7 @@ import sys
 from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
-from iegen.common.error import Error
+from iegen.common.error import Error, IEGAttrError
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
@@ -62,7 +62,7 @@ class WrapperGenerator:
         ir_builder.end_root()
 
         if Error.has_error:
-            raise Exception('Wrong attribute usage')
+            raise IEGAttrError('Wrong attribute usage')
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")
@@ -94,7 +94,7 @@ def run(args):
 
     try:
         WrapperGenerator.run(set(plat_lang_options))
-    except Exception as err:
+    except IEGAttrError as err:
         Error.error(err)
         sys.exit(1)
 

@@ -1,5 +1,5 @@
-API attributes
-^^^^^^^^^^^^^^
+API configuration
+^^^^^^^^^^^^^^^^^
 
 Iegen uses doxygen comments for processing. If the comment contains **__API__** tag then it will pe parsed by iegen.
 **__API__** comment should be of yaml format, otherwise an error will be thrown and should contain **gen** instruction.

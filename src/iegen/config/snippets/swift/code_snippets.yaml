@@ -476,15 +476,16 @@ getter:
       {% set result_converter = rconverter.sc_to_swift %}
       {%- if ctx.node.is_function_template %}
       {%- if template_names %}
-      {%- set _name = template_names|join|to_camel_case %}
+      {%- set _name = template_names|join %}
       {%- else %}
-      {%- set _name = overloading_prefix[0]|lower + overloading_prefix[1:]|to_camel_case %}
+      {%- set _name = overloading_prefix %}
       {%- endif %}
       {%- else %}
-      {%- set _name = name|to_camel_case %}
+      {%- set _name = name %}
       {%- endif %}
       {{helper.make_comment(comment)}}
-      public {{'override ' if is_override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
+      {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
+      public {{'override ' if override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}

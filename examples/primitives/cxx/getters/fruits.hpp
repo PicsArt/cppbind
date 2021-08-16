@@ -112,6 +112,7 @@ class Fruits  {
      *     - type: iegen::example::Apple
      *       name: apples
      *     - type: iegen::example::Pineapple
+     *       name: pineapple
      */
     template <typename T>
     std::vector<T*> fruits() const {

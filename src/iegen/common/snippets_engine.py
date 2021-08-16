@@ -595,10 +595,10 @@ class SnippetsEngine:
                 canonical_clang_type = all(
                     (not cutil.is_unexposed(arg.original_clang_type) for arg in tmpl_args))
                 if canonical_clang_type:
-                    clang_type = cutil.get_canonical_type(clang_type)
                     lookup_type = cutil.get_canonical_type(lookup_type)
 
-                type_info = self._create_type_info(ctx, cutil.template_type_name(lookup_type),
+                type_info = self._create_type_info(ctx,
+                                                   cutil.template_type_name(lookup_type),
                                                    clang_type=clang_type,
                                                    template_args=tmpl_args,
                                                    template_choice=template_choice)

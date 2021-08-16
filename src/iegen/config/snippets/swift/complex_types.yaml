@@ -2,6 +2,24 @@
 std::string:
   std::__cxx11::basic_string
 
+std::__1::pair:
+  std::pair
+
+std::__1::shared_ptr:
+  std::shared_ptr
+
+std::__1::vector:
+  std::vector
+
+std::__1::map:
+  std::map
+
+std::__1::unordered_map:
+  std::map
+
+std::__1::basic_string:
+  std::__cxx11::basic_string
+
 $Object:
   custom:
     is_c_pointer_type: True
@@ -262,16 +280,16 @@ std::pair:
   c_to_cxx: |
     auto first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
     auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
-    {{args[0].snippet('first_tmp_{}'.format(name))|indent}}
-    {{args[1].snippet('second_tmp_{}'.format(name))|indent}}
+    {{args[0].snippet('first_tmp_{}'.format(name))}}
+    {{args[1].snippet('second_tmp_{}'.format(name))}}
     {{cxx_pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
   cxx_to_c: |
     auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
     auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};
     const auto& first_{{name}} = {{name}}.first;
     const auto& second_{{name}} = {{name}}.second;
-    {{args[0].snippet('first_{}'.format(name))|indent}}
-    {{args[1].snippet('second_{}'.format(name))|indent}}
+    {{args[0].snippet('first_{}'.format(name))}}
+    {{args[1].snippet('second_{}'.format(name))}}
     *_first_data_{{target_name}} = {{args[0].converted_name('first_{}'.format(name))}};
     *_second_data_{{target_name}} = {{args[1].converted_name('second_{}'.format(name))}};
     {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
@@ -287,8 +305,8 @@ std::pair:
     {{target_name}}.second = UnsafeMutableRawPointer(_second_{{target_name}})
     let first_{{name}} = {{name}}.0
     let second_{{name}} = {{name}}.1
-    {{args[0].snippet('first_{}'.format(name))|indent}}
-    {{args[1].snippet('second_{}'.format(name))|indent}}
+    {{args[0].snippet('first_{}'.format(name))}}
+    {{args[1].snippet('second_{}'.format(name))}}
     _first_{{target_name}}[0] = {{args[0].converted_name('first_{}'.format(name))}}
     _second_{{target_name}}[0] = {{args[1].converted_name('second_{}'.format(name))}}
   sc_to_swift: |
@@ -300,6 +318,6 @@ std::pair:
     }
     let first_{{name}} = _tmp_pair_first_{{name}}_data[0];
     let second_{{name}} = _tmp_pair_second_{{name}}_data[0];
-    {{args[0].snippet('first_{}'.format(name))|indent}}
-    {{args[1].snippet('second_{}'.format(name))|indent}}
+    {{args[0].snippet('first_{}'.format(name))}}
+    {{args[1].snippet('second_{}'.format(name))}}
     let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ( {{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}} )

@@ -53,7 +53,7 @@ class Error:
             logging.debug(''.join(traceback_list))
 
 
-class IEGAttrError(Exception):
+class IEGParseError(Exception):
     """
-    Exception class to raise errors in case of wrong iegen api attribute usage
+    Exception class to raise errors in case of wrong api attribute usage or compilation errors
     """

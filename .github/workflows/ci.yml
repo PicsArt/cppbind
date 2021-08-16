@@ -29,11 +29,8 @@ jobs:
           if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
           python setup.py install
           brew install nlohmann-json
-          # download android ndk
-          curl -O https://dl.google.com/android/repository/android-ndk-r22-darwin-x86_64.zip
-          unzip android-ndk-r22-darwin-x86_64.zip
-          rm android-ndk-r22-darwin-x86_64.zip
-          mv android-ndk-r22 /tmp/android-ndk
+          # install android ndk
+          brew install android-ndk
           # make a symbolic link to libclang to overcome SIP issue
           ln -s /Library/Developer/CommandLineTools/usr/lib/libclang.dylib  /usr/local/lib
 
@@ -50,7 +47,7 @@ jobs:
 
       - name: Run comparison tests
         run: |
-          bazel test //... --action_env=NDK_PATH=/tmp/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot  --test_output=streamed
+          bazel test //... --action_env=NDK_PATH=/usr/local/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot  --test_output=streamed
 
   build_ubuntu:
 

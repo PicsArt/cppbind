@@ -99,32 +99,35 @@ Now let's go through variables one by one:
     - *extra_headers* - Extra headers to be processed. For example standard exception headers which are required to generate target language bindings for them.
 
 .. note::
+
    The default value and other properties can easily be overridden.
    An example demonstrating this
 
-   .. code-block:: yaml
+   .. code-block::
 
-   var_def:
-      !join
-      - !include variable_definitions.yaml
-      banner_comment:
-          inheritable: false
-          default: My custom banner comment
-          allowed_on: [ cxx, file_system ]
+       var_def:
+          !join
+          - !include variable_definitions.yaml
+          banner_comment:
+              inheritable: false
+              default: My custom banner comment
+              allowed_on: [ cxx, file_system ]
 
    Banner comment is overridden here.
 
-..note::
+
+.. note::
+
     Each variable can have platform, language specific values. Prefix variable with platform and/or language, like:
 
-    .. code-block:: yaml
+    .. code-block::
 
-    name: Task
-    python.name: PyTask
-    mac.name: MacTask
-    mac.python.name: MacPyTask
+        name: Task
+        python.name: PyTask
+        mac.name: MacTask
+        mac.python.name: MacPyTask
 
     These are tree ways to use variable.
     Note that you cannot have `<language>.<variable>` and `<platform>.<variable>` at the same time.
-    In this case value for `<language>.<language>.<variable>` is ambitious and iegen will complain about it.
+    In this case value for `<language>.<language>.<variable>` is ambiguous and iegen will complain about it.
     Another important thing is that default values also can be specified per platform language.

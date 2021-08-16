@@ -244,7 +244,17 @@ constructor:
     head: |
       {{helper.make_comment(comment)}}
       {%- set comma = joiner(', ') %}
-      public convenience init({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {
+      public convenience init(
+      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}
+      {%- elif arg.is_null_ptr %} = nil
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}) {
       {%- set call_args = [] %}
       {% for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
@@ -289,7 +299,17 @@ function:
         {%- set call_args = ['cself.cself']%}
       {%- else%}
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
-      public {{"static " if is_static}}{{"override " if override}}func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
+      public {{"static " if is_static}}{{"override " if override}}func {{name}}(
+      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}
+      {%- elif arg.is_null_ptr %} = nil
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}

@@ -11,7 +11,7 @@ import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error
-from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict
+from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict, load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import Node, NodeType
@@ -225,7 +225,7 @@ def test_jinja_attrs(clang_config):
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
     parser = CXXParser()
 
-    clang_cfg['src_glob'] = [os.path.join(test_dir, '*.hpp')]
+    clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_jinja_attrs.hpp')]
 
     plat, lang = 'linux', 'swift'
     ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
@@ -237,6 +237,48 @@ def test_jinja_attrs(clang_config):
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja variable value"
 
+
+def test_attrs_dependencies_and_jinja_usage(clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
+    parser = CXXParser()
+
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "example_var_def.yaml"))
+
+        clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
+
+        plat, lang = 'linux', 'swift'
+        ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+
+        ir_builder.start_root()
+        parser.parse(ir_builder, **clang_cfg)
+
+        namespace_node = ir_builder.ir.children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0]
+
+        # checking the first class and method
+        cls_node = namespace_node.children[0]
+        assert cls_node.args['a'] == 'ParentValue', "class 'name' variable is not set correctly"
+        assert cls_node.args['b'] == f"{cls_node.args['a']}UsedInB",\
+            "variables dependency for default values doesn't work correctly"
+
+        method_node = cls_node.children[0]
+        assert method_node.args['a'] == f"{cls_node.args['a']}InChild", "variables inheritance doesn't work correctly"
+        assert method_node.args['b'] == f"Used{method_node.args['a']}", "variables current evaluated context is ignored"
+
+        # checking the second class and method
+        cls_node = namespace_node.children[1]
+        assert cls_node.args['a'] == "DefaultValueOfA", "default value is not used correctly"
+        assert cls_node.args['b'] == "DefaultValueOfAUsedInB",\
+            "variables dependency for default values doesn't work correctly"
+
+        method_node = cls_node.children[0]
+        assert method_node.args['a'] == cls_node.args['a'],\
+            "inheritance of variables doesn't work correctly"
+        assert method_node.args['b'] == "DefaultValueOfAUsedInB",\
+            "current variable couldn't managed to use parents context"
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(clang_config):
@@ -331,3 +373,20 @@ def test_dir_api_positive():
     assert api == 'gen_package'
     assert args['name'] == 'inputs'
     assert args['code_fragment'] == ['import json']
+
+
+def test_var_def_validation():
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr')
+
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "example_var_def.yaml"))
+
+        # add dummy 'required_on' node without having it in 'allowed_on' list
+        var_def_mock.return_value['b']['required_on'] = ['dir']
+
+        try:
+            ContextDescriptor(None, 'linux', 'python')
+        except Exception:
+            pass
+        else:
+            assert False, "variable cannot be required on a node on which it is not allowed"

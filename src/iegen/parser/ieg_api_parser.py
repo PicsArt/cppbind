@@ -11,9 +11,10 @@ from types import SimpleNamespace
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 import yaml
 
+
 from iegen import default_config
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader, yaml_info_struct_to_dict
+from iegen.common.yaml_process import UniqueKeyLoader, YamlNode
 from iegen.ir.ast import Node
 from iegen.utils import JINJA2_ENV
 from iegen.utils.clang import extract_pure_comment
@@ -75,10 +76,8 @@ class APIParser:
                                location.line_number if location else None)
             yaml_lines.append(line[yaml_indent_cnt:])
 
-        yaml_lines = JINJA2_ENV.from_string('\n'.join(yaml_lines)).render(ctx)
-
         try:
-            attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
+            attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)
             return self.parse_api_attrs(attrs, location)
         except yaml.YAMLError as err:
             Error.critical(f"Error while scanning yaml style comments: {err}",
@@ -143,7 +142,7 @@ class APIParser:
             prior = APIParser.get_priority(platform, language)
 
             if attr == 'action':
-                api = value
+                api = value.value if isinstance(value, YamlNode) else value
 
             if attr not in self.var_def:
                 Error.critical(f"Variable {attr} is not specified. "
@@ -155,7 +154,7 @@ class APIParser:
             value = self.parse_attr(attr, value)
 
             if array:
-                if not isinstance(value, list):
+                if not isinstance(value, list) and not (isinstance(value, YamlNode) and value.is_of_type(list)):
                     value = [value]
             elif isinstance(value, list):
                 Error.critical(f"Wrong variable type: {attr} cannot be array",
@@ -187,7 +186,8 @@ class APIParser:
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':
-            if not isinstance(attr_value, dict):
+            if not isinstance(attr_value, dict) and \
+                    not (isinstance(attr_value, YamlNode) and attr_value.is_of_type(dict)):
                 raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
             if attr_name == 'template':
                 for attrs in attr_value.values():
@@ -228,6 +228,21 @@ class APIParser:
         if attrs.is_of_type(str):
             return yaml.load(JINJA2_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
         # if the section is not a string, i.e. values can contain jinja expressions,
-        # we need to dump it to the string, then evaluate it.
-        return yaml.load(JINJA2_ENV.from_string(yaml.dump(
-            yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)
+        # we need to keep values to eval them later
+        return attrs
+
+    @classmethod
+    def eval_var_value(cls, struct, ctx):
+        """
+        Evaluate structure value recursively using given context
+        """
+
+        if isinstance(struct, YamlNode) and struct.is_of_type(dict) or isinstance(struct, dict):
+            return {k: cls.eval_var_value(v, ctx) for k, v in struct.items()}
+        if isinstance(struct, YamlNode) and struct.is_of_type(list) or isinstance(struct, list):
+            return [cls.eval_var_value(i, ctx) for i in struct]
+        if isinstance(struct, YamlNode) and struct.is_of_type(str) or isinstance(struct, str):
+            return JINJA2_ENV.from_string(struct.value if isinstance(struct, YamlNode) else struct).render(ctx)
+        if isinstance(struct, YamlNode):
+            return struct.value
+        return struct

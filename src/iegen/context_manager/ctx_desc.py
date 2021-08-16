@@ -47,6 +47,7 @@ class ContextDescriptor:
         self.language = language
         self.ctx_def_map = self.build_ctx_def_map(context_def_glob)
         self.var_def = ContextDescriptor.resolve_attr_aliases(self.get_var_def())
+        self.validate_var_def()
 
     @staticmethod
     def resolve_attr_aliases(attrs):
@@ -238,6 +239,16 @@ class ContextDescriptor:
             Error.critical(f"API dir section definition can only contain '{cls.DIR_RULE_KEY}' key")
         elif section_key == cls.TYPE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict):
             Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
+
+    def validate_var_def(self):
+        """Method for variables definition validation"""
+        for var_name, prop in self.var_def.items():
+            for node in prop['required_on']:
+                if node not in prop['allowed_on']:
+                    Error.critical(f"Variable '{var_name}' cannot be required on '{node}' "
+                                   f"node when it's not allowed on that node.",
+                                   prop.file,
+                                   prop.line_number)
 
     def get_var_def(self):
         """Get variable definitions section"""

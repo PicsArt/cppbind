@@ -1,0 +1,15 @@
+action:
+  inheritable: false
+  default: null
+  allowed_on: [ cxx, file_system ]
+
+a:
+  inheritable: true
+  default: DefaultValueOfA
+  type: str
+
+b:
+  inheritable: true
+  default: "{{a}}UsedInB"
+  type: str
+

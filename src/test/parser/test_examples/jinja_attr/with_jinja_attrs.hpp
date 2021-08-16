@@ -29,7 +29,7 @@ class Car {
      * throws:
      *   - '{{package}}_exc_1'
      *   - '{{package}}_exc_2'
-     * name: {{package + ('_shared' if shared_ref else '_non_shared')}}
+     * name: "{{package + ('_shared' if shared_ref else '_non_shared')}}"
      */
     std::shared_ptr<Car> getNewCarSharedPtr() {
         Car* car = new Car(_cost);
@@ -42,8 +42,7 @@ class Car {
      *
      * __API__
      * action: gen_method
-     * {% set throw_value = "no_throw" %}
-     * throws: {{throw_value}}
+     * throws: "{{'no_throw' if action == 'gen_method'}}"
      * template:
      *   T:
      *     - type: '{{package}}Int'

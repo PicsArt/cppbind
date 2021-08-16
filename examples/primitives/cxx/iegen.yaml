@@ -12,10 +12,9 @@ dir_vars:
       project_dir: '{{_current_working_dir}}'
       project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
 
-vars: |
-  {%- set out_prj_dir = "." -%}
-  out_prj_dir: {{out_prj_dir}}
-  cxx_base_out_dir: {{path.join(out_prj_dir, "cxx/extra")}}
+vars:
+  out_prj_dir: "."
+  cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
     - cxx/**/*.h*
   include_dirs:
@@ -27,15 +26,15 @@ vars: |
   kotlin.clang_args:
     - -D__ANDROID__
   kotlin.file_postfix: ""
-  kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
-  kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
+  kotlin.cxx_out_dir: "{{path.join(out_prj_dir, 'kotlin/wrappers')}}"
+  kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"
   kotlin.package_prefix: com.examples
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
-  python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
+  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
-  python.out_dir: {{path.join(out_prj_dir, "python/src")}}
+  python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
   python.package_prefix: examples_lib
   python.pybind_module: examples
   python.src_exclude_glob:
@@ -43,8 +42,8 @@ vars: |
     - cxx/containers/json.hpp
   swift.file_postfix: _swgen
   swift.package_prefix: ""
-  swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
-  swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
+  swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
+  swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/optionals/*.h*

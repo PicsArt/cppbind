@@ -78,6 +78,8 @@ class ContextManager:
         # add all missing attributes
         for att_name, properties in self.ctx_desc.var_def.items():
             new_att_val = args.get(att_name)
+            if new_att_val is not None:
+                new_att_val = APIParser.eval_var_value(new_att_val, ctx)
 
             allowed = kind in properties["allowed_on"]
             if new_att_val is None:
@@ -141,6 +143,9 @@ class ContextManager:
         Retrieve language/platform specific default value for current variable.
         """
         def_val = prop.get("default")
+
+        if def_val is None:
+            return None
 
         if not def_val.is_of_type(MutableMapping):
             return def_val.value

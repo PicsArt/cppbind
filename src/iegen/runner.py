@@ -9,7 +9,7 @@ import sys
 from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
-from iegen.common.error import Error, IEGParseError
+from iegen.common.error import Error, IEGError
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
@@ -62,7 +62,7 @@ class WrapperGenerator:
         ir_builder.end_root()
 
         if Error.has_error:
-            raise IEGParseError('Iegen parsing error')
+            raise Error.critical('Cannot continue: iegen error has occured')
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")
@@ -79,6 +79,9 @@ class WrapperGenerator:
         # now we can dump builders into file
         logging.debug("Dumping builders to files.")
 
+        if Error.has_error:
+            raise Error.critical('Cannot continue: iegen error has occured')
+
         builder.dump_outputs()
 
 
@@ -94,7 +97,7 @@ def run(args):
 
     try:
         WrapperGenerator.run(set(plat_lang_options))
-    except IEGParseError as err:
+    except IEGError as err:
         Error.error(err)
         sys.exit(1)
 

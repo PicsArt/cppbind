@@ -183,6 +183,7 @@ def is_unexposed(clang_type):
 def get_libclang_full_path():
     """
     Return libclang full path.
+    cindex.Config.library_file returns only file name not a full path.
     """
     # linkmap structure, we only need the second entry
     class LINKMAP(Structure):

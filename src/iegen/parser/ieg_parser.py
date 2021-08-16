@@ -172,15 +172,12 @@ class CXXParser:
     def _process_cursor(self, cursor, processor):
 
         if self.filter.filter_cursor(cursor):
-            # logging.debug(f"Filtering cursor: {cursor.spelling}")
             return
 
         if cutil.is_declaration(cursor):
-            # logging.debug(f"Filtering forward declaration cursor: {cursor.spelling}")
             return
 
         if CXXParser.is_implementation(cursor):
-            # logging.debug(f"Filtering implementation cursor: {cursor.spelling}")
             return
 
         # process current cursor

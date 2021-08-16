@@ -124,8 +124,8 @@ char:
   jdk:
     type_info: Char
   jni_to_cxx: |
-    char {{target_name}} = (char){{name}};
+    char {{target_name}} = static_cast<char>({{name}});
   cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = (jbyte){{name}};
+    {{target_type_name}} {{target_name}} = static_cast<jbyte>({{name}});
   kotlin_to_jdk:
   jdk_to_kotlin:

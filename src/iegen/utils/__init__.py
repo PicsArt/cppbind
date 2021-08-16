@@ -132,7 +132,7 @@ def clear_iegen_generated_files(directory):
             if remove:
                 os.remove(file_path)
         if not os.listdir(root):
-            os.remove(root)
+            os.rmdir(root)
 
 
 def copy_yaml_config_template():

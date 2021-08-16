@@ -3,6 +3,7 @@ Module contains common fixtures used in iegen related tests
 """
 import copy
 import os
+import platform
 
 from unittest.mock import Mock
 import pytest
@@ -59,14 +60,20 @@ def clang_config():
     """
     Fixture returns clang config parameters for test files.
     """
-    return {
-        'clang_args': ['-D__ANDROID__'],
+    config = {
+        'clang_args': [],
         'include_dirs': ['.'],
         'src_glob': [TEST_CXX_DIR + '/*.h'],
         'src_exclude_glob': [],
         'extra_headers': []
     }
 
+    if platform.system() == 'Darwin':
+        config['clang_args'] = [
+            '--sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+        ]
+
+    return config
 
 ContextDescriptor.get_var_def = Mock(return_value=load_yaml(
     os.path.join(PROJECT_CONFIG_DIR, "variable_definitions.yaml")))

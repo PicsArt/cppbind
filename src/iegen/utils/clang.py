@@ -2,6 +2,7 @@
 Helper functions working with clang
 """
 import re
+import sys
 
 from itertools import chain
 
@@ -183,28 +184,30 @@ def is_unexposed(clang_type):
 def get_libclang_full_path():
     """
     Return libclang full path.
-    cindex.Config.library_file returns only file name not a full path.
+    cindex.Config.library_file returns only file name for linux not a full path.
     """
     # linkmap structure, we only need the second entry
-    class LINKMAP(Structure):
-        _fields_ = [
-            ("l_addr", c_void_p),
-            ("l_name", c_char_p)
-        ]
+    if sys.platform.startswith('linux'):
+        class LINKMAP(Structure):
+            _fields_ = [
+                ('l_addr', c_void_p),
+                ('l_name', c_char_p)
+            ]
 
-    libc = CDLL(cli.Config.library_file)
-    libdl = CDLL(find_library('dl'))
+        libc = CDLL(cli.Config.library_file)
+        libdl = CDLL(find_library('dl'))
 
-    dlinfo = libdl.dlinfo
-    dlinfo.argtypes = c_void_p, c_int, c_void_p
-    dlinfo.restype = c_int
+        dlinfo = libdl.dlinfo
+        dlinfo.argtypes = c_void_p, c_int, c_void_p
+        dlinfo.restype = c_int
 
-    # gets typecasted later, I dont know how to create a ctypes struct pointer instance
-    lmptr = c_void_p()
+        # gets typecasted later, I dont know how to create a ctypes struct pointer instance
+        lmptr = c_void_p()
 
-    # 2 equals RTLD_DI_LINKMAP, pass pointer by reference
-    dlinfo(libc._handle, 2, byref(lmptr))
+        # 2 equals RTLD_DI_LINKMAP, pass pointer by reference
+        dlinfo(libc._handle, 2, byref(lmptr))
 
-    # typecast to a linkmap pointer and retrieve the name.
-    abspath = cast(lmptr, POINTER(LINKMAP)).contents.l_name
-    return abspath.decode('utf-8')
+        # typecast to a linkmap pointer and retrieve the name.
+        abspath = cast(lmptr, POINTER(LINKMAP)).contents.l_name
+        return abspath.decode('utf-8')
+    return cli.Config.library_file

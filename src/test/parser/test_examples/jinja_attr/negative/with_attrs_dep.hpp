@@ -18,23 +18,4 @@ class ExampleClass {
     void ExampleMethod() {
     }
 };
-
-/**
- * comments
- *
- * __API__
- * action: gen_class
- */
-class AnotherExampleClass {
-    public:
-
-    /**
-     * __API__
-     * action: gen_method
-     * b: "{{b}}"
-     */
-    void AnotherExampleMethod() {
-    }
-};
 }
-

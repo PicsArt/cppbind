@@ -243,12 +243,11 @@ class ContextDescriptor:
     def validate_var_def(self):
         """Method for variables definition validation"""
         for var_name, prop in self.var_def.items():
-            for node in prop['required_on']:
-                if node not in prop['allowed_on']:
-                    Error.critical(f"Variable '{var_name}' cannot be required on '{node}' "
-                                   f"node when it's not allowed on that node.",
-                                   prop.file,
-                                   prop.line_number)
+            extra_nodes = set(prop['required_on']) - set(prop['allowed_on'])
+            if extra_nodes:
+                Error.critical(f"Variable '{var_name}' is not allowed on '{', '.join(extra_nodes)}'",
+                               prop.file,
+                               prop.line_number)
 
     def get_var_def(self):
         """Get variable definitions section"""

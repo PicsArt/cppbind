@@ -1,0 +1,38 @@
+action:
+  inheritable: false
+  default: null
+  allowed_on: [ cxx, file_system ]
+
+a:
+  inheritable: true
+  default: DefaultValueOfA
+  type: str
+
+b:
+  inheritable: true
+  default: "{{a}}UsedInB"
+  type: str
+
+c:
+  inheritable: true
+  default: DefaultValueOfC
+  type: str
+  allowed_on: [root, cxx]
+
+d:
+  inheritable: true
+  default: "{{c}}UsedInD"
+  type: str
+  allowed_on: [ root, cxx ]
+
+e:
+  inheritable: true
+  default: "DefaultValueOfE"
+  type: str
+  allowed_on: [ root, cxx ]
+
+f:
+  inheritable: true
+  default: "{{e}}UsedInF"
+  type: str
+  allowed_on: [ root, cxx ]

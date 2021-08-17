@@ -39,9 +39,9 @@ $Object:
     auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
     auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
   swift_to_sc: |
-    let {{target_name}} = {{name}}{{'?' if nullable is defined and nullable}}.cself
+    let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
   sc_to_swift: |
-    {%- if nullable is defined and nullable -%}
+    {%- if nullable|default(False) -%}
     let {{target_name}}: {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}?
     if let {{name}} = {{name}} {
         {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}({{name}}{% if is_value_type%}, true{%endif%})
@@ -104,9 +104,9 @@ char *:
   c_to_cxx: 
   cxx_to_c: 
   swift_to_sc: |
-    let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8)
+    let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8){{'!' if not nullable|default(False)}}
   sc_to_swift: |
-    let {{target_name}} = String(cString: {{name}}{{'!' if nullable is defined and nullable}})
+    let {{target_name}} = String(cString: {{name}}{{'!' if nullable|default(False)}})
 
 std::vector:
   custom:
@@ -253,19 +253,35 @@ std::shared_ptr:
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee = args_t[0] %}
     {%- set pointee_base = args_t_bases[0] %}
-    std::shared_ptr<{{pointee}}> {{target_name}};
+    {%- set is_nullable = nullable|default(False)%}
+    std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
+    {%- if is_nullable %}
+    if ({{name}}) {
+        auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+        {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    }
+    {%- else %}
     auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
     {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {%- endif %}
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
     {%- set pointee_base = args_t_bases[0] %}
-    {{target_type_name}} {{target_name}};
+    {%- set is_nullable = nullable|default(False)%}
+    {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+    {%- if is_nullable %}
+    if ({{name}}) {
+        std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
+        {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    }
+    {%- else %}
     std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
     {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    {%- endif %}
   swift_to_sc: |
-    {{args[0].snippet(name, nullable=nullable)|indent}}
+    {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
   sc_to_swift: |
-    {{args[0].snippet(name, nullable=nullable)|indent}}
+    {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
 
 
 std::pair:

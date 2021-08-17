@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen import logging
-from iegen import converter
+from iegen import converter, logging
+from iegen.common.error import Error
 from iegen.common import JINJA_UNIQUE_MARKER
 from iegen.utils import JINJA2_ENV
 
@@ -366,7 +366,7 @@ class SnippetsEngine:
             self.action_infos.append(FileAction(glob_tmpls, copy_to_tmpl, variables_tmpl))
 
         def handle_default(info_dict):
-            raise Exception("undefined actions.")
+            Error.critical("undefined actions.")
 
         actions_map = {
             'file': handle_file_action
@@ -377,7 +377,7 @@ class SnippetsEngine:
                 try:
                     actions_map.get(action_name, handle_default)(action_data)
                 except Exception as err:
-                    raise Exception(f"Error in action {action_name}. Error {str(err)}") from err
+                    Error.critical(f"Error in action {action_name}. Error {str(err)}")
 
     def _load_code_info(self, code_info_dict):
         # load into structures
@@ -398,7 +398,7 @@ class SnippetsEngine:
                 continue
 
             if not isinstance(info_map, MutableMapping):
-                raise Exception("Missing scopes section.")
+                Error.critical("Missing scopes section.")
 
             self.code_infos[code_name] = self._load_code_structure_info(code_name, info_map)
 
@@ -426,8 +426,8 @@ class SnippetsEngine:
                 unique_snippet = info.unique_content
                 unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
             except Exception as err:
-                raise Exception(f"Error in code snippets {code_name}, "
-                                f"in scope {':'.join(scopes)}. Error {str(err)}") from err
+                Error.critical(f"Error in code snippets {code_name}, "
+                               f"in scope {':'.join(scopes)}. Error {str(err)}")
             scope_infos[scopes] = ScopeInfo(name=code_name,
                                             parent_scopes=scopes,
                                             scopes=info.scopes,
@@ -446,8 +446,8 @@ class SnippetsEngine:
                 unique_snippet = info_map.get('unique_content', None)
                 unique_snippet = unique_snippet and self.jinja2_env.from_string(unique_snippet.value)
             except Exception as err:
-                raise Exception(f"Error in code file {file_name} snippets. "
-                                f"Error {str(err)}") from err
+                Error.critical(f"Error in code file {file_name} snippets. "
+                               f"Error {str(err)}")
             self.file_infos[file_name] = FileScopeInfo(file_path,
                                                        [file_name],
                                                        info_map.get('scopes', []),
@@ -462,7 +462,7 @@ class SnippetsEngine:
                 info_map = type_info_dict[info_map.value]
 
             if not isinstance(info_map, MutableMapping):
-                raise Exception("Missing type information")
+                Error.critical("Missing type information")
 
             custom = {}
             target_types = {}
@@ -479,8 +479,8 @@ class SnippetsEngine:
                         target_type_info = self.jinja2_env.from_string(tmpl)
                         snippet_tmpl = info and self.jinja2_env.from_string(info.value)
                     except Exception as err:
-                        raise Exception(f"Error in code snippets for {type_name}, "
-                                        f"in converter {name}. Error {str(err)}") from err
+                        Error.critical(f"Error in code snippets for {type_name}, "
+                                       f"in converter {name}. Error {str(err)}")
                     target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
                                                     name=name,
                                                     target_type_info=target_type_info)
@@ -493,8 +493,8 @@ class SnippetsEngine:
                     try:
                         target_type_info = self.jinja2_env.from_string(info['type_info'].value)
                     except Exception as err:
-                        raise Exception(f"Error in type info {type_name}, "
-                                        f"in converter {name}. Error {str(err)}") from err
+                        Error.critical(f"Error in type info {type_name}, "
+                                       f"in converter {name}. Error {str(err)}")
                     target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
                     target_types[name] = target_info
 

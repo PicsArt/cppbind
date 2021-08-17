@@ -58,7 +58,6 @@ vars: |
   swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
-    - cxx/optionals/*.h*
     - cxx/misc/size_buffer.hpp
 
 var_def:

@@ -37,7 +37,7 @@ swift_library(
 
 swift_binary(
     name = "hello_user_swift",
-    srcs = ["usage/swift/hello_user_usage.kt"],
+    srcs = ["usage/swift/hello_user_usage.swift"],
     deps = [":hello_user_swift_library"],
 )
 

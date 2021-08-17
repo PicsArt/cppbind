@@ -21,6 +21,8 @@ vars: |
     - typeinfo
   mac.clang_args:
     - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  file_postfix: ""
+  kotlin.c_wrapper_lib_name: libwrapper_jni
   kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
   kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
   kotlin.package_prefix: com.hello_user

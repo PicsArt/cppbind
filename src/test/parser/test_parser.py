@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
-from iegen.common.error import Error
+from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict, load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
@@ -132,7 +132,7 @@ def test_api_parser_negative(test_data):
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section, {})
-    except Exception:
+    except IEGError:
         pass
     else:
         assert False, "should get error"
@@ -178,7 +178,7 @@ def test_external_api_parser_positive():
             assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5,\
                 "External API parser results has bean changed."
 
-        except Exception:
+        except IEGError:
             assert False, "should not get error"
 
 
@@ -196,7 +196,7 @@ def test_external_api_merging_positive():
     try:
         res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
         assert expected_res == res, "External API parser results has bean changed."
-    except Exception:
+    except IEGError:
         assert False, "should not get error"
 
 
@@ -279,6 +279,7 @@ def test_attrs_dependencies_and_jinja_usage(clang_config):
             "inheritance of variables doesn't work correctly"
         assert method_node.args['b'] == "DefaultValueOfAUsedInB",\
             "current variable couldn't managed to use parents context"
+
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
 def test_empty_gen_rule(clang_config):
@@ -386,7 +387,7 @@ def test_var_def_validation():
 
         try:
             ContextDescriptor(None, 'linux', 'python')
-        except Exception:
+        except IEGError:
             pass
         else:
             assert False, "variable cannot be required on a node on which it is not allowed"

@@ -25,7 +25,7 @@ class Error:
     def critical(cls, msg, file=None, line=None):
         """Critical error: it's not possible to proceed after this type of error"""
         cls.log_traceback(extract_stack())
-        raise Exception(cls.get_message(msg, file, line, "critical"))
+        raise IEGError(cls.get_message(msg, file, line, "critical"))
 
     @classmethod
     def warning(cls, msg, file=None, line=None):
@@ -51,3 +51,9 @@ class Error:
             traceback_list = format_list(traceback_stack)
             traceback_list.pop()
             logging.debug(''.join(traceback_list))
+
+
+class IEGError(Exception):
+    """
+    Exception class to raise errors in case of critical iegen errors
+    """

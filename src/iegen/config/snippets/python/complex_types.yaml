@@ -22,6 +22,30 @@ std::__ndk1::function:
 std::__ndk1::basic_string:
   std::__cxx11::basic_string
 
+std::__ndk1::pair:
+  std::pair
+
+std::__1::shared_ptr:
+  std::shared_ptr
+
+std::__1::vector:
+  std::vector
+
+std::__1::map:
+  std::map
+
+std::__1::unordered_map:
+  std::map
+
+std::__1::function:
+  std::function
+
+std::__1::basic_string:
+  std::__cxx11::basic_string
+
+std::__1::pair:
+  std::pair
+
 $Object:
   custom:
     pname: object
@@ -126,9 +150,6 @@ std::shared_ptr:
   python_to_pybind:
   pybind_to_python:
 
-
-std::__ndk1::pair:
-  std::pair
 
 nlohmann::json:
   custom:

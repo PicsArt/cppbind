@@ -19,3 +19,21 @@ assert(person.age == 25)
 person.fullName = "Jane Doe"
 assert(person.fullName == "Jane Doe")
 // [person-usage]
+
+// [template-get-usage]
+let apple1 = Apple()
+let apple2 = Apple()
+let papple1 = Pineapple()
+let papple2 = Pineapple()
+let fruits = Fruits(fruits: [apple1, apple2, papple1, papple2])
+
+assert(fruits.apples.count == 2)
+assert(fruits.pineapple.count == 2)
+var applesPineapples = fruits.applesWithPineapples
+assert(applesPineapples.count == 4)
+fruits.applesWithPineapples = [papple1, papple2, apple1, apple2]
+applesPineapples = fruits.applesWithPineapples
+assert(applesPineapples[0].type == FruitType.Pineapple)
+assert(applesPineapples[3].type == FruitType.Apple)
+
+// [template-get-usage]

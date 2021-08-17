@@ -685,12 +685,12 @@ getter:
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if ctx.node.is_function_template %}
       {%- if template_names %}
-      {%- set _name = template_names|join|to_camel_case %}
+      {%- set _name = template_names|join %}
       {%- else %}
-      {%- set _name = overloading_prefix[0]|lower + overloading_prefix[1:]|to_camel_case %}
+      {%- set _name = overloading_prefix %}
       {%- endif %}
       {%- else %}
-      {%- set _name = name|to_camel_case %}
+      {%- set _name = name %}
       {%- endif %}
       {%- if comment %}
       {{helper.make_comment(comment)}}

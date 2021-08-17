@@ -140,13 +140,14 @@ Now let's see how **name** is used for template getters/setters.
 
 
 In the above example we have a template getter **fruits**. Here we have specified two possible types for parameter **T** Apple and Pineapple.
-Notice that **name** is specified only for Apple. This means that it'll be used as a property name in the target language. In the case of Pineapple
-it's **type** will be used as no **name** is specified.
+Notice that **name** is specified for both. This means that it'll be used as a property name in the target language. As a result we'll have apple and pineapple
+correspondingly. If for template getter types no name is specified then **type** name will be used as a property name.
+For this example we would have Apple And Pineapple correspondingly.
 For the all tree target languages we will have apples and pineapple correspondingly.
-In the above example we have another template getter **allFruits** with two parameters **T** and **U**. Notice we have used name for both **T** and **U**.
-In case of multiple parameters for each combination of parameters names(or types of no name is specified) are joined.
-For this example it'll be **applesWithPineapples** for kotlin and swift, apples_with_pineapples
-for python. Notice that the name is snake cased or camel cased depending on the target language.
+In the above example we have another template getter/setter **allFruits** with two parameters **T** and **U**. Notice we have used name for both **T** and **U**.
+In case of multiple parameters for each combination of template parameters appropriate names are joined.
+For this example it'll be **applesWithPineapples** for kotlin and swift, **apples_with_pineapples**
+for python. Notice that the name is snake cased for python.
 The API for this getter could also be written in the following way
 
 .. code-block:: yaml
@@ -159,8 +160,8 @@ The API for this getter could also be written in the following way
 
 The result will be the same.
 
-If no name is specified then type names are being joined and converted to snake case or camel case.
-For this example we would have applePineapple or apple_pineapple.
+If no name is specified then type names are being joined. For python additionally it'll be converted to snake case.
+For this example we would have applePineapple(swift, kotlin) and apple_pineapple(python).
 
 Let's see the generated APIs for the target languages.
 
@@ -174,6 +175,11 @@ Let's see the generated APIs for the target languages.
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py
            :language: py
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/fruits.swift
+           :language: swift
 
 And the usage examples
 
@@ -189,5 +195,12 @@ And the usage examples
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/main.py
            :language: py
+           :start-after: [template-get-usage]
+           :end-before: [template-get-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/python/src/getters/main.swift
+           :language: swift
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]

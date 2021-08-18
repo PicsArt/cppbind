@@ -69,7 +69,7 @@ class TestFilesIdentical(unittest.TestCase):
     def _prepare_config_and_examples(self):
         # set context_def_glob according to examples
         config.application.context_def_glob = 'cxx/**/*iegen.yaml'
-        os.makedirs('tmp', exist_ok=True)
+        os.makedirs('tmp')
         os.chdir('tmp')
         # copy example sources and config
         shutil.copytree(os.path.join(SCRIPT_DIR, '../../examples/primitives/cxx'), './cxx')

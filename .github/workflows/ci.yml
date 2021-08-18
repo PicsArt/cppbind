@@ -46,6 +46,10 @@ jobs:
           export NDK_PATH=/usr/local/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
           pytest ./src/test/
 
+      - name: Run examples tests
+        run: |
+          cd examples/primitives/
+          bazel test //...
 
   build_ubuntu:
 
@@ -76,3 +80,8 @@ jobs:
       - name: Run unit tests
         run: |
           pytest ./src/test/
+
+      - name: Run examples tests
+        run: |
+          cd examples/primitives/
+          bazel test //...

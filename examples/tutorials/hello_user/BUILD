@@ -93,20 +93,16 @@ py_binary(
     ],
 )
 
-genrule(
-    name = "copy_link_jni_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_header"],
-    outs = ["jni.h"],
-    cmd = "cp -f $< $@",
-)
-
 cc_library(
-    name = "copy_jni_hdr_lib",
-    hdrs = [":copy_link_jni_header"] + select({
+    name = "jni_header_lib",
+    hdrs = ["@bazel_tools//tools/jdk:jni_header"] + select({
         ":on_linux": ["@bazel_tools//tools/jdk:jni_md_header-linux"],
         ":on_macos": ["@bazel_tools//tools/jdk:jni_md_header-darwin"],
     }),
-    includes = ["kotlin/wrappers"] + select({
+    includes = [
+        "kotlin/wrappers",
+        "external/bazel_tools/tools/jdk/include/",
+    ] + select({
         ":on_linux": ["external/bazel_tools/tools/jdk/include/linux"],
         ":on_macos": ["external/bazel_tools/tools/jdk/include/darwin"],
     }),
@@ -120,8 +116,8 @@ cc_library(
     hdrs = glob(["kotlin/wrappers/**/*.h*"]),
     visibility = ["//visibility:public"],
     deps = [
-        ":copy_jni_hdr_lib",
         ":hello_user_library",
+        ":jni_header_lib",
     ],
     alwayslink = True,
 )

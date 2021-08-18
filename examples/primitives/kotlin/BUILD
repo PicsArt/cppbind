@@ -1,26 +1,18 @@
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
-genrule(
-    name = "copy_link_jni_md_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_md_header-linux"],
-    outs = ["jni_md.h"],
-    cmd = "cp -f $< $@",
-)
-
-genrule(
-    name = "copy_link_jni_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_header"],
-    outs = ["jni.h"],
-    cmd = "cp -f $< $@",
-)
-
 cc_library(
-    name = "copy_jni_hdr_lib",
-    hdrs = [
-        ":copy_link_jni_header",
-        ":copy_link_jni_md_header",
-    ],
-    includes = ["."],
+    name = "jni_header_lib",
+    hdrs = ["@bazel_tools//tools/jdk:jni_header"] + select({
+        "//:on_linux": ["@bazel_tools//tools/jdk:jni_md_header-linux"],
+        "//:on_macos": ["@bazel_tools//tools/jdk:jni_md_header-darwin"],
+    }),
+    includes = [
+        ".",
+        "../external/bazel_tools/tools/jdk/include",
+    ] + select({
+        "//:on_linux": ["../external/bazel_tools/tools/jdk/include/linux"],
+        "//:on_macos": ["../external/bazel_tools/tools/jdk/include/darwin"],
+    }),
     visibility = ["//visibility:public"],
 )
 
@@ -30,7 +22,7 @@ cc_library(
     hdrs = glob(["wrappers/**/*.h*"]),
     visibility = ["//visibility:public"],
     deps = [
-        ":copy_jni_hdr_lib",
+        ":jni_header_lib",
         "//cxx:cc_examples_library",
     ],
     alwayslink = True,
@@ -38,6 +30,13 @@ cc_library(
 
 cc_binary(
     name = "libwrapper_jni.so",
+    linkshared = True,
+    visibility = ["//visibility:public"],
+    deps = [":kt_examples_wrapper"],
+)
+
+cc_binary(
+    name = "libwrapper_jni.dylib",
     linkshared = True,
     visibility = ["//visibility:public"],
     deps = [":kt_examples_wrapper"],
@@ -54,7 +53,10 @@ kt_jvm_test(
 kt_jvm_test(
     name = "operators",
     srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni.so"],
+    data = select({
+        "//:on_linux": ["libwrapper_jni.so"],
+        "//:on_macos": ["libwrapper_jni.dylib"],
+    }),
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.operators.OperatorsApp",
 )

@@ -61,6 +61,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+      - name: Set up swift 5.4
+        uses: fwal/setup-swift@v1
+        with:
+          swift-version: "5.4.0"
 
       - name: Install dependencies
         run: |

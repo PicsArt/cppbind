@@ -127,7 +127,14 @@ cc_library(
 )
 
 cc_binary(
-    name = "libwrapper_jni",
+    name = "libwrapper_jni.so",
+    linkshared = True,
+    visibility = ["//visibility:public"],
+    deps = [":hello_user_kt_wrapper"],
+)
+
+cc_binary(
+    name = "libwrapper_jni.dylib",
     linkshared = True,
     visibility = ["//visibility:public"],
     deps = [":hello_user_kt_wrapper"],
@@ -139,7 +146,10 @@ kt_jvm_binary(
         "kotlin/src/**/*.kt",
         "usage/kotlin/**/*.kt",
     ]),
-    data = [":libwrapper_jni"],
-    jvm_flags = ["-Djava.library.path=./"],
+    data = select({
+        ":on_linux": ["libwrapper_jni.so"],
+        ":on_macos": ["libwrapper_jni.dylib"],
+    }),
+    jvm_flags = ["-Djava.library.path=."],
     main_class = "hello_user_usage.HelloUserApp",
 )

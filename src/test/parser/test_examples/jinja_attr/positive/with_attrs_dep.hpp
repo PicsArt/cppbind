@@ -1,7 +1,5 @@
 namespace Example {
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * a: ParentValue
@@ -14,14 +12,15 @@ class ExampleClass {
      * action: gen_method
      * a: "{{a}}InChild"
      * b: "Used{{a}}"
+     * h:
+     *  - "{{h[0]}}"
+     *  - "NewValue"
      */
     void ExampleMethod() {
     }
 };
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  */
@@ -34,6 +33,7 @@ class AnotherExampleClass {
      * b: "{{b}}"
      * c: AnotherValueOfC
      * e: "{{f}}UsedInE"
+     * h: "{{h + ['NewValue']}}"
      */
     void AnotherExampleMethod() {
     }

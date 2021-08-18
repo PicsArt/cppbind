@@ -163,14 +163,20 @@ class CXXIEGIRBuilder:
         """
         if len(self.node_stack) < 2:
             return None
+
         direct_parent_name = self.node_stack[-2].full_displayname
         if direct_parent_name in self._parent_arg_mapping:
             return self._parent_arg_mapping[direct_parent_name]
+
         parents = reversed(self.node_stack[:-1])
         parent_args = None
         for parent in parents:
             if parent.api:
-                parent_args = parent.args
+                var_def = self.ctx_mgr.ctx_desc.get_var_def()
+                # select only those variables which has 'inheritable' property set to true
+                # in order not to have redundant values in context when passing to child nodes
+                parent_args = {name: val for name, val in parent.args.items()
+                               if var_def[name].get('inheritable').value is True}
                 break
         self._parent_arg_mapping[direct_parent_name] = parent_args
         return parent_args

@@ -1,7 +1,5 @@
 namespace Example {
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * a: ParentValue

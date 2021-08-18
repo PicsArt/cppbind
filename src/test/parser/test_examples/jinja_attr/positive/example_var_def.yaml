@@ -1,7 +1,7 @@
 action:
   inheritable: false
   default: null
-  allowed_on: [ cxx, file_system ]
+  allowed_on: [cxx]
 
 a:
   inheritable: true
@@ -23,16 +23,47 @@ d:
   inheritable: true
   default: "{{c}}UsedInD"
   type: str
-  allowed_on: [ root, cxx ]
+  allowed_on: [root, cxx]
 
 e:
   inheritable: true
   default: "DefaultValueOfE"
   type: str
-  allowed_on: [ root, cxx ]
+  allowed_on: [root, cxx]
 
 f:
   inheritable: true
   default: "{{e}}UsedInF"
   type: str
-  allowed_on: [ root, cxx ]
+  allowed_on: [root, cxx]
+
+g:
+  inheritable: false
+  default: SingleValue
+  type: list
+
+h:
+  inheritable: true
+  default: |
+    {%- set result = [] -%}
+    {%- for i in range(3) -%}
+        {%- do result.append(g[0] + loop.index|string) -%}
+    {%- endfor -%}
+    {{result}}
+  type: list
+
+i:
+  inheritable: false
+  default:
+    T: "{{h[0]}}"
+    V:
+      - "{{h[0]}}"
+      - "{{h[1]}}"
+  type: dict
+
+j:
+  inheritable: true
+  default:
+    linux.swift:
+      T: "{{h[0]}}"
+  type: dict

@@ -11,12 +11,11 @@ from types import SimpleNamespace
 from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 import yaml
 
-
 from iegen import default_config
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader, YamlNode
+from iegen.common.yaml_process import get_real_value, has_type, UniqueKeyLoader
+from iegen.context_manager.ctx_eval import ContextEvaluator
 from iegen.ir.ast import Node
-from iegen.utils import JINJA2_ENV
 from iegen.utils.clang import extract_pure_comment
 
 
@@ -106,7 +105,7 @@ class APIParser:
             location = location or SimpleNamespace(file_name=attrs.file,
                                                    line_number=None)
             try:
-                api_attrs = APIParser.eval_attr_template(attrs, ctx)
+                api_attrs = ContextEvaluator.eval_attr_template(attrs, ctx)
             except JinjaUndefinedError as err:
                 Error.critical(f"Jinja evaluation error: {err}",
                                location.file_name, location.line_number)
@@ -142,7 +141,7 @@ class APIParser:
             prior = APIParser.get_priority(platform, language)
 
             if attr == 'action':
-                api = value.value if isinstance(value, YamlNode) else value
+                api = get_real_value(value)
 
             if attr not in self.var_def:
                 Error.critical(f"Variable {attr} is not specified. "
@@ -150,16 +149,7 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            array = self.var_def[attr].get('type') == 'list'
             value = self.parse_attr(attr, value)
-
-            if array:
-                if not isinstance(value, list) and not (isinstance(value, YamlNode) and value.is_of_type(list)):
-                    value = [value]
-            elif isinstance(value, list):
-                Error.critical(f"Wrong variable type: {attr} cannot be array",
-                               location.file_name if location else None,
-                               location.line_number if location else None)
 
             curr_max_prior = max(prev_priors[attr])
             # overwrite the value only if the current option
@@ -186,8 +176,7 @@ class APIParser:
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':
-            if not isinstance(attr_value, dict) and \
-                    not (isinstance(attr_value, YamlNode) and attr_value.is_of_type(dict)):
+            if not has_type(attr_value, dict):
                 raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
             if attr_name == 'template':
                 for attrs in attr_value.values():
@@ -217,32 +206,3 @@ class APIParser:
         if plat is None or lang is None:
             return 2
         return 3
-
-    @staticmethod
-    def eval_attr_template(attrs, ctx):
-        """
-        Evaluate jinja expressions in current yaml section.
-        """
-
-        # if the whole section is pure string, we just need to eval it
-        if attrs.is_of_type(str):
-            return yaml.load(JINJA2_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
-        # if the section is not a string, i.e. values can contain jinja expressions,
-        # we need to keep values to eval them later
-        return attrs
-
-    @classmethod
-    def eval_var_value(cls, struct, ctx):
-        """
-        Evaluate structure value recursively using given context
-        """
-
-        if isinstance(struct, YamlNode) and struct.is_of_type(dict) or isinstance(struct, dict):
-            return {k: cls.eval_var_value(v, ctx) for k, v in struct.items()}
-        if isinstance(struct, YamlNode) and struct.is_of_type(list) or isinstance(struct, list):
-            return [cls.eval_var_value(i, ctx) for i in struct]
-        if isinstance(struct, YamlNode) and struct.is_of_type(str) or isinstance(struct, str):
-            return JINJA2_ENV.from_string(struct.value if isinstance(struct, YamlNode) else struct).render(ctx)
-        if isinstance(struct, YamlNode):
-            return struct.value
-        return struct

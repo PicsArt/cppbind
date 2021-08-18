@@ -245,9 +245,11 @@ class ContextDescriptor:
         for var_name, prop in self.var_def.items():
             extra_nodes = set(prop['required_on']) - set(prop['allowed_on'])
             if extra_nodes:
-                Error.critical(f"Variable '{var_name}' is not allowed on '{', '.join(extra_nodes)}'",
-                               prop.file,
-                               prop.line_number)
+                Error.error(f"Variable '{var_name}' is required on '{', '.join(extra_nodes)}' "
+                            f"node{'s' if len(extra_nodes) > 1 else ''}, while it's not allowed on "
+                            f"{'them' if len(extra_nodes) > 1 else 'it'}",
+                            prop.file,
+                            prop.line_number)
 
     def get_var_def(self):
         """Get variable definitions section"""

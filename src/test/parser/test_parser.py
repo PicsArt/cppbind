@@ -9,8 +9,6 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from jinja2.exceptions import UndefinedError
-
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import YamlKeyDuplicationError, yaml_info_struct_to_dict, load_yaml
@@ -271,11 +269,21 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert cls_node.args['b'] == f"{cls_node.args['a']}UsedInB",\
             "variables dependency for default values doesn't work correctly"
 
+        # checking not simple types (list and dict)
+        assert cls_node.args['g'] == ["SingleValue"],\
+            "single value must be put into list if 'type' attribute of variable is list"
+        assert cls_node.args['h'] == [cls_node.args['g'][0] + str(i+1) for i in range(3)],\
+            "evaluation of jinja dynamic for cycle doesn't work correctly"
+        assert cls_node.args['i'] == {"T": "SingleValue1", "V": ["SingleValue1", "SingleValue2"]},\
+            "evaluation of jinja dict doesn't work correctly"
+
         method_node = cls_node.children[0]
         assert method_node.args['a'] == f"{cls_node.args['a']}InChild",\
             "inheritance of variables doesn't work correctly"
         assert method_node.args['b'] == f"Used{method_node.args['a']}",\
             "variables current evaluated context is ignored"
+        assert method_node.args['h'] == [cls_node.args['h'][0], 'NewValue'],\
+            "evaluation of each item of list doesn't work correctly"
 
         # checking the second class and method
         cls_node = namespace_node.children[1]
@@ -292,6 +300,10 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
             "inheritance of variables doesn't work correctly"
         assert method_node.args['e'] == f"{method_node.args['f']}UsedInE",\
             "cyclic-like dependencies doesn't work correctly"
+        assert(method_node.args['h'] == cls_node.args['h'] + ['NewValue']),\
+            "evaluation of jinja list augmentation doesn't work correctly"
+        assert method_node.args['j'] == {'T': 'SingleValue1'},\
+            "evaluation of platform/language specific field of default values doesn't work correctly"
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'test_examples/jinja_attr/negative'))
@@ -323,16 +335,32 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
-        context_def_glob = os.path.join(test_dir, 'example_iegen.yaml')
+        context_def_glob = os.path.join(test_dir, 'with_wrong_order_iegen.yaml')
         ctx_mgr = ContextManager(ContextDescriptor(context_def_glob, 'linux', 'swift'))
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         try:
             ir_builder.start_root()
-        except UndefinedError:
+        except IEGError:
             pass
         else:
             assert False, "should get error: incorrect dependency used in root section"
+
+    # check variables dependency in case when they are defined on different nodes
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "with_diff_nodes_var_def.yaml"))
+        clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_diff_nodes.hpp')]
+
+        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder.start_root()
+
+        try:
+            parser.parse(ir_builder, **clang_cfg)
+        except IEGError:
+            pass
+        else:
+            assert False, "not inheritable variable cannot be used when evaluating context of child node"
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
@@ -439,9 +467,7 @@ def test_var_def_validation():
         # add dummy 'required_on' node without having it in 'allowed_on' list
         var_def_mock.return_value['b']['required_on'] = ['dir']
 
-        try:
-            ContextDescriptor(None, 'linux', 'python')
-        except IEGError:
-            pass
-        else:
-            assert False, "variable cannot be required on a node on which it is not allowed"
+        Error.has_error = False
+        ContextDescriptor(None, 'linux', 'python')
+
+        assert Error.has_error is True, "variable cannot be required on a node on which it is not allowed"

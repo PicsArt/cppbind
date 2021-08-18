@@ -1,8 +1,3 @@
-action:
-  inheritable: false
-  default: null
-  allowed_on: [ cxx, file_system ]
-
 a:
   inheritable: true
   default: DefaultValueOfA

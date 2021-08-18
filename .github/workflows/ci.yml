@@ -76,4 +76,3 @@ jobs:
       - name: Run unit tests
         run: |
           pytest ./src/test/
-

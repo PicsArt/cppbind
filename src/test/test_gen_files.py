@@ -5,25 +5,29 @@ import sys
 import types
 import unittest
 
+from iegen.common.config import config
+from iegen.runner import run
+
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
 class TestFilesIdentical(unittest.TestCase):
 
     def setUp(self) -> None:
+        self.test_dir = os.getcwd()
         self.gen_root = './%s/'
-        self.examples_root = '../../examples/primitives/%s/'
+        self.examples_root = os.path.join(SCRIPT_DIR, '../../examples/primitives/%s/')
         self.languages = ['python', 'kotlin', 'swift']
         self._prepare_config_and_examples()
 
     def tearDown(self) -> None:
-        os.chdir(SCRIPT_DIR)
+        # remove added config
+        del config.application.context_def_glob
+        os.chdir(self.test_dir)
         # clear all generate file
         shutil.rmtree('tmp')
 
     def test_files_are_identical(self):
-        # using a local import to be able to use copied cfg file as iegen config file is loaded initally
-        from iegen.runner import run
 
         # run iegen
         run(types.SimpleNamespace(languages=self.languages))
@@ -63,10 +67,13 @@ class TestFilesIdentical(unittest.TestCase):
             raise AssertionError
 
     def _prepare_config_and_examples(self):
+        # set context_def_glob according to examples
+        config.application.context_def_glob = 'cxx/**/*iegen.yaml'
         os.makedirs('tmp', exist_ok=True)
         os.chdir('tmp')
-        shutil.copytree('../../examples/primitives/cxx', './cxx')
-        shutil.copyfile('../../examples/primitives/iegen_config.cfg', './iegen_config.cfg')
+        # copy example sources and config
+        shutil.copytree(os.path.join(SCRIPT_DIR, '../../examples/primitives/cxx'), './cxx')
+        shutil.copyfile(os.path.join(SCRIPT_DIR, '../../examples/primitives/iegen_config.cfg'), './iegen_config.cfg')
 
 
 def is_filtered(line):

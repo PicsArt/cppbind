@@ -43,11 +43,9 @@ jobs:
 
       - name: Run unit tests
         run: |
+          export NDK_PATH=/usr/local/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
           pytest ./src/test/
 
-      - name: Run comparison tests
-        run: |
-          bazel test //... --action_env=NDK_PATH=/usr/local/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot  --test_output=streamed
 
   build_ubuntu:
 
@@ -79,6 +77,3 @@ jobs:
         run: |
           pytest ./src/test/
 
-      - name: Run comparison tests
-        run: |
-          bazel test //... --test_output=streamed

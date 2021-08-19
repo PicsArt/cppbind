@@ -13,8 +13,8 @@ import yaml
 
 from iegen import default_config
 from iegen.common.error import Error
-from iegen.common.yaml_process import get_real_value, has_type, UniqueKeyLoader
-from iegen.context_manager.ctx_eval import ContextEvaluator
+from iegen.common.yaml_process import has_type, to_value, UniqueKeyLoader
+from iegen.context_manager.var_eval import VariableEvaluator
 from iegen.ir.ast import Node
 from iegen.utils.clang import extract_pure_comment
 
@@ -105,7 +105,7 @@ class APIParser:
             location = location or SimpleNamespace(file_name=attrs.file,
                                                    line_number=None)
             try:
-                api_attrs = ContextEvaluator.eval_attr_template(attrs, ctx)
+                api_attrs = VariableEvaluator.eval_attr_template(attrs, ctx)
             except JinjaUndefinedError as err:
                 Error.critical(f"Jinja evaluation error: {err}",
                                location.file_name, location.line_number)
@@ -141,7 +141,7 @@ class APIParser:
             prior = APIParser.get_priority(platform, language)
 
             if attr == 'action':
-                api = get_real_value(value)
+                api = to_value(value)
 
             if attr not in self.var_def:
                 Error.critical(f"Variable {attr} is not specified. "
@@ -149,7 +149,7 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            value = self.parse_attr(attr, value)
+            value = self.parse_attr(attr, value, location)
 
             curr_max_prior = max(prev_priors[attr])
             # overwrite the value only if the current option
@@ -166,7 +166,7 @@ class APIParser:
 
         return api, attr_dict
 
-    def parse_attr(self, attr_name, attr_value):
+    def parse_attr(self, attr_name, attr_value, location=None):
         """
         Evaluate the value of variable depending on its type.
         """
@@ -177,14 +177,19 @@ class APIParser:
 
         if attr_type == 'dict':
             if not has_type(attr_value, dict):
-                raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
+                Error.critical(f"Wrong variable type: {type(attr_value)}, it must be dictionary",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or 'type' not in attr:
-                            raise Exception(
+                            Error.critical(
                                 f"Wrong template variable style: {attr_value}, "
-                                f"template must have mandatory 'type' variable")
+                                f"template must have mandatory 'type' variable",
+                                location.file_name if location else None,
+                                location.line_number if location else None
+                            )
         # default string type
         return attr_value
 

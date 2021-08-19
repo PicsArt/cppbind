@@ -176,7 +176,7 @@ class CXXIEGIRBuilder:
                 # select only those variables which has 'inheritable' property set to true
                 # in order not to have redundant values in context when passing to child nodes
                 parent_args = {name: val for name, val in parent.args.items()
-                               if var_def[name].get('inheritable').value is True}
+                               if var_def[name].get('inheritable')}
                 break
         self._parent_arg_mapping[direct_parent_name] = parent_args
         return parent_args

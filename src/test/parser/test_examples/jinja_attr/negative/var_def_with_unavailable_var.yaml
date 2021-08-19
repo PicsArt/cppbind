@@ -1,0 +1,6 @@
+a:
+  allowed_on: [root]
+  default: "{{b}}UsedInA"
+
+b:
+  allowed_on: [dir]

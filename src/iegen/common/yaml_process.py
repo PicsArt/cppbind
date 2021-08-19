@@ -233,7 +233,7 @@ def has_type(obj, type_cls):
     return isinstance(obj, YamlNode) and obj.is_of_type(type_cls) or isinstance(obj, type_cls)
 
 
-def get_real_value(obj):
+def to_value(obj):
     """
     A function to return real value of object
     """

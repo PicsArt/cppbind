@@ -63,7 +63,14 @@ i:
 
 j:
   inheritable: true
-  default:
-    linux.swift:
+  linux.swift.default:
       T: "{{h[0]}}"
   type: dict
+
+k:
+  type: list
+  linux.default:
+    - |
+      row1
+
+      row2

@@ -2,10 +2,9 @@
 Module is responsible for context variables evaluating for current node.
 """
 from collections import OrderedDict
-from collections.abc import MutableMapping
 
 from iegen.common.error import Error
-from iegen.context_manager.ctx_eval import ContextEvaluator
+from iegen.context_manager.var_eval import VariableEvaluator
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
@@ -85,7 +84,7 @@ class ContextManager:
                     break
 
                 # inherit from parent or add default value
-                if properties["inheritable"]:
+                if properties.get('inheritable'):
                     # directory based nodes may not have parent
                     if ctx:
                         new_att_val = ctx.get(att_name)
@@ -96,11 +95,11 @@ class ContextManager:
                         new_att_val = ContextManager.get_attr_default_value(
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
 
-                        new_att_val = ContextEvaluator.eval_var_value(properties,
-                                                                      new_att_val,
-                                                                      ctx,
-                                                                      att_name,
-                                                                      location)
+                        new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                                       new_att_val,
+                                                                       ctx,
+                                                                       att_name,
+                                                                       location)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
@@ -109,11 +108,11 @@ class ContextManager:
                                 location.line_number if location else None)
                     break
 
-                new_att_val = ContextEvaluator.eval_var_value(properties,
-                                                              new_att_val,
-                                                              ctx,
-                                                              att_name,
-                                                              location)
+                new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                               new_att_val,
+                                                               ctx,
+                                                               att_name,
+                                                               location)
 
             # now we need to process variables of value and set value
             if new_att_val is not None:
@@ -132,38 +131,20 @@ class ContextManager:
         """
         Retrieve language/platform specific default value for current variable.
         """
-        def_val = prop.get("default")
-
-        if def_val is None:
-            return None
-
-        # if the section value is not dict, we simply return its value
-        if not def_val.is_of_type(MutableMapping):
-            return def_val.value
 
         # detect illegal specification of plat/lang option
-        if plat in def_val and lang in def_val:
+        if plat + '.default' in prop and lang + '.default' in prop:
             Error.critical(
-                f"Conflict of attributes in attributes definition file: {plat} and {lang}: "
+                f"Conflict of attributes in attributes definition file: {plat}.default and {lang}.default: "
                 f"only one of them must be defined separately, or they must be both specified")
 
         # if plat/lang specific key is preset, return corresponding section
-        for key in (plat + '.' + lang, plat, lang, 'else'):
-            if key in def_val:
-                return def_val[key].value
+        # we search for specific key by descending order of priority
+        for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
+            if key in prop:
+                return prop[key].value
 
-        # if there is no any other plat/lang specific options in keys,
-        # we return current section (since 'type' can be dict), otherwise we return None
-        # this is done to differentiate between 2 possible types of dictionaries: with/without plat/lang options
-        plat_lang_options = [f"{plat}.{lang}" for plat in default_config.platforms for lang in default_config.languages]
-        # this wrong combination is also skipped since it'll be caught for corresponding plat+lang option
-        lang_plat_options = [f"{lang}.{plat}" for plat in default_config.platforms for lang in default_config.languages]
-        for possible_plat_lang_option in plat_lang_options + lang_plat_options + \
-                                         default_config.platforms + default_config.languages:
-            if possible_plat_lang_option in def_val:
-                return None
-
-        return def_val
+        return None
 
     def has_yaml_api(self, name):
         """

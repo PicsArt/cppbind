@@ -8,15 +8,14 @@ from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from iegen.common.error import Error
 from iegen.common.yaml_process import (
-    get_real_value,
+    to_value,
     has_type,
-    UniqueKeyLoader,
-    YamlNode
+    UniqueKeyLoader
 )
 from iegen.utils import get_var_real_type, JINJA2_ENV
 
 
-class ContextEvaluator:
+class VariableEvaluator:
     """
     A class to evaluate jinja expressions according to variables type
     """
@@ -45,10 +44,8 @@ class ContextEvaluator:
         if has_type(struct, list):
             return [cls.eval_rec(i, ctx) for i in struct]
         if has_type(struct, str):
-            return JINJA2_ENV.from_string(get_real_value(struct)).render(ctx)
-        if isinstance(struct, YamlNode):
-            return struct.value
-        return struct
+            return JINJA2_ENV.from_string(to_value(struct)).render(ctx)
+        return to_value(struct)
 
     @classmethod
     def eval_var_value(cls, prop, val, ctx, att_name, location):
@@ -56,26 +53,36 @@ class ContextEvaluator:
         Method to eval/load variable value according to its type
         """
         # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
-        actual_type = get_var_real_type(prop.get('type')) or type(get_real_value(val))
+        actual_type = get_var_real_type(prop.get('type')) or type(to_value(val))
         # if 'type' is not defined and default value is null, actual_type still can be None
         # we still check val since for some languages/platforms it can be null
         if actual_type and val is not None:
             # we evaluate jinja expression when type is str, or when we have type mismatch
             if actual_type is str or not has_type(val, actual_type):
                 try:
-                    val = JINJA2_ENV.from_string(get_real_value(val)).render(ctx)
-                except JinjaUndefinedError as err:
+                    val = JINJA2_ENV.from_string(to_value(val)).render(ctx)
+                except (JinjaUndefinedError, TypeError) as err:
                     Error.critical(
-                        f"Jinja evaluation error in attributes definition file: {err}")
+                        f"Jinja evaluation error for '{att_name}' variable: {err}",
+                        location.file_name if location else None,
+                        location.line_number if location else None
+                    )
                 # we load evaluated result to yaml if we have type mismatch but type is not str
                 if actual_type is not str:
                     val = yaml.load(val, Loader=UniqueKeyLoader)
             else:
-                # if we have type match, we need to call recursive evaluation function
-                val = cls.eval_rec(val, ctx)
+                try:
+                    # if we have type match, we need to call recursive evaluation function
+                    val = cls.eval_rec(val, ctx)
+                except (JinjaUndefinedError, TypeError) as err:
+                    Error.critical(
+                        f"Jinja evaluation error for '{att_name}' variable: {err}",
+                        location.file_name if location else None,
+                        location.line_number if location else None
+                    )
 
-        # we put single element inside of list if 'type' attribute of variable is list
-        if actual_type is list and not isinstance(val, list):
+        # we put single string element inside of list if 'type' attribute of variable is list
+        if actual_type is list and isinstance(val, str):
             val = [val]
         # validate result type with actual type
         # we have cases when 'type' is specified but value can be null, that's why we need to check also val is not None

@@ -305,8 +305,11 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert method_node.args['j'] == {'T': 'SingleValue1'},\
             "evaluation of platform/language specific field of default values doesn't work correctly"
 
+        # check that new lines of variable are preserving if they are written in yaml config file
+        assert method_node.args['k'] == ['row1\n\nrow2'],\
+            "new lines are not preserved"
 
-@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'test_examples/jinja_attr/negative'))
+
 def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
@@ -315,7 +318,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
     # check wrong variables order in var def file
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "wrong_example_var_def.yaml"))
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_wrong_order.yaml"))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
@@ -326,6 +329,8 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             ir_builder.start_root()
         except IEGError:
             pass
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
         else:
             assert False, "should get error: incorrect order of dependant variables in variables definition file"
 
@@ -343,12 +348,14 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             ir_builder.start_root()
         except IEGError:
             pass
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
         else:
             assert False, "should get error: incorrect dependency used in root section"
 
     # check variables dependency in case when they are defined on different nodes
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "with_diff_nodes_var_def.yaml"))
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_diff_nodes.yaml"))
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_diff_nodes.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
@@ -359,8 +366,26 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             parser.parse(ir_builder, **clang_cfg)
         except IEGError:
             pass
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
         else:
             assert False, "not inheritable variable cannot be used when evaluating context of child node"
+
+    # check variables dependency in case when they are defined on different nodes
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_unavailable_var.yaml"))
+
+        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+
+        try:
+            ir_builder.start_root()
+        except IEGError:
+            pass
+        except Exception as err:
+            assert False, f"unexpected exception: {err}"
+        else:
+            assert False, "usage of unavailable variable inside jinja expression must be failed"
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
@@ -471,3 +496,17 @@ def test_var_def_validation():
         ContextDescriptor(None, 'linux', 'python')
 
         assert Error.has_error is True, "variable cannot be required on a node on which it is not allowed"
+
+
+def test_attr_type_mismatch_negative():
+    test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/negative')
+
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml"))
+
+        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+
+        Error.has_error = False
+        ir_builder.start_root()
+        assert Error.has_error is True, "evaluation of an expression must fail if its type doesn't match required one"

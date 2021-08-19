@@ -1,0 +1,18 @@
+vars: |
+  out_prj_dir: "."
+  src_glob:
+    - ./**/*.h*
+  src_exclude_glob: []
+
+var_def:
+  action:
+    inheritable: false
+    default: null
+    allowed_on: [ cxx, file_system ]
+
+rules:
+  kotlin.code_snippets:
+    class: Class Test
+
+  kotlin.type_converters:
+    MyType: Class MYType

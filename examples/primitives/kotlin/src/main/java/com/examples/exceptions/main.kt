@@ -26,7 +26,7 @@ class ExceptionsApp {
             try {
                 ThrowExc.getByKey(mapOf(1 to 1), 0)
             } catch (e: StdOutOfRange) {
-                assert(e.what() == "map::at")
+                assert(e.what().contains("map::at"))
             } catch (e: Exception) {
                 assert(false)
             }

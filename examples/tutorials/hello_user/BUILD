@@ -2,6 +2,20 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_binary", "swift_library
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_binary")
 
+config_setting(
+    name = "on_linux",
+    constraint_values = [
+        "@platforms//os:linux",
+    ],
+)
+
+config_setting(
+    name = "on_macos",
+    constraint_values = [
+        "@platforms//os:macos",
+    ],
+)
+
 cc_library(
     name = "hello_user_library",
     srcs = glob(["cxx/**/*.cpp"]),
@@ -37,7 +51,7 @@ swift_library(
 
 swift_binary(
     name = "hello_user_swift",
-    srcs = ["usage/swift/hello_user_usage.kt"],
+    srcs = ["usage/swift/hello_user_usage.swift"],
     deps = [":hello_user_swift_library"],
 )
 
@@ -79,27 +93,19 @@ py_binary(
     ],
 )
 
-genrule(
-    name = "copy_link_jni_md_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_md_header-linux"],
-    outs = ["jni_md.h"],
-    cmd = "cp -f $< $@",
-)
-
-genrule(
-    name = "copy_link_jni_header",
-    srcs = ["@bazel_tools//tools/jdk:jni_header"],
-    outs = ["jni.h"],
-    cmd = "cp -f $< $@",
-)
-
 cc_library(
-    name = "copy_jni_hdr_lib",
-    hdrs = [
-        ":copy_link_jni_header",
-        ":copy_link_jni_md_header",
-    ],
-    includes = ["kotlin/wrappers"],
+    name = "jni_header_lib",
+    hdrs = ["@bazel_tools//tools/jdk:jni_header"] + select({
+        ":on_linux": ["@bazel_tools//tools/jdk:jni_md_header-linux"],
+        ":on_macos": ["@bazel_tools//tools/jdk:jni_md_header-darwin"],
+    }),
+    includes = [
+        "kotlin/wrappers",
+        "external/bazel_tools/tools/jdk/include/",
+    ] + select({
+        ":on_linux": ["external/bazel_tools/tools/jdk/include/linux"],
+        ":on_macos": ["external/bazel_tools/tools/jdk/include/darwin"],
+    }),
     visibility = ["//visibility:public"],
 )
 
@@ -110,8 +116,8 @@ cc_library(
     hdrs = glob(["kotlin/wrappers/**/*.h*"]),
     visibility = ["//visibility:public"],
     deps = [
-        ":copy_jni_hdr_lib",
         ":hello_user_library",
+        ":jni_header_lib",
     ],
     alwayslink = True,
 )
@@ -123,13 +129,23 @@ cc_binary(
     deps = [":hello_user_kt_wrapper"],
 )
 
+cc_binary(
+    name = "libwrapper_jni.dylib",
+    linkshared = True,
+    visibility = ["//visibility:public"],
+    deps = [":hello_user_kt_wrapper"],
+)
+
 kt_jvm_binary(
     name = "hello_user_kotlin",
     srcs = glob([
         "kotlin/src/**/*.kt",
         "usage/kotlin/**/*.kt",
     ]),
-    data = [":libwrapper_jni.so"],
-    jvm_flags = ["-Djava.library.path=./"],
+    data = select({
+        ":on_linux": ["libwrapper_jni.so"],
+        ":on_macos": ["libwrapper_jni.dylib"],
+    }),
+    jvm_flags = ["-Djava.library.path=."],
     main_class = "hello_user_usage.HelloUserApp",
 )

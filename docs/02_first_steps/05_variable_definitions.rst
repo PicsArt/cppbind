@@ -1,8 +1,7 @@
 Variable Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
-
-IEGEN's uses variables for defining what code should be parsed, how target code should look like, where should output be stored etc.
+Project configuration is described through the variables. Using variables we define what code should be parsed, how target code should look like, where should output be stored etc.
 Let's go through variables definitions and see how they are used.
 Here is the list:
 
@@ -13,10 +12,10 @@ Each variable has the following properties.
 
     * **inheritable** indicates whether attribute is inherited from it's parent or no,
     * **default** indicates the default value,
-    * **allowed_on** indicates on which parts the attribute is allowed to be used e.g. file, class, method etc.,
-    * **required_on** indicates where the attribute is required e.g. file, class, method etc.,
-    * **array** indicates if the attribute can be used for multiple times or no
-    * **type** is the type of attribute's value. The default type is string. Other supported types bool and dict.
+    * **allowed_on** indicates on which parts of the code(files, classes etc.) the attribute is allowed to be used,
+    * **required_on** indicates where the attribute is required on a specific parts of code(files, classes, methods etc.),
+    * **array** indicates if the attribute is a list or no.
+    * **type** is the type of attribute's value. The default type is string. Other supported types are bool and dict.
 
 Values for the property **allowed_on** are divided into two groups:
 
@@ -29,6 +28,7 @@ Values for the property **allowed_on** are divided into two groups:
 
 If all values of the group are allowed then the group can be used instead.
 
+If user does not specify a value for variable the the default value is being used.
 There are predefined system variables which can be used for defining the default value for the variable.
 Here is the list of system variables:
 
@@ -42,36 +42,36 @@ Here is the list of system variables:
  * **_file_full_name**: full path of the file which is being processed
  * **_is_operator** - indicates whether the method is a c++ operator or not.
  * **_object_name** - name of the project which is being processed e.g. class name, method name etc.
- * **_file_name** - full name which is being processed.
+ * **_file_name** - files full name which is being processed.
 
 
-Now let's go through variables one by one:
+Now let's go through the variables one by one:
 
-    - *action* -Indicates what should be generated class, method, etc. Details here :doc:`API configuration </02_first_steps/06_api_configuration>`
-    - *file* -Output file name
-    - *file_full_name* -Source file full path.
-    - *package* -Package name which with **package_prefix** is used for generating the final package({package_prefix}.{package}).
-    - *name* -Name of the class, method etc. If not specified then the original name is used.
-    - *interface_name* -When action is gen_interface then this will be used as a name for the generated interface.
+    - *action* - Indicates what should be generated class, method, etc. Details here :doc:`API configuration </02_first_steps/06_api_configuration>`
+    - *file* - Output file name
+    - *file_full_name* - Source file full path.
+    - *package* - Package name which with **package_prefix** is used for generating the final package({package_prefix}.{package}).
+    - *name* - Name of the class, method etc. If not specified then the original name is used.
+    - *interface_name* - When action is gen_interface then this will be used as a name for the generated interface.
     - | *interface_class_name* - This variable is the name of the implementation class for the languages which do not support multiple inheritance.
       | It's used with **interface_name**. Let's assume we have marked Animal class with **action: gen_interface**.
       | For kotlin we would have one interface named with **interface_name** and the implementation class of  it named with **interface_class_name**.
-    - *include* -Additional includes that will be added to the generated file.
+    - *include* - Additional includes that will be added to the generated file.
     - | *code_fragment* - Code snippets which will be appended to the target code depending on what was tagged with this variable.
       | For example if enum is tagged with this variable then code fragment will be appended to the generated enum.
-    - *include_cxx* -Additional c++ includes which will be added to generated c wrappers.
-    - *shared_ref* -This variable is to manage how the object will be hold. If false then the generated wrapper will create a regular pointer otherwise it a shared pointer.
-    - *template* -This variable is used for template types/functions to specify all possible types for template parameters. More details here: :doc:`Templates </03_get_started/06_templates.rst>`.
+    - *include_cxx* - Additional c++ includes which will be added to generated c wrappers.
+    - *shared_ref* - This variable is to manage how the object will be hold. If false then the generated wrapper will create a regular pointer otherwise it a shared pointer.
+    - *template* - This variable is used for template types/functions to specify all possible types for template parameters. More details here: :doc:`Templates </03_get_started/06_templates.rst>`.
     - | *is_operator* - This variable is to indicate whether the c++ method is operator or not. Altough it's default value is True for operators and False otherwise
       | there might be cases that c++ operator does not have matching operator in the target language or user might want to generate a regular method instead.
       | For such cases this variable can be used to override the default value. More details and use cases here :doc:`Operators </03_get_started/08_operators>.`
-    - *is_exception* -To indicate that an exception should be generated.
-    - *throws* -This variable is mandatory for all methods. It indicates what exceptions method can throw.
-    - *bases_list* -This variable is used to define extra types which target type will additionally implement.
-    - *nullable_return* -Indicates whether the function can return null value or no. Details here :doc:`Nullable values </03_get_started/07_nullables>`.
-    - *nullable_arg* -Arguments which can be null should be marked with this variable. Examples here :doc:`Nullable values </03_get_started/07_nullables>`.
-    - *project_dir* -Root directory of code which is going to be parsed.
-    - *project_link* -Project source code link. The default value is it's git repo link if it uses git for version control and an empty string otherwise.
+    - *is_exception* - To indicate that an exception should be generated.
+    - *throws* - This variable is mandatory for all methods. It indicates what exceptions method can throw.
+    - *bases_list* - This variable is used to define extra types which target type will additionally implement.
+    - *nullable_return* - Indicates whether the function can return null value or no. Details here :doc:`Nullable values </03_get_started/07_nullables>`.
+    - *nullable_arg* - Arguments which can be null should be marked with this variable. Examples here :doc:`Nullable values </03_get_started/07_nullables>`.
+    - *project_dir* - Root directory of code which is going to be parsed.
+    - *project_link* - Project source code link. The default value is it's git repo link if it uses git for version control and an empty string otherwise.
     - | *comment_del_regex* - Regex to delete unwanted pure comment parts. By default the text between \internal and \endinternal will be ignored.
       | Or if no \endinternal is specified then the text after \internal will be ignored.
     - *comment* - Target code comment. By default it's pure comment without parts that match **comment_del_regex** variable.
@@ -118,7 +118,7 @@ Now let's go through variables one by one:
 
 .. note::
 
-    Each variable can have platform, language specific values. Prefix variable with platform and/or language, like:
+    Each variable can have platform, language specific values. For this purpose variable should prefixed with platform and/or language, like:
 
     .. code-block::
 
@@ -127,7 +127,7 @@ Now let's go through variables one by one:
         mac.name: MacTask
         mac.python.name: MacPyTask
 
-    These are tree ways to use variable.
+    These are tree ways to use variables.
     Note that you cannot have `<language>.<variable>` and `<platform>.<variable>` at the same time.
-    In this case value for `<language>.<language>.<variable>` is ambiguous and iegen will complain about it.
+    In this case the value for `<language>.<language>.<variable>` is ambiguous and iegen will complain about it.
     Another important thing is that default values also can be specified per platform language.

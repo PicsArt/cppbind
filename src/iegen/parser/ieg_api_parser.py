@@ -54,7 +54,8 @@ class APIParser:
         if api_section is None:
             return None, OrderedDict()
 
-        skip_regex = r'^[\s*/]*$'
+        # skip comment start/end (empty lines are preserving)
+        skip_regex = r'^[\s*]*/+[\s*]*$'
 
         lines = api_section.splitlines()
         filtered = list(filter(lambda x: not re.match(skip_regex, x), lines))
@@ -64,16 +65,20 @@ class APIParser:
                            location.file_name if location else None,
                            location.line_number if location else None)
 
-        comment_prefix = re.search(r'\s*\*?\s*', filtered[0])
-        yaml_indent_cnt = comment_prefix.end()
+        yaml_indent_cnt = 0
+        for line in filtered:
+            if line:
+                # calculate comment prefix on the first non-empty line
+                comment_prefix = re.search(r'\s*\*?\s*', line)
+                yaml_indent_cnt = comment_prefix.end()
+                break
 
         yaml_lines = []
         for line in filtered:
-            if len(line) <= yaml_indent_cnt:
-                Error.critical("Invalid yaml format",
-                               location.file_name if location else None,
-                               location.line_number if location else None)
-            yaml_lines.append(line[yaml_indent_cnt:])
+            if len(line) > yaml_indent_cnt:
+                yaml_lines.append(line[yaml_indent_cnt:])
+            else:
+                yaml_lines.append('')
 
         try:
             attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)

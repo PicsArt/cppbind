@@ -1,6 +1,7 @@
 a:
-  allowed_on: [root]
-  default: "{{b}}UsedInA"
+  allowed_on: [class]
+  default: DefaultValueOfA
 
 b:
-  allowed_on: [dir]
+  allowed_on: [root]
+  default: "{{a}}UsedInB"

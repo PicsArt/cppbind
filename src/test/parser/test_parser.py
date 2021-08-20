@@ -112,7 +112,7 @@ def test_api_parser(test_data, res_md5):
         *
         * __API__
         * kotlin.file: utils
-        dd
+        dddd
         */
         """,
 
@@ -291,6 +291,10 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert cls_node.args['b'] == "DefaultValueOfAUsedInB",\
             "variables dependency for default values doesn't work correctly"
 
+        # check that new lines of variable are preserving if they are written in yaml config file
+        assert cls_node.args['k'] == ['row1\n\nrow2'],\
+            "new lines are not preserved in yaml config section"
+
         method_node = cls_node.children[0]
         assert method_node.args['a'] == cls_node.args['a'],\
             "inheritance of variables doesn't work correctly"
@@ -305,9 +309,9 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert method_node.args['j'] == {'T': 'SingleValue1'},\
             "evaluation of platform/language specific field of default values doesn't work correctly"
 
-        # check that new lines of variable are preserving if they are written in yaml config file
-        assert method_node.args['k'] == ['row1\n\nrow2'],\
-            "new lines are not preserved"
+        # check that new lines of variable are preserving if they are written in API comment section
+        assert method_node.args['k'] == ['first row\n\n\nsecond row'],\
+            "new lines are not preserved in API comments section"
 
 
 def test_attrs_dependencies_and_jinja_usage_negative(clang_config):

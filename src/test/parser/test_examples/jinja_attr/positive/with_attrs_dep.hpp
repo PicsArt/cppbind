@@ -34,6 +34,12 @@ class AnotherExampleClass {
      * c: AnotherValueOfC
      * e: "{{f}}UsedInE"
      * h: "{{h + ['NewValue']}}"
+     * k:
+     *   - |
+     *    first row
+     *
+     *
+     *    second row
      */
     void AnotherExampleMethod() {
     }

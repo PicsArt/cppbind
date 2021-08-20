@@ -11,8 +11,5 @@ var_def:
     allowed_on: [ cxx, file_system ]
 
 rules:
-  kotlin.code_snippets:
+  code_snippets:
     class: Class Test
-
-  kotlin.type_converters:
-    MyType: Class MYType

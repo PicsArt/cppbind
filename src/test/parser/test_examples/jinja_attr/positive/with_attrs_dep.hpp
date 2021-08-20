@@ -44,11 +44,9 @@ class AnotherExampleClass {
     void AnotherExampleMethod() {
     }
 
-     /**
-     /// __API__
-     /// action: gen_method
-     /// a: "ValueOfA"
-     */
+    ///  __API__
+    ///  action: gen_method
+    //// a: "ValueOfA"
     void NewExampleMethod() {
     }
 

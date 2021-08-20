@@ -54,38 +54,33 @@ class APIParser:
         if api_section is None:
             return None, OrderedDict()
 
-        # skip comment start/end (empty lines are preserving)
-        skip_regex = r'^[\s*]*/+[\s*]*$'
+        # skip comment start/end
+        skip_pattern = r'^\s*(\*/|/\*)\s*$'
+
+        # keep empty lines or empty comments
+        comment_pattern = r'^\s*(\*+|/{2,})\s*'
 
         lines = api_section.splitlines()
-        filtered = list(filter(lambda x: not re.match(skip_regex, x), lines))
+        yaml_lines = []
 
-        if not filtered:
+        for line in lines:
+            # continue if line contains is only multiline comment begin/end sign
+            if re.match(skip_pattern, line):
+                continue
+
+            # search for comment prefix
+            comment_prefix = re.search(comment_pattern, line)
+            if comment_prefix:
+                pattern_len = comment_prefix.end()
+                yaml_lines.append(' ' * pattern_len + line[pattern_len:])
+            else:
+                # if no any comment sign found just save the line
+                yaml_lines.append(line)
+
+        if not yaml_lines:
             Error.critical("API comments are empty",
                            location.file_name if location else None,
                            location.line_number if location else None)
-
-        yaml_indent_cnt = 0
-        for line in filtered:
-            if line:
-                # calculate comment prefix on the first non-empty line
-                comment_prefix = re.search(r'\s*\*?\s*', line)
-                if comment_prefix:
-                    yaml_indent_cnt = comment_prefix.end()
-                    break
-
-        yaml_lines = []
-        for line in filtered:
-            if len(line) > yaml_indent_cnt:
-                yaml_lines.append(' ' * yaml_indent_cnt + line[yaml_indent_cnt:])
-            else:
-                # in case of empty comment line replace it with empty line
-                if re.match(r'^\s*\*?\s*$', line):
-                    yaml_lines.append('')
-                else:
-                    # if line is not just empty comment line and its length < yaml_indent_line, it can be
-                    # illegal yaml format. So we keep it to be failed later (during yaml.load) if needed.
-                    yaml_lines.append(line)
 
         try:
             attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)

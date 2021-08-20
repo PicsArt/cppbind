@@ -313,6 +313,10 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert method_node.args['k'] == ['first row\n\n\nsecond row'],\
             "new lines are not preserved in API comments section"
 
+        # check usage of "//" symbols as comment sign
+        assert cls_node.children[1].args['a'] == cls_node.children[2].args['a'] == "ValueOfA",\
+            "usage of '//' symbols as a start of api comment fails"
+
 
 def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
     clang_cfg = copy.deepcopy(clang_config)

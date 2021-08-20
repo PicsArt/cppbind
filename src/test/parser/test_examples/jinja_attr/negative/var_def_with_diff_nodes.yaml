@@ -1,0 +1,16 @@
+action:
+  inheritable: false
+  default: null
+  allowed_on: [class]
+
+a:
+  inheritable: false
+  default: DefaultValueOfA
+  type: str
+  allowed_on: [root]
+
+b:
+  inheritable: false
+  default: "{{a}}UsedInB"
+  type: str
+  allowed_on: [class]

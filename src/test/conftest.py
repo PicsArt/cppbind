@@ -75,5 +75,6 @@ def clang_config():
 
     return config
 
+
 ContextDescriptor.get_var_def = Mock(return_value=load_yaml(
     os.path.join(PROJECT_CONFIG_DIR, "variable_definitions.yaml")))

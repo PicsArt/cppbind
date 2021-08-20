@@ -2,13 +2,9 @@
 Module is responsible for context variables evaluating for current node.
 """
 from collections import OrderedDict
-from collections.abc import MutableMapping
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
-
-import yaml
 
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.context_manager.var_eval import VariableEvaluator
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
@@ -17,7 +13,6 @@ from iegen.ir.ast import (
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
-from iegen.utils import get_var_real_type, JINJA2_ENV
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -89,7 +84,7 @@ class ContextManager:
                     break
 
                 # inherit from parent or add default value
-                if properties["inheritable"]:
+                if properties.get('inheritable'):
                     # directory based nodes may not have parent
                     if ctx:
                         new_att_val = ctx.get(att_name)
@@ -100,21 +95,11 @@ class ContextManager:
                         new_att_val = ContextManager.get_attr_default_value(
                             properties, self.ctx_desc.platform, self.ctx_desc.language)
 
-                        # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
-                        actual_type = get_var_real_type(properties.get('type')) or type(new_att_val)
-                        # if 'type' is not defined and default value is null, actual_type still can be None
-                        # we still check new_att_val since for some languages/platforms it can be null
-                        if actual_type and new_att_val:
-                            # we evaluate jinja expression when type is str, or when we have type mismatch
-                            if actual_type is str or not isinstance(new_att_val, actual_type):
-                                try:
-                                    new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
-                                except JinjaUndefinedError as err:
-                                    Error.critical(
-                                        f"Jinja evaluation error in attributes definition file: {err}")
-                                # we load evaluated result to yaml we have type mismatch but type is not str
-                                if actual_type is not str:
-                                    new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
+                        new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                                       new_att_val,
+                                                                       ctx,
+                                                                       att_name,
+                                                                       location)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
@@ -122,6 +107,12 @@ class ContextManager:
                                 location.file_name if location else None,
                                 location.line_number if location else None)
                     break
+
+                new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                               new_att_val,
+                                                               ctx,
+                                                               att_name,
+                                                               location)
 
             # now we need to process variables of value and set value
             if new_att_val is not None:
@@ -140,19 +131,18 @@ class ContextManager:
         """
         Retrieve language/platform specific default value for current variable.
         """
-        def_val = prop.get("default")
 
-        if not def_val.is_of_type(MutableMapping):
-            return def_val.value
-
-        if plat in def_val and lang in def_val:
+        # detect illegal specification of plat/lang option
+        if plat + '.default' in prop and lang + '.default' in prop:
             Error.critical(
-                f"Conflict of attributes in attributes definition file: {plat} and {lang}: "
+                f"Conflict of attributes in attributes definition file: {plat}.default and {lang}.default: "
                 f"only one of them must be defined separately, or they must be both specified")
 
-        for key in (plat + '.' + lang, plat, lang, 'else'):
-            if key in def_val:
-                return def_val[key].value
+        # if plat/lang specific key is preset, return corresponding section
+        # we search for specific key by descending order of priority
+        for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
+            if key in prop:
+                return prop[key].value
 
         return None
 

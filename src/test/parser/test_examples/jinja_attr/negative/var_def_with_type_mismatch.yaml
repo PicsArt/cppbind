@@ -1,0 +1,4 @@
+a:
+  type: int
+  default: "string"
+  allowed_on: [root]

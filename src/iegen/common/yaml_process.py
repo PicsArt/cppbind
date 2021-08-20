@@ -224,13 +224,31 @@ def load_yaml(file_path):
         return yaml.load(file, MyLoader)
 
 
+def has_type(obj, type_cls):
+    """
+    A function to determine whether an object is an instance of given type,
+    or is an instance of YamlNode which has value of given type.
+    Used to eliminate some long checks.
+    """
+    return isinstance(obj, YamlNode) and obj.is_of_type(type_cls) or isinstance(obj, type_cls)
+
+
+def to_value(obj):
+    """
+    A function to return real value of object
+    """
+    if isinstance(obj, YamlNode):
+        return obj.value
+    return obj
+
+
 def yaml_info_struct_to_dict(struct):
     """
     A function to rebuild dict from nested YamlNode object.
     """
-    if isinstance(struct, YamlNode) and struct.is_of_type(dict) or isinstance(struct, dict):
+    if has_type(struct, dict):
         return {k: yaml_info_struct_to_dict(v) for k, v in struct.items()}
-    if isinstance(struct, YamlNode) and struct.is_of_type(list) or isinstance(struct, list):
+    if has_type(struct, list):
         return [yaml_info_struct_to_dict(i) for i in struct]
     if isinstance(struct, YamlNode):
         return struct.value

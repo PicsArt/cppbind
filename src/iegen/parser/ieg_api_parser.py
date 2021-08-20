@@ -70,15 +70,22 @@ class APIParser:
             if line:
                 # calculate comment prefix on the first non-empty line
                 comment_prefix = re.search(r'\s*\*?\s*', line)
-                yaml_indent_cnt = comment_prefix.end()
-                break
+                if comment_prefix:
+                    yaml_indent_cnt = comment_prefix.end()
+                    break
 
         yaml_lines = []
         for line in filtered:
             if len(line) > yaml_indent_cnt:
-                yaml_lines.append(line[yaml_indent_cnt:])
+                yaml_lines.append(' ' * yaml_indent_cnt + line[yaml_indent_cnt:])
             else:
-                yaml_lines.append('')
+                # in case of empty comment line replace it with empty line
+                if re.match(r'^\s*\*?\s*$', line):
+                    yaml_lines.append('')
+                else:
+                    # if line is not just empty comment line and its length < yaml_indent_line, it can be
+                    # illegal yaml format. So we keep it to be failed later (during yaml.load) if needed.
+                    yaml_lines.append(line)
 
         try:
             attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)

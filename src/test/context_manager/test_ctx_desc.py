@@ -15,7 +15,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 class TestContextDescriptor(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.initial_config_file = SCRIPT_DIR + '/test_examples/with_vars_var_def/iegen.yaml'
+        self.initial_config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_vars_var_def/iegen.yaml'
         self.ctx_desc = ContextDescriptor(self.initial_config_file, 'linux', 'kotlin')
         self.negative_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'negative')
         self.positive_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'positive')
@@ -41,7 +41,6 @@ class TestContextDescriptor(unittest.TestCase):
         self.assertEquals(value['action'].line_number, 8)
         self.assertEquals(value['action'].value['default'], None)
 
-
     def test_vars_should_be_unique(self):
         # negative case
         # asserts that an error is thrown when vars key is defined twice
@@ -65,7 +64,7 @@ class TestContextDescriptor(unittest.TestCase):
     def test_rules_merge_conflict_and_redefinition(self):
         # negative test case
         # asserts an YamlKeyDuplicationError is raised when there's a merge conflict or redefinition of a type api
-        folders = ['with_merge_conflict', 'with_duplicate_in_two_files']
+        folders = ['with_merge_conflict', 'with_duplicate_in_two_files', 'with_duplicate_in_the_same_file']
         for folder in folders:
             context_def_glob = os.path.join(self.negative_rules_dir, folder, '*.yaml')
             with self.assertRaises(YamlKeyDuplicationError):
@@ -74,11 +73,9 @@ class TestContextDescriptor(unittest.TestCase):
     def test_rules_load_with_yaml_error(self):
         # negative test case
         # asserts YAMLError is thrown when there's problem with yaml format
-        folders = ['with_duplicate_in_the_same_file', 'with_invalid_yaml_format']
-        for folder in folders:
-            context_def_glob = os.path.join(self.negative_rules_dir, folder, '*.yaml')
-            with self.assertRaises(yaml.YAMLError):
-                self.ctx_desc.build_ctx_def_map(context_def_glob)
+        context_def_glob = os.path.join(self.negative_rules_dir, 'with_invalid_yaml_format', '*.yaml')
+        with self.assertRaises(yaml.YAMLError):
+            self.ctx_desc.build_ctx_def_map(context_def_glob)
 
     def test_different_configs_loaded(self):
         # positive test case

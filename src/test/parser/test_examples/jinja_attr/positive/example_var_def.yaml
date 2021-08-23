@@ -3,6 +3,10 @@ action:
   default: null
   allowed_on: [cxx]
 
+comment:
+  inheritable: false
+  default: "{{_pure_comment}}"
+
 a:
   inheritable: true
   default: DefaultValueOfA

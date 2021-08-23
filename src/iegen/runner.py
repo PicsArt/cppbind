@@ -6,7 +6,8 @@ import argparse
 import os
 import sys
 
-from iegen import default_config, logging
+import iegen
+from iegen import default_config, logging, LOG_LEVELS
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error, IEGError
@@ -62,7 +63,7 @@ class WrapperGenerator:
         ir_builder.end_root()
 
         if Error.has_error:
-            raise Error.critical('Cannot continue: iegen error has occured')
+            raise Error.critical('Cannot continue: iegen error has occurred')
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")
@@ -80,7 +81,7 @@ class WrapperGenerator:
         logging.debug("Dumping builders to files.")
 
         if Error.has_error:
-            raise Error.critical('Cannot continue: iegen error has occured')
+            raise Error.critical('Cannot continue: iegen error has occurred')
 
         builder.dump_outputs()
 
@@ -119,6 +120,9 @@ def run_package():
     Command line arguments parser
     """
 
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
+
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
     choices = list(default_config.languages) + \
               [plat + '.' + lang for plat in default_config.platforms
@@ -126,21 +130,27 @@ def run_package():
 
     sub_parser = parser.add_subparsers(required=True)
 
-    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.')
+    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.',
+                                       parents=[parent_parser])
     run_parser.add_argument('languages', type=str, nargs='+',
                             choices=choices,
                             help='list of languages for which wrapper will be generated.')
     run_parser.set_defaults(func=run)
 
-    clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.')
-    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.')
+    clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
+                                         parents=[parent_parser])
+    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.',)
     clean_parser.set_defaults(func=clean)
 
-    init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.')
+    init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.',
+                                        parents=[parent_parser])
     init_parser.set_defaults(func=init)
 
     # print help if nothing is passed
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+
+    iegen.init_logger(args.log_level)
+
     args.func(args)
 
 

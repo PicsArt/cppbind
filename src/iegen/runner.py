@@ -7,7 +7,8 @@ import json
 import os
 import sys
 
-from iegen import default_config, logging
+import iegen
+from iegen import default_config, logging, LOG_LEVELS
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error, IEGError
@@ -44,7 +45,7 @@ class WrapperGenerator:
             WrapperGenerator.run_for(plat, lang, ctx_desc, cmd_line_args)
 
     @staticmethod
-    def run_for(platform, language, ctx_desc, cmd_line_args):
+    def run_for(platform, language, ctx_desc, init_ctx):
         """Run iegen for current target language + platform"""
 
         logging.info(f"Start running wrapper generator for "
@@ -54,7 +55,11 @@ class WrapperGenerator:
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-        root_ctx = ir_builder.start_root(cmd_line_args)
+        root_ctx = ir_builder.start_root(init_ctx)
+
+        if not root_ctx:
+            Error.critical(f"""Could not find any config file with path - {default_config.application.context_def_glob}.
+                           Run `iegen init` command under project's root directory to create an initial config file.""")
 
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder, **root_ctx)
@@ -62,7 +67,7 @@ class WrapperGenerator:
         ir_builder.end_root()
 
         if Error.has_error:
-            raise Error.critical('Cannot continue: iegen error has occured')
+            raise Error.critical('Cannot continue: iegen error has occurred')
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")
@@ -118,7 +123,10 @@ def run_package():
     """
     Command line arguments parser
     """
-    ctx_desc = ContextDescriptor()
+    ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
+
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
 
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
     choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
@@ -126,7 +134,8 @@ def run_package():
 
     sub_parser = parser.add_subparsers(required=True)
 
-    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.')
+    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.',
+                                       parents=[parent_parser])
     run_parser.add_argument('plat_lang_options',
                             type=str,
                             nargs='+',
@@ -159,15 +168,19 @@ def run_package():
 
     run_parser.set_defaults(func=run)
 
-    clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.')
-    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.')
+    clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
+                                         parents=[parent_parser])
+    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.',)
     clean_parser.set_defaults(func=clean)
 
-    init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.')
+    init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.',
+                                        parents=[parent_parser])
     init_parser.set_defaults(func=init)
 
     # print help if nothing is passed
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+
+    iegen.init_logger(args.log_level)
 
     if args.func.__name__ == 'run':
         # only run command needs context descriptor object

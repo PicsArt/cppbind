@@ -19,16 +19,20 @@ BANNER_LOGO = """
 LOGGING_FORMAT = '%(asctime)s:(%(levelname)s) %(message)s'
 DATETIME_FORMAT = '%m/%d/%Y-%H:%M'
 DATETIME_REGEX = r'^(0[1-9]|1[0-2])/([012][0-9]|3[0-1])/(20[0-9][0-9])-([01][0-9]|2[0-4]):([012345][0-9])'
+LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
-log_kwargs = {}
-if default_config.logging.log_file:
-    log_kwargs['filename'] = os.path.expanduser(default_config.logging.log_file)
-else:
-    log_kwargs['stream'] = sys.stdout
 
-logging.basicConfig(**log_kwargs,
-                    format=LOGGING_FORMAT,
-                    level=getLevelName(default_config.logging.level))
+def init_logger(log_level=None):
+    log_level = log_level or default_config.logging.level
+    log_kwargs = {}
+    if default_config.logging.log_file:
+        log_kwargs['filename'] = os.path.expanduser(default_config.logging.log_file)
+    else:
+        log_kwargs['stream'] = sys.stdout
+
+    logging.basicConfig(**log_kwargs,
+                        format=LOGGING_FORMAT,
+                        level=getLevelName(log_level))
 
 
 def find_prj_dir(dirname):

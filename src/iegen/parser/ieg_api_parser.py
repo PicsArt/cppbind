@@ -46,7 +46,7 @@ class APIParser:
         return (extract_pure_comment(raw_comment, index),
                 raw_comment[index + len(APIParser.API_START_KW)::])
 
-    def parse_comments(self, api_section, ctx, location=None):
+    def parse_comments(self, api_section, location=None):
         """
         Parse comment to extract API actions and their variables
         """
@@ -97,7 +97,7 @@ class APIParser:
         or in separate yaml config files.
         """
         if api_section:
-            return self.parse_comments(api_section, ctx, location)
+            return self.parse_comments(api_section, location)
         return self.parse_yaml_api(name, ctx, location)
 
     def parse_yaml_api(self, name, ctx=None, location=None):

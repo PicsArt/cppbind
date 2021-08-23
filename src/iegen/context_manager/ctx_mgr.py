@@ -37,8 +37,7 @@ class ContextManager:
         if parsed_api:
             api, args = parsed_api
 
-        if args is None:
-            args = {}
+        args = args or {}
         # overwrite parsed variables with command line values (it has higher priority)
         args.update(init_ctx)
 

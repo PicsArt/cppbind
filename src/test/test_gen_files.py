@@ -29,7 +29,7 @@ class TestFilesIdentical(unittest.TestCase):
         shutil.rmtree('tmp')
 
     def test_files_are_identical(self):
-        ctx_desc = ContextDescriptor()
+        ctx_desc = ContextDescriptor(config.application.context_def_glob)
 
         # run iegen
         run(types.SimpleNamespace(plat_lang_options=self.languages), ctx_desc)

@@ -2,12 +2,9 @@ import copy
 import hashlib
 import os
 import types
-
-from collections import OrderedDict
 from unittest.mock import patch
 
 import pytest
-import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error, IEGError
@@ -17,7 +14,6 @@ from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import Node, NodeType
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
-
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
@@ -136,68 +132,6 @@ def test_api_parser_negative(test_data):
         pass
     else:
         assert False, "should get error"
-
-
-def test_external_api_parser_negative():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
-    api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
-
-    for dir_ in os.listdir(api_rules_dir):
-        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
-        try:
-            ctx_desc.build_ctx_def_map(context_def_glob)
-        except (YamlKeyDuplicationError, yaml.YAMLError):
-            pass
-        except Exception as err:
-            assert False, f"unexpected exception: {err}"
-        else:
-            assert False, "should get error"
-
-
-def test_external_api_parser_positive():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
-    api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
-
-    results = {
-        'with_many_files': 'a176d1e4fee490bdd04f0749e654c836',
-        'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
-        'with_mixed_cfg': 'a176d1e4fee490bdd04f0749e654c836',
-        'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
-        'with_jinja_expr': '46060b5c7a6b72174f7729e6ce2f1ca0'
-    }
-
-    for dir_, res_md5 in results.items():
-        context_def_glob = os.path.join(api_rules_dir, dir_, '*.yaml')
-        try:
-            res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
-
-            ordered_res = OrderedDict()
-            for key in sorted(res.keys()):
-                ordered_res[key] = res[key]
-
-            assert hashlib.md5(str(ordered_res).encode()).hexdigest() == res_md5,\
-                "External API parser results has bean changed."
-
-        except IEGError:
-            assert False, "should not get error"
-
-
-def test_external_api_merging_positive():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
-    api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
-
-    expected_res = {
-        'code_snippets': {},
-        'type_converters': {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
-        'actions': []
-    }
-
-    context_def_glob = os.path.join(api_rules_dir, 'with_snippets_rules', '*.yaml')
-    try:
-        res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
-        assert expected_res == res, "External API parser results has bean changed."
-    except IEGError:
-        assert False, "should not get error"
 
 
 def test_parser_errors(clang_config):
@@ -396,7 +330,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             assert False, "usage of unavailable variable inside jinja expression must be failed"
 
 
-@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_empty_gen'))
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'test_examples', 'with_empty_gen'))
 def test_empty_gen_rule(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
@@ -426,11 +360,11 @@ def test_empty_gen_rule(clang_config):
     # check that 'package' inheritable variable is inherited from dir to class
     dir_pkg_value = dir_root.args['package']
     cls_pkg_value = dir_root.children[0].children[0].args['package']
-    assert dir_pkg_value == cls_pkg_value == 'example_pkg',\
+    assert dir_pkg_value == cls_pkg_value == 'example_pkg', \
         "inheritance of variables doesn't work correctly"
 
 
-@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'test_examples', 'with_root_config'))
 def test_root_config(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 

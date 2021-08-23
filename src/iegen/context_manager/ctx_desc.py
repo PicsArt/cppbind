@@ -111,13 +111,7 @@ class ContextDescriptor:
                     flat_key = ContextDescriptor._get_key(src_dict=src_dict,
                                                           ancestors=ancestors)
                     if flat_key in ctx_def_map:
-                        raise YamlKeyDuplicationError(
-                            f"Definition with duplicate '{flat_key}' key "
-                            f"in line {src_dict[cls.VARS_RULE_KEY].line_number} "
-                            f"of {src_dict[cls.VARS_RULE_KEY].file} file,\n"
-                            f"which already has been previously defined "
-                            f"in line {ctx_def_map[flat_key].line_number} "
-                            f"of {ctx_def_map[flat_key].file} file")
+                        self._raise_redefinition_error(flat_key, src_dict[cls.VARS_RULE_KEY], ctx_def_map[flat_key])
                     ctx_def_map[flat_key] = src_dict[cls.VARS_RULE_KEY]
                 if cls.SUB_RULE_KEY in src_dict:
                     for sub in src_dict[cls.SUB_RULE_KEY]:
@@ -129,13 +123,7 @@ class ContextDescriptor:
         if cls.ROOT_SECTION_KEY in attrs:
             root_section = attrs[cls.ROOT_SECTION_KEY]
             if RootNode.ROOT_KEY in ctx_def_map:
-                raise YamlKeyDuplicationError(f"Redefinition of '{cls.ROOT_SECTION_KEY}' "
-                                              f"section in line {root_section.line_number} "
-                                              f"of {root_section.file} file, which must be "
-                                              f"uniquely specified only in one file.\n"
-                                              f"It was previously defined in line "
-                                              f"{ctx_def_map[RootNode.ROOT_KEY].line_number} "
-                                              f"of {ctx_def_map[RootNode.ROOT_KEY].file} file.")
+                self._raise_redefinition_error(cls.ROOT_SECTION_KEY, root_section, ctx_def_map[RootNode.ROOT_KEY])
             ctx_def_map[RootNode.ROOT_KEY] = attrs[cls.ROOT_SECTION_KEY]
 
         for section in (cls.DIR_SECTION_KEY, cls.FILE_SECTION_KEY, cls.TYPE_SECTION_KEY):
@@ -144,9 +132,22 @@ class ContextDescriptor:
                     flatten_dict(item, section, [])
 
         if cls.VAR_DEF_SECTION_KEY in attrs:
-            ctx_def_map[cls.VAR_DEF_SECTION_KEY] = attrs[cls.VAR_DEF_SECTION_KEY]
+            var_def_section = attrs[cls.VAR_DEF_SECTION_KEY]
+            if cls.VAR_DEF_SECTION_KEY in ctx_def_map:
+                cls._raise_redefinition_error(cls.VAR_DEF_SECTION_KEY, var_def_section, ctx_def_map[cls.VAR_DEF_SECTION_KEY])
+            ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
 
         self.load_merge_rules(attrs, ctx_def_map)
+
+    @classmethod
+    def _raise_redefinition_error(cls, key, current_section, previous_section):
+        raise YamlKeyDuplicationError(f"Redefinition of '{key}' "
+                                      f"section in line {current_section.line_number} "
+                                      f"of {current_section.file} file, which must be "
+                                      f"uniquely specified only in one file.\n"
+                                      f"It was previously defined in line "
+                                      f"{previous_section.line_number} "
+                                      f"of {previous_section.file} file.")
 
     @classmethod
     def _get_key(cls, src_dict, ancestors):

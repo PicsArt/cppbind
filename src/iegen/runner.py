@@ -56,6 +56,11 @@ class WrapperGenerator:
 
         root_ctx = ir_builder.start_root()
 
+        if not root_ctx:
+            Error.critical('Could not find any config file. '
+                           'Run `iegen init` command under project\'s root directory to create an initial config file.'
+                           'If config file exists make sure `context_def_glob` is correctly defined.')
+
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder, **root_ctx)
 

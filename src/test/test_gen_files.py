@@ -6,6 +6,7 @@ import types
 import unittest
 
 from iegen.common.config import config
+from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.runner import run
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -18,7 +19,7 @@ class TestFilesIdentical(unittest.TestCase):
         self.gen_root = './%s/'
         self.examples_root = os.path.join(SCRIPT_DIR, '../../examples/primitives/%s/')
         self.languages = ['python', 'kotlin', 'swift']
-        self._prepare_config_and_examples()
+        TestFilesIdentical._prepare_config_and_examples()
 
     def tearDown(self) -> None:
         # remove added config
@@ -28,9 +29,10 @@ class TestFilesIdentical(unittest.TestCase):
         shutil.rmtree('tmp')
 
     def test_files_are_identical(self):
+        ctx_desc = ContextDescriptor()
 
         # run iegen
-        run(types.SimpleNamespace(languages=self.languages))
+        run(types.SimpleNamespace(plat_lang_options=self.languages), ctx_desc)
 
         # compare generated files with golden ones
         diff_per_language = {}
@@ -66,7 +68,8 @@ class TestFilesIdentical(unittest.TestCase):
         if diff_per_language:
             raise AssertionError
 
-    def _prepare_config_and_examples(self):
+    @staticmethod
+    def _prepare_config_and_examples():
         # set context_def_glob according to examples
         config.application.context_def_glob = 'cxx/**/*iegen.yaml'
         os.makedirs('tmp')

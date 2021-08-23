@@ -94,7 +94,7 @@ def test_parser_processor_cr_counter(clang_config):
     ]
 )
 def test_api_parser(test_data, res_md5):
-    parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
+    parser = APIParser(ContextDescriptor(), 'linux', 'swift')
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section, {})
@@ -128,7 +128,7 @@ def test_api_parser(test_data, res_md5):
     ]
 )
 def test_api_parser_negative(test_data):
-    parser = APIParser(ContextDescriptor(None, 'linux', 'swift'))
+    parser = APIParser(ContextDescriptor(), 'linux', 'swift')
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section, {})
@@ -139,7 +139,7 @@ def test_api_parser_negative(test_data):
 
 
 def test_external_api_parser_negative():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
+    ctx_desc = ContextDescriptor()
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'negative')
 
     for dir_ in os.listdir(api_rules_dir):
@@ -155,7 +155,7 @@ def test_external_api_parser_negative():
 
 
 def test_external_api_parser_positive():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
+    ctx_desc = ContextDescriptor()
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
 
     results = {
@@ -183,7 +183,7 @@ def test_external_api_parser_positive():
 
 
 def test_external_api_merging_positive():
-    ctx_desc = ContextDescriptor(None, 'linux', 'swift')
+    ctx_desc = ContextDescriptor()
     api_rules_dir = os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive')
 
     expected_res = {
@@ -195,7 +195,12 @@ def test_external_api_merging_positive():
     context_def_glob = os.path.join(api_rules_dir, 'with_snippets_rules', '*.yaml')
     try:
         res = yaml_info_struct_to_dict(ctx_desc.build_ctx_def_map(context_def_glob))
-        assert expected_res == res, "External API parser results has bean changed."
+
+        assert res['code_snippets'] == {}, "External API parser results has bean changed."
+        assert res['actions'] == {}, "External API parser results has bean changed."
+        assert res['type_converters']['linux']['python'] == \
+               {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}}, \
+            "External API parser results has bean changed."
     except IEGError:
         assert False, "should not get error"
 
@@ -208,7 +213,7 @@ def test_parser_errors(clang_config):
     parser = CXXParser()
 
     lang, plat = 'swift', 'linux'
-    ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
+    ctx_mgr = ContextManager(ContextDescriptor(), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     for file in os.listdir(test_dir):
@@ -228,7 +233,7 @@ def test_jinja_attrs(clang_config):
     clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_jinja_attrs.hpp')]
 
     plat, lang = 'linux', 'swift'
-    ctx_mgr = ContextManager(ContextDescriptor(None, plat, lang))
+    ctx_mgr = ContextManager(ContextDescriptor(), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     ir_builder.start_root()
@@ -245,13 +250,15 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/positive')
     parser = CXXParser()
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "example_var_def.yaml"))
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+         patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
+        parser_cfg_mock.application.context_def_glob = os.path.join(test_dir, 'example_iegen.yaml')
 
-        context_def_glob = os.path.join(test_dir, 'example_iegen.yaml')
-        ctx_mgr = ContextManager(ContextDescriptor(context_def_glob, 'linux', 'swift'))
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         ir_builder.start_root()
@@ -326,11 +333,12 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
     # check wrong variables order in var def file
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_wrong_order.yaml"))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "var_def_with_wrong_order.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
-        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         try:
@@ -343,13 +351,15 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             assert False, "should get error: incorrect order of dependant variables in variables definition file"
 
     # check wrong dependency usage in root section (undefined variable)
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "example_var_def.yaml"))
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+         patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
-        context_def_glob = os.path.join(test_dir, 'with_wrong_order_iegen.yaml')
-        ctx_mgr = ContextManager(ContextDescriptor(context_def_glob, 'linux', 'swift'))
+        parser_cfg_mock.application.context_def_glob = os.path.join(test_dir, 'with_wrong_order_iegen.yaml')
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         try:
@@ -363,10 +373,11 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
     # check variables dependency in case when they are defined on different nodes
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_diff_nodes.yaml"))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "var_def_with_diff_nodes.yaml")))
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_diff_nodes.hpp')]
 
-        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
         ir_builder.start_root()
 
@@ -381,9 +392,10 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
     # check variables dependency in case when they are defined on different nodes
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_unavailable_var.yaml"))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "var_def_with_unavailable_var.yaml")))
 
-        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         try:
@@ -403,31 +415,32 @@ def test_empty_gen_rule(clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-
-    context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser()
-    ctx_desc = ContextDescriptor(context_def_glob, plat, lang)
-    ctx_mgr = ContextManager(ctx_desc)
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    with patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        parser_cfg_mock.application.context_def_glob = os.path.join(working_dir, '*.yaml')
 
-    ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+        parser = CXXParser()
+        ctx_desc = ContextDescriptor()
+        ctx_mgr = ContextManager(ctx_desc, plat, lang)
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-    ir = ir_builder.ir
-    dir_root = ir.children[0]
+        ir_builder.start_root()
+        parser.parse(ir_builder, **clang_cfg)
 
-    # check that directory gen rule is empty
-    assert dir_root.api == Node.API_NONE, 'wrong directory gen rule'
-    assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
-    assert dir_root.children[0].children[0].api == 'gen_class', 'wrong api type'
+        ir = ir_builder.ir
+        dir_root = ir.children[0]
 
-    # check that 'package' inheritable variable is inherited from dir to class
-    dir_pkg_value = dir_root.args['package']
-    cls_pkg_value = dir_root.children[0].children[0].args['package']
-    assert dir_pkg_value == cls_pkg_value == 'example_pkg',\
-        "inheritance of variables doesn't work correctly"
+        # check that directory gen rule is empty
+        assert dir_root.api == Node.API_NONE, 'wrong directory gen rule'
+        assert dir_root.type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+        assert dir_root.children[0].children[0].api == 'gen_class', 'wrong api type'
+
+        # check that 'package' inheritable variable is inherited from dir to class
+        dir_pkg_value = dir_root.args['package']
+        cls_pkg_value = dir_root.children[0].children[0].args['package']
+        assert dir_pkg_value == cls_pkg_value == 'example_pkg',\
+            "inheritance of variables doesn't work correctly"
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, 'api_rules_dir', 'positive', 'with_root_config'))
@@ -437,71 +450,76 @@ def test_root_config(clang_config):
     working_dir = os.getcwd()
 
     lang, plat = 'python', 'linux'
-
-    context_def_glob = os.path.join(working_dir, '*.yaml')
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
 
-    parser = CXXParser()
-    ctx_mgr = ContextManager(ContextDescriptor(context_def_glob, plat, lang))
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    with patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        parser_cfg_mock.application.context_def_glob = os.path.join(working_dir, '*.yaml')
 
-    ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
-    root = ir_builder.ir
+        parser = CXXParser()
+        ctx_mgr = ContextManager(ContextDescriptor(), plat, lang)
+        ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-    assert root.api == Node.API_NONE, 'wrong root gen rule'
-    assert root.type == NodeType.ROOT_NODE, 'wrong root node kind'
-    assert root.children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
-    assert root.children[0].children[0].children[0].api == 'gen_class', 'wrong class node api'
+        ir_builder.start_root()
+        parser.parse(ir_builder, **clang_cfg)
+        root = ir_builder.ir
 
-    root_clang_value = root.args['clang_args']
-    assert root_clang_value == ['clang_args'], "inheritance of variables doesn't work correctly"
+        assert root.api == Node.API_NONE, 'wrong root gen rule'
+        assert root.type == NodeType.ROOT_NODE, 'wrong root node kind'
+        assert root.children[0].type == NodeType.DIRECTORY_NODE, 'wrong directory node kind'
+        assert root.children[0].children[0].children[0].api == 'gen_class', 'wrong class node api'
+
+        root_clang_value = root.args['clang_args']
+        assert root_clang_value == ['clang_args'], "inheritance of variables doesn't work correctly"
 
 
 def test_file_api_positive():
     file_api_folder = 'file_api_example'
-    context_def_glob = os.path.abspath(
-        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'swift'))
+    with patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        parser_cfg_mock.application.context_def_glob = os.path.abspath(
+            os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
+        api_parser = APIParser(ContextDescriptor(), 'linux', 'swift')
 
-    example_file_key = os.path.abspath(
-        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
+        example_file_key = os.path.abspath(
+            os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
 
-    api, args = api_parser.parse_yaml_api(example_file_key, {})
+        api, args = api_parser.parse_yaml_api(example_file_key, {})
 
-    assert api == Node.API_NONE
-    assert args['package'] == 'test_cxx_inputs'
+        assert api == Node.API_NONE
+        assert args['package'] == 'test_cxx_inputs'
 
 
 def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
-    context_def_glob = os.path.abspath(
-        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
-    api_parser = APIParser(ContextDescriptor(context_def_glob, 'linux', 'python'))
+    with patch('iegen.context_manager.ctx_desc.default_config') as parser_cfg_mock:
+        parser_cfg_mock.application.context_def_glob = os.path.abspath(
+            os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
 
-    example_dir_key = os.path.relpath(os.path.abspath(
-        os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
+        api_parser = APIParser(ContextDescriptor(), 'linux', 'python')
 
-    api, args = api_parser.parse_yaml_api(example_dir_key, {})
+        example_dir_key = os.path.relpath(os.path.abspath(
+            os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
 
-    assert api == 'gen_package'
-    assert args['name'] == 'inputs'
-    assert args['code_fragment'] == ['import json']
+        api, args = api_parser.parse_yaml_api(example_dir_key, {})
+
+        assert api == 'gen_package'
+        assert args['name'] == 'inputs'
+        assert args['code_fragment'] == ['import json']
 
 
 def test_var_def_validation():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples/jinja_attr/positive')
 
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "example_var_def.yaml"))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         # add dummy 'required_on' node without having it in 'allowed_on' list
         var_def_mock.return_value['b']['required_on'] = ['dir']
 
         Error.has_error = False
-        ContextDescriptor(None, 'linux', 'python')
+        ContextDescriptor()
 
         assert Error.has_error is True, "variable cannot be required on a node on which it is not allowed"
 
@@ -510,9 +528,10 @@ def test_attr_type_mismatch_negative():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/negative')
 
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml"))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+            load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml")))
 
-        ctx_mgr = ContextManager(ContextDescriptor(None, 'linux', 'swift'))
+        ctx_mgr = ContextManager(ContextDescriptor(), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
         Error.has_error = False

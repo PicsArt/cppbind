@@ -262,3 +262,10 @@ extra_headers:
   default: [ ]
   allowed_on: [ root ]
   type: list
+
+target_arch:
+  inheritable: false
+  default: x86_64
+  allowed_on: [ cmd_line, root ]
+  type: str
+  description: "Variable for setting target architecture"

@@ -3,6 +3,7 @@ Main module which parses command line arguments and runs iegen.
 """
 
 import argparse
+import json
 import os
 import sys
 
@@ -10,6 +11,7 @@ from iegen import default_config, logging
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error, IEGError
+from iegen.common.yaml_process import to_value
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
@@ -17,6 +19,7 @@ from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     clear_iegen_generated_files,
     get_host_platform,
+    get_var_real_type,
     load_rule_module,
     copy_yaml_config_template
 )
@@ -31,30 +34,27 @@ class WrapperGenerator:
         pass
 
     @staticmethod
-    def run(plat_lang_options):
+    def run(plat_lang_options, ctx_desc, cmd_line_args):
         """Run iegen for every platform + language combination"""
 
         logging.info(
             f"Start running wrapper generator for "
             f"{', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
         for plat, lang in plat_lang_options:
-            WrapperGenerator.run_for(plat, lang)
+            WrapperGenerator.run_for(plat, lang, ctx_desc, cmd_line_args)
 
     @staticmethod
-    def run_for(platform, language):
+    def run_for(platform, language, ctx_desc, cmd_line_args):
         """Run iegen for current target language + platform"""
 
         logging.info(f"Start running wrapper generator for "
                      f"{language} language for {platform} platform.")
         parser = CXXParser()
 
-        ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None),
-                                     platform,
-                                     language)
-        ctx_mgr = ContextManager(ctx_desc)
+        ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-        root_ctx = ir_builder.start_root()
+        root_ctx = ir_builder.start_root(cmd_line_args)
 
         logging.debug("Start parsing and building IR.")
         parser.parse(ir_builder, **root_ctx)
@@ -80,15 +80,15 @@ class WrapperGenerator:
         logging.debug("Dumping builders to files.")
 
         if Error.has_error:
-            raise Error.critical('Cannot continue: iegen error has occured')
+            raise Error.critical('Cannot continue: iegen error has occurred')
 
         builder.dump_outputs()
 
 
-def run(args):
+def run(args, ctx_desc):
     """Process language + platform command line arguments and run the main function"""
     plat_lang_options = []
-    for option in args.languages:
+    for option in args.plat_lang_options:
         if '.' in option:
             plat, lang = option.split('.')
         else:
@@ -96,7 +96,7 @@ def run(args):
         plat_lang_options.append((plat, lang))
 
     try:
-        WrapperGenerator.run(set(plat_lang_options))
+        WrapperGenerator.run(set(plat_lang_options), ctx_desc, args)
     except IEGError as err:
         Error.error(err)
         sys.exit(1)
@@ -118,18 +118,45 @@ def run_package():
     """
     Command line arguments parser
     """
+    ctx_desc = ContextDescriptor()
 
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
-    choices = list(default_config.languages) + \
-              [plat + '.' + lang for plat in default_config.platforms
-               for lang in default_config.languages]
+    choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
+                                                for lang in default_config.languages]
 
     sub_parser = parser.add_subparsers(required=True)
 
     run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.')
-    run_parser.add_argument('languages', type=str, nargs='+',
+    run_parser.add_argument('plat_lang_options',
+                            type=str,
+                            nargs='+',
                             choices=choices,
                             help='list of languages for which wrapper will be generated.')
+
+    # add arguments for setting context variables from command line
+    for name, prop in ctx_desc.get_var_def().items():
+        if 'cmd_line' in prop.get('allowed_on'):
+            var_type = get_var_real_type(prop.get('type'))
+            var_desc = to_value(prop.get('description'))
+
+            plat_lang_options = [f"--{plat}.{lang}.{name}" for plat in default_config.platforms
+                                 for lang in default_config.languages]
+            plat_options = [f"--{plat}.{name}" for plat in default_config.platforms]
+            lang_options = [f"--{lang}.{name}" for lang in default_config.languages]
+
+            for option in plat_lang_options + plat_options + lang_options + [f"--{name}"]:
+                # suppress option help if it is not pure one (has plat/lang specifications)
+                var_help = var_desc if option == f"--{name}" else argparse.SUPPRESS
+
+                if var_type is list:
+                    run_parser.add_argument(option, help=var_help, nargs='+')
+                elif var_type is dict:
+                    run_parser.add_argument(option, help=var_help, type=json.loads)
+                elif var_type is bool:
+                    run_parser.add_argument(option, help=var_help, action='store')
+                else:
+                    run_parser.add_argument(option, help=var_help, type=var_type)
+
     run_parser.set_defaults(func=run)
 
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.')
@@ -141,7 +168,12 @@ def run_package():
 
     # print help if nothing is passed
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
-    args.func(args)
+
+    if args.func.__name__ == 'run':
+        # only run command needs context descriptor object
+        args.func(args, ctx_desc)
+    else:
+        args.func(args)
 
 
 if __name__ == "__main__":

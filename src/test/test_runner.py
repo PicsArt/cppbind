@@ -8,13 +8,13 @@ from iegen.runner import run
 class TestRunner(TestCase):
 
     def test_run(self):
-        args = SimpleNamespace(languages=[])
+        args = SimpleNamespace(plat_lang_options=[])
 
         # positive test case
-        run(args)
+        run(args, None)
 
         # negative test case
         with mock.patch('iegen.runner.WrapperGenerator.run') as run_mock:
             run_mock.side_effect = IEGError('iegen error')
             with self.assertRaises(SystemExit):
-                run(args)
+                run(args, None)

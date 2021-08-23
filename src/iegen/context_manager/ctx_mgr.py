@@ -23,19 +23,25 @@ class ContextManager:
     A class for evaluating current context variables
     using current context to assign the result to the current node.
     """
-    def __init__(self, ctx_desc):
+    def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
-        self.ieg_api_parser = APIParser(ctx_desc,
-                                        ALL_LANGUAGES,
-                                        ALL_PLATFORMS)
+        self.platform = platform
+        self.language = language
+        self.ieg_api_parser = APIParser(ctx_desc, platform, language)
 
-    def eval_root_attrs(self, name, ctx, location=None):
+    def eval_root_attrs(self, name, ctx, init_ctx, location=None):
         """Eval context variables for root node"""
         args = None
         api = Node.API_NONE
         parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
             api, args = parsed_api
+
+        if args is None:
+            args = {}
+        # overwrite parsed variables with command line values (it has higher priority)
+        args.update(init_ctx)
+
         return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
     def eval_dir_attrs(self, name, ctx, location=None):
@@ -71,7 +77,7 @@ class ContextManager:
         res = OrderedDict()
 
         # add all missing attributes
-        for att_name, properties in self.ctx_desc.var_def.items():
+        for att_name, properties in self.ctx_desc.get_var_def().items():
             new_att_val = args.get(att_name)
 
             allowed = kind in properties["allowed_on"]
@@ -93,7 +99,7 @@ class ContextManager:
                     if new_att_val is None:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
-                            properties, self.ctx_desc.platform, self.ctx_desc.language)
+                            properties, self.platform, self.language)
 
                         new_att_val = VariableEvaluator.eval_var_value(properties,
                                                                        new_att_val,
@@ -146,14 +152,27 @@ class ContextManager:
 
         return None
 
-    def has_yaml_api(self, name):
+    def filter_init_ctx(self, init_ctx):
         """
-        Check whether current name is present in context definition map
+        Filter current platform/language specific values from initial context provided via command line arguments
         """
-        return name in self.ctx_desc.ctx_def_map
+        res = {}
 
-    def get_api_def_filename(self, name):
-        """
-        Method to get yaml config file name in which file/dir api is defined
-        """
-        return self.ctx_desc.ctx_def_map[name].file
+        if init_ctx is None:
+            return res
+
+        for name, prop in self.ctx_desc.get_var_def().items():
+            if 'cmd_line' not in prop['allowed_on'] or 'root' not in prop['allowed_on']:
+                continue
+
+            plat_lang_opt = f"{self.platform}.{self.language}.{name}"
+            plat_opt = f"{self.platform}.{name}"
+            lang_opt = f"{self.language}.{name}"
+
+            for opt in (plat_lang_opt, plat_opt, lang_opt, name):
+                val = getattr(init_ctx, opt, None)
+                if val is not None:
+                    res[name] = val
+                    break
+
+        return res

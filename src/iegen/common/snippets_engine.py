@@ -303,8 +303,9 @@ class FileScopeInfo(ScopeInfo):
 
 
 class SnippetsEngine:
-
-    def __init__(self, ctx_desc):
+    def __init__(self, ctx_desc, platform, language):
+        self.platform = platform
+        self.language = language
         self.ctx_desc = ctx_desc
         self.type_infos = {}
         self.file_infos = {}
@@ -313,9 +314,9 @@ class SnippetsEngine:
         self.jinja2_env = JINJA2_ENV
 
     def load(self):
-        self._load_actions(self.ctx_desc.get_action_snippets())
-        self._load_code_info(self.ctx_desc.get_code_snippets())
-        self._load_type_info(self.ctx_desc.get_type_converter_snippets())
+        self._load_actions(self.ctx_desc.get_action_snippets()[self.platform][self.language])
+        self._load_code_info(self.ctx_desc.get_code_snippets()[self.platform][self.language])
+        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.platform][self.language])
 
     def do_actions(self, context):
         variables = {}

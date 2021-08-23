@@ -25,15 +25,14 @@ class APIParser:
     """
 
     API_START_KW = default_config.api_start_kw
+    ALL_PLATFORMS = sorted(default_config.platforms)
+    ALL_LANGUAGES = sorted(default_config.languages)
 
-    ALL_LANGUAGES = ('java', 'kotlin', 'python', 'swift')
-    ALL_PLATFORMS = ('android', 'ios', 'linux', 'mac', 'win')
-
-    def __init__(self, ctx_desc, languages=None, platforms=None):
+    def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
-        self.var_def = self.ctx_desc.var_def
-        self.languages = languages or APIParser.ALL_LANGUAGES
-        self.platforms = platforms or APIParser.ALL_PLATFORMS
+        self.var_def = self.ctx_desc.get_var_def()
+        self.platform = platform
+        self.language = language
 
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
@@ -106,16 +105,14 @@ class APIParser:
         A method to parse api comments from separate yaml file.
         """
         ctx = ctx or {}
-        attrs = self.ctx_desc.ctx_def_map.get(name)
+        attrs = self.ctx_desc.get_yaml_api(name)
         if attrs:
             # for dir api pass yaml file path
-            location = location or SimpleNamespace(file_name=attrs.file,
-                                                   line_number=None)
+            location = location or SimpleNamespace(file_name=attrs.file, line_number=None)
             try:
                 api_attrs = VariableEvaluator.eval_attr_template(attrs, ctx)
             except JinjaUndefinedError as err:
-                Error.critical(f"Jinja evaluation error: {err}",
-                               location.file_name, location.line_number)
+                Error.critical(f"Jinja evaluation error: {err}", location.file_name, location.line_number)
             return self.parse_api_attrs(api_attrs, location)
 
         return None
@@ -125,11 +122,11 @@ class APIParser:
         Parsing api comment rows and extracting an action and its corresponding variables.
         """
 
-        curr_lang = self.ctx_desc.language
-        curr_plat = self.ctx_desc.platform
+        curr_lang = self.language
+        curr_plat = self.platform
 
         attr_dict = OrderedDict()
-        attr_key_regex = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        attr_key_regex = rf"[\s*/]*(?:({'|'.join(APIParser.ALL_PLATFORMS)})\.)?(?:({'|'.join(APIParser.ALL_LANGUAGES)})\.)?([^\d\W]\w*)\s*$"
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: [0])

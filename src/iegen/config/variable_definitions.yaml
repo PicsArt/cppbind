@@ -231,6 +231,13 @@ c_wrapper_lib_name:
   kotlin.default: wrapper_jni
   allowed_on: [ root, file_system ]
 
+target_arch:
+  inheritable: false
+  default: x86_64
+  allowed_on: [ cmd_line ]
+  type: str
+  description: "Variable for setting target architecture"
+
 clang_args:
   inheritable: false
   default: []
@@ -262,10 +269,3 @@ extra_headers:
   default: [ ]
   allowed_on: [ root ]
   type: list
-
-target_arch:
-  inheritable: false
-  default: x86_64
-  allowed_on: [ cmd_line ]
-  type: str
-  description: "Variable for setting target architecture"

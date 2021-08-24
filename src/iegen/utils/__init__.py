@@ -69,6 +69,8 @@ def get_android_ndk_sysroot(platform, ndk_path):
     """
     Construct android ndk sysroot path for target platform
     """
+
+    # now we check only for mac, win, linux platforms, but we also have ios, android platforms (also there is win32)
     platform_section = 'linux-x86_64'
     if platform == 'mac':
         platform_section = 'darwin-x86_64'
@@ -76,13 +78,6 @@ def get_android_ndk_sysroot(platform, ndk_path):
         platform_section = 'windows-x86_64'
 
     return os.path.join(ndk_path, 'toolchains/llvm/prebuilt', platform_section, 'sysroot')
-
-
-def get_android_ndk_target_option(target_arch):
-    """
-    Construct android ndk target option for given target architecture
-    """
-    return f"{target_arch}-none-linux-android"
 
 
 def make_snake_case(string, sub_strings=None):

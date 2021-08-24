@@ -21,7 +21,7 @@ from iegen.ir.ast import (
 )
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils.clang import get_full_displayname
-from iegen.utils import get_android_ndk_sysroot, get_android_ndk_target_option
+from iegen.utils import get_android_ndk_sysroot
 
 
 class CXXPrintProcessor:
@@ -195,8 +195,7 @@ class CXXIEGIRBuilder:
             sys_vars = {
                 'path': os.path,
                 'getenv': os.getenv,
-                'get_android_ndk_sysroot': lambda ndk_path: get_android_ndk_sysroot(self.ctx_mgr.platform, ndk_path),
-                'get_android_ndk_target_option': lambda target_arch: get_android_ndk_target_option(target_arch)
+                'get_android_ndk_sysroot': lambda ndk_path: get_android_ndk_sysroot(self.ctx_mgr.platform, ndk_path)
             }
         else:
             sys_vars = {

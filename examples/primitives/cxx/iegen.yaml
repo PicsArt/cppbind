@@ -31,7 +31,7 @@ vars:
   mac.kotlin.target_arch: x86_64
   mac.kotlin.clang_args:
     - -D__ANDROID__
-    - --target={{get_android_ndk_target_option(target_arch)}}
+    - --target={{target_arch}}-none-linux-android
     - --sysroot={{get_android_ndk_sysroot(getenv('ANDROID_NDK'))}}
   mac.swift.clang_args:
     - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk

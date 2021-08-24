@@ -1,6 +1,5 @@
-vars: |
-  {%- set out_prj_dir = "." -%}
-  out_prj_dir: {{out_prj_dir}}
+vars:
+  out_prj_dir: "."
   src_glob:
     - ./**/*.h*
   src_exclude_glob: []
@@ -14,13 +13,13 @@ vars: |
   kotlin.clang_args:
     - -D__ANDROID__
   file_postfix: ""
-  kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
-  kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
-  python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
-  python.out_dir: {{path.join(out_prj_dir, "python/src")}}
+  kotlin.cxx_out_dir: "{{path.join(out_prj_dir, 'kotlin/wrappers')}}"
+  kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"
+  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
+  python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
   python.pybind_module: ""
-  swift.cxx_out_dir:  {{path.join(out_prj_dir, "swift/wrappers")}}
-  swift.out_dir:  {{path.join(out_prj_dir, "swift/src")}}
+  swift.cxx_out_dir:  "{{path.join(out_prj_dir, 'swift/wrappers')}}"
+  swift.out_dir:  "{{path.join(out_prj_dir, 'swift/src')}}"
 
 type_vars:
   !join

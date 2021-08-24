@@ -45,7 +45,7 @@ class WrapperGenerator:
             WrapperGenerator.run_for(plat, lang, ctx_desc, cmd_line_args)
 
     @staticmethod
-    def run_for(platform, language, ctx_desc, init_ctx):
+    def run_for(platform, language, ctx_desc, var_values):
         """Run iegen for current target language + platform"""
 
         logging.info(f"Start running wrapper generator for "
@@ -55,7 +55,7 @@ class WrapperGenerator:
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-        root_ctx = ir_builder.start_root(init_ctx)
+        root_ctx = ir_builder.start_root(var_values)
 
         if not root_ctx:
             Error.critical(f"""Could not find any config file with path - {default_config.application.context_def_glob}.
@@ -166,7 +166,7 @@ def run_package():
                 else:
                     run_parser.add_argument(option, help=var_help, type=var_type)
 
-    run_parser.set_defaults(func=run)
+    run_parser.set_defaults(func=lambda arg: run(arg, ctx_desc))
 
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
                                          parents=[parent_parser])
@@ -182,11 +182,7 @@ def run_package():
 
     iegen.init_logger(args.log_level)
 
-    if args.func.__name__ == 'run':
-        # only run command needs context descriptor object
-        args.func(args, ctx_desc)
-    else:
-        args.func(args)
+    args.func(args)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from iegen.ir.ast import RootNode
 from iegen.utils.clang import join_type_parts
 
 NODE_GROUP_ALIASES = {
+    'cmd_line': ('cmd_line', 'root'),
     'file_system': ('dir', 'file'),
     'cxx': (
         'class', 'class_template', 'struct', 'struct_template', 'constructor',
@@ -48,7 +49,7 @@ class ContextDescriptor:
 
     def __init__(self, context_def_glob):
         self.__ctx_def_map = ContextDescriptor.build_ctx_def_map(context_def_glob)
-        self.__var_def = ContextDescriptor.resolve_attr_aliases(self.get_raw_var_def())
+        self.__var_def = ContextDescriptor.resolve_attr_aliases(self.__get_raw_var_def())
         self.validate_var_def()
 
     @staticmethod
@@ -60,14 +61,14 @@ class ContextDescriptor:
         for field in ['allowed_on', 'required_on']:
             for key, val in attrs.items():
                 if field not in val:
-                    attrs[key][field] = NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else []
+                    attrs[key][field] = set(NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else [])
                 else:
-                    res = []
+                    res = set()
                     for node in val[field]:
                         if node in NODE_GROUP_ALIASES:
-                            res.extend(NODE_GROUP_ALIASES[node])
+                            res.update(NODE_GROUP_ALIASES[node])
                         else:
-                            res.append(node)
+                            res.add(node)
                     attrs[key][field] = res
 
         return attrs
@@ -219,7 +220,7 @@ class ContextDescriptor:
                         language + '.' + section_key,
                         section_key):
                 if key in current_rules:
-                    merge_rules(current_rules[key], global_section_value[plat][lang], [])
+                    merge_rules(current_rules[key], global_section_value[platform][language], [])
 
         current_rules = attrs.get(ContextDescriptor.RULE_SECTION_KEY)
         if current_rules:
@@ -269,7 +270,7 @@ class ContextDescriptor:
                             prop.file,
                             prop.line_number)
 
-    def get_raw_var_def(self):
+    def __get_raw_var_def(self):
         """Get raw variable definitions section without resolving node alias names"""
         return self.__ctx_def_map.get(ContextDescriptor.VAR_DEF_SECTION_KEY, {})
 

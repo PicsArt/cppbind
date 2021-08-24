@@ -9,6 +9,7 @@ from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
     Node,
+    RootNode,
     ROOT_KIND_NAME,
     DIR_KIND_NAME,
     FILE_KIND_NAME
@@ -29,17 +30,21 @@ class ContextManager:
         self.language = language
         self.ieg_api_parser = APIParser(ctx_desc, platform, language)
 
-    def eval_root_attrs(self, name, ctx, init_ctx, location=None):
+    def eval_root_attrs(self, ctx, var_values, location=None):
         """Eval context variables for root node"""
         args = None
         api = Node.API_NONE
-        parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
+
+        # update context with var values to use them during evaluation
+        ctx.update(var_values)
+
+        parsed_api = self.ieg_api_parser.parse_yaml_api(RootNode.ROOT_KEY, ctx)
         if parsed_api:
             api, args = parsed_api
 
         args = args or {}
         # overwrite parsed variables with command line values (it has higher priority)
-        args.update(init_ctx)
+        args.update(var_values)
 
         return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
@@ -151,27 +156,36 @@ class ContextManager:
 
         return None
 
-    def filter_init_ctx(self, init_ctx):
+    def filter_by_plat_lang(self, var_values):
         """
         Filter current platform/language specific values from initial context provided via command line arguments
         """
         res = {}
 
-        if init_ctx is None:
+        if var_values is None:
             return res
 
-        for name, prop in self.ctx_desc.get_var_def().items():
-            if 'cmd_line' not in prop['allowed_on'] or 'root' not in prop['allowed_on']:
+        # convert argparse.Namespace into dict be able to lookup and iterate over it
+        var_values = var_values.__dict__
+
+        # pick those variable names which are present in variable definitions
+        var_def = self.ctx_desc.get_var_def()
+        var_names = set(name.split('.')[-1] for name in var_values if name in var_def)
+
+        for name in var_names:
+            prop = var_def[name]
+            if 'cmd_line' not in prop['allowed_on']:
                 continue
 
             plat_lang_opt = f"{self.platform}.{self.language}.{name}"
             plat_opt = f"{self.platform}.{name}"
             lang_opt = f"{self.language}.{name}"
 
+            # search for value from highest to lowest priority (plat+lang+name, plat+name, lang+name, name)
             for opt in (plat_lang_opt, plat_opt, lang_opt, name):
-                val = getattr(init_ctx, opt, None)
-                if val is not None:
-                    res[name] = val
+                if opt in var_values and var_values[opt] is not None:
+                    res[name] = var_values[opt]
+                    # no need for later searching since we already found an option with the highest possible priority
                     break
 
         return res

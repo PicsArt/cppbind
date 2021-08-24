@@ -46,7 +46,7 @@ class CXXIEGIRBuilder:
         # cache for holding parent args
         self._parent_arg_mapping = {}
 
-    def start_root(self, init_ctx=None):
+    def start_root(self, var_values=None):
         """
         Create root node and eval its context.
         """
@@ -56,10 +56,9 @@ class CXXIEGIRBuilder:
 
         ctx = self.get_full_ctx()
         # update context with initial context provided via command line arguments
-        init_ctx = self.ctx_mgr.filter_init_ctx(init_ctx)
-        ctx.update(init_ctx)
+        var_values = self.ctx_mgr.filter_by_plat_lang(var_values)
 
-        api, args = self.ctx_mgr.eval_root_attrs(root_node.name, ctx, init_ctx)
+        api, args = self.ctx_mgr.eval_root_attrs(ctx, var_values)
         root_node.api = api
         root_node.args = args
 

@@ -16,7 +16,7 @@ class TestContextDescriptor(unittest.TestCase):
 
     def setUp(self) -> None:
         self.initial_config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_vars_var_def/iegen.yaml'
-        self.ctx_desc = ContextDescriptor(self.initial_config_file, 'linux', 'kotlin')
+        self.ctx_desc = ContextDescriptor(self.initial_config_file)
         self.negative_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'negative')
         self.positive_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'positive')
 
@@ -24,22 +24,22 @@ class TestContextDescriptor(unittest.TestCase):
         # positive test case
         # asserts config is properly loaded
         # root section
-        root_section = self.ctx_desc.ctx_def_map[RootNode.ROOT_KEY]
-        self.assertEquals(root_section.file, self.initial_config_file)
-        self.assertEquals(root_section.line_number, 1)
-        value = yaml.load(root_section.value)
-        self.assertEquals(value['out_prj_dir'], '.')
-        self.assertEquals(value['src_glob'], ['./**/*.h*'])
-        self.assertEquals(value['src_exclude_glob'], [])
+        root_section = self.ctx_desc.get_yaml_api(RootNode.ROOT_KEY)
+        self.assertEqual(root_section.file, self.initial_config_file)
+        self.assertEqual(root_section.line_number, 1)
+        value = yaml.load(root_section.value, Loader=yaml.SafeLoader)
+        self.assertEqual(value['out_prj_dir'], '.')
+        self.assertEqual(value['src_glob'], ['./**/*.h*'])
+        self.assertEqual(value['src_exclude_glob'], [])
 
         # var_def section
-        var_def_section = self.ctx_desc.ctx_def_map[ContextDescriptor.VAR_DEF_SECTION_KEY]
-        self.assertEquals(var_def_section.file, self.initial_config_file)
-        self.assertEquals(var_def_section.line_number, 7)
+        var_def_section = self.ctx_desc.get_yaml_api(ContextDescriptor.VAR_DEF_SECTION_KEY)
+        self.assertEqual(var_def_section.file, self.initial_config_file)
+        self.assertEqual(var_def_section.line_number, 7)
         value = var_def_section.value
-        self.assertEquals(value['action'].file, self.initial_config_file)
-        self.assertEquals(value['action'].line_number, 8)
-        self.assertEquals(value['action'].value['default'], None)
+        self.assertEqual(value['action'].file, self.initial_config_file)
+        self.assertEqual(value['action'].line_number, 8)
+        self.assertEqual(value['action'].value['default'], None)
 
     def test_vars_should_be_unique(self):
         # negative case
@@ -57,7 +57,8 @@ class TestContextDescriptor(unittest.TestCase):
         # assert YamlKeyDuplicationError is thrown when key which should be unique is defined in two files
         with self.assertRaises(YamlKeyDuplicationError) as ctx:
             # ctx_desc ctx_def_map already contains <key>, pass new attributes with the same key to raise an error
-            self.ctx_desc.load_merge_ctx_def_map({key: YamlNode('value', line, file)}, self.ctx_desc.ctx_def_map)
+            self.ctx_desc.load_merge_ctx_def_map({key: YamlNode('value', line, file)},
+                                                 self.ctx_desc._ContextDescriptor__ctx_def_map)
         # assert error message
         self.assertTrue(f"Redefinition of '{key}' section in line {line} of {file}" in str(ctx.exception))
 
@@ -102,12 +103,11 @@ class TestContextDescriptor(unittest.TestCase):
     def test_external_api_merging_positive(self):
         # positive test case
         # asserts rules are properly merged from different files
-        expected_res = {
-            'code_snippets': {},
-            'type_converters': {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
-            'actions': []
-        }
-
         context_def_glob = os.path.join(self.positive_rules_dir, 'with_snippets_rules', '*.yaml')
         res = yaml_info_struct_to_dict(self.ctx_desc.build_ctx_def_map(context_def_glob))
-        self.assertEqual(expected_res, res, 'External API parser results has bean changed.')
+
+        self.assertEqual(res['code_snippets'], {}, 'External API parser results has bean changed.')
+        self.assertEqual(res['actions'], {}, 'External API parser results has bean changed.')
+        self.assertEqual(res['type_converters']['linux']['python'],
+                         {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
+                         'External API parser results has bean changed.')

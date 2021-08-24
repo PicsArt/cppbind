@@ -31,19 +31,19 @@ def set_language(language):
     LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
-def load_snippets_engine(ctx_desc):
+def load_snippets_engine(ctx_desc, platform, language):
     global SNIPPETS_ENGINE
-    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc)
+    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc, platform, language)
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(ctx, ctx_desc, *args, **kwargs):
+def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
     context = make_root_context(ctx)
 
-    load_snippets_engine(ctx_desc)
+    load_snippets_engine(ctx_desc, platform, language)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 

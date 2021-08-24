@@ -315,7 +315,6 @@ class Context(BaseContext):
 
 
 class RunRule:
-
     def __init__(self, ir, ctx_desc, platform, language):
         self.ir = ir
         self.ctx_desc = ctx_desc
@@ -344,7 +343,7 @@ class RunRule:
         logging.debug(f"Initialising rule for {self.language} for {self.platform} platform.")
         func = getattr(rule, init_att_name)
         if func:
-            func(BaseContext(self), self.ctx_desc)
+            func(BaseContext(self), self.ctx_desc, self.platform, self.language)
 
         # executes once for a type
         processed = dict()

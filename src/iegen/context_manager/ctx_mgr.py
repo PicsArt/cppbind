@@ -9,6 +9,7 @@ from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
     Node,
+    RootNode,
     ROOT_KIND_NAME,
     DIR_KIND_NAME,
     FILE_KIND_NAME
@@ -23,19 +24,28 @@ class ContextManager:
     A class for evaluating current context variables
     using current context to assign the result to the current node.
     """
-    def __init__(self, ctx_desc):
+    def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
-        self.ieg_api_parser = APIParser(ctx_desc,
-                                        ALL_LANGUAGES,
-                                        ALL_PLATFORMS)
+        self.platform = platform
+        self.language = language
+        self.ieg_api_parser = APIParser(ctx_desc, platform, language)
 
-    def eval_root_attrs(self, name, ctx, location=None):
+    def eval_root_attrs(self, ctx, var_values, location=None):
         """Eval context variables for root node"""
         args = None
         api = Node.API_NONE
-        parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
+
+        # update context with var values to use them during evaluation
+        ctx.update(var_values)
+
+        parsed_api = self.ieg_api_parser.parse_yaml_api(RootNode.ROOT_KEY, ctx)
         if parsed_api:
             api, args = parsed_api
+
+        args = args or {}
+        # overwrite parsed variables with command line values (it has higher priority)
+        args.update(var_values)
+
         return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
     def eval_dir_attrs(self, name, ctx, location=None):
@@ -71,7 +81,7 @@ class ContextManager:
         res = OrderedDict()
 
         # add all missing attributes
-        for att_name, properties in self.ctx_desc.var_def.items():
+        for att_name, properties in self.ctx_desc.get_var_def().items():
             new_att_val = args.get(att_name)
 
             allowed = kind in properties["allowed_on"]
@@ -93,7 +103,7 @@ class ContextManager:
                     if new_att_val is None:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
-                            properties, self.ctx_desc.platform, self.ctx_desc.language)
+                            properties, self.platform, self.language)
 
                         new_att_val = VariableEvaluator.eval_var_value(properties,
                                                                        new_att_val,
@@ -146,14 +156,36 @@ class ContextManager:
 
         return None
 
-    def has_yaml_api(self, name):
+    def filter_by_plat_lang(self, var_values):
         """
-        Check whether current name is present in context definition map
+        Filter current platform/language specific values from initial context provided via command line arguments
         """
-        return name in self.ctx_desc.ctx_def_map
+        res = {}
 
-    def get_api_def_filename(self, name):
-        """
-        Method to get yaml config file name in which file/dir api is defined
-        """
-        return self.ctx_desc.ctx_def_map[name].file
+        if var_values is None:
+            return res
+
+        # convert argparse.Namespace into dict be able to lookup and iterate over it
+        var_values = var_values.__dict__
+
+        # pick those variable names which are present in variable definitions
+        var_def = self.ctx_desc.get_var_def()
+        var_names = set(name.split('.')[-1] for name in var_values if name in var_def)
+
+        for name in var_names:
+            prop = var_def[name]
+            if 'cmd_line' not in prop['allowed_on']:
+                continue
+
+            plat_lang_opt = f"{self.platform}.{self.language}.{name}"
+            plat_opt = f"{self.platform}.{name}"
+            lang_opt = f"{self.language}.{name}"
+
+            # search for value from highest to lowest priority (plat+lang+name, plat+name, lang+name, name)
+            for opt in (plat_lang_opt, plat_opt, lang_opt, name):
+                if opt in var_values and var_values[opt] is not None:
+                    res[name] = var_values[opt]
+                    # no need for later searching since we already found an option with the highest possible priority
+                    break
+
+        return res

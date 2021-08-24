@@ -46,17 +46,22 @@ class CXXIEGIRBuilder:
         # cache for holding parent args
         self._parent_arg_mapping = {}
 
-    def start_root(self):
+    def start_root(self, var_values=None):
         """
         Create root node and eval its context.
         """
         root_node = self.ir
         self.node_stack.append(root_node)
         self.__update_internal_vars(root_node)
+
         ctx = self.get_full_ctx()
-        api, args = self.ctx_mgr.eval_root_attrs(root_node.name, ctx)
+        # update context with initial context provided via command line arguments
+        var_values = self.ctx_mgr.filter_by_plat_lang(var_values)
+
+        api, args = self.ctx_mgr.eval_root_attrs(ctx, var_values)
         root_node.api = api
         root_node.args = args
+
         return args
 
     def end_root(self):
@@ -71,8 +76,8 @@ class CXXIEGIRBuilder:
         """
         if dir_name not in self._processed_dirs:
             file_name = None
-            if self.ctx_mgr.has_yaml_api(dir_name):
-                file_name = self.ctx_mgr.get_api_def_filename(dir_name)
+            if self.ctx_mgr.ctx_desc.has_yaml_api(dir_name):
+                file_name = self.ctx_mgr.ctx_desc.get_api_def_filename(dir_name)
 
             dir_node = DirectoryNode(dir_name, file_name=file_name)
             self.node_stack.append(dir_node)
@@ -132,8 +137,8 @@ class CXXIEGIRBuilder:
         current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
 
-        if not self.ctx_mgr.ieg_api_parser.has_api(cursor.raw_comment) and not self.ctx_mgr.has_yaml_api(
-                get_full_displayname(cursor)):
+        if not APIParser.has_api(cursor.raw_comment) and \
+                not self.ctx_mgr.ctx_desc.has_yaml_api(get_full_displayname(cursor)):
             return
 
         self.__update_internal_vars(current_node)

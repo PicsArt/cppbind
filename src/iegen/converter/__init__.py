@@ -51,14 +51,6 @@ class Validator:
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
 
-    @staticmethod
-    def validate_parent_node_action(ctx):
-        """Ensure the parent class of method/getter/setter/property has action"""
-        if not (hasattr(ctx, 'parent_context') and hasattr(ctx.parent_context, 'action')):
-            Error.critical("Method/constructor/property node must have class/struct parent with action api",
-                           ctx.node.file_name,
-                           ctx.node.line_number)
-
 
 def _get_roots(cursor):
     roots = []

@@ -322,7 +322,6 @@ constructor:
   kotlin:
     include: *var_method_kotlin_include
     head: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- if comment %}
       {{helper.make_comment(comment)}}
       {%- endif %}
@@ -387,7 +386,6 @@ function:
   kotlin:
     include: *var_method_kotlin_include
     body: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- set comma = joiner(', ') -%}
       {%- if not is_static %}
       {%- if comment %}
@@ -424,7 +422,6 @@ function:
       }
       {%- endif %}
     companion: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- if is_static %}
       {%- set comma = joiner(', ') -%}
       {%- if comment %}
@@ -467,7 +464,6 @@ function:
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
       {%- set objid_args=["jobjectid id"]if not is_static else [] -%}
       {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
@@ -587,7 +583,6 @@ property_getter:
   kotlin:
     include: *var_getter_kotlin_include
     properties: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if comment %}
       {{helper.make_comment(comment)}}
@@ -630,7 +625,6 @@ property_getter:
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- set func_name="j%s"|format(name|capitalize) %}
       {%- set class_name = owner_class.name %}
       {%- if ctx.parent_context.action == 'gen_interface' %}
@@ -688,7 +682,6 @@ getter:
   kotlin:
     include: *var_getter_kotlin_include
     properties: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if ctx.node.is_function_template %}
       {%- if template_names %}
@@ -746,7 +739,6 @@ getter:
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- macro gen_exc_try_block() -%}
           {%- if helper.Exceptions.can_throw(throws) %}
           {%- for exc_type in throws -%}

@@ -1,8 +1,8 @@
 Variable Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
-Project configuration is described through the variables. Using variables we define what code should be parsed, how target code should look like, where should output be stored etc.
-Let's go through variables definitions and see how they are used.
+Project configuration is described through the variables. Using variables we define what code should be parsed, how the target code should look like, where should output be stored etc.
+Let's go through the variables definitions and see how they are used.
 Here is the list:
 
 .. literalinclude:: /../src/iegen/config/variable_definitions.yaml
@@ -21,10 +21,13 @@ Values for the property **allowed_on** are divided into two groups:
 
  * **file_system** - including **dir** and **file**.
  * **cxx** - including **class**, **class_template**, **struct**, **struct_template**, **constructor**, **function**, **function_template**, **cxx_method**, **enum** and **field**.
- * | **root** - variables that are common for the whole project should be allowed on root.
+ * | **cmd_line** - **cmd_line** and **root**.
+ * | Variables which are allowed on **root** are the ones which are common for the whole project.
    | For example **out_prj_dir** should be defined once and is allowed on only on root.
-   | there can be also variables that are allowed on root but can be overridden. An example of such variable is **comment_del_regex** which is allowed on also on **cxx** and **file_system**.
+   | There can be also variables that are allowed on root but can be overridden. An example of such variable is **comment_del_regex** which is allowed on also on **cxx** and **file_system**.
    | This means it can be defined for the whole project but overridden for a single file for example.
+   | **cmd_line** variables are the ones which are root and can be passed from command line as well.
+   | Note that if you use only **root** as a value for **allowed_on** property then the variable cannot be overridden from the command line.
 
 If all values of the group are allowed then the group can be used instead.
 
@@ -97,6 +100,7 @@ Now let's go through the variables one by one:
     - *src_exclude_glob* - Patterns to exclude from processing.
     - *include_dirs* - Include directories required for parsing. These directories are passed to clang parser.
     - *extra_headers* - Extra headers to be processed. For example standard exception headers which are required to generate target language bindings for them.
+    - *target_arch* - Variable for setting target architecture.
 
 .. note::
 

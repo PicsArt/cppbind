@@ -65,10 +65,11 @@ def get_host_platform():
     raise Exception(f"Not supported os platform: {platform}")
 
 
-def get_android_ndk_sysroot(platform, ndk_path):
+def get_android_ndk_sysroot(ndk_path):
     """
     Construct android ndk sysroot path for target platform
     """
+    platform = get_host_platform()
 
     # now we check only for mac, win, linux platforms, but we also have ios, android platforms (also there is win32)
     platform_section = 'linux-x86_64'

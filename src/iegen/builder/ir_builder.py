@@ -195,7 +195,7 @@ class CXXIEGIRBuilder:
             sys_vars = {
                 'path': os.path,
                 'getenv': os.getenv,
-                'get_android_ndk_sysroot': lambda ndk_path: get_android_ndk_sysroot(self.ctx_mgr.platform, ndk_path)
+                'get_android_ndk_sysroot': get_android_ndk_sysroot
             }
         else:
             sys_vars = {

@@ -13,9 +13,9 @@ import yaml
 
 from iegen import default_config
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader, yaml_info_struct_to_dict
+from iegen.common.yaml_process import has_type, to_value, UniqueKeyLoader
+from iegen.context_manager.var_eval import VariableEvaluator
 from iegen.ir.ast import Node
-from iegen.utils import JINJA2_ENV
 from iegen.utils.clang import extract_pure_comment
 
 
@@ -25,15 +25,14 @@ class APIParser:
     """
 
     API_START_KW = default_config.api_start_kw
+    ALL_PLATFORMS = sorted(default_config.platforms)
+    ALL_LANGUAGES = sorted(default_config.languages)
 
-    ALL_LANGUAGES = ('java', 'kotlin', 'python', 'swift')
-    ALL_PLATFORMS = ('android', 'ios', 'linux', 'mac', 'win')
-
-    def __init__(self, ctx_desc, languages=None, platforms=None):
+    def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
-        self.var_def = self.ctx_desc.var_def
-        self.languages = languages or APIParser.ALL_LANGUAGES
-        self.platforms = platforms or APIParser.ALL_PLATFORMS
+        self.var_def = self.ctx_desc.get_var_def()
+        self.platform = platform
+        self.language = language
 
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
@@ -47,38 +46,43 @@ class APIParser:
         return (extract_pure_comment(raw_comment, index),
                 raw_comment[index + len(APIParser.API_START_KW)::])
 
-    def parse_comments(self, api_section, ctx, location=None):
+    def parse_comments(self, api_section, location=None):
         """
         Parse comment to extract API actions and their variables
         """
         if api_section is None:
             return None, OrderedDict()
 
-        skip_regex = r'^[\s*/]*$'
+        # skip comment start/end
+        skip_pattern = r'^\s*(\*/|/\*)\s*$'
+
+        # keep empty lines or empty comments
+        comment_pattern = r'^\s*(\*+|/{2,})\s*'
 
         lines = api_section.splitlines()
-        filtered = list(filter(lambda x: not re.match(skip_regex, x), lines))
+        yaml_lines = []
 
-        if not filtered:
+        for line in lines:
+            # continue if line contains is only multiline comment begin/end sign
+            if re.match(skip_pattern, line):
+                continue
+
+            # search for comment prefix
+            comment_prefix = re.search(comment_pattern, line)
+            if comment_prefix:
+                pattern_len = comment_prefix.end()
+                yaml_lines.append(' ' * pattern_len + line[pattern_len:])
+            else:
+                # if no any comment sign found just save the line
+                yaml_lines.append(line)
+
+        if not yaml_lines:
             Error.critical("API comments are empty",
                            location.file_name if location else None,
                            location.line_number if location else None)
 
-        comment_prefix = re.search(r'\s*\*?\s*', filtered[0])
-        yaml_indent_cnt = comment_prefix.end()
-
-        yaml_lines = []
-        for line in filtered:
-            if len(line) <= yaml_indent_cnt:
-                Error.critical("Invalid yaml format",
-                               location.file_name if location else None,
-                               location.line_number if location else None)
-            yaml_lines.append(line[yaml_indent_cnt:])
-
-        yaml_lines = JINJA2_ENV.from_string('\n'.join(yaml_lines)).render(ctx)
-
         try:
-            attrs = yaml.load(yaml_lines, Loader=UniqueKeyLoader)
+            attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)
             return self.parse_api_attrs(attrs, location)
         except yaml.YAMLError as err:
             Error.critical(f"Error while scanning yaml style comments: {err}",
@@ -93,7 +97,7 @@ class APIParser:
         or in separate yaml config files.
         """
         if api_section:
-            return self.parse_comments(api_section, ctx, location)
+            return self.parse_comments(api_section, location)
         return self.parse_yaml_api(name, ctx, location)
 
     def parse_yaml_api(self, name, ctx=None, location=None):
@@ -101,16 +105,14 @@ class APIParser:
         A method to parse api comments from separate yaml file.
         """
         ctx = ctx or {}
-        attrs = self.ctx_desc.ctx_def_map.get(name)
+        attrs = self.ctx_desc.get_yaml_api(name)
         if attrs:
             # for dir api pass yaml file path
-            location = location or SimpleNamespace(file_name=attrs.file,
-                                                   line_number=None)
+            location = location or SimpleNamespace(file_name=attrs.file, line_number=None)
             try:
-                api_attrs = APIParser.eval_attr_template(attrs, ctx)
+                api_attrs = VariableEvaluator.eval_attr_template(attrs, ctx)
             except JinjaUndefinedError as err:
-                Error.critical(f"Jinja evaluation error: {err}",
-                               location.file_name, location.line_number)
+                Error.critical(f"Jinja evaluation error: {err}", location.file_name, location.line_number)
             return self.parse_api_attrs(api_attrs, location)
 
         return None
@@ -120,11 +122,11 @@ class APIParser:
         Parsing api comment rows and extracting an action and its corresponding variables.
         """
 
-        curr_lang = self.ctx_desc.language
-        curr_plat = self.ctx_desc.platform
+        curr_lang = self.language
+        curr_plat = self.platform
 
         attr_dict = OrderedDict()
-        attr_key_regex = rf"[\s*/]*(?:({'|'.join(self.platforms)})\.)?(?:({'|'.join(self.languages)})\.)?([^\d\W]\w*)\s*$"
+        attr_key_regex = rf"[\s*/]*(?:({'|'.join(APIParser.ALL_PLATFORMS)})\.)?(?:({'|'.join(APIParser.ALL_LANGUAGES)})\.)?([^\d\W]\w*)\s*$"
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: [0])
@@ -143,7 +145,7 @@ class APIParser:
             prior = APIParser.get_priority(platform, language)
 
             if attr == 'action':
-                api = value
+                api = to_value(value)
 
             if attr not in self.var_def:
                 Error.critical(f"Variable {attr} is not specified. "
@@ -151,16 +153,7 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            array = self.var_def[attr].get('type') == 'list'
-            value = self.parse_attr(attr, value)
-
-            if array:
-                if not isinstance(value, list):
-                    value = [value]
-            elif isinstance(value, list):
-                Error.critical(f"Wrong variable type: {attr} cannot be array",
-                               location.file_name if location else None,
-                               location.line_number if location else None)
+            value = self.parse_attr(attr, value, location)
 
             curr_max_prior = max(prev_priors[attr])
             # overwrite the value only if the current option
@@ -177,7 +170,7 @@ class APIParser:
 
         return api, attr_dict
 
-    def parse_attr(self, attr_name, attr_value):
+    def parse_attr(self, attr_name, attr_value, location=None):
         """
         Evaluate the value of variable depending on its type.
         """
@@ -187,15 +180,20 @@ class APIParser:
             return bool(distutils.util.strtobool(str(attr_value)))
 
         if attr_type == 'dict':
-            if not isinstance(attr_value, dict):
-                raise Exception(f"Wrong variable type: {type(attr_value)}, it must be dictionary")
+            if not has_type(attr_value, dict):
+                Error.critical(f"Wrong variable type: {type(attr_value)}, it must be dictionary",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or 'type' not in attr:
-                            raise Exception(
+                            Error.critical(
                                 f"Wrong template variable style: {attr_value}, "
-                                f"template must have mandatory 'type' variable")
+                                f"template must have mandatory 'type' variable",
+                                location.file_name if location else None,
+                                location.line_number if location else None
+                            )
         # default string type
         return attr_value
 
@@ -217,17 +215,3 @@ class APIParser:
         if plat is None or lang is None:
             return 2
         return 3
-
-    @staticmethod
-    def eval_attr_template(attrs, ctx):
-        """
-        Evaluate jinja expressions in current yaml section.
-        """
-
-        # if the whole section is pure string, we just need to eval it
-        if attrs.is_of_type(str):
-            return yaml.load(JINJA2_ENV.from_string(attrs.value).render(ctx), Loader=UniqueKeyLoader)
-        # if the section is not a string, i.e. values can contain jinja expressions,
-        # we need to dump it to the string, then evaluate it.
-        return yaml.load(JINJA2_ENV.from_string(yaml.dump(
-            yaml_info_struct_to_dict(attrs))).render(ctx), Loader=UniqueKeyLoader)

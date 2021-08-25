@@ -2,22 +2,18 @@
 Module is responsible for context variables evaluating for current node.
 """
 from collections import OrderedDict
-from collections.abc import MutableMapping
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
-
-import yaml
 
 from iegen.common.error import Error
-from iegen.common.yaml_process import UniqueKeyLoader
+from iegen.context_manager.var_eval import VariableEvaluator
 from iegen import default_config
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.ir.ast import (
     Node,
+    RootNode,
     ROOT_KIND_NAME,
     DIR_KIND_NAME,
     FILE_KIND_NAME
 )
-from iegen.utils import get_var_real_type, JINJA2_ENV
 
 ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
@@ -28,19 +24,28 @@ class ContextManager:
     A class for evaluating current context variables
     using current context to assign the result to the current node.
     """
-    def __init__(self, ctx_desc):
+    def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
-        self.ieg_api_parser = APIParser(ctx_desc,
-                                        ALL_LANGUAGES,
-                                        ALL_PLATFORMS)
+        self.platform = platform
+        self.language = language
+        self.ieg_api_parser = APIParser(ctx_desc, platform, language)
 
-    def eval_root_attrs(self, name, ctx, location=None):
+    def eval_root_attrs(self, ctx, var_values, location=None):
         """Eval context variables for root node"""
         args = None
         api = Node.API_NONE
-        parsed_api = self.ieg_api_parser.parse_yaml_api(name, ctx)
+
+        # update context with var values to use them during evaluation
+        ctx.update(var_values)
+
+        parsed_api = self.ieg_api_parser.parse_yaml_api(RootNode.ROOT_KEY, ctx)
         if parsed_api:
             api, args = parsed_api
+
+        args = args or {}
+        # overwrite parsed variables with command line values (it has higher priority)
+        args.update(var_values)
+
         return api, self.__process_attrs(ROOT_KIND_NAME, args, location, ctx)
 
     def eval_dir_attrs(self, name, ctx, location=None):
@@ -76,7 +81,7 @@ class ContextManager:
         res = OrderedDict()
 
         # add all missing attributes
-        for att_name, properties in self.ctx_desc.var_def.items():
+        for att_name, properties in self.ctx_desc.get_var_def().items():
             new_att_val = args.get(att_name)
 
             allowed = kind in properties["allowed_on"]
@@ -89,7 +94,7 @@ class ContextManager:
                     break
 
                 # inherit from parent or add default value
-                if properties["inheritable"]:
+                if properties.get('inheritable'):
                     # directory based nodes may not have parent
                     if ctx:
                         new_att_val = ctx.get(att_name)
@@ -98,23 +103,13 @@ class ContextManager:
                     if new_att_val is None:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
-                            properties, self.ctx_desc.platform, self.ctx_desc.language)
+                            properties, self.platform, self.language)
 
-                        # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
-                        actual_type = get_var_real_type(properties.get('type')) or type(new_att_val)
-                        # if 'type' is not defined and default value is null, actual_type still can be None
-                        # we still check new_att_val since for some languages/platforms it can be null
-                        if actual_type and new_att_val:
-                            # we evaluate jinja expression when type is str, or when we have type mismatch
-                            if actual_type is str or not isinstance(new_att_val, actual_type):
-                                try:
-                                    new_att_val = JINJA2_ENV.from_string(new_att_val).render(ctx)
-                                except JinjaUndefinedError as err:
-                                    Error.critical(
-                                        f"Jinja evaluation error in attributes definition file: {err}")
-                                # we load evaluated result to yaml we have type mismatch but type is not str
-                                if actual_type is not str:
-                                    new_att_val = yaml.load(new_att_val, Loader=UniqueKeyLoader)
+                        new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                                       new_att_val,
+                                                                       ctx,
+                                                                       att_name,
+                                                                       location)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
@@ -122,6 +117,12 @@ class ContextManager:
                                 location.file_name if location else None,
                                 location.line_number if location else None)
                     break
+
+                new_att_val = VariableEvaluator.eval_var_value(properties,
+                                                               new_att_val,
+                                                               ctx,
+                                                               att_name,
+                                                               location)
 
             # now we need to process variables of value and set value
             if new_att_val is not None:
@@ -140,30 +141,51 @@ class ContextManager:
         """
         Retrieve language/platform specific default value for current variable.
         """
-        def_val = prop.get("default")
 
-        if not def_val.is_of_type(MutableMapping):
-            return def_val.value
-
-        if plat in def_val and lang in def_val:
+        # detect illegal specification of plat/lang option
+        if plat + '.default' in prop and lang + '.default' in prop:
             Error.critical(
-                f"Conflict of attributes in attributes definition file: {plat} and {lang}: "
+                f"Conflict of attributes in attributes definition file: {plat}.default and {lang}.default: "
                 f"only one of them must be defined separately, or they must be both specified")
 
-        for key in (plat + '.' + lang, plat, lang, 'else'):
-            if key in def_val:
-                return def_val[key].value
+        # if plat/lang specific key is preset, return corresponding section
+        # we search for specific key by descending order of priority
+        for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
+            if key in prop:
+                return prop[key].value
 
         return None
 
-    def has_yaml_api(self, name):
+    def filter_by_plat_lang(self, var_values):
         """
-        Check whether current name is present in context definition map
+        Filter current platform/language specific values from initial context provided via command line arguments
         """
-        return name in self.ctx_desc.ctx_def_map
+        res = {}
 
-    def get_api_def_filename(self, name):
-        """
-        Method to get yaml config file name in which file/dir api is defined
-        """
-        return self.ctx_desc.ctx_def_map[name].file
+        if var_values is None:
+            return res
+
+        # convert argparse.Namespace into dict be able to lookup and iterate over it
+        var_values = var_values.__dict__
+
+        # pick those variable names which are present in variable definitions
+        var_def = self.ctx_desc.get_var_def()
+        var_names = set(name.split('.')[-1] for name in var_values if name in var_def)
+
+        for name in var_names:
+            prop = var_def[name]
+            if 'cmd_line' not in prop['allowed_on']:
+                continue
+
+            plat_lang_opt = f"{self.platform}.{self.language}.{name}"
+            plat_opt = f"{self.platform}.{name}"
+            lang_opt = f"{self.language}.{name}"
+
+            # search for value from highest to lowest priority (plat+lang+name, plat+name, lang+name, name)
+            for opt in (plat_lang_opt, plat_opt, lang_opt, name):
+                if opt in var_values and var_values[opt] is not None:
+                    res[name] = var_values[opt]
+                    # no need for later searching since we already found an option with the highest possible priority
+                    break
+
+        return res

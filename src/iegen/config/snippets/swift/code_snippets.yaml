@@ -119,13 +119,13 @@ class:
 
             // internal main initializer
             internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
-              self.cself = _cself
-              self.owner = _owner
+                self.cself = _cself
+                self.owner = _owner
             }
             deinit {
-              if owner {
-                release_{{name}}{{template_suffix}}(cself)
-              }
+                if owner {
+                    release_{{name}}{{template_suffix}}(cself)
+                }
             }
             {%endif%}
             {{head|string|indent}}
@@ -244,7 +244,17 @@ constructor:
     head: |
       {{helper.make_comment(comment)}}
       {%- set comma = joiner(', ') %}
-      public convenience init({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {
+      public convenience init(
+      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}
+      {%- elif arg.is_null_ptr %} = nil
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}) {
       {%- set call_args = [] %}
       {% for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
@@ -289,7 +299,17 @@ function:
         {%- set call_args = ['cself.cself']%}
       {%- else%}
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
-      public {{"static " if is_static}}{{"override " if override}}func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
+      public {{"static " if is_static}}{{"override " if override}}func {{name}}(
+      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}
+      {%- elif arg.is_null_ptr %} = nil
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
         {%- set call_args = ['cself'] if not is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -363,7 +383,7 @@ function:
           }
         {%- else %}
           try {
-            {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+              {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
           }
         {%- endif %}
         {%- if helper.Exceptions.can_throw(throws) %}
@@ -417,18 +437,18 @@ property_getter:
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
-            get {
+          get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
-            }
-            {%- if ctx.action == 'gen_property_setter' %}
-            {% set converter = rconverter.swift_to_sc %}
-            set(value) {
+          }
+          {%- if ctx.action == 'gen_property_setter' %}
+          {% set converter = rconverter.swift_to_sc %}
+          set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself, {{converter.converted_name('value')}})
-            }
-            {% endif %}
+          }
+          {% endif %}
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
@@ -474,20 +494,30 @@ getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
+      {%- if ctx.node.is_function_template %}
+      {%- if template_names %}
+      {%- set _name = template_names|join %}
+      {%- else %}
+      {%- set _name = overloading_prefix %}
+      {%- endif %}
+      {%- else %}
+      {%- set _name = name %}
+      {%- endif %}
       {{helper.make_comment(comment)}}
-      public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
-            get {
+      {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
+      public {{'override ' if override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
+          get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
-            }
-            {% if setter_ctx is defined %}
-            {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
-            set(value) {
+          }
+          {% if setter_ctx is defined %}
+          {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
+          set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}(cself, {{converter.converted_name('value')}})
-            }
-            {% endif %}
+          }
+          {% endif %}
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
@@ -497,6 +527,11 @@ getter:
   cc:
     include: *var_getter_cxx_include
     body: |
+      {%- if ctx.node.is_function_template -%}
+      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
+      {%- else %}
+      {%- set template_args = '' %}
+      {%- endif %}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
@@ -505,7 +540,7 @@ getter:
           {%- else %}
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
-          auto result = c_to_cxx_cself->{{cxx_name}}();
+          auto result = c_to_cxx_cself->{{cxx_name}}{{template_args}}();
           {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
@@ -520,7 +555,7 @@ getter:
           auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
           {%- endif %}
           {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent}}
-          c_to_cxx_cself->{{setter_ctx.cxx_name}}({{converter.converted_name(setter_ctx.args[0].name)}});
+          c_to_cxx_cself->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}
   ch:

@@ -27,9 +27,8 @@ name:
 interface_name:
   inheritable: false
   type: str
-  default:
-    kotlin: 'I{{name}}'
-    swift: '{{name}}'
+  kotlin.default: 'I{{name}}'
+  swift.default: '{{name}}'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 interface_class_name:
@@ -124,17 +123,16 @@ comment_del_regex:
 
 comment:
   inheritable: false
-  default:
-    python: |
-      {%- set regex = comment_del_regex|join('|') -%}
-      {{_pure_comment|replace_regex(regex, '')}}
-      {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
-      Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}
-      <{{project_link}}/{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
-      {%- endif %}
-    else: |
-      {%- set regex = comment_del_regex|join('|') -%}
-      {{_pure_comment|replace_regex(regex, '')}}
+  python.default: |
+    {%- set regex = comment_del_regex|join('|') -%}
+    {{_pure_comment|replace_regex(regex, '')}}
+    {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
+    Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}
+    <{{project_link}}/{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
+    {%- endif %}
+  default: |
+    {%- set regex = comment_del_regex|join('|') -%}
+    {{_pure_comment|replace_regex(regex, '')}}
 
 banner_comment:
   inheritable: false
@@ -160,10 +158,9 @@ cxx_out_dir:
 
 out_dir:
   inheritable: true
-  default:
-    kotlin: '{{path.join(out_prj_dir, run_dir, "android", run_dir, "source/main/java")}}'
-    python: '{{path.join(out_prj_dir, "python", run_dir, "src")}}'
-    swift: '{{path.join(out_prj_dir, "swift")}}'
+  kotlin.default: '{{path.join(out_prj_dir, run_dir, "android", run_dir, "source/main/java")}}'
+  python.default: '{{path.join(out_prj_dir, "python", run_dir, "src")}}'
+  swift.default: '{{path.join(out_prj_dir, "swift")}}'
   allowed_on: [ root ]
 
 cxx_base_out_dir:
@@ -173,10 +170,9 @@ cxx_base_out_dir:
 
 package_prefix:
   inheritable: true
-  default:
-    kotlin: com.picsart.example_lib
-    python: example_lib
-    swift: com.picsart.example_lib
+  kotlin.default: com.picsart.example_lib
+  python.default: example_lib
+  swift.default: com.picsart.example_lib
   allowed_on: [ root ]
 
 helpers_package_prefix:
@@ -196,17 +192,15 @@ common_helpers_dir:
 
 cxx_helpers_dir:
   inheritable: true
-  default:
-    swift: '{{path.join(common_helpers_dir, "swift/cxx")}}'
-    else: '{{path.join(common_helpers_dir, "cxx")}}'
+  swift.default: '{{path.join(common_helpers_dir, "swift/cxx")}}'
+  default: '{{path.join(common_helpers_dir, "cxx")}}'
   allowed_on: [ root ]
 
 helpers_dir:
   inheritable: true
-  default:
-    kotlin: '{{path.join(common_helpers_dir, "kotlin")}}'
-    python: '{{path.join(common_helpers_dir, "python")}}'
-    swift: '{{path.join(common_helpers_dir, "swift")}}'
+  kotlin.default: '{{path.join(common_helpers_dir, "kotlin")}}'
+  python.default: '{{path.join(common_helpers_dir, "python")}}'
+  swift.default: '{{path.join(common_helpers_dir, "swift")}}'
   allowed_on: [ root ]
 
 cxx_base_dir:
@@ -221,23 +215,20 @@ file_postfix:
 
 extension:
   inheritable: true
-  default:
-    kotlin: kt
-    python: py
-    swift: swift
+  kotlin.default: kt
+  python.default: py
+  swift.default: swift
   allowed_on: [ root ]
 
 pybind_module:
   inheritable: true
-  default:
-    python: example_lib
+  python.default: example_lib
   allowed_on: [ root ]
 
 c_wrapper_lib_name:
   inheritable: true
-  default:
-    swift: CWrapper
-    kotlin: wrapper_jni
+  swift.default: CWrapper
+  kotlin.default: wrapper_jni
   allowed_on: [ root, file_system ]
 
 clang_args:
@@ -271,3 +262,10 @@ extra_headers:
   default: [ ]
   allowed_on: [ root ]
   type: list
+
+target_arch:
+  inheritable: false
+  default: x86_64
+  allowed_on: [ cmd_line ]
+  type: str
+  description: "Variable for setting target architecture"

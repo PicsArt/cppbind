@@ -31,19 +31,19 @@ def set_language(language):
     LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
 
 
-def load_snippets_engine(ctx_desc):
+def load_snippets_engine(ctx_desc, platform, language):
     global SNIPPETS_ENGINE
-    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc)
+    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc, platform, language)
     SNIPPETS_ENGINE.load()
 
 
-def gen_init(ctx, ctx_desc, *args, **kwargs):
+def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
     context = make_root_context(ctx)
 
-    load_snippets_engine(ctx_desc)
+    load_snippets_engine(ctx_desc, platform, language)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
 
@@ -219,6 +219,8 @@ def make_getter_context(ctx):
     def make():
         # helper variables
         if ctx.setter:
+            if ctx.node.is_template:
+                _validate_template_getter_setter(ctx)
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
             setter_ctx.set_template_ctx(ctx.template_ctx)
@@ -389,4 +391,20 @@ def _validate_property_getter(ctx):
     if ctx.cursor.access_specifier != cli.AccessSpecifier.PUBLIC:
         Error.critical(
             f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} is not a public field.'
-            f'Make it public or remove iegen API.')
+            f' Make it public or remove iegen API.')
+
+
+def _validate_template_getter_setter(ctx):
+    is_valid = len(ctx.template.keys()) == len(ctx.setter.template.keys())
+    if is_valid:
+        for template_arg, possible_types in ctx.template.items():
+            getter_types = {template['type'] for template in possible_types}
+            setter_types = {template['type'] for template in ctx.setter.template[template_arg]}
+            if getter_types != setter_types:
+                is_valid = False
+                break
+    if not is_valid:
+        parent = ctx.cursor.lexical_parent.displayname
+        Error.critical(
+            f'Template getter/setter should have the same template argument types: '
+            f'{parent}.{ctx.cursor.displayname} and {parent}.{ctx.setter.cursor.displayname}.')

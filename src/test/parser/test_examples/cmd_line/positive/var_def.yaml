@@ -1,0 +1,9 @@
+a:
+  allowed_on: [root]
+  default: DefaultValueOfA
+  type: str
+
+b:
+  allowed_on: [root, cmd_line]
+  default: DefaultValueOfB
+  type: str

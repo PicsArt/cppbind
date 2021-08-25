@@ -368,6 +368,7 @@ constructor:
   python:
     include: *var_method_python_include
     constructor_body: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
@@ -405,6 +406,7 @@ function:
   python:
     include: *var_method_python_include
     body: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- set comma = joiner(', ') -%}
       {%- if is_static %}
       @classmethod
@@ -501,6 +503,7 @@ property_getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- set rctx = rconverter.ctx -%}
       {%- set _name = name|to_snake_case -%}
       {% set arg_package = rctx.file + '.' if rctx and (rctx.file != owner_class.file or rctx.package != owner_class.package) else '' %}
@@ -531,6 +534,7 @@ getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {%- set rctx = rconverter.ctx -%}
       {%- if ctx.node.is_function_template %}
       {%- if template_names %}

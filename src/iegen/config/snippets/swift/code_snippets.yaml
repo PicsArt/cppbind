@@ -242,6 +242,7 @@ var_method_cxx_include: &var_method_cxx_include
 constructor:
   swift:
     head: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {{helper.make_comment(comment)}}
       {%- set comma = joiner(', ') %}
       public convenience init(
@@ -292,6 +293,7 @@ constructor:
 function:
   swift:
     body: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {{helper.make_comment(comment)}}
       {%- set comma = joiner(', ') %}
       {%- if is_operator %}
@@ -434,6 +436,7 @@ var_getter_cxx_include: &var_getter_cxx_include
 property_getter:
   swift:
     properties: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set result_converter = rconverter.sc_to_swift %}
       {{helper.make_comment(comment)}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
@@ -493,6 +496,7 @@ property_getter:
 getter:
   swift:
     properties: |
+      {%- do helper.Validator.validate_parent_node_action(ctx) -%}
       {% set result_converter = rconverter.sc_to_swift %}
       {%- if ctx.node.is_function_template %}
       {%- if template_names %}

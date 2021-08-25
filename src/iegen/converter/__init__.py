@@ -1,5 +1,7 @@
 import clang.cindex as cli
 
+from iegen.common.error import Error
+
 NEW_LINE = '\n'
 
 
@@ -12,13 +14,17 @@ class Validator:
     def shared_ref_set(type_ctx):
         """Check whether shared_ref variable is set"""
         if not type_ctx.root.shared_ref:
-            raise Exception("Root must have an attribute \"shared_ref: True\"")
+            Error.critical("Root must have an attribute \"shared_ref: True\"",
+                           type_ctx.node.file_name,
+                           type_ctx.node.line_number)
 
     @staticmethod
     def shared_ref_unset(type_ctx):
         """Check whether shared_ref variable is false"""
         if type_ctx.root.shared_ref:
-            raise Exception("Root has an invalid attribute \"shared_ref: True\"")
+            Error.critical("Root has an invalid attribute \"shared_ref: True\"",
+                           type_ctx.node.file_name,
+                           type_ctx.node.line_number)
 
     @staticmethod
     def validate_single_root(cursor):
@@ -44,6 +50,14 @@ class Validator:
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
+
+    @staticmethod
+    def validate_parent_node_action(ctx):
+        """Ensure the parent class of method/getter/setter/property has action"""
+        if not (hasattr(ctx, 'parent_context') and hasattr(ctx.parent_context, 'action')):
+            Error.critical("Method/constructor/property node must have class/struct parent with action api",
+                           ctx.node.file_name,
+                           ctx.node.line_number)
 
 
 def _get_roots(cursor):

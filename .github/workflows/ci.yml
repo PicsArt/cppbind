@@ -43,7 +43,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          export NDK_PATH=/usr/local/share/android-ndk/toolchains/llvm/prebuilt/darwin-x86_64/sysroot
+          export ANDROID_NDK=/usr/local/share/android-ndk
           pytest ./src/test/
 
       - name: Run examples tests

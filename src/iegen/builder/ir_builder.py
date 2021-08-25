@@ -21,6 +21,7 @@ from iegen.ir.ast import (
 )
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils.clang import get_full_displayname
+from iegen.utils import get_android_ndk_sysroot
 
 
 class CXXPrintProcessor:
@@ -191,7 +192,11 @@ class CXXIEGIRBuilder:
         Update internal variables depending current node type.
         """
         if node.type == NodeType.ROOT_NODE:
-            sys_vars = {'path': os.path, 'getenv': os.getenv}
+            sys_vars = {
+                'path': os.path,
+                'getenv': os.getenv,
+                'get_android_ndk_sysroot': get_android_ndk_sysroot
+            }
         else:
             sys_vars = {
                 '_output_modification_time': OUTPUT_MODIFICATION_KEY,

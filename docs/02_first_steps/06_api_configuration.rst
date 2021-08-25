@@ -20,7 +20,7 @@ Supported values for **action** are the following:
 
     * **gen_class** - Used to generate a simple class/struct.
 
-    * **gen_interface** - For the languages which do not support multiple inheritance these can be used to generate interfaces. For more details got to doc:`Variable Definitions </03_get_started/04_inheritance>`
+    * **gen_interface** - For the languages which do not support multiple inheritance these can be used to generate interfaces. For more details got to :doc:`Variable Definitions </03_get_started/04_inheritance>`.
 
     * **gen_enum** - Used to generate enums.
 

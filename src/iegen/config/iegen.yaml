@@ -12,6 +12,11 @@ vars:
     - .
   kotlin.clang_args:
     - -D__ANDROID__
+  mac.kotlin.target_arch: x86_64
+  mac.kotlin.clang_args:
+    - -D__ANDROID__
+    - --target={{target_arch}}-none-linux-android
+    - --sysroot={{get_android_ndk_sysroot(getenv('ANDROID_NDK'))}}
   file_postfix: ""
   kotlin.cxx_out_dir: "{{path.join(out_prj_dir, 'kotlin/wrappers')}}"
   kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"

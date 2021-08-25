@@ -78,7 +78,14 @@ def get_android_ndk_sysroot(ndk_path):
     elif platform == 'win':
         platform_section = 'windows-x86_64'
 
-    return os.path.join(ndk_path, 'toolchains/llvm/prebuilt', platform_section, 'sysroot')
+    sysroot_path = os.path.join(ndk_path if ndk_path is not None else '/usr/local/share/android-ndk',
+                                'toolchains/llvm/prebuilt', platform_section, 'sysroot')
+
+    if not os.path.isdir(sysroot_path):
+        Error.critical(f"'ANDROID_NDK' environment variable is not set properly: "
+                       f"{sysroot_path} directory doesn't exist")
+
+    return sysroot_path
 
 
 def make_snake_case(string, sub_strings=None):

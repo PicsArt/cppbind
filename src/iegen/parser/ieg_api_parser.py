@@ -76,13 +76,8 @@ class APIParser:
                 # if no any comment sign found just save the line
                 yaml_lines.append(line)
 
-        if not yaml_lines:
-            Error.critical("API comments are empty",
-                           location.file_name if location else None,
-                           location.line_number if location else None)
-
         try:
-            attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader)
+            attrs = yaml.load('\n'.join(yaml_lines), Loader=UniqueKeyLoader) or {}
             return self.parse_api_attrs(attrs, location)
         except yaml.YAMLError as err:
             Error.critical(f"Error while scanning yaml style comments: {err}",

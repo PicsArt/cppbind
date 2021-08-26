@@ -147,7 +147,11 @@ def clear_iegen_generated_files(directory):
             remove = False
             file_path = os.path.join(root, file)
             with open(file_path, 'r') as file:
-                content = file.read()
+                try:
+                    content = file.read()
+                except UnicodeDecodeError as err:
+                    Error.warning(f"Cannot read content of {os.path.abspath(file_path)} file: {err}")
+                    continue
                 # remove all *, / and spaces from banner
                 content = re.sub(r'[/*\s+]', '', content)
                 if banner in content:
@@ -155,7 +159,10 @@ def clear_iegen_generated_files(directory):
             if remove:
                 os.remove(file_path)
         if not os.listdir(root):
-            os.rmdir(root)
+            if os.path.abspath(root) == os.getcwd():
+                Error.warning(f"Cannot delete current working directory: {os.getcwd()}")
+            else:
+                os.rmdir(root)
 
 
 def copy_yaml_config_template():

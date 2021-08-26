@@ -159,10 +159,10 @@ def clear_iegen_generated_files(directory):
             if remove:
                 os.remove(file_path)
         if not os.listdir(root):
-            if os.path.abspath(root) == os.getcwd():
-                Error.warning(f"Cannot delete current working directory: {os.getcwd()}")
-            else:
-                os.rmdir(root)
+            try:
+                os.rmdir(os.path.abspath(root))
+            except OSError as err:
+                Error.warning(f"Cannot delete {os.path.abspath(root)} directory: {err}")
 
 
 def copy_yaml_config_template():

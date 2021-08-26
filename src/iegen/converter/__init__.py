@@ -1,5 +1,7 @@
 import clang.cindex as cli
 
+from iegen.common.error import Error
+
 NEW_LINE = '\n'
 
 
@@ -12,13 +14,17 @@ class Validator:
     def shared_ref_set(type_ctx):
         """Check whether shared_ref variable is set"""
         if not type_ctx.root.shared_ref:
-            raise Exception("Root must have an attribute \"shared_ref: True\"")
+            Error.critical("Root must have an attribute \"shared_ref: True\"",
+                           type_ctx.node.file_name,
+                           type_ctx.node.line_number)
 
     @staticmethod
     def shared_ref_unset(type_ctx):
         """Check whether shared_ref variable is false"""
         if type_ctx.root.shared_ref:
-            raise Exception("Root has an invalid attribute \"shared_ref: True\"")
+            Error.critical("Root has an invalid attribute \"shared_ref: True\"",
+                           type_ctx.node.file_name,
+                           type_ctx.node.line_number)
 
     @staticmethod
     def validate_single_root(cursor):

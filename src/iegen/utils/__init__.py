@@ -157,8 +157,6 @@ def clear_iegen_generated_files(directory):
                     os.remove(file_path)
             except Exception as err:
                 Error.warning(f"Cannot process {os.path.abspath(file_path)} file: {err}")
-            if remove:
-                os.remove(file_path)
         if not os.listdir(root):
             try:
                 os.rmdir(os.path.abspath(root))

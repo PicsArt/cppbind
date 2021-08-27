@@ -146,16 +146,17 @@ def clear_iegen_generated_files(directory):
         for file in filenames:
             remove = False
             file_path = os.path.join(root, file)
-            with open(file_path, 'r') as file:
-                try:
+            try:
+                with open(file_path, 'r') as file:
                     content = file.read()
-                except UnicodeDecodeError as err:
-                    Error.warning(f"Cannot read content of {os.path.abspath(file_path)} file: {err}")
-                    continue
-                # remove all *, / and spaces from banner
-                content = re.sub(r'[/*\s+]', '', content)
-                if banner in content:
-                    remove = True
+                    # remove all *, / and spaces from banner
+                    content = re.sub(r'[/*\s+]', '', content)
+                    if banner in content:
+                        remove = True
+                if remove:
+                    os.remove(file_path)
+            except (OSError, UnicodeDecodeError) as err:
+                Error.warning(f"Cannot process {os.path.abspath(file_path)} file: {err}")
             if remove:
                 os.remove(file_path)
         if not os.listdir(root):

@@ -7,6 +7,7 @@ import sys
 from logging import getLevelName
 
 from iegen.common.config import config as default_config, PROJECT_CONFIG_DIR
+from iegen.common.error import Error
 
 BANNER_LOGO = """
 ,--.,------. ,----.   ,------.,--.  ,--. 
@@ -33,6 +34,13 @@ def init_logger(log_level=None):
     logging.basicConfig(**log_kwargs,
                         format=LOGGING_FORMAT,
                         level=getLevelName(log_level))
+
+
+def init_error_handler(error_limit):
+    """Function to initialize error handler module"""
+    if error_limit is None:
+        error_limit = int(default_config.error.error_limit)
+    Error.set_error_limit(error_limit)
 
 
 def find_prj_dir(dirname):

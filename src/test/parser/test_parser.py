@@ -146,11 +146,11 @@ def test_parser_errors(clang_config):
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
     for file in os.listdir(test_dir):
-        Error.has_error = False
+        Error._Error__has_error = False
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
         parser.parse(ir_builder, **clang_cfg)
-        assert Error.has_error is True, "Must cause an error"
+        assert Error.has_error() is True, "Must cause an error"
 
 
 def test_file_api_positive():
@@ -194,10 +194,10 @@ def test_var_def_validation():
         # add dummy 'required_on' node without having it in 'allowed_on' list
         var_def_mock.return_value['b']['required_on'] = ['dir']
 
-        Error.has_error = False
+        Error._Error__has_error = False
         ContextDescriptor(None)
 
-        assert Error.has_error is True, "variable cannot be required on a node on which it is not allowed"
+        assert Error.has_error() is True, "variable cannot be required on a node on which it is not allowed"
 
 
 def test_attr_type_mismatch_negative():
@@ -210,6 +210,6 @@ def test_attr_type_mismatch_negative():
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
 
-        Error.has_error = False
+        Error._Error__has_error = False
         ir_builder.start_root()
-        assert Error.has_error is True, "evaluation of an expression must fail if its type doesn't match required one"
+        assert Error.has_error() is True, "evaluation of an expression must fail if its type doesn't match required one"

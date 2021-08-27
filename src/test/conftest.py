@@ -10,6 +10,7 @@ import pytest
 
 from iegen import PROJECT_CONFIG_DIR
 from iegen.common.config import config as default_config
+from iegen.common.error import Error
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from . import TEST_CXX_DIR, TEST_OUT_DIR
@@ -78,3 +79,5 @@ def clang_config():
 
 ContextDescriptor.get_var_def = Mock(return_value=ContextDescriptor.resolve_attr_aliases(load_yaml(
     os.path.join(PROJECT_CONFIG_DIR, "variable_definitions.yaml"))))
+
+Error.set_error_limit(-1)

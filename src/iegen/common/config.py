@@ -78,6 +78,9 @@ class IEGConfig:
         self.logging = types.SimpleNamespace()
         self.logging.__dict__.update(cnfg.items("LOG"))
 
+        self.error = types.SimpleNamespace()
+        self.error.__dict__.update(cnfg.items("ERROR"))
+
     def __repr__(self):
         return f"IEG_Config({repr(self.__dict__)})"
 

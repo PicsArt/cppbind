@@ -40,8 +40,10 @@ class Error:
     @classmethod
     def critical(cls, msg, file=None, line=None):
         """Critical error: it's not possible to proceed after this type of error"""
+        error_msg = cls.get_message(msg, file, line, "critical")
+        logging.critical(error_msg)
         cls.log_traceback(extract_stack())
-        raise IEGError(cls.get_message(msg, file, line, "critical"))
+        raise IEGError(error_msg)
 
     @classmethod
     def warning(cls, msg, file=None, line=None):

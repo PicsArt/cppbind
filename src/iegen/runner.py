@@ -102,8 +102,7 @@ def run(args, ctx_desc):
 
     try:
         WrapperGenerator.run(set(plat_lang_options), ctx_desc, args)
-    except IEGError as err:
-        logging.critical(err)
+    except IEGError:
         sys.exit(1)
 
 

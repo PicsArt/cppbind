@@ -155,7 +155,7 @@ def clear_iegen_generated_files(directory):
                         remove = True
                 if remove:
                     os.remove(file_path)
-            except (OSError, UnicodeDecodeError) as err:
+            except Exception as err:
                 Error.warning(f"Cannot process {os.path.abspath(file_path)} file: {err}")
             if remove:
                 os.remove(file_path)

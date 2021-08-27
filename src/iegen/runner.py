@@ -123,62 +123,68 @@ def run_package():
     """
     Command line arguments parser
     """
-    ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
 
+    # register parent parser
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
 
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
-    choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
-                                                for lang in default_config.languages]
-
     sub_parser = parser.add_subparsers(required=True)
 
-    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.',
-                                       parents=[parent_parser])
-    run_parser.add_argument('plat_lang_options',
-                            type=str,
-                            nargs='+',
-                            choices=choices,
-                            help='list of languages for which wrapper will be generated.')
-
-    # add arguments for setting context variables from command line
-    for name, prop in ctx_desc.get_var_def().items():
-        if 'cmd_line' in prop.get('allowed_on'):
-            var_type = get_var_real_type(prop.get('type'))
-            var_desc = to_value(prop.get('description'))
-
-            plat_lang_options = [f"--{plat}.{lang}.{name}" for plat in default_config.platforms
-                                 for lang in default_config.languages]
-            plat_options = [f"--{plat}.{name}" for plat in default_config.platforms]
-            lang_options = [f"--{lang}.{name}" for lang in default_config.languages]
-
-            for option in plat_lang_options + plat_options + lang_options + [f"--{name}"]:
-                # suppress option help if it is not pure one (has plat/lang specifications)
-                var_help = var_desc if option == f"--{name}" else argparse.SUPPRESS
-
-                if var_type is list:
-                    run_parser.add_argument(option, help=var_help, nargs='+')
-                elif var_type is dict:
-                    run_parser.add_argument(option, help=var_help, type=json.loads)
-                elif var_type is bool:
-                    run_parser.add_argument(option, help=var_help, action='store')
-                else:
-                    run_parser.add_argument(option, help=var_help, type=var_type)
-
-    run_parser.set_defaults(func=lambda arg: run(arg, ctx_desc))
-
+    # register clean sub parser
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
                                          parents=[parent_parser])
     clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.',)
     clean_parser.set_defaults(func=clean)
 
+    # register init sub parser
     init_parser = sub_parser.add_parser('init', help='Creates an initial config file in current directory.',
                                         parents=[parent_parser])
     init_parser.set_defaults(func=init)
 
+    # register run sub parser
+    plat_lang_choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
+                                                          for lang in default_config.languages]
+    run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.',
+                                       parents=[parent_parser])
+    run_parser.add_argument('plat_lang_options',
+                            type=str,
+                            nargs='+',
+                            choices=plat_lang_choices,
+                            help='list of languages for which wrapper will be generated.')
+
+    current_sub_parser_args = parent_parser.parse_known_args()[1]
+    if current_sub_parser_args and current_sub_parser_args[0] == 'run':
+        ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
+
+        # add arguments for setting context variables from command line
+        for name, prop in ctx_desc.get_var_def().items():
+            if 'cmd_line' in prop.get('allowed_on'):
+                var_type = get_var_real_type(prop.get('type'))
+                var_desc = to_value(prop.get('description'))
+
+                plat_lang_options = [f"--{plat}.{lang}.{name}" for plat in default_config.platforms
+                                     for lang in default_config.languages]
+                plat_options = [f"--{plat}.{name}" for plat in default_config.platforms]
+                lang_options = [f"--{lang}.{name}" for lang in default_config.languages]
+
+                for option in plat_lang_options + plat_options + lang_options + [f"--{name}"]:
+                    # suppress option help if it is not pure one (has plat/lang specifications)
+                    var_help = var_desc if option == f"--{name}" else argparse.SUPPRESS
+
+                    if var_type is list:
+                        run_parser.add_argument(option, help=var_help, nargs='+')
+                    elif var_type is dict:
+                        run_parser.add_argument(option, help=var_help, type=json.loads)
+                    elif var_type is bool:
+                        run_parser.add_argument(option, help=var_help, action='store')
+                    else:
+                        run_parser.add_argument(option, help=var_help, type=var_type)
+
+        run_parser.set_defaults(func=lambda arg: run(arg, ctx_desc))
+
     # print help if nothing is passed
-    args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+    args = parser.parse_args(args=None if current_sub_parser_args else ['--help'])
 
     iegen.init_logger(args.log_level)
 

@@ -103,7 +103,7 @@ def run(args, ctx_desc):
     try:
         WrapperGenerator.run(set(plat_lang_options), ctx_desc, args)
     except IEGError as err:
-        print(err)
+        logging.critical(err)
         sys.exit(1)
 
 
@@ -127,7 +127,11 @@ def run_package():
 
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
-    parent_parser.add_argument('--error-limit', type=int, help='Error limit', required=False)
+    parent_parser.add_argument('--error-limit',
+                               type=int,
+                               help='Error limit',
+                               default=int(default_config.application.error_limit),
+                               required=False)
 
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
     choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
@@ -182,7 +186,8 @@ def run_package():
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
     iegen.init_logger(args.log_level)
-    iegen.init_error_handler(args.error_limit)
+
+    Error.set_error_limit(args.error_limit)
 
     args.func(args)
 

@@ -13,7 +13,7 @@ class Error:
     """
 
     __has_error = False
-    __error_limit = None
+    __error_limit = -1
 
     @classmethod
     def set_error_limit(cls, error_limit):

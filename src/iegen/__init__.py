@@ -36,13 +36,6 @@ def init_logger(log_level=None):
                         level=getLevelName(log_level))
 
 
-def init_error_handler(error_limit):
-    """Function to initialize error handler module"""
-    if error_limit is None:
-        error_limit = int(default_config.error.error_limit)
-    Error.set_error_limit(error_limit)
-
-
 def find_prj_dir(dirname):
     if not os.path.isabs(dirname):
         if not os.path.isdir(dirname):

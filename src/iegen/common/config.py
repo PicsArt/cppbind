@@ -75,8 +75,7 @@ class IEGConfig:
 
         self.api_start_kw = cnfg.get("API", "parser_start")
 
-        self.logging = types.SimpleNamespace()
-        self.logging.__dict__.update(cnfg.items("LOG"))
+        self.logging = types.SimpleNamespace(**dict(cnfg.items("LOG")))
 
     def __repr__(self):
         return f"IEG_Config({repr(self.__dict__)})"

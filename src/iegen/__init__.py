@@ -7,6 +7,7 @@ import sys
 from logging import getLevelName
 
 from iegen.common.config import config as default_config, PROJECT_CONFIG_DIR
+from iegen.common.error import Error
 
 BANNER_LOGO = """
 ,--.,------. ,----.   ,------.,--.  ,--. 

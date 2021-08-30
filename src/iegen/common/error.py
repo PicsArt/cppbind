@@ -12,20 +12,38 @@ class Error:
     Class is used to call various types of errors
     """
 
-    has_error = False
+    __has_error = False
+    __error_limit = -1
+
+    @classmethod
+    def set_error_limit(cls, error_limit):
+        """Method to set error limit"""
+        cls.__error_limit = error_limit
+
+    @classmethod
+    def has_error(cls):
+        """method to check whether error has ever occurred"""
+        return cls.__has_error
 
     @classmethod
     def error(cls, msg, file=None, line=None):
         """Simple error type"""
-        cls.has_error = True
-        logging.error(cls.get_message(msg, file, line, "error"))
-        cls.log_traceback(extract_stack())
+        cls.__has_error = True
+
+        if cls.__error_limit == 0:
+            Error.critical(msg, file, line)
+        else:
+            cls.__error_limit -= 1
+            logging.error(cls.get_message(msg, file, line, "error"))
+            cls.log_traceback(extract_stack())
 
     @classmethod
     def critical(cls, msg, file=None, line=None):
         """Critical error: it's not possible to proceed after this type of error"""
+        error_msg = cls.get_message(msg, file, line, "critical")
+        logging.critical(error_msg)
         cls.log_traceback(extract_stack())
-        raise IEGError(cls.get_message(msg, file, line, "critical"))
+        raise IEGError(error_msg)
 
     @classmethod
     def warning(cls, msg, file=None, line=None):

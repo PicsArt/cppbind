@@ -66,7 +66,7 @@ class WrapperGenerator:
 
         ir_builder.end_root()
 
-        if Error.has_error:
+        if Error.has_error():
             raise Error.critical('Cannot continue: iegen error has occurred')
 
         ir = ir_builder.ir
@@ -84,7 +84,7 @@ class WrapperGenerator:
         # now we can dump builders into file
         logging.debug("Dumping builders to files.")
 
-        if Error.has_error:
+        if Error.has_error():
             raise Error.critical('Cannot continue: iegen error has occurred')
 
         builder.dump_outputs()
@@ -102,8 +102,7 @@ def run(args, ctx_desc):
 
     try:
         WrapperGenerator.run(set(plat_lang_options), ctx_desc, args)
-    except IEGError as err:
-        Error.error(err)
+    except IEGError:
         sys.exit(1)
 
 
@@ -127,6 +126,11 @@ def run_package():
     # register parent parser
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
+    parent_parser.add_argument('--error-limit',
+                               type=int,
+                               help='Error limit',
+                               default=int(default_config.application.error_limit),
+                               required=False)
 
     parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
     sub_parser = parser.add_subparsers(required=True)
@@ -187,6 +191,8 @@ def run_package():
     args = parser.parse_args(args=None if current_sub_parser_args else ['--help'])
 
     iegen.init_logger(args.log_level)
+
+    Error.set_error_limit(args.error_limit)
 
     args.func(args)
 

@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-from iegen.utils import current_datetime
+from iegen import current_datetime
 from iegen.builder import OUTPUT_MODIFICATION_KEY, is_output_changed
 from iegen.builder.out_builder import Builder, Scope
 

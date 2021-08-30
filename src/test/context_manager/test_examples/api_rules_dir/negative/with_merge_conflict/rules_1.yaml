@@ -1,5 +1,5 @@
 rules:
-  code_snippets:
+  python.code_snippets:
     a:
       b:
         c: 1

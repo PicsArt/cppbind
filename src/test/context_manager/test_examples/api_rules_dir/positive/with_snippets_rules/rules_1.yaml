@@ -1,5 +1,5 @@
 rules:
-  type_converters:
+  linux.python.type_converters:
     a:
       b:
         c:

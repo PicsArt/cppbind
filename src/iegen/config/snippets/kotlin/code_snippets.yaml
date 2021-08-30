@@ -14,9 +14,10 @@ file:
 
       {% if package_prefix != ctx.lookup_ctx_by_name("std::exception").package_prefix or package != ctx.lookup_ctx_by_name("std::exception").package -%}
       import {{ctx.lookup_ctx_by_name("std::exception").package_prefix}}.{{ctx.lookup_ctx_by_name("std::exception").package}}.*
-      {%- endif -%}
-
+      {%- endif %}
+      {%- if include %}
       {{include}}
+      {%- endif %}
       {{body}}
   cxx:
     file_path: |
@@ -115,7 +116,7 @@ var_class_cxx: &var_class_cxx
 
 var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
-    {{include|format_list("import {}")|join_unique}}
+    {{marker if include}}{{include|format_list("import {}")|join_unique}}
     {%- macro gen_import(converter, current_ctx) -%}
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and type_ctx.is_proj_type and type_ctx.package != current_ctx.package -%}

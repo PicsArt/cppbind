@@ -1,6 +1,7 @@
 """
 Iegen is a tool to generate c++ bindings for various languages.
 """
+import datetime
 import logging
 import os
 import sys
@@ -40,3 +41,12 @@ def find_prj_dir(dirname):
         if not os.path.isdir(dirname):
             dirname = os.path.abspath(os.path.join(PROJECT_CONFIG_DIR, dirname))
     return dirname
+
+
+def current_datetime():
+    """
+    Returns formatted current date time in utc.
+    Returns:
+        str: Formatted result.
+    """
+    return datetime.date.strftime(datetime.datetime.utcnow(), DATETIME_FORMAT)

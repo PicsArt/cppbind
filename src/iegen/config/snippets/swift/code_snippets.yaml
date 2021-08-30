@@ -99,7 +99,7 @@ class:
   swift:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join_unique}}
+        {{marker if include}}{{include|format_list("import {}")|join_unique}}
     body:
       scopes:
         - head

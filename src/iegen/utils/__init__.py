@@ -1,7 +1,6 @@
 """
 Common utils that can by used from different modules
 """
-import datetime
 import enum
 import errno
 import importlib.util
@@ -12,7 +11,7 @@ import sys
 
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
-from iegen import DATETIME_FORMAT, BANNER_LOGO
+from iegen import BANNER_LOGO
 from iegen.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from iegen.common.error import Error
 
@@ -102,15 +101,6 @@ def make_camel_case(string, sub_strings=None):
     return ''.join([init, *map(str.title, temp)])
 
 
-def current_datetime():
-    """
-    Returns formatted current date time in utc.
-    Returns:
-        str: Formatted result.
-    """
-    return datetime.date.strftime(datetime.datetime.utcnow(), DATETIME_FORMAT)
-
-
 def clear_iegen_generated_files(directory):
     """
     Traverses given directory and removes all files that contain IEGEN banner.
@@ -187,6 +177,26 @@ def init_jinja_env():
     def replace_regex(input_, pattern, repl, count=0):
         return re.sub(pattern, repl, input_, count)
 
+    def _split(inputs_):
+        parts = []
+        if not isinstance(inputs_, list):
+            inputs_ = [inputs_]
+        for input_ in inputs_:
+            if isinstance(input_, str):
+                parts.append(*input_.split(JINJA_UNIQUE_MARKER))
+            else:
+                for part in input_.parts:
+                    parts.append(*str(part).split(JINJA_UNIQUE_MARKER))
+        return parts
+
+    def sort_snippet(inputs_, reverse=False):
+        parts = _split(inputs_)
+        return '\n'.join(sorted(parts, reverse=reverse))
+
+    def unique_snippet(inputs_):
+        parts = _split(inputs_)
+        '\n'.join(set(parts))
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
@@ -197,6 +207,8 @@ def init_jinja_env():
     env.filters['to_camel_case'] = make_camel_case
     env.filters['join_unique'] = join_unique
     env.filters['replace_regex'] = replace_regex
+    env.filters['sort_snippet'] = sort_snippet
+    env.filters['unique_snippet'] = unique_snippet
 
     env.tests['match_regexp'] = match_regexp
 

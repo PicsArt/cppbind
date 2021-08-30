@@ -21,17 +21,16 @@ file:
       - include
     content: |
       {{helper.make_comment((banner_logo + new_line + banner_comment).split(new_line))}}
-
-      from __future__ import annotations
-
-      from typing import *
-
-      import {{[pybind_module, package, file]|join('.')}} as {{'pybind_' + file + file_postfix}}
-      from {{helpers_package_prefix + '.' if helpers_package_prefix}}bind_utils import *
-      {{helper_includes|format_list('from {} import *')|join(new_line)}}
-      {%- if include %}
-      {{include}}
+      {%- set future_import = 'from __future__ import annotations' %}
+      {%- set typing_import = 'from typing import *' %}
+      {%- set pybind_import = 'import ' + [pybind_module, package, file]|join('.') + ' as pybind_' + file + file_postfix %}
+      {%- if helpers_package_prefix %}
+      {%- set bind_import = 'from ' + helpers_package_prefix + '.bind_utils import *' %}
+      {%- else %}
+      {%- set bind_import = 'from bind_utils import *' %}
       {%- endif %}
+      {%- set helpers = helper_includes|format_list('from {} import *')|join_unique %}
+      {{helper.sort_imports([future_import, typing_import, pybind_import, include, helpers, bind_import]|join(new_line))|trim}}
       {{body}}
       {{''}}
   cxx:
@@ -231,8 +230,8 @@ var_class: &var_class
       content: |
         {%- set bases_specifiers = [] -%}
         {%- for base_type_converter in base_types_converters -%}
-          {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
-          {%- do bases_specifiers.append(base_type_package + base_type_converter.python.target_type_name) -%}
+        {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
+        {%- do bases_specifiers.append(base_type_package + base_type_converter.python.target_type_name) -%}
         {%- endfor -%}
         {%- do bases_specifiers.extend(ctx.bases_list) -%}
         {%- do bases_specifiers.append('metaclass=OriginalMethodsMetaclass') %}

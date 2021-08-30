@@ -3,6 +3,8 @@ Helper codes for python conversion
 """
 import os
 
+from isort.api import sort_code_string
+
 from . import *
 
 OPERATOR_MAPPING = {
@@ -32,6 +34,8 @@ OPERATOR_MAPPING = {
     '>>': '__rshift__',
     '[]': '__getitem__',
 }
+
+sort_imports = sort_code_string
 
 
 def is_first_overload(ctx):

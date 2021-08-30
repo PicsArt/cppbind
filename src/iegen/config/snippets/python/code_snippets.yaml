@@ -36,7 +36,7 @@ file:
       {{''}}
   cxx:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
@@ -54,7 +54,7 @@ file:
       {{body|string}}
   hpp:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - body
     content: |
@@ -73,7 +73,7 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix}}.cpp
     scopes:
       - body
     content: |
@@ -88,7 +88,7 @@ file:
       }
   pybind_module_hpp:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix}}.hpp
     scopes:
       - include
     content: |
@@ -107,7 +107,7 @@ file:
       #endif
   pybind_package:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + '_module']|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + '_module'}}.cpp
     gen: false
     scopes:
       - body
@@ -115,7 +115,7 @@ file:
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
       {% set packages = pybind_module.split('.') %}
       {%- set package = packages[0] %}
-      {%- set file = cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join %}
+      {%- set file = cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix %}
       #include <pybind11/pybind11.h>
       #include "{{helper.cxx_rel_path(file, out_prj_dir)}}.hpp"
 
@@ -155,7 +155,7 @@ package:
 var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
-      {%- set cxx_output_filepath = cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join -%}
+      {%- set cxx_output_filepath = cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join -%}
       {{marker}}#include "{{helper.cxx_rel_path(cxx_output_filepath + '.hpp', out_prj_dir)}}"
 
 enum:

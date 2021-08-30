@@ -44,7 +44,7 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
-  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
+  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers/examples_lib')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
   python.package_prefix: examples_lib

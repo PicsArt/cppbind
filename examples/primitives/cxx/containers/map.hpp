@@ -127,31 +127,11 @@ struct MapExamples {
     std::unordered_map<std::string, MapItem> getMixedMap() {
         return mapMixedData;
     }
-// TODO: commented as for now for kotlin we do not have nested containers support
-//    /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     */
-//    void setNestedMap(const std::map<int, std::map<int, int>>& m) {
-//        nestedMap = m;
-//    }
-//     /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     */
-//     std::map<int, std::map<int, int>> getNestedMap() {
-//        return nestedMap;
-//     }
 
 private:
     std::unordered_map<std::string, std::string> mapStringData;
     std::unordered_map<int, int> mapIntData;
     std::unordered_map<std::string, MapItem> mapMixedData;
-    std::map<int, std::map<int, int>> nestedMap;
 };
 
 }

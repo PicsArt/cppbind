@@ -122,31 +122,10 @@ struct VectorExamples {
         return vectorIntData;
     }
 
-// TODO: commented as for now for kotlin we do not have nested containers support
-//    /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     */
-//    void setNestedVector(const std::vector<std::vector<int>>& v) {
-//        nestedVector = v;
-//    }
-//    /**
-//     * comments
-//     *
-//     * __API__
-//     * gen: method
-//     */
-//    std::vector<std::vector<int>> getNestedVector() {
-//        return nestedVector;
-//    }
-
 private:
     std::vector<std::string> vectorStringData;
     std::vector<int> vectorIntData;
     std::vector<VectorItem*> vectorObjData;
-    std::vector<std::vector<int>> nestedVector;
 };
 
 }

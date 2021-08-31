@@ -51,6 +51,11 @@ class ContainersApp {
             jsonUsage.setJson(jsonVal)
             assert(jsonUsage.getJson() == jsonVal)
             // [json-usage]
+
+            val nestedUsage = NestedExamples()
+            val nestedList = listOf(listOf(1, 2), listOf())
+            nestedUsage.setNestedIntVector(nestedList)
+            println(nestedUsage.getNestedIntVector())
        }
     }
 

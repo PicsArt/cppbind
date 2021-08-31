@@ -1,6 +1,7 @@
 from examples_lib.containers.map_pygen import MapItem, MapExamples
 from examples_lib.containers.vector_pygen import VectorItem, VectorExamples
 from examples_lib.containers.pair_pygen import PairExamples
+from examples_lib.containers.nested_containers_pygen import NestedExamples
 
 # [map-usage]
 mapusages = MapExamples()
@@ -50,3 +51,17 @@ pair_usage.set_nested_pair(nested_pair)
 result_pair = pair_usage.get_nested_pair()
 assert result_pair == nested_pair
 # [pair-usage]
+
+# [nested-containers-usage]
+nested_usage_obj = NestedExamples()
+
+nested_int_vector = [[1, 2], [], [-9, 100, 1000000]]
+nested_usage_obj.set_nested_int_vector(nested_int_vector)
+assert nested_usage_obj.get_nested_int_vector() == nested_int_vector
+
+nested_int_map = {1: {1: 2, 3: 4}, 2: {}}
+nested_usage_obj.set_nested_int_map(nested_int_map)
+assert nested_usage_obj.get_nested_int_map() == nested_int_map
+
+nested_usage_obj.mixed_example_with_many_args(nested_int_vector, nested_int_vector, nested_int_map, nested_int_map)
+# [nested-containers-usage]

@@ -11,7 +11,7 @@
 
 public class ExceptionHandler {
 
-    static var uncaughtExceptionHandler = defaultHandler;
+    static var uncaughtExceptionHandler = defaultHandler
 
     static func defaultHandler(_ err_msg: String) {
         print("Uncaught exception is found: \(err_msg)")
@@ -23,11 +23,10 @@ public class ExceptionHandler {
     }
 
     public static func setUncaughtExceptionHandler(_ handler: @escaping (String) -> Void) {
-        uncaughtExceptionHandler = handler;
+        uncaughtExceptionHandler = handler
     }
 
     public static func unsetUncaughtExceptionHandler() {
-        uncaughtExceptionHandler = defaultHandler;
+        uncaughtExceptionHandler = defaultHandler
     }
 }
-

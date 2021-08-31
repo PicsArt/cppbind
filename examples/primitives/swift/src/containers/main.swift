@@ -63,3 +63,17 @@ for json in jsonList {
     assert(jsonUsage.getJson() == json)
 }
 // [json-usage]
+
+// [nested-containers-usage]
+let nestedUsage = NestedExamples()
+
+let nestedIntList = [[1, 2], [3], []]
+nestedUsage.setNestedIntVector(v: nestedIntList)
+// assert(nestedUsage.getNestedIntVector() == nestedIntList)
+
+let nestedIntMap : [Int: [Int: Int]] = [1: [1: 2], 2: [-1000: 10000000, 0: 0]]
+nestedUsage.setNestedIntMap(m: nestedIntMap)
+// assert(nestedUsage.getNestedIntMap() == nestedIntMap)
+
+nestedUsage.mixedExampleWithManyArgs(v1: nestedIntList, v2: nestedIntList, m1: nestedIntMap, m2: nestedIntMap)
+// [nested-containers-usage]

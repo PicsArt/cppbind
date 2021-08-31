@@ -319,10 +319,10 @@ function:
         {%- endfor %}
           var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
+          let result = {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
           {{rconverter.sc_to_swift.snippet('result', nullable=nullable_return)|indent}}
         {%- else %}
-          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
+          {{helper.get_c_func_name("{}{}_{}{}".format(owner_class.name, owner_class.template_suffix, name, overloading_prefix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
           let err_type = Int(err.err_type)
           if (err_type != 0) {
@@ -343,7 +343,7 @@ function:
               }
           }
         {%- if rconverter.c.target_type_name != 'void' %}
-          return {{rconverter.sc_to_swift.converted_name('result')}};
+          return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
       }
     interface_body: |
@@ -438,7 +438,7 @@ property_getter:
       {{helper.make_comment(comment)}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
-              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
+              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself)
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
@@ -507,7 +507,7 @@ getter:
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
       public {{'override ' if override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
-              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself);
+              let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}(cself)
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }

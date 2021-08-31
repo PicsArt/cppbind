@@ -144,9 +144,9 @@ std::vector:
     {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
     {{target_name}}.size = Int64({{name}}.count)
     for _i in 0..<{{name}}.count {
-      let value_{{name}} = {{name}}[_i];
+      let value_{{name}} = {{name}}[_i]
       {{args[0].snippet('value_{}'.format(name))|indent}}
-      _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}};
+      _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
     }
   sc_to_swift: |
     let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
@@ -155,9 +155,9 @@ std::vector:
       _tmp_{{name}}_data.deallocate()
     }
     for _i in 0..<Int({{name}}.size) {
-      let value_{{name}} = _tmp_{{name}}_data[_i];
+      let value_{{name}} = _tmp_{{name}}_data[_i]
       {{args[0].snippet('value_{}'.format(name))|indent}}
-      {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}});
+      {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
     }
 
 
@@ -226,8 +226,8 @@ std::map:
       _tmp_v_{{name}}_data.deallocate()
     } 
     for _i_{{name}} in 0..<Int({{name}}.size) {
-      let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}];
-      let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}];
+      let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
+      let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
       do {
         {{args[0].snippet('key_{}'.format(name))|indent}}
         {{args[1].snippet('value_{}'.format(name))|indent}}
@@ -332,8 +332,8 @@ std::pair:
       _tmp_pair_first_{{name}}_data.deallocate()
       _tmp_pair_second_{{name}}_data.deallocate()
     }
-    let first_{{name}} = _tmp_pair_first_{{name}}_data[0];
-    let second_{{name}} = _tmp_pair_second_{{name}}_data[0];
+    let first_{{name}} = _tmp_pair_first_{{name}}_data[0]
+    let second_{{name}} = _tmp_pair_second_{{name}}_data[0]
     {{args[0].snippet('first_{}'.format(name))}}
     {{args[1].snippet('second_{}'.format(name))}}
     let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ( {{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}} )

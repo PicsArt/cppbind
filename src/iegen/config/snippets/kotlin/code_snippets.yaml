@@ -11,7 +11,7 @@ file:
       package {{package_prefix}}.{{package}}
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
       {%- set exc_include = 'import ' + ctx.lookup_ctx_by_name("std::exception").package_prefix + '.' + ctx.lookup_ctx_by_name("std::exception").package + '.*' %}
-      {{[helpers, exc_include, include]|sort_snippet}}
+      {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
       {{body}}
   cxx:
     file_path: |

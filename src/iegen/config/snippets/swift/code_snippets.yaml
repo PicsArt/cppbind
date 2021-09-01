@@ -8,10 +8,7 @@ file:
     content: |
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
-      import Foundation
-      import {{c_wrapper_lib_name}}
-      {{include}}
-
+      {{[include, 'import Foundation', 'import ' + c_wrapper_lib_name]|sort_snippets(cmp=helper.imports_comparator)|join(new_line)}}
       {{body}}
   cc:
     file_path: |

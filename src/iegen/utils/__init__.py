@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+from functools import cmp_to_key
 
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
@@ -189,13 +190,16 @@ def init_jinja_env():
                     parts += str(part).split(JINJA_UNIQUE_MARKER)
         return parts
 
-    def sort_snippet(inputs_, reverse=False):
-        parts = _split(inputs_)
-        return '\n'.join(sorted(parts, reverse=reverse))
+    def _default_comparator(a, b):
+        return 1 if a > b else -1
 
-    def unique_snippet(inputs_):
+    def sort_snippets(inputs_, cmp=_default_comparator, reverse=False):
         parts = _split(inputs_)
-        '\n'.join(set(parts))
+        return sorted(parts, key=cmp_to_key(cmp), reverse=reverse)
+
+    def unique_snippets(inputs_):
+        parts = _split(inputs_)
+        return set(parts)
 
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
@@ -207,8 +211,8 @@ def init_jinja_env():
     env.filters['to_camel_case'] = make_camel_case
     env.filters['join_unique'] = join_unique
     env.filters['replace_regex'] = replace_regex
-    env.filters['sort_snippet'] = sort_snippet
-    env.filters['unique_snippet'] = unique_snippet
+    env.filters['sort_snippets'] = sort_snippets
+    env.filters['unique_snippets'] = unique_snippets
 
     env.tests['match_regexp'] = match_regexp
 

@@ -183,10 +183,10 @@ def init_jinja_env():
             inputs_ = [inputs_]
         for input_ in inputs_:
             if isinstance(input_, str):
-                parts.append(*input_.split(JINJA_UNIQUE_MARKER))
+                parts += input_.split(JINJA_UNIQUE_MARKER)
             else:
                 for part in input_.parts:
-                    parts.append(*str(part).split(JINJA_UNIQUE_MARKER))
+                    parts += str(part).split(JINJA_UNIQUE_MARKER)
         return parts
 
     def sort_snippet(inputs_, reverse=False):

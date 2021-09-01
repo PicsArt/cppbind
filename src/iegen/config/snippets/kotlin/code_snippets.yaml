@@ -9,15 +9,9 @@ file:
       {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
 
       package {{package_prefix}}.{{package}}
-
-      {{helper_includes|format_list('import {}.*')|join(new_line)}}
-
-      {% if package_prefix != ctx.lookup_ctx_by_name("std::exception").package_prefix or package != ctx.lookup_ctx_by_name("std::exception").package -%}
-      import {{ctx.lookup_ctx_by_name("std::exception").package_prefix}}.{{ctx.lookup_ctx_by_name("std::exception").package}}.*
-      {%- endif %}
-      {%- if include %}
-      {{include}}
-      {%- endif %}
+      {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
+      {%- set exc_include = 'import ' + ctx.lookup_ctx_by_name("std::exception").package_prefix + '.' + ctx.lookup_ctx_by_name("std::exception").package + '.*' %}
+      {{[helpers, exc_include, include]|sort_snippet}}
       {{body}}
   cxx:
     file_path: |

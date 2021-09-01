@@ -48,6 +48,20 @@ Here is the list of system variables:
  * **_is_operator** - indicates whether the method is a c++ operator or not.
  * **_object_name** - name of the project which is being processed, e.g. class name, method name etc.
  * **_file_name** - full name of the file which is being processed.
+ * **get_android_ndk_sysroot** - internal function to dynamically construct android ndk sysroot path using android ndk installation path (retrieved from environment variable) and host platform value
+
+In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
+which will be evaluated using system variables and current context variables.
+Particularly, when compiling courses on mac os to generate android kotlin wrappers, clang must be provided with **sysroot** and **target** options.
+For this purpose we have **target_arch** parameter, which has `x86_64` default value and can be overwritten with command line arguments or within `vars` section.
+To use this feature user need to set **clang_args** variable properly. We have it done in our project default config file:
+
+.. code-block:: yaml
+
+    mac.kotlin.target_arch: x86_64
+    mac.kotlin.clang_args:
+      - --target={{target_arch}}-none-linux-android
+      - --sysroot={{get_android_ndk_sysroot(getenv('ANDROID_NDK'))}}
 
 
 Now let's go through the variables one by one:
@@ -89,16 +103,16 @@ Now let's go through the variables one by one:
     - *package_prefix* - Package prefix where generated files will be saved.
     - *helpers_package_prefix* - This is a path relative to **out_dir** where python helpers from **helpers_dir** are copied.
     - *helpers_include_prefix* - The generated python code might be used as a submodule. In this case we have to attach appropriate prefix to helper includes. This parameter is used for this purpose.
-    - *common_helpers_dir* - This directory containing iegen standard helper files per language/platform.
-    - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language/platform.
-    - *helpers_dir* - Directory containing iegen helpers. This is different for each language/platform.
+    - *common_helpers_dir* - This directory containing iegen standard helper files per language.
+    - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language.
+    - *helpers_dir* - Directory containing iegen helpers. This is different for each language.
     - *cxx_base_dir* - Iegen internal directory containing base classes.
     - *file_postfix* - Postfix which will be appended to each generated file.
     - *extension* - Target language file extension.
     - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.
     - *c_wrapper_lib_name* - Library name for generated wrappers.
     - *clang_args* - Arguments passed to clang.
-    - *src_glob* - File glob to define which source codes are processed by clang.
+    - *src_glob* - File glob to define which source code files must be processed by clang.
     - *src_exclude_glob* - Patterns to exclude files from processing list.
     - *include_dirs* - Include directories required for parsing. These directories are passed to clang parser.
     - *extra_headers* - Extra headers to be processed. For example standard exceptions headers which are required to generate target language bindings for them.

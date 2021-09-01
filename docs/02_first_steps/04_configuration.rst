@@ -2,7 +2,7 @@ Configuration
 =============
 
 IEGEN configuration is described in iegen_config.cfg file which should be placed under current working directory.
-Project configurations are described in yaml format files which should be placed under source code directories.
+Project configuration is described in yaml format files which should be placed under source code directories.
 In yaml files we define input and output sources as well as to define parameters which will affect generated results and tool behaviour.
 
 IEGEN iegen_config.cfg file contains the following main sections.
@@ -124,20 +124,6 @@ More details on variables definitions you can find :doc:`here </02_first_steps/0
 In **vars** section we define root level configuration. Here we can have variables that are common for the whole project
 and variables that can be overridden per directory or per file or even for a piece of code.
 
-In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
-which will be evaluated using system variables and current context variables.
-Particularly, when compiling courses on mac os to generate android kotlin wrappers, clang must be provided with **sysroot** and **target** options.
-For this purpose we have **target_arch** parameter, which has `x86_64` default value and can be overwritten with command line arguments or within `vars` section.
-We also have `get_android_ndk_sysroot` internal function to dynamically construct android ndk sysroot path using android ndk installation path (retrieved from
-environment variable) and host platform value. To use this feature user need to set **clang_args** variable properly. We have it done in our project default config file:
-
-.. code-block:: yaml
-
-    mac.kotlin.target_arch: x86_64
-    mac.kotlin.clang_args:
-      - --target={{target_arch}}-none-linux-android
-      - --sysroot={{get_android_ndk_sysroot(getenv('ANDROID_NDK'))}}
-
 **dir_vars** section is used to define API annotations for specific directories. Here is an example:
 
 .. code-block:: yaml
@@ -185,13 +171,13 @@ To define API annotations we need to use **type** key.
               action: gen_method
               throws: no_throw
 
-In front of `type` key we must specify the node (class, struct, method, property, etc.) for which we are going to define API.
-It must be the c++ correct spelling of the node separated by :: symbols. We have two ways to specify the type. Either we use the full spelling
-or we use nested structure. In the first example our node is a method called `methodExample` with one `int` argument which is a member function of
+In front of `type` key we must specify the member (class, struct, method, property, etc.) for which we are going to define API.
+It must be the c++ correct spelling of the member separated by :: symbols. We have two ways to specify the type. Either we use the full spelling
+or we use nested structure. In the first example our member is a method called `methodExample` with one `int` argument which is a member function of
 `ClassExample` class defined inside `NamespaceExample` namespace. The second example is the definition of another method, where we use nested form
 of definition. :: symbols are used here as a sign of sub section.
 
 .. note::
-   Since different **type_vars**/**dir_vars**/**file_vars** sections are being processed and merged with each other user must have single definition for the same node/type, otherwise
+   Since different **type_vars**/**dir_vars**/**file_vars** sections are being processed and merged with each other user must have single definition for the same member/type, otherwise
    iegen reports merge conflict. This constraint is related to nested structures also in case of `type_vars` section. For the same annotation
    user should have only one type of definition: either with full spelling or with nested structure.

@@ -144,7 +144,7 @@ banner_comment:
 out_prj_dir:
   inheritable: true
   default: wr_out
-  allowed_on: [ root ]
+  allowed_on: [ cmd_line ]
 
 run_dir:
   inheritable: true
@@ -154,19 +154,19 @@ run_dir:
 cxx_out_dir:
   inheritable: true
   default: '{{path.join(out_prj_dir, run_dir, "cxx_out")}}'
-  allowed_on: [ root ]
+  allowed_on: [ cmd_line ]
 
 out_dir:
   inheritable: true
   kotlin.default: '{{path.join(out_prj_dir, run_dir, "android", run_dir, "source/main/java")}}'
   python.default: '{{path.join(out_prj_dir, "python", run_dir, "src")}}'
   swift.default: '{{path.join(out_prj_dir, "swift")}}'
-  allowed_on: [ root ]
+  allowed_on: [ cmd_line ]
 
 cxx_base_out_dir:
   inheritable: true
   default: null
-  allowed_on: [ root ]
+  allowed_on: [ cmd_line ]
 
 package_prefix:
   inheritable: true

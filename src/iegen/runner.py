@@ -5,7 +5,9 @@ Main module which parses command line arguments and runs iegen.
 import argparse
 import json
 import os
+import shutil
 import sys
+import tempfile
 
 import iegen
 from iegen import default_config, logging, LOG_LEVELS
@@ -157,6 +159,8 @@ def run_package():
                             choices=plat_lang_choices,
                             help='list of languages for which wrapper will be generated.')
 
+    run_parser.add_argument('--dry-run', help='Run without generating actual wrappers', action='store_true')
+
     current_sub_parser_args = parent_parser.parse_known_args()[1]
     if current_sub_parser_args and current_sub_parser_args[0] == 'run':
         ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
@@ -181,7 +185,7 @@ def run_package():
                     elif var_type is dict:
                         run_parser.add_argument(option, help=var_help, type=json.loads)
                     elif var_type is bool:
-                        run_parser.add_argument(option, help=var_help, action='store')
+                        run_parser.add_argument(option, help=var_help, action='store_true')
                     else:
                         run_parser.add_argument(option, help=var_help, type=var_type)
 
@@ -194,7 +198,25 @@ def run_package():
 
     Error.set_error_limit(args.error_limit)
 
+    dry_run_tmp_dir = None
+    # if dry-run flag is set, overwrite all variables related to output directory
+    if hasattr(args, 'dry_run') and args.dry_run:
+        dry_run_tmp_dir = tempfile.mkdtemp()
+        for var in args.__dict__:
+            var_name = var.split('.')[-1]
+            if var_name == 'out_prj_dir':
+                setattr(args, var, dry_run_tmp_dir)
+            elif var_name == 'cxx_out_dir':
+                setattr(args, var, os.path.join(dry_run_tmp_dir, 'cxx'))
+            elif var_name == 'out_dir':
+                setattr(args, var, os.path.join(dry_run_tmp_dir, 'target'))
+            elif var_name == 'cxx_base_out_dir':
+                setattr(args, var, os.path.join(dry_run_tmp_dir, 'base'))
+
     args.func(args)
+
+    if dry_run_tmp_dir:
+        shutil.rmtree(dry_run_tmp_dir)
 
 
 if __name__ == "__main__":

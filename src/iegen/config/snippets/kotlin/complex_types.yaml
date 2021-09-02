@@ -28,21 +28,24 @@ $Object:
   jni_to_cxx: |
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = cxx_pointee_unqualified_name %}
-    {%- if  type_ctx.shared_ref or type_ctx.ancestors|selectattr('shared_ref')|list %}
+    {%- if type_ctx.root.shared_ref %}
+    {%- if cxx_root_type_name == pointee %}
+    auto {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+    {%- else %}
     auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{cxx_root_type_name}}>*>({{name}});
-    auto {{target_name}} = {{dereferencer}} std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    auto {{target_name}} = {{dereferencer}}std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {%- endif %}
     {%- else %}
     {%- if cxx_root_type_name == pointee %}
-    auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}} reinterpret_cast<{{pointee}}*>({{name}});
+    auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
     auto base_{{name}} = reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
-    // TODO: check this case
-    auto {{target_name}} = {{dereferencer}} dynamic_cast<{{pointee}}*>(base_{{name}});
+    auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
     {%- endif %}
     {%- endif %}
   cxx_to_jni: |
     {%- set pointee = cxx_pointee_unqualified_name %}
-    {%- set shared = type_ctx.shared_ref or type_ctx.ancestors|selectattr('shared_ref')|list %}
+    {%- set shared = type_ctx.root.shar ed_ref %}
     {%- if is_value_type -%}
     {%- set tmp_name = '_' + name %}
     {%- if shared %}
@@ -55,13 +58,13 @@ $Object:
     {%- endif %}
     {% if shared %}
     {%- if cxx_root_type_name != pointee %}
-    std::shared_ptr<{{cxx_root_type_name}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{cxx_root_type_name}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}});
+    std::shared_ptr<{{cxx_root_type_name}}> {{target_name}}_baseptr = std::dynamic_pointer_cast<{{cxx_root_type_name}}>({{'&' if is_reference}}{{tmp_name}});
     {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{cxx_root_type_name}}>({{target_name}}_baseptr));
     {%- else %}
-    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{'&' if not is_pointer and not is_value_type}}{{tmp_name}}));
+    {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{'&' if is_reference}}{{tmp_name}}));
     {%- endif %}
     {% else %}
-    {{cxx_root_type_name}}* {{target_name}}_baseptr = {{'&' if not is_pointer and not is_value_type}}{{tmp_name}};
+    {{cxx_root_type_name}}* {{target_name}}_baseptr = {{'&' if is_reference}}{{tmp_name}};
     {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
     {%- endif %}
   kotlin_to_jdk: |

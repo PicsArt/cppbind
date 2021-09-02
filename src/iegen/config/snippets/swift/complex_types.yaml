@@ -30,10 +30,13 @@ $Object:
   sc:
     type_info: "UnsafeMutableRawPointer"
   c_to_cxx: |
-    {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
-    {%- set pointee = cxx_pointee_unqualified_name %}
+    {%- set pointee = cxx_pointee_unqualified_name -%}
+    {%- if type_ctx.root.shared_ref %}
+    auto {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{cxx_root_type_name}}>*>({{name}}));
+    {%- else %}
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx_root_type_name}}*>({{name}}));
+    {%- endif %}
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
@@ -257,12 +260,10 @@ std::shared_ptr:
     std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
     {%- if is_nullable %}
     if ({{name}}) {
-        auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-        {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+        {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
     }
     {%- else %}
-    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+    {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
     {%- endif %}
   cxx_to_c: |
     {%- do helper.Validator.shared_ref_set(args[0].context.type_ctx) -%}
@@ -271,12 +272,10 @@ std::shared_ptr:
     {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
     {%- if is_nullable %}
     if ({{name}}) {
-        std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
-        {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+        {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
     }
     {%- else %}
-    std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_cast<{{pointee_base}}>({{name}});
-    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+    {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
     {%- endif %}
   swift_to_sc: |
     {{args[0].snippet(name, nullable=nullable|default(False))|indent}}

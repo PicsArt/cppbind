@@ -59,6 +59,13 @@ def get_map_cxx_operator_name(name):
 
 
 def imports_comparator(first: str, second: str):
+    """
+    Comparator for swift imports sorting.
+     Swift imports should be in the following order:
+        1. Regular imports like 'import ABC'
+        2. Declaration imports like 'import func ABC.sort.
+        3. Test modules imports like '@testable import ModuleUnderTest'
+    """
     first_is_test = first.startswith(TEST_IMPORT_PREFIX)
     second_is_test = second.startswith(TEST_IMPORT_PREFIX)
     first_is_decl = re.match(DECL_IMPORT_PREFIX_REGEX, first)

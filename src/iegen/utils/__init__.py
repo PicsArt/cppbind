@@ -186,6 +186,7 @@ def init_jinja_env():
             if isinstance(input_, str):
                 parts += input_.split(JINJA_UNIQUE_MARKER)
             else:
+                # input_ is a scope
                 for part in input_.parts:
                     parts += str(part).split(JINJA_UNIQUE_MARKER)
         return parts

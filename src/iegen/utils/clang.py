@@ -12,34 +12,54 @@ from ctypes import *
 from ctypes.util import find_library
 
 
-def get_pointee_type(clang_type):
-    return clang_type.get_pointee() if clang_type.get_pointee().spelling else clang_type
+def get_pointee_type(type_):
+    if isinstance(type_, cli.Type):
+        return type_.get_pointee() if type_.get_pointee().spelling else type_
+    # type_ is a string
+    return type_[:-1].strip() if type_.endswith('&') or type_.endswith('*') else type_
 
 
 def get_canonical_type(clang_type):
     return clang_type.get_canonical() if clang_type.get_canonical().spelling else clang_type
 
 
-def is_template(clang_type):
-    return clang_type.get_num_template_arguments() != -1
+def is_template(type_):
+    return type_.get_num_template_arguments() != -1 if isinstance(type_, cli.Type) else type_.find('<') != -1
 
 
-def template_argument_types(clang_type):
-    return [clang_type.get_template_argument_type(num)
-            for num in range(clang_type.get_num_template_arguments())]
+def template_argument_types(type_):
+    if isinstance(type_, cli.Type):
+        return [type_.get_template_argument_type(num)
+                for num in range(type_.get_num_template_arguments())]
+    return get_template_arguments(type_)
 
 
-def template_type_name(clang_type):
-    name = get_unqualified_type_name(clang_type)
+def get_template_arguments(type_spelling: str):
+    # very basic case no nested templates
+    start_idx = type_spelling.find('<')
+    while start_idx != -1:
+        return type_spelling[start_idx + 1: -1].split(',')
+    return []
+
+
+def template_type_name(type_):
+    name = get_unqualified_type_name(type_)
     end_idx = name.find('<')
     if end_idx != -1:
         return name[:end_idx].strip()
     return name
 
 
-def is_rval_referance(cursor):
-    return cursor.kind == cli.TypeKind.LVALUEREFERENCE
+def is_rval_reference(type_):
+    return type_.kind == cli.TypeKind.LVALUEREFERENCE if isinstance(type_, cli.Type) else type_.strip().endswith('&')
 
+
+def is_pointer(type_):
+    return type_.kind == cli.TypeKind.POINTER if isinstance(type_, cli.Type) else type_.strip().endswith('*')
+
+
+def is_value(type_):
+    return type_.kind == cli.TypeKind.RECORD if isinstance(type_, cli.Type) else not is_pointer(type_) and not is_rval_reference(type_)
 
 def _get_unqualified_type_name(type_name):
     """
@@ -53,7 +73,7 @@ def _get_unqualified_type_name(type_name):
 
 
 def get_unqualified_type_name(clang_type):
-    return _get_unqualified_type_name(clang_type.spelling)
+    return _get_unqualified_type_name(clang_type.spelling if isinstance(clang_type, cli.Type) else clang_type)
 
 
 def get_semantic_ancestors(cursor):

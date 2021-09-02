@@ -6,7 +6,6 @@ import types
 import clang.cindex as cli
 import iegen
 import iegen.converter
-from iegen.utils import DefaultValueKind
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.error import Error
@@ -16,6 +15,7 @@ from iegen.common.snippets_engine import (
     OBJECT_INFO_TYPE,
     SnippetsEngine
 )
+from iegen.utils import DefaultValueKind
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -181,11 +181,14 @@ def make_class_context(ctx):
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
             cxx_type_name = ctx.node.type_name(ctx.template_choice)
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
-                                                             template_choice=ctx.template_choice,
-                                                             search_name=ctx.node.full_displayname
-                                                             if ctx.cursor.type.kind == cli.TypeKind.INVALID
-                                                             else None)
+
+            # for cases when type kind is invalid clang type does not give enough information
+            # for such cases we use string type name
+            _type = cxx_type_name if ctx.cursor.type.kind == cli.TypeKind.INVALID else ctx.cursor.type
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                             _type,
+                                                             template_choice=ctx.template_choice)
+
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
                                      for base_type in ctx.base_types]
 

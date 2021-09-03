@@ -45,7 +45,7 @@ $Object:
     {%- endif %}
   cxx_to_jni: |
     {%- set pointee = cxx_pointee_unqualified_name %}
-    {%- set shared = type_ctx.root.shar ed_ref %}
+    {%- set shared = type_ctx.root.shared_ref %}
     {%- if is_value_type -%}
     {%- set tmp_name = '_' + name %}
     {%- if shared %}

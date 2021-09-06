@@ -78,6 +78,6 @@ def clang_config():
 
 ContextDescriptor.get_var_def = Mock(return_value=ContextDescriptor.resolve_attr_aliases(load_yaml(
     os.path.join(PROJECT_CONFIG_DIR, "variable_definitions.yaml"))))
-ContextDescriptor.orig_validate_and_set_languages = ContextDescriptor._ContextDescriptor__validate_and_set_languages
-ContextDescriptor._ContextDescriptor__validate_and_set_languages = Mock()
+ContextDescriptor.orig_validate_and_deduce_languages = ContextDescriptor._ContextDescriptor__validate_and_deduce_languages
+ContextDescriptor._ContextDescriptor__validate_and_deduce_languages = Mock()
 ContextDescriptor.get_all_languages = Mock(return_value=['python', 'kotlin', 'swift'])

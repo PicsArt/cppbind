@@ -117,11 +117,11 @@ class TestContextDescriptor(unittest.TestCase):
         context_def_glob = os.path.join(self.positive_rules_dir, 'with_lang_snippets_rules', '*.yaml')
         ctx_desc = ContextDescriptor(context_def_glob)
         ctx_desc.build_ctx_def_map(context_def_glob)
-        assert ctx_desc.orig_validate_and_set_languages() == ['python', 'swift']
+        assert ctx_desc.orig_validate_and_deduce_languages() == ['python', 'swift']
 
     def test_snippets_rules_validation_negative(self):
         context_def_glob = os.path.join(self.negative_rules_dir, 'with_lang_snippets_rules', '*.yaml')
         ctx_desc = ContextDescriptor(context_def_glob)
         ctx_desc.build_ctx_def_map(context_def_glob)
         with self.assertRaises(IEGError):
-            ctx_desc.orig_validate_and_set_languages()
+            ctx_desc.orig_validate_and_deduce_languages()

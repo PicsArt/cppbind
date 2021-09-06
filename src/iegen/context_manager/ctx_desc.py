@@ -49,7 +49,7 @@ class ContextDescriptor:
 
     def __init__(self, context_def_glob):
         self.__ctx_def_map = ContextDescriptor.build_ctx_def_map(context_def_glob)
-        self.__all_languages = self.__validate_and_set_languages()
+        self.__all_languages = self.__validate_and_deduce_languages()
         self.__var_def = ContextDescriptor.resolve_attr_aliases(self.__get_raw_var_def())
         self.__validate_var_def()
 
@@ -268,7 +268,7 @@ class ContextDescriptor:
                             prop.file,
                             prop.line_number)
 
-    def __validate_and_set_languages(self):
+    def __validate_and_deduce_languages(self):
         if ContextDescriptor.CODE_SNIPPETS_KEY not in self.__ctx_def_map:
             Error.critical("Iegen error: there is no any specified code snippet rule")
         if ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY not in self.__ctx_def_map:

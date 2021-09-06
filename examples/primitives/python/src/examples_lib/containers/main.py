@@ -64,4 +64,12 @@ nested_usage_obj.set_nested_int_map(nested_int_map)
 assert nested_usage_obj.get_nested_int_map() == nested_int_map
 
 nested_usage_obj.mixed_example_with_many_args(nested_int_vector, nested_int_vector, nested_int_map, nested_int_map)
+
+vector_of_maps = [{1: 2}, {}, {3: 4, 5: 6}]
+nested_usage_obj.set_vector_of_int_maps(vector_of_maps)
+assert nested_usage_obj.get_vector_of_int_maps() == vector_of_maps
+
+map_of_vectors = {1: [2, 3], 4: []}
+nested_usage_obj.set_map_of_int_vectors(map_of_vectors)
+assert nested_usage_obj.get_map_of_int_vectors() == map_of_vectors
 # [nested-containers-usage]

@@ -100,4 +100,4 @@ def make_doxygen_comment(pure_comment):
         return ''
     start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl
     return f"""/**{start}{nl.join(pure_comment)}
- */"""
+*/"""

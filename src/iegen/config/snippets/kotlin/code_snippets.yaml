@@ -6,7 +6,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       package {{package_prefix}}.{{package}}
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
@@ -21,7 +21,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       #include "jni.h"
       #include <iostream>
@@ -41,7 +41,7 @@ enum:
           {%- for case in enum_cases -%}
           {{comma()}}
           {%- if case.comment %}
-          {{helper.make_enum_case_comment(case.comment)|string|indent(4)}}
+          {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           {{case.name}}({{case.value}})
           {%- endfor %};
@@ -141,7 +141,7 @@ class:
         {%- do helper.Validator.validate_bases(name, base_types_converters) -%}
         {%- do helper.Validator.validate_ancestors(ancestors) -%}
         {%- if comment %}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         {%- endif %}
         {{'open ' if is_open}}class {{name}}{{template_suffix}}
         internal constructor(_id: Long){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
@@ -219,7 +219,7 @@ interface:
         {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + ctx.bases_list -%}
         {%- do helper.Validator.validate_single_root(cursor) -%}
         {%- if comment %}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         {%- endif %}
         interface {{interface_name}}{{template_suffix}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
@@ -318,7 +318,7 @@ constructor:
     include: *var_method_kotlin_include
     head: |
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
       constructor({%- for arg in args -%}
@@ -335,7 +335,7 @@ constructor:
       }
     companion: |
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
       protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): Long {
@@ -384,7 +384,7 @@ function:
       {%- set comma = joiner(', ') -%}
       {%- if not is_static %}
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
@@ -420,7 +420,7 @@ function:
       {%- if is_static %}
       {%- set comma = joiner(', ') -%}
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
           {%- set call_args = [] %}
@@ -580,7 +580,7 @@ property_getter:
     properties: |
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       {{'var' if ctx.action == 'gen_property_setter' else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
           get() {
@@ -688,7 +688,7 @@ getter:
       {%- set _name = name %}
       {%- endif %}
       {%- if comment %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- endif %}
       {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined else 'val'}} {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
           get() {

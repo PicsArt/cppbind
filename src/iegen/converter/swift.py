@@ -9,14 +9,6 @@ DECL_IMPORT_PREFIX_REGEX = r'^(import class |import enum |import func |import st
 TEST_IMPORT_PREFIX = '@testable'
 
 
-def make_comment(pure_comment):
-    return make_doxygen_comment(pure_comment)
-
-
-def make_enum_case_comment(pure_comment):
-    return make_comment(pure_comment)
-
-
 def get_c_func_name(hint_name):
     new_name = hint_name
     if "operator" in new_name:

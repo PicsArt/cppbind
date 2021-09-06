@@ -3,7 +3,7 @@ file_path: |
 scopes:
   - converter
 content: |
-  {{helper.make_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+  {{[banner_logo, banner_comment]|make_py_comment}}
   import functools
   import importlib
   import inspect

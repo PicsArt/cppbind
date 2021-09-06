@@ -10,6 +10,7 @@ import shutil
 import sys
 from functools import cmp_to_key
 
+from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
 from iegen import BANNER_LOGO
@@ -202,6 +203,33 @@ def init_jinja_env():
         parts = _split(inputs_)
         return set(parts)
 
+    def sort_python_code(source):
+        return sort_code_string(source).strip()
+
+    def make_doxygen_comment(comment):
+        if isinstance(comment, str):
+            comment = [comment]
+        lines = []
+        for line in comment:
+            lines += line.split('\n')
+        nl = '\n * '
+        if not lines or all((not line or line.isspace() for line in lines)):
+            return ''
+        start = '' if not lines[0] or lines[0].isspace() else nl
+        return f"""/**{start}{nl.join(lines)}\n */"""
+
+    def make_py_comment(comment):
+        nl = '\n'
+        if isinstance(comment, str):
+            comment = [comment]
+        lines = []
+        for line in comment:
+            lines += line.split(nl)
+        if not lines or all((not line or line.isspace() for line in lines)):
+            return ""
+        start = '' if not lines[0] or lines[0].isspace() else nl
+        return f'"""{start}{nl.join(lines)}{nl}"""'
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
@@ -214,6 +242,9 @@ def init_jinja_env():
     env.filters['replace_regex'] = replace_regex
     env.filters['sort_snippets'] = sort_snippets
     env.filters['unique_snippets'] = unique_snippets
+    env.filters['sort_python_code'] = sort_python_code
+    env.filters['make_doxygen_comment'] = make_doxygen_comment
+    env.filters['make_py_comment'] = make_py_comment
 
     env.tests['match_regexp'] = match_regexp
 

@@ -35,11 +35,36 @@ def template_argument_types(type_):
 
 
 def get_template_arguments(type_spelling: str):
-    # very basic case no nested templates
+    """
+    Retrieves template arguments spelling from a type's spelling.
+    E.g. for 'std::pair<std::string, std::vector<int>>' will return ['std::string', 'std::vector<int>']
+    """
     start_idx = type_spelling.find('<')
-    while start_idx != -1:
-        return type_spelling[start_idx + 1: -1].split(',')
-    return []
+    all_arguments_string = type_spelling[start_idx + 1: -1]
+
+    template_args = []
+    parts = all_arguments_string.split(',')
+    ii = 0
+    while ii < len(parts):
+        if '<' not in parts[ii]:
+            # not a template
+            template_args.append(parts[ii].strip())
+        else:
+            # template argument
+            start_count = parts[ii].count('<')
+            arg_parts = []
+            end_count = 0
+            # find remaining part(s)
+            while True:
+                end_count += parts[ii].count('>')
+                arg_parts.append(parts[ii])
+                if start_count == end_count:
+                    # argument parts found join and add to the list
+                    template_args.append(','.join(arg_parts).strip())
+                    break
+                ii += 1
+        ii += 1
+    return template_args
 
 
 def template_type_name(type_):
@@ -60,6 +85,7 @@ def is_pointer(type_):
 
 def is_value(type_):
     return type_.kind == cli.TypeKind.RECORD if isinstance(type_, cli.Type) else not is_pointer(type_) and not is_rval_reference(type_)
+
 
 def _get_unqualified_type_name(type_name):
     """

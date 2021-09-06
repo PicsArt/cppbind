@@ -257,23 +257,31 @@ def get_template_suffix(ctx, target_language):
     if template_choice:
         for t in template_types:
             search_name = template_choice[t]
+            type_converter = SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                                  search_name,
+                                                                  template_choice=ctx.template_choice)
 
-            ref_ctx = ctx.find_by_type(search_name)
-            if ref_ctx is not None:
-                if ctx.cursor.type.kind == cli.TypeKind.ENUM:
-                    search_name = ENUM_INFO_TYPE
-                else:
-                    search_name = OBJECT_INFO_TYPE
-
-            type_converter = SNIPPETS_ENGINE.get_type_info(search_name)
-            if not type_converter:
-                raise KeyError(f"Can not find type for {search_name}")
-            type_converter = type_converter.make_converter(ctx.cursor.type, ref_ctx,
-                                                           template_choice=template_choice)
-
-            args_names.append(getattr(type_converter, target_language).target_type_name)
+            args_names.append(_get_suffix(type_converter, target_language))
 
     return ''.join(args_names)
+
+
+def _get_suffix(converter, target_language):
+    """
+    Recursively retrieves template suffix for target language.
+    For example for std::pair<std::string, std::string> it'll return PairStringString for kotlin.
+    """
+    lang_converter = getattr(converter, target_language)
+    if converter.ctx:
+        # iegen generated types already contain suffix in their target type name
+        return lang_converter.target_type_name
+    if hasattr(lang_converter.custom, 'template_suffix'):
+        name = lang_converter.custom.template_suffix
+    else:
+        name = lang_converter.target_type_name
+    for arg in converter.template_args:
+        name += _get_suffix(arg, target_language)
+    return name
 
 
 def preprocess_scope(context, scope, info):

@@ -2,6 +2,7 @@ package com.examples.templates
 
 import com.examples.templates.*
 import com.examples.simple.*
+import com.examples.getters.NumberInt
 
 fun use() {
 // [stack-examples]
@@ -13,6 +14,15 @@ assert(!stackPrj.empty())
 assert(stackPrj.top().title == prj.title)
 stackPrj.pop()
 assert(stackPrj.empty())
+
+val stackNumber = StackNumberInt()
+val num1 = NumberInt(1)
+val num2 = NumberInt(2)
+stackNumber.push(num1)
+stackNumber.push(num2)
+assert(stackNumber.top().num == num2.num)
+stackNumber.pop()
+assert(stackNumber.top().num == num1.num)
 // [stack-examples]
 
 // [stack-usage-examples]
@@ -56,6 +66,15 @@ assert(addressableRoot.absPath() == path + name)
 val component = Component(root, name)
 assert(component.absPath() == path + name)
 // [addressable-examples]
+
+// [wrapper-examples]
+val wrapperPair = WrapperPairStringString(Pair<String, String>("first", "second"))
+assert(wrapperPair.value.first == "first")
+assert(wrapperPair.value.second == "second")
+wrapperPair.value = Pair<String, String>("third", "fourth")
+assert(wrapperPair.value.first == "third")
+assert(wrapperPair.value.second == "fourth")
+// [wrapper-examples]
 
 }
 

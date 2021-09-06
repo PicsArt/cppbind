@@ -24,6 +24,7 @@ namespace iegen::example {
  *   T:
  *     - type: iegen::example::Project
  *     - type: iegen::example::Task
+ *     - type: iegen::example::Number<int>
  * package: templates
  */
 template <class T>

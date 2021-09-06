@@ -1,9 +1,11 @@
-from examples_lib.templates.stack_pygen import StackProject
-from examples_lib.templates.stack_usage_pygen import StackUsage
-from examples_lib.templates.template_methods_pygen import TemplateMethods
+from examples_lib.getters import Numberint
+from examples_lib.simple import Project, Root
 from examples_lib.templates.addressable_pygen import AddressableRoot
 from examples_lib.templates.component_pygen import Component
-from examples_lib.simple import Project, Root
+from examples_lib.templates.stack_pygen import StackProject, StackNumberint
+from examples_lib.templates.stack_usage_pygen import StackUsage
+from examples_lib.templates.template_methods_pygen import TemplateMethods
+from examples_lib.templates.wrapper_pygen import WrapperPairstrstr
 
 # [stack-examples]
 stack_prj = StackProject()
@@ -14,6 +16,15 @@ assert stack_prj.empty() is False
 assert stack_prj.top().title == prj.title
 stack_prj.pop()
 assert stack_prj.empty() is True
+
+stackNumber = StackNumberint()
+num1 = Numberint(1)
+num2 = Numberint(2)
+stackNumber.push(num1)
+stackNumber.push(num2)
+assert stackNumber.top().num == num2.num
+stackNumber.pop()
+assert stackNumber.top().num == num1.num
 # [stack-examples]
 
 # [stack-usage-examples]
@@ -45,7 +56,6 @@ pair_root_prj = tm.make_pair(arg0=root1, arg1=prj1)
 assert len(pair_root_prj) == 2
 assert pair_root_prj[0].path == root1.path
 assert pair_root_prj[1].title == prj1.title
-
 # [template-funcs-examples]
 
 # [addressable-examples]
@@ -58,3 +68,13 @@ component = Component(parent=root, name=name)
 assert isinstance(component, AddressableRoot)
 assert component.abs_path() == path + name
 # [addressable-examples]
+
+
+# [wrapper-examples]
+wrapper_pair = WrapperPairstrstr(("first", "second"))
+assert wrapper_pair.value[0] == "first"
+assert (wrapper_pair.value[1] == "second")
+wrapper_pair.value = ("third", "fourth")
+assert (wrapper_pair.value[0] == "third")
+assert (wrapper_pair.value[1] == "fourth")
+# [wrapper-examples]

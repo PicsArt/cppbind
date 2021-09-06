@@ -347,6 +347,7 @@ std::shared_ptr:
 std::pair:
   custom:
     pname: Pair
+    template_suffix: Pair
   kotlin:
     type_info: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
   jni:

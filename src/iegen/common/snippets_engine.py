@@ -332,7 +332,7 @@ class SnippetsEngine:
             # type_ is a string
             res = self._build_type_converter_from_spelling(ctx,
                                                            type_,
-                                                           template_choice)
+                                                           template_choice=template_choice)
         if res is None:
             raise KeyError(f"Can not find type for {type_ if isinstance(type_, str) else type_.spelling}")
 
@@ -548,6 +548,7 @@ class SnippetsEngine:
 
         if type_info is None:
             unqualified_name = cutil._get_unqualified_type_name(lookup_type.spelling)
+            unqualified_name = cutil.replace_template_choice(unqualified_name, template_choice)
             if unqualified_name != search_name:
                 return self._build_type_converter(ctx,
                                                   clang_type,
@@ -604,6 +605,15 @@ class SnippetsEngine:
                                                    template_choice=template_choice)
                 return type_info
 
+            if type_info is None and search_name:
+                # search name might be a template itself
+                type_info = self._build_type_converter_from_spelling(ctx,
+                                                                     search_name,
+                                                                     clang_type,
+                                                                     template_choice)
+                if type_info:
+                    return type_info
+
             canonical_type = cutil.get_canonical_type(lookup_type)
             if canonical_type != lookup_type:
                 return self._build_type_converter(ctx, clang_type, canonical_type,
@@ -614,12 +624,13 @@ class SnippetsEngine:
     def _build_type_converter_from_spelling(self,
                                             ctx,
                                             type_name,
+                                            clang_type=None,
                                             template_choice=None):
 
         logging.debug(f"Creating type converter for {type_name}.")
         type_info = self._create_type_info(ctx,
                                            type_name,
-                                           type_name)
+                                           clang_type or type_name)
 
         if type_info is None:
 
@@ -631,7 +642,7 @@ class SnippetsEngine:
 
                 type_info = self._create_type_info(ctx,
                                                    cutil.template_type_name(type_name),
-                                                   type_=type_name,
+                                                   type_=clang_type or type_name,
                                                    template_args=tmpl_args,
                                                    template_choice=template_choice)
                 return type_info

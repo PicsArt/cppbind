@@ -748,7 +748,7 @@ getter:
       extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           validateID(id);
           {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
-          {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
+          {%- set converter = setter_ctx.args[0].converter.jni_to_cxx %}
           {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
           {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;

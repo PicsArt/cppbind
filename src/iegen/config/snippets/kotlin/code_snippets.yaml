@@ -96,7 +96,7 @@ var_class_cxx: &var_class_cxx
           {%- set jni_to_cxx_converter = converter.jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
           {%- if root.shared_ref %}
-          delete {{jni_to_cxx_converter.converted_name('id')}}.get();
+          {{jni_to_cxx_converter.converted_name('id')}}.reset();
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}

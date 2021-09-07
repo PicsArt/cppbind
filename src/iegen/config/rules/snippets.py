@@ -184,7 +184,7 @@ def make_class_context(ctx):
 
             # for cases when type kind is invalid clang type does not give enough information
             # for such cases we use string type name
-            _type = cxx_type_name if ctx.cursor.type.kind == cli.TypeKind.INVALID else ctx.cursor.type
+            _type = f'std::shared_ptr<{cxx_type_name}>' if ctx.root.shared_ref else cxx_type_name
             converter = SNIPPETS_ENGINE.build_type_converter(ctx,
                                                              _type,
                                                              template_choice=ctx.template_choice)

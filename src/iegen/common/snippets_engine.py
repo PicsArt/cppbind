@@ -140,14 +140,8 @@ class Converter:
 
             args_t = [arg.target_type_name for arg in args]
             args_t_bases = [
-                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling
-                if arg.ctx else arg.target_type_name for arg in args]
-
-            # # NOTE template(not specialized) base is not considered
-            # args_bases = [
-            #     cutil.get_base_cursor(
-            #         arg.ctx.cursor).type.get_canonical().spelling
-            #         if arg.ctx else arg.target_clang_type.spelling for arg in self.template_args]
+                arg.ctx.node.root_type_name(template_choice=self.template_choice) if arg.ctx else arg.target_type_name
+                for arg in args]
 
             custom = self.custom
 
@@ -157,7 +151,7 @@ class Converter:
             cxx_pointee_name = _original_pointee.spelling if isinstance(self.type_, cli.Type) else cxx_type_name
             is_pointer = cutil.is_pointer(self.type_)
             is_value_type = cutil.is_value(self.type_)
-            is_reference = cutil.is_rval_reference(self.type_)
+            is_reference = cutil.is_lval_reference(self.type_)
 
             cxx_pointee_unqualified_name = cutil.get_unqualified_type_name(_original_pointee)
             if self.ctx:

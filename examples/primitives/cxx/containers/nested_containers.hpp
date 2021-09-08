@@ -65,9 +65,47 @@ class NestedExamples {
                                   const std::map<int, std::map<int, int>>& m1, const std::map<int, std::map<int, int>>& m2) {
     }
 
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setVectorOfIntMaps(const std::vector<std::map<int, int>>& v) {
+        vectorOfIntMaps = v;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::vector<std::map<int, int>> getVectorOfIntMaps() {
+        return vectorOfIntMaps;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setMapOfIntVectors(const std::map<int, std::vector<int>>& m) {
+        mapOfIntVectors = m;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::map<int, std::vector<int>> getMapOfIntVectors() {
+        return mapOfIntVectors;
+    }
+
     private:
     std::vector<std::vector<int>> nestedIntVector;
     std::map<int, std::map<int, int>> nestedIntMap;
+    std::vector<std::map<int, int>> vectorOfIntMaps;
+    std::map<int, std::vector<int>> mapOfIntVectors;
 };
 
 }

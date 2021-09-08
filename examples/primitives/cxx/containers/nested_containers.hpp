@@ -101,11 +101,30 @@ class NestedExamples {
         return mapOfIntVectors;
     }
 
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setComplexNestedIntVector(const std::vector<std::vector<std::vector<int>>>& v) {
+        complexNestedIntVector = v;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::vector<std::vector<std::vector<int>>> getComplexNestedIntVector() {
+        return complexNestedIntVector;
+    }
+
     private:
     std::vector<std::vector<int>> nestedIntVector;
     std::map<int, std::map<int, int>> nestedIntMap;
     std::vector<std::map<int, int>> vectorOfIntMaps;
     std::map<int, std::vector<int>> mapOfIntVectors;
+    std::vector<std::vector<std::vector<int>>> complexNestedIntVector;
 };
 
 }

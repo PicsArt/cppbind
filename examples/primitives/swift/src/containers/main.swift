@@ -84,4 +84,8 @@ assert(nestedUsage.getVectorOfIntMaps() == vectorOfIntMaps)
 let mapOfIntVectors : [Int: [Int]] = [1 : [], 2: [3, 4]]
 nestedUsage.setMapOfIntVectors(m: mapOfIntVectors)
 assert(nestedUsage.getMapOfIntVectors() == mapOfIntVectors)
+
+let complexNestedIntVector : [[[Int]]] = [[[1, 2], []]]
+nestedUsage.setComplexNestedIntVector(v: complexNestedIntVector)
+assert(nestedUsage.getComplexNestedIntVector() == complexNestedIntVector)
 // [nested-containers-usage]

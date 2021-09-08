@@ -183,7 +183,7 @@ def run_package():
                     elif var_type is dict:
                         run_parser.add_argument(option, help=var_help, type=json.loads)
                     elif var_type is bool:
-                        run_parser.add_argument(option, help=var_help, action='store')
+                        run_parser.add_argument(option, help=var_help, action='store_true')
                     else:
                         run_parser.add_argument(option, help=var_help, type=var_type)
 

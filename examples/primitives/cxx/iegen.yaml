@@ -44,6 +44,7 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
+    - cxx/containers/nested_containers.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers/examples_lib')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
@@ -59,6 +60,7 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/misc/size_buffer.hpp
+    - cxx/containers/nested_containers.hpp
 
 var_def:
   !join

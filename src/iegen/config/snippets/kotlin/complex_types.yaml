@@ -26,22 +26,14 @@ $Object:
   jdk:
     type_info: Long
   jni_to_cxx: |
+    {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
     {%- set dereferencer = '*' if not is_pointer else '' %}
     {%- set pointee = cxx_pointee_unqualified_name %}
-    {%- if type_ctx.root.shared_ref %}
-    {%- if cxx_root_type_name == pointee %}
-    auto {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
-    {%- else %}
-    auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{cxx_root_type_name}}>*>({{name}});
-    auto {{target_name}} = {{dereferencer}}std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
-    {%- endif %}
-    {%- else %}
     {%- if cxx_root_type_name == pointee %}
     auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
     {%- else %}
     auto base_{{name}} = reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
     auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
-    {%- endif %}
     {%- endif %}
   cxx_to_jni: |
     {%- set pointee = cxx_pointee_unqualified_name %}

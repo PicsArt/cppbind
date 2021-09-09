@@ -15,6 +15,7 @@ import iegen.utils.clang as cutil
 from iegen import converter, logging
 from iegen.common import JINJA_UNIQUE_MARKER
 from iegen.common.error import Error
+from iegen.ir.exec_rules import Context
 from iegen.utils import JINJA2_ENV
 
 OBJECT_INFO_TYPE = '$Object'
@@ -96,23 +97,152 @@ class FileAction(Action):
         return variables
 
 
+class CXXType:
+    """
+    Type which holds a clang type or a string type with it's template choice if it's a template type,
+    and gives some utility functionality based on it.
+    """
+
+    def __init__(self, type_, template_choice=None):
+        self.type_ = type_
+        self.template_choice = template_choice
+
+    @property
+    def type_name(self):
+        return cutil.replace_template_choice(self.type_ if isinstance(self.type_, str) else self.type_.spelling,
+                                             self.template_choice)
+
+    @property
+    def original_type_name(self):
+        return self.type_ if isinstance(self.type_, str) else self.type_.spelling
+
+    @property
+    def pointee_type(self):
+        if isinstance(self.type_, cli.Type):
+            return CXXType(self.type_.get_pointee(),
+                           self.template_choice) if self.type_.get_pointee().spelling else self
+        # type_ is a string
+        _type = self.type_.strip()
+        if _type.endswith('&&'):
+            return CXXType(_type[:-2], self.template_choice)
+        if _type.endswith('*') or _type.endswith('&'):
+            return CXXType(_type[:-1], self.template_choice)
+        return self
+
+    @property
+    def canonical_type(self):
+        if isinstance(self.type_, cli.Type):
+            return CXXType(self.type_.get_canonical(),
+                           self.template_choice) if self.type_.get_canonical().spelling else self
+        else:
+            # we do not have a mechanism for string types yet
+            return self
+
+    @property
+    def is_template(self):
+        return self.type_.get_num_template_arguments() != -1 if isinstance(self.type_, cli.Type) else self.type_.find(
+            '<') != -1
+
+    @property
+    def is_function_proto(self):
+        if isinstance(self.type_, cli.Type):
+            return self.type_.kind == cli.TypeKind.FUNCTIONPROTO
+        # we don't have  a mechanism for string types yet
+        return False
+
+    @property
+    def is_typedef(self):
+        if isinstance(self.type_, cli.Type):
+            return self.type_.kind == cli.TypeKind.TYPEDEF
+        # we don't have  a mechanism for string types yet
+        return False
+
+    @property
+    def template_argument_types(self):
+        if isinstance(self.type_, cli.Type):
+            return [CXXType(self.type_.get_template_argument_type(num), self.template_choice)
+                    for num in range(self.type_.get_num_template_arguments())]
+        return self._get_template_arguments()
+
+    def _get_template_arguments(self):
+        # very basic case no nested templates
+        start_idx = self.type_.find('<')
+        while start_idx != -1:
+            return [CXXType(t, self.template_choice) for t in self.type_[start_idx + 1: -1].split(',')]
+        return []
+
+    @property
+    def template_type_name(self):
+        return cutil.template_type_name(self.original_type_name)
+
+    @property
+    def is_lval_reference(self):
+        return self.type_.kind == cli.TypeKind.LVALUEREFERENCE if isinstance(self.type_, cli.Type) else \
+            not self.type_.strip().endswith('&&') and self.type_.strip().endswith('&')
+
+    @property
+    def is_pointer(self):
+        return self.type_.kind == cli.TypeKind.POINTER if isinstance(self.type_,
+                                                                     cli.Type) else self.type_.strip().endswith('*')
+
+    @property
+    def is_value(self):
+        return self.type_.kind == cli.TypeKind.RECORD if isinstance(self.type_,
+                                                                    cli.Type) else not self.is_pointer and not self.is_lval_reference
+
+    @property
+    def unqualified_type_name(self):
+        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.original_type_name),
+                                             self.template_choice)
+
+    @property
+    def unqualified_pointee_name(self):
+        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.pointee_name), self.template_choice)
+
+    @property
+    def pointee_name(self):
+        return cutil.replace_template_choice(
+            self.pointee_type.type_.spelling if isinstance(self.type_, cli.Type) else self.pointee_type.type_,
+            self.template_choice)
+
+    @property
+    def is_unexposed(self):
+        """
+        Recursively checks if the type has an unexposed template argument.
+        E.g. std::vector<std::shared_ptr<T>> is unexposed.
+        Returns:
+            bool: True if the has an unexposed template argument and False otherwise.
+        """
+        if isinstance(self.type_, str):
+            return self.type_ != cutil.replace_template_choice(self.type_, self.template_choice)
+        clang_type = self.canonical_type.type_
+        if clang_type.kind == cli.TypeKind.UNEXPOSED:
+            return True
+        if clang_type.kind == cli.TypeKind.POINTER:
+            return self.pointee_type.is_unexposed
+        if self.is_template:
+            for arg_type in self.template_argument_types:
+                if arg_type.is_unexposed:
+                    return True
+        return False
+
+
 class Converter:
 
     def __init__(self,
-                 type_,
+                 cxx_type,
                  template_args,
                  target_lang,
                  custom,
                  ctx,
                  type_converter,
-                 template_choice):
-        self.type_ = type_
+                 **kwargs):
+        self.cxx_type = cxx_type
         self.type_converter = type_converter
         self.template_args = template_args
         self.target_lang = target_lang
         self.custom = custom
         self.ctx = ctx
-        self.template_choice = template_choice
         self.context = self._make_context()
 
     def snippet(self, name, **kwargs):
@@ -127,8 +257,11 @@ class Converter:
 
     @property
     def cxx_type_name(self):
-        return cutil.replace_template_choice(self.type_ if isinstance(self.type_, str) else self.type_.spelling,
-                                             self.template_choice)
+        return self.cxx_type.type_name
+
+    @property
+    def cxx_root_type_name(self):
+        return self._get_root_type(self.ctx, self.cxx_type)
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
@@ -140,44 +273,26 @@ class Converter:
 
             args_t = [arg.target_type_name for arg in args]
             args_t_bases = [
-                cutil.get_base_cursor(arg.ctx.cursor).type.get_canonical().spelling
-                if arg.ctx else arg.target_type_name for arg in args]
-
-            # # NOTE template(not specialized) base is not considered
-            # args_bases = [
-            #     cutil.get_base_cursor(
-            #         arg.ctx.cursor).type.get_canonical().spelling
-            #         if arg.ctx else arg.target_clang_type.spelling for arg in self.template_args]
+                self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name for arg in args]
 
             custom = self.custom
 
             cxx_type_name = self.cxx_type_name
 
-            _original_pointee = cutil.get_pointee_type(self.type_)
-            cxx_pointee_name = _original_pointee.spelling if isinstance(self.type_, cli.Type) else cxx_type_name
-            is_pointer = cutil.is_pointer(self.type_)
-            is_value_type = cutil.is_value(self.type_)
-            is_reference = cutil.is_rval_reference(self.type_)
+            cxx_pointee_name = self.cxx_type.pointee_name
+            is_pointer = self.cxx_type.is_pointer
+            is_value_type = self.cxx_type.is_value
+            is_reference = self.cxx_type.is_lval_reference
 
-            cxx_pointee_unqualified_name = cutil.get_unqualified_type_name(_original_pointee)
+            cxx_pointee_unqualified_name = self.cxx_type.unqualified_pointee_name
+
             if self.ctx:
                 type_name = self.ctx.name
                 type_ctx = self.ctx  # todo should we just import all attributes
-                cxx_root_type = cutil.get_base_cursor(self.ctx.cursor).type.get_canonical()
-                cxx_root_type_name = cutil.get_unqualified_type_name(
-                    cutil.get_pointee_type(cutil.get_base_cursor(self.ctx.cursor).type))
-                if self.ctx.node.is_template:
-                    _base_cursor = cutil.get_base_cursor(self.ctx.cursor)
-                    if _base_cursor == self.ctx.cursor:
-                        cxx_root_type_name = cxx_pointee_unqualified_name
-                cxx_root_type_name = cutil.replace_template_choice(
-                    cxx_root_type_name, self.template_choice)
+                cxx_root_type_name = self.cxx_root_type_name
             if args:
+                # todo single method here and in snippets
                 template_suffix = ''.join([arg.target_type_name for arg in args])
-
-            cxx_pointee_name = cutil.replace_template_choice(cxx_pointee_name, self.template_choice)
-            cxx_pointee_unqualified_name = cutil.replace_template_choice(cxx_pointee_unqualified_name,
-                                                                         self.template_choice)
 
             # helper name spaces
 
@@ -191,12 +306,30 @@ class Converter:
 
         return context
 
+    def _get_root_type(self, ctx, cxx_type):
+        if not ctx:
+            return cxx_type.type_name
+        _root_cursor = cutil.get_base_cursor(ctx.cursor)
+        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
+        # we cannot use type_converter.ctx.node.root_type_name for template types
+        # as the definition and usage types may differ
+        # e.g. we can have a definition like 'class Stack<T>' and a method with argument of type 'Stack<V>'
+        # although they are the same, template choices are different and cannot be applied one to another
+        if ctx.node.is_template:
+            _root_cursor = cutil.get_base_cursor(ctx.cursor)
+            if _root_cursor == ctx.cursor:
+                cxx_root_type_name = cxx_type.unqualified_pointee_name
+            else:
+                cxx_root_type_name = cutil.replace_template_choice(
+                    _root_cursor.type.spelling, self.cxx_type)
+        return cxx_root_type_name
+
 
 class Adapter:
 
-    def __init__(self, type_, ctx, type_info_collector, **kwargs):
+    def __init__(self, cxx_type, ctx, type_info_collector, **kwargs):
         self.type_info_collector = type_info_collector
-        self.type_ = type_
+        self.cxx_type = cxx_type
         self.ctx = ctx
         self.template_args = []
         self.kwargs = kwargs
@@ -206,18 +339,18 @@ class Adapter:
 
     def __getattr__(self, name):
         if '_to_' in name and name in self.type_info_collector.converters:
-            type_info = self.type_info_collector.converters[name]
+            type_info_collector = self.type_info_collector.converters[name]
         elif name in self.type_info_collector.target_type_infos:
-            type_info = self.type_info_collector.target_type_infos[name]
+            type_info_collector = self.type_info_collector.target_type_infos[name]
         else:
             return super().__getattribute__(name)
 
-        return Converter(type_=self.type_,
+        return Converter(cxx_type=self.cxx_type,
                          template_args=self.template_args,
                          target_lang=name,
                          custom=self.type_info_collector.custom,
                          ctx=self.ctx,
-                         type_converter=type_info,
+                         type_converter=type_info_collector,
                          **self.kwargs)
 
     __getitem__ = __getattr__
@@ -231,11 +364,10 @@ class TypeInfoCollector:
         self.target_type_infos = target_type_infos
         self.custom = custom
 
-    def make_converter(self, type_, ref_ctx, template_choice=None):
-        return Adapter(type_=type_,
+    def make_converter(self, cxx_type, ref_ctx):
+        return Adapter(cxx_type=cxx_type,
                        ctx=ref_ctx,
-                       type_info_collector=self,
-                       template_choice=template_choice)
+                       type_info_collector=self)
 
 
 class TargetTypeInfo:
@@ -319,22 +451,13 @@ class SnippetsEngine:
 
     def build_type_converter(self,
                              ctx,
-                             type_,
-                             template_choice=None):
+                             cxx_type):
 
-        if isinstance(type_, cli.Type):
-            # type_ is a clang type
-            res = self._build_type_converter(ctx,
-                                             type_,
-                                             template_choice=template_choice)
+        res = self._build_type_converter(ctx,
+                                         cxx_type)
 
-        else:
-            # type_ is a string
-            res = self._build_type_converter_from_spelling(ctx,
-                                                           type_,
-                                                           template_choice=template_choice)
         if res is None:
-            raise KeyError(f"Can not find type for {type_ if isinstance(type_, str) else type_.spelling}")
+            raise KeyError(f"Can not find type for {cxx_type.type_name}")
 
         return res
 
@@ -503,7 +626,7 @@ class SnippetsEngine:
                                                            converters=type_converters,
                                                            custom=custom)
 
-    def _create_type_info(self, ctx, search_name, type_, template_args=None, template_choice=None, **kwargs):
+    def _create_type_info(self, ctx, search_name, cxx_type, template_args=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
         ref_ctx = ctx.find_by_type(search_name)
         if ref_ctx is not None:
@@ -518,9 +641,8 @@ class SnippetsEngine:
             # type info for given type is not available
             return None
 
-        type_converter = type_converter.make_converter(type_,
-                                                       ref_ctx,
-                                                       template_choice=template_choice)
+        type_converter = type_converter.make_converter(cxx_type,
+                                                       ref_ctx)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])
@@ -528,63 +650,57 @@ class SnippetsEngine:
         return type_converter
 
     def _build_type_converter(self,
-                              ctx,
-                              clang_type,
-                              lookup_type=None,
-                              template_choice=None,
-                              search_name=None):
-        template_choice = template_choice or {}
+                              ctx: Context,
+                              cxx_type: CXXType,
+                              lookup_type: CXXType = None,
+                              search_name: str = None):
+        template_choice = cxx_type.template_choice or {}
 
-        lookup_type = lookup_type or clang_type
+        lookup_type = lookup_type or cxx_type
 
-        search_name = search_name or lookup_type.spelling
+        search_name = search_name or lookup_type.type_name
         search_name = template_choice.get(search_name, search_name)
         logging.debug(f"Creating type converter for {search_name} "
                       f"and template choice {template_choice}")
         type_info = self._create_type_info(ctx,
                                            search_name,
-                                           type_=clang_type,
-                                           template_choice=template_choice)
+                                           cxx_type=cxx_type)
 
         if type_info is None:
-            unqualified_name = cutil._get_unqualified_type_name(lookup_type.spelling)
-            unqualified_name = cutil.replace_template_choice(unqualified_name, template_choice)
+            unqualified_name = lookup_type.unqualified_type_name
             if unqualified_name != search_name:
                 return self._build_type_converter(ctx,
-                                                  clang_type,
+                                                  cxx_type,
                                                   lookup_type,
-                                                  template_choice,
                                                   search_name=unqualified_name)
-            pointee_type = cutil.get_pointee_type(lookup_type)
+            pointee_type = lookup_type.pointee_type
             if pointee_type != lookup_type:
                 return self._build_type_converter(ctx,
-                                                  clang_type,
-                                                  pointee_type,
-                                                  template_choice=template_choice)
-            if lookup_type.kind == cli.TypeKind.FUNCTIONPROTO:
+                                                  cxx_type,
+                                                  pointee_type)
+            if lookup_type.is_function_proto:
+                # here we assume lookup_type holds clang type
+                # update later when we will be able to parse lambda type from string
                 tmpl_args = [self._build_type_converter(ctx,
-                                                        arg_type,
-                                                        template_choice=template_choice)
-                             for arg_type in lookup_type.argument_types()]
+                                                        arg_type)
+                             for arg_type in lookup_type.type_.argument_types()]
                 tmpl_args.append(
                     self._build_type_converter(ctx,
-                                               lookup_type.get_result(),
-                                               template_choice=template_choice))
+                                               lookup_type.type_.get_result()))
 
-                type_info = self._create_type_info(ctx, FUNCTION_PROTO_INFO_TYPE,
-                                                   type_=clang_type,
-                                                   template_args=tmpl_args,
-                                                   template_choice=template_choice)
+                type_info = self._create_type_info(ctx,
+                                                   FUNCTION_PROTO_INFO_TYPE,
+                                                   cxx_type=cxx_type,
+                                                   template_args=tmpl_args)
                 return type_info
 
             # covers template parameter and template argument cases,
             # e.g. a::Stack<T> and a::Stack<Project>
             # might be a template typedef so get the canonical type and then proceed
-            if cutil.is_template(lookup_type) and lookup_type.kind != cli.TypeKind.TYPEDEF:
+            if lookup_type.is_template and not lookup_type.is_typedef:
                 tmpl_args = [self._build_type_converter(ctx,
-                                                        arg_type,
-                                                        template_choice=template_choice)
-                             for arg_type in cutil.template_argument_types(lookup_type)]
+                                                        arg_type)
+                             for arg_type in lookup_type.template_argument_types]
 
                 # for the case when all arguments are exposed
                 # for example a::Stack<Project> then the canonical will
@@ -594,15 +710,14 @@ class SnippetsEngine:
                 # will remove namespaces and return
                 # type with spelling equal to 'Stack<type-parameter-0-0>'
                 canonical_clang_type = all(
-                    (not cutil.is_unexposed(arg.type_) for arg in tmpl_args))
+                    (not arg.cxx_type.is_unexposed for arg in tmpl_args))
                 if canonical_clang_type:
-                    lookup_type = cutil.get_canonical_type(lookup_type)
+                    lookup_type = lookup_type.canonical_type
 
                 type_info = self._create_type_info(ctx,
-                                                   cutil.template_type_name(lookup_type),
-                                                   type_=clang_type,
-                                                   template_args=tmpl_args,
-                                                   template_choice=template_choice)
+                                                   lookup_type.template_type_name,
+                                                   cxx_type=cxx_type,
+                                                   template_args=tmpl_args)
                 return type_info
 
             if type_info is None and search_name:
@@ -614,37 +729,8 @@ class SnippetsEngine:
                 if type_info:
                     return type_info
 
-            canonical_type = cutil.get_canonical_type(lookup_type)
+            canonical_type = lookup_type.canonical_type
             if canonical_type != lookup_type:
-                return self._build_type_converter(ctx, clang_type, canonical_type,
-                                                  template_choice=template_choice)
-
-        return type_info
-
-    def _build_type_converter_from_spelling(self,
-                                            ctx,
-                                            type_name,
-                                            clang_type=None,
-                                            template_choice=None):
-
-        logging.debug(f"Creating type converter for {type_name}.")
-        type_info = self._create_type_info(ctx,
-                                           type_name,
-                                           clang_type or type_name)
-
-        if type_info is None:
-
-            if cutil.is_template(type_name):
-                tmpl_args = [self._build_type_converter_from_spelling(ctx,
-                                                                      arg_type,
-                                                                      template_choice=template_choice)
-                             for arg_type in cutil.template_argument_types(type_name)]
-
-                type_info = self._create_type_info(ctx,
-                                                   cutil.template_type_name(type_name),
-                                                   type_=clang_type or type_name,
-                                                   template_args=tmpl_args,
-                                                   template_choice=template_choice)
-                return type_info
+                return self._build_type_converter(ctx, cxx_type, canonical_type)
 
         return type_info

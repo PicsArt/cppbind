@@ -313,6 +313,24 @@ class Context(BaseContext):
     def lookup_ctx_by_name(self, name):
         return self.runner.get_context(name)
 
+    @property
+    def cxx_type_name(self):
+        """
+        Returns cxx type name.
+        Returns:
+           str: Type name.
+        """
+        # in case of a template class - cursor type is TypeKind.INVALID,
+        # that´s why cant get type spelling from the
+        # cursor using this approach instead
+        # for example for the type a::Stack<T> full_displayname=a::Stack,
+        # spelling=Stack, displayname=Stack<T>
+        template_choice = self.template_choice or {}
+        if self.node.is_template:
+            cxx_type_name = self.node.full_displayname.replace(self.node.spelling, self.node.displayname)
+            return cutil.replace_template_choice(cxx_type_name, template_choice)
+        return self.cursor.type.spelling
+
 
 class RunRule:
     def __init__(self, ir, ctx_desc, platform, language):

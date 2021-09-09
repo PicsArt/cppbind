@@ -10,61 +10,12 @@ from itertools import chain
 import clang.cindex as cli
 
 
-def get_pointee_type(type_):
-    if isinstance(type_, cli.Type):
-        return type_.get_pointee() if type_.get_pointee().spelling else type_
-    # type_ is a string
-    type_ = type_.strip()
-    if type_.endswith('&&'):
-        return type_[:-2]
-    if type_.endswith('*') or type_.endswith('&'):
-        return type_[:-1]
-    return type_
-
-
-def get_canonical_type(clang_type):
-    return clang_type.get_canonical() if clang_type.get_canonical().spelling else clang_type
-
-
-def is_template(type_):
-    return type_.get_num_template_arguments() != -1 if isinstance(type_, cli.Type) else type_.find('<') != -1
-
-
-def template_argument_types(type_):
-    if isinstance(type_, cli.Type):
-        return [type_.get_template_argument_type(num)
-                for num in range(type_.get_num_template_arguments())]
-    return get_template_arguments(type_)
-
-
-def get_template_arguments(type_spelling: str):
-    # very basic case no nested templates
-    start_idx = type_spelling.find('<')
-    while start_idx != -1:
-        return type_spelling[start_idx + 1: -1].split(',')
-    return []
-
-
 def template_type_name(type_):
     name = get_unqualified_type_name(type_)
     end_idx = name.find('<')
     if end_idx != -1:
         return name[:end_idx].strip()
     return name
-
-
-def is_lval_reference(type_):
-    return type_.kind == cli.TypeKind.LVALUEREFERENCE if isinstance(type_, cli.Type) else \
-        not type_.strip().endswith('&&') and type_.strip().endswith('&')
-
-
-def is_pointer(type_):
-    return type_.kind == cli.TypeKind.POINTER if isinstance(type_, cli.Type) else type_.strip().endswith('*')
-
-
-def is_value(type_):
-    return type_.kind == cli.TypeKind.RECORD if isinstance(type_, cli.Type) else not is_pointer(
-        type_) and not is_lval_reference(type_)
 
 
 def _get_unqualified_type_name(type_name):
@@ -183,28 +134,6 @@ def is_declaration(cursor):
     # todo check also function
     return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
                            cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
-
-
-def is_unexposed(clang_type):
-    """
-    Recursively checks if the type has an unexposed template argument.
-    E.g. std::vector<std::shred_ptr<T>> is unexposed.
-    Args:
-        clang_type(Type): Clang Type.
-    Returns:
-        bool: True if the has an unexposed template argument and False otherwise.
-    """
-    clang_type = get_canonical_type(clang_type)
-    if clang_type.kind == cli.TypeKind.UNEXPOSED:
-        return True
-    if clang_type.kind == cli.TypeKind.POINTER:
-        return is_unexposed(get_pointee_type(clang_type))
-    if is_template(clang_type):
-        for arg_type in template_argument_types(clang_type):
-            _is_unexposed = is_unexposed(arg_type)
-            if _is_unexposed:
-                return _is_unexposed
-    return False
 
 
 def get_libclang_full_path():

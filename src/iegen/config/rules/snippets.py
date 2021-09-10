@@ -75,6 +75,10 @@ def make_def_context(ctx):
         marker = JINJA_UNIQUE_MARKER
         banner_logo = iegen.BANNER_LOGO
         new_line = iegen.converter.NEW_LINE
+
+        def make_converter(type_name, template_choice=None):
+            return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
+                                                                     template_choice))
         return locals()
 
     context = make()
@@ -186,10 +190,6 @@ def make_class_context(ctx):
             converter = SNIPPETS_ENGINE.build_type_converter(ctx,
                                                              CXXType(type_=cxx_type_name,
                                                                      template_choice=ctx.template_choice))
-            shared_ref_converter = SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                                        CXXType(
-                                                                            type_=f'std::shared_ptr<{cxx_type_name}>',
-                                                                            template_choice=ctx.template_choice))
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]

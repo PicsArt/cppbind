@@ -732,11 +732,11 @@ class SnippetsEngine:
                 # here we assume lookup_type holds clang type
                 # update later when we will be able to parse lambda type from string
                 tmpl_args = [self._build_type_converter(ctx,
-                                                        arg_type)
+                                                        CXXType(arg_type, cxx_type.template_choice))
                              for arg_type in lookup_type.type_.argument_types()]
                 tmpl_args.append(
                     self._build_type_converter(ctx,
-                                               lookup_type.type_.get_result()))
+                                               CXXType(lookup_type.type_.get_result(), cxx_type.template_choice)))
 
                 type_info = self._create_type_info(ctx,
                                                    FUNCTION_PROTO_INFO_TYPE,

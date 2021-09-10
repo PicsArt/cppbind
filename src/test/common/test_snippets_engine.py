@@ -1,6 +1,6 @@
 import pytest
 
-from iegen.utils.clang import get_template_arguments
+from iegen.common.snippets_engine import CXXType
 
 
 @pytest.mark.parametrize(
@@ -25,5 +25,6 @@ from iegen.utils.clang import get_template_arguments
     ]
 )
 def test_get_template_arguments(spelling, arguments):
-    result = get_template_arguments(spelling)
+    cxx_type = CXXType(spelling)
+    result = [t.type_ for t in cxx_type.template_argument_types]
     assert result == arguments

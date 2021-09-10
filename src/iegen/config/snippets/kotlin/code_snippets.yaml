@@ -93,7 +93,7 @@ var_class_cxx: &var_class_cxx
       {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
       {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = shared_ref_converter.jni_to_cxx if root.shared_ref else converter.jni_to_cxx %}
+          {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_type_name + '>').jni_to_cxx if root.shared_ref else converter.jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
           {%- if root.shared_ref %}
           {{jni_to_cxx_converter.converted_name('id')}}.reset();
@@ -522,7 +522,7 @@ function:
           {{args_snippet(args, call_args)|indent(4)}}
           {%- if not is_static %}
           validateID(id);
-          {%- set this_converter = owner_class.shared_ref_converter.jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
           {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           {{call_code(this_converter.converted_name('id') + "->", call_args)|indent(4)}}
           {%- else %}
@@ -610,7 +610,7 @@ property_getter:
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- set this_converter = owner_class.shared_ref_converter.jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
           {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           auto result = {{this_converter.converted_name('id')}}->{{cxx_name}};
           {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
@@ -727,7 +727,7 @@ getter:
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- set this_converter = owner_class.shared_ref_converter.jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx %}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx %}
           {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;

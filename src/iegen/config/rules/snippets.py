@@ -12,7 +12,8 @@ from iegen.common.error import Error
 from iegen.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
-    CXXType
+    CXXType,
+    Converter
 )
 from iegen.utils import DefaultValueKind
 
@@ -126,7 +127,8 @@ def make_func_context(ctx):
         ]
 
         if hasattr(ctx, 'result_type'):
-            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.result_type, template_choice=ctx.template_choice))
+            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.result_type,
+                                                                           template_choice=ctx.template_choice))
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
@@ -136,7 +138,7 @@ def make_func_context(ctx):
         template_names = ctx.template_names
 
         if ctx.node.is_function_template:
-            overloading_prefix = get_template_suffix(ctx, LANGUAGE)
+            overloading_prefix = gen_template_function_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -176,7 +178,6 @@ def make_class_context(ctx):
     def _make(ctx):
         def make():
             # helper variables
-            template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
             cxx_type_name = ctx.cxx_type_name
 
@@ -186,12 +187,14 @@ def make_class_context(ctx):
                                                              CXXType(type_=cxx_type_name,
                                                                      template_choice=ctx.template_choice))
             shared_ref_converter = SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                                        CXXType(type_=f'std::shared_ptr<{cxx_type_name}>',
-                                                                                template_choice=ctx.template_choice))
+                                                                        CXXType(
+                                                                            type_=f'std::shared_ptr<{cxx_type_name}>',
+                                                                            template_choice=ctx.template_choice))
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
 
+            template_suffix = getattr(converter, LANGUAGE).template_suffix
             cxx_root_type_name = getattr(converter, LANGUAGE).cxx_root_type_name
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
@@ -251,38 +254,17 @@ def make_member_context(ctx):
     return context
 
 
-def get_template_suffix(ctx, target_language):
+def gen_template_function_suffix(ctx, target_language):
     template_choice = ctx.template_choice
     template_types = ctx.template_type_parameters
-    args_names = []
+    args = []
     if template_choice:
         for t in template_types:
             search_name = template_choice[t]
-            type_converter = SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                                  search_name,
-                                                                  template_choice=ctx.template_choice)
+            args.append(SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(search_name,
+                                                                          template_choice=ctx.template_choice)))
 
-            args_names.append(_get_suffix(type_converter, target_language))
-
-    return ''.join(args_names)
-
-
-def _get_suffix(converter, target_language):
-    """
-    Recursively retrieves template suffix for target language.
-    For example for std::pair<std::string, std::string> it'll return PairStringString for kotlin.
-    """
-    lang_converter = getattr(converter, target_language)
-    if converter.ctx:
-        # iegen generated types already contain suffix in their target type name
-        return lang_converter.target_type_name
-    if hasattr(lang_converter.custom, 'template_suffix'):
-        name = lang_converter.custom.template_suffix
-    else:
-        name = lang_converter.target_type_name
-    for arg in converter.template_args:
-        name += _get_suffix(arg, target_language)
-    return name
+    return Converter.gen_template_suffix(args, target_language)
 
 
 def preprocess_scope(context, scope, info):

@@ -283,7 +283,7 @@ std::shared_ptr:
 std::pair:
   custom:
     is_c_pointer_type: False
-    template_suffix: Pair
+    tname: Pair
   swift:
     type_info: "({{args_t[0]}}, {{args_t[1]}})"
   c:

@@ -140,8 +140,9 @@ class CXXType:
 
     @property
     def is_template(self):
-        return self.type_.get_num_template_arguments() != -1 if isinstance(self.type_, cli.Type) else self.type_.find(
-            '<') != -1
+        # we have to use type_name for clang types as well as it can be an unexposed type and it's choice can be a
+        # template for example if it's spelling is T and the choice of T is std::vector<int> then T is a template
+        return self.type_name.find('<') != -1
 
     @property
     def is_function_proto(self):
@@ -159,21 +160,48 @@ class CXXType:
 
     @property
     def template_argument_types(self):
-        if isinstance(self.type_, cli.Type):
+        # if type is unexposed it's choice can be a template thus we need to use string parsing in that case
+        if isinstance(self.type_, cli.Type) and self.type_.kind != cli.TypeKind.UNEXPOSED:
             return [CXXType(self.type_.get_template_argument_type(num), self.template_choice)
                     for num in range(self.type_.get_num_template_arguments())]
         return self._get_template_arguments()
 
     def _get_template_arguments(self):
-        # very basic case no nested templates
-        start_idx = self.type_.find('<')
-        while start_idx != -1:
-            return [CXXType(t, self.template_choice) for t in self.type_[start_idx + 1: -1].split(',')]
-        return []
+        """
+        Retrieves template arguments spelling from a type's spelling.
+        E.g. for 'std::pair<std::string, std::vector<int>>' will return ['std::string', 'std::vector<int>']
+        """
+        type_spelling = self.type_name
+        start_idx = type_spelling.find('<')
+        all_arguments_string = type_spelling[start_idx + 1: -1]
+
+        template_args = []
+        parts = all_arguments_string.split(',')
+        ii = 0
+        while ii < len(parts):
+            if '<' not in parts[ii]:
+                # not a template
+                template_args.append(CXXType(parts[ii].strip(), self.template_choice))
+            else:
+                # template argument
+                start_count = parts[ii].count('<')
+                arg_parts = []
+                end_count = 0
+                # find remaining part(s)
+                while True:
+                    end_count += parts[ii].count('>')
+                    arg_parts.append(parts[ii])
+                    if start_count == end_count:
+                        # argument parts found join and add to the list
+                        template_args.append(CXXType(','.join(arg_parts).strip()))
+                        break
+                    ii += 1
+            ii += 1
+        return template_args
 
     @property
     def template_type_name(self):
-        return cutil.template_type_name(self.original_type_name)
+        return cutil.template_type_name(self.type_name)
 
     @property
     def is_lval_reference(self):
@@ -192,12 +220,11 @@ class CXXType:
 
     @property
     def unqualified_type_name(self):
-        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.original_type_name),
-                                             self.template_choice)
+        return cutil.get_unqualified_type_name(self.type_name)
 
     @property
     def unqualified_pointee_name(self):
-        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.pointee_name), self.template_choice)
+        return cutil.get_unqualified_type_name(self.pointee_name)
 
     @property
     def pointee_name(self):
@@ -263,13 +290,39 @@ class Converter:
     def cxx_root_type_name(self):
         return self._get_root_type(self.ctx, self.cxx_type)
 
+    @property
+    def template_suffix(self):
+        return Converter.gen_template_suffix(self.template_args, self.target_lang)
+
+    @staticmethod
+    def gen_template_suffix(args, target_lang):
+        return ''.join([Converter._get_suffix(arg, target_lang) for arg in args])
+
+    @staticmethod
+    def _get_suffix(converter, target_language):
+        """
+        Recursively retrieves template suffix for target language.
+        For example for std::pair<std::string, std::string> it'll return PairStringString for kotlin.
+        """
+        lang_converter = getattr(converter, target_language)
+        if converter.ctx:
+            # iegen generated types already contain suffix in their target type name
+            return lang_converter.target_type_name
+        if hasattr(lang_converter.custom, 'tname'):
+            name = lang_converter.custom.tname
+        else:
+            name = lang_converter.target_type_name
+        for arg in converter.template_args:
+            name += Converter._get_suffix(arg, target_language)
+        return name
+
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
             args = [getattr(arg, self.target_lang) for arg in self.template_args]
             args_converters = self.template_args
-            template_suffix = ''
+            template_suffix = self.template_suffix
 
             args_t = [arg.target_type_name for arg in args]
             args_t_bases = [
@@ -290,9 +343,6 @@ class Converter:
                 type_name = self.ctx.name
                 type_ctx = self.ctx  # todo should we just import all attributes
                 cxx_root_type_name = self.cxx_root_type_name
-            if args:
-                # todo single method here and in snippets
-                template_suffix = ''.join([arg.target_type_name for arg in args])
 
             # helper name spaces
 
@@ -709,7 +759,7 @@ class SnippetsEngine:
                 # for example for the case a::Stack<T>, the canonical
                 # will remove namespaces and return
                 # type with spelling equal to 'Stack<type-parameter-0-0>'
-                canonical_clang_type = all(
+                canonical_clang_type = not lookup_type.is_unexposed and all(
                     (not arg.cxx_type.is_unexposed for arg in tmpl_args))
                 if canonical_clang_type:
                     lookup_type = lookup_type.canonical_type
@@ -719,15 +769,6 @@ class SnippetsEngine:
                                                    cxx_type=cxx_type,
                                                    template_args=tmpl_args)
                 return type_info
-
-            if type_info is None and search_name:
-                # search name might be a template itself
-                type_info = self._build_type_converter_from_spelling(ctx,
-                                                                     search_name,
-                                                                     clang_type,
-                                                                     template_choice)
-                if type_info:
-                    return type_info
 
             canonical_type = lookup_type.canonical_type
             if canonical_type != lookup_type:

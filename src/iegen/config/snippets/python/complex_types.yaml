@@ -169,7 +169,7 @@ json:
 std::pair:
   custom:
     pname: tuple
-    template_suffix: Pair
+    tname: Pair
   python:
     type_info: tuple
   pybind:

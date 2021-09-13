@@ -52,10 +52,16 @@ class ContainersApp {
             assert(jsonUsage.getJson() == jsonVal)
             // [json-usage]
 
+            // [nested-containers-usage]
             val nestedUsage = NestedExamples()
             val nestedList = listOf(listOf(1, 2), listOf())
             nestedUsage.setNestedIntVector(nestedList)
-            println(nestedUsage.getNestedIntVector())
+            assert(nestedUsage.getNestedIntVector() == nestedList)
+
+            // val nestedMap = mapOf(1 to mapOf(2 to 3, 3 to 4))
+            // nestedUsage.setNestedIntMap(nestedMap)
+            // assert(nestedUsage.getNestedIntMap() == nestedMap)
+            // [nested-containers-usage]
        }
     }
 

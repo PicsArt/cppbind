@@ -141,7 +141,7 @@ std::vector:
   jni:
     type_info: "{{args_t[0] if args[0].custom.pname != 'Object' else 'jobject'}}Array"
   jdk:
-    type_info: "{{args_t[0]}}Array"
+    type_info: "{{args_t[0] if args[0].custom.pname != 'Object' else 'Object'}}Array"
   jni_to_cxx: |
     {%- set tmp_name = '_' + target_name %}
     {%- set jni_array_get = 'iegen::get{}Array'.format(args[0].custom.pname) %}
@@ -173,7 +173,7 @@ std::vector:
     }
 
   kotlin_to_jdk: |
-    {%- set array_init = '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    {%- set array_init = '' if args[0].custom.pname != 'Object' else '{ Any() }' %}
     val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
     var index_{{name}} = 0
     for (value_{{name}} in {{name}}) {
@@ -183,7 +183,8 @@ std::vector:
     }
   jdk_to_kotlin: |
     val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-    for (value_{{name}} in {{name}}) {
+    val casted_{{name}} = {{name}} as {{args_t[0] if args[0].custom.pname != 'Object' else 'Object'}}Array
+    for (value_{{name}} in casted_{{name}}) {
         {{args[0].snippet('value_{}'.format(name))|indent}}
         {{target_name}}.add({{args[0].converted_name('value_{}'.format(name))}})
     }

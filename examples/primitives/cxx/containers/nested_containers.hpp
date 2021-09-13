@@ -55,7 +55,7 @@ class NestedExamples {
 //     std::map<int, std::map<int, int>> getNestedIntMap() {
 //        return nestedIntMap;
 //     }
-//
+
 //     /**
 //     * __API__
 //     * action: gen_method

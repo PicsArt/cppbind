@@ -56,14 +56,14 @@ class NestedExamples {
         return nestedIntMap;
      }
 
-//     /**
-//     * __API__
-//     * action: gen_method
-//     * throws: no_throw
-//     */
-//    void mixedExampleWithManyArgs(const std::vector<std::vector<int>>& v1, const std::vector<std::vector<int>>& v2,
-//                                  const std::map<int, std::map<int, int>>& m1, const std::map<int, std::map<int, int>>& m2) {
-//    }
+     /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void mixedExampleWithManyArgs(const std::vector<std::vector<int>>& v1, const std::vector<std::vector<int>>& v2,
+                                  const std::map<int, std::map<int, int>>& m1, const std::map<int, std::map<int, int>>& m2) {
+    }
 
     private:
     std::vector<std::vector<int>> nestedIntVector;

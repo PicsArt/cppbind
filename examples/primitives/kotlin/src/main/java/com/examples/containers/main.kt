@@ -58,9 +58,11 @@ class ContainersApp {
             nestedUsage.setNestedIntVector(nestedList)
             assert(nestedUsage.getNestedIntVector() == nestedList)
 
-            // val nestedMap = mapOf(1 to mapOf(2 to 3, 3 to 4))
-            // nestedUsage.setNestedIntMap(nestedMap)
-            // assert(nestedUsage.getNestedIntMap() == nestedMap)
+            val nestedMap = mapOf(1 to mapOf(2 to 3, 3 to 4))
+            nestedUsage.setNestedIntMap(nestedMap)
+            assert(nestedUsage.getNestedIntMap() == nestedMap)
+
+            nestedUsage.mixedExampleWithManyArgs(nestedList, nestedList, nestedMap, nestedMap)
             // [nested-containers-usage]
        }
     }

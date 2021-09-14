@@ -39,22 +39,22 @@ class NestedExamples {
         return nestedIntVector;
     }
 
-//    /**
-//     * __API__
-//     * action: gen_method
-//     * throws: no_throw
-//     */
-//    void setNestedIntMap(const std::map<int, std::map<int, int>>& m) {
-//        nestedIntMap = m;
-//    }
-//     /**
-//     * __API__
-//     * action: gen_method
-//     * throws: no_throw
-//     */
-//     std::map<int, std::map<int, int>> getNestedIntMap() {
-//        return nestedIntMap;
-//     }
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void setNestedIntMap(const std::map<int, std::map<int, int>>& m) {
+        nestedIntMap = m;
+    }
+     /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+     std::map<int, std::map<int, int>> getNestedIntMap() {
+        return nestedIntMap;
+     }
 
 //     /**
 //     * __API__

@@ -49,8 +49,9 @@ class ContextDescriptor:
 
     def __init__(self, context_def_glob):
         self.__ctx_def_map = ContextDescriptor.build_ctx_def_map(context_def_glob)
+        self.__all_languages = self.__validate_and_deduce_languages()
         self.__var_def = ContextDescriptor.resolve_attr_aliases(self.__get_raw_var_def())
-        self.validate_var_def()
+        self.__validate_var_def()
 
     @staticmethod
     def resolve_attr_aliases(attrs):
@@ -211,40 +212,37 @@ class ContextDescriptor:
                     rules_map[key] = copy.deepcopy(val)
                 path.pop()
 
-        def merge_section(section_key, global_section_value, platform, language):
-            """
-            Method to lookup with current section key and merge contents
-            """
-            for key in (platform + '.' + language + '.' + section_key,
-                        platform + '.' + section_key,
-                        language + '.' + section_key,
-                        section_key):
-                if key in current_rules:
-                    merge_rules(current_rules[key], global_section_value[platform][language], [])
-
         current_rules = attrs.get(ContextDescriptor.RULE_SECTION_KEY)
         if current_rules:
-            global_code_snippets = ctx_def_map.setdefault(ContextDescriptor.CODE_SNIPPETS_KEY,
-                                                          defaultdict(lambda: defaultdict(dict)))
-            global_type_converters = ctx_def_map.setdefault(ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY,
-                                                            defaultdict(lambda: defaultdict(dict)))
-            global_actions = ctx_def_map.setdefault(ContextDescriptor.ACTION_SNIPPETS_KEY,
-                                                    defaultdict(lambda: defaultdict(list)))
+            for rule_key in current_rules:
+                platforms = lang = section_type = None
+                rule_key_tokens = rule_key.split('.')
 
-            for plat in default_config.platforms:
-                for lang in default_config.languages:
-                    merge_section(ContextDescriptor.CODE_SNIPPETS_KEY,
-                                  global_code_snippets,
-                                  plat,
-                                  lang)
-                    merge_section(ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY,
-                                  global_type_converters,
-                                  plat,
-                                  lang)
-                    merge_section(ContextDescriptor.ACTION_SNIPPETS_KEY,
-                                  global_actions,
-                                  plat,
-                                  lang)
+                if len(rule_key_tokens) == 3:
+                    platforms = [rule_key_tokens[0]]
+                    lang = rule_key_tokens[1]
+                    section_type = rule_key_tokens[2]
+                elif len(rule_key_tokens) == 2:
+                    platforms = default_config.platforms
+                    lang = rule_key_tokens[0]
+                    section_type = rule_key_tokens[1]
+
+                if lang is None:
+                    continue
+
+                for plat in platforms:
+                    if section_type == ContextDescriptor.CODE_SNIPPETS_KEY:
+                        global_code_snippets = ctx_def_map.setdefault(ContextDescriptor.CODE_SNIPPETS_KEY,
+                                                                      defaultdict(lambda: defaultdict(dict)))
+                        merge_rules(current_rules[rule_key], global_code_snippets[lang][plat], [])
+                    elif section_type == ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY:
+                        global_type_converters = ctx_def_map.setdefault(ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY,
+                                                                        defaultdict(lambda: defaultdict(dict)))
+                        merge_rules(current_rules[rule_key], global_type_converters[lang][plat], [])
+                    elif section_type == ContextDescriptor.ACTION_SNIPPETS_KEY:
+                        global_actions = ctx_def_map.setdefault(ContextDescriptor.ACTION_SNIPPETS_KEY,
+                                                                defaultdict(lambda: defaultdict(list)))
+                        merge_rules(current_rules[rule_key], global_actions[lang][plat], [])
 
     @classmethod
     def validate_section_keys(cls, src_dict, section_key):
@@ -259,7 +257,7 @@ class ContextDescriptor:
         elif section_key == cls.TYPE_SECTION_KEY and (cls.DIR_RULE_KEY in src_dict or cls.FILE_RULE_KEY in src_dict):
             Error.critical(f"API type section definition can only contain '{cls.TYPE_RULE_KEY}' key")
 
-    def validate_var_def(self):
+    def __validate_var_def(self):
         """Method for variables definition validation"""
         for var_name, prop in self.get_var_def().items():
             extra_nodes = set(prop['required_on']) - set(prop['allowed_on'])
@@ -269,6 +267,22 @@ class ContextDescriptor:
                             f"{'them' if len(extra_nodes) > 1 else 'it'}",
                             prop.file,
                             prop.line_number)
+
+    def __validate_and_deduce_languages(self):
+        if ContextDescriptor.CODE_SNIPPETS_KEY not in self.__ctx_def_map:
+            Error.critical("Iegen error: there is no any specified code snippet rule")
+        if ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY not in self.__ctx_def_map:
+            Error.critical("Iegen error: there is no any specified type converter snippet rule")
+
+        code_snippets_languages = sorted(list(self.__ctx_def_map[ContextDescriptor.CODE_SNIPPETS_KEY].keys()))
+        type_converter_languages = sorted(list(self.__ctx_def_map[ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY].keys()))
+        if code_snippets_languages != type_converter_languages:
+            languages_with_diff = set(code_snippets_languages).symmetric_difference(set(type_converter_languages))
+            Error.critical(f"Iegen error: code snippets and type converters must be both specified for a language. "
+                           f"This rule is violated for {', '.join(languages_with_diff)} "
+                           f"language{'s' if len(languages_with_diff) > 1 else ''}")
+
+        return code_snippets_languages
 
     def __get_raw_var_def(self):
         """Get raw variable definitions section without resolving node alias names"""
@@ -307,3 +321,9 @@ class ContextDescriptor:
         Get yaml api value from context definition map
         """
         return self.__ctx_def_map.get(name)
+
+    def get_all_languages(self):
+        """
+        Returns the list of all languages
+        """
+        return self.__all_languages

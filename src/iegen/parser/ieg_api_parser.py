@@ -26,7 +26,6 @@ class APIParser:
 
     API_START_KW = default_config.api_start_kw
     ALL_PLATFORMS = sorted(default_config.platforms)
-    ALL_LANGUAGES = sorted(default_config.languages)
 
     def __init__(self, ctx_desc, platform, language):
         self.ctx_desc = ctx_desc
@@ -106,9 +105,9 @@ class APIParser:
             location = location or SimpleNamespace(file_name=attrs.file, line_number=None)
             try:
                 api_attrs = VariableEvaluator.eval_attr_template(attrs, ctx)
+                return self.parse_api_attrs(api_attrs, location)
             except JinjaUndefinedError as err:
                 Error.critical(f"Jinja evaluation error: {err}", location.file_name, location.line_number)
-            return self.parse_api_attrs(api_attrs, location)
 
         return None
 
@@ -121,7 +120,7 @@ class APIParser:
         curr_plat = self.platform
 
         attr_dict = OrderedDict()
-        attr_key_regex = rf"[\s*/]*(?:({'|'.join(APIParser.ALL_PLATFORMS)})\.)?(?:({'|'.join(APIParser.ALL_LANGUAGES)})\.)?([^\d\W]\w*)\s*$"
+        attr_key_regex = rf"[\s*/]*(?:({'|'.join(APIParser.ALL_PLATFORMS)})\.)?(?:({'|'.join(self.ctx_desc.get_all_languages())})\.)?([^\d\W]\w*)\s*$"
 
         # Data structure to keep previous priorities
         prev_priors = defaultdict(lambda: [0])

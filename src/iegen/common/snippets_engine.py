@@ -323,9 +323,9 @@ class SnippetsEngine:
         self.jinja2_env = JINJA2_ENV
 
     def load(self):
-        self._load_actions(self.ctx_desc.get_action_snippets()[self.platform][self.language])
-        self._load_code_info(self.ctx_desc.get_code_snippets()[self.platform][self.language])
-        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.platform][self.language])
+        self._load_actions(self.ctx_desc.get_action_snippets()[self.language][self.platform])
+        self._load_code_info(self.ctx_desc.get_code_snippets()[self.language][self.platform])
+        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.language][self.platform])
 
     def do_actions(self, context):
         variables = {}

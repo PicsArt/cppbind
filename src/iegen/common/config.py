@@ -70,7 +70,6 @@ class IEGConfig:
 
         self.default_config_dirs = DEFAULT_DIRS
 
-        self.languages = cnfg.getlist("APPLICATION", "all_languages")
         self.platforms = cnfg.getlist("APPLICATION", "all_platforms")
 
         self.api_start_kw = cnfg.get("API", "parser_start")

@@ -54,7 +54,6 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
-    - cxx/containers/nested_containers.hpp
   swift.file_postfix: _swgen
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

@@ -2,13 +2,13 @@ from examples_lib.getters import Numberint
 from examples_lib.simple import Project, Root
 from examples_lib.templates.addressable_pygen import AddressableRoot
 from examples_lib.templates.component_pygen import Component
-from examples_lib.templates.stack_pygen import StackProject, StackNumberint
+from examples_lib.templates.stack_pygen import StackPrj, StackNumInt
 from examples_lib.templates.stack_usage_pygen import StackUsage
 from examples_lib.templates.template_methods_pygen import TemplateMethods
-from examples_lib.templates.wrapper_pygen import WrapperPairstrstr
+from examples_lib.templates.wrapper_pygen import WrapperPairStrings
 
 # [stack-examples]
-stack_prj = StackProject()
+stack_prj = StackPrj()
 assert stack_prj.empty()
 prj = Project(title="My Project")
 stack_prj.push(item=prj)
@@ -17,7 +17,7 @@ assert stack_prj.top().title == prj.title
 stack_prj.pop()
 assert stack_prj.empty() is True
 
-stackNumber = StackNumberint()
+stackNumber = StackNumInt()
 num1 = Numberint(1)
 num2 = Numberint(2)
 stackNumber.push(num1)
@@ -71,7 +71,7 @@ assert component.abs_path() == path + name
 
 
 # [wrapper-examples]
-wrapper_pair = WrapperPairstrstr(("first", "second"))
+wrapper_pair = WrapperPairStrings(("first", "second"))
 assert wrapper_pair.value[0] == "first"
 assert (wrapper_pair.value[1] == "second")
 wrapper_pair.value = ("third", "fourth")

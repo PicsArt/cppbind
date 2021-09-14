@@ -292,7 +292,7 @@ var_class: &var_class
             {%- endif %}
             {% set comma = joiner(', ') -%}
             {% set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
-            py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|selectattr('shared_ref')|list -%}
+            py::class_<{{cxx_type_name}} {%- if root.shared_ref -%}
                                           , std::shared_ptr<{{cxx_type_name}}>
                                          {%- endif %}
                                          {%- if base_types_converters -%}

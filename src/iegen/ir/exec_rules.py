@@ -9,8 +9,8 @@ import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
-from iegen.utils.clang import extract_pure_comment
 from iegen.utils import DefaultValueKind
+from iegen.utils.clang import extract_pure_comment
 
 
 class BaseContext:
@@ -304,11 +304,11 @@ class Context(BaseContext):
 
     @property
     def template_choice(self):
-        return self.template_ctx['choice'] if self.template_ctx else None
+        return self.template_ctx.choice if self.template_ctx else None
 
     @property
     def template_names(self):
-        return self.template_ctx['names'] if self.template_ctx else None
+        return self.template_ctx.names if self.template_ctx else None
 
     def lookup_ctx_by_name(self, name):
         return self.runner.get_context(name)
@@ -338,6 +338,7 @@ class RunRule:
         self.ctx_desc = ctx_desc
         self.language = language
         self.platform = platform
+        self.all_contexts = dict()
         # calling order should be such as that parent node processes first
         self.api_call_order = [
             # {'gen_class', 'gen_interface', 'gen_enum'},
@@ -399,19 +400,7 @@ class RunRule:
                             # check if the node is template and generate code for each combination of template args
                             if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
                                                            cli.CursorKind.FUNCTION_TEMPLATE]:
-                                parent_template = node.args.get('template', None)
-                                template_arg = {}
-                                # if parent also has a template argument join with child´s
-                                if parent_template:
-                                    template_arg = template_arg.update(parent_template)
-                                template_arg.update(child.args['template'])
-                                all_possible_args = list(itertools.product(*template_arg.values()))
-                                template_keys = child.args['template'].keys()
-                                for _, combination in enumerate(all_possible_args):
-                                    choice = [item['type'] for item in combination]
-                                    choice_names = [item['name'] for item in combination if 'name' in item]
-                                    _template_choice = dict(zip(template_keys, choice))
-                                    _template_ctx = {'choice': _template_choice, 'names': choice_names}
+                                for _template_ctx in RunRule._get_template_combinations(child):
                                     _run_recursive(child, _template_ctx)
                             else:
                                 _run_recursive(child, template_ctx)
@@ -456,15 +445,38 @@ class RunRule:
 
     def allocate_all_contexts(self):
         logging.debug("Allocating context for all nodes")
-        self.all_contexts = dict()
         for node in self.ir.walk():
-            self.create_context(node)
+            self.all_contexts.setdefault(node.full_displayname,
+                                         Context(self, node))
+            if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+                # for template types also create a context with template choice
+                for template_ctx in RunRule._get_template_combinations(node):
+                    context = Context(self, node, template_ctx)
+                    self.all_contexts[context.cxx_type_name] = context
+
+    @staticmethod
+    def _get_template_combinations(node):
+        parent_template = node.parent.args.get('template', None)
+        template_arg = {}
+        # if parent also has a template argument join with child´s
+        if parent_template:
+            template_arg = template_arg.update(parent_template)
+        template_arg.update(node.args['template'])
+        all_possible_args = list(itertools.product(*template_arg.values()))
+        template_keys = node.args['template'].keys()
+        all_contexts = []
+        for _, combination in enumerate(all_possible_args):
+            choice = [item['type'] for item in combination]
+            choice_names = [item['name'] for item in combination if 'name' in item]
+            _template_choice = dict(zip(template_keys, choice))
+            all_contexts.append(types.SimpleNamespace(choice=_template_choice, names=choice_names))
+        return all_contexts
 
     @staticmethod
     def __node_key(node, template_ctx):
         node_key = (node,)
         if node and node.type == NodeType.CLANG_NODE and node.is_template:
-            node_key = (node, json.dumps(template_ctx))
+            node_key = (node, json.dumps(template_ctx.__dict__))
         return node_key
 
     @staticmethod

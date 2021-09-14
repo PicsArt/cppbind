@@ -23,6 +23,9 @@ namespace iegen::example {
  * template:
  *   T:
  *     - type: std::pair<std::string, std::string>
+ *       name: PairStrings
+ *     - type: std::pair<int, int>
+ *     - type: std::string
  * package: templates
  */
 template <class T>

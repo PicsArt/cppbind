@@ -6,7 +6,7 @@ import com.examples.getters.NumberInt
 
 fun use() {
 // [stack-examples]
-var stackPrj = StackProject()
+var stackPrj = StackPrj()
 assert(stackPrj.empty())
 val prj = Project("My Project")
 stackPrj.push(prj)
@@ -15,7 +15,7 @@ assert(stackPrj.top().title == prj.title)
 stackPrj.pop()
 assert(stackPrj.empty())
 
-val stackNumber = StackNumberInt()
+val stackNumber = StackNumInt()
 val num1 = NumberInt(1)
 val num2 = NumberInt(2)
 stackNumber.push(num1)
@@ -68,7 +68,7 @@ assert(component.absPath() == path + name)
 // [addressable-examples]
 
 // [wrapper-examples]
-val wrapperPair = WrapperPairStringString(Pair<String, String>("first", "second"))
+val wrapperPair = WrapperPairStrings(Pair<String, String>("first", "second"))
 assert(wrapperPair.value.first == "first")
 assert(wrapperPair.value.second == "second")
 wrapperPair.value = Pair<String, String>("third", "fourth")

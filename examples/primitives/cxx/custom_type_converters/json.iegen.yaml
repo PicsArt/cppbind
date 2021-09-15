@@ -26,7 +26,7 @@ rules:
   kotlin.type_converters:
     nlohmann::json:
       custom:
-        pname: json
+        pname: Object
       kotlin:
         type_info: String
       jni:

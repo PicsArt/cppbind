@@ -2,6 +2,7 @@
 #define nested_containers_h
 
 #include <vector>
+#include <string>
 #include <map>
 
 namespace iegen::example {
@@ -101,11 +102,49 @@ class NestedExamples {
         return mapOfIntVectors;
     }
 
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setComplexStringVector(const std::vector<std::vector<std::vector<std::string>>>& v) {
+        complexStringVector = v;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::vector<std::vector<std::vector<std::string>>> getComplexStringVector() {
+        return complexStringVector;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setComplexStringMap(const std::map<std::string, std::map<std::string, std::map<std::string, std::string>>>& m) {
+        complexStringMap = m;
+    }
+
+    /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> getComplexStringMap() {
+        return complexStringMap;
+    }
+
     private:
     std::vector<std::vector<int>> nestedIntVector;
     std::map<int, std::map<int, int>> nestedIntMap;
     std::vector<std::map<int, int>> vectorOfIntMaps;
     std::map<int, std::vector<int>> mapOfIntVectors;
+    std::vector<std::vector<std::vector<std::string>>> complexStringVector;
+    std::map<std::string, std::map<std::string, std::map<std::string, std::string>>> complexStringMap;
 };
 
 }

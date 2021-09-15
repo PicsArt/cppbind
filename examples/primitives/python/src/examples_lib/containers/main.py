@@ -72,4 +72,12 @@ assert nested_usage_obj.get_vector_of_int_maps() == vector_of_maps
 map_of_vectors = {1: [2, 3], 4: []}
 nested_usage_obj.set_map_of_int_vectors(map_of_vectors)
 assert nested_usage_obj.get_map_of_int_vectors() == map_of_vectors
+
+complex_vector = [[["a", "b"]]]
+nested_usage_obj.set_complex_string_vector(complex_vector)
+assert nested_usage_obj.get_complex_string_vector() == complex_vector
+
+complex_map = {"a": {"b": {"c": "d"}}}
+nested_usage_obj.set_complex_string_map(complex_map)
+assert nested_usage_obj.get_complex_string_map() == complex_map
 # [nested-containers-usage]

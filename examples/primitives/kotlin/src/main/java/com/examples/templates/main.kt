@@ -2,6 +2,8 @@ package com.examples.templates
 
 import com.examples.templates.*
 import com.examples.simple.*
+import com.examples.forward_decl.student.Student
+import com.examples.overloads.Employee
 import com.examples.getters.NumberInt
 
 fun use() {
@@ -76,6 +78,16 @@ assert(wrapperPair.value.first == "third")
 assert(wrapperPair.value.second == "fourth")
 // [wrapper-examples]
 
+// [pair-examples]
+
+val student = Student("John Doe")
+val employee = Employee("Jane Doe")
+var pair1 = PairStudent("student", student)
+var pair2 = PairEmployee("employee", employee)
+assert(pair1.second.name == student.name)
+assert(pair2.second.name == employee.name)
+// [pair-examples]
+
 }
 
 class TemplatesApp {
@@ -85,6 +97,5 @@ class TemplatesApp {
         fun main(args: Array<String>) {
             use()
        }
-
     }
 }

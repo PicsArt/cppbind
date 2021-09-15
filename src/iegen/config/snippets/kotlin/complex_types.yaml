@@ -183,11 +183,10 @@ std::vector:
   jdk_to_kotlin: |
     val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
     for (value_{{name}} in {{name}}) {
-        {%- if args[0].custom.pname == "Object" %}
-        @Suppress("UNCHECKED_CAST") val actual_value_{{name}} = value_{{name}} as {{args[0].source_type_name}}
-        {%- set var_name = 'actual_value_' + name %}
-        {%- else %}
         {%- set var_name = 'value_' + name %}
+        {%- if args[0].custom.pname == "Object" %}
+        {%- set var_name = 'actual_' + var_name %}
+        @Suppress("UNCHECKED_CAST") val actual_value_{{name}} = value_{{name}} as {{args[0].source_type_name}}
         {%- endif %}
         {{args[0].snippet(var_name)|indent}}
         {{target_name}}.add({{args[0].converted_name(var_name)}})
@@ -275,8 +274,16 @@ std::map:
   jdk_to_kotlin: |
     val {{target_name}} = HashMap<{{args_t[0]}}, {{args_t[1]}}>()
     for (i_{{name}} in 0..{{name}}.first.size - 1) {
-        {{'@Suppress("UNCHECKED_CAST") ' if args[0].custom.pname == 'Object' else ''}}val elem1_{{name}} = {{name}}.first.get(i_{{name}}){{' as ' + args[0].source_type_name if args[0].custom.pname == 'Object' else ''}}
-        {{'@Suppress("UNCHECKED_CAST") ' if args[1].custom.pname == 'Object' else ''}}val elem2_{{name}} = {{name}}.second.get(i_{{name}}){{' as ' + args[1].source_type_name if args[1].custom.pname == 'Object' else ''}}
+        {%- if args[0].custom.pname == 'Object' %}
+        @Suppress("UNCHECKED_CAST") val elem1_{{name}} = {{name}}.first.get(i_{{name}}) as {{args[0].source_type_name}}
+        {%- else %}
+        val elem1_{{name}} = {{name}}.first.get(i_{{name}})
+        {%- endif %}
+        {%- if args[1].custom.pname == 'Object' %}
+        @Suppress("UNCHECKED_CAST") val elem2_{{name}} = {{name}}.second.get(i_{{name}}) as {{args[1].source_type_name}}
+        {%- else %}
+        val elem2_{{name}} = {{name}}.second.get(i_{{name}})
+        {%- endif %}
         {{args[0].snippet('elem1_{}'.format(name))|indent}}
         {{args[1].snippet('elem2_{}'.format(name))|indent}}
         {{target_name}}.put({{args[0].converted_name('elem1_{}'.format(name))}}, {{args[1].converted_name('elem2_{}'.format(name))}})

@@ -128,7 +128,7 @@ class APIParser:
         for attr_key, value in attrs.items():
             match = re.match(attr_key_regex, attr_key)
             if not match:
-                Error.critical({attr_key: value},
+                Error.critical(f"Wrong variable specification: '{attr_key}'",
                                location.file_name if location else None,
                                location.line_number if location else None)
             platform, language, attr = match.groups()

@@ -49,7 +49,7 @@ class ContextDescriptor:
 
     def __init__(self, context_def_glob):
         self.__ctx_def_map = ContextDescriptor.build_ctx_def_map(context_def_glob)
-        self.__all_languages = self.__validate_and_deduce_languages()
+        self.__deduced_languages = self.__validate_and_deduce_languages()
         self.__var_def = ContextDescriptor.resolve_attr_aliases(self.__get_raw_var_def())
         self.__validate_var_def()
 
@@ -322,8 +322,14 @@ class ContextDescriptor:
         """
         return self.__ctx_def_map.get(name)
 
+    def get_deduced_languages(self):
+        """
+        Returns the list of languages deduced from snippets info under "rules" section
+        """
+        return self.__deduced_languages
+
     def get_all_languages(self):
         """
-        Returns the list of all languages
+        Returns the set of all languages: deduced languages merged with application supported languages
         """
-        return self.__all_languages
+        return set(self.__deduced_languages + default_config.languages)

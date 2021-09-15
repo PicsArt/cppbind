@@ -153,7 +153,7 @@ def run_package():
     current_sub_parser_args = parent_parser.parse_known_args()[1]
     if current_sub_parser_args and current_sub_parser_args[0] == 'run':
         ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
-        all_languages = ctx_desc.get_all_languages()
+        all_languages = ctx_desc.get_deduced_languages()
 
         plat_lang_choices = all_languages + [plat + '.' + lang for plat in default_config.platforms
                                              for lang in all_languages]

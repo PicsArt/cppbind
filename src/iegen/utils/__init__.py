@@ -1,7 +1,6 @@
 """
 Common utils that can by used from different modules
 """
-import datetime
 import enum
 import errno
 import importlib.util
@@ -9,10 +8,12 @@ import os
 import re
 import shutil
 import sys
+from functools import cmp_to_key
 
+from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
-from iegen import DATETIME_FORMAT, BANNER_LOGO
+from iegen import BANNER_LOGO
 from iegen.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from iegen.common.error import Error
 
@@ -125,15 +126,6 @@ def make_camel_case(string, sub_strings=None):
     return ''.join([init, *map(str.title, temp)])
 
 
-def current_datetime():
-    """
-    Returns formatted current date time in utc.
-    Returns:
-        str: Formatted result.
-    """
-    return datetime.date.strftime(datetime.datetime.utcnow(), DATETIME_FORMAT)
-
-
 def clear_iegen_generated_files(directory):
     """
     Traverses given directory and removes all files that contain IEGEN banner.
@@ -216,6 +208,57 @@ def init_jinja_env():
     def replace_regex(input_, pattern, repl, count=0):
         return re.sub(pattern, repl, input_, count)
 
+    def _split(inputs_):
+        parts = []
+        if not isinstance(inputs_, list):
+            inputs_ = [inputs_]
+        for input_ in inputs_:
+            if isinstance(input_, str):
+                parts += input_.split(JINJA_UNIQUE_MARKER)
+            else:
+                # input_ is a scope
+                for part in input_.parts:
+                    parts += str(part).split(JINJA_UNIQUE_MARKER)
+        return parts
+
+    def _default_comparator(a, b):
+        return 1 if a > b else -1
+
+    def sort_snippets(inputs_, cmp=_default_comparator, reverse=False):
+        parts = _split(inputs_)
+        return sorted(parts, key=cmp_to_key(cmp), reverse=reverse)
+
+    def unique_snippets(inputs_):
+        parts = _split(inputs_)
+        return set(parts)
+
+    def sort_python_code(source):
+        return sort_code_string(source).strip()
+
+    def make_doxygen_comment(comment):
+        if isinstance(comment, str):
+            comment = [comment]
+        lines = []
+        for line in comment:
+            lines += line.split('\n')
+        nl = '\n * '
+        if not lines or all((not line or line.isspace() for line in lines)):
+            return ''
+        start = '' if not lines[0] or lines[0].isspace() else nl
+        return f"""/**{start}{nl.join(lines)}\n */"""
+
+    def make_py_comment(comment):
+        nl = '\n'
+        if isinstance(comment, str):
+            comment = [comment]
+        lines = []
+        for line in comment:
+            lines += line.split(nl)
+        if not lines or all((not line or line.isspace() for line in lines)):
+            return ""
+        start = '' if not lines[0] or lines[0].isspace() else nl
+        return f'"""{start}{nl.join(lines)}{nl}"""'
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
@@ -226,6 +269,11 @@ def init_jinja_env():
     env.filters['to_camel_case'] = make_camel_case
     env.filters['join_unique'] = join_unique
     env.filters['replace_regex'] = replace_regex
+    env.filters['sort_snippets'] = sort_snippets
+    env.filters['unique_snippets'] = unique_snippets
+    env.filters['sort_python_code'] = sort_python_code
+    env.filters['make_doxygen_comment'] = make_doxygen_comment
+    env.filters['make_py_comment'] = make_py_comment
 
     env.tests['match_regexp'] = match_regexp
 

@@ -3,6 +3,8 @@ Helper codes for python conversion
 """
 import os
 
+from isort.api import sort_code_string
+
 from . import *
 
 OPERATOR_MAPPING = {
@@ -33,6 +35,8 @@ OPERATOR_MAPPING = {
     '[]': '__getitem__',
 }
 
+sort_imports = sort_code_string
+
 
 def is_first_overload(ctx):
     adjacents = ctx.find_adjacents([ctx.name], ctx.node.api)
@@ -47,22 +51,6 @@ def cxx_rel_path(filepath, cxx_filepath):
 def get_operator_name(spelling):
     operator = spelling.replace('operator', '').strip()
     return OPERATOR_MAPPING.get(operator, spelling)
-
-
-def make_comment(pure_comment):
-    if isinstance(pure_comment, str):
-        pure_comment = pure_comment.split(NEW_LINE)
-    if not pure_comment or all((not line or line.isspace() for line in pure_comment)):
-        return ""
-    start = '' if not pure_comment[0] or pure_comment[0].isspace() else NEW_LINE
-    return f'"""{start}{NEW_LINE.join(pure_comment)}{NEW_LINE}"""'
-
-
-def make_enum_case_comment(pure_comment):
-    nl = f'{NEW_LINE}# '
-    if not pure_comment:
-        return ""
-    return f'# {nl.join([c for c in pure_comment if c])}'
 
 
 def is_overloaded_cursor(ctx):

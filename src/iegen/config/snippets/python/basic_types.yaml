@@ -1,59 +1,59 @@
 void:
-  python:
-    type_info: None
-  pybind:
-    type_info: None
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind:
+  types:
+    python: None
+    pybind: None
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind:
 
 bool:
-  python:
-    type_info: bool
-  pybind:
-    type_info: bool
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: bool
+    pybind: bool
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 int:
-  python:
-    type_info: int
-  pybind:
-    type_info: int
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: int
+    pybind: int
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 unsigned int:
   long
 
 short:
-  python:
-    type_info: int
-  pybind:
-    type_info: int
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: int
+    pybind: int
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 long:
-  python:
-    type_info: int
-  pybind:
-    type_info: int
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: int
+    pybind: int
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 long long:
   long
@@ -62,23 +62,23 @@ unsigned long:
   long
 
 float:
-  python:
-    type_info: float
-  pybind:
-    type_info: float
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: float
+    pybind: float
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 double:
-  python:
-    type_info: float
-  pybind:
-    type_info: float
-  cxx_to_pybind:
-  pybind_to_cxx:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
+  types:
+    python: float
+    pybind: float
+  converters:
+    cxx_to_pybind:
+    pybind_to_cxx:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})

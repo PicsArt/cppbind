@@ -1,7 +1,7 @@
 import Wrapper
 
 // [stack-examples]
-let stackPrj = StackProject()
+let stackPrj = StackPrj()
 assert(stackPrj.empty())
 let prj = Project(title: "My Project")
 stackPrj.push(item: prj)
@@ -10,7 +10,7 @@ assert(stackPrj.top().title == prj.title)
 stackPrj.pop()
 assert(stackPrj.empty())
 
-let stackNumber = StackNumberInt()
+let stackNumber = StackNumInt()
 let num1 = NumberInt(n: 1)
 let num2 = NumberInt(n: 2)
 stackNumber.push(item: num1)
@@ -66,7 +66,7 @@ assert(component.absPath() == path + name)
 // [addressable-examples]
 
 // [wrapper-examples]
-let wrapperPair = WrapperPairStringString(value: ("first", "second"))
+let wrapperPair = WrapperPairStrings(value: ("first", "second"))
 assert(wrapperPair.value.0 == "first")
 assert(wrapperPair.value.1 == "second")
 wrapperPair.value = ("third", "fourth")

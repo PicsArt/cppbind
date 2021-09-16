@@ -292,28 +292,32 @@ class Converter:
 
     @property
     def template_suffix(self):
-        return Converter.gen_template_suffix(self.template_args, self.target_lang)
+        return self._get_suffix()
 
     @staticmethod
-    def gen_template_suffix(args, target_lang):
-        return ''.join([Converter._get_suffix(arg, target_lang) for arg in args])
+    def gen_template_suffix(template_arguments, target_lang):
+        return ''.join([Converter._get_name(getattr(arg, target_lang)) for arg in template_arguments])
 
-    @staticmethod
-    def _get_suffix(converter, target_language):
+    def _get_suffix(self):
         """
         Recursively retrieves template suffix for target language.
         For example for std::pair<std::string, std::string> it'll return PairStringString for kotlin.
         """
-        lang_converter = getattr(converter, target_language)
-        if converter.ctx:
-            # iegen generated types already contain suffix in their target type name
-            return lang_converter.target_type_name
-        if hasattr(lang_converter.custom, 'tname'):
-            name = lang_converter.custom.tname
+        if self.ctx:
+            if self.ctx.template_names:
+                return ''.join(self.ctx.template_names)
+        # if the type has no template names then generate suffix from converter tname or target_type_name
+        return Converter.gen_template_suffix(self.template_args, self.target_lang)
+
+    @staticmethod
+    def _get_name(converter):
+        if hasattr(converter.custom, 'tname'):
+            name = converter.custom.tname
         else:
-            name = lang_converter.target_type_name
+            name = converter.target_type_name
         for arg in converter.template_args:
-            name += Converter._get_suffix(arg, target_language)
+            arg_converter = getattr(arg, converter.target_lang)
+            name += Converter._get_name(arg_converter)
         return name
 
     def _make_context(self):
@@ -712,9 +716,11 @@ class SnippetsEngine:
         search_name = template_choice.get(search_name, search_name)
         logging.debug(f"Creating type converter for {search_name} "
                       f"and template choice {template_choice}")
-        type_info = self._create_type_info(ctx,
-                                           search_name,
-                                           cxx_type=cxx_type)
+        type_info = None
+        if not cxx_type.is_template:
+            type_info = self._create_type_info(ctx,
+                                               search_name,
+                                               cxx_type=cxx_type)
 
         if type_info is None:
             unqualified_name = lookup_type.unqualified_type_name
@@ -764,10 +770,17 @@ class SnippetsEngine:
                 if canonical_clang_type:
                     lookup_type = lookup_type.canonical_type
 
+                # at first search with full exposed name
                 type_info = self._create_type_info(ctx,
-                                                   lookup_type.template_type_name,
+                                                   lookup_type.type_name,
                                                    cxx_type=cxx_type,
                                                    template_args=tmpl_args)
+                if not type_info:
+                    # if not found with full name search without arguments
+                    type_info = self._create_type_info(ctx,
+                                                       lookup_type.template_type_name,
+                                                       cxx_type=cxx_type,
+                                                       template_args=tmpl_args)
                 return type_info
 
             canonical_type = lookup_type.canonical_type

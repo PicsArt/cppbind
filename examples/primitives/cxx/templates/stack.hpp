@@ -23,8 +23,10 @@ namespace iegen::example {
  * template:
  *   T:
  *     - type: iegen::example::Project
+ *       name: Prj
  *     - type: iegen::example::Task
  *     - type: iegen::example::Number<int>
+ *       name: NumInt
  * package: templates
  */
 template <class T>

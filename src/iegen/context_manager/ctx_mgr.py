@@ -15,7 +15,6 @@ from iegen.ir.ast import (
     FILE_KIND_NAME
 )
 
-ALL_LANGUAGES = sorted(list(default_config.languages))
 ALL_PLATFORMS = sorted(list(default_config.platforms))
 
 

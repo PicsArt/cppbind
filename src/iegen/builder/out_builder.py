@@ -5,9 +5,8 @@ to generated output.
 import copy
 import os
 
-from iegen import logging
+from iegen import logging, current_datetime
 from iegen.builder import is_output_changed, OUTPUT_MODIFICATION_KEY
-from iegen.utils import current_datetime
 
 TAB_STR = '    '
 
@@ -103,7 +102,7 @@ class Scope:
     def __str__(self):
 
         lines = [
-            (self.tab_str*self.tab)+s
+            (self.tab_str * self.tab) + s
             for s in self.parts_splitter.join(str(p) for p in self.parts).splitlines(keepends=True)
         ]
 

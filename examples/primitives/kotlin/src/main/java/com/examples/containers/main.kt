@@ -51,6 +51,35 @@ class ContainersApp {
             jsonUsage.setJson(jsonVal)
             assert(jsonUsage.getJson() == jsonVal)
             // [json-usage]
+
+            // [nested-containers-usage]
+            val nestedUsage = NestedExamples()
+            val nestedList = listOf(listOf(1, 2), listOf())
+            nestedUsage.setNestedIntVector(nestedList)
+            assert(nestedUsage.getNestedIntVector() == nestedList)
+
+            val nestedMap = mapOf(1 to mapOf(2 to 3, 3 to 4))
+            nestedUsage.setNestedIntMap(nestedMap)
+            assert(nestedUsage.getNestedIntMap() == nestedMap)
+
+            nestedUsage.mixedExampleWithManyArgs(nestedList, nestedList, nestedMap, nestedMap)
+
+            val listOfMaps = listOf(mapOf(1 to 1, 2 to 2), mapOf())
+            nestedUsage.setVectorOfIntMaps(listOfMaps)
+            assert(nestedUsage.getVectorOfIntMaps() == listOfMaps)
+
+            val mapOfLists = mapOf(1 to listOf(2, 3), 2 to listOf())
+            nestedUsage.setMapOfIntVectors(mapOfLists)
+            assert(nestedUsage.getMapOfIntVectors() == mapOfLists)
+
+            val complexList = listOf(listOf(listOf("a", "b")))
+            nestedUsage.setComplexStringVector(complexList)
+            assert(nestedUsage.getComplexStringVector() == complexList)
+
+            val complexMap = mapOf("a" to mapOf("b" to mapOf("c" to "d")))
+            nestedUsage.setComplexStringMap(complexMap)
+            assert(nestedUsage.getComplexStringMap() == complexMap)
+            // [nested-containers-usage]
        }
     }
 

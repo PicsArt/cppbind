@@ -147,19 +147,21 @@ def run_package():
     init_parser.set_defaults(func=init)
 
     # register run sub parser
-    plat_lang_choices = list(default_config.languages) + [plat + '.' + lang for plat in default_config.platforms
-                                                          for lang in default_config.languages]
     run_parser = sub_parser.add_parser('run', help='Run iegen to generate code for given languages.',
                                        parents=[parent_parser])
-    run_parser.add_argument('plat_lang_options',
-                            type=str,
-                            nargs='+',
-                            choices=plat_lang_choices,
-                            help='list of languages for which wrapper will be generated.')
 
     current_sub_parser_args = parent_parser.parse_known_args()[1]
     if current_sub_parser_args and current_sub_parser_args[0] == 'run':
         ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
+        all_languages = ctx_desc.get_deduced_languages()
+
+        plat_lang_choices = all_languages + [plat + '.' + lang for plat in default_config.platforms
+                                             for lang in all_languages]
+        run_parser.add_argument('plat_lang_options',
+                                type=str,
+                                nargs='+',
+                                choices=plat_lang_choices,
+                                help='list of languages for which wrapper will be generated.')
 
         # add arguments for setting context variables from command line
         for name, prop in ctx_desc.get_var_def().items():
@@ -168,9 +170,9 @@ def run_package():
                 var_desc = to_value(prop.get('description'))
 
                 plat_lang_options = [f"--{plat}.{lang}.{name}" for plat in default_config.platforms
-                                     for lang in default_config.languages]
+                                     for lang in all_languages]
                 plat_options = [f"--{plat}.{name}" for plat in default_config.platforms]
-                lang_options = [f"--{lang}.{name}" for lang in default_config.languages]
+                lang_options = [f"--{lang}.{name}" for lang in all_languages]
 
                 for option in plat_lang_options + plat_options + lang_options + [f"--{name}"]:
                     # suppress option help if it is not pure one (has plat/lang specifications)
@@ -181,7 +183,7 @@ def run_package():
                     elif var_type is dict:
                         run_parser.add_argument(option, help=var_help, type=json.loads)
                     elif var_type is bool:
-                        run_parser.add_argument(option, help=var_help, action='store')
+                        run_parser.add_argument(option, help=var_help, action='store_true')
                     else:
                         run_parser.add_argument(option, help=var_help, type=var_type)
 

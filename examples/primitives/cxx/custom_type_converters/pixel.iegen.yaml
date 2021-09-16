@@ -2,7 +2,7 @@ rules:
   kotlin.type_converters:
     iegen::example::Pixel:
       custom:
-        pname: Pixel
+        pname: Long
       kotlin:
         type_info: Pixel
       jni:

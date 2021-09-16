@@ -6,12 +6,9 @@ file:
       - include
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
-      import Foundation
-      import {{c_wrapper_lib_name}}
-      {{include}}
-
+      {{[include, 'import Foundation', 'import ' + c_wrapper_lib_name]|sort_snippets(cmp=helper.imports_comparator)|join(new_line)}}
       {{body}}
   cc:
     file_path: |
@@ -21,7 +18,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       #include <string.h>
       #include <memory>
@@ -37,7 +34,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       #ifndef _C_{{file}}_WRAPPER_
       #define _C_{{file}}_WRAPPER_
@@ -63,7 +60,7 @@ enum:
       public enum {{name}}: CUnsignedInt{{', ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
           {%- for case in enum_cases -%}
           {%- if case.comment %}
-          {{helper.make_enum_case_comment(case.comment)|string|indent(4)}}
+          {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           case {{case.name}} = {{case.value}}
           {%- endfor %}
@@ -99,7 +96,7 @@ class:
   swift:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join_unique}}
+        {{marker if include}}{{include|format_list("import {}")|join_unique}}
     body:
       scopes:
         - head
@@ -108,7 +105,7 @@ class:
         - private_external
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + ctx.bases_list -%}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         public class {{name}}{{template_suffix}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if ctx.is_exception and not helper.Exceptions.has_exc_base(ctx) -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
@@ -169,7 +166,7 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + ctx.bases_list -%}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         public protocol {{interface_name}}{{template_suffix}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
             {% if not base_types_converters %}
@@ -242,7 +239,7 @@ var_method_cxx_include: &var_method_cxx_include
 constructor:
   swift:
     head: |
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       public convenience init(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
@@ -292,7 +289,7 @@ constructor:
 function:
   swift:
     body: |
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       {%- if is_operator %}
       public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
@@ -348,7 +345,7 @@ function:
       }
     interface_body: |
       {%- set comma = joiner(', ') -%}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}}
   cc:
     include: *var_method_cxx_include
@@ -432,7 +429,7 @@ property_getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself);
@@ -449,7 +446,7 @@ property_getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
   cc:
     include: *var_getter_cxx_include
@@ -495,7 +492,7 @@ getter:
       {%- else %}
       {%- set _name = name %}
       {%- endif %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
       public {{'override ' if override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
@@ -513,7 +510,7 @@ getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:

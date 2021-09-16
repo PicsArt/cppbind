@@ -113,10 +113,6 @@ class CXXType:
                                              self.template_choice)
 
     @property
-    def original_type_name(self):
-        return self.type_ if isinstance(self.type_, str) else self.type_.spelling
-
-    @property
     def pointee_type(self):
         if isinstance(self.type_, cli.Type):
             return CXXType(self.type_.get_pointee(),
@@ -283,6 +279,10 @@ class Converter:
         return self.type_converter.target_type_name(self.context)
 
     @property
+    def source_type_name(self):
+        return self.type_converter.source_type_name(self.context)
+
+    @property
     def cxx_type_name(self):
         return self.cxx_type.type_name
 
@@ -436,9 +436,13 @@ class TargetTypeInfo:
 
 class TypeConvertorInfo(TargetTypeInfo):
 
-    def __init__(self, snippet_tmpl, *args, **kwargs):
+    def __init__(self, snippet_tmpl, source_type_info, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.source_type_info = source_type_info
         self.snippet_tmpl = snippet_tmpl
+
+    def source_type_name(self, context):
+        return self.source_type_info.render(context)
 
     def snippet(self, name, context):
         if self.snippet_tmpl:
@@ -492,9 +496,9 @@ class SnippetsEngine:
         self.jinja2_env = JINJA2_ENV
 
     def load(self):
-        self._load_actions(self.ctx_desc.get_action_snippets()[self.platform][self.language])
-        self._load_code_info(self.ctx_desc.get_code_snippets()[self.platform][self.language])
-        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.platform][self.language])
+        self._load_actions(self.ctx_desc.get_action_snippets()[self.language][self.platform])
+        self._load_code_info(self.ctx_desc.get_code_snippets()[self.language][self.platform])
+        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.language][self.platform])
 
     def do_actions(self, context):
         variables = {}
@@ -649,18 +653,24 @@ class SnippetsEngine:
                     # converter
                     index = name.rfind('_to_')
                     target_lang = name[index + 4:]
-                    tmpl = '{{cxx_type_name}}'
+                    source_lang = name[:index]
+                    target_tmpl = source_tmpl = '{{cxx_type_name}}'
                     if target_lang in info_map:
-                        tmpl = info_map[target_lang]['type_info'].value
+                        target_tmpl = info_map[target_lang]['type_info'].value
+                    if source_lang in info_map:
+                        source_tmpl = info_map[source_lang]['type_info'].value
+
                     try:
-                        target_type_info = self.jinja2_env.from_string(tmpl)
+                        target_type_info = self.jinja2_env.from_string(target_tmpl)
+                        source_type_info = self.jinja2_env.from_string(source_tmpl)
                         snippet_tmpl = info and self.jinja2_env.from_string(info.value)
                     except Exception as err:
                         Error.critical(f"Error in code snippets for {type_name}, "
                                        f"in converter {name}. Error {str(err)}")
                     target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
                                                     name=name,
-                                                    target_type_info=target_type_info)
+                                                    target_type_info=target_type_info,
+                                                    source_type_info=source_type_info)
                     type_converters[name] = target_info
                 elif name == 'custom':
                     # primitive type info

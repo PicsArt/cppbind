@@ -88,6 +88,8 @@ assert(pair1.second.name == student.name)
 assert(pair2.second.name == employee.name)
 // [pair-examples]
 
+component.close()
+addressableRoot.close()
 }
 
 class TemplatesApp {

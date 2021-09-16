@@ -1,0 +1,9 @@
+rules:
+  mac.python.code_snippets:
+    python_snippets_example: text
+  python.type_converters:
+    python_type_converters_example: text
+  swift.code_snippets:
+    swift_snippets_example: text
+  swift.type_converters:
+    swift_type_converters_example: text

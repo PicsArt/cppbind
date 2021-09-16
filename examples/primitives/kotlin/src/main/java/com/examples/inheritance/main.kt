@@ -35,6 +35,13 @@ assert(gf.parallelogram.getObjId() == rhombus.getObjId())
 val mv = MyVehicle(bicycle)
 mv.vehicle = bicycle
 
+// delete instances
+square.close()
+gf.close()
+mv.close()
+rhombus.close()
+bicycle.close()
+rectangle.close()
 }
 
 class InheritanceApp {

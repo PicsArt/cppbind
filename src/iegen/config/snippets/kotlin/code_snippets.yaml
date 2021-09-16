@@ -91,12 +91,13 @@ var_class_cxx: &var_class_cxx
   body:
     content: |
       {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
-      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
+      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, interface_class_name if action == 'gen_interface' else name,  template_suffix, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_type_name + '>').jni_to_cxx if root.shared_ref else converter.jni_to_cxx %}
+          {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_root_type_name + '>').jni_to_cxx if root.shared_ref else make_converter(cxx_root_type_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
           {%- if root.shared_ref %}
           {{jni_to_cxx_converter.converted_name('id')}}.reset();
+          delete &{{jni_to_cxx_converter.converted_name('id')}};
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}

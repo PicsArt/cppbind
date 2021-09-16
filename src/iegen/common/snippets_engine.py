@@ -113,10 +113,6 @@ class CXXType:
                                              self.template_choice)
 
     @property
-    def original_type_name(self):
-        return self.type_ if isinstance(self.type_, str) else self.type_.spelling
-
-    @property
     def pointee_type(self):
         if isinstance(self.type_, cli.Type):
             return CXXType(self.type_.get_pointee(),
@@ -173,7 +169,7 @@ class CXXType:
 
     @property
     def template_type_name(self):
-        return cutil.template_type_name(self.original_type_name)
+        return cutil.template_type_name(self.type_name)
 
     @property
     def is_lval_reference(self):
@@ -192,7 +188,7 @@ class CXXType:
 
     @property
     def unqualified_type_name(self):
-        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.original_type_name),
+        return cutil.replace_template_choice(cutil.get_unqualified_type_name(self.type_name),
                                              self.template_choice)
 
     @property

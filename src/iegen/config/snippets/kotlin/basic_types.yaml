@@ -5,22 +5,22 @@ void:
     type_info: void
   jdk:
     type_info: Unit
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
 bool:
   custom:
-    pname: Bool
+    pname: Boolean
   kotlin:
     type_info: Boolean
   jni:
     type_info: jboolean
   jdk:
     type_info: Boolean
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -33,14 +33,14 @@ int:
     type_info: jint
   jdk:
     type_info: Int
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
 unsigned int:
   custom:
-    pname: UInt
+    pname: Long
   kotlin:
     type_info: Long
   jni:
@@ -61,8 +61,8 @@ short:
     type_info: jshort
   jdk:
     type_info: Short
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -75,8 +75,8 @@ long:
     type_info: jlong
   jdk:
     type_info: Long
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -95,8 +95,8 @@ float:
     type_info: jfloat
   jdk:
     type_info: Float
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
@@ -109,14 +109,14 @@ double:
     type_info: jdouble
   jdk:
     type_info: Double
-  jni_to_cxx: 
-  cxx_to_jni: 
+  jni_to_cxx:
+  cxx_to_jni:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
 char:
   custom:
-    pname: "Char"
+    pname: Char
   kotlin:
     type_info: Char
   jni:

@@ -37,3 +37,4 @@ sphinx-tabs==3.0.0
 GitPython==3.1.17
 wheel==0.36.2
 twine==3.3.0
+isort==5.9.3

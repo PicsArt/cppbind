@@ -2,7 +2,7 @@ rules:
   kotlin.type_converters:
     iegen::example::Size:
       custom:
-        pname: SizeF
+        pname: Object
       kotlin:
         type_info: Point2D.Float
       jni:

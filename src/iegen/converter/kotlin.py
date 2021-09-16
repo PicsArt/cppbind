@@ -4,13 +4,6 @@ Helper codes for kotlin conversion
 from . import *
 
 
-def make_comment(pure_comment):
-    return make_doxygen_comment(pure_comment)
-
-def make_enum_case_comment(pure_comment):
-    return make_comment(pure_comment)
-
-
 def arg_str(type_name, name, default=None, **kwargs):
     arg_str = name + ': ' + type_name
     if default:

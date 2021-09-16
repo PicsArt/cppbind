@@ -1,5 +1,5 @@
 rules:
-  code_snippets:
+  python.code_snippets:
     a:
       # redefinition of key which is already defined in ./rules_1.yaml file
       b: 1

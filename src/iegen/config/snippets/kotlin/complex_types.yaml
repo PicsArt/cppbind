@@ -75,7 +75,7 @@ $Enum:
 
 const char *:
   custom:
-    pname: "Object"
+    pname: Object
   kotlin:
     type_info: String
   jni:
@@ -97,7 +97,7 @@ const char *:
 
 std::__cxx11::basic_string:
   custom:
-    pname: "Object"
+    pname: Object
   kotlin:
     type_info: String
   jni:
@@ -114,16 +114,15 @@ std::__cxx11::basic_string:
   kotlin_to_jdk:
   jdk_to_kotlin:
 
-
 std::vector:
   custom:
-    pname: "Object"
+    pname: Object
   kotlin:
     type_info: "List<{{args_t[0]}}>"
   jni:
     type_info: "{{args_t[0] if args[0].custom.pname != 'Object' else 'jobject'}}Array"
   jdk:
-    type_info: "{{args_t[0]}}Array"
+    type_info: "{{args[0].custom.pname}}Array"
   jni_to_cxx: |
     {%- set tmp_name = '_' + target_name %}
     {%- set jni_array_get = 'iegen::get{}Array'.format(args[0].custom.pname) %}
@@ -136,7 +135,7 @@ std::vector:
 
   cxx_to_jni: |
     {%- set jni_type_prefix = args[0].custom.pname %}
-    {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else  'SetObjectArrayElement' -%}
+    {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else 'SetObjectArrayElement' -%}
 
     {%- if jni_type_prefix != 'Object' %}
     {{target_type_name}} {{target_name}} = env->New{{args[0].custom.pname}}Array({{name}}.size());
@@ -155,7 +154,7 @@ std::vector:
     }
 
   kotlin_to_jdk: |
-    {%- set array_init = '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
+    {%- set array_init = '' if args[0].custom.pname != 'Object' else '{ Any() }' %}
     val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
     var index_{{name}} = 0
     for (value_{{name}} in {{name}}) {
@@ -166,19 +165,24 @@ std::vector:
   jdk_to_kotlin: |
     val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
     for (value_{{name}} in {{name}}) {
-        {{args[0].snippet('value_{}'.format(name))|indent}}
-        {{target_name}}.add({{args[0].converted_name('value_{}'.format(name))}})
+        {%- set var_name = 'value_' + name %}
+        {%- if args[0].custom.pname == "Object" %}
+        {%- set var_name = 'actual_' + var_name %}
+        @Suppress("UNCHECKED_CAST") val actual_value_{{name}} = value_{{name}} as {{args[0].source_type_name}}
+        {%- endif %}
+        {{args[0].snippet(var_name)|indent}}
+        {{target_name}}.add({{args[0].converted_name(var_name)}})
     }
 
 std::map:
   custom:
-    pname: "Object"
+    pname: Object
   kotlin:
     type_info: "Map<{{args_t[0]}}, {{args_t[1]}}>"
   jni:
-    type_info: "jmapobject"
+    type_info: jmapobject
   jdk:
-    type_info: "Pair<{{args_t[0]}}Array, {{args_t[1]}}Array>"
+    type_info: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
   jni_to_cxx: |
     {%- set tmp_name = '_' + target_name %}
     {%- set tmp_key_name = 'tmp_key_' + target_name %}
@@ -235,10 +239,10 @@ std::map:
   kotlin_to_jdk: |
     {%- set tmp_key_name = 'tmp_key_' + target_name %}
     {%- set tmp_val_name = 'tmp_val_' + target_name %}
-    {%- set karray_init =  '' if args[0].custom.pname != 'Object' else '{{ {}() }}'.format(args[0].target_type_name) %}
-    {%- set varray_init =  '' if args[1].custom.pname != 'Object' else '{{ {}() }}'.format(args[1].target_type_name) %}
-    val {{tmp_key_name}} = {{args[0].target_type_name}}Array({{name}}.size) {{karray_init}}
-    val {{tmp_val_name}} = {{args[1].target_type_name}}Array({{name}}.size) {{varray_init}}
+    {%- set karray_init = '' if args[0].custom.pname != 'Object' else '{ Any() }' %}
+    {%- set varray_init = '' if args[1].custom.pname != 'Object' else '{ Any() }' %}
+    val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size) {{karray_init}}
+    val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size) {{varray_init}}
     val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
     var index_{{name}} = 0
     for ((key_{{name}}, value_{{name}}) in {{name}}) {
@@ -251,12 +255,20 @@ std::map:
 
   jdk_to_kotlin: |
     val {{target_name}} = HashMap<{{args_t[0]}}, {{args_t[1]}}>()
-    for (i in 0..{{name}}.first.size - 1) {
-        val elem1_{{name}} = {{name}}.first.get(i)
-        val elem2_{{name}} = {{name}}.second.get(i)
+    for (i_{{name}} in 0..{{name}}.first.size - 1) {
+        {%- if args[0].custom.pname == 'Object' %}
+        @Suppress("UNCHECKED_CAST") val elem1_{{name}} = {{name}}.first.get(i_{{name}}) as {{args[0].source_type_name}}
+        {%- else %}
+        val elem1_{{name}} = {{name}}.first.get(i_{{name}})
+        {%- endif %}
+        {%- if args[1].custom.pname == 'Object' %}
+        @Suppress("UNCHECKED_CAST") val elem2_{{name}} = {{name}}.second.get(i_{{name}}) as {{args[1].source_type_name}}
+        {%- else %}
+        val elem2_{{name}} = {{name}}.second.get(i_{{name}})
+        {%- endif %}
         {{args[0].snippet('elem1_{}'.format(name))|indent}}
         {{args[1].snippet('elem2_{}'.format(name))|indent}}
-        jdk_to_kotlin_result.put({{args[0].converted_name('elem1_{}'.format(name))}}, {{args[1].converted_name('elem2_{}'.format(name))}})
+        {{target_name}}.put({{args[0].converted_name('elem1_{}'.format(name))}}, {{args[1].converted_name('elem2_{}'.format(name))}})
     }
 
 

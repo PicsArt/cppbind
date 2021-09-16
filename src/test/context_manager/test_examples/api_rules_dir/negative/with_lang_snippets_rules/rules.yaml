@@ -1,0 +1,5 @@
+rules:
+  python.code_snippets:
+    key: value
+  swift.type_converters:
+    key: value

@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 import yaml
 
+from iegen.common.error import IEGError
 from iegen.common.yaml_process import YamlNode, YamlKeyDuplicationError, yaml_info_struct_to_dict
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.ir.ast import RootNode
@@ -106,8 +107,21 @@ class TestContextDescriptor(unittest.TestCase):
         context_def_glob = os.path.join(self.positive_rules_dir, 'with_snippets_rules', '*.yaml')
         res = yaml_info_struct_to_dict(self.ctx_desc.build_ctx_def_map(context_def_glob))
 
-        self.assertEqual(res['code_snippets'], {}, 'External API parser results has bean changed.')
-        self.assertEqual(res['actions'], {}, 'External API parser results has bean changed.')
-        self.assertEqual(res['type_converters']['linux']['python'],
+        self.assertEqual(res.get('code_snippets'), None, 'External API parser results has bean changed.')
+        self.assertEqual(res.get('actions'), None, 'External API parser results has bean changed.')
+        self.assertEqual(res['type_converters']['python']['linux'],
                          {'a': {'f': {'g': {'h': 1}}, 'b': {'c': {'e': 1, 'd': ['e', 'f']}}}},
                          'External API parser results has bean changed.')
+
+    def test_getting_languages_from_snippets_rules(self):
+        context_def_glob = os.path.join(self.positive_rules_dir, 'with_lang_snippets_rules', '*.yaml')
+        ctx_desc = ContextDescriptor(context_def_glob)
+        ctx_desc.build_ctx_def_map(context_def_glob)
+        assert ctx_desc.orig_validate_and_deduce_languages() == ['python', 'swift']
+
+    def test_snippets_rules_validation_negative(self):
+        context_def_glob = os.path.join(self.negative_rules_dir, 'with_lang_snippets_rules', '*.yaml')
+        ctx_desc = ContextDescriptor(context_def_glob)
+        ctx_desc.build_ctx_def_map(context_def_glob)
+        with self.assertRaises(IEGError):
+            ctx_desc.orig_validate_and_deduce_languages()

@@ -86,24 +86,14 @@ var_class_cxx: &var_class_cxx
   body:
     content: |
       {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
-      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, name, template_suffix, 'jFinalize') %}
+      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, interface_class_name if action == 'gen_interface' else name,  template_suffix, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
+          {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_root_type_name + '>').jni_to_cxx if root.shared_ref else make_converter(cxx_root_type_name).jni_to_cxx %}
+          {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
           {%- if root.shared_ref %}
-          {%- if cxx_root_type_name != cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{cxx_type_name}}>(baseptr);
+          delete &{{jni_to_cxx_converter.converted_name('id')}};
           {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{cxx_type_name}}>*>(id);
-          {%- endif %}
-          delete &this_object;
-          {%- else %}
-          {%- if cxx_root_type_name != cxx_type_name %}
-          {{cxx_root_type_name}}* baseptr = reinterpret_cast<{{cxx_root_type_name}}*>(id);
-          {{cxx_type_name}}* this_object = dynamic_cast<{{cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{cxx_type_name}}* this_object = reinterpret_cast<{{cxx_type_name}}*>(id);
-          {%- endif %}
-          delete this_object;
+          delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}
       }
       {%- endif %}
@@ -476,16 +466,16 @@ function:
       {%- endif -%}
       {% if rconverter.jni.target_type_name != 'void' %}
       try {
-        auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
-                                            <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                            {%- endif -%}({{call_args|join(', ')}});
-        {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)}}
-        return {{rconverter.cxx_to_jni.converted_name('result')}};
+          auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
+                                              <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                              {%- endif -%}({{call_args|join(', ')}});
+          {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
+          return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- else %}
       try {
-        {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
-        return;
+          {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
+          return;
       }
       {%- endif %}
       {%- if helper.Exceptions.can_throw(throws) %}
@@ -527,22 +517,9 @@ function:
           {{args_snippet(args, call_args)|indent(4)}}
           {%- if not is_static %}
           validateID(id);
-          {%- if owner_class.root.shared_ref %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
-          {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
-          {%- endif %}
-          {%- else %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
-          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
-          {%- endif %}
-          {%- endif %}
-          {{call_code("this_object->", call_args)|indent(4)}}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
+          {{call_code(this_converter.converted_name('id') + "->", call_args)|indent(4)}}
           {%- else %}
           {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(4)}}
           {%- endif %}
@@ -628,22 +605,9 @@ property_getter:
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- if owner_class.root.shared_ref %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
-          {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
-          {%- endif %}
-          {%- else %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
-          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
-          {%- endif %}
-          {%- endif %}
-          auto result = this_object->{{cxx_name}};
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
+          auto result = {{this_converter.converted_name('id')}}->{{cxx_name}};
           {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
@@ -652,24 +616,10 @@ property_getter:
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           validateID(id);
-          {%- if owner_class.root.shared_ref %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
-          {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
-          {%- endif %}
-          {%- else %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
-          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
-          {%- endif %}
-          {%- endif %}
+          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           {% set converter = rconverter.jni_to_cxx %}
           {{converter.snippet('value', nullable=nullable_return)|indent(4)}}
-          this_object->{{cxx_name}} = {{converter.converted_name('value')}};
+          {{this_converter.converted_name('id')}}->{{cxx_name}} = {{converter.converted_name('value')}};
       }
       {% endif %}
 
@@ -735,8 +685,8 @@ getter:
     include: *var_getter_cxx_include
     body: |
       {%- macro gen_exc_try_block() -%}
-          {%- if helper.Exceptions.can_throw(throws) %}
-          {%- for exc_type in throws -%}
+      {%- if helper.Exceptions.can_throw(throws) %}
+      {%- for exc_type in throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
               jclass excCls = env->FindClass("{{[ctx.lookup_ctx_by_name(exc_type).package_prefix, ctx.lookup_ctx_by_name(exc_type).package, ctx.lookup_ctx_by_name(exc_type).name]|map('replace', '.', pat_sep)|path_join}}");
@@ -744,15 +694,15 @@ getter:
               jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
               env->Throw(jthrowable(excObj));
           }
-          {%- endfor %}
-          {%- endif %}
-          {%- if not 'std::exception' in throws %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if not 'std::exception' in throws %}
           catch (const std::exception& e) {
               jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
           }
-          {%- endif %}
+      {%- endif %}
           catch (...) {
               jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
@@ -772,26 +722,13 @@ getter:
       {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- if owner_class.root.shared_ref %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
-          {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
-          {%- endif %}
-          {%- else %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
-          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
-          {%- endif %}
-          {%- endif %}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx %}
+          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;
-          {%- endif -%}
+          {%- endif %}
           try {
-              auto result = this_object->{{cxx_name}}{{template_args}}();
+              auto result = {{this_converter.converted_name('id')}}->{{cxx_name}}{{template_args}}();
               {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
@@ -805,28 +742,14 @@ getter:
       {%- set jni_setter_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
       extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
           validateID(id);
-          {%- if owner_class.root.shared_ref %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          auto baseptr = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(id);
-          auto this_object = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(baseptr);
-          {%- else %}
-          auto this_object = *reinterpret_cast<std::shared_ptr<{{owner_class.cxx_type_name}}>*>(id);
-          {%- endif %}
-          {%- else %}
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          {{owner_class.cxx_root_type_name}}* baseptr = reinterpret_cast<{{owner_class.cxx_root_type_name}}*>(id);
-          {{owner_class.cxx_type_name}}* this_object = dynamic_cast<{{owner_class.cxx_type_name}}*>(baseptr);
-          {%- else %}
-          {{owner_class.cxx_type_name}}* this_object = reinterpret_cast<{{owner_class.cxx_type_name}}*>(id);
-          {%- endif %}
-          {%- endif %}
+          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
           {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
           {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
           {%- if helper.Exceptions.can_throw(throws) %}
           void* err_ptr = nullptr;
-          {%- endif -%}
+          {%- endif %}
           try {
-              this_object->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
+             {{this_converter.converted_name('id')}}->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
           }
           {{gen_exc_try_block()}}
       }

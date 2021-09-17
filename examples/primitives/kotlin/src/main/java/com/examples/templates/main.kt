@@ -56,7 +56,8 @@ assert(addressableRoot.absPath() == path + name)
 val component = Component(root, name)
 assert(component.absPath() == path + name)
 // [addressable-examples]
-
+component.close()
+addressableRoot.close()
 }
 
 class TemplatesApp {

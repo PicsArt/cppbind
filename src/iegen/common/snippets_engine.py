@@ -437,6 +437,13 @@ class FileScopeInfo(ScopeInfo):
 
 
 class SnippetsEngine:
+    TARGET_KEY = 'target'
+    SOURCE_KEY = 'source'
+    SNIPPET_KEY = 'snippet'
+    CUSTOM_KEY = 'custom'
+    TYPES_KEY = 'types'
+    CONVERTERS_KEY = 'converters'
+
     def __init__(self, ctx_desc, platform, language):
         self.platform = platform
         self.language = language
@@ -604,7 +611,7 @@ class SnippetsEngine:
 
             # iterate over all sections: 'custom', 'types', 'converters'
             for section_key, section_val in info_map.items():
-                if section_key == 'converters':
+                if section_key == SnippetsEngine.CONVERTERS_KEY:
                     # converter
                     for name, info in section_val.items():
                         target_lang = source_lang = None
@@ -614,16 +621,16 @@ class SnippetsEngine:
                             source_lang = name[:index]
 
                         if info.is_of_type(dict):
-                            target_lang = to_value(info.get('target', target_lang))
-                            source_lang = to_value(info.get('source', source_lang))
+                            target_lang = to_value(info.get(SnippetsEngine.TARGET_KEY, target_lang))
+                            source_lang = to_value(info.get(SnippetsEngine.SOURCE_KEY, source_lang))
 
                         target_tmpl = source_tmpl = None
                         if target_lang and source_lang:
                             target_tmpl = source_tmpl = '{{cxx_type_name}}'
-                            if target_lang in info_map['types']:
-                                target_tmpl = info_map['types'][target_lang].value
-                            if source_lang in info_map['types']:
-                                source_tmpl = info_map['types'][source_lang].value
+                            if target_lang in info_map[SnippetsEngine.TYPES_KEY]:
+                                target_tmpl = info_map[SnippetsEngine.TYPES_KEY][target_lang].value
+                            if source_lang in info_map[SnippetsEngine.TYPES_KEY]:
+                                source_tmpl = info_map[SnippetsEngine.TYPES_KEY][source_lang].value
 
                         try:
                             target_type_info = source_type_info = None
@@ -631,7 +638,7 @@ class SnippetsEngine:
                                 target_type_info = self.jinja2_env.from_string(target_tmpl)
                                 source_type_info = self.jinja2_env.from_string(source_tmpl)
                             snippet_tmpl = info and self.jinja2_env.from_string(
-                                info['snippet'].value if info.is_of_type(dict) else info.value)
+                                info[SnippetsEngine.SNIPPET_KEY].value if info.is_of_type(dict) else info.value)
                         except Exception as err:
                             Error.critical(f"Error in code snippets for {type_name}, "
                                            f"in converter {name}. Error {str(err)}")
@@ -644,7 +651,7 @@ class SnippetsEngine:
                                                             target_type_info=target_type_info,
                                                             source_type_info=source_type_info)
                             type_converters[key_name] = target_info
-                elif section_key == 'custom':
+                elif section_key == SnippetsEngine.CUSTOM_KEY:
                     # primitive type info
                     custom = SimpleNamespace(**{k: v.value for k, v in section_val.items()})
                 else:

@@ -3,31 +3,30 @@ rules:
     iegen::example::Buffer:
       custom:
         pname: Buffer
-      kotlin:
-        type_info: "Buffer{{template_suffix}}"
-      jni:
-        type_info: jobjectid
-      jdk:
-        type_info: Long
-      jni_to_cxx: |
-        auto {{target_name}} = {{'*' if not is_pointer}}reinterpret_cast<{{cxx_pointee_unqualified_name}}*>({{name}});
-      cxx_to_jni: |
-        {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not is_pointer}}{{name}});
-      kotlin_to_jdk:
-        val {{target_name}} = {{name}}.getObjId()
-      jdk_to_kotlin:
-        val {{target_name}} = {{target_type_name}}({{name}})
+      types:
+        kotlin: "Buffer{{template_suffix}}"
+        jni: jobjectid
+        jdk: Long
+      converters:
+        jni_to_cxx: |
+          auto {{target_name}} = {{'*' if not is_pointer}}reinterpret_cast<{{cxx_pointee_unqualified_name}}*>({{name}});
+        cxx_to_jni: |
+          {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not is_pointer}}{{name}});
+        kotlin_to_jdk:
+          val {{target_name}} = {{name}}.getObjId()
+        jdk_to_kotlin:
+          val {{target_name}} = {{target_type_name}}({{name}})
 
   python.type_converters:
     iegen::example::Buffer:
       custom:
         pname: Buffer
-      python:
-        type_info: Buffer
-      pybind:
-        type_info: Buffer
-      cxx_to_pybind:
-        py::module_::import("pybind_buffer").attr("Buffer");
-      pybind_to_cxx:
-      python_to_pybind:
-      pybind_to_python:
+      types:
+        python: Buffer
+        pybind: Buffer
+      converters:
+        cxx_to_pybind:
+          py::module_::import("pybind_buffer").attr("Buffer");
+        pybind_to_cxx:
+        python_to_pybind:
+        pybind_to_python:

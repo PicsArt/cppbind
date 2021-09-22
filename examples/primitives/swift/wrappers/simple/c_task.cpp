@@ -31,6 +31,6 @@ char* _Nonnull _prop_get_Task_title(void* _Nonnull cself){
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<iegen::example::Task*>(static_cast<iegen::example::Task*>(cself));
     auto result = c_to_cxx_cself->title();
-    auto cxx_to_c_result = strdup(result.c_str()); 
+    auto cxx_to_c_result = strdup(result.c_str());
     return cxx_to_c_result;
 }

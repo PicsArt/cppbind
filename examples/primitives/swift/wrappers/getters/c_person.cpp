@@ -34,7 +34,7 @@ char* _Nonnull _prop_get_Person_fullName(void* _Nonnull cself){
     std::shared_ptr<iegen::example::Person> c_to_cxx_cself;
     c_to_cxx_cself = std::dynamic_pointer_cast<iegen::example::Person>(*static_cast<std::shared_ptr<iegen::example::Person>*>(cself));
     auto result = c_to_cxx_cself->fullName();
-    auto cxx_to_c_result = strdup(result.c_str()); 
+    auto cxx_to_c_result = strdup(result.c_str());
     return cxx_to_c_result;
 }
 
@@ -51,7 +51,7 @@ char* _Nonnull _prop_get_Person_email(void* _Nonnull cself){
     std::shared_ptr<iegen::example::Person> c_to_cxx_cself;
     c_to_cxx_cself = std::dynamic_pointer_cast<iegen::example::Person>(*static_cast<std::shared_ptr<iegen::example::Person>*>(cself));
     auto result = c_to_cxx_cself->_email;
-    auto cxx_to_c_result = strdup(result.c_str()); 
+    auto cxx_to_c_result = strdup(result.c_str());
     return cxx_to_c_result;
 }
 int _prop_get_Person_age(void* _Nonnull cself){

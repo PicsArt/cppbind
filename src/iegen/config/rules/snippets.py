@@ -6,16 +6,15 @@ import types
 import clang.cindex as cli
 import iegen
 import iegen.converter
-from iegen.utils import DefaultValueKind
 import iegen.utils.clang as cutil
 from iegen import find_prj_dir
 from iegen.common.error import Error
 from iegen.common.snippets_engine import (
-    ENUM_INFO_TYPE,
     JINJA_UNIQUE_MARKER,
-    OBJECT_INFO_TYPE,
-    SnippetsEngine
+    SnippetsEngine,
+    CXXType
 )
+from iegen.utils import DefaultValueKind
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -75,6 +74,10 @@ def make_def_context(ctx):
         marker = JINJA_UNIQUE_MARKER
         banner_logo = iegen.BANNER_LOGO
         new_line = iegen.converter.NEW_LINE
+
+        def make_converter(type_name, template_choice=None):
+            return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
+                                                                     template_choice))
         return locals()
 
     context = make()
@@ -110,8 +113,8 @@ def make_func_context(ctx):
         args = [
             types.SimpleNamespace(
                 converter=SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                               arg.type,
-                                                               template_choice=ctx.template_choice),
+                                                               CXXType(type_=arg.type,
+                                                                       template_choice=ctx.template_choice)),
                 name=arg.name,
                 default=arg.default.value,
                 cursor=arg.cursor,
@@ -123,12 +126,12 @@ def make_func_context(ctx):
                 is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
                 is_literal=arg.default.kind == DefaultValueKind.LITERAL,
                 is_null_ptr=arg.default.kind == DefaultValueKind.NULL_PTR,
-                pointee_type=cutil.get_pointee_type(arg.type)
             ) for arg in ctx.args
         ]
 
         if hasattr(ctx, 'result_type'):
-            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.result_type, template_choice=ctx.template_choice)
+            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.result_type,
+                                                                           template_choice=ctx.template_choice))
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
@@ -166,7 +169,7 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
-        cxx_type_name = ctx.node.type_name()
+        cxx_type_name = ctx.cxx_type_name
         return locals()
 
     context = make_clang_context(ctx)
@@ -180,16 +183,18 @@ def make_class_context(ctx):
             # helper variables
             template_suffix = get_template_suffix(ctx, LANGUAGE)
             is_open = not cutil.is_final_cursor(ctx.cursor)
-            cxx_type_name = ctx.node.type_name(ctx.template_choice)
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type,
-                                                             template_choice=ctx.template_choice,
-                                                             search_name=ctx.node.full_displayname
-                                                             if ctx.cursor.type.kind == cli.TypeKind.INVALID
-                                                             else None)
-            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, base_type, ctx.template_choice)
+            cxx_type_name = ctx.cxx_type_name
+
+            # for cases when type kind is invalid clang type does not give enough information
+            # for such cases we use string type name
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                             CXXType(type_=cxx_type_name,
+                                                                     template_choice=ctx.template_choice))
+
+            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
 
-            cxx_root_type_name = ctx.node.root_type_name(template_choice=ctx.template_choice)
+            cxx_root_type_name = getattr(converter, LANGUAGE).cxx_root_type_name
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
 
@@ -236,7 +241,8 @@ def make_getter_context(ctx):
 def make_member_context(ctx):
     def make():
         # helper variables
-        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, ctx.cursor.type, template_choice=ctx.template_choice)
+        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.cursor.type,
+                                                                       template_choice=ctx.template_choice))
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
@@ -255,19 +261,8 @@ def get_template_suffix(ctx, target_language):
         for t in template_types:
             search_name = template_choice[t]
 
-            ref_ctx = ctx.find_by_type(search_name)
-            if ref_ctx is not None:
-                if ctx.cursor.type.kind == cli.TypeKind.ENUM:
-                    search_name = ENUM_INFO_TYPE
-                else:
-                    search_name = OBJECT_INFO_TYPE
-
-            type_converter = SNIPPETS_ENGINE.get_type_info(search_name)
-            if not type_converter:
-                raise KeyError(f"Can not find type for {search_name}")
-            type_converter = type_converter.make_converter(ctx.cursor.type, ref_ctx,
-                                                           template_choice=template_choice)
-
+            type_converter = SNIPPETS_ENGINE.build_type_converter(ctx,
+                                                                  CXXType(search_name, ctx.template_choice))
             args_names.append(getattr(type_converter, target_language).target_type_name)
 
     return ''.join(args_names)

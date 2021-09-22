@@ -2,28 +2,27 @@ rules:
   kotlin.type_converters:
     iegen::example::Pixel:
       custom:
-        pname: Pixel
-      kotlin:
-        type_info: Pixel
-      jni:
-        type_info: jobjectid
-      jdk:
-        type_info: Long
-      jni_to_cxx:
-      cxx_to_jni:
-      kotlin_to_jdk:
-      jdk_to_kotlin:
+        pname: Long
+      types:
+        kotlin: Pixel
+        jni: jobjectid
+        jdk: Long
+      converters:
+        jni_to_cxx:
+        cxx_to_jni:
+        kotlin_to_jdk:
+        jdk_to_kotlin:
 
   python.type_converters:
     iegen::example::Pixel:
       custom:
         pname: Pixel
-      python:
-        type_info: Pixel
-      pybind:
-        type_info: Pixel
-      cxx_to_pybind:
-        py::module_::import("pybind_pixel").attr("Pixel");
-      pybind_to_cxx:
-      python_to_pybind:
-      pybind_to_python:
+      types:
+        python: Pixel
+        pybind: Pixel
+      converters:
+        cxx_to_pybind:
+          py::module_::import("pybind_pixel").attr("Pixel");
+        pybind_to_cxx:
+        python_to_pybind:
+        pybind_to_python:

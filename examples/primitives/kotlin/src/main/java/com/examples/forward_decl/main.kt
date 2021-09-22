@@ -33,6 +33,14 @@ val student4 = Student(listOf(teacher1, teacher2))
 
 assert(student3.teachers().size == 1)
 assert(student4.teachers().size == 2)
+
+// deallocate memory
+teacher1.close()
+teacher2.close()
+student1.close()
+student2.close()
+student3.close()
+student4.close()
 }
 
 class ForwardDeclsApp {

@@ -6,12 +6,9 @@ file:
       - include
       - body
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
-      import Foundation
-      import {{c_wrapper_lib_name}}
-      {{include}}
-
+      {{[include, 'import Foundation', 'import ' + c_wrapper_lib_name]|sort_snippets(cmp=helper.imports_comparator)|join(new_line)}}
       {{body}}
   cc:
     file_path: |
@@ -21,7 +18,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       #include <string.h>
       #include <memory>
@@ -37,7 +34,7 @@ file:
       - body
       - include
     content: |
-      {{helper.make_doxygen_comment((banner_logo + new_line + banner_comment).split(new_line))}}
+      {{[banner_logo, banner_comment]|make_doxygen_comment}}
 
       #ifndef _C_{{file}}_WRAPPER_
       #define _C_{{file}}_WRAPPER_
@@ -63,7 +60,7 @@ enum:
       public enum {{name}}: CUnsignedInt{{', ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
           {%- for case in enum_cases -%}
           {%- if case.comment %}
-          {{helper.make_enum_case_comment(case.comment)|string|indent(4)}}
+          {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           case {{case.name}} = {{case.value}}
           {%- endfor %}
@@ -99,7 +96,7 @@ class:
   swift:
     include:
       unique_content: |
-        {{include|format_list("import {}")|join_unique}}
+        {{marker if include}}{{include|format_list("import {}")|join_unique}}
     body:
       scopes:
         - head
@@ -108,7 +105,7 @@ class:
         - private_external
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + ctx.bases_list -%}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         public class {{name}}{{template_suffix}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if ctx.is_exception and not helper.Exceptions.has_exc_base(ctx) -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
@@ -169,7 +166,7 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + ctx.bases_list -%}
-        {{helper.make_comment(comment)}}
+        {{comment|make_doxygen_comment}}
         public protocol {{interface_name}}{{template_suffix}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
             {% if not base_types_converters %}
@@ -242,7 +239,7 @@ var_method_cxx_include: &var_method_cxx_include
 constructor:
   swift:
     head: |
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       public convenience init(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
@@ -292,7 +289,7 @@ constructor:
 function:
   swift:
     body: |
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       {%- if is_operator %}
       public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
@@ -348,7 +345,7 @@ function:
       }
     interface_body: |
       {%- set comma = joiner(', ') -%}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}}
   cc:
     include: *var_method_cxx_include
@@ -364,26 +361,23 @@ function:
           {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
         {%- do call_args.append(converter.converted_name(arg.name))%}
         {% endfor %}
+        {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').c_to_cxx if owner_class.root.shared_ref else owner_class.converter.c_to_cxx -%}
         {%- if not is_static %}
-          {%- if owner_class.root.shared_ref %}
-          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                    );
-          {%- else %}
-          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
-          {%- endif %}
+          {{this_converter.snippet('cself', is_pointer=True)|indent(4)}}
         {%- endif %}
 
         {%- if rconverter.c.target_type_name != 'void' %}
           try {
-            const auto& result = {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}{%- if ctx.node.is_function_template -%}
-                                                                      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
-            {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
-            return {{rconverter.cxx_to_c.converted_name('result')}};
+              const auto& result = {%if not is_static %}{{this_converter.converted_name('cself')}}->
+                                   {%- else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}
+                                   {%- if ctx.node.is_function_template -%}
+                                   <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
+              {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent(8)}}
+              return {{rconverter.cxx_to_c.converted_name('result')}};
           }
         {%- else %}
           try {
-              {%if not is_static %}c_to_cxx_cself->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
+              {%if not is_static %}{{this_converter.converted_name('cself')}}->{%else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}({{call_args|join(', ')}});
           }
         {%- endif %}
         {%- if helper.Exceptions.can_throw(throws) %}
@@ -435,7 +429,7 @@ property_getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
               let result = _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself)
@@ -452,21 +446,16 @@ property_getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get {% if ctx.action == 'gen_property_setter' %}set{% endif %} }
   cc:
     include: *var_getter_cxx_include
     body: |
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
-          {%- if owner_class.root.shared_ref %}
-          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                    );
-          {%- else %}
-          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
-          {%- endif %}
-          auto result = c_to_cxx_cself->{{cxx_name}};
-          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').c_to_cxx if owner_class.root.shared_ref else owner_class.converter.c_to_cxx -%}
+          {{this_converter.snippet('cself', is_pointer=True)|indent(4)}}
+          auto result = {{this_converter.converted_name('cself')}}->{{cxx_name}};
+          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if ctx.action == 'gen_property_setter' %}
@@ -476,10 +465,10 @@ property_getter:
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
                     );
           {%- else %}
-          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {{this_converter.snippet('cself', is_pointer=True)|indent(4)}}
           {%- endif %}
-          {{rconverter.c_to_cxx.snippet(name, nullable=nullable_return)|indent}}
-          c_to_cxx_cself->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
+          {{rconverter.c_to_cxx.snippet(name, nullable=nullable_return)|indent(4)}}
+          {{this_converter.converted_name('cself')}}->{{cxx_name}} = {{rconverter.c_to_cxx.converted_name(name)}};
       }
       {% endif %}
   ch:
@@ -503,7 +492,7 @@ getter:
       {%- else %}
       {%- set _name = name %}
       {%- endif %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       {% set override = is_override and not (original_definition_context and original_definition_context.action == 'gen_interface') -%}
       public {{'override ' if override}}var {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
@@ -521,7 +510,7 @@ getter:
       }
     interface_properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {{helper.make_comment(comment)}}
+      {{comment|make_doxygen_comment}}
       var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} { get{% if setter_ctx is defined %} set{% endif %}
       }
   cc:
@@ -533,15 +522,10 @@ getter:
       {%- set template_args = '' %}
       {%- endif %}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}{{overloading_prefix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
-          {%- if owner_class.root.shared_ref %}
-          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
-                    );
-          {%- else %}
-          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
-          {%- endif %}
-          auto result = c_to_cxx_cself->{{cxx_name}}{{template_args}}();
-          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent}}
+          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').c_to_cxx if owner_class.root.shared_ref else owner_class.converter.c_to_cxx -%}
+          {{this_converter.snippet('cself', is_pointer=True)|indent(4)}}
+          auto result = {{this_converter.converted_name('cself')}}->{{cxx_name}}{{template_args}}();
+          {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if setter_ctx is defined %}
@@ -552,10 +536,10 @@ getter:
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
                     );
           {%- else %}
-          auto c_to_cxx_cself = dynamic_cast<{{owner_class.cxx_type_name}}*>(static_cast<{{owner_class.cxx_root_type_name}}*>(cself));
+          {{this_converter.snippet('cself', is_pointer=True)|indent(4)}}
           {%- endif %}
-          {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent}}
-          c_to_cxx_cself->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
+          {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
+          {{this_converter.converted_name('cself')}}->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
       }
       {% endif %}
   ch:

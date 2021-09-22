@@ -2,45 +2,44 @@ rules:
   kotlin.type_converters:
     iegen::example::Size:
       custom:
-        pname: SizeF
-      kotlin:
-        type_info: Point2D.Float
-      jni:
-        type_info: jfloatArray
-      jdk:
-        type_info: FloatArray
-      jni_to_cxx: |
-        jfloat *elems = env->GetFloatArrayElements({{name}}, 0);
-        jfloat width_{{name}} = elems[0];
-        jfloat height_{{name}} = elems[1];
-        env->ReleaseFloatArrayElements({{name}}, elems, 0);
-        {{target_type_name}} {{target_name}} = {{cxx_pointee_unqualified_name}}(width_{{name}}, height_{{name}});
-      cxx_to_jni: |
-        jfloat width_{{name}} = {{name}}.width;
-        jfloat height_{{name}} = {{name}}.height;
-        {{target_type_name}} {{target_name}} = env->NewFloatArray(2);
-        jfloat carray[] = {width_{{name}}, height_{{name}}};
-        env->SetFloatArrayRegion({{target_name}}, 0 , 2, carray);
-      kotlin_to_jdk: |
-        val width_{{name}} = {{name}}.getX().toFloat()
-        val height_{{name}} = {{name}}.getY().toFloat()
-        val {{target_name}} = {{target_type_name}}(2)
-        {{target_name}}.set(0, width_{{name}})
-        {{target_name}}.set(1, height_{{name}})
-      jdk_to_kotlin: |
-        val width_{{name}} = {{name}}[0]
-        val height_{{name}} = {{name}}[1]
-        val {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}})
+        pname: Object
+      types:
+        kotlin: Point2D.Float
+        jni: jfloatArray
+        jdk: FloatArray
+      converters:
+        jni_to_cxx: |
+          jfloat *elems = env->GetFloatArrayElements({{name}}, 0);
+          jfloat width_{{name}} = elems[0];
+          jfloat height_{{name}} = elems[1];
+          env->ReleaseFloatArrayElements({{name}}, elems, 0);
+          {{target_type_name}} {{target_name}} = {{cxx_pointee_unqualified_name}}(width_{{name}}, height_{{name}});
+        cxx_to_jni: |
+          jfloat width_{{name}} = {{name}}.width;
+          jfloat height_{{name}} = {{name}}.height;
+          {{target_type_name}} {{target_name}} = env->NewFloatArray(2);
+          jfloat carray[] = {width_{{name}}, height_{{name}}};
+          env->SetFloatArrayRegion({{target_name}}, 0 , 2, carray);
+        kotlin_to_jdk: |
+          val width_{{name}} = {{name}}.getX().toFloat()
+          val height_{{name}} = {{name}}.getY().toFloat()
+          val {{target_name}} = {{target_type_name}}(2)
+          {{target_name}}.set(0, width_{{name}})
+          {{target_name}}.set(1, height_{{name}})
+        jdk_to_kotlin: |
+          val width_{{name}} = {{name}}[0]
+          val height_{{name}} = {{name}}[1]
+          val {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}})
 
   python.type_converters:
     iegen::example::Size:
       custom:
         pname: SizeF
-      python:
-        type_info: SizeF
-      pybind:
-        type_info: SizeF
-      pybind_to_cxx:
-      cxx_to_pybind:
-      python_to_pybind:
-      pybind_to_python:
+      types:
+        python: SizeF
+        pybind: SizeF
+      converters:
+        pybind_to_cxx:
+        cxx_to_pybind:
+        python_to_pybind:
+        pybind_to_python:

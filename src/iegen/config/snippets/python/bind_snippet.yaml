@@ -3,6 +3,7 @@ file_path: |
 scopes:
   - converter
 content: |
+  {{[banner_logo, banner_comment]|make_py_comment}}
   import functools
   import importlib
   import inspect

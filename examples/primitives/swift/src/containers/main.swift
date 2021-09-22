@@ -85,7 +85,11 @@ let mapOfIntVectors : [Int: [Int]] = [1 : [], 2: [3, 4]]
 nestedUsage.setMapOfIntVectors(m: mapOfIntVectors)
 assert(nestedUsage.getMapOfIntVectors() == mapOfIntVectors)
 
-let complexNestedIntVector : [[[Int]]] = [[[1, 2], []]]
-nestedUsage.setComplexNestedIntVector(v: complexNestedIntVector)
-assert(nestedUsage.getComplexNestedIntVector() == complexNestedIntVector)
+let complexNestedStringVector : [[[String]]] = [[["a", "bc"], []]]
+nestedUsage.setComplexStringVector(v: complexNestedStringVector)
+assert(nestedUsage.getComplexStringVector() == complexNestedStringVector)
+
+let complexNestedStringMap : [String : [String : [String : String]]] = ["a" : ["b" : ["c" : "d"]]]
+nestedUsage.setComplexStringMap(m: complexNestedStringMap)
+assert(nestedUsage.getComplexStringMap() == complexNestedStringMap)
 // [nested-containers-usage]

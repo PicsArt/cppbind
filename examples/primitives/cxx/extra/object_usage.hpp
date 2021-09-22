@@ -11,6 +11,7 @@ namespace iegen {
  * __API__
  * action: gen_class
  * package: extra
+ * shared_ref: True
  */
 class ObjectUsage : public Object {
 public:

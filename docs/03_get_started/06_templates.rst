@@ -178,7 +178,7 @@ Let's see the generated APIs for the target languages.
 
     .. tab:: swift
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/fruits.swift
+        .. literalinclude:: /../examples/primitives/swift/src/getters/fruits.swift
            :language: swift
 
 And the usage examples
@@ -200,7 +200,7 @@ And the usage examples
 
     .. tab:: swift
 
-        .. literalinclude:: /../examples/primitives/python/src/getters/main.swift
+        .. literalinclude:: /../examples/primitives/swift/src/getters/main.swift
            :language: swift
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]

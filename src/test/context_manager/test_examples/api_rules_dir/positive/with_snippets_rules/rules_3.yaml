@@ -1,5 +1,5 @@
 rules:
-  type_converters:
+  python.type_converters:
     a:
       f:
         g:

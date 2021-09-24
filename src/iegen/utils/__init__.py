@@ -259,6 +259,9 @@ def init_jinja_env():
         start = '' if not lines[0] or lines[0].isspace() else nl
         return f'"""{start}{nl.join(lines)}{nl}"""'
 
+    def decapitalize(input_):
+        return input_[0].lower() + input_[1:]
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
@@ -274,6 +277,7 @@ def init_jinja_env():
     env.filters['sort_python_code'] = sort_python_code
     env.filters['make_doxygen_comment'] = make_doxygen_comment
     env.filters['make_py_comment'] = make_py_comment
+    env.filters['decapitalize'] = decapitalize
 
     env.tests['match_regexp'] = match_regexp
 

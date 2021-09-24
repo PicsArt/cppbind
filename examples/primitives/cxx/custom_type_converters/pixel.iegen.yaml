@@ -3,6 +3,7 @@ rules:
     iegen::example::Pixel:
       custom:
         pname: Long
+        tname: Pixel
       kotlin:
         type_info: Pixel
       jni:
@@ -18,6 +19,7 @@ rules:
     iegen::example::Pixel:
       custom:
         pname: Pixel
+        tname: Pixel
       python:
         type_info: Pixel
       pybind:

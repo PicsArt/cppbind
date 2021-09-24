@@ -13,7 +13,7 @@ class Validator:
     @staticmethod
     def shared_ref_set(type_ctx):
         """Check whether shared_ref variable is set"""
-        if not type_ctx.root.shared_ref:
+        if not type_ctx.root.api_vars.shared_ref:
             Error.critical("Root must have an attribute \"shared_ref: True\"",
                            type_ctx.node.file_name,
                            type_ctx.node.line_number)
@@ -21,7 +21,7 @@ class Validator:
     @staticmethod
     def shared_ref_unset(type_ctx):
         """Check whether shared_ref variable is false"""
-        if type_ctx.root.shared_ref:
+        if type_ctx.root.api_vars.shared_ref:
             Error.critical("Root has an invalid attribute \"shared_ref: True\"",
                            type_ctx.node.file_name,
                            type_ctx.node.line_number)
@@ -46,7 +46,7 @@ class Validator:
         """Ensure the class has only one non abstract base"""
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.ctx.action == 'gen_interface':
+            if not base_type.ctx.api_vars.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
@@ -95,7 +95,7 @@ class Exceptions:
     @staticmethod
     def has_exc_base(ctx):
         """Check whether current class has a base class which is exception class"""
-        return any(base.is_exception for base in ctx.ancestors)
+        return any(base.api_vars.is_exception for base in ctx.ancestors)
 
 
 def make_doxygen_comment(pure_comment):

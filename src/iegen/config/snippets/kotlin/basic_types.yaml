@@ -1,4 +1,7 @@
 void:
+  custom:
+    tname: Unit
+    pname: Unit
   kotlin:
     type_info: Unit
   jni:
@@ -13,6 +16,7 @@ void:
 bool:
   custom:
     pname: Boolean
+    tname: Boolean
   kotlin:
     type_info: Boolean
   jni:
@@ -27,6 +31,7 @@ bool:
 int:
   custom:
     pname: Int
+    tname: Int
   kotlin:
     type_info: Int
   jni:
@@ -41,6 +46,7 @@ int:
 unsigned int:
   custom:
     pname: Long
+    tname: Long
   kotlin:
     type_info: Long
   jni:
@@ -55,6 +61,7 @@ unsigned int:
 short:
   custom:
     pname: Short
+    tname: Short
   kotlin:
     type_info: Short
   jni:
@@ -69,6 +76,7 @@ short:
 long:
   custom:
     pname: Long
+    tname: Long
   kotlin:
     type_info: Long
   jni:
@@ -89,6 +97,7 @@ unsigned long:
 float:
   custom:
     pname: Float
+    tname: Float
   kotlin:
     type_info: Float
   jni:
@@ -103,6 +112,7 @@ float:
 double:
   custom:
     pname: Double
+    tname: Double
   kotlin:
     type_info: Double
   jni:
@@ -117,6 +127,7 @@ double:
 char:
   custom:
     pname: Char
+    tname: Char
   kotlin:
     type_info: Char
   jni:

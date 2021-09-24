@@ -2,7 +2,8 @@ rules:
   swift.type_converters:
     nlohmann::json:
       custom:
-        is_c_pointer_type: False
+        is_c_pointer_type: false
+        tname: JSON
       swift:
         type_info: String
       c:
@@ -27,6 +28,7 @@ rules:
     nlohmann::json:
       custom:
         pname: Object
+        tname: JSON
       kotlin:
         type_info: String
       jni:

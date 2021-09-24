@@ -10,6 +10,8 @@ import shutil
 from collections.abc import MutableMapping
 from types import SimpleNamespace
 
+from jinja2 import Template
+
 import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import converter, logging
@@ -266,7 +268,7 @@ class Converter:
         self.target_lang = target_lang
         self.custom = custom
         self.ctx = ctx
-        self.context = self._make_context()
+        self.context = self._make_context
 
     def snippet(self, name, **kwargs):
         return self.type_converter.snippet(name, {**self.context, **kwargs})
@@ -277,6 +279,9 @@ class Converter:
     @property
     def target_type_name(self):
         return self.type_converter.target_type_name(self.context)
+
+    def get_target_type_name(self, **kwargs):
+        return self.type_converter.target_type_name({**self.context, **kwargs})
 
     @property
     def source_type_name(self):
@@ -291,48 +296,16 @@ class Converter:
         return self._get_root_type(self.ctx, self.cxx_type)
 
     @property
-    def template_suffix(self):
-        return self._get_suffix()
-
-    @staticmethod
-    def gen_template_suffix(template_arguments, target_lang):
-        return ''.join([Converter._get_name(getattr(arg, target_lang)) for arg in template_arguments])
-
-    def _get_suffix(self):
-        """
-        Recursively retrieves template suffix for target language.
-        For example for std::pair<std::string, std::string> it'll return PairStringString for kotlin.
-        """
-        if self.ctx:
-            if self.ctx.template_names:
-                return ''.join(self.ctx.template_names)
-        # if the type has no template names then generate suffix from converter tname or target_type_name
-        return Converter.gen_template_suffix(self.template_args, self.target_lang)
-
-    @staticmethod
-    def _get_name(converter):
-        if hasattr(converter.custom, 'tname'):
-            name = converter.custom.tname
-        else:
-            name = converter.target_type_name
-        for arg in converter.template_args:
-            arg_converter = getattr(arg, converter.target_lang)
-            name += Converter._get_name(arg_converter)
-        return name
-
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
             args = [getattr(arg, self.target_lang) for arg in self.template_args]
             args_converters = self.template_args
-            template_suffix = self.template_suffix
 
             args_t = [arg.target_type_name for arg in args]
             args_t_bases = [
                 self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name for arg in args]
-
-            custom = self.custom
 
             cxx_type_name = self.cxx_type_name
 
@@ -344,7 +317,9 @@ class Converter:
             cxx_pointee_unqualified_name = self.cxx_type.unqualified_pointee_name
 
             if self.ctx:
-                type_name = self.ctx.name
+                # make api variables available in converter under vars
+                vars = SimpleNamespace(**self.ctx.node.args)
+                template_names = self.ctx.template_names or []
                 type_ctx = self.ctx  # todo should we just import all attributes
                 cxx_root_type_name = self.cxx_root_type_name
 
@@ -357,6 +332,14 @@ class Converter:
 
         context = make()
         del context['self']
+
+        custom = SimpleNamespace()
+        # evaluate custom fields one by one to make available by defined order
+        for k, v in self.custom.__dict__.items():
+            setattr(custom, k, v.render(context) if isinstance(v, Template) else v)
+            context['custom'] = custom
+
+        self.custom = custom
 
         return context
 
@@ -674,7 +657,9 @@ class SnippetsEngine:
                     type_converters[name] = target_info
                 elif name == 'custom':
                     # primitive type info
-                    custom = SimpleNamespace(**{k: v.value for k, v in info.items()})
+                    custom = SimpleNamespace(
+                        **{k: self.jinja2_env.from_string(v.value) if isinstance(v.value, str) else v.value for k, v in
+                           info.items()})
                 else:
                     # type info
                     try:

@@ -18,12 +18,11 @@ class BaseContext:
         self.runner = runner
         self.node = node or runner.ir
 
-    def __getattr__(self, name):
-        val = self.node.args.get(name, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
-    API has no '{name}' attribute for {self.node.displayname}.")
-        return val
+    @property
+    def api_vars(self):
+        if not hasattr(self, '_api_vars'):
+            self._api_vars = types.SimpleNamespace(**self.node.args)
+        return self._api_vars
 
 
 class Context(BaseContext):
@@ -125,7 +124,7 @@ class Context(BaseContext):
 
         if not hasattr(self, '_overloading_prefix'):
             search_api = self.node.api
-            name = self.name
+            name = self.api_vars.name
             search_names = {name}
             overloads = self.find_adjacents(search_names, search_api)
             _overloading_prefix = ''
@@ -142,7 +141,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_setter'
-        name = self.name
+        name = self.api_vars.name
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
         search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
@@ -155,7 +154,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_getter'
-        name = self.name
+        name = self.api_vars.name
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
         search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],
@@ -263,20 +262,14 @@ class Context(BaseContext):
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
             self._prj_rel_file_name = os.path.relpath(
-                self.cursor.location.file.name, self.out_prj_dir)
+                self.cursor.location.file.name, self.api_vars.out_prj_dir)
         return self._prj_rel_file_name
 
     @property
     def is_proj_type(self):
         """Check whether the given type is user's type or is the type from standard/3pty lib"""
         return os.path.abspath(self.cursor.location.file.name).startswith(
-            os.path.abspath(self.out_prj_dir) + os.path.sep)
-
-    @property
-    def api_args(self):
-        if not hasattr(self, '_api_args'):
-            self._api_args = self.node.args
-        return self._api_args
+            os.path.abspath(self.api_vars.out_prj_dir) + os.path.sep)
 
     @property
     def template_type_parameters(self):
@@ -467,7 +460,7 @@ class RunRule:
         all_contexts = []
         for _, combination in enumerate(all_possible_args):
             choice = [item['type'] for item in combination]
-            choice_names = [item['name'] for item in combination if 'name' in item]
+            choice_names = [item.get('name') for item in combination]
             _template_choice = dict(zip(template_keys, choice))
             all_contexts.append(types.SimpleNamespace(choice=_template_choice, names=choice_names))
         return all_contexts

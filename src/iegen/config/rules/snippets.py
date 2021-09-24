@@ -12,8 +12,7 @@ from iegen.common.error import Error
 from iegen.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
-    CXXType,
-    Converter
+    CXXType
 )
 from iegen.utils import DefaultValueKind
 
@@ -51,16 +50,16 @@ def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
 def make_root_context(ctx):
     def make():
         # helper variables
-        cxx_helpers_dir = find_prj_dir(ctx.cxx_helpers_dir)
-        helpers_dir = find_prj_dir(ctx.helpers_dir)
-        out_dir = ctx.out_dir
-        helpers_package_prefix = ctx.helpers_package_prefix
+        cxx_helpers_dir = find_prj_dir(ctx.api_vars.cxx_helpers_dir)
+        helpers_dir = find_prj_dir(ctx.api_vars.helpers_dir)
+        out_dir = ctx.api_vars.out_dir
+        helpers_package_prefix = ctx.api_vars.helpers_package_prefix
         helpers_out_dir = os.path.join(out_dir + helpers_package_prefix.replace('.', os.sep))
         # base variables
-        cxx_base_dir = find_prj_dir(ctx.cxx_base_dir)
+        cxx_base_dir = find_prj_dir(ctx.api_vars.cxx_base_dir)
         return locals()
 
-    context = {k: getattr(ctx, k) for k in ctx.node.args}
+    context = {**ctx.api_vars.__dict__}
     context.update(make())
 
     return context
@@ -83,7 +82,7 @@ def make_def_context(ctx):
 
     context = make()
     context.update(GLOBAL_VARIABLES)
-    context.update(ctx.api_args)
+    context.update(ctx.api_vars.__dict__)
     return context
 
 
@@ -93,7 +92,7 @@ def make_clang_context(ctx):
         cxx_name = ctx.cursor.spelling
 
         prj_rel_file_name = ctx.prj_rel_file_name
-        comment = ctx.comment
+        comment = ctx.api_vars.comment
 
         return locals()
 
@@ -105,7 +104,7 @@ def make_clang_context(ctx):
 def make_package_context(ctx):
     context = make_def_context(ctx)
 
-    context['package'] = ctx.name
+    context['package'] = ctx.api_vars.name
     return context
 
 
@@ -120,7 +119,7 @@ def make_func_context(ctx):
                 default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.nullable_arg or arg.default.kind == DefaultValueKind.NULL_PTR,
+                nullable=arg.name in ctx.api_vars.nullable_arg or arg.default.kind == DefaultValueKind.NULL_PTR,
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
@@ -140,9 +139,8 @@ def make_func_context(ctx):
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_names = ctx.template_names
-
-        if ctx.node.is_function_template:
-            overloading_prefix = gen_template_function_suffix(ctx, LANGUAGE)
+        template_type_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=template_arg_type)) for
+                                    template_arg_type in template_choice.values()] if template_choice else []
 
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -194,7 +192,6 @@ def make_class_context(ctx):
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
 
-            template_suffix = getattr(converter, LANGUAGE).template_suffix
             cxx_root_type_name = getattr(converter, LANGUAGE).cxx_root_type_name
             is_abstract = ctx.cursor.is_abstract_record()
             return locals()
@@ -252,19 +249,6 @@ def make_member_context(ctx):
     context = make_clang_context(ctx)
     context.update(make())
     return context
-
-
-def gen_template_function_suffix(ctx, target_language):
-    template_choice = ctx.template_choice
-    template_types = ctx.template_type_parameters
-    args = []
-    if template_choice:
-        for t in template_types:
-            search_name = template_choice[t]
-            args.append(SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(search_name,
-                                                                          template_choice=ctx.template_choice)))
-
-    return Converter.gen_template_suffix(args, target_language)
 
 
 def preprocess_scope(context, scope, info):
@@ -356,7 +340,7 @@ def gen_setter(ctx, builder):
 
 def _validate_nullable_args(ctx):
     args = [arg.name for arg in ctx.args]
-    incorrect_args = [arg for arg in ctx.nullable_arg if arg not in args]
+    incorrect_args = [arg for arg in ctx.api_vars.nullable_arg if arg not in args]
     if incorrect_args:
         Error.critical(
             f'{", ".join(incorrect_args)} arguments are marked as nullable but '
@@ -374,7 +358,7 @@ def _validate_getter(ctx):
 
         _validate_nullable_args(ctx.setter)
 
-        have_diff_nullability = len(ctx.setter.nullable_arg) == 0 ^ ctx.nullable_return is False
+        have_diff_nullability = len(ctx.setter.api_vars.nullable_arg) == 0 ^ ctx.api_vars.nullable_return is False
         if have_diff_nullability:
             Error.critical(
                 f'Setter argument and getter return value should have the same nullability:'
@@ -389,11 +373,11 @@ def _validate_property_getter(ctx):
 
 
 def _validate_template_getter_setter(ctx):
-    is_valid = len(ctx.template.keys()) == len(ctx.setter.template.keys())
+    is_valid = len(ctx.api_vars.template.keys()) == len(ctx.setter.api_vars.template.keys())
     if is_valid:
-        for template_arg, possible_types in ctx.template.items():
+        for template_arg, possible_types in ctx.api_vars.template.items():
             getter_types = {template['type'] for template in possible_types}
-            setter_types = {template['type'] for template in ctx.setter.template[template_arg]}
+            setter_types = {template['type'] for template in ctx.setter.api_vars.template[template_arg]}
             if getter_types != setter_types:
                 is_valid = False
                 break

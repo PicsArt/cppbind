@@ -14,6 +14,7 @@ namespace iegen::example {
  * template:
  *   T:
  *     - type: std::string
+ *       name: ''
  *   V:
  *     - type: std::shared_ptr<iegen::example::Employee>
  *       name: Employee

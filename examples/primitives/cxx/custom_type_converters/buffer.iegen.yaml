@@ -3,8 +3,9 @@ rules:
     iegen::example::Buffer:
       custom:
         pname: Buffer
+        tname: "Buffer{{args_t[0]}}"
       kotlin:
-        type_info: "Buffer{{template_suffix}}"
+        type_info: "custom.tname"
       jni:
         type_info: jobjectid
       jdk:
@@ -22,6 +23,7 @@ rules:
     iegen::example::Buffer:
       custom:
         pname: Buffer
+        tname: Buffer
       python:
         type_info: Buffer
       pybind:

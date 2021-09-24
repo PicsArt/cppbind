@@ -12,6 +12,7 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: containers
+ * swift.file: pair_examples
  */
 struct PairExamples {
 

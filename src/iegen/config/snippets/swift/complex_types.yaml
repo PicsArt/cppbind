@@ -51,14 +51,14 @@ $Object:
       let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
     sc_to_swift: |
       {%- if nullable|default(False) -%}
-      let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{ustom.tpostfix}}?
+      let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
       if let {{name}} = {{name}} {
-          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{ustom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
+          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
       } else {
           {{target_name}} = nil
       }
       {%- else -%}
-      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{ustom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
+      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
       {%- endif -%}
 
 $Enum:

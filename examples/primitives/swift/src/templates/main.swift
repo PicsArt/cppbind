@@ -73,3 +73,13 @@ wrapperPair.value = ("third", "fourth")
 assert(wrapperPair.value.0 == "third")
 assert(wrapperPair.value.1 == "fourth")
 // [wrapper-examples]
+
+
+// [pair-examples]
+let student = Student(st_name: "John Doe")
+let employee = Employee(name: "Jane Doe")
+let pair1 = PairStudent(first: "student", second: student)
+let pair2 = PairEmployee(first: "employee", second: employee)
+assert(pair1.second.name == student.name)
+assert(pair2.second.name == employee.name)
+// [pair-examples]

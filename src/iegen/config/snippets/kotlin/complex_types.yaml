@@ -126,7 +126,7 @@ std::__cxx11::basic_string:
 std::vector:
   custom:
     pname: Object
-    name: "List{{args[0].custom.tname}}"
+    tname: "List{{args[0].custom.tname}}"
   types:
     kotlin: "List<{{args_t[0]}}>"
     jni: "{{args_t[0] if args[0].custom.pname != 'Object' else 'jobject'}}Array"

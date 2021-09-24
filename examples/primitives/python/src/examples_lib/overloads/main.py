@@ -1,5 +1,5 @@
 from examples_lib.overloads import pretty_print, Employee, Utils
-from examples_lib.getters import Numberint
+from examples_lib.getters import NumberInt
 
 # [overload-usage]
 assert Utils.sum(1, 2) == 3
@@ -27,8 +27,8 @@ assert e3.age == 20
 # [overload-usage]
 
 # [implicit-cast-example]
-n1 = Numberint(1)
-n2 = Numberint(2)
+n1 = NumberInt(1)
+n2 = NumberInt(2)
 assert utils.sum(n1, n2) == 3
 # [implicit-cast-example]
 

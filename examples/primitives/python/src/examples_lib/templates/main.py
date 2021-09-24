@@ -1,11 +1,17 @@
-from examples_lib.getters import Numberint
+from examples_lib.forward_decl.student_pygen import Student
+from examples_lib.getters import NumberInt
+from examples_lib.overloads.employee_pygen import Employee
 from examples_lib.simple import Project, Root
-from examples_lib.templates.addressable_pygen import AddressableRoot
-from examples_lib.templates.component_pygen import Component
-from examples_lib.templates.stack_pygen import StackPrj, StackNumInt
-from examples_lib.templates.stack_usage_pygen import StackUsage
-from examples_lib.templates.template_methods_pygen import TemplateMethods
-from examples_lib.templates.wrapper_pygen import WrapperPairStrings
+from examples_lib.templates import (
+    AddressableRoot,
+    Component,
+    StackPrj,
+    StackNumInt,
+    StackUsage,
+    TemplateMethods,
+    WrapperPairStrings,
+    PairEmployee, PairStudent
+)
 
 # [stack-examples]
 stack_prj = StackPrj()
@@ -18,8 +24,8 @@ stack_prj.pop()
 assert stack_prj.empty() is True
 
 stackNumber = StackNumInt()
-num1 = Numberint(1)
-num2 = Numberint(2)
+num1 = NumberInt(1)
+num2 = NumberInt(2)
 stackNumber.push(num1)
 stackNumber.push(num2)
 assert stackNumber.top().num == num2.num
@@ -78,3 +84,12 @@ wrapper_pair.value = ("third", "fourth")
 assert (wrapper_pair.value[0] == "third")
 assert (wrapper_pair.value[1] == "fourth")
 # [wrapper-examples]
+
+# [pair-examples]
+student = Student(st_name="John Doe")
+employee = Employee(name="Jane Doe")
+pair1 = PairStudent(first="student", second=student)
+pair2 = PairEmployee(first="employee", second=employee)
+assert pair1.second.name == student.name
+assert pair2.second.name == employee.name
+# [pair-examples]

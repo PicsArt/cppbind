@@ -91,7 +91,6 @@ var_class_cxx: &var_class_cxx
           {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_root_type_name + '>').jni_to_cxx if root.shared_ref else make_converter(cxx_root_type_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
           {%- if root.shared_ref %}
-          {{jni_to_cxx_converter.converted_name('id')}}.reset();
           delete &{{jni_to_cxx_converter.converted_name('id')}};
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};

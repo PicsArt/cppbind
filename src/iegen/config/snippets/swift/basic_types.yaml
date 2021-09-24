@@ -1,154 +1,143 @@
 void:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Void
-  swift:
-    type_info: Void
-  c:
-    type_info: void
-  sc:
-    type_info: Void
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: Void
+    c: void
+    sc: Void
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 bool:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Bool
-  swift:
-    type_info: Bool
-  c:
-    type_info: bool
-  sc:
-    type_info: CBool
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: Bool
+    c: bool
+    sc: CBool
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 int:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Int
-  swift:
-    type_info: Int
-  c:
-    type_info: int
-  sc:
-    type_info: CInt
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-    let {{target_name}} = CInt({{name}})
-  sc_to_swift:
-    let {{target_name}} = Int({{name}})
+  types:
+    swift: Int
+    c: int
+    sc: CInt
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+      let {{target_name}} = CInt({{name}})
+    sc_to_swift:
+      let {{target_name}} = Int({{name}})
 
 unsigned int:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: UInt
-  swift:
-    type_info: UInt
-  c:
-    type_info: unsigned int
-  sc:
-    type_info: CUnsignedInt 
-  c_to_cxx:
-  cxx_to_c:
-  swift_to_sc:
-    let {{target_name}} = CUnsignedInt({{name}})
-  sc_to_swift:
-    let {{target_name}} = UInt({{name}})
+  types:
+    swift: UInt
+    c: unsigned int
+    sc: CUnsignedInt
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+      let {{target_name}} = CUnsignedInt({{name}})
+    sc_to_swift:
+      let {{target_name}} = UInt({{name}})
 
 short:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Short
-  swift:
-    type_info: Short
-  c:
-    type_info: short
-  sc:
-    type_info: CShort
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: Short
+    c: short
+    sc: CShort
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 long:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: CLong
-  swift:
-    type_info: CLong
-  c:
-    type_info: long
-  sc:
-    type_info: CLong
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: CLong
+    c: long
+    sc: CLong
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 long long:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: CLongLong
-  swift:
-    type_info: CLongLong
-  c:
-    type_info: long long
-  sc:
-    type_info: CLongLong
-  c_to_cxx:
-  cxx_to_c:
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: CLongLong
+    c: long long
+    sc: ClongLong
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 unsigned long:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: CUnsignedLong
-  swift:
-    type_info: CUnsignedLong
-  c:
-    type_info: unsigned long
-  sc:
-    type_info: CUnsignedLong
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: CUnsignedLong
+    c: unsigned long
+    sc: CUnsignedLong
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 float:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Float
-  swift:
-    type_info: Float
-  c:
-    type_info: float
-  sc:
-    type_info: CFloat
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
+  types:
+    swift: Float
+    c: float
+    sc: CFloat
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 double:
   custom:
-    is_c_pointer_type: false
+    is_c_pointer_type: False
     tname: Double
-  swift:
-    type_info: Double
-  c:
-    type_info: double
-  sc:
-    type_info: CDouble
-  c_to_cxx: 
-  cxx_to_c: 
-  swift_to_sc:
-  sc_to_swift:
-
+  types:
+    swift: Double
+    c: double
+    sc: CDouble
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:

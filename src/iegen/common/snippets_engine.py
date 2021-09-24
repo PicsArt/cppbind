@@ -17,8 +17,10 @@ import iegen.utils.clang as cutil
 from iegen import converter, logging
 from iegen.common import JINJA_UNIQUE_MARKER
 from iegen.common.error import Error
+from iegen.common.yaml_process import to_value
 from iegen.ir.exec_rules import Context
 from iegen.utils import JINJA2_ENV
+
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -375,10 +377,10 @@ class Adapter:
         self.template_args = args
 
     def __getattr__(self, name):
-        if '_to_' in name and name in self.type_info_collector.converters:
-            type_info_collector = self.type_info_collector.converters[name]
-        elif name in self.type_info_collector.target_type_infos:
+        if name in self.type_info_collector.target_type_infos:
             type_info_collector = self.type_info_collector.target_type_infos[name]
+        elif name in self.type_info_collector.converters:
+            type_info_collector = self.type_info_collector.converters[name]
         else:
             return super().__getattribute__(name)
 
@@ -414,6 +416,8 @@ class TargetTypeInfo:
         self.name = name
 
     def target_type_name(self, context):
+        if self.target_type_info is None:
+            return None
         return self.target_type_info.render(context)
 
 
@@ -425,6 +429,8 @@ class TypeConvertorInfo(TargetTypeInfo):
         self.snippet_tmpl = snippet_tmpl
 
     def source_type_name(self, context):
+        if self.source_type_info is None:
+            return None
         return self.source_type_info.render(context)
 
     def snippet(self, name, context):
@@ -468,6 +474,13 @@ class FileScopeInfo(ScopeInfo):
 
 
 class SnippetsEngine:
+    TARGET_KEY = 'target'
+    SOURCE_KEY = 'source'
+    SNIPPET_KEY = 'snippet'
+    CUSTOM_KEY = 'custom'
+    TYPES_KEY = 'types'
+    CONVERTERS_KEY = 'converters'
+
     def __init__(self, ctx_desc, platform, language):
         self.platform = platform
         self.language = language
@@ -612,11 +625,12 @@ class SnippetsEngine:
             except Exception as err:
                 Error.critical(f"Error in code file {file_name} snippets. "
                                f"Error {str(err)}")
-            self.file_infos[file_name] = FileScopeInfo(file_path,
-                                                       [file_name],
-                                                       info_map.get('scopes', []),
-                                                       snippet,
-                                                       unique_snippet)
+            else:
+                self.file_infos[file_name] = FileScopeInfo(file_path,
+                                                           [file_name],
+                                                           info_map.get('scopes', []),
+                                                           snippet,
+                                                           unique_snippet)
 
     def _load_type_info(self, type_info_dict):
         # load into structures
@@ -631,44 +645,65 @@ class SnippetsEngine:
             custom = {}
             target_types = {}
             type_converters = {}
-            for name, info in info_map.items():
-                if '_to_' in name:
-                    # converter
-                    index = name.rfind('_to_')
-                    target_lang = name[index + 4:]
-                    source_lang = name[:index]
-                    target_tmpl = source_tmpl = '{{cxx_type_name}}'
-                    if target_lang in info_map:
-                        target_tmpl = info_map[target_lang]['type_info'].value
-                    if source_lang in info_map:
-                        source_tmpl = info_map[source_lang]['type_info'].value
 
-                    try:
-                        target_type_info = self.jinja2_env.from_string(target_tmpl)
-                        source_type_info = self.jinja2_env.from_string(source_tmpl)
-                        snippet_tmpl = info and self.jinja2_env.from_string(info.value)
-                    except Exception as err:
-                        Error.critical(f"Error in code snippets for {type_name}, "
-                                       f"in converter {name}. Error {str(err)}")
-                    target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
-                                                    name=name,
-                                                    target_type_info=target_type_info,
-                                                    source_type_info=source_type_info)
-                    type_converters[name] = target_info
-                elif name == 'custom':
+            # iterate over all sections: 'custom', 'types', 'converters'
+            for section_key, section_val in info_map.items():
+                if section_key == SnippetsEngine.CONVERTERS_KEY:
+                    # converter
+                    for name, info in section_val.items():
+                        target_lang = source_lang = None
+                        if '_to_' in name:
+                            index = name.rfind('_to_')
+                            target_lang = name[index + 4:]
+                            source_lang = name[:index]
+
+                        if info.is_of_type(dict):
+                            target_lang = to_value(info.get(SnippetsEngine.TARGET_KEY, target_lang))
+                            source_lang = to_value(info.get(SnippetsEngine.SOURCE_KEY, source_lang))
+
+                        target_tmpl = source_tmpl = None
+                        if target_lang and source_lang:
+                            target_tmpl = source_tmpl = '{{cxx_type_name}}'
+                            if target_lang in info_map[SnippetsEngine.TYPES_KEY]:
+                                target_tmpl = info_map[SnippetsEngine.TYPES_KEY][target_lang].value
+                            if source_lang in info_map[SnippetsEngine.TYPES_KEY]:
+                                source_tmpl = info_map[SnippetsEngine.TYPES_KEY][source_lang].value
+
+                        try:
+                            target_type_info = source_type_info = None
+                            if target_tmpl is not None and source_tmpl is not None:
+                                target_type_info = self.jinja2_env.from_string(target_tmpl)
+                                source_type_info = self.jinja2_env.from_string(source_tmpl)
+                            snippet_tmpl = info and self.jinja2_env.from_string(
+                                info[SnippetsEngine.SNIPPET_KEY].value if info.is_of_type(dict) else info.value)
+                        except Exception as err:
+                            Error.critical(f"Error in code snippets for {type_name}, "
+                                           f"in converter {name}. Error {str(err)}")
+                        else:
+                            key_name = name
+                            if target_lang and source_lang:
+                                key_name = f"{source_lang}_to_{target_lang}"
+                            target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
+                                                            name=key_name,
+                                                            target_type_info=target_type_info,
+                                                            source_type_info=source_type_info)
+                            type_converters[key_name] = target_info
+                elif section_key == SnippetsEngine.CUSTOM_KEY:
                     # primitive type info
                     custom = SimpleNamespace(
                         **{k: self.jinja2_env.from_string(v.value) if isinstance(v.value, str) else v.value for k, v in
-                           info.items()})
+                           section_val.items()})
                 else:
                     # type info
-                    try:
-                        target_type_info = self.jinja2_env.from_string(info['type_info'].value)
-                    except Exception as err:
-                        Error.critical(f"Error in type info {type_name}, "
-                                       f"in converter {name}. Error {str(err)}")
-                    target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
-                    target_types[name] = target_info
+                    for name, info in section_val.items():
+                        try:
+                            target_type_info = self.jinja2_env.from_string(info.value)
+                        except Exception as err:
+                            Error.critical(f"Error in type info {type_name}, "
+                                           f"in converter {name}. Error {str(err)}")
+                        else:
+                            target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
+                            target_types[name] = target_info
 
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,

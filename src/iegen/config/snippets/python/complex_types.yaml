@@ -55,145 +55,139 @@ $Object:
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
-  python:
-    type_info: "{{custom.tname}}"
-  pybind:
-    type_info: |
+  types:
+    python: |
       {%- if interface_class|default(False) -%}
       {{vars.interface_class_name}}{{custom.tpostfix}}
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+    pybind: |
+      {%- if interface_class|default(False) -%}
+      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {%- else -%}
+      {{custom.tname}}
+      {%- endif -%}
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 $Enum:
   custom:
     pname: int
     tname: "{{vars.name}}"
-  python:
-    type_info: "{{custom.tname}}"
-  pybind:
-    type_info: "{{custom.tname}}"
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+  types:
+    python: "{{custom.tname}}"
+    pybind: "{{custom.tname}}"
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 $FunctionProto:
   custom:
-    pname: func
     tname: Callable
-  python:
-    type_info: |
+  types:
+    python: |
       {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
-  pybind:
-    type_info: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+    pybind: |
+        {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::__cxx11::basic_string:
   custom:
-    pname: str
     tname: String
-  python:
-    type_info: str
-  pybind:
-    type_info: str
-  pybind_to_cxx:
-  cxx_to_pybind:
-  pybind_to_python:
-  python_to_pybind: |
-    {{target_name}} = {{target_type_name}}({{name}})
-
+  types:
+    python: str
+    pybind: str
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
 
 std::vector:
   custom:
-    pname: list
     tname: List[{{args[0].custom.tname}}]
-  python:
-    type_info: List[{{args_t[0]}}]
-  pybind:
-    type_info: list
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+  types:
+    python: List[{{args_t[0]}}]
+    pybind: list
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::function:
   custom:
-    pname: function
-    tname: "Func{{args[0].custom.tname}}"
-  python:
-    type_info: "{{args_t[0]}}"
-  pybind:
-    type_info: "{{args_t[0]}}"
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+    tname: "Function"
+  types:
+    python: "{{args_t[0]}}"
+    pybind: "{{args_t[0]}}"
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::map:
   custom:
-    pname: dict
     tname: "Map{{args[0].custom.tname}}{{args[1].custom.tname}}"
-  python:
-    type_info: dict
-  pybind:
-    type_info: dict
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+  types:
+    python: dict
+    pybind: dict
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::unordered_map:
   std::map
 
-
 std::shared_ptr:
   custom:
-    pname: object
     tname: "{{args[0].custom.tname}}"
-  python:
-    type_info: "{{args_t[0]}}"
-  pybind:
-    type_info: "{{args_t[0]}}"
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
-
+  types:
+    python: "{{args_t[0]}}"
+    pybind: "{{args_t[0]}}"
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 nlohmann::json:
   custom:
     pname: json
-    tname: JSON
-  python:
-    type_info: dict
-  pybind:
-    type_info: dict
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+  types:
+    python: dict
+    pybind: dict
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 json:
   nlohmann::json
 
 std::pair:
   custom:
-    pname: tuple
     tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
-  python:
-    type_info: tuple
-  pybind:
-    type_info: tuple
-  pybind_to_cxx:
-  cxx_to_pybind:
-  python_to_pybind:
-  pybind_to_python:
+  types:
+    python: tuple
+    pybind: tuple
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:

@@ -2,91 +2,85 @@ void:
   custom:
     tname: Unit
     pname: Unit
-  kotlin:
-    type_info: Unit
-  jni:
-    type_info: void
-  jdk:
-    type_info: Unit
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Unit
+    jni: void
+    jdk: Unit
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 bool:
   custom:
     pname: Boolean
     tname: Boolean
-  kotlin:
-    type_info: Boolean
-  jni:
-    type_info: jboolean
-  jdk:
-    type_info: Boolean
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Boolean
+    jni: jboolean
+    jdk: Boolean
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 int:
   custom:
     pname: Int
     tname: Int
-  kotlin:
-    type_info: Int
-  jni:
-    type_info: jint
-  jdk:
-    type_info: Int
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Int
+    jni: jint
+    jdk: Int
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 unsigned int:
   custom:
     pname: Long
     tname: Long
-  kotlin:
-    type_info: Long
-  jni:
-    type_info: jlong
-  jdk:
-    type_info: Long
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Long
+    jni: jlong
+    jdk: Long
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 short:
   custom:
     pname: Short
     tname: Short
-  kotlin:
-    type_info: Short
-  jni:
-    type_info: jshort
-  jdk:
-    type_info: Short
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Short
+    jni: jshort
+    jdk: Short
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 long:
   custom:
     pname: Long
     tname: Long
-  kotlin:
-    type_info: Long
-  jni:
-    type_info: jlong
-  jdk:
-    type_info: Long
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Long
+    jni: jlong
+    jdk: Long
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 long long:
   long
@@ -98,45 +92,42 @@ float:
   custom:
     pname: Float
     tname: Float
-  kotlin:
-    type_info: Float
-  jni:
-    type_info: jfloat
-  jdk:
-    type_info: Float
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Float
+    jni: jfloat
+    jdk: Float
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 double:
   custom:
     pname: Double
     tname: Double
-  kotlin:
-    type_info: Double
-  jni:
-    type_info: jdouble
-  jdk:
-    type_info: Double
-  jni_to_cxx:
-  cxx_to_jni:
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Double
+    jni: jdouble
+    jdk: Double
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 char:
   custom:
     pname: Char
     tname: Char
-  kotlin:
-    type_info: Char
-  jni:
-    type_info: jbyte
-  jdk:
-    type_info: Char
-  jni_to_cxx: |
-    char {{target_name}} = static_cast<char>({{name}});
-  cxx_to_jni: |
-    {{target_type_name}} {{target_name}} = static_cast<jbyte>({{name}});
-  kotlin_to_jdk:
-  jdk_to_kotlin:
+  types:
+    kotlin: Char
+    jni: jbyte
+    jdk: Char
+  converters:
+    jni_to_cxx: |
+      char {{target_name}} = static_cast<char>({{name}});
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = static_cast<jbyte>({{name}});
+    kotlin_to_jdk:
+    jdk_to_kotlin:

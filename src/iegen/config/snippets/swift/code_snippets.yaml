@@ -259,6 +259,12 @@ constructor:
       {%- do call_args.append(converter.converted_name(arg.name)) %}
       {%- endfor %}
           self.init(create_{{owner_class.name}}{{owner_class.template_suffix}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
+      {%- for arg in args %}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet('swift_to_sc_' + arg.name) %}
+        {%- if cleanup_code_fragment %}
+          {{cleanup_code_fragment|indent}}
+        {%- endif %}
+      {%- endfor %}
       }
   cc:
     include: *var_method_cxx_include
@@ -339,6 +345,12 @@ function:
                       ExceptionHandler.handleUncaughtException("Uncaught Exception")
               }
           }
+        {%- for arg in args %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet('swift_to_sc_' + arg.name) %}
+          {%- if cleanup_code_fragment %}
+            {{cleanup_code_fragment|indent}}
+          {%- endif %}
+        {%- endfor %}
         {%- if rconverter.c.target_type_name != 'void' %}
           return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
@@ -441,6 +453,10 @@ property_getter:
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{name}}(cself, {{converter.converted_name('value')}})
+              {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet('swift_to_sc_value') %}
+              {%- if cleanup_code_fragment %}
+                {{cleanup_code_fragment|indent(8)}}
+              {%- endif %}
           }
           {% endif %}
       }
@@ -505,6 +521,10 @@ getter:
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.name}}{{owner_class.template_suffix}}_{{setter_ctx.name}}{{setter_ctx.overloading_prefix}}(cself, {{converter.converted_name('value')}})
+              {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet('swift_to_sc_value') %}
+              {%- if cleanup_code_fragment %}
+                {{cleanup_code_fragment|indent(8)}}
+              {%- endif %}
           }
           {% endif %}
       }

@@ -131,9 +131,6 @@ std::vector:
       }
     swift_to_sc: |
       let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      defer {
-        _data_{{target_name}}.deallocate()
-      }
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
       {{target_name}}.size = Int64({{name}}.count)
@@ -153,6 +150,19 @@ std::vector:
         {{args[0].snippet('value_{}'.format(name))|indent}}
         {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
       }
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
+        {%- if cleanup_code_fragment %}
+        let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
+        for _i in 0..<Int({{name}}.size) {
+          let {{name}}_item = {{name}}_data[_i]
+          {{cleanup_code_fragment|indent}}
+        }
+        {%- endif %}
+        {{name}}.data.deallocate()
 
 std::map:
   custom:
@@ -193,10 +203,6 @@ std::map:
     swift_to_sc: |
       let _key_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
       let _val_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      defer {
-        _key_{{target_name}}.deallocate()
-        _val_{{target_name}}.deallocate()
-      }
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.keys = UnsafeMutableRawPointer(_key_{{target_name}})
       {{target_name}}.values = UnsafeMutableRawPointer(_val_{{target_name}})
@@ -226,6 +232,21 @@ std::map:
           {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
         }
       }
+
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
+        {%- if cleanup_code_fragment %}
+        let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
+        for _i in 0..<Int({{name}}.size) {
+          let {{name}}_item = {{name}}_data[_i]
+          {{args[0].snippet('{}_item'.format(name))|indent}}
+        }
+        {%- endif %}
+        {{name}}.keys.deallocate()
+        {{name}}.values.deallocate()
 
 std::unordered_map:
   std::map

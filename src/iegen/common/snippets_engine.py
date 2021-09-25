@@ -294,7 +294,7 @@ class Converter:
                 cxx_root_type_name = self.cxx_root_type_name
             if args:
                 # todo single method here and in snippets
-                template_suffix = ''.join([arg.target_type_name for arg in args])
+                template_suffix = ''.join([arg.target_type_name for arg in args if arg.target_type_name is not None])
 
             # helper name spaces
 
@@ -340,11 +340,16 @@ class Adapter:
         self.template_args = args
 
     def __getattr__(self, name):
+        type_info_collector = TypeConvertorInfo(snippet_tmpl='',
+                                                name=name,
+                                                source_type_info=None,
+                                                target_type_info=None)
+
         if name in self.type_info_collector.target_type_infos:
             type_info_collector = self.type_info_collector.target_type_infos[name]
         elif name in self.type_info_collector.converters:
             type_info_collector = self.type_info_collector.converters[name]
-        else:
+        elif name in self.__dict__:
             return super().__getattribute__(name)
 
         return Converter(cxx_type=self.cxx_type,
@@ -643,14 +648,11 @@ class SnippetsEngine:
                             Error.critical(f"Error in code snippets for {type_name}, "
                                            f"in converter {name}. Error {str(err)}")
                         else:
-                            key_name = name
-                            if target_lang and source_lang:
-                                key_name = f"{source_lang}_to_{target_lang}"
                             target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
-                                                            name=key_name,
+                                                            name=name,
                                                             target_type_info=target_type_info,
                                                             source_type_info=source_type_info)
-                            type_converters[key_name] = target_info
+                            type_converters[name] = target_info
                 elif section_key == SnippetsEngine.CUSTOM_KEY:
                     # primitive type info
                     custom = SimpleNamespace(**{k: v.value for k, v in section_val.items()})

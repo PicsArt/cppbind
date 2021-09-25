@@ -237,12 +237,12 @@ std::map:
       source: swift
       target: sc
       snippet: |
-        {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
+        {%- set cleanup_code_fragment = args[1].snippet('{}_item'.format(name)) %}
         {%- if cleanup_code_fragment %}
-        let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
+        let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
           let {{name}}_item = {{name}}_data[_i]
-          {{args[0].snippet('{}_item'.format(name))|indent}}
+          {{args[1].snippet('{}_item'.format(name))|indent}}
         }
         {%- endif %}
         {{name}}.keys.deallocate()

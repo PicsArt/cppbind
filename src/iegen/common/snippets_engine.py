@@ -269,12 +269,7 @@ class Converter:
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
-            args = []
-            for arg in self.template_args:
-                try:
-                    args.append(getattr(arg, self.target_lang))
-                except AttributeError:
-                    args.append(None)
+            args = [getattr(arg, self.target_lang) for arg in self.template_args]
 
             args_converters = self.template_args
             template_suffix = ''
@@ -351,7 +346,7 @@ class Adapter:
         elif name in self.type_info_collector.converters:
             type_info_collector = self.type_info_collector.converters[name]
         else:
-            return super().__getattribute__(name)
+            return None
 
         return Converter(cxx_type=self.cxx_type,
                          template_args=self.template_args,
@@ -360,8 +355,6 @@ class Adapter:
                          ctx=self.ctx,
                          type_converter=type_info_collector,
                          **self.kwargs)
-
-    __getitem__ = __getattr__
 
 
 class TypeInfoCollector:

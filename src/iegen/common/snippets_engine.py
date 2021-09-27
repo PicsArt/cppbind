@@ -269,13 +269,19 @@ class Converter:
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
-            args = [getattr(arg, self.target_lang) for arg in self.template_args]
+            args = []
+            for arg in self.template_args:
+                try:
+                    args.append(getattr(arg, self.target_lang))
+                except AttributeError:
+                    args.append(None)
+
             args_converters = self.template_args
             template_suffix = ''
 
-            args_t = [arg.target_type_name for arg in args]
-            args_t_bases = [
-                self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name for arg in args]
+            args_t = [arg.target_type_name if arg else None for arg in args]
+            args_t_bases = [(self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name)
+                            if arg else None for arg in args]
 
             custom = self.custom
 
@@ -294,7 +300,7 @@ class Converter:
                 cxx_root_type_name = self.cxx_root_type_name
             if args:
                 # todo single method here and in snippets
-                template_suffix = ''.join([arg.target_type_name for arg in args if arg.target_type_name is not None])
+                template_suffix = ''.join([arg.target_type_name for arg in args if arg])
 
             # helper name spaces
 
@@ -340,16 +346,11 @@ class Adapter:
         self.template_args = args
 
     def __getattr__(self, name):
-        type_info_collector = TypeConvertorInfo(snippet_tmpl='',
-                                                name=name,
-                                                source_type_info=None,
-                                                target_type_info=None)
-
         if name in self.type_info_collector.target_type_infos:
             type_info_collector = self.type_info_collector.target_type_infos[name]
         elif name in self.type_info_collector.converters:
             type_info_collector = self.type_info_collector.converters[name]
-        elif name in self.__dict__:
+        else:
             return super().__getattribute__(name)
 
         return Converter(cxx_type=self.cxx_type,

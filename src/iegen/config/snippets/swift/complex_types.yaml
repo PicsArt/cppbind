@@ -154,13 +154,15 @@ std::vector:
       source: swift
       target: sc
       snippet: |
+        {%- if args[0] %}
         {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
           let {{name}}_item = {{name}}_data[_i]
-          {{cleanup_code_fragment|indent}}
+          {{cleanup_code_fragment|indent(2)}}
         }
+        {%- endif %}
         {%- endif %}
         {{name}}.data.deallocate()
 
@@ -182,7 +184,6 @@ std::map:
           {{args[1].snippet('vtmp_{}'.format(name))|indent}}
           {{target_name}}.insert({ {{args[0].converted_name('ktmp_{}'.format(name))}}, {{args[1].converted_name('vtmp_{}'.format(name))}} });
       }
-
     cxx_to_c: |
       auto _k_data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
       auto _v_data_{{target_name}} = new {{args_converters[1].c.target_type_name}} [{{name}}.size()];
@@ -199,7 +200,6 @@ std::map:
             _i_{{name}} += 1;
           }
       }
-
     swift_to_sc: |
       let _key_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
       let _val_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
@@ -232,18 +232,19 @@ std::map:
           {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
         }
       }
-
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
+        {%- if args[1] %}
         {%- set cleanup_code_fragment = args[1].snippet('{}_item'.format(name)) %}
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
           let {{name}}_item = {{name}}_data[_i]
-          {{args[1].snippet('{}_item'.format(name))|indent}}
+          {{args[1].snippet('{}_item'.format(name))|indent(2)}}
         }
+        {%- endif %}
         {%- endif %}
         {{name}}.keys.deallocate()
         {{name}}.values.deallocate()

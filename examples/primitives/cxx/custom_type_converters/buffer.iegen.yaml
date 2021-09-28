@@ -3,16 +3,16 @@ rules:
     iegen::example::Buffer:
       custom:
         pname: Buffer
-        tname: "Buffer{{args_t[0]}}"
+        tname: "Buffer{{args[0].target_type_name}}"
       types:
         kotlin: "{{custom.tname}}"
         jni: jobjectid
         jdk: Long
       converters:
         jni_to_cxx: |
-          auto {{target_name}} = {{'*' if not is_pointer}}reinterpret_cast<{{cxx_pointee_unqualified_name}}*>({{name}});
+          auto {{target_name}} = {{'*' if not cxx.is_pointer}}reinterpret_cast<{{cxx_pointee_unqualified_name}}*>({{name}});
         cxx_to_jni: |
-          {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not is_pointer}}{{name}});
+          {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not cxx.is_pointer}}{{name}});
         kotlin_to_jdk:
           val {{target_name}} = {{name}}.getObjId()
         jdk_to_kotlin:

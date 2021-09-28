@@ -13,7 +13,7 @@ class Validator:
     @staticmethod
     def shared_ref_set(type_ctx):
         """Check whether shared_ref variable is set"""
-        if not type_ctx.root.api_vars.shared_ref:
+        if not type_ctx.root.vars.shared_ref:
             Error.critical("Root must have an attribute \"shared_ref: True\"",
                            type_ctx.node.file_name,
                            type_ctx.node.line_number)
@@ -21,7 +21,7 @@ class Validator:
     @staticmethod
     def shared_ref_unset(type_ctx):
         """Check whether shared_ref variable is false"""
-        if type_ctx.root.api_vars.shared_ref:
+        if type_ctx.root.vars.shared_ref:
             Error.critical("Root has an invalid attribute \"shared_ref: True\"",
                            type_ctx.node.file_name,
                            type_ctx.node.line_number)
@@ -38,7 +38,7 @@ class Validator:
     @staticmethod
     def validate_ancestors(ancestors):
         """Ensure that all ancestors has the same value for shared_ref variable"""
-        if ancestors and not all(item.shared_ref == ancestors[0].shared_ref for item in ancestors[1:]):
+        if ancestors and not all(item.vars.shared_ref == ancestors[0].vars.shared_ref for item in ancestors[1:]):
             raise TypeError('All ancestors must have the same value for shared_ref.')
 
     @staticmethod
@@ -46,7 +46,7 @@ class Validator:
         """Ensure the class has only one non abstract base"""
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.ctx.api_vars.action == 'gen_interface':
+            if not base_type.ctx.vars.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
@@ -95,7 +95,7 @@ class Exceptions:
     @staticmethod
     def has_exc_base(ctx):
         """Check whether current class has a base class which is exception class"""
-        return any(base.api_vars.is_exception for base in ctx.ancestors)
+        return any(base.vars.is_exception for base in ctx.ancestors)
 
 
 def make_doxygen_comment(pure_comment):

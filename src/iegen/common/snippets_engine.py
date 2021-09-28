@@ -21,7 +21,6 @@ from iegen.common.yaml_process import to_value
 from iegen.ir.exec_rules import Context
 from iegen.utils import JINJA2_ENV
 
-
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
 FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
@@ -298,6 +297,10 @@ class Converter:
         return self._get_root_type(self.ctx, self.cxx_type)
 
     @property
+    def vars(self):
+        return self.ctx.vars if self.ctx else None
+
+    @property
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
@@ -305,25 +308,20 @@ class Converter:
             args = [getattr(arg, self.target_lang) for arg in self.template_args]
             args_converters = self.template_args
 
-            args_t = [arg.target_type_name for arg in args]
-            args_t_bases = [
-                self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name for arg in args]
-
-            cxx_type_name = self.cxx_type_name
-
-            cxx_pointee_name = self.cxx_type.pointee_name
-            is_pointer = self.cxx_type.is_pointer
-            is_value_type = self.cxx_type.is_value
-            is_reference = self.cxx_type.is_lval_reference
-
-            cxx_pointee_unqualified_name = self.cxx_type.unqualified_pointee_name
+            cxx = SimpleNamespace(
+                type_name=self.cxx_type_name,
+                pointee_name=self.cxx_type.pointee_name,
+                is_pointer=self.cxx_type.is_pointer,
+                is_value_type=self.cxx_type.is_value,
+                is_reference=self.cxx_type.is_lval_reference,
+                pointee_unqualified_name=self.cxx_type.unqualified_pointee_name,
+            )
 
             if self.ctx:
                 # make api variables available in converter under vars
-                vars = SimpleNamespace(**self.ctx.node.args)
+                vars = self.ctx.vars
                 template_names = self.ctx.template_names or []
-                type_ctx = self.ctx  # todo should we just import all attributes
-                cxx_root_type_name = self.cxx_root_type_name
+                cxx.root_type_name = self.cxx_root_type_name
 
             # helper name spaces
 
@@ -335,6 +333,11 @@ class Converter:
         context = make()
         del context['self']
 
+        # expose cxx and vars so that they can be overridden if required when calling snippeta
+        self._expose_namespace(context, 'cxx')
+        if 'vars' in context:
+            self._expose_namespace(context, 'vars')
+
         custom = SimpleNamespace()
         # evaluate custom fields one by one to make available by defined order
         for k, v in self.custom.__dict__.items():
@@ -344,6 +347,10 @@ class Converter:
         self.custom = custom
 
         return context
+
+    def _expose_namespace(self, context, name):
+        for k, v in context[name].__dict__.items():
+            context[f'{name}_{k}'] = v
 
     def _get_root_type(self, ctx, cxx_type):
         if not ctx:
@@ -360,7 +367,7 @@ class Converter:
                 cxx_root_type_name = cxx_type.unqualified_pointee_name
             else:
                 cxx_root_type_name = cutil.replace_template_choice(
-                    _root_cursor.type.spelling, self.cxx_type)
+                    _root_cursor.type.spelling, self.cxx_type.template_choice)
         return cxx_root_type_name
 
 
@@ -370,6 +377,7 @@ class Adapter:
         self.type_info_collector = type_info_collector
         self.cxx_type = cxx_type
         self.ctx = ctx
+        self.vars = self.ctx.vars if self.ctx else None
         self.template_args = []
         self.kwargs = kwargs
 
@@ -663,7 +671,7 @@ class SnippetsEngine:
 
                         target_tmpl = source_tmpl = None
                         if target_lang and source_lang:
-                            target_tmpl = source_tmpl = '{{cxx_type_name}}'
+                            target_tmpl = source_tmpl = '{{cxx.type_name}}'
                             if target_lang in info_map[SnippetsEngine.TYPES_KEY]:
                                 target_tmpl = info_map[SnippetsEngine.TYPES_KEY][target_lang].value
                             if source_lang in info_map[SnippetsEngine.TYPES_KEY]:

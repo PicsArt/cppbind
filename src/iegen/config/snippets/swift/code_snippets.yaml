@@ -1,7 +1,7 @@
 file:
   swift:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{vars.out_dir + pat_sep + [vars.package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.swift
     scopes:
       - include
       - body
@@ -12,7 +12,7 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{cxx_out_dir + pat_sep + [vars.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - namespace
       - body
@@ -22,14 +22,14 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(cxx_out_dir + pat_sep + [package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
+      #include "{{path.relpath(cxx_out_dir + pat_sep + [vars.package_prefix, package]|map('replace', '.', pat_sep)|path_join, out_prj_dir)}}/c_{{file}}.h"
       {{include}}
       {{namespace}}
 
       {{body}}
   ch:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{cxx_out_dir + pat_sep + [vars.package_prefix, package, 'c_' + file]|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
       - include
@@ -77,7 +77,7 @@ var_class_include: &var_class_include
       {%- endif -%}
       {%- macro gen_import(converter) -%}
       {%- set type_ctx = converter.ctx -%}
-      {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.api_vars.package != package or type_ctx.api_vars.file != file) -%}
+      {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.vars.package != vars.package or type_ctx.vars.file != vars.file) -%}
       {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
       {%- endif -%}
       {%- for tmpl_arg_converter in converter.template_args -%}
@@ -110,7 +110,7 @@ class:
                                 {%- if is_exception and not helper.Exceptions.has_exc_base(ctx) -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
                                 {%- endif %} {
-            {% if not base_types_converters|rejectattr('ctx.api_vars.action', 'equalto', 'gen_interface')|list and not helper.Exceptions.is_std_custom_exc(ctx)%}
+            {% if not base_types_converters|rejectattr('vars.action', 'equalto', 'gen_interface')|list and not helper.Exceptions.is_std_custom_exc(ctx)%}
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 
@@ -220,20 +220,20 @@ interface:
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
     {%- endif -%}
 
 constructor:
@@ -291,12 +291,12 @@ function:
     body: |
       {{comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- if is_operator %}
       public static func {{helper.get_map_cxx_operator_name(name)}}(cself: {{owner_class.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      {% set override = is_override and not (original_definition_context and original_definition_context.api_vars.action == 'gen_interface') -%}
+      {% set override = is_override and not is_original_definition_override -%}
       public {{"static " if is_static}}{{"override " if override}}func {{name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
@@ -328,12 +328,12 @@ function:
               {%- if helper.Exceptions.can_throw(throws) %}
               {%- for exc_type in throws %}
                   case({{loop.index}}):
-                      throw {{ctx.lookup_ctx_by_name(exc_type).api_vars.name}}(err.err_ptr, true)
+                      throw {{ctx.lookup_ctx_by_name(exc_type).vars.name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in throws %}
                   case({{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}}):
-                      let exc_obj = {{ctx.lookup_ctx_by_name("std::exception").api_vars.name}}(err.err_ptr, true)
+                      let exc_obj = {{ctx.lookup_ctx_by_name("std::exception").vars.name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -351,7 +351,7 @@ function:
   cc:
     include: *var_method_cxx_include
     body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') %}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}(
       {%- if not is_static -%}
@@ -372,7 +372,7 @@ function:
           try {
               const auto& result = {%if not is_static %}{{this_converter.converted_name('cself')}}->
                                    {%- else%}{{owner_class.cxx_type_name}}::{% endif %}{{cxx_name}}
-                                   {%- if ctx.node.is_function_template -%}
+                                   {%- if cxx.is_template -%}
                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
               {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_c.converted_name('result')}};
@@ -409,7 +409,7 @@ function:
     body:
       content: |
         {%- set comma = joiner(', ') %}
-        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
+        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}(
         {%- if not is_static -%}
         {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
@@ -417,16 +417,16 @@ function:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
 
 property_getter:
   swift:
@@ -486,10 +486,10 @@ getter:
   swift:
     properties: |
       {% set result_converter = rconverter.sc_to_swift %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {{comment|make_doxygen_comment}}
-      {% set override = is_override and not (original_definition_context and original_definition_context.api_vars.action == 'gen_interface') -%}
-      public {{'override ' if override}}var {% if ctx.node.is_function_template -%}
+      {% set override = is_override and not is_original_definition_override -%}
+      public {{'override ' if override}}var {% if cxx.is_template -%}
                                            {%- for name in template_names or [] %}
                                            {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
                                            {%- endfor %}
@@ -504,7 +504,7 @@ getter:
           {% set converter = setter_ctx.args[0].converter.swift_to_sc %}
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
-              _prop_set_{{owner_class.converter.swift.target_type_name}}_{{ctx.api_vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
+              _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
           }
           {% endif %}
       }
@@ -516,8 +516,8 @@ getter:
   cc:
     include: *var_getter_cxx_include
     body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {%- if cxx.is_template -%}
       {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
       {%- else %}
       {%- set template_args = '' %}
@@ -531,7 +531,7 @@ getter:
       }
       {%- if setter_ctx is defined %}
       {% set converter = setter_ctx.args[0].converter.c_to_cxx %}
-      void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{ctx.api_vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter_ctx.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}}){
+      void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter_ctx.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}}){
           {%- if owner_class.root.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx_type_name}}>(
                     *static_cast<std::shared_ptr<{{owner_class.cxx_root_type_name}}>*>(cself)
@@ -546,10 +546,10 @@ getter:
   ch:
     body:
       content: |
-        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if ctx.node.is_function_template else '' -%}
+        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself);
         {%- if setter_ctx is defined %}
         {% set converter = setter_ctx.args[0].converter.c %}
-        void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{ctx.api_vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{converter.target_type_name}}
+        void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{converter.target_type_name}}
         {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{setter_ctx.args[0].name}});
         {% endif %}

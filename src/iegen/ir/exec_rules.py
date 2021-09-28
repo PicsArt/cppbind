@@ -19,10 +19,10 @@ class BaseContext:
         self.node = node or runner.ir
 
     @property
-    def api_vars(self):
-        if not hasattr(self, '_api_vars'):
-            self._api_vars = types.SimpleNamespace(**self.node.args)
-        return self._api_vars
+    def vars(self):
+        if not hasattr(self, '_vars'):
+            self._vars = types.SimpleNamespace(**self.node.args)
+        return self._vars
 
 
 class Context(BaseContext):
@@ -124,7 +124,7 @@ class Context(BaseContext):
 
         if not hasattr(self, '_overloading_prefix'):
             search_api = self.node.api
-            name = self.api_vars.name
+            name = self.vars.name
             search_names = {name}
             overloads = self.find_adjacents(search_names, search_api)
             _overloading_prefix = ''
@@ -141,7 +141,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_setter'
-        name = self.api_vars.name
+        name = self.vars.name
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
         search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
@@ -154,7 +154,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_getter'
-        name = self.api_vars.name
+        name = self.vars.name
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
         search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],
@@ -262,14 +262,14 @@ class Context(BaseContext):
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
             self._prj_rel_file_name = os.path.relpath(
-                self.cursor.location.file.name, self.api_vars.out_prj_dir)
+                self.cursor.location.file.name, self.vars.out_prj_dir)
         return self._prj_rel_file_name
 
     @property
     def is_proj_type(self):
         """Check whether the given type is user's type or is the type from standard/3pty lib"""
         return os.path.abspath(self.cursor.location.file.name).startswith(
-            os.path.abspath(self.api_vars.out_prj_dir) + os.path.sep)
+            os.path.abspath(self.vars.out_prj_dir) + os.path.sep)
 
     @property
     def template_type_parameters(self):

@@ -210,17 +210,17 @@ var_class: &var_class
         {%- if include -%}
         {{marker}}{{include|format_list("from {} import *")|join_unique}}
         {%- endif -%}
-        {%- macro gen_import(converter, current_ctx) -%}
+        {%- macro gen_import(converter) -%}
         {%- set type_ctx = converter.ctx -%}
-        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.api_vars.package != current_ctx.api_vars.package or type_ctx.api_vars.file != current_ctx.api_vars.file) -%}
-        {{marker}}import {{type_ctx.api_vars.package_prefix + '.' if type_ctx.api_vars.package_prefix}}{{type_ctx.api_vars.package}}.{{type_ctx.api_vars.file + type_ctx.api_vars.file_postfix}} as {{type_ctx.api_vars.file}}
+        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.vars.package != vars.package or type_ctx.vars.file != vars.file) -%}
+        {{marker}}import {{type_ctx.vars.package_prefix + '.' if type_ctx.vars.package_prefix}}{{type_ctx.vars.package}}.{{type_ctx.vars.file + type_ctx.vars.file_postfix}} as {{type_ctx.vars.file}}
         {%- endif -%}
         {%- for tmpl_arg_converter in converter.template_args -%}
-        {{gen_import(tmpl_arg_converter, current_ctx)}}
+        {{gen_import(tmpl_arg_converter)}}
         {%- endfor -%}
         {%- endmacro -%}
         {%- for base in base_types_converters -%}
-        {{gen_import(base, ctx)}}
+        {{gen_import(base)}}
         {%- endfor -%}
     body:
       scopes:
@@ -230,7 +230,7 @@ var_class: &var_class
       content: |
         {%- set bases_specifiers = [] -%}
         {%- for base_type_converter in base_types_converters -%}
-        {%- set base_type_package = base_type_converter.ctx.api_vars.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.api_vars.file != file or base_type_converter.ctx.api_vars.package != package) else '' -%}
+        {%- set base_type_package = base_type_converter.vars.file + '.' if base_type_converter.ctx and (base_type_converter.vars.file != file or base_type_converter.vars.package != package) else '' -%}
         {%- do bases_specifiers.append(base_type_package + base_type_converter.python.target_type_name) -%}
         {%- endfor -%}
         {%- do bases_specifiers.extend(bases_list) -%}
@@ -265,17 +265,17 @@ var_class: &var_class
         {%- if ctx.is_proj_type -%}
         #include "{{prj_rel_file_name}}"
         {%- endif -%}
-        {%- macro gen_import(converter, current_ctx) -%}
+        {%- macro gen_import(converter) -%}
         {%- set type_ctx = converter.ctx -%}
-        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.api_vars.package != current_ctx.api_vars.package or type_ctx.api_vars.file != current_ctx.api_vars.file) -%}
+        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.vars.package != vars.package or type_ctx.vars.file != vars.file) -%}
         {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
         {%- endif -%}
         {%- for tmpl_arg_converter in converter.template_args -%}
-        {{gen_import(tmpl_arg_converter, current_ctx)}}
+        {{gen_import(tmpl_arg_converter)}}
         {%- endfor -%}
         {%- endmacro -%}
         {%- for base in base_types_converters -%}
-        {{gen_import(base, ctx)}}
+        {{gen_import(base)}}
         {%- endfor -%}
         {%- if include_cxx -%}
         {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
@@ -329,38 +329,38 @@ var_bind_method: &var_bind_method
 
 var_method_python_include: &var_method_python_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.api_vars.package != current_ctx.api_vars.package or type_ctx.api_vars.file != current_ctx.api_vars.file) -%}
-    {{marker}}import {{type_ctx.api_vars.package_prefix + '.' if type_ctx.api_vars.package_prefix}}{{type_ctx.api_vars.package}}.{{type_ctx.api_vars.file + type_ctx.api_vars.file_postfix}} as {{type_ctx.api_vars.file}}
+    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.vars.package != vars.package or type_ctx.vars.file != vars.file) -%}
+    {{marker}}import {{type_ctx.vars.package_prefix + '.' if type_ctx.vars.package_prefix}}{{type_ctx.vars.package}}.{{type_ctx.vars.file + type_ctx.vars.file_postfix}} as {{type_ctx.vars.file}}
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
     {%- endif -%}
 
 constructor:
@@ -370,7 +370,7 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {%- set arg_package = arg.converter.ctx.api_vars.file + '.' if arg.converter.ctx and (arg.converter.ctx.api_vars.file != file or arg.converter.ctx.api_vars.package != package) else '' -%}
+                                       {%- set arg_package = arg.converter.vars.file + '.' if arg.converter.ctx and (arg.converter.vars.file != file or arg.converter.vars.package != package) else '' -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
@@ -415,9 +415,9 @@ function:
       {%- endif %}
       @bind
       def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
-                                                          {%- set rtype_package = rconverter.ctx.api_vars.file + '.' if rconverter.ctx and (rconverter.ctx.api_vars.file != file or rconverter.ctx.api_vars.package != package) else '' -%}
+                                                          {%- set rtype_package = rconverter.vars.file + '.' if rconverter.ctx and (rconverter.vars.file != file or rconverter.vars.package != package) else '' -%}
                                                           {%- for arg in args -%}
-                                                          {%- set arg_package = arg.converter.ctx.api_vars.file + '.' if arg.converter.ctx and (arg.converter.ctx.api_vars.file != file or arg.converter.ctx.api_vars.package != package) else '' -%}
+                                                          {%- set arg_package = arg.converter.vars.file + '.' if arg.converter.ctx and (arg.converter.vars.file != file or arg.converter.vars.package != package) else '' -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
@@ -448,7 +448,7 @@ function:
       {%- else -%}
       , &{{owner_class.cxx_type_name}}::{{cxx_name}}
       {%- endif -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- if cxx.is_template -%}
       <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
       {%- endif -%}
       {{', ' if args}}
@@ -472,29 +472,29 @@ var_bind_getter: &var_bind_getter
 
 var_getter_python_include: &var_getter_python_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.api_vars.package != current_ctx.api_vars.package or type_ctx.api_vars.file != current_ctx.api_vars.file) -%}
-    {{marker}}import {{type_ctx.api_vars. package_prefix + '.' if type_ctx.api_vars.package_prefix}}{{type_ctx.api_vars.package}}.{{type_ctx.api_vars.file + type_ctx.api_vars.file_postfix}} as {{type_ctx.api_vars.file}}
+    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.vars.package != vars.package or type_ctx.vars.file != vars.file) -%}
+    {{marker}}import {{type_ctx.vars. package_prefix + '.' if type_ctx.vars.package_prefix}}{{type_ctx.vars.package}}.{{type_ctx.vars.file + type_ctx.vars.file_postfix}} as {{type_ctx.vars.file}}
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
+    {%- macro gen_import(converter) -%}
     {%- set type_ctx = converter.ctx -%}
     {%- if type_ctx and type_ctx.is_proj_type -%}
     {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {{gen_import(tmpl_arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
 
 property_getter:
   python:
@@ -502,7 +502,7 @@ property_getter:
     properties: |
       {%- set rctx = rconverter.ctx -%}
       {%- set _name = name|to_snake_case -%}
-      {% set arg_package = rctx.api_vars.file + '.' if rctx and (rctx.api_vars.file != owner_class.file or rctx.api_vars.package != owner_class.package) else '' %}
+      {% set arg_package = rctx.vars.file + '.' if rctx and (rctx.vars.file != owner_class.file or rctx.vars.package != owner_class.package) else '' %}
       @property
       @bind
       def {{_name}}(self) -> {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
@@ -532,14 +532,14 @@ getter:
     properties: |
       {%- set rctx = rconverter.ctx -%}
       {%- macro gen_name() -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- if cxx.is_template -%}
       {%- for name in template_names or [] %}
       {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
       {%- endfor %}
       {%- else %}{{name}}
       {%- endif -%}
       {%- endmacro -%}
-      {%- set arg_package = rctx.api_vars.file + '.' if rctx and (rctx.api_vars.file != file or rctx.api_vars.package != package) else '' %}
+      {%- set arg_package = rctx.vars.file + '.' if rctx and (rctx.vars.file != file or rctx.vars.package != package) else '' %}
       @property
       @bind
       def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
@@ -558,14 +558,14 @@ getter:
     include: *var_getter_cxx_include
     body: |
       {%- macro gen_name() -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- if cxx.is_template -%}
       {%- for name in template_names or [] %}
       {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
       {%- endfor %}
       {%- else %}{{name}}
       {%- endif -%}
       {%- endmacro -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- if cxx.is_template -%}
       {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
       {%- else %}
       {%- set template_args = '' %}

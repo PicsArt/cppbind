@@ -29,7 +29,7 @@ extension Parallelogram {
     
     public var area: Double {
         get {
-            let result = _prop_get_Parallelogram_area(cself);
+            let result = _prop_get_Parallelogram_area(cself)
             
             return result
         }
@@ -39,7 +39,7 @@ extension Parallelogram {
     public func perimeter() -> Double {
 
         var err = ErrorObj()
-        let result = _func_Parallelogram_perimeter(cself, &err);
+        let result = _func_Parallelogram_perimeter(cself, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -51,7 +51,7 @@ extension Parallelogram {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 }
 public class ParallelogramImpl : Parallelogram {

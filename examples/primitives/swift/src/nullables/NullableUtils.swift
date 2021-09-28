@@ -38,7 +38,7 @@ public class NumInt  {
 
     public var value: Int {
         get {
-            let result = _prop_get_NumInt_value(cself);
+            let result = _prop_get_NumInt_value(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -72,7 +72,7 @@ public class NumDouble  {
 
     public var value: Double {
         get {
-            let result = _prop_get_NumDouble_value(cself);
+            let result = _prop_get_NumDouble_value(cself)
             
             return result
         }
@@ -107,7 +107,7 @@ public class NullableUtils  {
     
     public var nullable: NumDouble? {
         get {
-            let result = _prop_get_NullableUtils_nullable(cself);
+            let result = _prop_get_NullableUtils_nullable(cself)
             let sc_to_swift_result: NumDouble?
             if let result = result {
                 sc_to_swift_result = NumDouble(result)
@@ -127,7 +127,7 @@ public class NullableUtils  {
 
     public var nonNull: NumDouble {
         get {
-            let result = _prop_get_NullableUtils_nonNull(cself);
+            let result = _prop_get_NullableUtils_nonNull(cself)
             let sc_to_swift_result = NumDouble(result)
             return sc_to_swift_result
         }
@@ -143,7 +143,7 @@ public class NullableUtils  {
 
     public var numDouble: NumDouble? {
         get {
-            let result = _prop_get_NullableUtils_numDouble(cself);
+            let result = _prop_get_NullableUtils_numDouble(cself)
             let sc_to_swift_result: NumDouble?
             if let result = result {
                 sc_to_swift_result = NumDouble(result)
@@ -163,7 +163,7 @@ public class NullableUtils  {
 
     public var numInt: NumInt {
         get {
-            let result = _prop_get_NullableUtils_numInt(cself);
+            let result = _prop_get_NullableUtils_numInt(cself)
             let sc_to_swift_result = NumInt(result, true)
             return sc_to_swift_result
         }
@@ -180,7 +180,7 @@ public class NullableUtils  {
         let swift_to_sc_first = first?.cself
         let swift_to_sc_second = second.cself
         var err = ErrorObj()
-        let result = _func_NullableUtils_max(swift_to_sc_first, swift_to_sc_second, &err);
+        let result = _func_NullableUtils_max(swift_to_sc_first, swift_to_sc_second, &err)
         let sc_to_swift_result: NumDouble?
         if let result = result {
             sc_to_swift_result = NumDouble(result)
@@ -197,7 +197,7 @@ public class NullableUtils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func max(first: NumInt?, second: NumInt?) -> NumInt? {
@@ -205,7 +205,7 @@ public class NullableUtils  {
         let swift_to_sc_first = first?.cself
         let swift_to_sc_second = second?.cself
         var err = ErrorObj()
-        let result = _func_NullableUtils_max_1(swift_to_sc_first, swift_to_sc_second, &err);
+        let result = _func_NullableUtils_max_1(swift_to_sc_first, swift_to_sc_second, &err)
         let sc_to_swift_result: NumInt?
             if let result = result {
                 sc_to_swift_result = NumInt(result, true)
@@ -222,14 +222,14 @@ public class NullableUtils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func checkNonnullArg(number: NumDouble) -> Void {
 
         let swift_to_sc_number = number.cself
         var err = ErrorObj()
-        _func_NullableUtils_checkNonnullArg(swift_to_sc_number, &err);
+        _func_NullableUtils_checkNonnullArg(swift_to_sc_number, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {
@@ -245,7 +245,7 @@ public class NullableUtils  {
     public static func checkNonnullReturn() -> NumDouble {
 
         var err = ErrorObj()
-        let result = _func_NullableUtils_checkNonnullReturn(&err);
+        let result = _func_NullableUtils_checkNonnullReturn(&err)
         let sc_to_swift_result = NumDouble(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -257,6 +257,6 @@ public class NullableUtils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

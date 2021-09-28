@@ -38,7 +38,7 @@ public class Path  {
 
     public var value: String {
         get {
-            let result = _prop_get_Path_value(cself);
+            let result = _prop_get_Path_value(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -50,7 +50,7 @@ public class Path  {
     public func toString() -> String {
 
         var err = ErrorObj()
-        let result = _func_Path_toString(cself, &err);
+        let result = _func_Path_toString(cself, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -65,6 +65,6 @@ public class Path  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

@@ -37,7 +37,7 @@ public class GeometricFigure  {
     
     public var parallelogram: Parallelogram {
         get {
-            let result = _prop_get_GeometricFigure_parallelogram(cself);
+            let result = _prop_get_GeometricFigure_parallelogram(cself)
             let sc_to_swift_result = ParallelogramImpl(result)
             return sc_to_swift_result
         }
@@ -77,7 +77,7 @@ public class MyVehicle  {
     
     public var vehicle: Vehicle {
         get {
-            let result = _prop_get_MyVehicle_vehicle(cself);
+            let result = _prop_get_MyVehicle_vehicle(cself)
             let sc_to_swift_result = Vehicle(result, true)
             return sc_to_swift_result
         }

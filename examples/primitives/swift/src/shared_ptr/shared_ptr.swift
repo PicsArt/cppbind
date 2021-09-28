@@ -45,7 +45,7 @@ public class Car  {
      */
     public var cost: Int {
         get {
-            let result = _prop_get_Car_cost(cself);
+            let result = _prop_get_Car_cost(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -59,7 +59,7 @@ public class Car  {
 
         let swift_to_sc_sp = sp.cself
         var err = ErrorObj()
-        _func_Car_setCostWithCarSharedPtr(cself, swift_to_sc_sp, &err);
+        _func_Car_setCostWithCarSharedPtr(cself, swift_to_sc_sp, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {
@@ -78,7 +78,7 @@ public class Car  {
     public func getNewCarSharedPtr() -> Car {
 
         var err = ErrorObj()
-        let result = _func_Car_getNewCarSharedPtr(cself, &err);
+        let result = _func_Car_getNewCarSharedPtr(cself, &err)
         let sc_to_swift_result = Car(result, true)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -90,6 +90,6 @@ public class Car  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

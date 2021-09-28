@@ -63,3 +63,33 @@ for json in jsonList {
     assert(jsonUsage.getJson() == json)
 }
 // [json-usage]
+
+// [nested-containers-usage]
+let nestedUsage = NestedExamples()
+
+let nestedIntList = [[1, 2], [3], []]
+nestedUsage.setNestedIntVector(v: nestedIntList)
+assert(nestedUsage.getNestedIntVector() == nestedIntList)
+
+let nestedIntMap : [Int: [Int: Int]] = [1: [1: 2], 2: [-1000: 10000000, 0: 0]]
+nestedUsage.setNestedIntMap(m: nestedIntMap)
+assert(nestedUsage.getNestedIntMap() == nestedIntMap)
+
+nestedUsage.mixedExampleWithManyArgs(v1: nestedIntList, v2: nestedIntList, m1: nestedIntMap, m2: nestedIntMap)
+
+let vectorOfIntMaps : [[Int: Int]] = [[1: 2, 3: 4], [-1: 0]]
+nestedUsage.setVectorOfIntMaps(v: vectorOfIntMaps)
+assert(nestedUsage.getVectorOfIntMaps() == vectorOfIntMaps)
+
+let mapOfIntVectors : [Int: [Int]] = [1 : [], 2: [3, 4]]
+nestedUsage.setMapOfIntVectors(m: mapOfIntVectors)
+assert(nestedUsage.getMapOfIntVectors() == mapOfIntVectors)
+
+let complexNestedStringVector : [[[String]]] = [[["a", "bc"], []]]
+nestedUsage.setComplexStringVector(v: complexNestedStringVector)
+assert(nestedUsage.getComplexStringVector() == complexNestedStringVector)
+
+let complexNestedStringMap : [String : [String : [String : String]]] = ["a" : ["b" : ["c" : "d"]]]
+nestedUsage.setComplexStringMap(m: complexNestedStringMap)
+assert(nestedUsage.getComplexStringMap() == complexNestedStringMap)
+// [nested-containers-usage]

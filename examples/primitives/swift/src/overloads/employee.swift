@@ -44,7 +44,7 @@ public class Employee  {
     
     public var name: String {
         get {
-            let result = _prop_get_Employee_name(cself);
+            let result = _prop_get_Employee_name(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -56,7 +56,7 @@ public class Employee  {
 
     public var email: String {
         get {
-            let result = _prop_get_Employee_email(cself);
+            let result = _prop_get_Employee_email(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -68,7 +68,7 @@ public class Employee  {
 
     public var age: Int {
         get {
-            let result = _prop_get_Employee_age(cself);
+            let result = _prop_get_Employee_age(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -81,7 +81,7 @@ public class Employee  {
         let swift_to_sc_age = CInt(age)
         let swift_to_sc_email = strdup(email)!
         var err = ErrorObj()
-        _func_Employee_setData(cself, swift_to_sc_name, swift_to_sc_age, swift_to_sc_email, &err);
+        _func_Employee_setData(cself, swift_to_sc_name, swift_to_sc_age, swift_to_sc_email, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {
@@ -98,7 +98,7 @@ public class Employee  {
 
         let swift_to_sc_age = CInt(age)
         var err = ErrorObj()
-        _func_Employee_setData_1(cself, swift_to_sc_age, &err);
+        _func_Employee_setData_1(cself, swift_to_sc_age, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {

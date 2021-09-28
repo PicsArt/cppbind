@@ -37,7 +37,7 @@ public class Vehicle  {
     
     public var numberOfSeats: Int {
         get {
-            let result = _prop_get_Vehicle_numberOfSeats(cself);
+            let result = _prop_get_Vehicle_numberOfSeats(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }

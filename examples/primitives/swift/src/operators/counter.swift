@@ -43,7 +43,7 @@ public class Counter  {
      */
     public var count: Int {
         get {
-            let result = _prop_get_Counter_count(cself);
+            let result = _prop_get_Counter_count(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -55,7 +55,7 @@ public class Counter  {
     public static func +(cself: Counter, counter: Counter) -> Counter {
         let swift_to_sc_counter = counter.cself
         var err = ErrorObj()
-        let result = _func_Counter_operator_add_(cself.cself, swift_to_sc_counter, &err);
+        let result = _func_Counter_operator_add_(cself.cself, swift_to_sc_counter, &err)
         let sc_to_swift_result = Counter(result, true)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -67,7 +67,7 @@ public class Counter  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * Comparison operator for kotlin
@@ -76,7 +76,7 @@ public class Counter  {
 
         let swift_to_sc_counter = counter.cself
         var err = ErrorObj()
-        let result = _func_Counter_compareTo(cself, swift_to_sc_counter, &err);
+        let result = _func_Counter_compareTo(cself, swift_to_sc_counter, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -88,13 +88,13 @@ public class Counter  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func >(cself: Counter, counter: Counter) -> Bool {
         let swift_to_sc_counter = counter.cself
         var err = ErrorObj()
-        let result = _func_Counter_operator_gt_(cself.cself, swift_to_sc_counter, &err);
+        let result = _func_Counter_operator_gt_(cself.cself, swift_to_sc_counter, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -106,13 +106,13 @@ public class Counter  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 
     public static func +=(cself: Counter, counter: Counter) -> Counter {
         let swift_to_sc_counter = counter.cself
         var err = ErrorObj()
-        let result = _func_Counter_operator_iadd_(cself.cself, swift_to_sc_counter, &err);
+        let result = _func_Counter_operator_iadd_(cself.cself, swift_to_sc_counter, &err)
         let sc_to_swift_result = Counter(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -124,6 +124,6 @@ public class Counter  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

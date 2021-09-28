@@ -38,7 +38,7 @@ public class NumberInt  {
 
     public var num: Int {
         get {
-            let result = _prop_get_NumberInt_num(cself);
+            let result = _prop_get_NumberInt_num(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -53,7 +53,7 @@ public class NumberInt  {
     public func toInt() -> Int {
 
         var err = ErrorObj()
-        let result = _func_NumberInt_toInt(cself, &err);
+        let result = _func_NumberInt_toInt(cself, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -65,7 +65,7 @@ public class NumberInt  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 
@@ -95,7 +95,7 @@ public class NumberDouble  {
 
     public var num: Double {
         get {
-            let result = _prop_get_NumberDouble_num(cself);
+            let result = _prop_get_NumberDouble_num(cself)
             
             return result
         }
@@ -110,7 +110,7 @@ public class NumberDouble  {
     public func toInt() -> Int {
 
         var err = ErrorObj()
-        let result = _func_NumberDouble_toInt(cself, &err);
+        let result = _func_NumberDouble_toInt(cself, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -122,6 +122,6 @@ public class NumberDouble  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

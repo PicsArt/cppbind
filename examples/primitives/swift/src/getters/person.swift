@@ -41,7 +41,7 @@ public class Person  {
     
     public var fullName: String {
         get {
-            let result = _prop_get_Person_fullName(cself);
+            let result = _prop_get_Person_fullName(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -60,7 +60,7 @@ public class Person  {
 
     public var email: String {
         get {
-            let result = _prop_get_Person_email(cself);
+            let result = _prop_get_Person_email(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -72,7 +72,7 @@ public class Person  {
 
     public var age: Int {
         get {
-            let result = _prop_get_Person_age(cself);
+            let result = _prop_get_Person_age(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }

@@ -39,24 +39,24 @@ $Object:
     sc: "UnsafeMutableRawPointer"
   converters:
     c_to_cxx: |
-      {%- set pointee = cxx_pointee_unqualified_name %}
+      {%- set pointee = cxx.pointee_unqualified_name %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not is_pointer}} {{target_name}} = {{'*' if not is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx_root_type_name}}*>({{name}}));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx.root_type_name}}*>({{name}}));
     cxx_to_c: |
-      auto value_ptr_{{name}} = const_cast<{{cxx_pointee_unqualified_name}}*>({%if is_pointer%}{{name}}{%elif is_reference%} &{{name}} {%else%} new {{cxx_pointee_unqualified_name}}({{name}}) {%endif%});
-      auto {{target_name}} = static_cast<{{cxx_root_type_name}}*>(value_ptr_{{name}});
+      auto value_ptr_{{name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
+      auto {{target_name}} = static_cast<{{cxx.root_type_name}}*>(value_ptr_{{name}});
     swift_to_sc: |
       let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
     sc_to_swift: |
       {%- if nullable|default(False) -%}
       let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
       if let {{name}} = {{name}} {
-          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
+          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       } else {
           {{target_name}} = nil
       }
       {%- else -%}
-      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if is_value_type%}, true{%endif%})
+      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
 
 $Enum:
@@ -120,12 +120,12 @@ std::vector:
     is_c_pointer_type: False
     tname: "Array{{args[0].custom.tname}}"
   types:
-    swift: "Array<{{args_t[0]}}>"
+    swift: "Array<{{args[0].target_type_name}}>"
     c: "CDataArray"
     sc: "CDataArray"
   converters:
     c_to_cxx: |
-      {{cxx_pointee_unqualified_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
 
@@ -172,12 +172,12 @@ std::map:
     is_c_pointer_type: False
     tname: "Dictionary{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
-    swift: "Dictionary<{{args_t[0]}}, {{args_t[1]}}>"
+    swift: "Dictionary<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     c: "CDataMap"
     sc: "CDataMap"
   converters:
     c_to_cxx: |
-      {{cxx_pointee_unqualified_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
@@ -249,13 +249,13 @@ std::shared_ptr:
     is_c_pointer_type: True
     tname: "{{args[0].custom.tname}}"
   types:
-    swift: "{{args_t[0]}}"
-    c: "{{args_t[0]}}"
-    sc: "{{args_t[0]}}"
+    swift: "{{args[0].target_type_name}}"
+    c: "{{args[0].target_type_name}}"
+    sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- set pointee = args_t[0] %}
-      {%- set pointee_base = args_t_bases[0] %}
+      {%- set pointee = args[0].target_type_name %}
+      {%- set pointee_base = args[0].cxx_root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
@@ -266,7 +266,7 @@ std::shared_ptr:
       {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
       {%- endif %}
     cxx_to_c: |
-      {%- set pointee_base = args_t_bases[0] %}
+      {%- set pointee_base = args[0].cxx_root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
@@ -286,7 +286,7 @@ std::pair:
     is_c_pointer_type: False
     tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
-    swift: "({{args_t[0]}}, {{args_t[1]}})"
+    swift: "({{args[0].target_type_name}}, {{args[1].target_type_name}})"
     c: "CDataPair"
     sc: "CDataPair"
   converters:
@@ -295,7 +295,7 @@ std::pair:
       auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
       {{args[0].snippet('first_tmp_{}'.format(name))}}
       {{args[1].snippet('second_tmp_{}'.format(name))}}
-      {{cxx_pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
+      {{cxx.pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
       auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
       auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};

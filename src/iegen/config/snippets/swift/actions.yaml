@@ -1,41 +1,41 @@
 - file:
     files_glob: 
-      "{{[cxx_helpers_dir, '**/*.h*'] | path_join}}"
+      "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
     copy_to: |
-      {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
-      {{path.join(cxx_out_dir, file_rel_name)}}
+      {%- set file_rel_name = path.relpath(file_name, vars.cxx_helpers_dir) -%}
+      {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
     variables:
       cxx_helper_includes: |
-        {%- set prj_rel = path.relpath(cxx_out_dir, out_prj_dir) -%}
-        {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
+        {%- set prj_rel = path.relpath(vars.cxx_out_dir, vars.out_prj_dir) -%}
+        {%- set file_rel_name = path.relpath(file_name, vars.cxx_helpers_dir) -%}
         {{[prj_rel, file_rel_name]| path_join}}
 
 - file:
     files_glob: 
-      "{{[cxx_helpers_dir, '**/*.c*'] | path_join}}"
+      "{{[vars.cxx_helpers_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
-      {{path.join(cxx_out_dir, file_rel_name)}}
+      {%- set file_rel_name = path.relpath(file_name, vars.cxx_helpers_dir) -%}
+      {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
 - file:
     files_glob: 
-      - "{{[helpers_dir, '**/*.swift'] | path_join}}"
+      - "{{[vars.helpers_dir, '**/*.swift'] | path_join}}"
     copy_to: |
-      {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
-      {{path.join(out_dir, file_rel_name)}}
+      {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
+      {{path.join(vars.out_dir, file_rel_name)}}
 
     variables:
       helper_includes: |
-        {%- set file_rel_name = path.relpath(file_name, helpers_dir) -%}
+        {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
         {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
 - file:
     files_glob:
-      - "{{[cxx_base_dir, '**/*.h*'] | path_join}}"
-      - "{{[cxx_base_dir, '**/*.c*'] | path_join}}"
+      - "{{[vars.cxx_base_dir, '**/*.h*'] | path_join}}"
+      - "{{[vars.cxx_base_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {%- if cxx_base_out_dir is defined -%}
-        {%- set file_rel_name = path.relpath(file_name, cxx_base_dir) -%}
-        {{path.join(cxx_base_out_dir, file_rel_name)}}
+      {%- if vars.cxx_base_out_dir is defined -%}
+      {%- set file_rel_name = path.relpath(file_name, vars.cxx_base_dir) -%}
+      {{path.join(vars.cxx_base_out_dir, file_rel_name)}}
       {%- endif -%}

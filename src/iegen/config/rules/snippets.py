@@ -41,29 +41,9 @@ def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
-    context = make_root_context(ctx)
-
     load_snippets_engine(ctx_desc, platform, language)
 
-    GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions(context)
-
-
-def make_root_context(ctx):
-    def make():
-        # api
-        vars = ctx.vars
-
-        # helper variables
-        vars.cxx_helpers_dir = find_prj_dir(ctx.vars.cxx_helpers_dir)
-        vars.helpers_dir = find_prj_dir(ctx.vars.helpers_dir)
-        vars.cxx_base_dir = find_prj_dir(ctx.vars.cxx_base_dir)
-
-        # base variables
-        return locals()
-
-    context = make()
-
-    return context
+    GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions({'vars': ctx.vars})
 
 
 def make_def_context(ctx):
@@ -91,8 +71,6 @@ def make_def_context(ctx):
 
 def make_package_context(ctx):
     context = make_def_context(ctx)
-
-    context['package'] = ctx.vars.name
     return context
 
 
@@ -160,6 +138,7 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
+        prj_rel_file_name = ctx.prj_rel_file_name
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     type_name=ctx.cxx_type_name)
         return locals()
@@ -186,7 +165,8 @@ def make_class_context(ctx):
                                         root_type_name=getattr(converter, LANGUAGE).cxx_root_type_name,
                                         name=ctx.cursor.spelling,
                                         is_open=not cutil.is_final_cursor(ctx.cursor),
-                                        is_abstract=ctx.cursor.is_abstract_record())
+                                        is_abstract=ctx.cursor.is_abstract_record(),
+                                        cursor=ctx.cursor)
 
             return locals()
 
@@ -295,13 +275,11 @@ def gen_enum(ctx, builder):
 
 def gen_class(ctx, builder):
     context = make_class_context(ctx)
-    _validate_class(context)
     preprocess_entry(context, builder, 'class')
 
 
 def gen_interface(ctx, builder):
     context = make_class_context(ctx)
-    _validate_class(context)
     preprocess_entry(context, builder, 'interface')
 
 
@@ -335,14 +313,6 @@ def gen_property_setter(ctx, builder):
 
 def gen_setter(ctx, builder):
     return
-
-
-def _validate_class(context):
-    if LANGUAGE in ('swift', 'kotlin'):
-        Validator.validate_single_root(context['ctx'].cursor)
-        Validator.validate_bases(context['vars'].name, context['base_types_converters'])
-        Validator.validate_ancestors(context['ancestors'])
-        Validator.validate_ancestors(context['ancestors'])
 
 
 def _validate_nullable_args(ctx):

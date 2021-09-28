@@ -301,6 +301,14 @@ class Converter:
         return self.ctx.vars if self.ctx else None
 
     @property
+    def is_proj_type(self):
+        return self.ctx is not None and self.ctx.is_proj_type
+
+    @property
+    def is_obj_type(self):
+        return self.ctx is not None
+
+    @property
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():

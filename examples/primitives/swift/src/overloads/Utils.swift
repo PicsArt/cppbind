@@ -44,7 +44,7 @@ public class Utils  {
         let swift_to_sc_first = CInt(first)
         let swift_to_sc_second = CInt(second)
         var err = ErrorObj()
-        let result = _func_Utils_sum(swift_to_sc_first, swift_to_sc_second, &err);
+        let result = _func_Utils_sum(swift_to_sc_first, swift_to_sc_second, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -56,7 +56,7 @@ public class Utils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * Sum two floats.
@@ -66,7 +66,7 @@ public class Utils  {
         
         
         var err = ErrorObj()
-        let result = _func_Utils_sum_1(first, second, &err);
+        let result = _func_Utils_sum_1(first, second, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -78,7 +78,7 @@ public class Utils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
     /**
      * Concatenate with two strings.
@@ -88,7 +88,7 @@ public class Utils  {
         let swift_to_sc_first = strdup(first)!
         let swift_to_sc_second = strdup(second)!
         var err = ErrorObj()
-        let result = _func_Utils_concatenate(cself, swift_to_sc_first, swift_to_sc_second, &err);
+        let result = _func_Utils_concatenate(cself, swift_to_sc_first, swift_to_sc_second, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -103,7 +103,7 @@ public class Utils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * Concatenate with three strings.
@@ -114,7 +114,7 @@ public class Utils  {
         let swift_to_sc_second = strdup(second)!
         let swift_to_sc_third = strdup(third)!
         var err = ErrorObj()
-        let result = _func_Utils_concatenate_1(cself, swift_to_sc_first, swift_to_sc_second, swift_to_sc_third, &err);
+        let result = _func_Utils_concatenate_1(cself, swift_to_sc_first, swift_to_sc_second, swift_to_sc_third, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -129,6 +129,6 @@ public class Utils  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

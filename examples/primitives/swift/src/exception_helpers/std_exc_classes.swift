@@ -34,7 +34,7 @@ public class StdException  : Error {
     public func what() -> String {
 
         var err = ErrorObj()
-        let result = _func_StdException_what(cself, &err);
+        let result = _func_StdException_what(cself, &err)
         let sc_to_swift_result = String(cString: result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -46,7 +46,7 @@ public class StdException  : Error {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 

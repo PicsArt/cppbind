@@ -40,7 +40,7 @@ public class Integer  {
      */
     public var value: Int {
         get {
-            let result = _prop_get_Integer_value(cself);
+            let result = _prop_get_Integer_value(cself)
             let sc_to_swift_result = Int(result)
             return sc_to_swift_result
         }
@@ -72,7 +72,7 @@ public class MiscExc  {
 
         
         var err = ErrorObj()
-        let result = _func_MiscExc_returnInteger(do_throw, &err);
+        let result = _func_MiscExc_returnInteger(do_throw, &err)
         let sc_to_swift_result = Integer(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -86,14 +86,14 @@ public class MiscExc  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func raiseErrorByType(err_type: String) throws -> Void {
 
         let swift_to_sc_err_type = strdup(err_type)!
         var err = ErrorObj()
-        _func_MiscExc_raiseErrorByType(swift_to_sc_err_type, &err);
+        _func_MiscExc_raiseErrorByType(swift_to_sc_err_type, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {

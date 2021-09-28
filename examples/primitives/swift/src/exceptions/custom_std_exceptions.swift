@@ -31,7 +31,7 @@ public class SystemError : StdException {
     public override func what() -> String {
 
         var err = ErrorObj()
-        let result = _func_SystemError_what(cself, &err);
+        let result = _func_SystemError_what(cself, &err)
         let sc_to_swift_result = String(cString: result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -43,7 +43,7 @@ public class SystemError : StdException {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 
@@ -63,7 +63,7 @@ public class FileError : SystemError {
     public override func what() -> String {
 
         var err = ErrorObj()
-        let result = _func_FileError_what(cself, &err);
+        let result = _func_FileError_what(cself, &err)
         let sc_to_swift_result = String(cString: result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -75,6 +75,6 @@ public class FileError : SystemError {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

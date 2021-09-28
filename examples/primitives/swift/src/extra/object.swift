@@ -40,7 +40,7 @@ public class Object  {
     public func toString() -> String {
 
         var err = ErrorObj()
-        let result = _func_Object_toString(cself, &err);
+        let result = _func_Object_toString(cself, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -55,7 +55,7 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * Human readable class name
@@ -64,7 +64,7 @@ public class Object  {
     public func className() -> String {
 
         var err = ErrorObj()
-        let result = _func_Object_className(cself, &err);
+        let result = _func_Object_className(cself, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -79,7 +79,7 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * Compare on equality two objects
@@ -90,7 +90,7 @@ public class Object  {
 
         let swift_to_sc_other = other.cself
         var err = ErrorObj()
-        let result = _func_Object_equals(cself, swift_to_sc_other, &err);
+        let result = _func_Object_equals(cself, swift_to_sc_other, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -102,7 +102,7 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
     /**
      * Hash for object. Used in wrappers (java, obj-c, python) to define the hash function
@@ -111,7 +111,7 @@ public class Object  {
     public func hash() -> CUnsignedLong {
 
         var err = ErrorObj()
-        let result = _func_Object_hash(cself, &err);
+        let result = _func_Object_hash(cself, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -123,7 +123,7 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
     /**
      * Detailed string representation only for debug porpoises
@@ -132,7 +132,7 @@ public class Object  {
     public func debugInfo() -> String {
 
         var err = ErrorObj()
-        let result = _func_Object_debugInfo(cself, &err);
+        let result = _func_Object_debugInfo(cself, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -147,7 +147,7 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * The object's size in bytes
@@ -156,7 +156,7 @@ public class Object  {
     public func bytesCount() -> CUnsignedLong {
 
         var err = ErrorObj()
-        let result = _func_Object_bytesCount(cself, &err);
+        let result = _func_Object_bytesCount(cself, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -168,6 +168,6 @@ public class Object  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 }

@@ -48,7 +48,7 @@ public class JsonExamples  {
 
         let swift_to_sc_j = strdup(j)!
         var err = ErrorObj()
-        _func_JsonExamples_setJson(cself, swift_to_sc_j, &err);
+        _func_JsonExamples_setJson(cself, swift_to_sc_j, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {
@@ -67,7 +67,7 @@ public class JsonExamples  {
     public func getJson() -> String {
 
         var err = ErrorObj()
-        let result = _func_JsonExamples_getJson(cself, &err);
+        let result = _func_JsonExamples_getJson(cself, &err)
         let sc_to_swift_result = String(cString: result!)
         defer {
           result!.deallocate()
@@ -82,7 +82,7 @@ public class JsonExamples  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
     /**
      * comments
@@ -91,7 +91,7 @@ public class JsonExamples  {
     public func getSimpleJsonExample() -> String {
 
         var err = ErrorObj()
-        let result = _func_JsonExamples_getSimpleJsonExample(cself, &err);
+        let result = _func_JsonExamples_getSimpleJsonExample(cself, &err)
         let sc_to_swift_result = String(cString: result!)
         defer {
           result!.deallocate()
@@ -106,6 +106,6 @@ public class JsonExamples  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

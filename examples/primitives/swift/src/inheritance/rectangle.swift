@@ -36,7 +36,7 @@ extension Rectangle {
 
     public var area: Double {
         get {
-            let result = _prop_get_Rectangle_area(cself);
+            let result = _prop_get_Rectangle_area(cself)
             
             return result
         }
@@ -46,7 +46,7 @@ extension Rectangle {
 
     public var length: Double {
         get {
-            let result = _prop_get_Rectangle_length(cself);
+            let result = _prop_get_Rectangle_length(cself)
             
             return result
         }
@@ -56,7 +56,7 @@ extension Rectangle {
 
     public var width: Double {
         get {
-            let result = _prop_get_Rectangle_width(cself);
+            let result = _prop_get_Rectangle_width(cself)
             
             return result
         }
@@ -66,7 +66,7 @@ extension Rectangle {
     public func perimeter() -> Double {
 
         var err = ErrorObj()
-        let result = _func_Rectangle_perimeter(cself, &err);
+        let result = _func_Rectangle_perimeter(cself, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -78,7 +78,7 @@ extension Rectangle {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 }
 public class RectangleImpl : Rectangle {

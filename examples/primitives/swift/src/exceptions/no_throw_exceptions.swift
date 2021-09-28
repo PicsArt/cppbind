@@ -34,7 +34,7 @@ public class NoThrowExc  {
     public static func noop() -> Void {
 
         var err = ErrorObj()
-        _func_NoThrowExc_noop(&err);
+        _func_NoThrowExc_noop(&err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {

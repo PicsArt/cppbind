@@ -39,7 +39,7 @@ public class StackUsage  {
 
         let swift_to_sc_p = p.cself
         var err = ErrorObj()
-        let result = _func_StackUsage_firstItemOfSpecializedStack(cself, swift_to_sc_p, &err);
+        let result = _func_StackUsage_firstItemOfSpecializedStack(cself, swift_to_sc_p, &err)
         let sc_to_swift_result = Project(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -51,14 +51,14 @@ public class StackUsage  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public func firstItemOfTemplateStack(arg0: StackProject) -> Project {
 
         let swift_to_sc_arg0 = arg0.cself
         var err = ErrorObj()
-        let result = _func_StackUsage_firstItemOfTemplateStackProject(cself, swift_to_sc_arg0, &err);
+        let result = _func_StackUsage_firstItemOfTemplateStackProject(cself, swift_to_sc_arg0, &err)
         let sc_to_swift_result = Project(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -70,6 +70,6 @@ public class StackUsage  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

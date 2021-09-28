@@ -39,7 +39,7 @@ public class SimpleBaseException  : Error {
     public func errNum() -> Int {
 
         var err = ErrorObj()
-        let result = _func_SimpleBaseException_errNum(cself, &err);
+        let result = _func_SimpleBaseException_errNum(cself, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -51,7 +51,7 @@ public class SimpleBaseException  : Error {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 
@@ -74,7 +74,7 @@ public class SimpleChildException : SimpleBaseException {
     public override func errNum() -> Int {
 
         var err = ErrorObj()
-        let result = _func_SimpleChildException_errNum(cself, &err);
+        let result = _func_SimpleChildException_errNum(cself, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -86,6 +86,6 @@ public class SimpleChildException : SimpleBaseException {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

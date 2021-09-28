@@ -38,7 +38,7 @@ public class WithExternalAPIComments  {
 
     public var str: String {
         get {
-            let result = _prop_get_WithExternalAPIComments_str(cself);
+            let result = _prop_get_WithExternalAPIComments_str(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -58,7 +58,7 @@ public class WithExternalAPIComments  {
 
         let swift_to_sc_n = CInt(n)
         var err = ErrorObj()
-        let result = _func_WithExternalAPIComments_retInt(swift_to_sc_n, &err);
+        let result = _func_WithExternalAPIComments_retInt(swift_to_sc_n, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -70,7 +70,7 @@ public class WithExternalAPIComments  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func max(arg0: Int, arg1: Int) -> Int {
@@ -78,7 +78,7 @@ public class WithExternalAPIComments  {
         let swift_to_sc_arg0 = CInt(arg0)
         let swift_to_sc_arg1 = CInt(arg1)
         var err = ErrorObj()
-        let result = _func_WithExternalAPIComments_maxInt(swift_to_sc_arg0, swift_to_sc_arg1, &err);
+        let result = _func_WithExternalAPIComments_maxInt(swift_to_sc_arg0, swift_to_sc_arg1, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -90,7 +90,7 @@ public class WithExternalAPIComments  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 
     public static func max(arg0: String, arg1: String) -> String {
@@ -98,7 +98,7 @@ public class WithExternalAPIComments  {
         let swift_to_sc_arg0 = strdup(arg0)!
         let swift_to_sc_arg1 = strdup(arg1)!
         var err = ErrorObj()
-        let result = _func_WithExternalAPIComments_maxString(swift_to_sc_arg0, swift_to_sc_arg1, &err);
+        let result = _func_WithExternalAPIComments_maxString(swift_to_sc_arg0, swift_to_sc_arg1, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -113,7 +113,7 @@ public class WithExternalAPIComments  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 
@@ -141,7 +141,7 @@ public class AdderInt  {
         let swift_to_sc_a = CInt(a)
         let swift_to_sc_b = CInt(b)
         var err = ErrorObj()
-        let result = _func_AdderInt_add(swift_to_sc_a, swift_to_sc_b, &err);
+        let result = _func_AdderInt_add(swift_to_sc_a, swift_to_sc_b, &err)
         let sc_to_swift_result = Int(result)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -153,7 +153,7 @@ public class AdderInt  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 
@@ -181,7 +181,7 @@ public class AdderDouble  {
         
         
         var err = ErrorObj()
-        let result = _func_AdderDouble_add(a, b, &err);
+        let result = _func_AdderDouble_add(a, b, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -193,7 +193,7 @@ public class AdderDouble  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 }
 public enum color: CUnsignedInt {

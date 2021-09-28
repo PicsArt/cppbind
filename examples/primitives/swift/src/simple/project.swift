@@ -44,7 +44,7 @@ public class Project  {
      */
     public var title: String {
         get {
-            let result = _prop_get_Project_title(cself);
+            let result = _prop_get_Project_title(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -60,7 +60,7 @@ public class Project  {
 
         let swift_to_sc_task = task.cself
         var err = ErrorObj()
-        _func_Project_addTask(cself, swift_to_sc_task, &err);
+        _func_Project_addTask(cself, swift_to_sc_task, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {
@@ -78,16 +78,16 @@ public class Project  {
     public func tasks() -> Array<Task> {
 
         var err = ErrorObj()
-        let result = _func_Project_tasks(cself, &err);
+        let result = _func_Project_tasks(cself, &err)
         let _tmp_result_data = UnsafeBufferPointer<UnsafeMutableRawPointer>(start: result.data.assumingMemoryBound(to: UnsafeMutableRawPointer.self), count: Int(result.size))
         var sc_to_swift_result: [Task] = []
         defer {
           _tmp_result_data.deallocate()
         }
         for _i in 0..<Int(result.size) {
-          let value_result = _tmp_result_data[_i];
+          let value_result = _tmp_result_data[_i]
           let sc_to_swift_value_result = Task(value_result)
-          sc_to_swift_result.append(sc_to_swift_value_result);
+          sc_to_swift_result.append(sc_to_swift_value_result)
         }
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -99,6 +99,6 @@ public class Project  {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }

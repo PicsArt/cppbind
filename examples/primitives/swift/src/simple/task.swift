@@ -44,7 +44,7 @@ public class Task  {
      */
     public var title: String {
         get {
-            let result = _prop_get_Task_title(cself);
+            let result = _prop_get_Task_title(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()

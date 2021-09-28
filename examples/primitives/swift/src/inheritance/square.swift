@@ -38,7 +38,7 @@ public class Square : RhombusFigure, Rectangle {
 
     public var area: Double {
         get {
-            let result = _prop_get_Square_area(cself);
+            let result = _prop_get_Square_area(cself)
             
             return result
         }
@@ -48,7 +48,7 @@ public class Square : RhombusFigure, Rectangle {
     public func perimeter() -> Double {
 
         var err = ErrorObj()
-        let result = _func_Square_perimeter(cself, &err);
+        let result = _func_Square_perimeter(cself, &err)
         
         let err_type = Int(err.err_type)
         if (err_type != 0) {
@@ -60,6 +60,6 @@ public class Square : RhombusFigure, Rectangle {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return result;
+        return result
     }
 }

@@ -38,7 +38,7 @@ extension AddressableRoot {
     public func absPath() -> String {
 
         var err = ErrorObj()
-        let result = _func_AddressableRoot_absPath(cself, &err);
+        let result = _func_AddressableRoot_absPath(cself, &err)
         let sc_to_swift_result = String(cString: result)
         defer{
           result.deallocate()
@@ -53,7 +53,7 @@ extension AddressableRoot {
                     ExceptionHandler.handleUncaughtException("Uncaught Exception")
             }
         }
-        return sc_to_swift_result;
+        return sc_to_swift_result
     }
 }
 public class AddressableImplRoot : AddressableRoot {

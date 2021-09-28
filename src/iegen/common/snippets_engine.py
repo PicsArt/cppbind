@@ -270,7 +270,7 @@ class Converter:
         self.target_lang = target_lang
         self.custom = custom
         self.ctx = ctx
-        self.context = self._make_context
+        self.context = self._make_context()
 
     def snippet(self, name, **kwargs):
         return self.type_converter.snippet(name, {**self.context, **kwargs})
@@ -297,17 +297,17 @@ class Converter:
     def cxx_root_type_name(self):
         return self._get_root_type(self.ctx, self.cxx_type)
 
-    @property
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
             args = [getattr(arg, self.target_lang) for arg in self.template_args]
+
             args_converters = self.template_args
 
-            args_t = [arg.target_type_name for arg in args]
-            args_t_bases = [
-                self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name for arg in args]
+            args_t = [arg.target_type_name if arg else None for arg in args]
+            args_t_bases = [(self._get_root_type(arg.ctx, arg.cxx_type) if arg.ctx else arg.target_type_name)
+                            if arg else None for arg in args]
 
             cxx_type_name = self.cxx_type_name
 
@@ -382,7 +382,7 @@ class Adapter:
         elif name in self.type_info_collector.converters:
             type_info_collector = self.type_info_collector.converters[name]
         else:
-            return super().__getattribute__(name)
+            return None
 
         return Converter(cxx_type=self.cxx_type,
                          template_args=self.template_args,
@@ -391,8 +391,6 @@ class Adapter:
                          ctx=self.ctx,
                          type_converter=type_info_collector,
                          **self.kwargs)
-
-    __getitem__ = __getattr__
 
 
 class TypeInfoCollector:
@@ -680,14 +678,11 @@ class SnippetsEngine:
                             Error.critical(f"Error in code snippets for {type_name}, "
                                            f"in converter {name}. Error {str(err)}")
                         else:
-                            key_name = name
-                            if target_lang and source_lang:
-                                key_name = f"{source_lang}_to_{target_lang}"
                             target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
-                                                            name=key_name,
+                                                            name=name,
                                                             target_type_info=target_type_info,
                                                             source_type_info=source_type_info)
-                            type_converters[key_name] = target_info
+                            type_converters[name] = target_info
                 elif section_key == SnippetsEngine.CUSTOM_KEY:
                     # primitive type info
                     custom = SimpleNamespace(

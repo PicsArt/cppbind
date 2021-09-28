@@ -146,16 +146,13 @@ std::vector:
       }
     swift_to_sc: |
       let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      defer {
-        _data_{{target_name}}.deallocate()
-      }
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
       {{target_name}}.size = Int64({{name}}.count)
       for _i in 0..<{{name}}.count {
-        let value_{{name}} = {{name}}[_i];
+        let value_{{name}} = {{name}}[_i]
         {{args[0].snippet('value_{}'.format(name))|indent}}
-        _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}};
+        _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
       }
     sc_to_swift: |
       let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
@@ -164,10 +161,25 @@ std::vector:
         _tmp_{{name}}_data.deallocate()
       }
       for _i in 0..<Int({{name}}.size) {
-        let value_{{name}} = _tmp_{{name}}_data[_i];
+        let value_{{name}} = _tmp_{{name}}_data[_i]
         {{args[0].snippet('value_{}'.format(name))|indent}}
-        {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}});
+        {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
       }
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- if args[0] %}
+        {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
+        {%- if cleanup_code_fragment %}
+        let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
+        for _i in 0..<Int({{name}}.size) {
+          let {{name}}_item = {{name}}_data[_i]
+          {{cleanup_code_fragment|indent(2)}}
+        }
+        {%- endif %}
+        {%- endif %}
+        {{name}}.data.deallocate()
 
 std::map:
   custom:
@@ -188,7 +200,6 @@ std::map:
           {{args[1].snippet('vtmp_{}'.format(name))|indent}}
           {{target_name}}.insert({ {{args[0].converted_name('ktmp_{}'.format(name))}}, {{args[1].converted_name('vtmp_{}'.format(name))}} });
       }
-
     cxx_to_c: |
       auto _k_data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
       auto _v_data_{{target_name}} = new {{args_converters[1].c.target_type_name}} [{{name}}.size()];
@@ -205,14 +216,9 @@ std::map:
             _i_{{name}} += 1;
           }
       }
-
     swift_to_sc: |
       let _key_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
       let _val_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      defer {
-        _key_{{target_name}}.deallocate()
-        _val_{{target_name}}.deallocate()
-      }
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.keys = UnsafeMutableRawPointer(_key_{{target_name}})
       {{target_name}}.values = UnsafeMutableRawPointer(_val_{{target_name}})
@@ -234,14 +240,30 @@ std::map:
         _tmp_v_{{name}}_data.deallocate()
       }
       for _i_{{name}} in 0..<Int({{name}}.size) {
-        let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}];
-        let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}];
+        let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
+        let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
         do {
           {{args[0].snippet('key_{}'.format(name))|indent}}
           {{args[1].snippet('value_{}'.format(name))|indent}}
           {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
         }
       }
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- if args[1] %}
+        {%- set cleanup_code_fragment = args[1].snippet('{}_item'.format(name)) %}
+        {%- if cleanup_code_fragment %}
+        let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
+        for _i in 0..<Int({{name}}.size) {
+          let {{name}}_item = {{name}}_data[_i]
+          {{args[1].snippet('{}_item'.format(name))|indent(2)}}
+        }
+        {%- endif %}
+        {%- endif %}
+        {{name}}.keys.deallocate()
+        {{name}}.values.deallocate()
 
 std::unordered_map:
   std::map
@@ -333,8 +355,8 @@ std::pair:
         _tmp_pair_first_{{name}}_data.deallocate()
         _tmp_pair_second_{{name}}_data.deallocate()
       }
-      let first_{{name}} = _tmp_pair_first_{{name}}_data[0];
-      let second_{{name}} = _tmp_pair_second_{{name}}_data[0];
+      let first_{{name}} = _tmp_pair_first_{{name}}_data[0]
+      let second_{{name}} = _tmp_pair_second_{{name}}_data[0]
       {{args[0].snippet('first_{}'.format(name))}}
       {{args[1].snippet('second_{}'.format(name))}}
-      let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ( {{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}} )
+      let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}})

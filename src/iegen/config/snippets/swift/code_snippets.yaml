@@ -259,6 +259,14 @@ constructor:
       {%- do call_args.append(converter.converted_name(arg.name)) %}
       {%- endfor %}
           self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
+      {%- for arg in args %}
+        {%- if arg.converter.sc_cleanup %}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet('swift_to_sc_' + arg.name) %}
+        {%- if cleanup_code_fragment %}
+          {{cleanup_code_fragment|indent}}
+        {%- endif %}
+        {%- endif %}
+      {%- endfor %}
       }
   cc:
     include: *var_method_cxx_include
@@ -317,11 +325,19 @@ function:
         {%- endfor %}
           var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-          let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
+          let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
           {{rconverter.sc_to_swift.snippet('result', nullable=nullable_return)|indent}}
         {%- else %}
-          {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err);
+          {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
+        {%- for arg in args %}
+          {%- if arg.converter.sc_cleanup %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet('swift_to_sc_' + arg.name) %}
+          {%- if cleanup_code_fragment %}
+            {{cleanup_code_fragment|indent}}
+          {%- endif %}
+          {%- endif %}
+        {%- endfor %}
           let err_type = Int(err.err_type)
           if (err_type != 0) {
               switch(err_type) {
@@ -341,7 +357,7 @@ function:
               }
           }
         {%- if rconverter.c.target_type_name != 'void' %}
-          return {{rconverter.sc_to_swift.converted_name('result')}};
+          return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
       }
     interface_body: |
@@ -435,7 +451,7 @@ property_getter:
       {{comment|make_doxygen_comment}}
       public var {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
-              let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{name}}(cself);
+              let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{name}}(cself)
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
@@ -444,6 +460,12 @@ property_getter:
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.converter.swift.target_type_name}}_{{name}}(cself, {{converter.converted_name('value')}})
+              {%- if rconverter.sc_cleanup %}
+              {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet('swift_to_sc_value') %}
+              {%- if cleanup_code_fragment %}
+                {{cleanup_code_fragment|indent(8)}}
+              {%- endif %}
+              {%- endif %}
           }
           {% endif %}
       }
@@ -496,7 +518,7 @@ getter:
                                            {%- else %}{{name}}
                                            {%- endif -%}: {{result_converter.target_type_name}}{{'?' if nullable_return}} {
           get {
-              let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{name}}{{overloading_prefix}}{{template_postfix}}(cself);
+              let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{name}}{{overloading_prefix}}{{template_postfix}}(cself)
               {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
@@ -505,6 +527,12 @@ getter:
           set(value) {
               {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
               _prop_set_{{owner_class.converter.swift.target_type_name}}_{{ctx.api_vars.name}}{{setter_ctx.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
+              {%- if rconverter.sc_cleanup %}
+              {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet('swift_to_sc_value') %}
+              {%- if cleanup_code_fragment %}
+                {{cleanup_code_fragment|indent(8)}}
+              {%- endif %}
+              {%- endif %}
           }
           {% endif %}
       }

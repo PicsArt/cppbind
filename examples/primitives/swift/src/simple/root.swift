@@ -43,7 +43,7 @@ public class Root  {
 
     public var path: String {
         get {
-            let result = _prop_get_Root_path(cself);
+            let result = _prop_get_Root_path(cself)
             let sc_to_swift_result = String(cString: result)
             defer{
               result.deallocate()
@@ -62,7 +62,7 @@ public class Root  {
 
         let swift_to_sc__path = strdup(_path)!
         var err = ErrorObj()
-        _func_Root_setPath(cself, swift_to_sc__path, &err);
+        _func_Root_setPath(cself, swift_to_sc__path, &err)
         let err_type = Int(err.err_type)
         if (err_type != 0) {
             switch(err_type) {

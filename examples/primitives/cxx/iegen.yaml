@@ -59,7 +59,6 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/misc/size_buffer.hpp
-    - cxx/containers/nested_containers.hpp
 
 var_def:
   !join

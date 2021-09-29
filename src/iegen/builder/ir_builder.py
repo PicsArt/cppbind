@@ -194,7 +194,7 @@ class CXXIEGIRBuilder:
         if node.type == NodeType.ROOT_NODE:
             sys_vars = {
                 'path': os.path,
-                '_project_config_dir': PROJECT_CONFIG_DIR,
+                '_iegen_extras_dir': PROJECT_CONFIG_DIR,
                 'getenv': os.getenv,
                 'get_android_ndk_sysroot': get_android_ndk_sysroot
             }

@@ -106,7 +106,7 @@ Now let's go through the variables one by one:
     - *common_helpers_dir* - This directory containing iegen standard helper files per language.
     - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language.
     - *helpers_dir* - Directory containing iegen helpers. This is different for each language.
-    - *cxx_base_dir* - Iegen internal directory containing base classes.
+    - *cxx_base_source_dir* - Iegen internal directory containing base classes.
     - *file_postfix* - Postfix which will be appended to each generated file.
     - *extension* - Target language file extension.
     - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.

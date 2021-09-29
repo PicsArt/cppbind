@@ -187,7 +187,7 @@ helpers_include_prefix:
 
 common_helpers_dir:
   inheritable: true
-  default: '{{path.abspath(path.join(_project_config_dir, "std_helpers"))}}'
+  default: '{{path.abspath(path.join(_iegen_extras_dir, "std_helpers"))}}'
   allowed_on: [ root ]
 
 cxx_helpers_dir:
@@ -203,7 +203,7 @@ helpers_dir:
   swift.default: '{{path.join(common_helpers_dir, "swift")}}'
   allowed_on: [ root ]
 
-cxx_base_dir:
+cxx_base_source_dir:
   inheritable: true
   default: base
   allowed_on: [ root ]

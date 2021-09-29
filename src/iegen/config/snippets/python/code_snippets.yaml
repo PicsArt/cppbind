@@ -495,7 +495,7 @@ property_getter:
     include: *var_getter_python_include
     properties: |
       {%- set _name = vars.name|to_snake_case -%}
-      {% set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != owner_class.vars.file or rconverter.vars.package != owner_class.vars.package) else '' %}
+      {% set arg_package = rconverter.vars.file + '.' if rconverter.python.is_obj_type and (rconverter.vars.file != owner_class.vars.file or rconverter.vars.package != owner_class.vars.package) else '' %}
       @property
       @bind
       def {{_name}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if vars.nullable_return}}:
@@ -531,7 +531,7 @@ getter:
       {%- else %}{{vars.name}}
       {%- endif -%}
       {%- endmacro -%}
-      {%- set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != vars.file or rconverter.vars.package != vars.package) else '' %}
+      {%- set arg_package = rconverter.vars.file + '.' if rconverter.python.is_obj_type and (rconverter.vars.file != vars.file or rconverter.vars.package != vars.package) else '' %}
       @property
       @bind
       def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if vars.nullable_return}}:

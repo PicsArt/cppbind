@@ -78,7 +78,7 @@ class Exceptions:
         return "no_throw" not in throws
 
     @staticmethod
-    def is_std_custom_exc(ctx):
+    def is_std_custom_exc(cursor):
         """Check whether the given class is derived from C++ std exceptions"""
         std_exc_list = (
             "std::exception", "std::runtime_error", "std::logic_error", "std::bad_alloc",
@@ -87,15 +87,10 @@ class Exceptions:
             "std::out_of_range", "std::domain_error"
         )
 
-        for cursor in list(ctx.cursor.get_children()):
-            if cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER and cursor.spelling in std_exc_list:
+        for base in list(cursor.get_children()):
+            if base.kind == cli.CursorKind.CXX_BASE_SPECIFIER and base.spelling in std_exc_list:
                 return True
         return False
-
-    @staticmethod
-    def has_exc_base(ctx):
-        """Check whether current class has a base class which is exception class"""
-        return any(base.vars.is_exception for base in ctx.ancestors)
 
 
 def make_doxygen_comment(pure_comment):

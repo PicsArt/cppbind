@@ -21,7 +21,7 @@ $Object:
     pname: Long
     tpostfix: |
       {%- for name in template_names or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args[loop.index - 1].custom.tname}}{% endif -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].kotlin.custom.tname}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}

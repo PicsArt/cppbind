@@ -10,7 +10,7 @@ file:
 
       package {{vars.package_prefix}}.{{vars.package}}
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
-      {%- set exc_vars = ctx.lookup_ctx_by_name("std::exception").vars %}
+      {%- set exc_vars = make_converter("std::exception").vars %}
       {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
       {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
       {{body}}
@@ -60,12 +60,12 @@ enum:
 var_class_cxx: &var_class_cxx
   include:
     unique_content: |
-      {%- if ctx.is_proj_type -%}
-      #include "{{prj_rel_file_name}}"
+      {%- if converter.kotlin.is_proj_type -%}
+      #include "{{converter.kotlin.prj_rel_file_name}}"
       {%- endif -%}
       {%- macro gen_import(converter) -%}
       {%- if converter.kotlin.is_proj_type and (converter.vars.package != vars.package or converter.vars.file != vars.file) -%}
-      {{marker}}#include "{{converter.ctx.prj_rel_file_name}}"
+      {{marker}}#include "{{converter.kotlin.prj_rel_file_name}}"
       {%- endif -%}
       {%- for tmpl_arg_converter in converter.template_args -%}
       {{gen_import(tmpl_arg_converter)}}
@@ -80,8 +80,8 @@ var_class_cxx: &var_class_cxx
       {%- endif -%}
   namespace:
     unique_content: |
-      {%- if ctx.namespace %}
-      using namespace {{ctx.namespace}};
+      {%- if cxx.namespace %}
+      using namespace {{cxx.namespace}};
       {%- endif %}
   body:
     content: |
@@ -125,7 +125,7 @@ class:
         - private_external
       content: |
         {%- set base_interfaces = base_types_converters|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='kotlin.target_type_name')|list -%}
-        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or not base_types_converters|rejectattr('vars.action', 'equalto', 'gen_interface')|list else []) + (['Exception()'] if vars.is_exception and not helper.Exceptions.has_exc_base(ctx) else []) -%}
+        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or not base_types_converters|rejectattr('vars.action', 'equalto', 'gen_interface')|list else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
         {%- do helper.Validator.validate_single_root(cxx.cursor) -%}
         {%- do helper.Validator.validate_bases(name, base_types_converters) -%}
         {%- do helper.Validator.validate_ancestors(ancestors) -%}
@@ -289,7 +289,7 @@ var_method_cxx_include: &var_method_cxx_include
   unique_content: |
     {%- macro gen_import(converter) -%}
     {%- if converter.kotlin.is_proj_type -%}
-    {{marker}}#include "{{converter.ctx.prj_rel_file_name}}"
+    {{marker}}#include "{{converter.kotlin.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
     {{gen_import(tmpl_arg_converter)}}
@@ -488,7 +488,7 @@ function:
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          {%- set exc_vars = ctx.lookup_ctx_by_name(exc_type).vars %}
+          {%- set exc_vars = make_converter(exc_type).vars %}
           jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
           jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
@@ -546,7 +546,7 @@ var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
     {%- macro gen_import(converter) -%}
     {%- if converter.kotlin.is_proj_type -%}
-    {{marker}}#include "{{converter.ctx.prj_rel_file_name}}"
+    {{marker}}#include "{{converter.kotlin.prj_rel_file_name}}"
     {%- endif -%}
     {%- for tmpl_arg_converter in converter.template_args -%}
     {{gen_import(tmpl_arg_converter)}}
@@ -635,7 +635,7 @@ getter:
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      {{'open ' if cxx.is_open}}{{'override ' if cxx.is_override}}{{'var ' if setter_ctx is defined else 'val '}}
+      {{'open ' if cxx.is_open}}{{'override ' if cxx.is_override}}{{'var ' if setter is defined else 'val '}}
                                              {%- if cxx.is_template -%}
                                              {%- for name in template_names or [] %}
                                              {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
@@ -651,8 +651,8 @@ getter:
               {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
-          {%- if setter_ctx is defined %}
-          {%- set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
+          {%- if setter is defined %}
+          {%- set converter = setter.args[0].converter.kotlin_to_jdk %}
           {%- if cxx.is_override %}
           set(value) {
               super.{{vars.name}} = value
@@ -661,9 +661,9 @@ getter:
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
               {%- if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.j{{setter_ctx.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
+              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
-              j{{setter_ctx.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
+              j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
           }
           {%- endif %}
@@ -671,17 +671,17 @@ getter:
     private_external: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       private external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      {%- if setter is defined %}
+      private external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
       {% set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       @JvmStatic
       external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if setter_ctx is defined %}
+      {%- if setter is defined %}
 
       @JvmStatic
-      external fun j{{setter_ctx.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     include: *var_getter_cxx_include
@@ -691,7 +691,7 @@ getter:
       {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              {%- set exc_vars = ctx.lookup_ctx_by_name(exc_type).vars %}
+              {%- set exc_vars = make_converter(exc_type).vars %}
               jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
               jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
@@ -739,19 +739,19 @@ getter:
           {{rconverter.jni.target_type_name}} result;
           return result;
       }
-      {%- if setter_ctx is defined %}
-      {% set func_name="j%s%s"|format(setter_ctx.vars.name|capitalize, template_postfix) %}
+      {%- if setter is defined %}
+      {% set func_name="j%s%s"|format(setter.vars.name|capitalize, template_postfix) %}
       {%- set jni_setter_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
-      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
+      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {%- set converter = setter_ctx.args[0].converter.jni_to_cxx %}
-          {{converter.snippet(setter_ctx.args[0].name, nullable=vars.nullable_return)|indent(4)}}
+          {%- set converter = setter.args[0].converter.jni_to_cxx %}
+          {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
           {%- if helper.Exceptions.can_throw(vars.throws) %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-             {{this_converter.converted_name('id')}}->{{setter_ctx.cxx.name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
+             {{this_converter.converted_name('id')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.args[0].name)}});
           }
           {{gen_exc_try_block()}}
       }

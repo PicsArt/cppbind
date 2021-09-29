@@ -7,9 +7,7 @@ import clang.cindex as cli
 import iegen
 import iegen.converter
 import iegen.utils.clang as cutil
-from iegen import find_prj_dir
 from iegen.common.error import Error
-from iegen.converter import Validator
 from iegen.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
@@ -116,8 +114,11 @@ def make_func_context(ctx):
             is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
             is_protected=ctx.cursor.access_specifier == cli.AccessSpecifier.PROTECTED,
             is_private=ctx.cursor.access_specifier == cli.AccessSpecifier.PRIVATE,
+            is_const=ctx.cursor.is_const_method(),
+            kind_name=ctx.kind_name,
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
+            is_overloaded=_is_overloaded(ctx),
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -140,7 +141,9 @@ def make_enum_context(ctx):
         enum_cases = ctx.enum_values
         prj_rel_file_name = ctx.prj_rel_file_name
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
-                                    type_name=ctx.cxx_type_name)
+                                    type_name=ctx.cxx_type_name,
+                                    namespace=ctx.namespace,
+                                    kind_name=ctx.kind_name)
         return locals()
 
     context = make_def_context(ctx)
@@ -164,8 +167,10 @@ def make_class_context(ctx):
             cxx = types.SimpleNamespace(type_name=ctx.cxx_type_name,
                                         root_type_name=getattr(converter, LANGUAGE).cxx_root_type_name,
                                         name=ctx.cursor.spelling,
+                                        namespace=ctx.namespace,
                                         is_open=not cutil.is_final_cursor(ctx.cursor),
                                         is_abstract=ctx.cursor.is_abstract_record(),
+                                        kind_name=ctx.kind_name,
                                         cursor=ctx.cursor)
 
             return locals()
@@ -201,7 +206,7 @@ def make_getter_context(ctx):
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
             setter_ctx.set_template_ctx(ctx.template_ctx)
-            setter_ctx = make_func_context(setter_ctx)
+            setter = make_func_context(setter_ctx)
 
         return locals()
 
@@ -219,7 +224,8 @@ def make_member_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
         prj_rel_file_name = ctx.prj_rel_file_name
 
-        cxx = types.SimpleNamespace(name=ctx.cursor.spelling)
+        cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
+                                    kind_name=ctx.kind_name)
 
         return locals()
 
@@ -314,6 +320,10 @@ def gen_property_setter(ctx, builder):
 def gen_setter(ctx, builder):
     return
 
+
+def _is_overloaded(ctx):
+    return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
+            item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 def _validate_nullable_args(ctx):
     args = [arg.name for arg in ctx.args]

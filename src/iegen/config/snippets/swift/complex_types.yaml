@@ -24,7 +24,7 @@ $Object:
     is_c_pointer_type: True
     tpostfix: |
       {%- for name in template_names or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args[loop.index - 1].custom.tname}}{% endif -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
@@ -118,7 +118,7 @@ char *:
 std::vector:
   custom:
     is_c_pointer_type: False
-    tname: "Array{{args[0].custom.tname}}"
+    tname: "Array{{args_converters[0].swift.custom.tname}}"
   types:
     swift: "Array<{{args[0].target_type_name}}>"
     c: "CDataArray"
@@ -182,7 +182,7 @@ std::vector:
 std::map:
   custom:
     is_c_pointer_type: False
-    tname: "Dictionary{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Dictionary{{args_converters[0].swift.custom.tname}}{{args_converters[1].swift.custom.tname}}"
   types:
     swift: "Dictionary<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     c: "CDataMap"
@@ -269,7 +269,7 @@ std::unordered_map:
 std::shared_ptr:
   custom:
     is_c_pointer_type: True
-    tname: "{{args[0].custom.tname}}"
+    tname: "{{args_converters[0].swift.custom.tname}}"
   types:
     swift: "{{args[0].target_type_name}}"
     c: "{{args[0].target_type_name}}"
@@ -306,7 +306,7 @@ std::shared_ptr:
 std::pair:
   custom:
     is_c_pointer_type: False
-    tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Pair{{args_converters[0].swift.custom.tname}}{{args_converters[1].swift.custom.tname}}"
   types:
     swift: "({{args[0].target_type_name}}, {{args[1].target_type_name}})"
     c: "CDataPair"

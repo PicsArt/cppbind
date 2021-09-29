@@ -51,7 +51,7 @@ $Object:
     pname: object
     tpostfix: |
       {%- for name in template_names or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args[loop.index - 1].custom.tname}}{% endif -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}

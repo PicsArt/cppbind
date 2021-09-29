@@ -308,6 +308,10 @@ class Converter:
     def is_obj_type(self):
         return self.ctx is not None
 
+    @property
+    def prj_rel_file_name(self):
+        return self.ctx.prj_rel_file_name if self.ctx else None
+
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():

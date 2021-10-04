@@ -41,9 +41,6 @@ class Snippet:
             return value.replace(self.marker, '')
         return value
 
-    def __bool__(self):
-        return str(self) != ''
-
 
 class Action:
     """Base class for any action subclass"""
@@ -230,7 +227,7 @@ class Converter:
     def __init__(self,
                  cxx_type,
                  template_args,
-                 target_lang,
+                 snippet_name,
                  custom,
                  ctx,
                  type_converter,
@@ -238,7 +235,7 @@ class Converter:
         self.cxx_type = cxx_type
         self.type_converter = type_converter
         self.template_args = template_args
-        self.target_lang = target_lang
+        self.snippet_name = snippet_name
         self.custom = custom
         self.ctx = ctx
         self.context = self._make_context()
@@ -269,7 +266,7 @@ class Converter:
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
-            args = [getattr(arg, self.target_lang) for arg in self.template_args]
+            args = [getattr(arg, self.snippet_name) for arg in self.template_args]
 
             args_converters = self.template_args
             template_suffix = ''
@@ -350,7 +347,7 @@ class Adapter:
 
         return Converter(cxx_type=self.cxx_type,
                          template_args=self.template_args,
-                         target_lang=name,
+                         snippet_name=name,
                          custom=self.type_info_collector.custom,
                          ctx=self.ctx,
                          type_converter=type_info_collector,
@@ -454,9 +451,16 @@ class SnippetsEngine:
         self.jinja2_env = JINJA2_ENV
 
     def load(self):
-        self._load_actions(self.ctx_desc.get_action_snippets()[self.language][self.platform])
-        self._load_code_info(self.ctx_desc.get_code_snippets()[self.language][self.platform])
-        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.language][self.platform])
+        action_snippets = self.ctx_desc.get_action_snippets()
+        code_snippets = self.ctx_desc.get_code_snippets()
+        type_converter_snippets = self.ctx_desc.get_type_converter_snippets()
+
+        if action_snippets:
+            self._load_actions(action_snippets[self.language][self.platform])
+        if code_snippets:
+            self._load_code_info(code_snippets[self.language][self.platform])
+        if type_converter_snippets:
+            self._load_type_info(type_converter_snippets[self.language][self.platform])
 
     def do_actions(self, context):
         variables = {}

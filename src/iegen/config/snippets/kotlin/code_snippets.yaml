@@ -376,7 +376,7 @@ function:
       {%- if comment %}
       {{comment|make_doxygen_comment}}
       {%- endif %}
-      {{'open ' if is_open}}{{'operator 'if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
+      {{'open ' if is_open}}{{'operator ' if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
       {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default.split('::')|last}}

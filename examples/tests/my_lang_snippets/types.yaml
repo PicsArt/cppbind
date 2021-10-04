@@ -1,0 +1,10 @@
+int:
+  types:
+    my_lang: my_lang_int
+  converters:
+    my_section: |
+      name: {{name}}
+
+$Object:
+  types:
+    my_lang: my_lang_obj

@@ -1,0 +1,17 @@
+rules:
+    my_lang.code_snippets:
+        !include my_lang_snippets/code_snippets.yaml
+    
+    my_lang.type_converters:
+        !include my_lang_snippets/types.yaml
+
+vars:
+    out_prj_dir: "."
+    src_glob:
+        - cxx/example.hpp
+    package_prefix: ""
+    helpers_dir: "{{path.join(common_helpers_dir, 'my_lang')}}"
+    out_dir: "{{path.join(out_prj_dir, 'my_lang')}}"
+
+var_def:
+  !include variable_definitions.yaml

@@ -1,0 +1,25 @@
+file:
+  my_lang:
+    file_path: |
+      {{out_dir + pat_sep + [package_prefix, package, file]|map('replace', '.', pat_sep)|path_join}}.my_lang
+    scopes:
+      - body
+    content: |
+      {{body}}
+
+class:
+  my_lang:
+    body:
+      scopes:
+        - body
+      content: |
+        {{body}}
+
+function:
+  my_lang:
+    body: |
+      {%- for arg in args %}
+        {%- if arg.converter.my_section %}
+          {{arg.converter.my_section.snippet("my_var_name")}}
+        {%- endif %}
+      {%- endfor %}

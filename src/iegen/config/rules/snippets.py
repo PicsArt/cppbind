@@ -1,5 +1,6 @@
 import copy
 import importlib
+import logging
 import os
 import types
 
@@ -27,7 +28,10 @@ def set_language(language):
     global LANGUAGE
     LANGUAGE = language
     global LANGUAGE_HELPER_MODULE
-    LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
+    try:
+        LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
+    except ModuleNotFoundError:
+        logging.warning(f"Helper module is not found for '{language}' language")
 
 
 def load_snippets_engine(ctx_desc, platform, language):
@@ -274,9 +278,7 @@ def preprocess_scope(context, scope, info):
         s = scope.create_scope(sname)
         context_scope[sname] = s
     if info.snippet_tmpl:
-        snippet = info.make_snippet(context_scope)
-        if snippet:
-            scope.add(snippet)
+        scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 
@@ -293,7 +295,8 @@ def preprocess_entry(context, builder, code_name):
             fscope_name, scope_name = fs
             file_scope = get_file(context, builder, fscope_name)
             parent_scope = file_scope[scope_name]
-            preprocess_scope(context, parent_scope, info)
+            if parent_scope is not None:
+                preprocess_scope(context, parent_scope, info)
 
 
 def get_file(context, builder, fscope_name):

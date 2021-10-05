@@ -100,10 +100,9 @@ class Scope:
         return f"Scope({self.__dict__})"
 
     def __str__(self):
-
         lines = [
             (self.tab_str * self.tab) + s
-            for s in self.parts_splitter.join(str(p) for p in self.parts).splitlines(keepends=True)
+            for s in self.parts_splitter.join(str(p) for p in self.parts if str(p)).splitlines(keepends=True)
         ]
 
         str_scope = ''.join(lines)
@@ -111,7 +110,7 @@ class Scope:
         return str_scope
 
     def __bool__(self):
-        return bool(self.parts)
+        return any(str(p) for p in self.parts)
 
 
 class File(Scope):

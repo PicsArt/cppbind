@@ -72,18 +72,18 @@ enum:
 
 var_class_include: &var_class_include
     unique_content: |
-      {%- if converter.swift.is_proj_type -%}
-      #include "{{converter.swift.prj_rel_file_name}}"
+      {%- if is_proj_type -%}
+      #include "{{prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_import(converter) -%}
-      {%- if converter.swift.is_proj_type and (converter.vars.package != vars.package or converter.vars.file != vars.file) -%}
-      {{marker}}#include "{{converter.swift.prj_rel_file_name}}"
+      {%- macro gen_import(type_info) -%}
+      {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+      {{marker}}#include "{{type_info.prj_rel_file_name}}"
       {%- endif -%}
-      {%- for tmpl_arg_converter in converter.template_args -%}
-      {{gen_import(tmpl_arg_converter)}}
+      {%- for arg_type_info in type_info.arg_types_infos -%}
+      {{gen_import(arg_type_info)}}
       {%- endfor -%}
       {%- endmacro -%}
-      {%- for base in base_types_converters -%}
+      {%- for base in base_types_infos -%}
       {{gen_import(base)}}
       {%- endfor -%}
       {%- if vars.include_cxx -%}
@@ -109,7 +109,7 @@ class:
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
                                 {%- endif %} {
-            {% if not base_types_converters|rejectattr('vars.action', 'equalto', 'gen_interface')|list and not helper.Exceptions.is_std_custom_exc(cxx.cursor)%}
+            {% if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list and not helper.Exceptions.is_std_custom_exc(cxx.cursor)%}
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 
@@ -219,19 +219,19 @@ interface:
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
-    {%- if converter.swift.is_proj_type -%}
-    {{marker}}#include "{{converter.swift.prj_rel_file_name}}"
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter)}}
+    {{gen_import(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter)}}
+    {{gen_import(return_type_info)}}
     {%- endif -%}
 
 constructor:
@@ -342,12 +342,12 @@ function:
               {%- if helper.Exceptions.can_throw(vars.throws) %}
               {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
-                      throw {{make_converter(exc_type).vars.name}}(err.err_ptr, true)
+                      throw {{get_type_info(exc_type).vars.name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if helper.Exceptions.can_throw(vars.throws) else 1}}):
-                      let exc_obj = {{make_converter("std::exception").vars.name}}(err.err_ptr, true)
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -431,15 +431,15 @@ function:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
-    {%- if converter.swift.is_proj_type -%}
-    {{marker}}#include "{{converter.swift.prj_rel_file_name}}"
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter)}}
+    {{gen_import(return_type_info)}}
 
 property_getter:
   swift:

@@ -295,7 +295,7 @@ std::shared_ptr:
   converters:
     jni_to_cxx: |
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_base = args[0].cxx_root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
       std::shared_ptr<{{pointee}}> {{target_name}} = nullptr;
@@ -317,8 +317,8 @@ std::shared_ptr:
       {%- endif %}
     cxx_to_jni: |
       {# TODO: won´t work if arg[0] itself is a template type #}
-      {%- set pointee = args[0].cxx_type_name %}
-      {%- set pointee_base = args[0].cxx_root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee = args[0].cxx.type_name %}
+      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
       {%- if is_nullable %}

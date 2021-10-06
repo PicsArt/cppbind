@@ -272,6 +272,10 @@ class Context(BaseContext):
             os.path.abspath(self.vars.out_prj_dir) + os.path.sep)
 
     @property
+    def is_template(self):
+        return self.node.is_template
+
+    @property
     def template_type_parameters(self):
         return [child.type.spelling for child in self.cursor.get_children() if
                 child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]
@@ -318,11 +322,35 @@ class Context(BaseContext):
         # cursor using this approach instead
         # for example for the type a::Stack<T> full_displayname=a::Stack,
         # spelling=Stack, displayname=Stack<T>
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE,
+                                               cli.CursorKind.ENUM_DECL]:
+            raise AttributeError(f"{self.__class__.__name__}.cxx_type_name is invalid.")
         template_choice = self.template_choice or {}
         if self.node.is_template:
             cxx_type_name = self.node.full_displayname.replace(self.node.spelling, self.node.displayname)
             return cutil.replace_template_choice(cxx_type_name, template_choice)
         return self.cursor.type.spelling
+
+    @property
+    def cxx_root_type_name(self):
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE]:
+            raise AttributeError(f"{self.__class__.__name__}.cxx_root_type_name is invalid.")
+        _root_cursor = cutil.get_base_cursor(self.cursor)
+        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
+
+        if self.is_template:
+            _root_cursor = cutil.get_base_cursor(self.cursor)
+            if _root_cursor == self.cursor:
+                cxx_root_type_name = self.cxx_type_name
+            else:
+                # todo add an example to check this
+                cxx_root_type_name = cutil.replace_template_choice(
+                    _root_cursor.displayname, self.template_choice)
+        return cxx_root_type_name
 
 
 class RunRule:
@@ -419,7 +447,7 @@ class RunRule:
         api = node.api
         if api == Node.API_NONE:
             return
-        logging.debug(f"Call API: {api.lstrip('gen_')} on {node.displayname}")
+        logging.debug(f"Call API: {api.lstrip(api)} on {node.displayname}")
         func = getattr(rule, api)
         context = self.get_context(node.full_displayname)
         # set current template context to generate code based on correct template choice

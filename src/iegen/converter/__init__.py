@@ -46,7 +46,7 @@ class Validator:
         """Ensure the class has only one non abstract base"""
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.ctx.vars.action == 'gen_interface':
+            if not base_type.vars.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')

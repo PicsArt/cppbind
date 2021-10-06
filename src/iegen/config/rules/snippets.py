@@ -7,12 +7,13 @@ import clang.cindex as cli
 import iegen
 import iegen.converter
 import iegen.utils.clang as cutil
+from iegen.common.cxx_type import CXXType
 from iegen.common.error import Error
 from iegen.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
-    CXXType
 )
+from iegen.common.type_info import create_type_info
 from iegen.utils import DefaultValueKind
 
 SNIPPETS_ENGINE = None
@@ -56,9 +57,12 @@ def make_def_context(ctx):
 
         vars = ctx.vars
 
-        def make_converter(type_name, template_choice=None):
+        def make_type_converter(type_name, template_choice=None):
             return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
                                                                      template_choice))
+
+        def get_type_info(type_name):
+            return create_type_info(ctx, CXXType(type_name, template_choice=None))
 
         return locals()
 
@@ -79,6 +83,8 @@ def make_func_context(ctx):
                 converter=SNIPPETS_ENGINE.build_type_converter(ctx,
                                                                CXXType(type_=arg.type,
                                                                        template_choice=ctx.template_choice)),
+                type_info=create_type_info(ctx, CXXType(type_=arg.type,
+                                                        template_choice=ctx.template_choice)),
                 name=arg.name,
                 default=arg.default.value,
                 cursor=arg.cursor,
@@ -94,8 +100,10 @@ def make_func_context(ctx):
         ]
 
         if hasattr(ctx, 'result_type'):
-            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.result_type,
-                                                                           template_choice=ctx.template_choice))
+            _cxx_type = CXXType(type_=ctx.result_type,
+                                template_choice=ctx.template_choice)
+            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
+            return_type_info = create_type_info(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
         prj_rel_file_name = ctx.prj_rel_file_name
@@ -156,22 +164,20 @@ def make_class_context(ctx):
         def make():
             # for cases when type kind is invalid clang type does not give enough information
             # for such cases we use string type name
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                             CXXType(type_=ctx.cxx_type_name,
-                                                                     template_choice=ctx.template_choice))
+            _cxx_type = CXXType(type_=ctx.cxx_type_name,
+                                template_choice=ctx.template_choice)
+            _type_info = create_type_info(ctx, _cxx_type)
+
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
-            prj_rel_file_name = ctx.prj_rel_file_name
 
-            cxx = types.SimpleNamespace(type_name=ctx.cxx_type_name,
-                                        root_type_name=getattr(converter, LANGUAGE).cxx_root_type_name,
-                                        name=ctx.cursor.spelling,
-                                        namespace=ctx.namespace,
-                                        is_open=not cutil.is_final_cursor(ctx.cursor),
-                                        is_abstract=ctx.cursor.is_abstract_record(),
-                                        kind_name=ctx.kind_name,
-                                        cursor=ctx.cursor)
+            prj_rel_file_name = _type_info.prj_rel_file_name
+            is_proj_type = _type_info.is_proj_type
+
+            cxx = _type_info.cxx
+            base_types_infos = _type_info.base_types_infos
 
             return locals()
 
@@ -218,8 +224,10 @@ def make_getter_context(ctx):
 def make_member_context(ctx):
     def make():
         # helper variables
-        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.cursor.type,
-                                                                       template_choice=ctx.template_choice))
+        _cxx_type = CXXType(type_=ctx.cursor.type,
+                            template_choice=ctx.template_choice)
+        return_type_info = create_type_info(ctx, _cxx_type)
+        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
         prj_rel_file_name = ctx.prj_rel_file_name
@@ -324,6 +332,7 @@ def gen_setter(ctx, builder):
 def _is_overloaded(ctx):
     return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
+
 
 def _validate_nullable_args(ctx):
     args = [arg.name for arg in ctx.args]

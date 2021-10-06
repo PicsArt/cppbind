@@ -1,6 +1,6 @@
 import pytest
 
-from iegen.common.snippets_engine import CXXType
+from iegen.common.cxx_type import CXXType
 
 
 @pytest.mark.parametrize(

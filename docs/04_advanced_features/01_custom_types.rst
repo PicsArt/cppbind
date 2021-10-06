@@ -3,7 +3,7 @@ Custom Types
 
 Type conversions are described in yaml config files. There are predefined basic and complex types. User can also have custom types configuration.
 The files containing this configuration must be of pattern **\*_types.yaml**  and placed under **custom_config_dir** directory.
-Following is an example of converter for std::pair and nlohmann::json from cxx to kotlin and vice versa.
+Following is an example of converter for nlohmann::json from cxx to kotlin and vice versa.
 
   .. code-block::
 

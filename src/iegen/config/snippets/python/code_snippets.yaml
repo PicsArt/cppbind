@@ -293,8 +293,8 @@ var_class: &var_class
                                           , std::shared_ptr<{{cxx.type_name}}>
                                          {%- endif %}
                                          {%- if base_types_converters -%}
-                                         , {% for base_type in base_types_converters -%}
-                                         {{comma()}}{{base_type.python.cxx.type_name}}
+                                         , {% for base_info in base_types_infos -%}
+                                         {{comma()}}{{base_info.cxx.type_name}}
                                          {%- endfor -%}
                                          {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
         {{body|string|indent}}
@@ -386,7 +386,7 @@ constructor:
     body: |
       {%- set comma = joiner(', ') %}
       {{owner_class.converter.python.target_type_name|decapitalize}}.def(py::init<{%- for arg in args -%}
-                                                                                   {{comma()}}{{arg.converter.python.cxx.type_name}}
+                                                                                   {{comma()}}{{arg.type_info.cxx.type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}
                                                                                     {%- set comma = joiner(', ') -%}
                                                                                     {%- for arg in args -%}
@@ -442,7 +442,7 @@ function:
       {{owner_class.converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<
       {%- for arg in args -%}
-      {{comma()}}{{arg.converter.python.cxx.type_name}}
+      {{comma()}}{{arg.type_info.cxx.type_name}}
       {%- endfor -%}>(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
       {%- else -%}
       , &{{owner_class.cxx.type_name}}::{{cxx.name}}

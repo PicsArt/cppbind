@@ -39,16 +39,16 @@ $Object:
     sc: "UnsafeMutableRawPointer"
   converters:
     c_to_cxx: |
-      {%- if root_type_info.vars.shared_ref %}
-      {{Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
-      {%- endif %}
+      {%- if root_type_info.vars.shared_ref -%}
+      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
       {%- set pointee = cxx.pointee_unqualified_name %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx.root_type_name}}*>({{name}}));
     cxx_to_c: |
-      {%- if root_type_info.vars.shared_ref %}
-      {{Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
-      {%- endif %}
+      {%- if root_type_info.vars.shared_ref -%}
+      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
       auto value_ptr_{{name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
       auto {{target_name}} = static_cast<{{cxx.root_type_name}}*>(value_ptr_{{name}});
     swift_to_sc: |
@@ -144,9 +144,9 @@ std::vector:
       auto _data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
       {{target_type_name}} {{target_name}} = { _data_{{target_name}}, (long long){{name}}.size() };
       for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
-        auto& value_{{name}} = {{name}}[_i_{{name}}];
-        {{args[0].snippet('value_{}'.format(name))|indent}}
-        _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
+          auto& value_{{name}} = {{name}}[_i_{{name}}];
+          {{args[0].snippet('value_{}'.format(name))|indent}}
+          _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
       let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
@@ -154,9 +154,9 @@ std::vector:
       {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
       {{target_name}}.size = Int64({{name}}.count)
       for _i in 0..<{{name}}.count {
-        let value_{{name}} = {{name}}[_i]
-        {{args[0].snippet('value_{}'.format(name))|indent}}
-        _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
+          let value_{{name}} = {{name}}[_i]
+          {{args[0].snippet('value_{}'.format(name))|indent}}
+          _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
       }
     sc_to_swift: |
       let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
@@ -165,9 +165,9 @@ std::vector:
         _tmp_{{name}}_data.deallocate()
       }
       for _i in 0..<Int({{name}}.size) {
-        let value_{{name}} = _tmp_{{name}}_data[_i]
-        {{args[0].snippet('value_{}'.format(name))|indent}}
-        {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
+          let value_{{name}} = _tmp_{{name}}_data[_i]
+          {{args[0].snippet('value_{}'.format(name))|indent}}
+          {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
       }
     sc_cleanup:
       source: swift
@@ -178,8 +178,8 @@ std::vector:
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
-          let {{name}}_item = {{name}}_data[_i]
-          {{cleanup_code_fragment|indent(2)}}
+            let {{name}}_item = {{name}}_data[_i]
+            {{cleanup_code_fragment|indent(2)}}
         }
         {%- endif %}
         {%- endif %}
@@ -213,11 +213,11 @@ std::map:
           const auto& key_{{name}} = value_{{name}}.first;
           const auto& val_{{name}} = value_{{name}}.second;
           {
-            {{args[0].snippet('key_{}'.format(name))|indent}}
-            {{args[1].snippet('val_{}'.format(name))|indent}}
-            _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}};
-            _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}};
-            _i_{{name}} += 1;
+              {{args[0].snippet('key_{}'.format(name))|indent}}
+              {{args[1].snippet('val_{}'.format(name))|indent}}
+              _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}};
+              _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}};
+              _i_{{name}} += 1;
           }
       }
     swift_to_sc: |
@@ -240,17 +240,17 @@ std::map:
       let _tmp_v_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: Int({{name}}.size))
       var {{target_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
       defer {
-        _tmp_k_{{name}}_data.deallocate()
-        _tmp_v_{{name}}_data.deallocate()
+          _tmp_k_{{name}}_data.deallocate()
+          _tmp_v_{{name}}_data.deallocate()
       }
       for _i_{{name}} in 0..<Int({{name}}.size) {
-        let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
-        let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
-        do {
-          {{args[0].snippet('key_{}'.format(name))|indent}}
-          {{args[1].snippet('value_{}'.format(name))|indent}}
-          {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
-        }
+          let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
+          let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
+          do {
+              {{args[0].snippet('key_{}'.format(name))|indent}}
+              {{args[1].snippet('value_{}'.format(name))|indent}}
+              {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
+          }
       }
     sc_cleanup:
       source: swift
@@ -282,9 +282,9 @@ std::shared_ptr:
     sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- if not args[0].root_type_info.vars.shared_ref %}
-      {{Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
-      {%- endif %}
+      {%- if not args[0].root_type_info.vars.shared_ref -%}
+      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
       {%- set pointee = args[0].target_type_name %}
       {%- set pointee_base = args[0].cxx.root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
@@ -297,9 +297,9 @@ std::shared_ptr:
       {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
       {%- endif %}
     cxx_to_c: |
-      {%- if not args[0].root_type_info.vars.shared_ref %}
-      {{Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
-      {%- endif %}
+      {%- if not args[0].root_type_info.vars.shared_ref -%}
+      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
       {%- set pointee_base = args[0].cxx.root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};

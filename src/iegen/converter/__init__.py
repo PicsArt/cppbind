@@ -11,22 +11,6 @@ class Validator:
     """
 
     @staticmethod
-    def shared_ref_set(type_ctx):
-        """Check whether shared_ref variable is set"""
-        if not type_ctx.root.vars.shared_ref:
-            Error.critical("Root must have an attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
-    def shared_ref_unset(type_ctx):
-        """Check whether shared_ref variable is false"""
-        if type_ctx.root.vars.shared_ref:
-            Error.critical("Root has an invalid attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
     def validate_single_root(cursor):
         """Validate that the cursor has only a single base root"""
         roots = _get_roots(cursor)

@@ -164,17 +164,21 @@ class Converter:
     @property
     def args_converters(self):
         return self._template_args
+    
+    @property
+    def root_type_info(self):
+        return self._type_info.root_type_info
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
             args = self.args
-
             args_converters = self.args_converters
+            
+            root_type_info = self.root_type_info
 
             cxx = self.cxx
-
             # make api variables available in converter under vars
             vars = self.vars
             template_names = self.template_names

@@ -39,10 +39,16 @@ $Object:
     sc: "UnsafeMutableRawPointer"
   converters:
     c_to_cxx: |
+      {%- if root_type_info.vars.shared_ref %}
+      {{Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
+      {%- endif %}
       {%- set pointee = cxx.pointee_unqualified_name %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx.root_type_name}}*>({{name}}));
     cxx_to_c: |
+      {%- if root_type_info.vars.shared_ref %}
+      {{Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
+      {%- endif %}
       auto value_ptr_{{name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
       auto {{target_name}} = static_cast<{{cxx.root_type_name}}*>(value_ptr_{{name}});
     swift_to_sc: |
@@ -276,6 +282,9 @@ std::shared_ptr:
     sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
+      {%- if not args[0].root_type_info.vars.shared_ref %}
+      {{Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
+      {%- endif %}
       {%- set pointee = args[0].target_type_name %}
       {%- set pointee_base = args[0].cxx.root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
@@ -288,6 +297,9 @@ std::shared_ptr:
       {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
       {%- endif %}
     cxx_to_c: |
+      {%- if not args[0].root_type_info.vars.shared_ref %}
+      {{Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.')}}
+      {%- endif %}
       {%- set pointee_base = args[0].cxx.root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};

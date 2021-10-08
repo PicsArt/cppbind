@@ -66,7 +66,8 @@ CDataArray _func_Project_tasks(void* _Nonnull cself, ErrorObj* _Nonnull err){
         CDataArray cxx_to_c_result = { _data_cxx_to_c_result, (long long)result.size() };
         for (int _i_result = 0; _i_result < result.size(); ++_i_result) {
           auto& value_result = result[_i_result];
-          auto value_ptr_value_result = const_cast<iegen::example::Task*>(value_result);
+          
+            auto value_ptr_value_result = const_cast<iegen::example::Task*>(value_result);
             auto cxx_to_c_value_result = static_cast<iegen::example::Task*>(value_ptr_value_result);
           _data_cxx_to_c_result[_i_result] = cxx_to_c_value_result;
         }

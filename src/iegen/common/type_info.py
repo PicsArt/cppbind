@@ -24,6 +24,15 @@ class TypeInfo:
     @property
     def cxx(self):
         if not hasattr(self, '_cxx'):
+            root_type_name = None
+            if self._type_ctx and self._type_ctx.kind_name != 'enum':
+                root_type_name = self._type_ctx.cxx_root_type_name
+                if root_type_name == self._type_ctx.cxx_type_name:
+                    # might be cases when cxx_type.type_name and self._type_ctx.cxx_type_name are different as we
+                    # retrieve self._type_ctx from the raw type
+                    # and in this case self._type_ctx.cxx_type_name is full name while cxx_type.type_name might
+                    # not contain namespace
+                    root_type_name = self._cxx_type.unqualified_pointee_name
             self._cxx = types.SimpleNamespace(
                 type_name=self._cxx_type.type_name,
                 pointee_name=self._cxx_type.pointee_name,
@@ -36,7 +45,8 @@ class TypeInfo:
                 is_abstract=self._type_ctx.cursor.is_abstract_record() if self._type_ctx else None,
                 kind_name=self._type_ctx.kind_name if self._type_ctx else None,
                 cursor=self._type_ctx.cursor if self._type_ctx else None,
-                root_type_name=self._type_ctx.cxx_root_type_name if self._type_ctx and self._type_ctx.kind_name != 'enum' else None)
+                root_type_name=root_type_name)
+
         return self._cxx
 
     @property
@@ -53,6 +63,14 @@ class TypeInfo:
             self._arg_types_infos = [create_type_info(self._ctx, t) for t in
                                      self._raw_type.template_argument_types] if self._raw_type.is_template else []
         return self._arg_types_infos
+
+    @property
+    def root_type_info(self):
+        if not hasattr(self, '_root_type_info'):
+            self._root_type_info = create_type_info(self._type_ctx,
+                                                    CXXType(self._type_ctx.root.cxx_type_name,
+                                                            self._type_ctx.template_choice)) if self._type_ctx else None
+        return self._root_type_info
 
     @property
     def vars(self):

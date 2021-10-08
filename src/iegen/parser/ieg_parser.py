@@ -75,10 +75,13 @@ class CXXParser:
             if file_name != CXXParser.EXTRA_INCLUDES_FILE_NAME:
                 logging.info(f"parsing file {file_name}")
             self.current_file = file_name
-            tu = index.parse(path=file_name,
-                             args=args,
-                             unsaved_files=unsaved_files,
-                             options=CXXParser.CLANG_DEF_OPTIONS)
+            try:
+                tu = index.parse(path=file_name,
+                                 args=args,
+                                 unsaved_files=unsaved_files,
+                                 options=CXXParser.CLANG_DEF_OPTIONS)
+            except cli.TranslationUnitLoadError as err:
+                Error.critical(f"Cannot continue: iegen error has occurred: {err}", file_name)
 
             has_error = False
             for diagnostic in tu.diagnostics:

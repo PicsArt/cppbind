@@ -341,13 +341,21 @@ function:
               switch(err_type) {
               {%- if helper.Exceptions.can_throw(vars.throws) %}
               {%- for exc_type in vars.throws %}
+                  {%- set exc_vars = get_type_info(exc_type).vars %}
+                  {%- if not exc_vars %}
+                    {{Error.critical("Cannot find info for '" + exc_type + "' type: API annotations are missing")}}
+                  {%- endif %}
                   case({{loop.index}}):
-                      throw {{get_type_info(exc_type).vars.name}}(err.err_ptr, true)
+                      throw {{exc_vars.name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
+                  {%- set exc_vars = get_type_info('std::exception').vars %}
+                  {%- if not exc_vars %}
+                    {{Error.critical("Cannot find info for 'std::exception' type: API annotations are missing")}}
+                  {%- endif %}
                   case({{vars.throws|length + 1 if helper.Exceptions.can_throw(vars.throws) else 1}}):
-                      let exc_obj = {{get_type_info("std::exception").vars.name}}(err.err_ptr, true)
+                      let exc_obj = {{exc_vars.name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:

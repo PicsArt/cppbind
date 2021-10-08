@@ -11,6 +11,9 @@ file:
       package {{vars.package_prefix}}.{{vars.package}}
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
       {%- set exc_vars = get_type_info("std::exception").vars %}
+      {%- if not exc_vars %}
+        {{Error.critical("Cannot find info for 'std::exception' type: API annotations are missing")}}
+      {%- endif %}
       {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
       {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
       {{body}}
@@ -492,6 +495,9 @@ function:
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
           {%- set exc_vars = get_type_info(exc_type).vars %}
+          {%- if not exc_vars %}
+            {{Error.critical("Cannot find info for '" + exc_type + "' type: API annotations are missing")}}
+          {%- endif %}
           jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
           jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
@@ -696,6 +702,9 @@ getter:
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
               {%- set exc_vars = get_type_info(exc_type).vars %}
+              {%- if not exc_vars %}
+                {{Error.critical("Cannot find info for '" + exc_type + "' type: API annotations are missing")}}
+              {%- endif %}
               jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
               jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));

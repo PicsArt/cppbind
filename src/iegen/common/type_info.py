@@ -67,9 +67,11 @@ class TypeInfo:
     @property
     def root_type_info(self):
         if not hasattr(self, '_root_type_info'):
-            self._root_type_info = create_type_info(self._type_ctx,
-                                                    CXXType(self._type_ctx.root.cxx_type_name,
-                                                            self._type_ctx.template_choice)) if self._type_ctx else None
+            self._root_type_info = None
+            if self._type_ctx and self._type_ctx.kind_name != 'enum':
+                self._root_type_info = create_type_info(self._type_ctx,
+                                                        CXXType(self._type_ctx.root.cxx_type_name,
+                                                                self._type_ctx.template_choice))
         return self._root_type_info
 
     @property

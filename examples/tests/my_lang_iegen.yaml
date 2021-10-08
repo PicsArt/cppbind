@@ -14,4 +14,131 @@ vars:
     out_dir: "{{path.join(out_prj_dir, 'my_lang')}}"
 
 var_def:
-  !include variable_definitions.yaml
+    # we need this to have action rules wtih gen
+    action:
+      inheritable: false
+      default: null
+      allowed_on: [ cxx, file_system ]
+
+    # I used this variable in my test to control output dir
+    package:
+        inheritable: true
+        default: 'undefined'
+        allowed_on: [ dir, file, class, class_template, struct, struct_template, enum, function, function_template ]
+
+    # variables we need to pass to cxx parse function
+    src_glob:
+        inheritable: false
+        default: []
+        allowed_on: [ root ]
+        type: list
+
+    clang_args:
+        inheritable: false
+        default: [ ]
+        allowed_on: [ root ]
+        type: list
+
+    extra_headers:
+        inheritable: false
+        default: [ ]
+        allowed_on: [ root ]
+        type: list
+
+    include_dirs:
+        inheritable: false
+        default:
+            - .
+        allowed_on: [ root ]
+        type: list
+
+    src_exclude_glob:
+        inheritable: false
+        default: [ ]
+        allowed_on: [ root ]
+        type: list
+
+    # cxx_helpers_dir variable depends on this
+    common_helpers_dir:
+        inheritable: true
+        default: std_helpers
+        allowed_on: [ root ]
+
+    # variables that we need to pass to make_root_context function
+    cxx_helpers_dir:
+        inheritable: true
+        my_lang.default: '{{path.join(common_helpers_dir, "my_lang/cxx")}}'
+        default: '{{path.join(common_helpers_dir, "cxx")}}'
+        allowed_on: [ root ]
+
+    helpers_dir:
+        inheritable: true
+        my_lang.default: '{{path.join(common_helpers_dir, "my_lang")}}'
+        allowed_on: [ root ]
+
+    out_prj_dir:
+        inheritable: true
+        default: wr_out
+        allowed_on: [ cmd_line ]
+
+    out_dir:
+        inheritable: true
+        my_lang.default: '{{path.join(out_prj_dir, "my_lang")}}'
+        allowed_on: [ cmd_line ]
+
+    # helpers_prefix_package depends on this
+    package_prefix:
+        inheritable: true
+        my_lang.default: example_lib
+        allowed_on: [ root ]
+
+    helpers_package_prefix:
+        inheritable: true
+        default: '{{package_prefix}}'
+        allowed_on: [ root ]
+
+    cxx_base_dir:
+        inheritable: true
+        default: base
+        allowed_on: [ root ]
+
+    # variables we need for make_clang_context function
+    comment_del_regex:
+        inheritable: true
+        type: list
+        default:
+            - '\s*\\internal([\s\S]*?)\\endinternal\s*'
+            - '\s*\\internal[\s\S]*'
+        allowed_on: [ cxx, file_system, root ]
+
+    comment:
+        inheritable: false
+        python.default: |
+            {%- set regex = comment_del_regex|join('|') -%}
+            {{_pure_comment|replace_regex(regex, '')}}
+            {%- if _file_full_name and path.isfile(_file_full_name) and project_dir is defined %}
+            Documentation generated from: `{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}
+            <{{project_link}}/{{path.relpath(_file_full_name, project_dir)}}#L{{_line_number}}>`_
+            {%- endif %}
+        default: |
+            {%- set regex = comment_del_regex|join('|') -%}
+            {{_pure_comment|replace_regex(regex, '')}}
+
+    # variables we need for converter logic
+    name:
+        inheritable: false
+        type: str
+        default: '{{_object_name}}'
+        allowed_on: [ cxx, file_system ]
+
+    file:
+      inheritable: true
+      default: '{{_file_name}}'
+      allowed_on: [ class, class_template, struct, struct_template, enum ]
+
+    # variables we need for _validate_nullable_args function
+    nullable_arg:
+        inheritable: false
+        default: [ ]
+        type: list
+        allowed_on: [ cxx_method, constructor, function, function_template ]

@@ -1,10 +1,23 @@
+# type converter section for 'int'
 int:
+  # type info specifications
   types:
+    cxx: int
     my_lang: my_lang_int
+  # converters section
   converters:
+    # a section example without source and target definitions
     my_section: |
       name: {{name}}
+    # a section example with source and target specifications
+    my_lang_to_cxx:
+      source: my_lang
+      target: cxx
+      snippet: |
+        {{name}} used in my_lang to cxx converter snippet
 
+# type converter section for custom object
 $Object:
+  # type info specifications
   types:
     my_lang: my_lang_obj

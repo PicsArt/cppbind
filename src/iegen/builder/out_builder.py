@@ -100,6 +100,8 @@ class Scope:
         return f"Scope({self.__dict__})"
 
     def __str__(self):
+
+        # `if str(p)` helps to skip blank lines
         lines = [
             (self.tab_str * self.tab) + s
             for s in self.parts_splitter.join(str(p) for p in self.parts if str(p)).splitlines(keepends=True)
@@ -110,6 +112,7 @@ class Scope:
         return str_scope
 
     def __bool__(self):
+        # this check helps to remove redundant blank lines
         return any(str(p) for p in self.parts)
 
 

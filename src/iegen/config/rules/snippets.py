@@ -31,7 +31,7 @@ def set_language(language):
     try:
         LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
     except ModuleNotFoundError:
-        logging.warning(f"Helper module is not found for '{language}' language")
+        logging.info(f"Helper module is not found for '{language}' language")
 
 
 def load_snippets_engine(ctx_desc, platform, language):

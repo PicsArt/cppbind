@@ -1,5 +1,5 @@
-Adding a new supported language
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Add new language bindings generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let's consider a case when the users want to add a new supported language to iegen. It's not hard if the user already has
 code snippets and type converter snippets (look :doc:`here </04_advanced_features/03_snippets>` for more detailed information

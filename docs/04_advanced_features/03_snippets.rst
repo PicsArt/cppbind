@@ -9,9 +9,9 @@ We have three types of snippets: `code` snippets, `type converter` snippets and 
 Code snippets
 ~~~~~~~~~~~~~
 
-Code snippets are responsible for generating classes, interfaces, functions, enums, constructors, property getters/setters
-and other nodes in wrapper files. For example, `class` section of code snippets describes the structure of class in target langauge.
-Also it defines what must be generated in C wrappers for class node.
+Code snippets are called for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
+User can use them to generate multiple files. For example user can generate C-C++ code to implement binding logic on C++ side and
+target language file to expose interface and also add some logic.
 
 .. code-block:: yaml
 
@@ -35,13 +35,13 @@ Also it defines what must be generated in C wrappers for class node.
 Above described code block is a part of our code snippets for generating swift classes. We have some subsections under `class`
 parent section: `include`, `body`, and these subsections are used to group generated code fragments. We also have `scopes` which
 we use to gather snippet values from the lower levels and use them in current section: for example we use function body inside class.
-Actual snippets are described under `content` or `unique_content` sections. `unique_content` is used to generate code fragment
-that has unique lines. This is mainly used for includes to avoid redundant repetitions.
+Actual snippets are described under `content` or `unique_content` sections. `unique_content` is used to generate unique lines or
+code fragment defined by marker. This is mainly used for includes to avoid redundant repetitions.
 
 Type converter snippets
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Type converter snippets are responsible for defining types for source/target languages and also provide conversions between
+Type converter snippets are responsible for defining type information for target language and also provide conversions between
 source and target for the given cxx type.
 
 Here is an example of type converter for `char *`:
@@ -100,3 +100,15 @@ Here is an example of action snippets for swift target language, where we define
         copy_to: |
           {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
           {{path.join(cxx_out_dir, file_rel_name)}}
+
+An action is described by a pair of special keys that show what we are applying the action to and the purpose of the action.
+We have a list of supported actions:
+
+.. list-table:: Actions
+    :widths: 25 75
+    :header-rows: 1
+
+    * - Action keys
+      - Purpose of action
+    * - file/copy_to
+      - Copy input files described by glob pattern to the destination

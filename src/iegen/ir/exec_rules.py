@@ -9,8 +9,8 @@ import clang.cindex as cli
 import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
-from iegen.utils.clang import extract_pure_comment
 from iegen.utils import DefaultValueKind
+from iegen.utils.clang import extract_pure_comment
 
 
 class BaseContext:
@@ -18,12 +18,11 @@ class BaseContext:
         self.runner = runner
         self.node = node or runner.ir
 
-    def __getattr__(self, name):
-        val = self.node.args.get(name, None)
-        if val is None:
-            raise AttributeError(f"{self.__class__.__name__}.{name} is invalid.\
-    API has no '{name}' attribute for {self.node.displayname}.")
-        return val
+    @property
+    def vars(self):
+        if not hasattr(self, '_vars'):
+            self._vars = types.SimpleNamespace(**self.node.args)
+        return self._vars
 
 
 class Context(BaseContext):
@@ -125,7 +124,7 @@ class Context(BaseContext):
 
         if not hasattr(self, '_overloading_prefix'):
             search_api = self.node.api
-            name = self.name
+            name = self.vars.name
             search_names = {name}
             overloads = self.find_adjacents(search_names, search_api)
             _overloading_prefix = ''
@@ -142,7 +141,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_setter'
-        name = self.name
+        name = self.vars.name
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
         search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
@@ -155,7 +154,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_getter'
-        name = self.name
+        name = self.vars.name
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
         search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],
@@ -263,20 +262,18 @@ class Context(BaseContext):
     def prj_rel_file_name(self):
         if not hasattr(self, '_prj_rel_file_name'):
             self._prj_rel_file_name = os.path.relpath(
-                self.cursor.location.file.name, self.out_prj_dir)
+                self.cursor.location.file.name, self.vars.out_prj_dir)
         return self._prj_rel_file_name
 
     @property
     def is_proj_type(self):
         """Check whether the given type is user's type or is the type from standard/3pty lib"""
         return os.path.abspath(self.cursor.location.file.name).startswith(
-            os.path.abspath(self.out_prj_dir) + os.path.sep)
+            os.path.abspath(self.vars.out_prj_dir) + os.path.sep)
 
     @property
-    def api_args(self):
-        if not hasattr(self, '_api_args'):
-            self._api_args = self.node.args
-        return self._api_args
+    def is_template(self):
+        return self.node.is_template
 
     @property
     def template_type_parameters(self):
@@ -304,11 +301,11 @@ class Context(BaseContext):
 
     @property
     def template_choice(self):
-        return self.template_ctx['choice'] if self.template_ctx else None
+        return self.template_ctx.choice if self.template_ctx else None
 
     @property
     def template_names(self):
-        return self.template_ctx['names'] if self.template_ctx else None
+        return self.template_ctx.names if self.template_ctx else None
 
     def lookup_ctx_by_name(self, name):
         return self.runner.get_context(name)
@@ -325,11 +322,35 @@ class Context(BaseContext):
         # cursor using this approach instead
         # for example for the type a::Stack<T> full_displayname=a::Stack,
         # spelling=Stack, displayname=Stack<T>
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE,
+                                               cli.CursorKind.ENUM_DECL]:
+            raise AttributeError(f"{self.__class__.__name__}.cxx_type_name is invalid.")
         template_choice = self.template_choice or {}
         if self.node.is_template:
             cxx_type_name = self.node.full_displayname.replace(self.node.spelling, self.node.displayname)
             return cutil.replace_template_choice(cxx_type_name, template_choice)
         return self.cursor.type.spelling
+
+    @property
+    def cxx_root_type_name(self):
+        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
+                                               cli.CursorKind.CLASS_DECL,
+                                               cli.CursorKind.CLASS_TEMPLATE]:
+            raise AttributeError(f"{self.__class__.__name__}.cxx_root_type_name is invalid.")
+        _root_cursor = cutil.get_base_cursor(self.cursor)
+        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
+
+        if self.is_template:
+            _root_cursor = cutil.get_base_cursor(self.cursor)
+            if _root_cursor == self.cursor:
+                cxx_root_type_name = self.cxx_type_name
+            else:
+                # todo add an example to check this
+                cxx_root_type_name = cutil.replace_template_choice(
+                    _root_cursor.displayname, self.template_choice)
+        return cxx_root_type_name
 
 
 class RunRule:
@@ -338,6 +359,7 @@ class RunRule:
         self.ctx_desc = ctx_desc
         self.language = language
         self.platform = platform
+        self.all_contexts = dict()
         # calling order should be such as that parent node processes first
         self.api_call_order = [
             # {'gen_class', 'gen_interface', 'gen_enum'},
@@ -399,19 +421,7 @@ class RunRule:
                             # check if the node is template and generate code for each combination of template args
                             if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
                                                            cli.CursorKind.FUNCTION_TEMPLATE]:
-                                parent_template = node.args.get('template', None)
-                                template_arg = {}
-                                # if parent also has a template argument join with child´s
-                                if parent_template:
-                                    template_arg = template_arg.update(parent_template)
-                                template_arg.update(child.args['template'])
-                                all_possible_args = list(itertools.product(*template_arg.values()))
-                                template_keys = child.args['template'].keys()
-                                for _, combination in enumerate(all_possible_args):
-                                    choice = [item['type'] for item in combination]
-                                    choice_names = [item['name'] for item in combination if 'name' in item]
-                                    _template_choice = dict(zip(template_keys, choice))
-                                    _template_ctx = {'choice': _template_choice, 'names': choice_names}
+                                for _template_ctx in RunRule._get_template_combinations(child):
                                     _run_recursive(child, _template_ctx)
                             else:
                                 _run_recursive(child, template_ctx)
@@ -437,7 +447,7 @@ class RunRule:
         api = node.api
         if api == Node.API_NONE:
             return
-        logging.debug(f"Call API: {api.lstrip('gen_')} on {node.displayname}")
+        logging.debug(f"Call API: {api.lstrip(api)} on {node.displayname}")
         func = getattr(rule, api)
         context = self.get_context(node.full_displayname)
         # set current template context to generate code based on correct template choice
@@ -456,15 +466,38 @@ class RunRule:
 
     def allocate_all_contexts(self):
         logging.debug("Allocating context for all nodes")
-        self.all_contexts = dict()
         for node in self.ir.walk():
-            self.create_context(node)
+            self.all_contexts.setdefault(node.full_displayname,
+                                         Context(self, node))
+            if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+                # for template types also create a context with template choice
+                for template_ctx in RunRule._get_template_combinations(node):
+                    context = Context(self, node, template_ctx)
+                    self.all_contexts[context.cxx_type_name] = context
+
+    @staticmethod
+    def _get_template_combinations(node):
+        parent_template = node.parent.args.get('template', None)
+        template_arg = {}
+        # if parent also has a template argument join with child´s
+        if parent_template:
+            template_arg = template_arg.update(parent_template)
+        template_arg.update(node.args['template'])
+        all_possible_args = list(itertools.product(*template_arg.values()))
+        template_keys = node.args['template'].keys()
+        all_contexts = []
+        for _, combination in enumerate(all_possible_args):
+            choice = [item['type'] for item in combination]
+            choice_names = [item.get('name') for item in combination]
+            _template_choice = dict(zip(template_keys, choice))
+            all_contexts.append(types.SimpleNamespace(choice=_template_choice, names=choice_names))
+        return all_contexts
 
     @staticmethod
     def __node_key(node, template_ctx):
         node_key = (node,)
         if node and node.type == NodeType.CLANG_NODE and node.is_template:
-            node_key = (node, json.dumps(template_ctx))
+            node_key = (node, json.dumps(template_ctx.__dict__))
         return node_key
 
     @staticmethod

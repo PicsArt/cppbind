@@ -3,6 +3,7 @@ rules:
     iegen::example::Size:
       custom:
         pname: Object
+        tname: PointFloat
       types:
         kotlin: Point2D.Float
         jni: jfloatArray
@@ -35,6 +36,7 @@ rules:
     iegen::example::Size:
       custom:
         pname: SizeF
+        tname: SizeF
       types:
         python: SizeF
         pybind: SizeF

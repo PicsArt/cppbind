@@ -1,27 +1,28 @@
 file:
   kotlin:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
-    scopes: 
+      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
+    scopes:
       - body
       - include
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      package {{package_prefix}}.{{package}}
+      package {{vars.package_prefix}}.{{vars.package}}
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
-      {%- set exc_include = 'import ' + ctx.lookup_ctx_by_name("std::exception").package_prefix + '.' + ctx.lookup_ctx_by_name("std::exception").package + '.*' %}
+      {%- set exc_vars = get_type_info("std::exception").vars %}
+      {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
       {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
       {{body}}
   cxx:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - namespace
       - body
       - include
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
       #include "jni.h"
       #include <iostream>
@@ -34,9 +35,9 @@ file:
 package:
 
 enum:
-  kotlin: 
+  kotlin:
     body: |
-      enum class {{name}}(val value: Int){{': ' if ctx.bases_list}}{{ctx.bases_list|join(', ')}} {
+      enum class {{vars.name}}(val value: Int){{': ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}
           {{comma()}}
@@ -50,47 +51,46 @@ enum:
               private val values = values();
               fun getByValue(value: Int) = values.firstOrNull { it.value == value }
           }
-          {%- if code_fragment %}
+          {%- if vars.code_fragment %}
 
-          {{code_fragment|join(2 * new_line)|indent(4)}}
+          {{vars.code_fragment|join(2 * new_line)|indent(4)}}
           {%- endif %}
       }
 
 var_class_cxx: &var_class_cxx
   include:
     unique_content: |
-      {%- if ctx.is_proj_type -%}
+      {%- if is_proj_type -%}
       #include "{{prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_import(converter, current_ctx) -%}
-      {%- set type_ctx = converter.ctx -%}
-      {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
-      {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+      {%- macro gen_import(type_info) -%}
+      {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+      {{marker}}#include "{{type_info.prj_rel_file_name}}"
       {%- endif -%}
-      {%- for tmpl_arg_converter in converter.template_args -%}
-      {{gen_import(tmpl_arg_converter, current_ctx)}}
+      {%- for arg_type_info in type_info.arg_types_infos -%}
+      {{gen_import(arg_type_info)}}
       {%- endfor -%}
       {%- endmacro -%}
-      {%- for base in base_types_converters -%}
-      {{gen_import(base, ctx)}}
+      {%- for base in base_types_infos -%}
+      {{gen_import(base)}}
       {%- endfor -%}
-      {%- if include_cxx -%}
-      {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
-      {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
+      {%- if vars.include_cxx -%}
+      {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
+      {{marker}}{{vars.include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
       {%- endif -%}
   namespace:
     unique_content: |
-      {%- if ctx.namespace %}
-      using namespace {{ctx.namespace}};
+      {%- if cxx.namespace %}
+      using namespace {{cxx.namespace}};
       {%- endif %}
   body:
     content: |
-      {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
-      {%- set finalize_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, interface_class_name if action == 'gen_interface' else name,  template_suffix, 'jFinalize') %}
+      {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+      {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface'), 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = make_converter('std::shared_ptr<' + cxx_root_type_name + '>').jni_to_cxx if root.shared_ref else make_converter(cxx_root_type_name).jni_to_cxx %}
-          {{jni_to_cxx_converter.snippet('id', is_pointer=True)|indent(4)}}
-          {%- if root.shared_ref %}
+          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + cxx.root_type_name + '>').jni_to_cxx if root.vars.shared_ref else make_type_converter(cxx.root_type_name).jni_to_cxx %}
+          {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
+          {%- if root.vars.shared_ref %}
           delete &{{jni_to_cxx_converter.converted_name('id')}};
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};
@@ -100,18 +100,18 @@ var_class_cxx: &var_class_cxx
 
 var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
-    {{marker if include}}{{include|format_list("import {}")|join_unique}}
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and type_ctx.package != current_ctx.package -%}
-    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
+    {%- macro gen_import(converter) -%}
+    {%- set converter = converter.kotlin -%}
+    {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_converter in converter.args_converters -%}
+    {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for base in base_types_converters -%}
-    {{gen_import(base, ctx)}}
+    {{gen_import(base)}}
     {%- endfor -%}
 
 class:
@@ -125,28 +125,29 @@ class:
         - companion
         - private_external
       content: |
-        {%- set base_interfaces = base_types_converters|selectattr('ctx.action', 'eq', 'gen_interface')|map(attribute='kotlin.target_type_name')|list -%}
-        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + ctx.bases_list + (['AutoCloseable'] if not base_types_converters or not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list else []) + (['Exception()'] if ctx.is_exception and not helper.Exceptions.has_exc_base(ctx) else []) -%}
-        {%- do helper.Validator.validate_single_root(cursor) -%}
-        {%- do helper.Validator.validate_bases(name, base_types_converters) -%}
+        {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
+        {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
+        {%- do helper.Validator.validate_single_root(cxx.cursor) -%}
+        {%- do helper.Validator.validate_bases(name, base_types_converters|map(attribute='kotlin')) -%}
         {%- do helper.Validator.validate_ancestors(ancestors) -%}
-        {%- if comment %}
-        {{comment|make_doxygen_comment}}
+        {%- if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        {{'open ' if is_open}}class {{name}}{{template_suffix}}
+        {{'open ' if cxx.is_open}}class {{converter.kotlin.target_type_name}}
         internal constructor(_id: Long){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             companion object {
-                {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
+                {%- if all_bases_are_interface %}
                 init {
-                    System.loadLibrary("{{c_wrapper_lib_name}}");
+                    System.loadLibrary("{{vars.c_wrapper_lib_name}}");
                 }
                 {%- endif %}
                 {{companion|string|indent(8)}}
             }
-            {% if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
+            {% if all_bases_are_interface %}
             protected var id = _id
             {%- endif %}
-            {%- if base_types_converters|selectattr('ctx.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
+            {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
             {{'override '}}
             {%- else %}
@@ -168,7 +169,7 @@ class:
             {%- if body %}
             {{body|string|indent}}
             {%- endif %}
-            {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
+            {%- if all_bases_are_interface %}
 
             override fun close() {
                 if (id != 0L) {
@@ -189,7 +190,7 @@ class:
             ///// External wrapper functions ////////////
             {{private_external|string|indent}}
             {%- endif %}
-            {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
+            {%- if all_bases_are_interface %}
             private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
@@ -206,31 +207,33 @@ interface:
         - companion
         - interface_external
       content: |
-        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + ctx.bases_list -%}
-        {%- do helper.Validator.validate_single_root(cursor) -%}
-        {%- if comment %}
-        {{comment|make_doxygen_comment}}
+        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin')|map(attribute='target_type_name')|list + vars.bases_list %}
+        {%- do helper.Validator.validate_ancestors(ancestors) %}
+        {%- do helper.Validator.validate_single_root(cxx.cursor) %}
+        {% if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        interface {{interface_name}}{{template_suffix}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
+        interface {{converter.kotlin.target_type_name}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
             fun getObjId(): Long
             {%- endif %}
             {{properties|string|indent}}
             {{body|string|indent}}
         }
+
         {% if interface_external %}
-        class {{name}}Helper{{template_suffix}} {
+        class {{converter.kotlin.target_type_name}}Helper {
             companion object {
                 {{interface_external|string|indent(8)}}
             }
         }
-        {%-endif %}
-        {% do helper.Validator.validate_ancestors(ancestors) %}
-        {{'open ' if is_open}}class {{interface_class_name}}{{template_suffix}}
-        internal constructor(_id: Long) : {{interface_name}}{{template_suffix}} {
+        {% endif %}
+
+        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True)}}
+        internal constructor(_id: Long) : {{converter.kotlin.target_type_name}} {
             companion object {
                 init {
-                    System.loadLibrary("{{c_wrapper_lib_name}}");
+                    System.loadLibrary("{{vars.c_wrapper_lib_name}}");
                 }
                 {{companion|string|indent(8)}}
             }
@@ -245,7 +248,7 @@ interface:
             {%- if head %}
             {{head|string|indent}}
             {%- endif %}
-            {%- if not base_types_converters|rejectattr('ctx.action', 'equalto', 'gen_interface')|list %}
+            {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
 
             override fun close() {
                 if (id != 0L) {
@@ -269,46 +272,45 @@ interface:
 
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and type_ctx.package != current_ctx.package -%}
-    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {%- macro gen_import(converter) -%}
+    {%- set converter = converter.kotlin -%}
+    {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_converter in converter.args_converters -%}
+    {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type -%}
-    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(return_type_info)}}
     {%- endif -%}
 
 constructor:
   kotlin:
     include: *var_method_kotlin_include
     head: |
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
       constructor({%- for arg in args -%}
@@ -324,8 +326,8 @@ constructor:
       {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}})) {
       }
     companion: |
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
       protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): Long {
@@ -344,7 +346,9 @@ constructor:
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, owner_class.interface_class_name if owner_class.action == 'gen_interface' else owner_class.name, owner_class.template_suffix, 'jConstructor' + overloading_prefix) -%}
+      {%- set kotlin_type_info = owner_class.converter.kotlin -%}
+      {%- set owner_name = kotlin_type_info.get_target_type_name(interface_class=True) if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, 'jConstructor' + overloading_prefix) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}
@@ -352,17 +356,17 @@ constructor:
           {{converter.snippet(arg.name, nullable=arg.nullable)|indent(4)}}
           {%- do call_args.append(converter.converted_name(arg.name)) -%}
           {%- endfor %}
-          {%- if not owner_class.root.shared_ref %}
-          {{owner_class.cxx_root_type_name}}* baseptr = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
+          {%- if not owner_class.root.vars.shared_ref %}
+          {{owner_class.cxx.root_type_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
           return reinterpret_cast<jlong>(baseptr);
           {%- else %}
-          {{owner_class.cxx_type_name}}* obj_ptr = new {{owner_class.cxx_type_name}}({{call_args|join(', ')}});
-          auto this_object = std::shared_ptr<{{owner_class.cxx_type_name}}>(obj_ptr);
-          {%- if owner_class.cxx_root_type_name != owner_class.cxx_type_name %}
-          std::shared_ptr<{{owner_class.cxx_root_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.cxx_root_type_name}}>(this_object);
-          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx_root_type_name}}>(baseptr));
+          {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+          auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
+          {%- if owner_class.cxx.root_type_name != owner_class.cxx.type_name %}
+          std::shared_ptr<{{owner_class.cxx.root_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.cxx.root_type_name}}>(this_object);
+          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.root_type_name}}>(baseptr));
           {%- else %}
-          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx_type_name}}>(this_object));
+          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
           {%- endif %}
           {%- endif %}
       }
@@ -371,12 +375,13 @@ function:
   kotlin:
     include: *var_method_kotlin_include
     body: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
-      {%- if not is_static %}
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
+      {%- if not cxx.is_static %}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      {{'open ' if is_open}}{{'operator ' if is_operator}}{{'override ' if is_override or name == 'toString'}}fun {{name}}(
+      {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
       {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.default.split('::')|last}}
@@ -386,7 +391,7 @@ function:
       {%- endif %}
       {%- endif %}
       {%- endif -%}
-      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
+      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
           {%- set call_args = ['getObjId()'] -%}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}
@@ -397,22 +402,23 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {%- if ctx.parent_context.action == 'gen_interface' %}
-          val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          {%- if owner_class.vars.action == 'gen_interface' %}
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result', nullable=nullable_return)|indent}}
+          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- endif %}
     companion: |
-      {%- if is_static %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- if cxx.is_static %}
       {%- set comma = joiner(', ') -%}
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      fun {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if nullable_return}} {
+      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
           {%- set call_args = [] %}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args -%}
@@ -423,34 +429,37 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          {%- if ctx.parent_context.action == 'gen_interface' %}
-          val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          {%- if owner_class.vars.action == 'gen_interface' %}
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{name|capitalize}}{{overloading_prefix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result', nullable=nullable_return)|indent}}
+          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- set comma = joiner(', ') %}
       @JvmStatic
-      private external fun j{{name|capitalize}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     private_external: |
-      {%- if not is_static %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
-      private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     interface_external: |
-      {%- if not is_static %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
       @JvmStatic
-      external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
   cxx:
     include: *var_method_cxx_include
     body: |
-      {% set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
-      {%- set objid_args=["jobjectid id"]if not is_static else [] -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set objid_args=["jobjectid id"]if not cxx.is_static else [] -%}
       {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- macro args_snippet(args, call_args) %}
@@ -461,35 +470,36 @@ function:
       {% endfor %}
       {%- endmacro %}
       {% macro call_code(prefix, call_args) -%}
-      {%- if helper.Exceptions.can_throw(throws) %}
+      {%- if helper.Exceptions.can_throw(vars.throws) %}
       void* err_ptr = nullptr;
       {%- endif -%}
       {% if rconverter.jni.target_type_name != 'void' %}
       try {
-          auto result = {{prefix}}{{cxx_name}}{%- if ctx.node.is_function_template -%}
+          auto result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
                                               <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                               {%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- else %}
       try {
-          {{prefix}}{{cxx_name}}({{call_args|join(', ')}});
+          {{prefix}}{{cxx.name}}({{call_args|join(', ')}});
           return;
       }
       {%- endif %}
-      {%- if helper.Exceptions.can_throw(throws) %}
-      {%- for exc_type in throws -%}
+      {%- if helper.Exceptions.can_throw(vars.throws) %}
+      {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          jclass excCls = env->FindClass("{{[ctx.lookup_ctx_by_name(exc_type).package_prefix, ctx.lookup_ctx_by_name(exc_type).package, ctx.lookup_ctx_by_name(exc_type).name]|map('replace', '.', pat_sep)|path_join}}");
+          {%- set exc_vars = get_type_info(exc_type).vars %}
+          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
           jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
       {%- endif %}
-      {%- if not 'std::exception' in throws %}
+      {%- if not 'std::exception' in vars.throws %}
       catch (const std::exception& e) {
             jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
@@ -507,119 +517,115 @@ function:
       return result;
       {%- endif %}
       {%- endmacro %}
-      {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.action == 'gen_interface' %}
-      {%- set class_name = owner_class.name + 'Helper' %}
-      {%- endif %}
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set kotlin_type_info = owner_class.converter.kotlin %}
+      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
           {%- set call_args = [] %}
           {{args_snippet(args, call_args)|indent(4)}}
-          {%- if not is_static %}
+          {%- if not cxx.is_static %}
           validateID(id);
-          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
-          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
+          {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {{call_code(this_converter.converted_name('id') + "->", call_args)|indent(4)}}
           {%- else %}
-          {{call_code(owner_class.cxx_type_name + "::", call_args)|indent(4)}}
+          {{call_code(owner_class.cxx.type_name + "::", call_args)|indent(4)}}
           {%- endif %}
       }
 
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and type_ctx.package != current_ctx.package -%}
-    {{marker}}import {{type_ctx.package_prefix}}.{{type_ctx.package}}.{{converter.kotlin.target_type_name}}
+    {%- macro gen_import(converter) -%}
+    {%- set converter = converter.kotlin -%}
+    {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_converter in converter.args_converters -%}
+    {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(rconverter)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type -%}
-    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(return_type_info)}}
 
 property_getter:
   kotlin:
     include: *var_getter_kotlin_include
     properties: |
+      {%- set owner_name = owner_class.converter.kotlin.target_type_name -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      {{'var' if ctx.action == 'gen_property_setter' else 'val'}} {{name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
+      {{'var' if vars.action == 'gen_property_setter' else 'val'}} {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
-              {%- if ctx.parent_context.action == 'gen_interface' %}
-              val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
+              {%- if owner_class.vars.action == 'gen_interface' %}
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(getObjId())
               {%- else %}
-              val result = j{{name|capitalize}}(getObjId())
+              val result = j{{vars.name|capitalize}}(getObjId())
               {%- endif %}
-              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
+              {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
-          {%- if ctx.action == 'gen_property_setter' %}
+          {%- if vars.action == 'gen_property_setter' %}
           {%- set converter = rconverter.kotlin_to_jdk %}
           set(value) {
-              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
-              {%- if ctx.parent_context.action == 'gen_interface' %}
-              {{owner_class.name}}Helper{{owner_class.template_suffix}}.jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
+              {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
+              {%- if owner_class.vars.action == 'gen_interface' %}
+              {{owner_name}}Helper.jSet{{vars.name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
-              jSet{{name|lower}}(getObjId(), {{converter.converted_name('value')}})
+              jSet{{vars.name|lower}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
           }
           {% endif %}
     private_external: |
-      private external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if ctx.action == 'gen_property_setter' %}
-      private external fun jSet{{name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
+      private external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
+      {%- if vars.action == 'gen_property_setter' %}
+      private external fun jSet{{vars.name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
 
       @JvmStatic
-      external fun j{{name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if ctx.action == 'gen_property_setter' %}
+      external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
+      {%- if vars.action == 'gen_property_setter' %}
 
       @JvmStatic
-      external fun jSet{{name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
+      external fun jSet{{vars.name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- set func_name="j%s"|format(name|capitalize) %}
-      {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.action == 'gen_interface' %}
-      {%- set class_name = owner_class.name + 'Helper' %}
-      {%- endif %}
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set kotlin_type_info = owner_class.converter.kotlin -%}
+      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {%- set func_name="j%s"|format(vars.name|capitalize) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
+      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx -%}
-          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
-          auto result = {{this_converter.converted_name('id')}}->{{cxx_name}};
-          {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(4)}}
+          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
+          auto result = {{this_converter.converted_name('id')}}->{{cxx.name}};
+          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
-      {%- if ctx.action == 'gen_property_setter' %}
-      {% set func_name="jSet%s"|format(name|lower) %}
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- if vars.action == 'gen_property_setter' %}
+      {% set func_name="jSet%s"|format(vars.name|lower) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           validateID(id);
-          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
+          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {% set converter = rconverter.jni_to_cxx %}
-          {{converter.snippet('value', nullable=nullable_return)|indent(4)}}
-          {{this_converter.converted_name('id')}}->{{cxx_name}} = {{converter.converted_name('value')}};
+          {{converter.snippet('value', nullable=vars.nullable_return)|indent(4)}}
+          {{this_converter.converted_name('id')}}->{{cxx.name}} = {{converter.converted_name('value')}};
       }
       {% endif %}
 
@@ -627,76 +633,77 @@ getter:
   kotlin:
     include: *var_getter_kotlin_include
     properties: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {%- set owner_name = owner_class.converter.kotlin.target_type_name -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
-      {%- if ctx.node.is_function_template %}
-      {%- if template_names %}
-      {%- set _name = template_names|join %}
-      {%- else %}
-      {%- set _name = overloading_prefix %}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      {%- else %}
-      {%- set _name = name %}
-      {%- endif %}
-      {%- if comment %}
-      {{comment|make_doxygen_comment}}
-      {%- endif %}
-      {{'open ' if is_open}}{{'override ' if is_override}}{{'var' if setter_ctx is defined else 'val'}} {{_name}}: {{result_converter.target_type_name}}{{'?' if nullable_return}}
+      {{'open ' if cxx.is_open}}{{'override ' if cxx.is_override}}{{'var ' if setter is defined else 'val '}}
+                                             {%- if cxx.is_template -%}
+                                             {%- for name in template_names or [] %}
+                                             {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
+                                             {%- endfor %}
+                                             {%- else %}{{vars.name}}
+                                             {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
-              {%- if ctx.parent_context.action == 'gen_interface' %}
-              val result = {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{name|capitalize}}(getObjId())
+              {%- if owner_class.vars.action == 'gen_interface' %}
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{template_postfix}}(getObjId())
               {%- else %}
-              val result = j{{name|capitalize}}{{overloading_prefix}}(getObjId())
+              val result = j{{vars.name|capitalize}}{{template_postfix}}(getObjId())
               {%- endif %}
-              {{result_converter.snippet('result', nullable=nullable_return)|indent(8)}}
+              {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
-          {%- if setter_ctx is defined %}
-          {%- set converter = setter_ctx.args[0].converter.kotlin_to_jdk %}
-          {%- if is_override %}
+          {%- if setter is defined %}
+          {%- set converter = setter.args[0].converter.kotlin_to_jdk %}
+          {%- if cxx.is_override %}
           set(value) {
-              super.{{name}} = value
+              super.{{vars.name}} = value
           }
           {%- else %}
           set(value) {
-              {{converter.snippet('value', nullable=nullable_return)|indent(8)}}
-              {%- if ctx.parent_context.action == 'gen_interface' %}
-              {{owner_class.name}}Helper{{owner_class.template_suffix}}.j{{setter_ctx.name|capitalize}}(getObjId(), {{converter.converted_name('value')}})
+              {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
+              {%- if owner_class.vars.action == 'gen_interface' %}
+              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
               {%- else %}
-              j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(getObjId(), {{converter.converted_name('value')}})
+              j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
               {%- endif %}
           }
           {%- endif %}
           {%- endif %}
     private_external: |
-      private external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if setter_ctx is defined %}
-      private external fun j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      private external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
+      {%- if setter is defined %}
+      private external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
     interface_external: |
+      {% set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      @JvmStatic
+      external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
+      {%- if setter is defined %}
 
       @JvmStatic
-      external fun j{{name|capitalize}}{{overloading_prefix}}(id: Long): {{rconverter.jdk.target_type_name}}
-      {%- if setter_ctx is defined %}
-
-      @JvmStatic
-      external fun j{{setter_ctx.name|capitalize}}{{overloading_prefix}}(id: Long, value: {{setter_ctx.args[0].converter.jdk.target_type_name}}): Unit
+      external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
   cxx:
     include: *var_getter_cxx_include
     body: |
       {%- macro gen_exc_try_block() -%}
-      {%- if helper.Exceptions.can_throw(throws) %}
-      {%- for exc_type in throws -%}
+      {%- if helper.Exceptions.can_throw(vars.throws) %}
+      {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              jclass excCls = env->FindClass("{{[ctx.lookup_ctx_by_name(exc_type).package_prefix, ctx.lookup_ctx_by_name(exc_type).package, ctx.lookup_ctx_by_name(exc_type).name]|map('replace', '.', pat_sep)|path_join}}");
+              {%- set exc_vars = get_type_info(exc_type).vars %}
+              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
               jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
               env->Throw(jthrowable(excObj));
           }
       {%- endfor %}
       {%- endif %}
-      {%- if not 'std::exception' in throws %}
+      {%- if not 'std::exception' in vars.throws %}
           catch (const std::exception& e) {
               jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
@@ -709,27 +716,26 @@ getter:
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
           }
       {%- endmacro -%}
-      {%- set func_name="j%s%s"|format(name|capitalize, overloading_prefix) %}
-      {%- set class_name = owner_class.name %}
-      {%- if ctx.parent_context.action == 'gen_interface' %}
-      {%- set class_name = owner_class.name + 'Helper' %}
-      {%- endif %}
-      {%- if ctx.node.is_function_template -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {%- set func_name="j%s%s"|format(vars.name|capitalize, template_postfix) %}
+      {%- if cxx.is_template -%}
       {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
-      {%- set jni_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
+      {%- set kotlin_type_info = owner_class.converter.kotlin -%}
+      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
+      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
-          {%- set this_converter = make_converter('std::shared_ptr<' + owner_class.cxx_type_name + '>').jni_to_cxx if owner_class.root.shared_ref else owner_class.converter.jni_to_cxx %}
-          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
-          {%- if helper.Exceptions.can_throw(throws) %}
+          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
+          {%- if helper.Exceptions.can_throw(vars.throws) %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-              auto result = {{this_converter.converted_name('id')}}->{{cxx_name}}{{template_args}}();
-              {{rconverter.cxx_to_jni.snippet('result', nullable=nullable_return)|indent(8)}}
+              auto result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
+              {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
           {{gen_exc_try_block()}}
@@ -737,19 +743,19 @@ getter:
           {{rconverter.jni.target_type_name}} result;
           return result;
       }
-      {%- if setter_ctx is defined %}
-      {% set func_name="j%s%s"|format(setter_ctx.name|capitalize, overloading_prefix) %}
-      {%- set jni_setter_name = helper.get_jni_func_name(ctx.package_prefix + '.' + ctx.package, class_name, owner_class.template_suffix, func_name) %}
-      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter_ctx.args[0].converter.jni.target_type_name}} {{setter_ctx.args[0].name}}){
+      {%- if setter is defined %}
+      {% set func_name="j%s%s"|format(setter.vars.name|capitalize, template_postfix) %}
+      {%- set jni_setter_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
+      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}){
           validateID(id);
-          {{this_converter.snippet('id', is_pointer=True, nullable=False)|indent(4)}}
-          {%- set converter = setter_ctx.args[0].converter.jni_to_cxx -%}
-          {{converter.snippet(setter_ctx.args[0].name, nullable=nullable_return)|indent(4)}}
-          {%- if helper.Exceptions.can_throw(throws) %}
+          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
+          {%- set converter = setter.args[0].converter.jni_to_cxx %}
+          {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
+          {%- if helper.Exceptions.can_throw(vars.throws) %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-             {{this_converter.converted_name('id')}}->{{setter_ctx.cxx_name}}{{template_args}}({{converter.converted_name(setter_ctx.args[0].name)}});
+             {{this_converter.converted_name('id')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.args[0].name)}});
           }
           {{gen_exc_try_block()}}
       }

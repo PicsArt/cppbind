@@ -1,4 +1,4 @@
-from examples_lib.misc.yaml_example_pygen import WithExternalAPIComments, Adderfloat, Adderint, color
+from examples_lib.misc.yaml_example_pygen import WithExternalAPIComments, AdderFloat, AdderInt, color
 from examples_lib.misc.size_buffer_pygen import SizeUsage, BufferUsage
 from buffer import SizeF, Buffer
 
@@ -12,8 +12,8 @@ assert (obj.str == "ab")
 assert WithExternalAPIComments.max(2, 3) == 3
 assert WithExternalAPIComments.max("2", "3") == "3"
 
-assert Adderint.add(1, 2) == 3
-assert Adderfloat.add(1.5, 2.5) == 4.0
+assert AdderInt.add(1, 2) == 3
+assert AdderFloat.add(1.5, 2.5) == 4.0
 
 assert color.RED.name == "RED" and color.RED.value == 0
 # [external-yaml-usage]

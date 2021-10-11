@@ -119,7 +119,7 @@ def replace_template_choice(type_name, template_choice):
         if replaced in template_choice:
             return template_choice[replaced]
         for typename, value in template_choice.items():
-            replaced = re.sub(rf'([,<\s]?)\s*{typename}([\s,>&*]\s*)', rf'\g<1>{value}\g<2>', replaced)
+            replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
     return replaced
 
 

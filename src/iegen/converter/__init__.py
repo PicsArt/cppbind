@@ -11,22 +11,6 @@ class Validator:
     """
 
     @staticmethod
-    def shared_ref_set(type_ctx):
-        """Check whether shared_ref variable is set"""
-        if not type_ctx.root.shared_ref:
-            Error.critical("Root must have an attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
-    def shared_ref_unset(type_ctx):
-        """Check whether shared_ref variable is false"""
-        if type_ctx.root.shared_ref:
-            Error.critical("Root has an invalid attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
     def validate_single_root(cursor):
         """Validate that the cursor has only a single base root"""
         roots = _get_roots(cursor)
@@ -38,7 +22,7 @@ class Validator:
     @staticmethod
     def validate_ancestors(ancestors):
         """Ensure that all ancestors has the same value for shared_ref variable"""
-        if ancestors and not all(item.shared_ref == ancestors[0].shared_ref for item in ancestors[1:]):
+        if ancestors and not all(item.vars.shared_ref == ancestors[0].vars.shared_ref for item in ancestors[1:]):
             raise TypeError('All ancestors must have the same value for shared_ref.')
 
     @staticmethod
@@ -46,7 +30,7 @@ class Validator:
         """Ensure the class has only one non abstract base"""
         non_abstract_bases = 0
         for base_type in base_types_converters:
-            if not base_type.ctx.action == 'gen_interface':
+            if not base_type.vars.action == 'gen_interface':
                 non_abstract_bases += 1
         if non_abstract_bases > 1:
             raise TypeError(f'{class_name} has more than 1 non abstract bases.')
@@ -78,7 +62,7 @@ class Exceptions:
         return "no_throw" not in throws
 
     @staticmethod
-    def is_std_custom_exc(ctx):
+    def is_std_custom_exc(cursor):
         """Check whether the given class is derived from C++ std exceptions"""
         std_exc_list = (
             "std::exception", "std::runtime_error", "std::logic_error", "std::bad_alloc",
@@ -87,15 +71,10 @@ class Exceptions:
             "std::out_of_range", "std::domain_error"
         )
 
-        for cursor in list(ctx.cursor.get_children()):
-            if cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER and cursor.spelling in std_exc_list:
+        for base in list(cursor.get_children()):
+            if base.kind == cli.CursorKind.CXX_BASE_SPECIFIER and base.spelling in std_exc_list:
                 return True
         return False
-
-    @staticmethod
-    def has_exc_base(ctx):
-        """Check whether current class has a base class which is exception class"""
-        return any(base.is_exception for base in ctx.ancestors)
 
 
 def make_doxygen_comment(pure_comment):

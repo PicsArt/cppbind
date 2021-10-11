@@ -1,7 +1,6 @@
 /**
 * __API__
 * action: gen_class
-* package: my_lang_test
 */
 class Example {
     /**

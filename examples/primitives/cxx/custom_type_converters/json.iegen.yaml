@@ -3,6 +3,7 @@ rules:
     nlohmann::json:
       custom:
         is_c_pointer_type: False
+        tname: JSON
       types:
         swift: String
         c: char * _Nullable
@@ -26,6 +27,7 @@ rules:
     nlohmann::json:
       custom:
         pname: Object
+        tname: JSON
       types:
         kotlin: String
         jni: jstring

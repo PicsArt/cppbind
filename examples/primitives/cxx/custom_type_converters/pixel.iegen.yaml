@@ -3,6 +3,7 @@ rules:
     iegen::example::Pixel:
       custom:
         pname: Long
+        tname: Pixel
       types:
         kotlin: Pixel
         jni: jobjectid
@@ -16,7 +17,7 @@ rules:
   python.type_converters:
     iegen::example::Pixel:
       custom:
-        pname: Pixel
+        tname: Pixel
       types:
         python: Pixel
         pybind: Pixel

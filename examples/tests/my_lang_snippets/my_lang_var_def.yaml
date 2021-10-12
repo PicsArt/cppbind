@@ -1,0 +1,68 @@
+# we need this to have action rules with gen
+action:
+  inheritable: false
+  default: null
+  allowed_on: [ cxx, file_system ]
+
+# used in make_class_context (prj_rel_file_name)
+out_prj_dir:
+    inheritable: true
+    default: wr_out
+    allowed_on: [ cmd_line ]
+
+# used in test to control output
+out_dir:
+    inheritable: true
+    my_lang.default: '{{path.join(out_prj_dir, "my_lang")}}'
+    allowed_on: [ cmd_line ]
+
+file:
+  inheritable: true
+  default: '{{_file_name}}'
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
+
+# variables we need to pass to cxx parse function
+src_glob:
+    inheritable: false
+    default: []
+    allowed_on: [ root ]
+    type: list
+
+clang_args:
+    inheritable: false
+    default: [ ]
+    allowed_on: [ root ]
+    type: list
+
+extra_headers:
+    inheritable: false
+    default: [ ]
+    allowed_on: [ root ]
+    type: list
+
+include_dirs:
+    inheritable: false
+    default:
+        - .
+    allowed_on: [ root ]
+    type: list
+
+src_exclude_glob:
+    inheritable: false
+    default: [ ]
+    allowed_on: [ root ]
+    type: list
+
+# variables we need for converter logic
+name:
+    inheritable: false
+    type: str
+    default: '{{_object_name}}'
+    allowed_on: [ cxx, file_system ]
+
+# variables we need for _validate_nullable_args function
+nullable_arg:
+    inheritable: false
+    default: [ ]
+    type: list
+    allowed_on: [ cxx_method, constructor, function, function_template ]

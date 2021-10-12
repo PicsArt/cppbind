@@ -15,16 +15,26 @@ class:
       scopes:
         - body
       content: |
-        {{body}}
+        public class {{vars.name}}  {
+
+          // body of function
+          {{body|string|indent}}
+        }
 
 # code snippets for function
 function:
   my_lang:
     # example of snippet call which doesn't have source and target defined
     body: |
-      {%- for arg in args %}
-        {%- if arg.converter.my_section %}
-          {{arg.converter.my_section.snippet("my_var_name")}}
-          {{arg.converter.my_lang_to_cxx.snippet("arg name")}}
-        {%- endif %}
-      {%- endfor %}
+      {%- set comma = joiner(', ') -%}
+      public function ({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.my_lang.target_type_name}}{%- endfor -%}) {
+
+        {%- for arg in args %}
+          {%- if arg.converter.my_section %}
+            {{arg.converter.my_section.snippet(arg.name)}}
+          {%- endif %}
+
+          {{arg.converter.my_lang_to_c.snippet(arg.name)}}
+        {%- endfor %}
+
+      }

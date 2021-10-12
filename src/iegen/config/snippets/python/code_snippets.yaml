@@ -264,16 +264,16 @@ var_class: &var_class
         {%- if is_proj_type -%}
         #include "{{prj_rel_file_name}}"
         {%- endif -%}
-        {%- macro gen_import(type_info) -%}
+        {%- macro gen_include(type_info) -%}
         {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
         {{marker}}#include "{{type_info.prj_rel_file_name}}"
         {%- endif -%}
         {%- for arg_type_info in type_info.arg_types_infos -%}
-        {{gen_import(arg_type_info)}}
+        {{gen_include(arg_type_info)}}
         {%- endfor -%}
         {%- endmacro -%}
         {%- for base in base_types_infos -%}
-        {{gen_import(base)}}
+        {{gen_include(base)}}
         {%- endfor -%}
         {%- if vars.include_cxx -%}
         {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
@@ -344,19 +344,19 @@ var_method_python_include: &var_method_python_include
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.type_info)}}
+    {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
     {%- endif -%}
 
 constructor:
@@ -483,15 +483,15 @@ var_getter_python_include: &var_getter_python_include
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if  type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
 
 property_getter:
   python:

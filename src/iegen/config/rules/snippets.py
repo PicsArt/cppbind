@@ -61,8 +61,13 @@ def make_def_context(ctx):
             return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
                                                                      template_choice))
 
-        def get_type_info(type_name):
-            return create_type_info(ctx, CXXType(type_name, template_choice=None))
+        def get_type_info(type_name, template_choice=None):
+            cxx_type = CXXType(type_name,
+                               template_choice)
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, cxx_type)
+            if converter:
+                return getattr(converter, LANGUAGE)._type_info
+            Error.critical(f'No type info found for: {cxx_type.type_name}')
 
         return locals()
 
@@ -175,7 +180,8 @@ def make_class_context(ctx):
                                 template_choice=ctx.template_choice)
             _type_info = create_type_info(ctx, _cxx_type)
 
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
+            converter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.cxx_type_name,
+                                                                          template_choice=ctx.template_choice))
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
@@ -185,6 +191,7 @@ def make_class_context(ctx):
 
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
+            root_types_infos = _type_info.root_types_infos
 
             return locals()
 

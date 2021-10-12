@@ -4,6 +4,7 @@ import shutil
 import sys
 import types
 import unittest
+from unittest.mock import patch
 
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
@@ -24,11 +25,12 @@ class TestDummyLang(unittest.TestCase):
         shutil.rmtree('tmp')
 
     def test_dummy_lang(self):
-        ContextDescriptor.get_var_def = unittest.mock.Mock(return_value=ContextDescriptor.resolve_attr_aliases(
-            load_yaml(os.path.join(SCRIPT_DIR, '../../examples/tests/my_lang_snippets/my_lang_var_def.yaml'))))
+        with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+            var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(load_yaml(
+                os.path.join(SCRIPT_DIR, '../../examples/tests/my_lang_snippets/my_lang_var_def.yaml')))
 
-        run(types.SimpleNamespace(plat_lang_options=['my_lang']),
-            ContextDescriptor(os.path.join(SCRIPT_DIR, '../../examples/tests/my_lang_iegen.yaml')))
+            run(types.SimpleNamespace(plat_lang_options=['my_lang']),
+                ContextDescriptor(os.path.join(SCRIPT_DIR, '../../examples/tests/my_lang_iegen.yaml')))
 
         gen_root = self.gen_root % 'my_lang'
         examples_root = self.examples_root % 'my_lang'

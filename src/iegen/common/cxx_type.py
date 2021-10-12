@@ -12,6 +12,12 @@ class CXXType:
         self.type_ = type_
         self.template_choice = template_choice
 
+    def __eq__(self, other):
+        return self.type_ == other.type_ and self.template_choice == other.template_choice
+
+    def __hash__(self):
+        return hash(self.type_name)
+
     @property
     def type_name(self):
         return cutil.replace_template_choice(self.type_ if isinstance(self.type_, str) else self.type_.spelling,

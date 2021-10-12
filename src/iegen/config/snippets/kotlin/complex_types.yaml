@@ -36,7 +36,7 @@ $Object:
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- if root_type_info.vars.shared_ref -%}
+      {%- if root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
@@ -48,7 +48,7 @@ $Object:
       auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
     cxx_to_jni: |
-      {%- if root_type_info.vars.shared_ref -%}
+      {%- if root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = cxx.pointee_unqualified_name %}
@@ -300,7 +300,7 @@ std::shared_ptr:
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- if not args[0].root_type_info.vars.shared_ref -%}
+      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = args[0].target_type_name %}
@@ -325,7 +325,7 @@ std::shared_ptr:
       {%- endif %}
       {%- endif %}
     cxx_to_jni: |
-      {%- if not args[0].root_type_info.vars.shared_ref -%}
+      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}

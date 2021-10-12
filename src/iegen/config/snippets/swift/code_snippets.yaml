@@ -75,16 +75,16 @@ var_class_include: &var_class_include
       {%- if is_proj_type -%}
       #include "{{prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_import(type_info) -%}
+      {%- macro gen_include(type_info) -%}
       {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
       {{marker}}#include "{{type_info.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
-      {{gen_import(arg_type_info)}}
+      {{gen_include(arg_type_info)}}
       {%- endfor -%}
       {%- endmacro -%}
       {%- for base in base_types_infos -%}
-      {{gen_import(base)}}
+      {{gen_include(base)}}
       {%- endfor -%}
       {%- if vars.include_cxx -%}
       {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
@@ -109,7 +109,7 @@ class:
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
                                 {%- endif %} {
-            {% if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list and not helper.Exceptions.is_std_custom_exc(cxx.cursor)%}
+            {% if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
             public let cself : {{converter.sc.target_type_name}}
             public let owner : Bool
 
@@ -219,19 +219,19 @@ interface:
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.type_info)}}
+    {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
     {%- endif -%}
 
 constructor:
@@ -299,7 +299,7 @@ function:
       {%- set comma = joiner(', ') %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- if vars.is_operator %}
-      public static func {{helper.get_map_cxx_operator_name(vars.name)}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(vars.throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+      public static func {{helper.get_map_cxx_operator_name(vars.name)}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
       {% set override = cxx.is_override and not cxx.is_original_definition_override -%}
@@ -313,7 +313,7 @@ function:
       {%- endif %}
       {%- endif %}
       {%- endif -%}
-      {%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(vars.throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+      {%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {%- set call_args = ['cself'] if not cxx.is_static else [] %}
       {%endif%}
         {%- for arg in args %}
@@ -339,14 +339,14 @@ function:
           let err_type = Int(err.err_type)
           if (err_type != 0) {
               switch(err_type) {
-              {%- if helper.Exceptions.can_throw(vars.throws) %}
+              {%- if 'no_throw' not in vars.throws %}
               {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
                       throw {{get_type_info(exc_type).vars.name}}(err.err_ptr, true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
-                  case({{vars.throws|length + 1 if helper.Exceptions.can_throw(vars.throws) else 1}}):
+                  case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
                       let exc_obj = {{get_type_info("std::exception").vars.name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
@@ -361,7 +361,7 @@ function:
     interface_body: |
       {%- set comma = joiner(', ') -%}
       {{vars.comment|make_doxygen_comment}}
-      func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(vars.throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}}
+      func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}}
   cc:
     include: *var_method_cxx_include
     body: |
@@ -396,7 +396,7 @@ function:
               {%if not cxx.is_static %}{{this_converter.converted_name('cself')}}->{%else%}{{owner_class.cxx.type_name}}::{% endif %}{{cxx.name}}({{call_args|join(', ')}});
           }
         {%- endif %}
-        {%- if helper.Exceptions.can_throw(vars.throws) %}
+        {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err->err_type = {{loop.index}};
@@ -406,7 +406,7 @@ function:
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           catch (const std::exception& e) {
-              err->err_type = {{vars.throws|length + 1 if helper.Exceptions.can_throw(vars.throws) else 1}};
+              err->err_type = {{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}};
               err->err_ptr = new std::exception(e);
           }
           {%- endif %}
@@ -431,15 +431,15 @@ function:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
 
 property_getter:
   swift:

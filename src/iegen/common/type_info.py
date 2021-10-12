@@ -1,10 +1,13 @@
 import types
 
+from cachetools import cached
+
 import iegen.utils.clang as cutil
 from iegen.common.cxx_type import CXXType
 from iegen.ir.exec_rules import Context
 
 
+@cached(cache={}, key=lambda ctx, cxx_type: 11 * hash(ctx.runner.language) + hash(cxx_type))
 def create_type_info(ctx: Context, cxx_type: CXXType):
     return TypeInfo(ctx, cxx_type)
 
@@ -17,7 +20,7 @@ class TypeInfo:
         # get raw type to be able to find it's context(cxx type might be a typedef, pointer etc.)
         self._raw_type = cxx_type.raw_type
         self._type_ctx = None
-        if ctx and self._raw_type.unqualified_type_name:
+        if self._raw_type.unqualified_type_name:
             # for template types find exact context with appropriate template choice
             self._type_ctx = ctx.lookup_ctx_by_name(self._raw_type.unqualified_type_name)
 
@@ -39,13 +42,13 @@ class TypeInfo:
                 is_pointer=self._cxx_type.is_pointer,
                 is_value_type=self._cxx_type.is_value,
                 is_reference=self._cxx_type.is_lval_reference,
-                pointee_unqualified_name=self._cxx_type.unqualified_pointee_name,
-                namespace=self._type_ctx.namespace if self._type_ctx else None,
-                is_open=not cutil.is_final_cursor(self._type_ctx.cursor) if self._type_ctx else None,
-                is_abstract=self._type_ctx.cursor.is_abstract_record() if self._type_ctx else None,
-                kind_name=self._type_ctx.kind_name if self._type_ctx else None,
-                cursor=self._type_ctx.cursor if self._type_ctx else None,
-                root_type_name=root_type_name)
+                pointee_unqualified_name=self._cxx_type.unqualified_pointee_name)
+            if self._type_ctx:
+                self._cxx.namespace = self._type_ctx.namespace
+                self._cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
+                self._cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
+                self._cxx.kind_name = self._type_ctx.kind_name
+                self._cxx.root_type_name = root_type_name
 
         return self._cxx
 
@@ -65,14 +68,18 @@ class TypeInfo:
         return self._arg_types_infos
 
     @property
-    def root_type_info(self):
-        if not hasattr(self, '_root_type_info'):
-            self._root_type_info = None
+    def root_types_infos(self):
+        if not hasattr(self, '_roots'):
+            self._roots = []
             if self._type_ctx and self._type_ctx.kind_name != 'enum':
-                self._root_type_info = create_type_info(self._type_ctx,
-                                                        CXXType(self._type_ctx.root.cxx_type_name,
-                                                                self._type_ctx.template_choice))
-        return self._root_type_info
+                for parent in set(self._type_ctx.ancestors):
+                    if not parent.base_types:
+                        self._roots.append(create_type_info(parent, CXXType(parent.cxx_type_name,
+                                                                            self._type_ctx.template_choice)))
+                if not self._roots:
+                    self._roots.append(self)
+
+        return self._roots
 
     @property
     def vars(self):
@@ -85,3 +92,11 @@ class TypeInfo:
     @property
     def is_proj_type(self):
         return self._type_ctx.is_proj_type if self._type_ctx else False
+
+    @property
+    def template_names(self):
+        return self._type_ctx.template_names if self._type_ctx else None
+
+    @property
+    def template_choice(self):
+        return self._type_ctx.template_choice if self._type_ctx else None

@@ -7,6 +7,8 @@ import filecmp
 import glob
 import os
 import shutil
+from cachetools import cached
+
 from collections.abc import MutableMapping
 from types import SimpleNamespace
 
@@ -101,20 +103,18 @@ class FileAction(Action):
 class Converter:
 
     def __init__(self,
-                 cxx_type,
+                 type_info,
                  template_args,
                  snippet_name,
                  custom,
                  ctx,
                  type_converter,
                  **kwargs):
-        self._cxx_type = cxx_type
-        self._ctx = ctx
+        self._type_info = type_info
         self._type_converter = type_converter
         self._template_args = template_args
         self._snippet_name = snippet_name
         self.custom = custom
-        self._type_info = create_type_info(self._ctx, self._cxx_type)
         self._context = self._make_context()
 
     def snippet(self, name, **kwargs):
@@ -140,19 +140,19 @@ class Converter:
 
     @property
     def vars(self):
-        return self._ctx.vars if self._ctx else None
+        return self._type_info.vars
 
     @property
     def is_proj_type(self):
-        return self._ctx is not None and self._ctx.is_proj_type
+        return self._type_info.is_proj_type
 
     @property
     def is_obj_type(self):
-        return self._ctx is not None
+        return self._type_info.vars is not None
 
     @property
     def template_names(self):
-        return self._ctx.template_names if self._ctx else None
+        return self._type_info.template_names
 
     @property
     def args(self):
@@ -161,10 +161,10 @@ class Converter:
     @property
     def args_converters(self):
         return self._template_args
-
+    
     @property
-    def root_type_info(self):
-        return self._type_info.root_type_info
+    def root_types_infos(self):
+        return self._type_info.root_types_infos
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
@@ -173,7 +173,7 @@ class Converter:
             args = self.args
             args_converters = self.args_converters
 
-            root_type_info = self.root_type_info
+            root_types_infos = self.root_types_infos
 
             cxx = self.cxx
             # make api variables available in converter under vars
@@ -195,7 +195,7 @@ class Converter:
         self._expose_namespace(context, 'vars')
 
         custom = SimpleNamespace()
-
+        # evaluate custom fields one by one to make available by defined order
         for k, v in self.custom.__dict__.items():
             setattr(custom, k, v.render(context) if isinstance(v, Template) else v)
             context['custom'] = custom
@@ -212,9 +212,9 @@ class Converter:
 
 class Adapter:
 
-    def __init__(self, cxx_type, ctx, type_info_collector, **kwargs):
+    def __init__(self, type_info, ctx, type_info_collector, **kwargs):
         self.type_info_collector = type_info_collector
-        self.cxx_type = cxx_type
+        self.type_info = type_info
         self.ctx = ctx
         self.template_args = []
         self.kwargs = kwargs
@@ -230,7 +230,7 @@ class Adapter:
         else:
             return None
 
-        return Converter(cxx_type=self.cxx_type,
+        return Converter(type_info=self.type_info,
                          template_args=self.template_args,
                          snippet_name=name,
                          custom=self.type_info_collector.custom,
@@ -247,8 +247,8 @@ class TypeInfoCollector:
         self.target_type_infos = target_type_infos
         self.custom = custom
 
-    def make_type_converter(self, cxx_type, ref_ctx):
-        return Adapter(cxx_type=cxx_type,
+    def make_type_converter(self, type_info, ref_ctx):
+        return Adapter(type_info=type_info,
                        ctx=ref_ctx,
                        type_info_collector=self)
 
@@ -354,6 +354,7 @@ class SnippetsEngine:
             variables.update(vars_)
         return variables
 
+    @cached(cache={}, key=lambda self, ctx, cxx_type: 11 * hash(cxx_type) + hash(self.language))
     def build_type_converter(self,
                              ctx,
                              cxx_type):
@@ -573,8 +574,9 @@ class SnippetsEngine:
             # type info for given type is not available
             return None
 
-        type_converter = type_converter.make_type_converter(cxx_type,
-                                                       ref_ctx)
+        type_info = create_type_info(ctx, cxx_type)
+        type_converter = type_converter.make_type_converter(type_info,
+                                                            ref_ctx)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])
@@ -644,7 +646,7 @@ class SnippetsEngine:
                 # will remove namespaces and return
                 # type with spelling equal to 'Stack<type-parameter-0-0>'
                 canonical_clang_type = not lookup_type.is_unexposed and all(
-                    (not arg.cxx_type.is_unexposed for arg in tmpl_args))
+                    (not arg_type.is_unexposed for arg_type in lookup_type.template_argument_types))
                 if canonical_clang_type:
                     lookup_type = lookup_type.canonical_type
 

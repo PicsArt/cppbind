@@ -63,16 +63,16 @@ var_class_cxx: &var_class_cxx
       {%- if is_proj_type -%}
       #include "{{prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_import(type_info) -%}
+      {%- macro gen_include(type_info) -%}
       {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
       {{marker}}#include "{{type_info.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
-      {{gen_import(arg_type_info)}}
+      {{gen_include(arg_type_info)}}
       {%- endfor -%}
       {%- endmacro -%}
       {%- for base in base_types_infos -%}
-      {{gen_import(base)}}
+      {{gen_include(base)}}
       {%- endfor -%}
       {%- if vars.include_cxx -%}
       {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
@@ -102,15 +102,14 @@ var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
     {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
     {%- macro gen_import(converter) -%}
-    {%- set converter = converter.kotlin -%}
     {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for arg_converter in converter.args_converters -%}
+    {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {%- for base in base_types_converters -%}
+    {%- for base in base_types_converters|map(attribute='kotlin') -%}
     {{gen_import(base)}}
     {%- endfor -%}
 
@@ -128,9 +127,15 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
         {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
-        {%- do helper.Validator.validate_single_root(cxx.cursor) -%}
-        {%- do helper.Validator.validate_bases(name, base_types_converters|map(attribute='kotlin')) -%}
-        {%- do helper.Validator.validate_ancestors(ancestors) -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
+        {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
+        {%- do Error.critical(cxx.name + 'has more than 1 non abstract base type.') %}
+        {%- endif %}
+        {%- if ancestors|selectattr('vars.shared_ref', 'equalto', True)|list|length not in (0, ancestors|length) %}
+        {%- do Error.critical(cxx.name + 'ancestors have different values for shared_ref variable.') %}
+        {%- endif %}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
@@ -207,9 +212,13 @@ interface:
         - companion
         - interface_external
       content: |
-        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin')|map(attribute='target_type_name')|list + vars.bases_list %}
-        {%- do helper.Validator.validate_ancestors(ancestors) %}
-        {%- do helper.Validator.validate_single_root(cxx.cursor) %}
+        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
+        {%- if ancestors|selectattr('vars.shared_ref', 'equalto', True)|list|length not in (0, ancestors|length) %}
+        {%- do Error.critical(cxx.name + 'ancestors have different values for shared_ref variable.') %}
+        {%- endif %}
+        {%- if root_types_infos|length > 1 %}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') %}
+        {%- endif %}
         {% if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
@@ -273,36 +282,35 @@ interface:
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
-    {%- set converter = converter.kotlin -%}
     {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for arg_converter in converter.args_converters -%}
+    {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {%- for arg in args -%}
-    {{gen_import(arg.converter)}}
+    {%- for arg_converter in args|map(attribute='converter.kotlin') -%}
+    {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter)}}
+    {{gen_import(rconverter.kotlin)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.type_info)}}
+    {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
     {%- endif -%}
 
 constructor:
@@ -470,7 +478,7 @@ function:
       {% endfor %}
       {%- endmacro %}
       {% macro call_code(prefix, call_args) -%}
-      {%- if helper.Exceptions.can_throw(vars.throws) %}
+      {%- if 'no_throw' not in vars.throws %}
       void* err_ptr = nullptr;
       {%- endif -%}
       {% if rconverter.jni.target_type_name != 'void' %}
@@ -487,7 +495,7 @@ function:
           return;
       }
       {%- endif %}
-      {%- if helper.Exceptions.can_throw(vars.throws) %}
+      {%- if 'no_throw' not in vars.throws %}
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
@@ -536,27 +544,26 @@ function:
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
-    {%- set converter = converter.kotlin -%}
     {%- if converter.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
-    {%- for arg_converter in converter.args_converters -%}
+    {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter)}}
+    {{gen_import(rconverter.kotlin)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(type_info) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.is_proj_type -%}
     {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_import(arg_type_info)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(return_type_info)}}
+    {{gen_include(return_type_info)}}
 
 property_getter:
   kotlin:
@@ -691,7 +698,7 @@ getter:
     include: *var_getter_cxx_include
     body: |
       {%- macro gen_exc_try_block() -%}
-      {%- if helper.Exceptions.can_throw(vars.throws) %}
+      {%- if 'no_throw' not in vars.throws %}
       {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
@@ -730,7 +737,7 @@ getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {%- if helper.Exceptions.can_throw(vars.throws) %}
+          {%- if 'no_throw' not in vars.throws %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {
@@ -751,7 +758,7 @@ getter:
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- set converter = setter.args[0].converter.jni_to_cxx %}
           {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
-          {%- if helper.Exceptions.can_throw(vars.throws) %}
+          {%- if 'no_throw' not in vars.throws %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {

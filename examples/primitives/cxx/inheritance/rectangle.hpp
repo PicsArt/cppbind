@@ -30,11 +30,6 @@ public:
         return _length * _width;
     }
 
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
     double perimeter() const override {
         return 2 * (_length + _width);
     }

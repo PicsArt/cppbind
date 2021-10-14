@@ -18,6 +18,15 @@ def template_type_name(type_):
     return name
 
 
+def get_all_overridden_cursors(cursor):
+    cursors = []
+    if cursor.get_overriden_cursors():
+        cursors += cursor.get_overriden_cursors()
+        for overridden in cursors:
+            cursors += get_all_overridden_cursors(overridden)
+    return cursors
+
+
 def _get_unqualified_type_name(type_name):
     """
     TODO: python API is missing

@@ -97,6 +97,19 @@ std::__cxx11::basic_string:
     python_to_pybind: |
       {{target_name}} = {{target_type_name}}({{name}})
 
+std::string_view:
+  custom:
+    pname: str
+  types:
+    python: str
+    pybind: str
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    pybind_to_python:
+    python_to_pybind: |
+      {{target_name}} = {{target_type_name}}({{name}})
+
 std::vector:
   custom:
     pname: list

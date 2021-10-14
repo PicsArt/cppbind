@@ -88,6 +88,28 @@ std::__cxx11::basic_string:
         {{name}}.deallocate()
       }
 
+std::string_view:
+  custom:
+    is_c_pointer_type: True
+  types:
+    swift: String
+    c: char*
+    sc: UnsafeMutablePointer<CChar>
+  converters:
+    c_to_cxx: |
+      std::string {{target_name}} = {{name}};
+      free({{name}});
+    cxx_to_c: |
+      auto {{target_name}} = strdup({{name}}.data());
+    swift_to_sc: |
+      let {{target_name}} = strdup({{name}})!
+    sc_to_swift: |
+      let {{target_name}} = String(cString: {{name}})
+      defer{
+        {{name}}.deallocate()
+      }
+
+
 char *:
   custom:
     is_c_pointer_type: True

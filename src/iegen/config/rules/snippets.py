@@ -140,11 +140,9 @@ def make_func_context(ctx):
             _ctx_by_type = None
             if cxx.is_override:
                 _ctx_by_type = ctx.find_by_type(_overriden_cursors[0].lexical_parent.type.spelling)
-                if _ctx_by_type is None:
-                    Error.critical(f"Cannot find info for '{_overriden_cursors[0].lexical_parent.type.spelling}' "
-                                   f"type: API annotations are missing")
 
-            cxx.is_original_definition_override = cxx.is_override and _ctx_by_type.vars.action == 'gen_interface'
+            cxx.is_original_definition_override = cxx.is_override and \
+                                                  _ctx_by_type and _ctx_by_type.vars.action == 'gen_interface'
             cxx.is_static = bool(ctx.cursor.is_static_method())
             cxx.is_virtual = bool(ctx.cursor.is_virtual_method())
 

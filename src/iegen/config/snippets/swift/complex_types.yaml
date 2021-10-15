@@ -79,7 +79,7 @@ std::__cxx11::basic_string:
       auto {{target_name}} = std::string({{name}});
       free({{name}});
     cxx_to_c: |
-      auto {{target_name}} = strdup({{name}}.c_str());
+      auto {{target_name}} = strdup({{name}}.data());
     swift_to_sc: |
       let {{target_name}} = strdup({{name}})!
     sc_to_swift: |
@@ -87,6 +87,10 @@ std::__cxx11::basic_string:
       defer{
         {{name}}.deallocate()
       }
+
+std::string_view:
+  std::__cxx11::basic_string
+
 
 char *:
   custom:

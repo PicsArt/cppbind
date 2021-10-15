@@ -97,6 +97,9 @@ std::__cxx11::basic_string:
     python_to_pybind: |
       {{target_name}} = {{target_type_name}}({{name}})
 
+std::string_view:
+  std::__cxx11::basic_string
+
 std::vector:
   custom:
     pname: list

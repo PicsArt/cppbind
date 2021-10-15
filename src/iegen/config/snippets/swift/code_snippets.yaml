@@ -104,7 +104,8 @@ class:
         - body
         - private_external
       content: |
-        {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + ctx.bases_list -%}
+        {%- set base_interfaces = base_types_converters|selectattr('ctx.action', 'equalto', 'gen_interface')|map(attribute='swift.target_type_name')|list -%}
+        {%- set bases_specifiers = base_types_converters|selectattr('ctx.action', 'equalto', 'gen_class')|map(attribute='swift.target_type_name')|list + base_interfaces + ctx.bases_list -%}
         {{comment|make_doxygen_comment}}
         public class {{name}}{{template_suffix}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if ctx.is_exception and not helper.Exceptions.has_exc_base(ctx) -%}

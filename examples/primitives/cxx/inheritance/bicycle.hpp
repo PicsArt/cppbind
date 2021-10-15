@@ -1,6 +1,8 @@
 #ifndef bicycle_hpp
 #define bicycle_hpp
 
+#include<string>
+
 #include "cxx/inheritance/vehicle.hpp"
 
 namespace iegen::example {
@@ -17,7 +19,20 @@ public:
      * __API__
      * action: gen_constructor
      */
-    Bicycle(int numberOfSeats) : Vehicle(numberOfSeats) {};
+    Bicycle(int numberOfSeats) : Vehicle(numberOfSeats) {
+        name = "bicycle";
+    };
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    std::string type() const override {
+        return name;
+    }
+
+    std::string name;
 };
 // [example]
 }

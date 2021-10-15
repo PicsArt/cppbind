@@ -78,6 +78,7 @@ def make_def_context(ctx):
         def make_converter(type_name, template_choice=None):
             return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
                                                                      template_choice))
+
         return locals()
 
     context = make()
@@ -144,11 +145,13 @@ def make_func_context(ctx):
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
-            _overriden_cursors = ctx.cursor.get_overriden_cursors()
-            is_override = bool(_overriden_cursors)
+            _overridden_cursors = cutil.get_all_overridden_cursors(ctx.cursor)
+            # at least one of the overridden cursors should have an api
+            is_override = any([ctx.find_by_type(
+                cutil.get_full_displayname(cursor)) is not None for cursor in _overridden_cursors])
             if is_override:
                 original_definition_context = ctx.find_by_type(
-                    _overriden_cursors[0].lexical_parent.type.spelling)
+                    _overridden_cursors[0].lexical_parent.type.spelling)
             is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
         is_abstract = ctx.cursor.is_abstract_record()

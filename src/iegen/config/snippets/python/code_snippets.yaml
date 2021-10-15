@@ -372,7 +372,7 @@ constructor:
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_converter = arg.converter.python %}
                                        {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
                                        {%- else -%}
@@ -425,7 +425,7 @@ function:
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
                                                           {%- else -%}
@@ -505,6 +505,9 @@ property_getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- if not cxx.is_public -%}
+        {%- do Error.critical(owner_class.cxx.displayname + "." + cxx.displayname + " is not a public field. Make it public or remove iegen API.") -%}
+      {%- endif -%}
       {%- set _name = vars.name|to_snake_case -%}
       {%- set rconverter = rconverter.python -%}
       {% set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != owner_class.vars.file or rconverter.vars.package != owner_class.vars.package) else '' %}
@@ -535,6 +538,8 @@ getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- do helper.validate_getter(cxx, vars, args, owner_class, setter|default(none)) -%}
+      {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
       {%- macro gen_name() -%}
       {%- if cxx.is_template -%}
       {%- for name in template_names or [] %}

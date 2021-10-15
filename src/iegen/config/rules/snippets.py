@@ -98,7 +98,6 @@ def make_func_context(ctx):
                 default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.vars.nullable_arg or arg.default.kind == DefaultValueKind.NULL_PTR,
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
@@ -125,6 +124,7 @@ def make_func_context(ctx):
 
         cxx = types.SimpleNamespace(
             name=ctx.cursor.spelling,
+            displayname=ctx.cursor.displayname,
             is_abstract=ctx.cursor.is_abstract_record(),
             is_open=not cutil.is_final_cursor(ctx.cursor),
             is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
@@ -134,8 +134,7 @@ def make_func_context(ctx):
             kind_name=ctx.kind_name,
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
-            is_overloaded=cutil.is_overloaded(ctx.cursor),
-            isplayname=ctx.cursor.displayname
+            is_overloaded=cutil.is_overloaded(ctx.cursor)
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -214,8 +213,6 @@ def make_getter_context(ctx):
     def make():
         # helper variables
         if ctx.setter:
-            if ctx.node.is_template:
-                _validate_template_getter_setter(ctx)
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
             setter_ctx.set_template_ctx(ctx.template_ctx)
@@ -239,7 +236,10 @@ def make_member_context(ctx):
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
-                                    kind_name=ctx.kind_name)
+                                    displayname=ctx.cursor.displayname,
+                                    kind_name=ctx.kind_name,
+                                    is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
+                                    is_template=ctx.node.is_template)
 
         return locals()
 
@@ -313,13 +313,11 @@ def gen_method(ctx, builder):
 
 
 def gen_getter(ctx, builder):
-    _validate_getter(ctx)
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
 
 
 def gen_property_getter(ctx, builder):
-    _validate_property_getter(ctx)
     context = make_member_context(ctx)
     preprocess_entry(context, builder, 'property_getter')
 
@@ -330,42 +328,3 @@ def gen_property_setter(ctx, builder):
 
 def gen_setter(ctx, builder):
     return
-
-
-def _validate_getter(ctx):
-    if ctx.args:
-        Error.critical(
-            f'Getter should not have arguments: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-    if ctx.setter:
-        if len(ctx.setter.args) != 1:
-            Error.critical(
-                f'Setter should have one argument: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-
-        have_diff_nullability = len(ctx.setter.vars.nullable_arg) == 0 ^ ctx.vars.nullable_return is False
-        if have_diff_nullability:
-            Error.critical(
-                f'Setter argument and getter return value should have the same nullability:'
-                f' {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-
-
-def _validate_property_getter(ctx):
-    if ctx.cursor.access_specifier != cli.AccessSpecifier.PUBLIC:
-        Error.critical(
-            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} is not a public field.'
-            f' Make it public or remove iegen API.')
-
-
-def _validate_template_getter_setter(ctx):
-    is_valid = len(ctx.vars.template.keys()) == len(ctx.setter.vars.template.keys())
-    if is_valid:
-        for template_arg, possible_types in ctx.vars.template.items():
-            getter_types = {template['type'] for template in possible_types}
-            setter_types = {template['type'] for template in ctx.setter.vars.template[template_arg]}
-            if getter_types != setter_types:
-                is_valid = False
-                break
-    if not is_valid:
-        parent = ctx.cursor.lexical_parent.displayname
-        Error.critical(
-            f'Template getter/setter should have the same template argument types: '
-            f'{parent}.{ctx.cursor.displayname} and {parent}.{ctx.setter.cursor.displayname}.')

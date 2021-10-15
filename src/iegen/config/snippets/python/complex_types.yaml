@@ -50,8 +50,8 @@ $Object:
   custom:
     pname: object
     tpostfix: |
-      {%- for name in type_ctx.template_names or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args[loop.index - 1].custom.tname}}{% endif -%}
+      {%- for name in template_names or [] -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
@@ -92,9 +92,9 @@ $FunctionProto:
     tname: Callable
   types:
     python: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
     pybind: |
-        {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -118,7 +118,7 @@ std::vector:
   custom:
     tname: List[{{args[0].custom.tname}}]
   types:
-    python: List[{{args_t[0]}}]
+    python: List[{{args[0].target_type_name}}]
     pybind: list
   converters:
     pybind_to_cxx:
@@ -130,8 +130,8 @@ std::function:
   custom:
     tname: "Function"
   types:
-    python: "{{args_t[0]}}"
-    pybind: "{{args_t[0]}}"
+    python: "{{args[0].target_type_name}}"
+    pybind: "{{args[0].target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -157,8 +157,8 @@ std::shared_ptr:
   custom:
     tname: "{{args[0].custom.tname}}"
   types:
-    python: "{{args_t[0]}}"
-    pybind: "{{args_t[0]}}"
+    python: "{{args[0].target_type_name}}"
+    pybind: "{{args[0].target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:

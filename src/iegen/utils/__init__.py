@@ -281,6 +281,8 @@ def init_jinja_env():
 
     env.tests['match_regexp'] = match_regexp
 
+    env.globals['Error'] = Error
+
     return env
 
 

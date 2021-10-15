@@ -121,12 +121,16 @@ std::__cxx11::basic_string:
     jni_to_cxx: |
       jstring j{{target_name}}Str = (jstring){{name}};
       auto {{target_name}}_cstr = env->GetStringUTFChars(j{{target_name}}Str, 0);
-      {{target_type_name}} {{target_name}} = {{target_name}}_cstr;
+      std::string {{target_name}} = {{target_name}}_cstr;
       env->ReleaseStringUTFChars(j{{target_name}}Str, {{target_name}}_cstr);
     cxx_to_jni: |
-      {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}}.c_str());
+      {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}}.data());
     kotlin_to_jdk:
     jdk_to_kotlin:
+
+
+std::string_view:
+  std::__cxx11::basic_string
 
 std::vector:
   custom:
@@ -319,7 +323,7 @@ std::shared_ptr:
       {%- else %}
       {%- if pointee_base != pointee %}
       auto& {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-      std::shared_ptr<{{pointee}}>& {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+      std::shared_ptr<{{pointee}}> {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
       {%- else %}
       std::shared_ptr<{{pointee}}>& {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
       {%- endif %}

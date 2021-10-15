@@ -2,6 +2,7 @@
 #define optionals_h
 
 #include <string>
+#include <string_view>
 #include <memory>
 #include <complex>
 #include "cxx/enums/color.hpp"
@@ -124,6 +125,16 @@ public:
      * throws: no_throw
      */
 	std::string optionalStringWithDefault(std::string optionalStr = "abc") {
+	    return optionalStr;
+	}
+
+	/**
+     * @param[in] optionalStr string with default value
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	std::string_view optionalStringViewWithDefault(std::string_view optionalStr = "abc") {
 	    return optionalStr;
 	}
 

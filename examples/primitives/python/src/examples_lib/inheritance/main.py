@@ -4,7 +4,8 @@ from examples_lib.inheritance import (
     RhombusFigure,
     Square,
     GeometricFigure,
-    MyVehicle
+    MyVehicle,
+    DateTime
 )
 
 # [simple-inheritance-usage]
@@ -36,3 +37,7 @@ assert gf.parallelogram == rhombus
 
 mv = MyVehicle(bicycle)
 mv.vehicle = bicycle
+
+# mixed multiple inheritance with interface and class
+dt = DateTime(15, 1, 2015, 15, 15, 15)
+assert dt.datetime == "15:1:2015 15:15:15"

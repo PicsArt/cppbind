@@ -18,6 +18,15 @@ def template_type_name(type_):
     return name
 
 
+def get_all_overridden_cursors(cursor):
+    cursors = []
+    if cursor.get_overriden_cursors():
+        cursors += cursor.get_overriden_cursors()
+        for overridden in cursors:
+            cursors += get_all_overridden_cursors(overridden)
+    return cursors
+
+
 def is_overloaded(cursor):
     return bool([child for child in list(cursor.semantic_parent.get_children()) if
             child.spelling == cursor.spelling and child != cursor])

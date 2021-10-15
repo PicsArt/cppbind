@@ -115,7 +115,6 @@ def make_func_context(ctx):
             return_type_info = create_type_info(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        prj_rel_file_name = ctx.prj_rel_file_name
 
         overloading_prefix = ctx.overloading_prefix
         # capturing template related properties since we use single context with different template choice
@@ -136,6 +135,7 @@ def make_func_context(ctx):
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
             is_overloaded=_is_overloaded(ctx),
+            displayname=ctx.cursor.displayname
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -156,7 +156,6 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
-        prj_rel_file_name = ctx.prj_rel_file_name
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     type_name=ctx.cxx_type_name,
                                     namespace=ctx.namespace,
@@ -182,9 +181,6 @@ def make_class_context(ctx):
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
-
-            prj_rel_file_name = _type_info.prj_rel_file_name
-            is_proj_type = _type_info.is_proj_type
 
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
@@ -241,7 +237,6 @@ def make_member_context(ctx):
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        prj_rel_file_name = ctx.prj_rel_file_name
 
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     kind_name=ctx.kind_name)
@@ -308,13 +303,11 @@ def gen_interface(ctx, builder):
 
 
 def gen_constructor(ctx, builder):
-    _validate_nullable_args(ctx)
     context = make_constructor_context(ctx)
     preprocess_entry(context, builder, 'constructor')
 
 
 def gen_method(ctx, builder):
-    _validate_nullable_args(ctx)
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
 
@@ -344,15 +337,6 @@ def _is_overloaded(ctx):
             item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
-def _validate_nullable_args(ctx):
-    args = [arg.name for arg in ctx.args]
-    incorrect_args = [arg for arg in ctx.vars.nullable_arg if arg not in args]
-    if incorrect_args:
-        Error.critical(
-            f'{", ".join(incorrect_args)} arguments are marked as nullable but '
-            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} does not have such arguments.')
-
-
 def _validate_getter(ctx):
     if ctx.args:
         Error.critical(
@@ -361,8 +345,6 @@ def _validate_getter(ctx):
         if len(ctx.setter.args) != 1:
             Error.critical(
                 f'Setter should have one argument: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-
-        _validate_nullable_args(ctx.setter)
 
         have_diff_nullability = len(ctx.setter.vars.nullable_arg) == 0 ^ ctx.vars.nullable_return is False
         if have_diff_nullability:

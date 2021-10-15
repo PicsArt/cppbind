@@ -6,10 +6,8 @@ rules:
         !include my_lang_snippets/types.yaml
 
 vars:
-    out_prj_dir: "."
     src_glob:
         - cxx/example.hpp
-    out_dir: "{{path.join(out_prj_dir, 'my_lang')}}"
 
 var_def:
     !include my_lang_var_def.yaml

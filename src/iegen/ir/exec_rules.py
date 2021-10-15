@@ -259,19 +259,6 @@ class Context(BaseContext):
         return '::'.join(reversed(namespaces))
 
     @property
-    def prj_rel_file_name(self):
-        if not hasattr(self, '_prj_rel_file_name'):
-            self._prj_rel_file_name = os.path.relpath(
-                self.cursor.location.file.name, self.vars.out_prj_dir)
-        return self._prj_rel_file_name
-
-    @property
-    def is_proj_type(self):
-        """Check whether the given type is user's type or is the type from standard/3pty lib"""
-        return os.path.abspath(self.cursor.location.file.name).startswith(
-            os.path.abspath(self.vars.out_prj_dir) + os.path.sep)
-
-    @property
     def is_template(self):
         return self.node.is_template
 

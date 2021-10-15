@@ -4,18 +4,7 @@ action:
   default: null
   allowed_on: [ cxx, file_system ]
 
-# used in make_class_context (prj_rel_file_name)
-out_prj_dir:
-    inheritable: true
-    default: wr_out
-    allowed_on: [ cmd_line ]
-
-# used in test to control output
-out_dir:
-    inheritable: true
-    my_lang.default: '{{path.join(out_prj_dir, "my_lang")}}'
-    allowed_on: [ cmd_line ]
-
+# used to control generated file name
 file:
   inheritable: true
   default: '{{_file_name}}'
@@ -59,10 +48,3 @@ name:
     type: str
     default: '{{_object_name}}'
     allowed_on: [ cxx, file_system ]
-
-# variables we need for _validate_nullable_args function
-nullable_arg:
-    inheritable: false
-    default: [ ]
-    type: list
-    allowed_on: [ cxx_method, constructor, function, function_template ]

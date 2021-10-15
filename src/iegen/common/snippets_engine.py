@@ -143,10 +143,6 @@ class Converter:
         return self._type_info.vars
 
     @property
-    def is_proj_type(self):
-        return self._type_info.is_proj_type
-
-    @property
     def is_obj_type(self):
         return self._type_info.vars is not None
 

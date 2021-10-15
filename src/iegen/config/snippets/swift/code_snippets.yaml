@@ -72,12 +72,12 @@ enum:
 
 var_class_include: &var_class_include
     unique_content: |
-      {%- if is_proj_type -%}
-      #include "{{prj_rel_file_name}}"
+      {%- if vars.is_proj_type -%}
+      #include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- macro gen_include(type_info) -%}
-      {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
-      {{marker}}#include "{{type_info.prj_rel_file_name}}"
+      {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+      {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
       {{gen_include(arg_type_info)}}
@@ -220,8 +220,8 @@ interface:
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
     {%- macro gen_include(type_info) -%}
-    {%- if type_info.is_proj_type -%}
-    {{marker}}#include "{{type_info.prj_rel_file_name}}"
+    {%- if type_info.vars and type_info.vars.is_proj_type -%}
+    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
     {{gen_include(arg_type_info)}}
@@ -237,6 +237,10 @@ var_method_cxx_include: &var_method_cxx_include
 constructor:
   swift:
     head: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+      {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       public convenience init(
@@ -295,6 +299,10 @@ constructor:
 function:
   swift:
     body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+      {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
@@ -432,8 +440,8 @@ function:
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
     {%- macro gen_include(type_info) -%}
-    {%- if type_info.is_proj_type -%}
-    {{marker}}#include "{{type_info.prj_rel_file_name}}"
+    {%- if type_info.vars and type_info.vars.is_proj_type -%}
+    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
     {{gen_include(arg_type_info)}}
@@ -520,6 +528,10 @@ getter:
               return {{result_converter.converted_name('result')}}
           }
           {% if setter is defined %}
+          {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
+          {%- if incorrect_nullable_args -%}
+            {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + setter.owner_class.cxx.displayname + "." + setter.cxx.displayname + " does not have such arguments.") -%}
+          {%- endif %}
           {% set converter = setter.args[0].converter.swift_to_sc %}
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}

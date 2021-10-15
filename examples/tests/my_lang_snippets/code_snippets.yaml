@@ -2,7 +2,7 @@
 file:
   my_lang:
     file_path: |
-      {{vars.out_dir + pat_sep + [vars.file]|map('replace', '.', pat_sep)|path_join}}.my_lang
+      {{"my_lang" + pat_sep + [vars.file]|map('replace', '.', pat_sep)|path_join}}.my_lang
     scopes:
       - body
     content: |

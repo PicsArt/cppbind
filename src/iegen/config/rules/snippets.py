@@ -131,7 +131,7 @@ def make_func_context(ctx):
             kind_name=ctx.kind_name,
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
-            is_overloaded=_is_overloaded(ctx),
+            is_overloaded=cutil.is_overloaded(ctx.cursor),
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
@@ -341,11 +341,6 @@ def gen_property_setter(ctx, builder):
 
 def gen_setter(ctx, builder):
     return
-
-
-def _is_overloaded(ctx):
-    return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
-            item.spelling == ctx.cursor.spelling and item != ctx.cursor]
 
 
 def _validate_nullable_args(ctx):

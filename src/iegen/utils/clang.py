@@ -18,6 +18,11 @@ def template_type_name(type_):
     return name
 
 
+def is_overloaded(cursor):
+    return bool([child for child in list(cursor.semantic_parent.get_children()) if
+            child.spelling == cursor.spelling and child != cursor])
+
+
 def _get_unqualified_type_name(type_name):
     """
     TODO: python API is missing

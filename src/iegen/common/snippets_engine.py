@@ -110,7 +110,6 @@ class Converter:
                  template_args,
                  target_lang,
                  custom,
-                 ctx,
                  type_converter,
                  **kwargs):
         self._type_info = type_info
@@ -215,10 +214,9 @@ class Converter:
 
 class Adapter:
 
-    def __init__(self, type_info, ctx, type_info_collector, **kwargs):
+    def __init__(self, type_info, type_info_collector, **kwargs):
         self.type_info_collector = type_info_collector
         self.type_info = type_info
-        self.ctx = ctx
         self.template_args = []
         self.kwargs = kwargs
 
@@ -237,7 +235,6 @@ class Adapter:
                          template_args=self.template_args,
                          target_lang=name,
                          custom=self.type_info_collector.custom,
-                         ctx=self.ctx,
                          type_converter=type_info_collector,
                          **self.kwargs)
 
@@ -250,9 +247,8 @@ class TypeInfoCollector:
         self.target_type_infos = target_type_infos
         self.custom = custom
 
-    def make_type_converter(self, type_info, ref_ctx):
+    def make_type_converter(self, type_info):
         return Adapter(type_info=type_info,
-                       ctx=ref_ctx,
                        type_info_collector=self)
 
 
@@ -571,8 +567,7 @@ class SnippetsEngine:
             return None
 
         type_info = create_type_info(ctx, cxx_type)
-        type_converter = type_converter.make_type_converter(type_info,
-                                                            ref_ctx)
+        type_converter = type_converter.make_type_converter(type_info)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])

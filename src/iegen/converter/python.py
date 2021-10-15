@@ -38,12 +38,6 @@ OPERATOR_MAPPING = {
 sort_imports = sort_code_string
 
 
-def is_first_overload(ctx):
-    adjacents = ctx.find_adjacents([ctx.name], ctx.node.api)
-    is_first = next(adjacents).cursor == ctx.cursor
-    return is_first
-
-
 def cxx_rel_path(filepath, cxx_filepath):
     return os.path.relpath(filepath, cxx_filepath)
 
@@ -51,8 +45,3 @@ def cxx_rel_path(filepath, cxx_filepath):
 def get_operator_name(spelling):
     operator = spelling.replace('operator', '').strip()
     return OPERATOR_MAPPING.get(operator, spelling)
-
-
-def is_overloaded_cursor(ctx):
-    return [item for item in list(ctx.node.parent.clang_cursor.get_children()) if
-            item.spelling == ctx.cursor.spelling and item != ctx.cursor]

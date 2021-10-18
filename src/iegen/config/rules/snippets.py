@@ -135,17 +135,17 @@ def make_func_context(ctx):
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overridden_cursors = cutil.get_all_overridden_cursors(ctx.cursor)
+            _override_contexts = []
+            for cursor in _overridden_cursors:
+                overridden_ctx = ctx.find_by_type(
+                    cursor.lexical_parent.type.spelling)
+                if overridden_ctx:
+                    _override_contexts.append(overridden_ctx)
+
             # at least one of the overridden cursors should have an api
-            cxx.is_override = any([ctx.find_by_type(
-                cutil.get_full_displayname(cursor)) is not None for cursor in _overridden_cursors])
+            cxx.is_override = bool(_override_contexts)
 
-            _ctx_by_type = None
-            if cxx.is_override:
-                _ctx_by_type = ctx.find_by_type(_overridden_cursors[0].lexical_parent.type.spelling)
-
-            # TODO might be only first cursor check is not enough
-            cxx.is_original_definition_override = cxx.is_override and \
-                                                  _ctx_by_type and _ctx_by_type.vars.action == 'gen_interface'
+            is_interface_override = cxx.is_override and all([c.vars.action == 'gen_interface' for c in _override_contexts])
             cxx.is_static = bool(ctx.cursor.is_static_method())
             cxx.is_virtual = bool(ctx.cursor.is_virtual_method())
 

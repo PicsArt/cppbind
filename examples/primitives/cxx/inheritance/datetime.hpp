@@ -33,10 +33,19 @@ public:
 
     /**
      * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const std::string & value() const override {
+        return _datetime;
+    }
+
+    /**
+     * __API__
      * action: gen_getter
      * throws: no_throw
      */
-    std::string datetime() const {
+    const std::string & datetime() const {
         return _datetime;
     }
 

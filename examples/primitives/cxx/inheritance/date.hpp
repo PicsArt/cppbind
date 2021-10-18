@@ -32,10 +32,19 @@ public:
 
     /**
      * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const std::string & value() const override {
+        return _date;
+    }
+
+    /**
+     * __API__
      * action: gen_getter
      * throws: no_throw
      */
-    std::string date() const {
+    const std::string & date() const {
         return _date;
     }
 

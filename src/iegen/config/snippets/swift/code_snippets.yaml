@@ -304,7 +304,7 @@ function:
       public static func {{helper.get_map_cxx_operator_name(vars.name)}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      {% set override = cxx.is_override and not cxx.is_original_definition_override -%}
+      {% set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
       {%- if arg.default -%}
@@ -509,7 +509,7 @@ getter:
       {% set result_converter = rconverter.sc_to_swift %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {{vars.comment|make_doxygen_comment}}
-      {% set override = cxx.is_override and not cxx.is_original_definition_override -%}
+      {% set override = cxx.is_override and not is_interface_override -%}
       public {{'override ' if override}}var {% if cxx.is_template -%}
                                            {%- for name in template_names or [] %}
                                            {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}

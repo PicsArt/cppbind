@@ -1,6 +1,8 @@
 #ifndef vehicle_hpp
 #define vehicle_hpp
 
+#include<string>
+
 namespace iegen::example {
 // [example]
 /**
@@ -11,10 +13,7 @@ namespace iegen::example {
  */
 class Vehicle {
 public:
-    /**
-     * __API__
-     * action: gen_constructor
-     */
+
     Vehicle(int numberOfSeats) : _numberOfSeats(numberOfSeats) {};
 
     /**
@@ -25,6 +24,8 @@ public:
     int numberOfSeats() const {
         return _numberOfSeats;
     };
+
+     virtual std::string type() const = 0;
 
     virtual ~Vehicle() = default;
 private:

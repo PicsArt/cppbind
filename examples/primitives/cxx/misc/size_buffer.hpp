@@ -57,7 +57,8 @@ class SizeUsage {
  * comments
  *
  * __API__
- * action: gen_class
+ * python.action: gen_class
+ * kotlin.action: gen_class
  * package: misc
  * python.include:
  *   - buffer
@@ -66,13 +67,15 @@ class BufferUsage {
     public:
     /**
     * __API__
-    * action: gen_constructor
+    * kotlin.action: gen_constructor
+    * python.action: gen_constructor
     */
     BufferUsage() {};
 
     /**
     * __API__
-    * action: gen_method
+    * python.action: gen_method
+    * kotlin.action: gen_method
     * throws: no_throw
     */
     std::string usage1(iegen::example::Buffer<int>& b) const {
@@ -81,7 +84,8 @@ class BufferUsage {
 
     /**
     * __API__
-    * action: gen_method
+    * python.action: gen_method
+    * kotlin.action: gen_method
     * throws: no_throw
     */
     iegen::example::Buffer<int>* usage2() const {

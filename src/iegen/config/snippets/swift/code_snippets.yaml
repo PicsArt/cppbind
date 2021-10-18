@@ -103,7 +103,9 @@ class:
         - body
         - private_external
       content: |
-        {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
+        {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
+        {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
+        {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
         {{vars.comment|make_doxygen_comment}}
         public class {{converter.swift.target_type_name}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
@@ -310,7 +312,7 @@ function:
       public static func {{helper.get_map_cxx_operator_name(vars.name)}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {%- set call_args = ['cself.cself']%}
       {%- else%}
-      {% set override = cxx.is_override and not cxx.is_original_definition_override -%}
+      {% set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
@@ -520,7 +522,7 @@ getter:
       {% set result_converter = rconverter.sc_to_swift %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {{vars.comment|make_doxygen_comment}}
-      {% set override = cxx.is_override and not cxx.is_original_definition_override -%}
+      {% set override = cxx.is_override and not is_interface_override -%}
       public {{'override ' if override}}var {% if cxx.is_template -%}
                                            {%- for name in template_names or [] %}
                                            {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}

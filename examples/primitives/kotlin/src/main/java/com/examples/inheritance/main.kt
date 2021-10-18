@@ -35,6 +35,11 @@ assert(gf.parallelogram.getObjId() == rhombus.getObjId())
 val mv = MyVehicle(bicycle)
 mv.vehicle = bicycle
 
+
+// mixed multiple inheritance with interface and class
+val dt = DateTime(15, 1, 2015, 15, 15, 15)
+assert(dt.datetime == "15:1:2015 15:15:15")
+
 // delete instances
 square.close()
 gf.close()

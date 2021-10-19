@@ -166,7 +166,7 @@ enum:
           {{vars.comment|make_py_comment|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
-          # {{case.comment[1:]|join('\n# ')|indent}}
+          # {{case.comment[0 if case.comment[0] else 1:]|join('\n# ')|indent}}
           {%- endif %}
           {{vars.enum_field_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
           {%- endfor %}

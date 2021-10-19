@@ -168,7 +168,7 @@ enum:
           {%- if case.comment %}
           # {{case.comment[1:]|join('\n# ')|indent}}
           {%- endif %}
-          {{case.name}} = {{m}}.{{vars.name}}.{{case.name}}
+          {{vars.enum_field_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
           {%- endfor %}
 
           def __int__(self):
@@ -370,7 +370,7 @@ constructor:
                                        {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
                                        {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
                                        {%- if arg.default -%}
-                                       {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
+                                       {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                        {%- else -%}
                                        {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                        {%- else %} = None
@@ -419,7 +419,7 @@ function:
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
                                                           {%- if arg.default -%}
-                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
+                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                                           {%- else -%}
                                                           {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                                           {%- else %} = None

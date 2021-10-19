@@ -173,6 +173,15 @@ public:
      * action: gen_method
      * throws: no_throw
      */
+	ColorShade optionalEnumWithDefaultAndFieldPrefix(ColorShade c = ColorShade::Light) {
+	    return c;
+	}
+
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
 	const Task& optionalRefWithDefaultComplexValue(const Task& task = Task("MyTask")) {
 	    return task;
 	}

@@ -269,3 +269,8 @@ extra_headers:
   default: [ ]
   allowed_on: [ root ]
   type: list
+
+enum_field_name_prefix:
+  inheritable: false
+  default: ''
+  allowed_on: [ enum ]

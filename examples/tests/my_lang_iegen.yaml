@@ -8,6 +8,8 @@ rules:
 vars:
     src_glob:
         - cxx/example.hpp
+    mac.clang_args:
+        - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
 var_def:
     !include my_lang_var_def.yaml

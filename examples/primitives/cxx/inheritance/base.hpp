@@ -16,6 +16,12 @@ public:
 
     virtual ~Base() = default;
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    virtual const std::string & value() const = 0;
 };
 // [example]
 }

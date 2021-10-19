@@ -4,6 +4,7 @@ dir_vars:
     vars:
       action: gen_package
       name: simple
+      package: simple
       python.code_fragment:
         - import json
         - >
@@ -15,6 +16,7 @@ dir_vars:
     vars:
       action: gen_package
       name: overloads
+      package: overloads
       python.code_fragment:
         - import json
         - >
@@ -26,6 +28,7 @@ dir_vars:
     vars:
       action: gen_package
       name: operators
+      package: operators
       python.code_fragment:
         - import json
         - >

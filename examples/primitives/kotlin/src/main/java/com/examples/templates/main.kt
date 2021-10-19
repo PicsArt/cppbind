@@ -2,10 +2,13 @@ package com.examples.templates
 
 import com.examples.templates.*
 import com.examples.simple.*
+import com.examples.forward_decl.student.Student
+import com.examples.overloads.Employee
+import com.examples.getters.NumberInt
 
 fun use() {
 // [stack-examples]
-var stackPrj = StackProject()
+var stackPrj = StackPrj()
 assert(stackPrj.empty())
 val prj = Project("My Project")
 stackPrj.push(prj)
@@ -13,6 +16,15 @@ assert(!stackPrj.empty())
 assert(stackPrj.top().title == prj.title)
 stackPrj.pop()
 assert(stackPrj.empty())
+
+val stackNumber = StackNumInt()
+val num1 = NumberInt(1)
+val num2 = NumberInt(2)
+stackNumber.push(num1)
+stackNumber.push(num2)
+assert(stackNumber.top().num == num2.num)
+stackNumber.pop()
+assert(stackNumber.top().num == num1.num)
 // [stack-examples]
 
 // [stack-usage-examples]
@@ -56,6 +68,26 @@ assert(addressableRoot.absPath() == path + name)
 val component = Component(root, name)
 assert(component.absPath() == path + name)
 // [addressable-examples]
+
+// [wrapper-examples]
+val wrapperPair = WrapperPairStrings(Pair<String, String>("first", "second"))
+assert(wrapperPair.value.first == "first")
+assert(wrapperPair.value.second == "second")
+wrapperPair.value = Pair<String, String>("third", "fourth")
+assert(wrapperPair.value.first == "third")
+assert(wrapperPair.value.second == "fourth")
+// [wrapper-examples]
+
+// [pair-examples]
+
+val student = Student("John Doe")
+val employee = Employee("Jane Doe")
+var pair1 = PairStudent("student", student)
+var pair2 = PairEmployee("employee", employee)
+assert(pair1.second.name == student.name)
+assert(pair2.second.name == employee.name)
+// [pair-examples]
+
 component.close()
 addressableRoot.close()
 }
@@ -67,6 +99,5 @@ class TemplatesApp {
         fun main(args: Array<String>) {
             use()
        }
-
     }
 }

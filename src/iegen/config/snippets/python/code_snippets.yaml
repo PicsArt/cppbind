@@ -1,12 +1,12 @@
 file:
   python_init:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{extension}}
+      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{vars.extension}}
     scopes:
       - include
       - code_fragment
     content: |
-      {{[banner_logo, banner_comment]|make_py_comment}}
+      {{[banner_logo, vars.banner_comment]|make_py_comment}}
       {{include}}
       {%- if code_fragment %}
       {{code_fragment}}
@@ -15,17 +15,17 @@ file:
       {%- endif %}
   python:
     file_path: |
-      {{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}
+      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{vars.extension}}
     scopes:
       - body
       - include
     content: |
-      {{[banner_logo, banner_comment]|make_py_comment}}
+      {{[banner_logo, vars.banner_comment]|make_py_comment}}
       {%- set future_import = 'from __future__ import annotations' %}
       {%- set typing_import = 'from typing import *' %}
-      {%- set pybind_import = 'import ' + [pybind_module, package, file]|join('.') + ' as pybind_' + file + file_postfix %}
-      {%- if helpers_package_prefix %}
-      {%- set bind_import = 'from ' + helpers_package_prefix + '.bind_utils import *' %}
+      {%- set pybind_import = 'import ' + [vars.pybind_module, vars.package, vars.file]|join('.') + ' as pybind_' + vars.file + vars.file_postfix %}
+      {%- if vars.helpers_package_prefix %}
+      {%- set bind_import = 'from ' + vars.helpers_package_prefix + '.bind_utils import *' %}
       {%- else %}
       {%- set bind_import = 'from bind_utils import *' %}
       {%- endif %}
@@ -35,12 +35,12 @@ file:
       {{''}}
   cxx:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{vars.cxx_out_dir + pat_sep + [vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - body
       - include
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
@@ -53,13 +53,13 @@ file:
       {{body|string}}
   hpp:
     file_path: |
-      {{cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
+      {{vars.cxx_out_dir + pat_sep + [vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp
     scopes:
       - body
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      {% set filename = [package, file]|map('replace', '.', '_')|join('_') -%}
+      {% set filename = [vars.package, vars.file]|map('replace', '.', '_')|join('_') -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -72,51 +72,51 @@ file:
       #endif
   pybind_module_cxx:
     file_path: |
-      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix}}.cpp
+      {{vars.cxx_out_dir + pat_sep + vars.pybind_module.split('.')[-1] + vars.file_postfix}}.cpp
     scopes:
       - body
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
       #include <pybind11/pybind11.h>
-      #include "{{pybind_module.split('.')[-1] + file_postfix}}.hpp"
+      #include "{{vars.pybind_module.split('.')[-1] + vars.file_postfix}}.hpp"
 
       namespace py = pybind11;
-      void bind{{pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
+      void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
           {{body|string|indent}}
       }
   pybind_module_hpp:
     file_path: |
-      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix}}.hpp
+      {{vars.cxx_out_dir + pat_sep + vars.pybind_module.split('.')[-1] + vars.file_postfix}}.hpp
     scopes:
       - include
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      {% set package = pybind_module.split('.')[-1] -%}
-      #ifndef {{package + file_postfix}}_hpp
-      #define {{package + file_postfix}}_hpp
+      {% set package = vars.pybind_module.split('.')[-1] -%}
+      #ifndef {{package + vars.file_postfix}}_hpp
+      #define {{package + vars.file_postfix}}_hpp
 
       {{include}}
       #include <pybind11/pybind11.h>
 
       namespace py = pybind11;
-      void bind{{pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m);
+      void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m);
 
       #endif
   pybind_package:
     file_path: |
-      {{cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + '_module'}}.cpp
+      {{vars.cxx_out_dir + pat_sep + vars.pybind_module.split('.')[-1] + '_module'}}.cpp
     gen: false
     scopes:
       - body
     content: |
-      {{[banner_logo, banner_comment]|make_doxygen_comment}}
-      {% set packages = pybind_module.split('.') %}
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
+      {% set packages = vars.pybind_module.split('.') %}
       {%- set package = packages[0] %}
-      {%- set file = cxx_out_dir + pat_sep + pybind_module.split('.')[-1] + file_postfix %}
+      {%- set file = vars.cxx_out_dir + pat_sep + vars.pybind_module.split('.')[-1] + vars.file_postfix %}
       #include <pybind11/pybind11.h>
-      #include "{{helper.cxx_rel_path(file, out_prj_dir)}}.hpp"
+      #include "{{helper.cxx_rel_path(file, vars.out_prj_dir)}}.hpp"
 
       namespace py = pybind11;
       PYBIND11_MODULE({{package}}, m) {
@@ -126,7 +126,7 @@ file:
           py::module_ {{parent_module}} = parent.def_submodule("{{p}}", "{{p}}");
           parent = {{parent_module}};
           {%- endfor %}
-          bind{{pybind_module.replace('.', '_').split('_')|map('capitalize')|join}}(parent);
+          bind{{vars.pybind_module.replace('.', '_').split('_')|map('capitalize')|join}}(parent);
       }
 
   bind: !include bind_snippet.yaml
@@ -134,59 +134,59 @@ file:
 var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
-      {%- set package_name = package|replace('.', '_') -%}
-      {{marker}}py::module_ {{package_name}} = m.def_submodule("{{package}}", "{{package}}");
-      {{marker}}py::module_ {{package_name}}_{{file}} = {{package_name}}.def_submodule("{{file}}", "{{file}}");
-      {{marker}}bind{{ctx.namespace.split('::')|map('capitalize')|join}}{{name}}{{template_suffix if ctx.kind_name != 'enum'}}({{package_name}}_{{file}});
+      {%- set package_name = vars.package|replace('.', '_') -%}
+      {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
+      {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
+      {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name if cxx.kind_name == 'enum' else converter.python.target_type_name}}({{package_name}}_{{vars.file}});
 
 package:
   python_init:
     code_fragment:
       unique_content: |
-        {%- if code_fragment -%}
+        {%- if vars.code_fragment -%}
         {{marker}}
-        {{code_fragment|join(3 * new_line)}}
+        {{vars.code_fragment|join(3 * new_line)}}
         {%- endif -%}
     include:
       unique_content: |
-        {{include|format_list('from {} import *')|join_unique}}
+        {{vars.include|format_list('from {} import *')|join_unique}}
 
 var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
-      {%- set cxx_output_filepath = cxx_out_dir + pat_sep + [package, file + file_postfix]|map('replace', '.', pat_sep)|path_join -%}
-      {{marker}}#include "{{helper.cxx_rel_path(cxx_output_filepath + '.hpp', out_prj_dir)}}"
+      {%- set cxx_output_filepath = vars.cxx_out_dir + pat_sep + [vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join -%}
+      {{marker}}#include "{{helper.cxx_rel_path(cxx_output_filepath + '.hpp', vars.out_prj_dir)}}"
 
 enum:
   python:
     body: |
-      {% set m = 'pybind_' + file + file_postfix %}
+      {% set m = 'pybind_' + vars.file + vars.file_postfix %}
 
-      class {{name}}({{ctx.bases_list|join(', ')}}{{', ' if ctx.bases_list}}metaclass=EnumMetaclass):
-          {{comment|make_py_comment|indent}}
+      class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=EnumMetaclass):
+          {{vars.comment|make_py_comment|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
           # {{case.comment[1:]|join('\n# ')|indent}}
           {%- endif %}
-          {{case.name}} = {{m}}.{{name}}.{{case.name}}
+          {{case.name}} = {{m}}.{{vars.name}}.{{case.name}}
           {%- endfor %}
 
           def __int__(self):
               return self.value
-          {%- if code_fragment %}
+          {%- if vars.code_fragment %}
 
-          {{code_fragment|join(2 * new_line)|indent(4)}}
+          {{vars.code_fragment|join(2 * new_line)|indent(4)}}
           {%- endif %}
   python_init:
     include:
       unique_content: |
-        from .{{file + file_postfix}} import {{name}}
+        from .{{vars.file + vars.file_postfix}} import {{vars.name}}
   cxx:
     body: |
-      void {{'bind' + ctx.namespace.split('::')|map('capitalize')|join + name}}(py::module& m) {
-          py::enum_<{{cxx_type_name}}>(m, "{{name}}")
+      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name}}(py::module& m) {
+          py::enum_<{{cxx.type_name}}>(m, "{{vars.name}}")
               {%- for case in enum_cases %}
-              .value("{{case.name}}", {{cxx_type_name}}::{{case.name}})
+              .value("{{case.name}}", {{cxx.type_name}}::{{case.name}})
               {%- endfor -%};
       }
     include:
@@ -194,7 +194,7 @@ enum:
         #include "{{prj_rel_file_name}}"
   hpp:
     body: |
-      void {{'bind' + ctx.namespace.split('::')|map('capitalize')|join + name}}(py::module& m);
+      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name}}(py::module& m);
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_package:
@@ -204,23 +204,22 @@ var_class: &var_class
   python:
     include:
       unique_content: |
-        {%- if is_abstract -%}
+        {%- if cxx.is_abstract -%}
         {{marker}}from abc import abstractmethod
         {%- endif -%}
-        {%- if include -%}
-        {{marker}}{{include|format_list("from {} import *")|join_unique}}
+        {%- if vars.include -%}
+        {{marker}}{{vars.include|format_list("from {} import *")|join_unique}}
         {%- endif -%}
-        {%- macro gen_import(converter, current_ctx) -%}
-        {%- set type_ctx = converter.ctx -%}
-        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
-        {{marker}}import {{type_ctx.package_prefix + '.' if type_ctx.package_prefix}}{{type_ctx.package}}.{{type_ctx.file + type_ctx.file_postfix}} as {{type_ctx.file}}
+        {%- macro gen_import(type_info) -%}
+        {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+        {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
         {%- endif -%}
-        {%- for tmpl_arg_converter in converter.template_args -%}
-        {{gen_import(tmpl_arg_converter, current_ctx)}}
+        {%- for arg_type_info in type_info.arg_types_infos -%}
+        {{gen_import(arg_type_info)}}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- for base in base_types_converters -%}
-        {{gen_import(base, ctx)}}
+        {%- for base in base_types_infos -%}
+        {{gen_import(base)}}
         {%- endfor -%}
     body:
       scopes:
@@ -229,18 +228,18 @@ var_class: &var_class
         - body
       content: |
         {%- set bases_specifiers = [] -%}
-        {%- for base_type_converter in base_types_converters -%}
-        {%- set base_type_package = base_type_converter.ctx.file + '.' if base_type_converter.ctx and (base_type_converter.ctx.file != file or base_type_converter.ctx.package != package) else '' -%}
-        {%- do bases_specifiers.append(base_type_package + base_type_converter.python.target_type_name) -%}
+        {%- for base_type_converter in base_types_converters|map(attribute='python') -%}
+        {%- set base_type_package = base_type_converter.vars.file + '.' if base_type_converter.is_obj_type and (base_type_converter.vars.file != vars.file or base_type_converter.vars.package != vars.package) else '' -%}
+        {%- do bases_specifiers.append(base_type_package + base_type_converter.target_type_name) -%}
         {%- endfor -%}
-        {%- do bases_specifiers.extend(ctx.bases_list) -%}
+        {%- do bases_specifiers.extend(vars.bases_list) -%}
         {%- do bases_specifiers.append('metaclass=OriginalMethodsMetaclass') %}
 
-        class {{name}}{{template_suffix}}({{bases_specifiers|join(', ')}}):
-            {%- if comment %}
-            {{comment|make_py_comment|indent}}
+        class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
+            {%- if vars.comment %}
+            {{vars.comment|make_py_comment|indent}}
             {%- endif %}
-            {%- if not is_abstract %}
+            {%- if not cxx.is_abstract %}
             {%- if constructor_body %}
             {{constructor_body|string|indent}}
             {%- endif %}
@@ -258,52 +257,51 @@ var_class: &var_class
   python_init:
     include:
       unique_content: |
-        from .{{file + file_postfix}} import {{name}}{{template_suffix}}
+        from .{{vars.file + vars.file_postfix}} import {{converter.python.target_type_name}}
   cxx:
     include:
       unique_content: |
-        {%- if ctx.is_proj_type -%}
+        {%- if is_proj_type -%}
         #include "{{prj_rel_file_name}}"
         {%- endif -%}
-        {%- macro gen_import(converter, current_ctx) -%}
-        {%- set type_ctx = converter.ctx -%}
-        {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
-        {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+        {%- macro gen_include(type_info) -%}
+        {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+        {{marker}}#include "{{type_info.prj_rel_file_name}}"
         {%- endif -%}
-        {%- for tmpl_arg_converter in converter.template_args -%}
-        {{gen_import(tmpl_arg_converter, current_ctx)}}
+        {%- for arg_type_info in type_info.arg_types_infos -%}
+        {{gen_include(arg_type_info)}}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- for base in base_types_converters -%}
-        {{gen_import(base, ctx)}}
+        {%- for base in base_types_infos -%}
+        {{gen_include(base)}}
         {%- endfor -%}
-        {%- if include_cxx -%}
-        {{marker}}{{include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
-        {{marker}}{{include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
+        {%- if vars.include_cxx -%}
+        {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
+        {{marker}}{{vars.include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
         {%- endif -%}
     body:
       scopes:
         - body
       content: |
-        void {{'bind' + ctx.namespace.split('::')|map('capitalize')|join + name + template_suffix}}(py::module& m) {
-            {%- if ctx.namespace %}
-            using namespace {{ctx.namespace}};
+        void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + converter.python.target_type_name}}(py::module& m) {
+            {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
             {%- endif %}
             {% set comma = joiner(', ') -%}
-            {% set shared_ptr = 'std::shared_ptr<' + cxx_type_name + '>' -%}
-            py::class_<{{cxx_type_name}} {%- if shared_ref or ancestors|selectattr('shared_ref')|list -%}
-                                          , std::shared_ptr<{{cxx_type_name}}>
+            {% set shared_ptr = 'std::shared_ptr<' + cxx.type_name + '>' -%}
+            py::class_<{{cxx.type_name}} {%- if root.vars.shared_ref -%}
+                                          , std::shared_ptr<{{cxx.type_name}}>
                                          {%- endif %}
                                          {%- if base_types_converters -%}
-                                         , {% for base_type in base_types_converters -%}
-                                         {{comma()}}{{base_type.python.cxx_type_name}}
+                                         , {% for base_info in base_types_infos -%}
+                                         {{comma()}}{{base_info.cxx.type_name}}
                                          {%- endfor -%}
-                                         {%- endif %}> {{name|lower}}{{template_suffix|capitalize}}(m, "{{name}}{{template_suffix}}"{{', py::is_final()' if not is_open}});
+                                         {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
         {{body|string|indent}}
         }
   hpp:
     body: |
-      void {{'bind' + ctx.namespace.split('::')|map('capitalize')|join + name + template_suffix}}(py::module& m);
+      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + converter.python.target_type_name}}(py::module& m);
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_package:
@@ -329,38 +327,36 @@ var_bind_method: &var_bind_method
 
 var_method_python_include: &var_method_python_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
-    {{marker}}import {{type_ctx.package_prefix + '.' if type_ctx.package_prefix}}{{type_ctx.package}}.{{type_ctx.file + type_ctx.file_postfix}} as {{type_ctx.file}}
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+    {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_import(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(return_type_info)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type -%}
-    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- macro gen_include(type_info) -%}
+    {%- if type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
     {%- for arg in args -%}
-    {{gen_import(arg.converter, ctx)}}
+    {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_include(return_type_info)}}
     {%- endif -%}
 
 constructor:
@@ -370,10 +366,11 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
-                                       {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
+                                       {%- set arg_converter = arg.converter.python %}
+                                       {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
                                        {%- if arg.default -%}
-                                       {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
+                                       {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
                                        {%- else -%}
                                        {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                        {%- else %} = None
@@ -381,15 +378,15 @@ constructor:
                                        {%- endif %}
                                        {%- endif -%}
                                        {%- endfor %}):
-          {{comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
+          {{vars.comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   bind: *var_bind_method
   cxx:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def(py::init<{%- for arg in args -%}
-                                                                                   {{comma()}}{{arg.converter.python.cxx_type_name}}
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def(py::init<{%- for arg in args -%}
+                                                                                   {{comma()}}{{arg.type_info.cxx.type_name}}
                                                                                    {%- endfor -%}>(){{', ' if args}}
                                                                                     {%- set comma = joiner(', ') -%}
                                                                                     {%- for arg in args -%}
@@ -405,50 +402,52 @@ function:
     include: *var_method_python_include
     body: |
       {%- set comma = joiner(', ') -%}
-      {%- if is_static %}
+      {%- if cxx.is_static %}
       @classmethod
       {%- endif %}
-      {%- if is_operator %}
-      {%- set _name = helper.get_operator_name(name) %}
+      {%- if vars.is_operator %}
+      {%- set _name = helper.get_operator_name(vars.name) %}
       {%- else %}
-      {%- set _name = name|to_snake_case %}
+      {%- set _name = vars.name|to_snake_case %}
       {%- endif %}
+      {%- set rconverter = rconverter.python %}
       @bind
-      def {{_name}}({{'self' if not is_static else 'cls'}}{{', ' if args}}
-                                                          {%- set rtype_package = rconverter.ctx.file + '.' if rconverter.ctx and (rconverter.ctx.file != file or rconverter.ctx.package != package) else '' -%}
+      def {{_name}}({{'self' if not cxx.is_static else 'cls'}}{{', ' if args}}
+                                                          {%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != vars.file or rconverter.vars.package != vars.package) else '' -%}
                                                           {%- for arg in args -%}
-                                                          {%- set arg_package = arg.converter.ctx.file + '.' if arg.converter.ctx and (arg.converter.ctx.file != file or arg.converter.ctx.package != package) else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg.converter.python.target_type_name}}{{']' if arg.nullable}}
+                                                          {%- set arg_converter = arg.converter.python %}
+                                                          {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
                                                           {%- if arg.default -%}
-                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg.converter.python.target_type_name}}.{{arg.default.split('::')|last}}
+                                                          {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.default.split('::')|last}}
                                                           {%- else -%}
                                                           {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                                           {%- else %} = None
                                                           {%- endif %}
                                                           {%- endif %}
                                                           {%- endif -%}
-                                                          {%- endfor %}) -> {{'Optional[' if nullable_return}}{{rtype_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
-          {{comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
+                                                          {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
+          {{vars.comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   bind: *var_bind_method
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- if is_operator %}
-      {%- set _name = helper.get_operator_name(name) -%}
+      {%- if vars.is_operator %}
+      {%- set _name = helper.get_operator_name(vars.name) -%}
       {%- else -%}
-      {%- set _name = name|to_snake_case -%}
+      {%- set _name = vars.name|to_snake_case -%}
       {%- endif %}
       {%- set comma = joiner(', ') -%}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def{{'_static' if is_static }}("{{_name}}"{%- if helper.is_overloaded_cursor(ctx) -%}
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<
       {%- for arg in args -%}
-      {{comma()}}{{arg.converter.python.cxx_type_name}}
-      {%- endfor -%}>(&{{owner_class.cxx_type_name}}::{{cxx_name}}{{', py::const_' if ctx.cursor.is_const_method()}})
+      {{comma()}}{{arg.type_info.cxx.type_name}}
+      {%- endfor -%}>(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
       {%- else -%}
-      , &{{owner_class.cxx_type_name}}::{{cxx_name}}
+      , &{{owner_class.cxx.type_name}}::{{cxx.name}}
       {%- endif -%}
-      {%- if ctx.node.is_function_template -%}
+      {%- if cxx.is_template -%}
       <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
       {%- endif -%}
       {{', ' if args}}
@@ -472,107 +471,104 @@ var_bind_getter: &var_bind_getter
 
 var_getter_python_include: &var_getter_python_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type and (type_ctx.package != current_ctx.package or type_ctx.file != current_ctx.file) -%}
-    {{marker}}import {{type_ctx.package_prefix + '.' if type_ctx.package_prefix}}{{type_ctx.package}}.{{type_ctx.file + type_ctx.file_postfix}} as {{type_ctx.file}}
+    {%- macro gen_import(type_info) -%}
+    {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+    {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_import(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_import(return_type_info)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_import(converter, current_ctx) -%}
-    {%- set type_ctx = converter.ctx -%}
-    {%- if type_ctx and type_ctx.is_proj_type -%}
-    {{marker}}#include "{{type_ctx.prj_rel_file_name}}"
+    {%- macro gen_include(type_info) -%}
+    {%- if  type_info.is_proj_type -%}
+    {{marker}}#include "{{type_info.prj_rel_file_name}}"
     {%- endif -%}
-    {%- for tmpl_arg_converter in converter.template_args -%}
-    {{gen_import(tmpl_arg_converter, current_ctx)}}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter, ctx)}}
+    {{gen_include(return_type_info)}}
 
 property_getter:
   python:
     include: *var_getter_python_include
     properties: |
-      {%- set rctx = rconverter.ctx -%}
-      {%- set _name = name|to_snake_case -%}
-      {% set arg_package = rctx.file + '.' if rctx and (rctx.file != owner_class.file or rctx.package != owner_class.package) else '' %}
+      {%- set _name = vars.name|to_snake_case -%}
+      {%- set rconverter = rconverter.python -%}
+      {% set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != owner_class.vars.file or rconverter.vars.package != owner_class.vars.package) else '' %}
       @property
       @bind
-      def {{_name}}(self) -> {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
-          {{comment|make_py_comment|indent}}
+      def {{_name}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
+          {{vars.comment|make_py_comment|indent}}
           pass
-      {% if ctx.action == 'gen_property_setter' %}
+      {% if vars.action == 'gen_property_setter' %}
       @{{_name}}.setter
       @bind
-      def {{_name}}(self, value: {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}):
-          {{comment|make_py_comment|indent}}
+      def {{_name}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}):
+          {{vars.comment|make_py_comment|indent}}
           pass
       {%- endif %}
   bind: *var_bind_getter
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- set _name = name|to_snake_case -%}
-      {%- if ctx.action == 'gen_property_setter' %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {%- set _name = vars.name|to_snake_case -%}
+      {%- if vars.action == 'gen_property_setter' %}
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}});
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}});
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}});
       {%- endif %}
 
 getter:
   python:
     include: *var_getter_python_include
     properties: |
-      {%- set rctx = rconverter.ctx -%}
-      {%- if ctx.node.is_function_template %}
-      {%- if template_names %}
-      {%- set _name = template_names|join|to_snake_case %}
-      {%- else %}
-      {%- set _name = overloading_prefix|to_snake_case %}
-      {%- endif %}
-      {%- else %}
-      {%- set _name = name|to_snake_case %}
-      {%- endif %}
-      {%- set arg_package = rctx.file + '.' if rctx and (rctx.file != ctx.file or rctx.package != ctx.package) else '' %}
+      {%- macro gen_name() -%}
+      {%- if cxx.is_template -%}
+      {%- for name in template_names or [] %}
+      {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
+      {%- endfor %}
+      {%- else %}{{vars.name}}
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set rconverter = rconverter.python %}
+      {%- set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != vars.file or rconverter.vars.package != vars.package) else '' %}
       @property
       @bind
-      def {{_name}}(self) -> {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}:
-          {{comment|make_py_comment|indent}}
+      def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
+          {{vars.comment|make_py_comment|indent}}
           pass
-      {%- if setter_ctx is defined %}
+      {%- if setter is defined %}
 
-      @{{_name}}.setter
+      @{{gen_name()|to_snake_case}}.setter
       @bind
-      def {{_name}}(self, value: {{'Optional[' if nullable_return}}{{arg_package}}{{rconverter.python.target_type_name}}{{']' if nullable_return}}):
-          {{comment|make_py_comment|indent}}
+      def {{gen_name()|to_snake_case}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}):
+          {{vars.comment|make_py_comment|indent}}
           pass
       {%- endif -%}
   bind: *var_bind_getter
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- if ctx.node.is_function_template %}
-      {%- set _name = overloading_prefix|to_snake_case  %}
-      {%- if template_names %}
-      {%- set _name = template_names|join|to_snake_case %}
-      {% endif %}
-      {%- else %}
-      {%- set _name = name|to_snake_case %}
-      {%- endif %}
-      {%- if ctx.node.is_function_template -%}
+      {%- macro gen_name() -%}
+      {%- if cxx.is_template -%}
+      {%- for name in template_names or [] %}
+      {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
+      {%- endfor %}
+      {%- else %}{{vars.name}}
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- if cxx.is_template -%}
       {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
-      {% if setter_ctx is defined %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{{template_args}}, &{{owner_class.cxx_type_name}}::{{setter_ctx.cxx_name}}{{template_args}});
+      {% if setter is defined %}
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}, &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}});
       {%- else %}
-      {{owner_class.name|lower}}{{owner_class.template_suffix|capitalize}}.def_property_readonly("{{_name}}", &{{owner_class.cxx_type_name}}::{{cxx_name}}{{template_args}});
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}});
       {%- endif %}

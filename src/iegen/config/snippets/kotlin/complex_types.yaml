@@ -19,45 +19,62 @@ std::__ndk1::basic_string:
 $Object:
   custom:
     pname: Long
+    tpostfix: |
+      {%- for name in template_names or [] -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].kotlin.custom.tname}}{% endif -%}
+      {%- endfor -%}
+    tname: |
+      {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
   types:
-    kotlin: "{{type_ctx.interface_name if type_ctx.action == 'gen_interface' else type_name}}{{template_suffix}}"
+    kotlin: |
+      {%- if interface_class|default(False) -%}
+      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {%- else -%}
+      {{custom.tname}}
+      {%- endif -%}
     jni: jobjectid
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- do helper.Validator.shared_ref_unset(type_ctx) -%}
-      {%- set dereferencer = '*' if not is_pointer else '' %}
-      {%- set pointee = cxx_pointee_unqualified_name %}
-      {%- if cxx_root_type_name == pointee %}
-      auto{{'&' if not is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
+      {%- if root_types_infos[0].vars.shared_ref -%}
+      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
+      {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
+      {%- set pointee = cxx.pointee_unqualified_name %}
+      {%- if cxx.root_type_name == pointee %}
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
-      auto base_{{name}} = reinterpret_cast<{{cxx_root_type_name}}*>({{name}});
+      auto base_{{name}} = reinterpret_cast<{{cxx.root_type_name}}*>({{name}});
       auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
     cxx_to_jni: |
-      {%- set pointee = cxx_pointee_unqualified_name %}
-      {%- if is_value_type -%}
+      {%- if root_types_infos[0].vars.shared_ref -%}
+      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
+      {%- set pointee = cxx.pointee_unqualified_name %}
+      {%- if cxx.is_value_type -%}
       {%- set tmp_name = '_' + name %}
       {{pointee}}* {{tmp_name}} = new {{pointee}}({{name}});
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{cxx_root_type_name}}* {{target_name}}_baseptr = {{'&' if is_reference}}{{tmp_name}};
+      {{cxx.root_type_name}}* {{target_name}}_baseptr = {{'&' if cxx.is_reference}}{{tmp_name}};
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
     kotlin_to_jdk: |
       val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.getObjId(){{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
       {%- if nullable|default(False)-%}
-      val {{target_name}} = if ({{name}} == 0L) null else {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
+      val {{target_name}} = if ({{name}} == 0L) null else {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}})
       {%- else -%}
-      val {{target_name}} = {{type_ctx.interface_class_name if type_ctx.action == 'gen_interface' else target_type_name}}({{name}})
+      val {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}})
       {%- endif -%}
 
 $Enum:
   custom:
     pname: Int
+    tname: "{{vars.name}}"
   types:
-    kotlin: "{{type_name}}"
+    kotlin: "{{custom.tname}}"
     jni: jint
     jdk: Int
   converters:
@@ -73,6 +90,7 @@ $Enum:
 const char *:
   custom:
     pname: Object
+    tname: String
   types:
     kotlin: String
     jni: jstring
@@ -82,7 +100,7 @@ const char *:
       auto deleter = [&env, &{{name}}]({{target_type_name}} ptr) {
           env->ReleaseStringUTFChars({{name}}, ptr);
       };
-      std::unique_ptr<{{cxx_pointee_name}}, decltype(deleter)> {{target_name}}_unique_ptr(
+      std::unique_ptr<{{cxx.pointee_name}}, decltype(deleter)> {{target_name}}_unique_ptr(
                                                                     env->GetStringUTFChars({{name}}, NULL),
                                                                     deleter);
       {{target_type_name}} {{target_name}} = {{target_name}}_unique_ptr.get()
@@ -94,6 +112,7 @@ const char *:
 std::__cxx11::basic_string:
   custom:
     pname: Object
+    tname: String
   types:
     kotlin: String
     jni: jstring
@@ -116,15 +135,16 @@ std::string_view:
 std::vector:
   custom:
     pname: Object
+    tname: "List{{args[0].custom.tname}}"
   types:
-    kotlin: "List<{{args_t[0]}}>"
-    jni: "{{args_t[0] if args[0].custom.pname != 'Object' else 'jobject'}}Array"
+    kotlin: "List<{{args[0].target_type_name}}>"
+    jni: "{{args[0].target_type_name if args[0].custom.pname != 'Object' else 'jobject'}}Array"
     jdk: "{{args[0].custom.pname}}Array"
   converters:
     jni_to_cxx: |
       {%- set tmp_name = '_' + target_name %}
       {%- set jni_array_get = 'iegen::get{}Array'.format(args[0].custom.pname) %}
-      {{cxx_pointee_unqualified_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
       auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
       for (auto& value_{{tmp_name}} : {{tmp_name}}) {
           {{args[0].snippet('value_{}'.format(tmp_name))|indent}}
@@ -175,8 +195,9 @@ std::vector:
 std::map:
   custom:
     pname: Object
+    tname: "Map{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
-    kotlin: "Map<{{args_t[0]}}, {{args_t[1]}}>"
+    kotlin: "Map<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jmapobject
     jdk: "Pair<{{args[0].custom.pname}}Array, {{args[1].custom.pname}}Array>"
   converters:
@@ -186,7 +207,7 @@ std::map:
       {%- set tmp_val_name = 'tmp_val_' + target_name %}
       {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
       {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
-      {{cxx_pointee_unqualified_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
       auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
       auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
       auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
@@ -251,7 +272,7 @@ std::map:
       }
 
     jdk_to_kotlin: |
-      val {{target_name}} = HashMap<{{args_t[0]}}, {{args_t[1]}}>()
+      val {{target_name}} = HashMap<{{args[0].target_type_name}}, {{args[1].target_type_name}}>()
       for (i_{{name}} in 0..{{name}}.first.size - 1) {
           {%- if args[0].custom.pname == 'Object' %}
           @Suppress("UNCHECKED_CAST") val elem1_{{name}} = {{name}}.first.get(i_{{name}}) as {{args[0].source_type_name}}
@@ -276,14 +297,18 @@ std::unordered_map:
 std::shared_ptr:
   custom:
     pname: Long
+    tname: "{{args[0].custom.tname}}"
   types:
-    kotlin: "{{args_t[0]}}"
+    kotlin: "{{args[0].target_type_name}}"
     jni: jobjectid
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- set pointee = args_t[0] %}
-      {%- set pointee_base = args_t_bases[0] %}
+      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
+      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
+      {%- set pointee = args[0].target_type_name %}
+      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
       std::shared_ptr<{{pointee}}> {{target_name}} = nullptr;
@@ -304,9 +329,12 @@ std::shared_ptr:
       {%- endif %}
       {%- endif %}
     cxx_to_jni: |
+      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
+      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
-      {%- set pointee = args[0].cxx_type_name %}
-      {%- set pointee_base = args_t_bases[0] %}
+      {%- set pointee = args[0].cxx.type_name %}
+      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
       {%- if is_nullable %}
@@ -334,10 +362,11 @@ std::shared_ptr:
 std::pair:
   custom:
     pname: Pair
+    tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
-    kotlin: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+    kotlin: "Pair<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jobject
-    jdk: "Pair<{{args_t[0]}}, {{args_t[1]}}>"
+    jdk: "Pair<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
   converters:
     jni_to_cxx: |
       jclass pairClass_{{name}} = env->FindClass("kotlin/Pair");
@@ -354,7 +383,7 @@ std::pair:
       auto second_{{name}} = {{extract_second}}(env, secondObject_{{name}});
       {{args[0].snippet('first_{}'.format(name))}}
       {{args[1].snippet('second_{}'.format(name))}}
-      {{cxx_pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}});
+      {{cxx.pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}});
     cxx_to_jni: |
       auto first_{{name}} = {{name}}.first;
       auto second_{{name}} = {{name}}.second;

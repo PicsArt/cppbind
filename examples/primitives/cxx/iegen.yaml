@@ -7,6 +7,7 @@ dir_vars:
     vars:
       python.action: gen_package
       python.name: ''
+      python.package: ''
       python.code_fragment:
         - from buffer import *
       project_dir: '{{_current_working_dir}}'
@@ -16,7 +17,7 @@ vars:
   out_prj_dir: "."
   cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
-    - cxx/**/*.h*
+    - cxx/**/*.hpp
   include_dirs:
     - .
   mac.include_dirs:

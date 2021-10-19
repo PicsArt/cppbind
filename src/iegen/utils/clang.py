@@ -27,6 +27,11 @@ def get_all_overridden_cursors(cursor):
     return cursors
 
 
+def is_overloaded(cursor):
+    return bool([child for child in list(cursor.semantic_parent.get_children()) if
+            child.spelling == cursor.spelling and child != cursor])
+
+
 def _get_unqualified_type_name(type_name):
     """
     TODO: python API is missing
@@ -128,7 +133,7 @@ def replace_template_choice(type_name, template_choice):
         if replaced in template_choice:
             return template_choice[replaced]
         for typename, value in template_choice.items():
-            replaced = re.sub(rf'([,<\s]?)\s*{typename}([\s,>&*]\s*)', rf'\g<1>{value}\g<2>', replaced)
+            replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
     return replaced
 
 

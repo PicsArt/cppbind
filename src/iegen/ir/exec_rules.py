@@ -339,6 +339,28 @@ class Context(BaseContext):
                     _root_cursor.displayname, self.template_choice)
         return cxx_root_type_name
 
+    @property
+    def overridden_contexts(self):
+        if self.cursor.kind != cli.CursorKind.CXX_METHOD:
+            raise AttributeError(f"{self.__class__.__name__}.overridden_contexts is invalid.")
+
+        if not hasattr(self, '_overridden_contexts'):
+            self._overridden_contexts = self._get_overridden_contexts(self.cursor)
+        return self._overridden_contexts
+
+    def _get_overridden_contexts(self, cursor):
+        contexts = []
+        if cursor.get_overriden_cursors():
+            for overridden in cursor.get_overriden_cursors():
+                func_ctx = self.find_by_type(cutil.get_full_displayname(overridden))
+                parent_ctx = self.find_by_type(cutil.get_full_displayname(overridden.lexical_parent))
+                if func_ctx:
+                    contexts.append(func_ctx)
+                # if overridden method has not api but is parent has then consider it as well
+                if parent_ctx or func_ctx:
+                    contexts += self._get_overridden_contexts(overridden)
+        return contexts
+
 
 class RunRule:
     def __init__(self, ir, ctx_desc, platform, language):

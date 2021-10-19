@@ -25,6 +25,11 @@ public:
         return _numberOfSeats;
     };
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
      virtual std::string type() const = 0;
 
     virtual ~Vehicle() = default;

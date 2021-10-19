@@ -133,7 +133,8 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.result_type,
                                                                            template_choice=ctx.template_choice))
 
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+        if ctx.parent_context:
+            owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         overloading_prefix = ctx.overloading_prefix
         # capturing template related properties since we use single context with different template choice
@@ -143,14 +144,18 @@ def make_func_context(ctx):
         if ctx.node.is_function_template:
             overloading_prefix = get_template_suffix(ctx, LANGUAGE)
 
-        if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
+        # for template methods
+        is_override = False
+
+        if ctx.cursor.kind == cli.CursorKind.CXX_METHOD:
             _overriden_cursors = ctx.cursor.get_overriden_cursors()
             is_override = bool(_overriden_cursors)
             if is_override:
                 original_definition_context = ctx.find_by_type(
                     _overriden_cursors[0].lexical_parent.type.spelling)
-            is_static = bool(ctx.cursor.is_static_method())
             is_virtual = bool(ctx.cursor.is_virtual_method())
+
+        is_static = bool(ctx.cursor.is_static_method())
         is_abstract = ctx.cursor.is_abstract_record()
         is_open = not cutil.is_final_cursor(ctx.cursor)
         is_public = ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC
@@ -330,6 +335,12 @@ def gen_constructor(ctx, builder):
 
 
 def gen_method(ctx, builder):
+    _validate_nullable_args(ctx)
+    context = make_func_context(ctx)
+    preprocess_entry(context, builder, 'method')
+
+
+def gen_function(ctx, builder):
     _validate_nullable_args(ctx)
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')

@@ -29,6 +29,10 @@ $Object:
       // Calling converter for object type from my_lang to c
       assign {{target_name}} = Pointer({{name}}.self)
 
+# for mac
+std::__1::map:
+  std::map
+
 # type converter section for std::map
 std::map:
   types:

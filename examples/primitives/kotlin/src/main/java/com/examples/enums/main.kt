@@ -15,6 +15,12 @@ frame.backgroundColor = Color.Red
 assert(frame.backgroundColor == Color.Red)
 // [color-usage]
 
+assert(ColorShade.ShadeLight.value == 1)
+assert(ColorShade.ShadeDark.value == 2)
+
+frame.backgroundColorShade = ColorShade.ShadeDark
+assert(frame.backgroundColorShade == ColorShade.ShadeDark)
+
 }
 
 class EnumsApp {

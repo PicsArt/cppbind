@@ -13,6 +13,8 @@ As we can see in the above example we can extend enums logic by using **code_fra
 Code fragments defined with this variable are appended to the enum definition.
 Particularly in this example we added custom conversion from enum to string for all tree languages.
 Notice that for swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
+We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
+prefix string to enum field names in target language.
 
 And the Frame struct using it:
 

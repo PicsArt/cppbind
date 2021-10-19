@@ -24,6 +24,11 @@ struct Frame {
      */
     Color backgroundColor;
 
+    /**
+     * __API__
+     * action: gen_property_setter
+     */
+    ColorShade backgroundColorShade;
 };
 // [example]
 }

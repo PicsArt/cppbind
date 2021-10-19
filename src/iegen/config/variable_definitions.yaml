@@ -168,6 +168,18 @@ cxx_base_out_dir:
   default: null
   allowed_on: [ cmd_line ]
 
+is_proj_type:
+    inheritable: false
+    default: '{{path.abspath(_file_full_name).startswith(path.abspath(out_prj_dir) + path.sep)}}'
+    allowed_on: [ cxx ]
+    type: bool
+    description: "Boolean showing whether the given type is user's type or is the type from standard/3pty lib"
+
+prj_rel_file_name:
+  inheritable: false
+  default: '{{path.relpath(_file_full_name, out_prj_dir)}}'
+  allowed_on: [ cxx ]
+
 package_prefix:
   inheritable: true
   kotlin.default: com.picsart.example_lib

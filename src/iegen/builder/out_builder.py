@@ -28,7 +28,7 @@ class Scope:
 
     def add_unique(self, *parts, add_front=False):
         """
-        Adds text or scope to corresponding partition
+        Adds text to corresponding partition
         """
         return self.add(
             *[part for part in list(dict.fromkeys(parts))
@@ -39,9 +39,9 @@ class Scope:
         Adds text or scope to corresponding partition
         """
         if add_front:
-            self.parts = [p for p in parts if p] + self.parts
+            self.parts = list(parts) + self.parts
         else:
-            self.parts = self.parts + [p for p in parts if p]
+            self.parts = self.parts + list(parts)
 
         # register scopes
         self._register_scopes(*parts)
@@ -101,9 +101,10 @@ class Scope:
 
     def __str__(self):
 
+        # `if str(p)` helps to skip blank lines
         lines = [
             (self.tab_str * self.tab) + s
-            for s in self.parts_splitter.join(str(p) for p in self.parts).splitlines(keepends=True)
+            for s in self.parts_splitter.join(str(p) for p in self.parts if str(p)).splitlines(keepends=True)
         ]
 
         str_scope = ''.join(lines)
@@ -111,7 +112,8 @@ class Scope:
         return str_scope
 
     def __bool__(self):
-        return bool(self.parts)
+        # this check helps to remove redundant blank lines
+        return any(str(p) for p in self.parts)
 
 
 class File(Scope):
@@ -162,7 +164,7 @@ class File(Scope):
         return self._scope_stack
 
     def __getitem__(self, scope_name):
-        return self.get_scope(scope_name, create=True)
+        return self.get_scope(scope_name, create=False)
 
     def _lookup_scope_by_name(self, scope_name, dept=-1):
         if len(self.scope_stack) < -dept:

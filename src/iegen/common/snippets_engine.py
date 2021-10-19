@@ -45,9 +45,6 @@ class Snippet:
             return value.replace(self.marker, '')
         return value
 
-    def __bool__(self):
-        return str(self) != ''
-
 
 class Action:
     """Base class for any action subclass"""
@@ -108,14 +105,14 @@ class Converter:
     def __init__(self,
                  type_info,
                  template_args,
-                 target_lang,
+                 snippet_name,
                  custom,
                  type_converter,
                  **kwargs):
         self._type_info = type_info
         self._type_converter = type_converter
         self._template_args = template_args
-        self._target_lang = target_lang
+        self._snippet_name = snippet_name
         self.custom = custom
         self._context = self._make_context()
 
@@ -145,10 +142,6 @@ class Converter:
         return self._type_info.vars
 
     @property
-    def is_proj_type(self):
-        return self._type_info.is_proj_type
-
-    @property
     def is_obj_type(self):
         return self._type_info.vars is not None
 
@@ -158,12 +151,12 @@ class Converter:
 
     @property
     def args(self):
-        return [getattr(arg, self._target_lang) for arg in self._template_args]
+        return [getattr(arg, self._snippet_name) for arg in self._template_args]
 
     @property
     def args_converters(self):
         return self._template_args
-
+    
     @property
     def root_types_infos(self):
         return self._type_info.root_types_infos
@@ -233,7 +226,7 @@ class Adapter:
 
         return Converter(type_info=self.type_info,
                          template_args=self.template_args,
-                         target_lang=name,
+                         snippet_name=name,
                          custom=self.type_info_collector.custom,
                          type_converter=type_info_collector,
                          **self.kwargs)
@@ -335,9 +328,16 @@ class SnippetsEngine:
         self.jinja2_env = JINJA2_ENV
 
     def load(self):
-        self._load_actions(self.ctx_desc.get_action_snippets()[self.language][self.platform])
-        self._load_code_info(self.ctx_desc.get_code_snippets()[self.language][self.platform])
-        self._load_type_info(self.ctx_desc.get_type_converter_snippets()[self.language][self.platform])
+        action_snippets = self.ctx_desc.get_action_snippets()
+        code_snippets = self.ctx_desc.get_code_snippets()
+        type_converter_snippets = self.ctx_desc.get_type_converter_snippets()
+
+        if action_snippets:
+            self._load_actions(action_snippets[self.language][self.platform])
+        if code_snippets:
+            self._load_code_info(code_snippets[self.language][self.platform])
+        if type_converter_snippets:
+            self._load_type_info(type_converter_snippets[self.language][self.platform])
 
     def do_actions(self, context):
         variables = {}
@@ -486,7 +486,7 @@ class SnippetsEngine:
             if not isinstance(info_map, MutableMapping):
                 Error.critical("Missing type information")
 
-            custom = {}
+            custom = SimpleNamespace()
             target_types = {}
             type_converters = {}
 

@@ -3,7 +3,7 @@ API configuration
 
 Besides the yaml configuration iegen also uses doxygen comments for defining the API for the target code.
 If the comment contains **__API__** tag then it'll be parsed by iegen. Everything under **__API__** are instructions for iegen.
-For defining the API we use variables from doc:`Variable Definitions </02_first_steps/05_variable_definitions>`
+For defining the API we use variables from :doc:`Variable Definitions </02_first_steps/05_variable_definitions>`
 iegen uses them to know what should be generated, where should be generated etc.
 **__API__** comment should be of yaml format, otherwise an error will be thrown.
 Jinja expressions, sys variables can be used here.

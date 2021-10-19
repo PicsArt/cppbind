@@ -49,6 +49,7 @@ class TypeInfo:
                 self._cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
                 self._cxx.kind_name = self._type_ctx.kind_name
                 self._cxx.root_type_name = root_type_name
+                self._cxx.displayname = self._type_ctx.cursor.displayname
 
         return self._cxx
 
@@ -84,14 +85,6 @@ class TypeInfo:
     @property
     def vars(self):
         return self._type_ctx.vars if self._type_ctx else None
-
-    @property
-    def prj_rel_file_name(self):
-        return self._type_ctx.prj_rel_file_name if self._type_ctx else None
-
-    @property
-    def is_proj_type(self):
-        return self._type_ctx.is_proj_type if self._type_ctx else False
 
     @property
     def template_names(self):

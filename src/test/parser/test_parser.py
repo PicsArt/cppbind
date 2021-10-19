@@ -144,6 +144,7 @@ def test_parser_errors(clang_config):
     lang, plat = 'swift', 'linux'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
     ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    ir_builder.start_root()
 
     for file in os.listdir(test_dir):
         Error._Error__has_error = False

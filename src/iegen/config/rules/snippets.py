@@ -1,5 +1,6 @@
 import copy
 import importlib
+import logging
 import os
 import types
 
@@ -27,7 +28,10 @@ def set_language(language):
     global LANGUAGE
     LANGUAGE = language
     global LANGUAGE_HELPER_MODULE
-    LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
+    try:
+        LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
+    except ModuleNotFoundError:
+        logging.info(f"Helper module is not found for '{language}' language")
 
 
 def load_snippets_engine(ctx_desc, platform, language):
@@ -94,7 +98,6 @@ def make_func_context(ctx):
                 default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
-                nullable=arg.name in ctx.vars.nullable_arg or arg.default.kind == DefaultValueKind.NULL_PTR,
                 is_enum=arg.type.kind == cli.TypeKind.ENUM,
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
@@ -111,7 +114,6 @@ def make_func_context(ctx):
             return_type_info = create_type_info(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        prj_rel_file_name = ctx.prj_rel_file_name
 
         overloading_prefix = ctx.overloading_prefix
         # capturing template related properties since we use single context with different template choice
@@ -122,6 +124,7 @@ def make_func_context(ctx):
 
         cxx = types.SimpleNamespace(
             name=ctx.cursor.spelling,
+            displayname=ctx.cursor.displayname,
             is_abstract=ctx.cursor.is_abstract_record(),
             is_open=not cutil.is_final_cursor(ctx.cursor),
             is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
@@ -131,7 +134,7 @@ def make_func_context(ctx):
             kind_name=ctx.kind_name,
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
-            is_overloaded=cutil.is_overloaded(ctx.cursor),
+            is_overloaded=cutil.is_overloaded(ctx.cursor)
         )
         if ctx.cursor.kind in [cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE]:
             _overridden_cursors = cutil.get_all_overridden_cursors(ctx.cursor)
@@ -160,7 +163,6 @@ def make_enum_context(ctx):
     def make():
         # helper variables
         enum_cases = ctx.enum_values
-        prj_rel_file_name = ctx.prj_rel_file_name
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     type_name=ctx.cxx_type_name,
                                     namespace=ctx.namespace,
@@ -186,9 +188,6 @@ def make_class_context(ctx):
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
-
-            prj_rel_file_name = _type_info.prj_rel_file_name
-            is_proj_type = _type_info.is_proj_type
 
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
@@ -222,8 +221,6 @@ def make_getter_context(ctx):
     def make():
         # helper variables
         if ctx.setter:
-            if ctx.node.is_template:
-                _validate_template_getter_setter(ctx)
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
             setter_ctx.set_template_ctx(ctx.template_ctx)
@@ -245,10 +242,12 @@ def make_member_context(ctx):
         rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
-        prj_rel_file_name = ctx.prj_rel_file_name
 
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
-                                    kind_name=ctx.kind_name)
+                                    displayname=ctx.cursor.displayname,
+                                    kind_name=ctx.kind_name,
+                                    is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
+                                    is_template=ctx.node.is_template)
 
         return locals()
 
@@ -263,9 +262,7 @@ def preprocess_scope(context, scope, info):
         s = scope.create_scope(sname)
         context_scope[sname] = s
     if info.snippet_tmpl:
-        snippet = info.make_snippet(context_scope)
-        if snippet:
-            scope.add(snippet)
+        scope.add(info.make_snippet(context_scope))
     if info.unique_snippet_tmpl:
         scope.add_unique(*str(info.unique_make_snippet(context_scope)).split(JINJA_UNIQUE_MARKER))
 
@@ -282,7 +279,8 @@ def preprocess_entry(context, builder, code_name):
             fscope_name, scope_name = fs
             file_scope = get_file(context, builder, fscope_name)
             parent_scope = file_scope[scope_name]
-            preprocess_scope(context, parent_scope, info)
+            if parent_scope is not None:
+                preprocess_scope(context, parent_scope, info)
 
 
 def get_file(context, builder, fscope_name):
@@ -313,25 +311,21 @@ def gen_interface(ctx, builder):
 
 
 def gen_constructor(ctx, builder):
-    _validate_nullable_args(ctx)
     context = make_constructor_context(ctx)
     preprocess_entry(context, builder, 'constructor')
 
 
 def gen_method(ctx, builder):
-    _validate_nullable_args(ctx)
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
 
 
 def gen_getter(ctx, builder):
-    _validate_getter(ctx)
     context = make_getter_context(ctx)
     preprocess_entry(context, builder, 'getter')
 
 
 def gen_property_getter(ctx, builder):
-    _validate_property_getter(ctx)
     context = make_member_context(ctx)
     preprocess_entry(context, builder, 'property_getter')
 
@@ -342,53 +336,3 @@ def gen_property_setter(ctx, builder):
 
 def gen_setter(ctx, builder):
     return
-
-
-def _validate_nullable_args(ctx):
-    args = [arg.name for arg in ctx.args]
-    incorrect_args = [arg for arg in ctx.vars.nullable_arg if arg not in args]
-    if incorrect_args:
-        Error.critical(
-            f'{", ".join(incorrect_args)} arguments are marked as nullable but '
-            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} does not have such arguments.')
-
-
-def _validate_getter(ctx):
-    if ctx.args:
-        Error.critical(
-            f'Getter should not have arguments: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-    if ctx.setter:
-        if len(ctx.setter.args) != 1:
-            Error.critical(
-                f'Setter should have one argument: {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-
-        _validate_nullable_args(ctx.setter)
-
-        have_diff_nullability = len(ctx.setter.vars.nullable_arg) == 0 ^ ctx.vars.nullable_return is False
-        if have_diff_nullability:
-            Error.critical(
-                f'Setter argument and getter return value should have the same nullability:'
-                f' {ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname}.')
-
-
-def _validate_property_getter(ctx):
-    if ctx.cursor.access_specifier != cli.AccessSpecifier.PUBLIC:
-        Error.critical(
-            f'{ctx.cursor.lexical_parent.displayname}.{ctx.cursor.displayname} is not a public field.'
-            f' Make it public or remove iegen API.')
-
-
-def _validate_template_getter_setter(ctx):
-    is_valid = len(ctx.vars.template.keys()) == len(ctx.setter.vars.template.keys())
-    if is_valid:
-        for template_arg, possible_types in ctx.vars.template.items():
-            getter_types = {template['type'] for template in possible_types}
-            setter_types = {template['type'] for template in ctx.setter.vars.template[template_arg]}
-            if getter_types != setter_types:
-                is_valid = False
-                break
-    if not is_valid:
-        parent = ctx.cursor.lexical_parent.displayname
-        Error.critical(
-            f'Template getter/setter should have the same template argument types: '
-            f'{parent}.{ctx.cursor.displayname} and {parent}.{ctx.setter.cursor.displayname}.')

@@ -191,7 +191,7 @@ enum:
       }
     include:
       unique_content: |
-        #include "{{prj_rel_file_name}}"
+        #include "{{vars.prj_rel_file_name}}"
   hpp:
     body: |
       void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name}}(py::module& m);
@@ -211,7 +211,7 @@ var_class: &var_class
         {{marker}}{{vars.include|format_list("from {} import *")|join_unique}}
         {%- endif -%}
         {%- macro gen_import(type_info) -%}
-        {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+        {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
         {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
         {%- endif -%}
         {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -261,12 +261,12 @@ var_class: &var_class
   cxx:
     include:
       unique_content: |
-        {%- if is_proj_type -%}
-        #include "{{prj_rel_file_name}}"
+        {%- if vars.is_proj_type -%}
+        #include "{{vars.prj_rel_file_name}}"
         {%- endif -%}
         {%- macro gen_include(type_info) -%}
-        {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
-        {{marker}}#include "{{type_info.prj_rel_file_name}}"
+        {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+        {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
         {%- endif -%}
         {%- for arg_type_info in type_info.arg_types_infos -%}
         {{gen_include(arg_type_info)}}
@@ -328,7 +328,7 @@ var_bind_method: &var_bind_method
 var_method_python_include: &var_method_python_include
   unique_content: |
     {%- macro gen_import(type_info) -%}
-    {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+    {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
     {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -345,8 +345,8 @@ var_method_python_include: &var_method_python_include
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
     {%- macro gen_include(type_info) -%}
-    {%- if type_info.is_proj_type -%}
-    {{marker}}#include "{{type_info.prj_rel_file_name}}"
+    {%- if type_info.vars and type_info.vars.is_proj_type -%}
+    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
     {{gen_include(arg_type_info)}}
@@ -363,12 +363,16 @@ constructor:
   python:
     include: *var_method_python_include
     constructor_body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+      {%- endif -%}
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_converter = arg.converter.python %}
                                        {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                        {%- else -%}
@@ -401,6 +405,10 @@ function:
   python:
     include: *var_method_python_include
     body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+      {%- endif -%}
       {%- set comma = joiner(', ') -%}
       {%- if cxx.is_static %}
       @classmethod
@@ -417,7 +425,7 @@ function:
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and (arg_converter.vars.file != vars.file or arg_converter.vars.package != vars.package) else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.nullable}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.nullable}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                                           {%- else -%}
@@ -472,7 +480,7 @@ var_bind_getter: &var_bind_getter
 var_getter_python_include: &var_getter_python_include
   unique_content: |
     {%- macro gen_import(type_info) -%}
-    {%- if type_info.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+    {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
     {{marker}}import {{type_info.vars.package_prefix + '.' if type_info.vars.package_prefix}}{{type_info.vars.package}}.{{type_info.vars.file + type_info.vars.file_postfix}} as {{type_info.vars.file}}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -484,8 +492,8 @@ var_getter_python_include: &var_getter_python_include
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
     {%- macro gen_include(type_info) -%}
-    {%- if  type_info.is_proj_type -%}
-    {{marker}}#include "{{type_info.prj_rel_file_name}}"
+    {%- if type_info.vars and type_info.vars.is_proj_type -%}
+    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
     {{gen_include(arg_type_info)}}
@@ -497,6 +505,9 @@ property_getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- if not cxx.is_public -%}
+        {%- do Error.critical(owner_class.cxx.displayname + "." + cxx.displayname + " is not a public field. Make it public or remove iegen API.") -%}
+      {%- endif -%}
       {%- set _name = vars.name|to_snake_case -%}
       {%- set rconverter = rconverter.python -%}
       {% set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and (rconverter.vars.file != owner_class.vars.file or rconverter.vars.package != owner_class.vars.package) else '' %}
@@ -527,6 +538,8 @@ getter:
   python:
     include: *var_getter_python_include
     properties: |
+      {%- do helper.validate_getter(cxx, vars, args, owner_class, setter|default(none)) -%}
+      {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
       {%- macro gen_name() -%}
       {%- if cxx.is_template -%}
       {%- for name in template_names or [] %}
@@ -543,6 +556,10 @@ getter:
           {{vars.comment|make_py_comment|indent}}
           pass
       {%- if setter is defined %}
+      {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + setter.owner_class.cxx.displayname + "." + setter.cxx.displayname + " does not have such arguments.") -%}
+      {%- endif %}
 
       @{{gen_name()|to_snake_case}}.setter
       @bind

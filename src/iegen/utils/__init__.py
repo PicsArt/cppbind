@@ -218,7 +218,9 @@ def init_jinja_env():
             else:
                 # input_ is a scope
                 for part in input_.parts:
-                    parts += str(part).split(JINJA_UNIQUE_MARKER)
+                    for part_ in str(part).split(JINJA_UNIQUE_MARKER):
+                        if part_:
+                            parts.append(part_)
         return parts
 
     def _default_comparator(a, b):

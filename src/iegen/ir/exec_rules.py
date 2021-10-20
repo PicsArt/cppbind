@@ -235,7 +235,7 @@ class Context(BaseContext):
             if enum_value_c.raw_comment != last_case_comment:
                 comment = extract_pure_comment(enum_value_c.raw_comment)
             elif last_case_comment:
-                comment = ['', 'The Same as previous case comment.', '']
+                comment = ['', 'The same as previous case comment.', '']
             else:
                 comment = None
             last_case_comment = enum_value_c.raw_comment

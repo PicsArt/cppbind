@@ -1,4 +1,5 @@
 from examples_lib.enums.color_pygen import Color
+from examples_lib.enums.color_pygen import ColorShade
 from examples_lib.enums.frame_pygen import Frame
 
 
@@ -18,3 +19,8 @@ frame = Frame()
 frame.background_color = Color.Red
 assert frame.background_color == Color.Red
 # [color-usage]
+
+assert ColorShade.ShadeLight.value == 1
+assert ColorShade.ShadeDark.value == 2
+frame.background_color_shade = ColorShade.ShadeDark
+assert frame.background_color_shade == ColorShade.ShadeDark

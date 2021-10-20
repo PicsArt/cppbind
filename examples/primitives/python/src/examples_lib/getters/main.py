@@ -3,8 +3,8 @@ from examples_lib.getters.person_pygen import *
 from examples_lib.getters.number_pygen import *
 
 # [number-usage]
-intNum = Numberint(5)
-doubleNum = Numberfloat(1.0)
+intNum = NumberInt(5)
+doubleNum = NumberFloat(1.0)
 assert (intNum.num == 5)
 intNum.num = 2
 assert (intNum.num == 2)

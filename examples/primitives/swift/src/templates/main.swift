@@ -1,7 +1,7 @@
 import Wrapper
 
 // [stack-examples]
-let stackPrj = StackProject()
+let stackPrj = StackPrj()
 assert(stackPrj.empty())
 let prj = Project(title: "My Project")
 stackPrj.push(item: prj)
@@ -9,6 +9,15 @@ assert(!stackPrj.empty())
 assert(stackPrj.top().title == prj.title)
 stackPrj.pop()
 assert(stackPrj.empty())
+
+let stackNumber = StackNumInt()
+let num1 = NumberInt(n: 1)
+let num2 = NumberInt(n: 2)
+stackNumber.push(item: num1)
+stackNumber.push(item: num2)
+assert(stackNumber.top().num == num2.num)
+stackNumber.pop()
+assert(stackNumber.top().num == num1.num)
 // [stack-examples]
 
 // [stack-usage-examples]
@@ -55,3 +64,22 @@ let component = Component(parent: root, name: name)
 // assert(component is IAddressableRoot)
 assert(component.absPath() == path + name)
 // [addressable-examples]
+
+// [wrapper-examples]
+let wrapperPair = WrapperPairStrings(value: ("first", "second"))
+assert(wrapperPair.value.0 == "first")
+assert(wrapperPair.value.1 == "second")
+wrapperPair.value = ("third", "fourth")
+assert(wrapperPair.value.0 == "third")
+assert(wrapperPair.value.1 == "fourth")
+// [wrapper-examples]
+
+
+// [pair-examples]
+let student = Student(st_name: "John Doe")
+let employee = Employee(name: "Jane Doe")
+let pair1 = PairStudent(first: "student", second: student)
+let pair2 = PairEmployee(first: "employee", second: employee)
+assert(pair1.second.name == student.name)
+assert(pair2.second.name == employee.name)
+// [pair-examples]

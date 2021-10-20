@@ -1,0 +1,15 @@
+rules:
+    my_lang.code_snippets:
+        !include my_lang_snippets/code_snippets.yaml
+    
+    my_lang.type_converters:
+        !include my_lang_snippets/types.yaml
+
+vars:
+    src_glob:
+        - cxx/example.hpp
+    mac.clang_args:
+        - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
+var_def:
+    !include my_lang_var_def.yaml

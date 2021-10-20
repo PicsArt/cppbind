@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from git import Repo, GitError
 
-from iegen import DATETIME_FORMAT, logging
+from iegen import DATETIME_FORMAT, logging, PROJECT_CONFIG_DIR
 from iegen.builder import OUTPUT_MODIFICATION_KEY
 from iegen.common.error import Error
 from iegen.ir.ast import (
@@ -194,6 +194,7 @@ class CXXIEGIRBuilder:
         if node.type == NodeType.ROOT_NODE:
             sys_vars = {
                 'path': os.path,
+                '_iegen_extras_dir': PROJECT_CONFIG_DIR,
                 'getenv': os.getenv,
                 'get_android_ndk_sysroot': get_android_ndk_sysroot
             }

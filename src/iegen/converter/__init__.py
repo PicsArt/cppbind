@@ -1,101 +1,6 @@
-import clang.cindex as cli
-
 from iegen.common.error import Error
 
 NEW_LINE = '\n'
-
-
-class Validator:
-    """
-    Class to validate some constraints on variables
-    """
-
-    @staticmethod
-    def shared_ref_set(type_ctx):
-        """Check whether shared_ref variable is set"""
-        if not type_ctx.root.shared_ref:
-            Error.critical("Root must have an attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
-    def shared_ref_unset(type_ctx):
-        """Check whether shared_ref variable is false"""
-        if type_ctx.root.shared_ref:
-            Error.critical("Root has an invalid attribute \"shared_ref: True\"",
-                           type_ctx.node.file_name,
-                           type_ctx.node.line_number)
-
-    @staticmethod
-    def validate_single_root(cursor):
-        """Validate that the cursor has only a single base root"""
-        roots = _get_roots(cursor)
-        if len(roots) > 1 and not all((roots[0].type == root.type for root in roots)):
-            raise TypeError(
-                f'Type {cursor.spelling} has more than one root - '
-                f'[{", ".join(map(lambda root: root.spelling, roots))}].')
-
-    @staticmethod
-    def validate_ancestors(ancestors):
-        """Ensure that all ancestors has the same value for shared_ref variable"""
-        if ancestors and not all(item.shared_ref == ancestors[0].shared_ref for item in ancestors[1:]):
-            raise TypeError('All ancestors must have the same value for shared_ref.')
-
-    @staticmethod
-    def validate_bases(class_name, base_types_converters):
-        """Ensure the class has only one non abstract base"""
-        non_abstract_bases = 0
-        for base_type in base_types_converters:
-            if not base_type.ctx.action == 'gen_interface':
-                non_abstract_bases += 1
-        if non_abstract_bases > 1:
-            raise TypeError(f'{class_name} has more than 1 non abstract bases.')
-
-
-def _get_roots(cursor):
-    roots = []
-    for parent in cursor.get_children():
-        if parent.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-            parent_children = []
-            for child in parent.get_definition().get_children():
-                if child.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                    parent_children.append(child.get_definition())
-            if not parent_children:
-                roots.append(parent)
-            else:
-                roots += _get_roots(parent.get_definition())
-    return roots
-
-
-class Exceptions:
-    """
-    Helper class for exceptions
-    """
-
-    @staticmethod
-    def can_throw(throws):
-        """Check whether the node has list of throwable exceptions"""
-        return "no_throw" not in throws
-
-    @staticmethod
-    def is_std_custom_exc(ctx):
-        """Check whether the given class is derived from C++ std exceptions"""
-        std_exc_list = (
-            "std::exception", "std::runtime_error", "std::logic_error", "std::bad_alloc",
-            "std::bad_cast", "std::bad_typeid", "std::bad_exception", "std::overflow_error",
-            "std::range_error", "std::underflow_error", "std::invalid_argument", "std::length_error",
-            "std::out_of_range", "std::domain_error"
-        )
-
-        for cursor in list(ctx.cursor.get_children()):
-            if cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER and cursor.spelling in std_exc_list:
-                return True
-        return False
-
-    @staticmethod
-    def has_exc_base(ctx):
-        """Check whether current class has a base class which is exception class"""
-        return any(base.is_exception for base in ctx.ancestors)
 
 
 def make_doxygen_comment(pure_comment):
@@ -107,3 +12,38 @@ def make_doxygen_comment(pure_comment):
     start = '' if not pure_comment[0] or pure_comment[0].isspace() else nl
     return f"""/**{start}{nl.join(pure_comment)}
 */"""
+
+
+def validate_getter(cxx, vars, args, owner_class, setter):
+    if args:
+        Error.critical(
+            f'Getter should not have arguments: {owner_class.cxx.displayname}.{cxx.displayname}.')
+    if setter:
+        if len(setter['args']) != 1:
+            Error.critical(
+                f'Setter should have one argument: {owner_class.cxx.displayname}.{cxx.displayname}.')
+
+        have_diff_nullability = len(setter['vars'].nullable_arg) == 0 ^ vars.nullable_return is False
+        if have_diff_nullability:
+            Error.critical(
+                f'Setter argument and getter return value should have the same nullability:'
+                f' {owner_class.cxx.displayname}.{cxx.displayname}.')
+
+
+def validate_template_getter_setter(cxx, vars, owner_class, setter):
+    if not setter or not cxx.is_template:
+        return
+
+    is_valid = len(vars.template) == len(setter['vars'].template)
+    if is_valid:
+        for template_arg, possible_types in vars.template.items():
+            getter_types = {template['type'] for template in possible_types}
+            setter_types = {template['type'] for template in setter['vars'].template[template_arg]}
+            if getter_types != setter_types:
+                is_valid = False
+                break
+    if not is_valid:
+        parent = owner_class.cxx.displayname
+        Error.critical(
+            f'Template getter/setter should have the same template argument types: '
+            f'{parent}.{cxx.displayname} and {parent}.{setter["cxx"].displayname}.')

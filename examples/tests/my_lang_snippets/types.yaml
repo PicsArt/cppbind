@@ -1,0 +1,56 @@
+# type converter section for 'int'
+int:
+  # type info specifications
+  types:
+    c: int
+    my_lang: myLangInt
+  # converters section
+  converters:
+    # a section example without source and target definitions
+    my_section: |
+      // Calling a section without source and target attributes
+    # a section example with source and target specifications
+    my_lang_to_c:
+      source: my_lang
+      target: c
+      snippet: |
+
+        // Calling converter for int type from my_lang to c
+        assign {{target_name}} = int({{name}})
+
+# type converter section for custom object
+$Object:
+  types:
+    my_lang: myLangPointer
+    c: void*
+  converters:
+    my_lang_to_c: |
+
+      // Calling converter for object type from my_lang to c
+      assign {{target_name}} = Pointer({{name}}.self)
+
+# for mac
+std::__1::map:
+  std::map
+
+# type converter section for std::map
+std::map:
+  types:
+    my_lang: "myLangDict<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
+    c: CDataMap
+  converters:
+    my_lang_to_c: |
+
+      // Calling converter for std::map
+      var {{target_name}} = {{target_type_name}}()
+      {{target_name}}.keys = Pointer(_key_{{target_name}})
+      {{target_name}}.values = Pointer(_val_{{target_name}})
+      {{target_name}}.size = myLangInt({{name}}.count)
+      var _i_{{name}} = 0
+      for (key_{{name}}, val_{{name}}) in {{name}} {
+          {{args[0].snippet('key_{}'.format(name))|indent}}
+          {{args[1].snippet('val_{}'.format(name))|indent}}
+          _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
+          _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
+          _i_{{name}} += 1
+      }

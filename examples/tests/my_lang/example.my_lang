@@ -1,0 +1,50 @@
+public class Example  {
+
+  // body of function
+  public function (i: myLangInt, m: myLangDict<myLangInt, myLangDict<myLangInt, myLangInt>>, e: myLangPointer) {
+          // Calling a section without source and target attributes
+
+        
+    // Calling converter for int type from my_lang to c
+    assign my_lang_to_c_i = int(i)
+
+        
+    // Calling converter for std::map
+    var my_lang_to_c_m = CDataMap()
+    my_lang_to_c_m.keys = Pointer(_key_my_lang_to_c_m)
+    my_lang_to_c_m.values = Pointer(_val_my_lang_to_c_m)
+    my_lang_to_c_m.size = myLangInt(m.count)
+    var _i_m = 0
+    for (key_m, val_m) in m {
+        
+        // Calling converter for int type from my_lang to c
+        assign my_lang_to_c_key_m = int(key_m)
+        
+        // Calling converter for std::map
+        var my_lang_to_c_val_m = CDataMap()
+        my_lang_to_c_val_m.keys = Pointer(_key_my_lang_to_c_val_m)
+        my_lang_to_c_val_m.values = Pointer(_val_my_lang_to_c_val_m)
+        my_lang_to_c_val_m.size = myLangInt(val_m.count)
+        var _i_val_m = 0
+        for (key_val_m, val_val_m) in val_m {
+            
+            // Calling converter for int type from my_lang to c
+            assign my_lang_to_c_key_val_m = int(key_val_m)
+            
+            // Calling converter for int type from my_lang to c
+            assign my_lang_to_c_val_val_m = int(val_val_m)
+            _key_my_lang_to_c_val_m[_i_val_m] = my_lang_to_c_key_val_m
+            _val_my_lang_to_c_val_m[_i_val_m] = my_lang_to_c_val_val_m
+            _i_val_m += 1
+        }
+        _key_my_lang_to_c_m[_i_m] = my_lang_to_c_key_m
+        _val_my_lang_to_c_m[_i_m] = my_lang_to_c_val_m
+        _i_m += 1
+    }
+
+        
+    // Calling converter for object type from my_lang to c
+    assign my_lang_to_c_e = Pointer(e.self)
+
+    }
+}

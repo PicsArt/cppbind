@@ -1,4 +1,6 @@
 void:
+  custom:
+    tname: None
   types:
     python: None
     pybind: None
@@ -9,6 +11,8 @@ void:
     python_to_pybind:
 
 bool:
+  custom:
+    tname: Bool
   types:
     python: bool
     pybind: bool
@@ -20,6 +24,8 @@ bool:
       {{target_name}} = {{target_type_name}}({{name}})
 
 int:
+  custom:
+    tname: Int
   types:
     python: int
     pybind: int
@@ -34,6 +40,8 @@ unsigned int:
   long
 
 short:
+  custom:
+    tname: Int
   types:
     python: int
     pybind: int
@@ -45,6 +53,8 @@ short:
       {{target_name}} = {{target_type_name}}({{name}})
 
 long:
+  custom:
+    tname: Int
   types:
     python: int
     pybind: int
@@ -62,6 +72,8 @@ unsigned long:
   long
 
 float:
+  custom:
+    tname: Float
   types:
     python: float
     pybind: float
@@ -73,6 +85,8 @@ float:
       {{target_name}} = {{target_type_name}}({{name}})
 
 double:
+  custom:
+    tname: Float
   types:
     python: float
     pybind: float

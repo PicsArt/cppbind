@@ -38,6 +38,17 @@ enum class Color {
      */
     Blue = 20
 };
+
+/**
+ * __API__
+ * action: gen_enum
+ * package: enums
+ * enum_field_name_prefix: Shade
+ */
+enum class ColorShade {
+    Light = 1,
+    Dark = 2
+};
 // [example]
 }
 #endif

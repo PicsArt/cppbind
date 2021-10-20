@@ -12,7 +12,7 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: getters
- * shared_ref: True
+ * shared_ref: False
  * template:
  *   T:
  *     - type: int

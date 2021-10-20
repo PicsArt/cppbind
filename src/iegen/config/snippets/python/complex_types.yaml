@@ -49,9 +49,25 @@ std::__1::pair:
 $Object:
   custom:
     pname: object
+    tpostfix: |
+      {%- for name in template_names or [] -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
+      {%- endfor -%}
+    tname: |
+      {{vars.name}}{{custom.tpostfix}}
   types:
-    python: "{{type_name}}{{template_suffix}}"
-    pybind: "{{type_name}}{{template_suffix}}"
+    python: |
+      {%- if interface_class|default(False) -%}
+      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {%- else -%}
+      {{custom.tname}}
+      {%- endif -%}
+    pybind: |
+      {%- if interface_class|default(False) -%}
+      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {%- else -%}
+      {{custom.tname}}
+      {%- endif -%}
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -61,9 +77,10 @@ $Object:
 $Enum:
   custom:
     pname: int
+    tname: "{{vars.name}}"
   types:
-    python: "{{type_name}}"
-    pybind: "{{type_name}}"
+    python: "{{custom.tname}}"
+    pybind: "{{custom.tname}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -72,12 +89,12 @@ $Enum:
 
 $FunctionProto:
   custom:
-    pname: int
+    tname: Callable
   types:
     python: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
     pybind: |
-        {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args_t[:-1] -%}{{comma()}}{{arg}}{%- endfor -%}], {{args_t|last}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -86,7 +103,7 @@ $FunctionProto:
 
 std::__cxx11::basic_string:
   custom:
-    pname: str
+    tname: String
   types:
     python: str
     pybind: str
@@ -98,23 +115,13 @@ std::__cxx11::basic_string:
       {{target_name}} = {{target_type_name}}({{name}})
 
 std::string_view:
-  custom:
-    pname: str
-  types:
-    python: str
-    pybind: str
-  converters:
-    pybind_to_cxx:
-    cxx_to_pybind:
-    pybind_to_python:
-    python_to_pybind: |
-      {{target_name}} = {{target_type_name}}({{name}})
+  std::__cxx11::basic_string
 
 std::vector:
   custom:
-    pname: list
+    tname: List[{{args[0].custom.tname}}]
   types:
-    python: List[{{args_t[0]}}]
+    python: List[{{args[0].target_type_name}}]
     pybind: list
   converters:
     pybind_to_cxx:
@@ -124,10 +131,10 @@ std::vector:
 
 std::function:
   custom:
-    pname: function
+    tname: "Function"
   types:
-    python: "{{args_t[0]}}"
-    pybind: "{{args_t[0]}}"
+    python: "{{args[0].target_type_name}}"
+    pybind: "{{args[0].target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -136,7 +143,7 @@ std::function:
 
 std::map:
   custom:
-    pname: dict
+    tname: "Map{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
     python: dict
     pybind: dict
@@ -151,10 +158,10 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    pname: object
+    tname: "{{args[0].custom.tname}}"
   types:
-    python: "{{args_t[0]}}"
-    pybind: "{{args_t[0]}}"
+    python: "{{args[0].target_type_name}}"
+    pybind: "{{args[0].target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -178,7 +185,7 @@ json:
 
 std::pair:
   custom:
-    pname: tuple
+    tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
   types:
     python: tuple
     pybind: tuple

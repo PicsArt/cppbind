@@ -19,11 +19,13 @@ assert(op.optionalStringViewWithDefault() == "abc")
 assert(op.optionalCharPointerWithDefault() == "def")
 assert(op.optionalSharedPtrWithNullptrDefault() == nil)
 assert(op.optionalEnumWithDefault() == Color.Red)
+assert(op.optionalEnumWithDefaultAndFieldPrefix() == ColorShade.ShadeLight)
 //
 // // non default value assertions
 let task = Task(title: "my task")
 assert(op.optionalPtrWithNullptrDefault(task: task)!.cself == task.cself)
 assert(op.optionalEnumWithDefault(c: Color.Blue) == Color.Blue)
+assert(op.optionalEnumWithDefaultAndFieldPrefix(c: ColorShade.ShadeDark) == ColorShade.ShadeDark)
 assert(op.optionalBoolWithDefault(value: false) == false)
 assert(op.optionalStringViewWithDefault(optionalStr: "test") == "test")
 // TODO add char converter

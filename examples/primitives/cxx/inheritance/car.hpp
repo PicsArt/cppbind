@@ -11,16 +11,7 @@ namespace iegen::example {
 class Car : public Vehicle {
 public:
 
-    Car(int numberOfSeats) : Vehicle(numberOfSeats) {
-        name = "car";
-    };
-
-
-    std::string type() const override {
-        return name;
-    }
-
-    std::string name;
+    Car(int numberOfSeats) : Vehicle(numberOfSeats) {};
 };
 
 

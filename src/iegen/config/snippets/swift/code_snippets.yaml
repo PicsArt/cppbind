@@ -221,6 +221,9 @@ interface:
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
+    {%- if vars.is_proj_type -%}
+    #include "{{vars.prj_rel_file_name}}"
+    {%- endif -%}
     {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
@@ -443,9 +446,14 @@ method:
 function:
   swift:
     body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+      {%- endif -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {% set comma = joiner(', ') %}
-      {{comment|make_doxygen_comment}}
-      public func {{name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.nullable}}
+      {{vars.comment|make_doxygen_comment}}
+      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
       {%- else -%}
@@ -454,18 +462,18 @@ function:
       {%- endif %}
       {%- endif %}
       {%- endif %}
-      {%- endfor-%}) {{'throws ' if helper.Exceptions.can_throw(throws)}}-> {{rconverter.swift.target_type_name}}{{'?' if nullable_return}} {
+      {%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
           {%- set call_args = [] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
-          {{converter.snippet(arg.name, nullable=arg.nullable)|indent}}
+          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent}}
           {%- do call_args.append(converter.converted_name(arg.name))%}
           {%- endfor %}
           var err = ErrorObj()
-          {%- set c_func_name = helper.get_c_func_name("{}{}".format(name, overloading_prefix)) %}
+          {%- set c_func_name = helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix)) %}
           {%- if rconverter.c.target_type_name != 'void' %}
           let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
-          {{rconverter.sc_to_swift.snippet('result', nullable=nullable_return)|indent}}
+          {{rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return)|indent}}
           {%- else %}
           {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
           {%- endif %}
@@ -480,15 +488,15 @@ function:
           let err_type = Int(err.err_type)
           if (err_type != 0) {
               switch(err_type) {
-                  {%- if helper.Exceptions.can_throw(throws) %}
-                  {%- for exc_type in throws %}
+                  {%- if 'no_throw' not in vars.throws %}
+                  {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
-                      throw {{ctx.lookup_ctx_by_name(exc_type).name}}(err.err_ptr, true)
+                      throw {{get_type_info(exc_type).vars.name}}(err.err_ptr, true)
                   {%- endfor %}
                   {%- endif %}
-                  {%- if not 'std::exception' in throws %}
-                  case({{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}}):
-                      let exc_obj = {{ctx.lookup_ctx_by_name("std::exception").name}}(err.err_ptr, true)
+                  {%- if not 'std::exception' in vars.throws %}
+                  case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(err.err_ptr, true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
                   {%- endif %}
                   default:
@@ -503,42 +511,43 @@ function:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}".format(name, overloading_prefix))}}(
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix))}}(
       {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
-      {{' _Nullable' if arg.nullable else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err) {
+      {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
-          {{converter.snippet(arg.name, nullable=arg.nullable)|indent(4)}}
+          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent(4)}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if rconverter.c.target_type_name != 'void' %}
           try {
-              const auto& result = {{ctx.namespace}}::{{cxx_name}}
-                                   {%- if ctx.node.is_function_template -%}
+              const auto& result = {{cxx.namespace}}::{{cxx.name}}
+                                   {%- if cxx.is_template -%}
                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                    {%- endif -%}({{call_args|join(', ')}});
-              {{rconverter.cxx_to_c.snippet('result', nullable=nullable_return)|indent(8)}}
+              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_c.converted_name('result')}};
           }
           {%- else %}
           try {
-              {{cxx_name}}{%- if ctx.node.is_function_template -%}
+              {{cxx.name}}{%- if cxx.is_template -%}
               <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
               {%- endif -%}({{call_args|join(', ')}});
           }
           {%- endif %}
-          {%- if helper.Exceptions.can_throw(throws) %}
-          {%- for exc_type in throws -%}
+          {%- if 'no_throw' not in vars.throws %}
+          {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err->err_type = {{loop.index}};
               err->err_ptr = new {{exc_type}}(e);
           }
           {%- endfor %}
           {%- endif %}
-          {%- if not 'std::exception' in throws %}
+          {%- if not 'std::exception' in vars.throws %}
           catch (const std::exception& e) {
-              err->err_type = {{throws|length + 1 if helper.Exceptions.can_throw(throws) else 1}};
+              err->err_type = {{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}};
               err->err_ptr = new std::exception(e);
           }
           {%- endif %}
@@ -555,10 +564,11 @@ function:
     body:
       content: |
         {%- set comma = joiner(', ') %}
-        {%- set c_func_name = helper.get_c_func_name("{}{}".format(name, overloading_prefix)) %}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
+        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- set c_func_name = helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix)) %}
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
         {%- for arg in args -%}
-        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.nullable else '_Nonnull'}}{% endif %} {{arg.name}}
+        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}
         {%- endfor -%}{{', ' if args}}ErrorObj* _Nonnull err);
 
 

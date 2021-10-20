@@ -136,7 +136,8 @@ def make_func_context(ctx):
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
             is_overloaded=cutil.is_overloaded(ctx.cursor),
-            is_static = bool(ctx.cursor.is_static_method()),
+            is_static=bool(ctx.cursor.is_static_method()),
+            namespace=ctx.namespace,
             # for template methods
             is_override=False
         )

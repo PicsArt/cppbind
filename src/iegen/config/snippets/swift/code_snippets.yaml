@@ -470,7 +470,8 @@ function:
           {%- do call_args.append(converter.converted_name(arg.name))%}
           {%- endfor %}
           var err = ErrorObj()
-          {%- set c_func_name = helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix)) %}
+          {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+          {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
           {%- if rconverter.c.target_type_name != 'void' %}
           let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
           {{rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return)|indent}}
@@ -512,7 +513,8 @@ function:
     body: |
       {%- set comma = joiner(', ') %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix))}}(
+      {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix))}}(
       {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
       {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err) {
           {%- set call_args = [] %}
@@ -565,7 +567,8 @@ function:
       content: |
         {%- set comma = joiner(', ') %}
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-        {%- set c_func_name = helper.get_c_func_name("{}{}{}".format(vars.name, overloading_prefix, template_postfix)) %}
+        {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+        {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
         {%- for arg in args -%}
         {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}

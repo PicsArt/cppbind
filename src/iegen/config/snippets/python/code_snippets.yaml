@@ -6,7 +6,7 @@ file:
       - include
       - code_fragment
     content: |
-      {{[banner_logo, vars.banner_comment]|make_py_comment}}
+      {{[banner_logo, vars.banner_comment]|make_py_docstring}}
       {{include}}
       {%- if code_fragment %}
       {{code_fragment}}
@@ -20,7 +20,7 @@ file:
       - body
       - include
     content: |
-      {{[banner_logo, vars.banner_comment]|make_py_comment}}
+      {{[banner_logo, vars.banner_comment]|make_py_docstring}}
       {%- set future_import = 'from __future__ import annotations' %}
       {%- set typing_import = 'from typing import *' %}
       {%- set pybind_import = 'import ' + [vars.pybind_module, vars.package, vars.file]|join('.') + ' as pybind_' + vars.file + vars.file_postfix %}
@@ -163,10 +163,10 @@ enum:
       {% set m = 'pybind_' + vars.file + vars.file_postfix %}
 
       class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=EnumMetaclass):
-          {{vars.comment|make_py_comment|indent}}
+          {{vars.comment|make_py_docstring|indent}}
           {%- for case in enum_cases -%}
           {%- if case.comment %}
-          # {{case.comment[1:]|join('\n# ')|indent}}
+          {{case.comment|make_py_comment|indent}}
           {%- endif %}
           {{vars.enum_field_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
           {%- endfor %}
@@ -237,7 +237,7 @@ var_class: &var_class
 
         class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
             {%- if vars.comment %}
-            {{vars.comment|make_py_comment|indent}}
+            {{vars.comment|make_py_docstring|indent}}
             {%- endif %}
             {%- if not cxx.is_abstract %}
             {%- if constructor_body %}
@@ -382,7 +382,7 @@ constructor:
                                        {%- endif %}
                                        {%- endif -%}
                                        {%- endfor %}):
-          {{vars.comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
+          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   bind: *var_bind_method
   cxx:
@@ -435,7 +435,7 @@ function:
                                                           {%- endif %}
                                                           {%- endif -%}
                                                           {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_comment|to_snake_case(args|map(attribute='name'))|indent}}
+          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
           pass
   bind: *var_bind_method
   cxx:
@@ -514,13 +514,13 @@ property_getter:
       @property
       @bind
       def {{_name}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_comment|indent}}
+          {{vars.comment|make_py_docstring|indent}}
           pass
       {% if vars.action == 'gen_property_setter' %}
       @{{_name}}.setter
       @bind
       def {{_name}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}):
-          {{vars.comment|make_py_comment|indent}}
+          {{vars.comment|make_py_docstring|indent}}
           pass
       {%- endif %}
   bind: *var_bind_getter
@@ -553,7 +553,7 @@ getter:
       @property
       @bind
       def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_comment|indent}}
+          {{vars.comment|make_py_docstring|indent}}
           pass
       {%- if setter is defined %}
       {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
@@ -564,7 +564,7 @@ getter:
       @{{gen_name()|to_snake_case}}.setter
       @bind
       def {{gen_name()|to_snake_case}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}):
-          {{vars.comment|make_py_comment|indent}}
+          {{vars.comment|make_py_docstring|indent}}
           pass
       {%- endif -%}
   bind: *var_bind_getter

@@ -40,3 +40,9 @@ file_vars:
   - file: "./root.hpp"
     vars:
       package: simple
+
+# uncomment these lines to generate a modulemap
+#rules:
+#  swift.code_snippets:
+#    !join
+#    - !include swift/modulemap_snippets.yaml

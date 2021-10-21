@@ -1,0 +1,34 @@
+file:
+  modulemap:
+    file_path: |
+      {{vars.cxx_out_dir + pat_sep + vars.modulemap_name}}.modulemap
+    scopes:
+      - header
+    content: |
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
+      framework module {{vars.c_wrapper_lib_name.split('.')[0]}} {
+          umbrella header "{{vars.c_wrapper_lib_name.split('.')[0]}}.h"
+
+          export *
+          module * { export * }
+
+          explicit module {{vars.c_wrapper_lib_name.split('.')[-1]}} {
+              {{header|string|indent(8)}}
+              export *
+          }
+      }
+
+var_header_include: &var_header_include
+  header:
+    unique_content: |
+      {%- set cxx_output_filepath = vars.cxx_out_dir + pat_sep + [vars.package, 'c_' + vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join -%}
+      {{marker}}header "{{path.relpath(cxx_output_filepath + '.hpp', vars.out_prj_dir)}}"
+
+interface:
+  modulemap: *var_header_include
+
+class:
+  modulemap: *var_header_include
+
+enum:
+  modulemap: *var_header_include

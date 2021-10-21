@@ -116,7 +116,7 @@ file:
       {%- set package = packages[0] %}
       {%- set file = vars.cxx_out_dir + pat_sep + vars.pybind_module.split('.')[-1] + vars.file_postfix %}
       #include <pybind11/pybind11.h>
-      #include "{{helper.cxx_rel_path(file, vars.out_prj_dir)}}.hpp"
+      #include "{{path.relpath(file, vars.out_prj_dir)}}.hpp"
 
       namespace py = pybind11;
       PYBIND11_MODULE({{package}}, m) {
@@ -155,7 +155,7 @@ var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
       {%- set cxx_output_filepath = vars.cxx_out_dir + pat_sep + [vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join -%}
-      {{marker}}#include "{{helper.cxx_rel_path(cxx_output_filepath + '.hpp', vars.out_prj_dir)}}"
+      {{marker}}#include "{{path.relpath(cxx_output_filepath + '.hpp', vars.out_prj_dir)}}"
 
 enum:
   python:

@@ -286,3 +286,8 @@ enum_field_name_prefix:
   inheritable: false
   default: ''
   allowed_on: [ enum ]
+
+modulemap_name:
+  inheritable: True
+  default: IEGen
+  allowed_on: [ root ]

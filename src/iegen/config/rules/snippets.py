@@ -141,19 +141,13 @@ def make_func_context(ctx):
             # for template methods
             is_override=False
         )
-        if ctx.cursor.kind == cli.CursorKind.CXX_METHOD:
-            _overridden_cursors = cutil.get_all_overridden_cursors(ctx.cursor)
-            _override_contexts = []
-            for cursor in _overridden_cursors:
-                overridden_ctx = ctx.find_by_type(cutil.get_full_displayname(cursor))
-                if overridden_ctx:
-                    _override_contexts.append(overridden_ctx)
 
+        if ctx.cursor.kind == cli.CursorKind.CXX_METHOD:
             # at least one of the overridden cursors should have an api
-            cxx.is_override = bool(_override_contexts)
+            cxx.is_override = bool(ctx.overridden_contexts)
 
             is_interface_override = cxx.is_override and all(
-                [c.parent_context.vars.action == 'gen_interface' for c in _override_contexts])
+                [c.parent_context.vars.action == 'gen_interface' for c in ctx.overridden_contexts])
             cxx.is_virtual = bool(ctx.cursor.is_virtual_method())
 
         return locals()

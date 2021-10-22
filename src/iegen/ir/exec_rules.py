@@ -182,16 +182,18 @@ class Context(BaseContext):
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
 
-        def walk(base_types):
-            for base in base_types:
-                base = self.find_by_type(base)
-                for _base in walk(base.base_types):
-                    yield _base
-                yield base
+        if not hasattr(self, '_ancestors'):
+            def walk(base_types):
+                for base in base_types:
+                    base = self.find_by_type(base)
+                    for _base in walk(base.base_types):
+                        yield _base
+                    yield base
 
-        _ancestors = list(walk(self.base_types))
+            self._ancestors = list(walk(self.base_types))
 
-        return _ancestors
+        return self._ancestors
+
 
     @property
     def root(self):
@@ -235,7 +237,7 @@ class Context(BaseContext):
             if enum_value_c.raw_comment != last_case_comment:
                 comment = extract_pure_comment(enum_value_c.raw_comment)
             elif last_case_comment:
-                comment = ['', 'The Same as previous case comment.', '']
+                comment = ['', 'The same as previous case comment.', '']
             else:
                 comment = None
             last_case_comment = enum_value_c.raw_comment
@@ -338,6 +340,30 @@ class Context(BaseContext):
                 cxx_root_type_name = cutil.replace_template_choice(
                     _root_cursor.displayname, self.template_choice)
         return cxx_root_type_name
+
+    @property
+    def overridden_contexts(self):
+        if self.cursor.kind != cli.CursorKind.CXX_METHOD:
+            raise AttributeError(f"{self.__class__.__name__}.overridden_contexts is invalid.")
+
+        if not hasattr(self, '_overridden_contexts'):
+            def _get_overridden_contexts(cursor):
+                contexts = []
+                ancestors = self.parent_context.ancestors
+                if cursor.get_overriden_cursors():
+                    for overridden in cursor.get_overriden_cursors():
+                        func_ctx = self.find_by_type(cutil.get_full_displayname(overridden))
+                        parent_ctx = self.find_by_type(cutil.get_full_displayname(overridden.lexical_parent))
+                        # if overridden method has not api but is parent has then consider it as well
+                        if parent_ctx in ancestors:
+                            if func_ctx:
+                                contexts.append(func_ctx)
+                            contexts += _get_overridden_contexts(overridden)
+                return contexts
+            self._overridden_contexts = _get_overridden_contexts(self.cursor)
+        return self._overridden_contexts
+
+
 
 
 class RunRule:

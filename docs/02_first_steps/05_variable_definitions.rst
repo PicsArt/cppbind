@@ -117,6 +117,7 @@ Now let's go through the variables one by one:
     - *include_dirs* - Include directories required for parsing. These directories are passed to clang parser.
     - *extra_headers* - Extra headers to be processed. For example standard exceptions headers which are required to generate target language bindings for them.
     - *target_arch* - Variable for setting target architecture.
+    - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
 
 .. note::
 

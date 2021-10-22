@@ -249,7 +249,7 @@ def init_jinja_env():
         start = '' if not lines[0] or lines[0].isspace() else nl
         return f"""/**{start}{nl.join(lines)}\n */"""
 
-    def make_py_comment(comment):
+    def make_py_docstring(comment):
         nl = '\n'
         if isinstance(comment, str):
             comment = [comment]
@@ -260,6 +260,9 @@ def init_jinja_env():
             return ""
         start = '' if not lines[0] or lines[0].isspace() else nl
         return f'"""{start}{nl.join(lines)}{nl}"""'
+
+    def make_py_comment(comment):
+        return '# ' + '\n# '.join(comment)
 
     def decapitalize(input_):
         return input_[0].lower() + input_[1:]
@@ -278,6 +281,7 @@ def init_jinja_env():
     env.filters['unique_snippets'] = unique_snippets
     env.filters['sort_python_code'] = sort_python_code
     env.filters['make_doxygen_comment'] = make_doxygen_comment
+    env.filters['make_py_docstring'] = make_py_docstring
     env.filters['make_py_comment'] = make_py_comment
     env.filters['decapitalize'] = decapitalize
 

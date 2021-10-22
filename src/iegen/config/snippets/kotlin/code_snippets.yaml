@@ -37,6 +37,9 @@ package:
 enum:
   kotlin:
     body: |
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
+      {%- endif %}
       enum class {{vars.name}}(val value: Int){{': ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}

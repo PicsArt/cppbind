@@ -57,6 +57,7 @@ package:
 enum:
   swift:
     body: |
+      {{vars.comment|make_doxygen_comment}}
       public enum {{vars.name}}: CUnsignedInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- for case in enum_cases -%}
           {%- if case.comment %}

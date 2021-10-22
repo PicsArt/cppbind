@@ -30,7 +30,7 @@ enum class Color {
      */
     Red = 1,
     /**
-     * Green = 1
+     * Green = 2
      */
     Green = 2,
     /**
@@ -46,8 +46,19 @@ enum class Color {
  * enum_field_name_prefix: Shade
  */
 enum class ColorShade {
+    /// Light = 1
     Light = 1,
-    Dark = 2
+    /// Dark = 2
+    ///
+    Dark = 2,
+    ///
+    /// SemiLight = 3
+    ///
+    SemiLight = 3,
+    /**
+     * SemiDark = 4
+     */
+    SemiDark = 4
 };
 // [example]
 }

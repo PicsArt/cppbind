@@ -149,7 +149,7 @@ std::vector:
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto& value_{{name}} = data_{{name}}[_i_{{name}}];
-          {{args[0].snippet('value_{}'.format(name))|indent}}
+          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
           {{target_name}}.emplace_back({{args[0].converted_name('value_{}'.format(name))}});
       }
     cxx_to_c: |
@@ -157,7 +157,7 @@ std::vector:
       {{target_type_name}} {{target_name}} = { _data_{{target_name}}, (long long){{name}}.size() };
       for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
           auto& value_{{name}} = {{name}}[_i_{{name}}];
-          {{args[0].snippet('value_{}'.format(name))|indent}}
+          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
           _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
@@ -167,7 +167,7 @@ std::vector:
       {{target_name}}.size = Int64({{name}}.count)
       for _i in 0..<{{name}}.count {
           let value_{{name}} = {{name}}[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent}}
+          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
           _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
       }
     sc_to_swift: |
@@ -178,7 +178,7 @@ std::vector:
       }
       for _i in 0..<Int({{name}}.size) {
           let value_{{name}} = _tmp_{{name}}_data[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent}}
+          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
           {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
       }
     sc_cleanup:
@@ -191,7 +191,7 @@ std::vector:
         let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
             let {{name}}_item = {{name}}_data[_i]
-            {{cleanup_code_fragment|indent(2)}}
+            {{cleanup_code_fragment|indent(4)}}
         }
         {%- endif %}
         {%- endif %}
@@ -212,8 +212,8 @@ std::map:
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
           auto vtmp_{{name}} = reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.values)[_i_{{name}}];
-          {{args[0].snippet('ktmp_{}'.format(name))|indent}}
-          {{args[1].snippet('vtmp_{}'.format(name))|indent}}
+          {{args[0].snippet('ktmp_{}'.format(name))|indent(4)}}
+          {{args[1].snippet('vtmp_{}'.format(name))|indent(4)}}
           {{target_name}}.insert({ {{args[0].converted_name('ktmp_{}'.format(name))}}, {{args[1].converted_name('vtmp_{}'.format(name))}} });
       }
     cxx_to_c: |
@@ -225,8 +225,8 @@ std::map:
           const auto& key_{{name}} = value_{{name}}.first;
           const auto& val_{{name}} = value_{{name}}.second;
           {
-              {{args[0].snippet('key_{}'.format(name))|indent}}
-              {{args[1].snippet('val_{}'.format(name))|indent}}
+              {{args[0].snippet('key_{}'.format(name))|indent(8)}}
+              {{args[1].snippet('val_{}'.format(name))|indent(8)}}
               _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}};
               _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}};
               _i_{{name}} += 1;
@@ -241,8 +241,8 @@ std::map:
       {{target_name}}.size = Int64({{name}}.count)
       var _i_{{name}} = 0
       for (key_{{name}}, val_{{name}}) in {{name}} {
-          {{args[0].snippet('key_{}'.format(name))|indent}}
-          {{args[1].snippet('val_{}'.format(name))|indent}}
+          {{args[0].snippet('key_{}'.format(name))|indent(4)}}
+          {{args[1].snippet('val_{}'.format(name))|indent(4)}}
           _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
           _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
           _i_{{name}} += 1
@@ -259,8 +259,8 @@ std::map:
           let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
           let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
           do {
-              {{args[0].snippet('key_{}'.format(name))|indent}}
-              {{args[1].snippet('value_{}'.format(name))|indent}}
+              {{args[0].snippet('key_{}'.format(name))|indent(8)}}
+              {{args[1].snippet('value_{}'.format(name))|indent(8)}}
               {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
           }
       }
@@ -273,8 +273,8 @@ std::map:
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
-          let {{name}}_item = {{name}}_data[_i]
-          {{args[1].snippet('{}_item'.format(name))|indent(2)}}
+            let {{name}}_item = {{name}}_data[_i]
+            {{args[1].snippet('{}_item'.format(name))|indent(4)}}
         }
         {%- endif %}
         {%- endif %}

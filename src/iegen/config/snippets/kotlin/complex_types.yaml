@@ -84,8 +84,11 @@ $Enum:
       {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
     kotlin_to_jdk:
       val {{target_name}} = {{name}}.value
-    jdk_to_kotlin:
-      val {{target_name}} = {{target_type_name}}.getByValue({{name}})!!
+    jdk_to_kotlin: |
+      val {{target_name}} = {{target_type_name}}.getByValue({{name}}) ?: run {
+          {{"println(\"Internal error: unresolved reference to non existing field of {} enum.\")".format(target_type_name)}}
+          exitProcess(1)
+      }
 
 const char *:
   custom:

@@ -44,6 +44,8 @@ enum class Color {
  * action: gen_enum
  * package: enums
  * enum_field_name_prefix: Shade
+ * enum_excluded_fields:
+ *   - InternalField
  */
 enum class ColorShade {
     /// Light = 1
@@ -58,7 +60,9 @@ enum class ColorShade {
     /**
      * SemiDark = 4
      */
-    SemiDark = 4
+    SemiDark = 4,
+    /// Unused field
+    InternalField = 5
 };
 // [example]
 }

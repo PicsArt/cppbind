@@ -182,6 +182,14 @@ public:
      * action: gen_method
      * throws: no_throw
      */
+	ColorShade optionalEnumWithInternalDefault(ColorShade c = ColorShade::InternalField) {
+	    return c;
+	}
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
 	const Task& optionalRefWithDefaultComplexValue(const Task& task = Task("MyTask")) {
 	    return task;
 	}

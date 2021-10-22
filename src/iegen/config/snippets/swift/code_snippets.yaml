@@ -289,7 +289,11 @@ constructor:
           {%- if owner_class.root.vars.shared_ref %}
           return new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object);
           {%- else %}
+          {%- if owner_class.root.cxx.type_name == owner_class.cxx.type_name %}
+          return this_object;
+          {%- else %}
           return static_cast<{{owner_class.root.cxx.type_name}}*>(this_object);
+          {%- endif %}
           {%- endif %}
       }
   ch:

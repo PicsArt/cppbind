@@ -13,15 +13,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include "cxx/inheritance/vehicle.hpp"
+#include "cxx/inheritance/car.hpp"
 
 namespace py = pybind11;
 
-void bindIegenExampleVehicle(py::module& m) {
+void bindIegenExampleMyCar(py::module& m) {
     using namespace iegen::example;
-    py::class_<iegen::example::Vehicle, std::shared_ptr<iegen::example::Vehicle>> vehicle(m, "Vehicle");
+    py::class_<iegen::example::MyCar, std::shared_ptr<iegen::example::MyCar>> myCar(m, "MyCar");
 
-
-    vehicle.def_property_readonly("number_of_seats", &iegen::example::Vehicle::numberOfSeats);
-    vehicle.def("type", &iegen::example::Vehicle::type);
+    myCar.def(py::init<int>(), py::arg("number_of_seats"));
+    myCar.def("type", &iegen::example::MyCar::type);
 }

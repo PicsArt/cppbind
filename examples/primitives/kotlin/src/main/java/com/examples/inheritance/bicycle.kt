@@ -33,7 +33,7 @@ internal constructor(_id: Long) : Vehicle(_id) {
     constructor(numberOfSeats: Int): this(construct_helper(numberOfSeats)) {
     }
     
-    open fun type(): String {
+    open override fun type(): String {
         val result = jType(getObjId())
         
         return result

@@ -32,11 +32,11 @@ stackPrj.push(prj)
 var stackUsage = StackUsage()
 var res = stackUsage.firstItemOfSpecializedStack(stackPrj)
 assert(res.title == prj.title)
-assert(res.getObjId() == prj.getObjId())
+assert(res.id == prj.id)
 
 res = stackUsage.firstItemOfTemplateStack(stackPrj)
 assert(res.title == prj.title)
-assert(res.getObjId() == prj.getObjId())
+assert(res.id == prj.id)
 // [stack-usage-examples]
 
 // [template-funcs-examples]

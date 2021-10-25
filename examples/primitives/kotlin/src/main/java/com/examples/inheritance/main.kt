@@ -28,9 +28,9 @@ assert(square.perimeter() == 20.0)
 
 // other test cases
 val gf = GeometricFigure(square)
-assert(gf.parallelogram.getObjId() == square.getObjId())
+assert(gf.parallelogram.id == square.id)
 gf.parallelogram = rhombus
-assert(gf.parallelogram.getObjId() == rhombus.getObjId())
+assert(gf.parallelogram.id == rhombus.id)
 
 val mv = MyVehicle(bicycle)
 mv.vehicle = bicycle

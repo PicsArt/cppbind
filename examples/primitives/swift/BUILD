@@ -114,6 +114,12 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "globs",
+    srcs = ["src/globs/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

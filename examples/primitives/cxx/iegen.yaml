@@ -46,6 +46,7 @@ vars:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
     - cxx/operators/intarray.hpp
+    - cxx/globs/*.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers/examples_lib')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
@@ -55,6 +56,7 @@ vars:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
     - cxx/operators/intarray.hpp
+    - cxx/globs/*.hpp
   swift.file_postfix: _swgen
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

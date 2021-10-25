@@ -22,7 +22,7 @@ class:
         }
 
 # code snippets for function
-function:
+method:
   my_lang:
     # example of snippet call which doesn't have source and target defined
     body: |

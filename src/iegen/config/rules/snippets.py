@@ -113,7 +113,8 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
             return_type_info = create_type_info(ctx, _cxx_type)
 
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+        if ctx.parent_context:
+            owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 
         overloading_prefix = ctx.overloading_prefix
         # capturing template related properties since we use single context with different template choice
@@ -136,6 +137,8 @@ def make_func_context(ctx):
             is_template=ctx.node.is_function_template,
             is_overloaded=cutil.is_overloaded(ctx.cursor),
             is_static=bool(ctx.cursor.is_static_method()),
+            namespace=ctx.namespace,
+            # for template methods
             is_override=False
         )
 
@@ -311,6 +314,11 @@ def gen_constructor(ctx, builder):
 
 
 def gen_method(ctx, builder):
+    context = make_func_context(ctx)
+    preprocess_entry(context, builder, 'method')
+
+
+def gen_function(ctx, builder):
     context = make_func_context(ctx)
     preprocess_entry(context, builder, 'function')
 

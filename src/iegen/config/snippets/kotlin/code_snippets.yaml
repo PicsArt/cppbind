@@ -386,7 +386,7 @@ constructor:
           {%- endif %}
       }
 
-function:
+method:
   kotlin:
     include: *var_method_kotlin_include
     body: |

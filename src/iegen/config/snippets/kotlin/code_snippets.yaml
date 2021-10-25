@@ -12,7 +12,7 @@ file:
       {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
       {%- set exc_vars = get_type_info("std::exception").vars %}
       {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
-      {{[helpers, exc_include, include, 'import kotlin.system.exitProcess']|sort_snippets|join(new_line)}}
+      {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
       {{body}}
   cxx:
     file_path: |

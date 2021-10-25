@@ -83,7 +83,7 @@ $Enum:
     sc_to_swift: |
       let {{target_name}}_optional = {{target_type_name}}(rawValue: {{name}})
       if ({{target_name}}_optional == nil) {
-          {{"fatalError(\"Internal error: unresolved reference to non existing field of {} enum.\")".format(target_type_name)}}
+          {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
       let {{target_name}} = {{target_name}}_optional!
 

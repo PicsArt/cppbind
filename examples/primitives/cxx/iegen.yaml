@@ -17,7 +17,7 @@ vars:
   out_prj_dir: "."
   cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
-    - cxx/**/*.hpp
+    - cxx/**/*.h*
   include_dirs:
     - .
   mac.include_dirs:
@@ -45,6 +45,7 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
+    - cxx/operators/intarray.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers/examples_lib')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
@@ -53,6 +54,7 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
+    - cxx/operators/intarray.hpp
   swift.file_postfix: _swgen
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

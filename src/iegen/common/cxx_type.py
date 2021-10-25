@@ -134,6 +134,10 @@ class CXXType:
         return cutil.get_unqualified_type_name(self.pointee_name)
 
     @property
+    def is_const_qualified(self):
+        return self.type_name.startswith('const')
+
+    @property
     def pointee_name(self):
         return cutil.replace_template_choice(
             self.pointee_type.type_.spelling if isinstance(self.type_, cli.Type) else self.pointee_type.type_,

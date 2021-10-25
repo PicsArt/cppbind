@@ -480,13 +480,14 @@ class RunRule:
     def allocate_all_contexts(self):
         logging.debug("Allocating context for all nodes")
         for node in self.ir.walk():
-            self.all_contexts.setdefault(node.full_displayname,
-                                         Context(self, node))
-            if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
-                # for template types also create a context with template choice
-                for template_ctx in RunRule._get_template_combinations(node):
-                    context = Context(self, node, template_ctx)
-                    self.all_contexts[context.cxx_type_name] = context
+            if node.api is not None:
+                self.all_contexts.setdefault(node.full_displayname,
+                                             Context(self, node))
+                if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+                    # for template types also create a context with template choice
+                    for template_ctx in RunRule._get_template_combinations(node):
+                        context = Context(self, node, template_ctx)
+                        self.all_contexts[context.cxx_type_name] = context
 
     @staticmethod
     def _get_template_combinations(node):

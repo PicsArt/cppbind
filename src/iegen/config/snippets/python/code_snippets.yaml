@@ -409,7 +409,7 @@ constructor:
 
 
 
-function:
+method:
   python:
     include: *var_method_python_include
     body: |

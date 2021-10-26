@@ -155,7 +155,7 @@ class:
                 {{companion|string|indent(8)}}
             }
             {% if all_bases_are_interface %}
-            protected var id = _id
+            protected var objId = _id
             {%- endif %}
             {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
@@ -163,12 +163,13 @@ class:
             {%- else %}
             {{'open '}}
             {%- endif -%}
-            fun getObjId(): Long {
-                if (id == 0L) {
-                    throw RuntimeException("Object is not allocated")
+            val id: Long
+                get() {
+                    if (objId == 0L) {
+                        throw RuntimeException("Object is not allocated")
+                    }
+                    return objId
                 }
-                return id
-            }
             {%- endif -%}
             {%- if head %}
             {{head|string|indent}}
@@ -182,9 +183,9 @@ class:
             {%- if all_bases_are_interface %}
 
             override fun close() {
-                if (id != 0L) {
-                    jFinalize(id)
-                    id = 0L
+                if (objId != 0L) {
+                    jFinalize(objId)
+                    objId = 0L
                 }
             }
 
@@ -229,7 +230,7 @@ interface:
         {%- endif %}
         interface {{converter.kotlin.target_type_name}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
-            fun getObjId(): Long
+            val id: Long
             {%- endif %}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -252,22 +253,23 @@ interface:
                 {{companion|string|indent(8)}}
             }
 
-            protected var id = _id
-            override fun getObjId(): Long {
-                if (id == 0L) {
-                    throw RuntimeException("Object is not allocated")
+            protected var objId = _id
+            override val id: Long
+                get() {
+                    if (objId == 0L) {
+                        throw RuntimeException("Object is not allocated")
+                    }
+                    return objId
                 }
-                return id
-            }
             {%- if head %}
             {{head|string|indent}}
             {%- endif %}
             {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
 
             override fun close() {
-                if (id != 0L) {
-                    jFinalize(id)
-                    id = 0L
+                if (objId != 0L) {
+                    jFinalize(objId)
+                    objId = 0L
                 }
             }
 
@@ -421,7 +423,7 @@ method:
       {%- endif %}
       {%- endif -%}
       {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
-          {%- set call_args = ['getObjId()'] -%}
+          {%- set call_args = ['id'] -%}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
@@ -601,9 +603,9 @@ property_getter:
       {{'var' if vars.action == 'gen_property_setter' else 'val'}} {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
               {%- if owner_class.vars.action == 'gen_interface' %}
-              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(getObjId())
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(id)
               {%- else %}
-              val result = j{{vars.name|capitalize}}(getObjId())
+              val result = j{{vars.name|capitalize}}(id)
               {%- endif %}
               {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
@@ -613,9 +615,9 @@ property_getter:
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
               {%- if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.jSet{{vars.name|lower}}(getObjId(), {{converter.converted_name('value')}})
+              {{owner_name}}Helper.jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}})
               {%- else %}
-              jSet{{vars.name|lower}}(getObjId(), {{converter.converted_name('value')}})
+              jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}})
               {%- endif %}
           }
           {% endif %}
@@ -681,9 +683,9 @@ getter:
                                              {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
               {%- if owner_class.vars.action == 'gen_interface' %}
-              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{template_postfix}}(getObjId())
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{template_postfix}}(id)
               {%- else %}
-              val result = j{{vars.name|capitalize}}{{template_postfix}}(getObjId())
+              val result = j{{vars.name|capitalize}}{{template_postfix}}(id)
               {%- endif %}
               {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
@@ -702,9 +704,9 @@ getter:
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
               {%- if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
+              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
               {%- else %}
-              j{{setter.vars.name|capitalize}}{{template_postfix}}(getObjId(), {{converter.converted_name('value')}})
+              j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
               {%- endif %}
           }
           {%- endif %}

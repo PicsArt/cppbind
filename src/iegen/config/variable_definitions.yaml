@@ -286,3 +286,9 @@ enum_field_name_prefix:
   inheritable: false
   default: ''
   allowed_on: [ enum ]
+
+enum_excluded_fields:
+  inheritable: false
+  default: [ ]
+  allowed_on: [ enum ]
+  type: list

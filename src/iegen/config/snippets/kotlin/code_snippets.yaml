@@ -43,15 +43,17 @@ enum:
       enum class {{vars.name}}(val value: Int){{': ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}
+          {%- if case.name not in vars.enum_excluded_fields -%}
           {{comma()}}
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           {{vars.enum_field_name_prefix + case.name}}({{case.value}})
+          {%- endif %}
           {%- endfor %};
 
           companion object {
-              private val values = values();
+              private val values = values()
               fun getByValue(value: Int) = values.firstOrNull { it.value == value }
           }
           {%- if vars.code_fragment %}
@@ -147,7 +149,7 @@ class:
             companion object {
                 {%- if all_bases_are_interface %}
                 init {
-                    System.loadLibrary("{{vars.c_wrapper_lib_name}}");
+                    System.loadLibrary("{{vars.c_wrapper_lib_name}}")
                 }
                 {%- endif %}
                 {{companion|string|indent(8)}}
@@ -165,7 +167,7 @@ class:
                 if (id == 0L) {
                     throw RuntimeException("Object is not allocated")
                 }
-                return id;
+                return id
             }
             {%- endif -%}
             {%- if head %}
@@ -245,7 +247,7 @@ interface:
         internal constructor(_id: Long) : {{converter.kotlin.target_type_name}} {
             companion object {
                 init {
-                    System.loadLibrary("{{vars.c_wrapper_lib_name}}");
+                    System.loadLibrary("{{vars.c_wrapper_lib_name}}")
                 }
                 {{companion|string|indent(8)}}
             }
@@ -255,7 +257,7 @@ interface:
                 if (id == 0L) {
                     throw RuntimeException("Object is not allocated")
                 }
-                return id;
+                return id
             }
             {%- if head %}
             {{head|string|indent}}
@@ -322,7 +324,7 @@ constructor:
     head: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -331,7 +333,11 @@ constructor:
       constructor({%- for arg in args -%}
       {{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
       {%- elif arg.is_null_ptr %} = null
@@ -392,7 +398,7 @@ method:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
       {%- endif -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
@@ -403,7 +409,11 @@ method:
       {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
       {%- elif arg.is_null_ptr %} = null
@@ -581,7 +591,7 @@ property_getter:
     include: *var_getter_kotlin_include
     properties: |
       {%- if not cxx.is_public -%}
-        {%- do Error.critical(owner_class.cxx.displayname + "." + cxx.displayname + " is not a public field. Make it public or remove iegen API.") -%}
+        {%- do Error.critical("{}.{} is not a public field. Make it public or remove iegen API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {%- set owner_name = owner_class.converter.kotlin.target_type_name -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
@@ -681,7 +691,7 @@ getter:
           {%- if setter is defined %}
           {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
           {%- if incorrect_nullable_args -%}
-            {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + setter.owner_class.cxx.displayname + "." + setter.cxx.displayname + " does not have such arguments.") -%}
+            {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
           {%- endif -%}
           {%- set converter = setter.args[0].converter.kotlin_to_jdk %}
           {%- if cxx.is_override %}

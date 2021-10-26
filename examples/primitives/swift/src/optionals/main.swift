@@ -26,6 +26,7 @@ let task = Task(title: "my task")
 assert(op.optionalPtrWithNullptrDefault(task: task)!.cself == task.cself)
 assert(op.optionalEnumWithDefault(c: Color.Blue) == Color.Blue)
 assert(op.optionalEnumWithDefaultAndFieldPrefix(c: ColorShade.ShadeDark) == ColorShade.ShadeDark)
+assert(op.optionalEnumWithInternalDefault(c: ColorShade.ShadeLight) == ColorShade.ShadeLight)
 assert(op.optionalBoolWithDefault(value: false) == false)
 assert(op.optionalStringViewWithDefault(optionalStr: "test") == "test")
 // TODO add char converter

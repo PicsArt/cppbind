@@ -60,10 +60,12 @@ enum:
       {{vars.comment|make_doxygen_comment}}
       public enum {{vars.name}}: CUnsignedInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- for case in enum_cases -%}
+          {%- if case.name not in vars.enum_excluded_fields -%}
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           case {{vars.enum_field_name_prefix + case.name}} = {{case.value}}
+          {%- endif %}
           {%- endfor %}
           {%- if vars.code_fragment %}
 
@@ -245,14 +247,18 @@ constructor:
     head: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       public convenience init(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}
       {%- elif arg.is_null_ptr %} = nil
@@ -307,7 +313,7 @@ method:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
@@ -320,7 +326,11 @@ method:
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}
       {%- elif arg.is_null_ptr %} = nil
@@ -449,14 +459,18 @@ function:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.displayname)) -%}
       {%- endif -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {% set comma = joiner(', ') %}
       {{vars.comment|make_doxygen_comment}}
       public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}
       {%- elif arg.is_null_ptr %} = nil
@@ -592,7 +606,7 @@ property_getter:
   swift:
     properties: |
       {%- if not cxx.is_public -%}
-        {%- do Error.critical(owner_class.cxx.displayname + "." + cxx.displayname + " is not a public field. Make it public or remove iegen API.") -%}
+        {%- do Error.critical("{}.{} is not a public field. Make it public or remove iegen API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {% set result_converter = rconverter.sc_to_swift %}
       {{vars.comment|make_doxygen_comment}}
@@ -674,7 +688,7 @@ getter:
           {% if setter is defined %}
           {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
           {%- if incorrect_nullable_args -%}
-            {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + setter.owner_class.cxx.displayname + "." + setter.cxx.displayname + " does not have such arguments.") -%}
+            {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
           {%- endif %}
           {% set converter = setter.args[0].converter.swift_to_sc %}
           set(value) {

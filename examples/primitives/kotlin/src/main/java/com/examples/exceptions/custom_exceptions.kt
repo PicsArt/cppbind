@@ -19,7 +19,7 @@ open class SimpleBaseException
 internal constructor(_id: Long) : AutoCloseable, Exception() {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
         protected fun construct_helper(err_num: Int): Long {
@@ -38,7 +38,7 @@ internal constructor(_id: Long) : AutoCloseable, Exception() {
             if (objId == 0L) {
                 throw RuntimeException("Object is not allocated")
             }
-            return objId;
+            return objId
         }
     
     constructor(err_num: Int): this(construct_helper(err_num)) {

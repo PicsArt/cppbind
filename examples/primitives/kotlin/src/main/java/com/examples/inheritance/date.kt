@@ -19,7 +19,7 @@ open class Date
 internal constructor(_id: Long) : IBase, AutoCloseable {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
         protected fun construct_helper(d: Int, m: Int, y: Int): Long {
@@ -37,7 +37,7 @@ internal constructor(_id: Long) : IBase, AutoCloseable {
             if (objId == 0L) {
                 throw RuntimeException("Object is not allocated")
             }
-            return objId;
+            return objId
         }
     
     constructor(d: Int, m: Int, y: Int): this(construct_helper(d, m, y)) {

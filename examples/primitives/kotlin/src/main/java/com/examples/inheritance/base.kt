@@ -40,7 +40,7 @@ open class BaseImpl
 internal constructor(_id: Long) : IBase {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
     }

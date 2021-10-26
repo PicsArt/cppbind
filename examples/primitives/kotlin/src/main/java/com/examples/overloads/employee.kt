@@ -19,7 +19,7 @@ open class Employee
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
         protected fun construct_helper(name: String): Long {
@@ -46,7 +46,7 @@ internal constructor(_id: Long) : AutoCloseable {
             if (objId == 0L) {
                 throw RuntimeException("Object is not allocated")
             }
-            return objId;
+            return objId
         }
     
     constructor(name: String): this(construct_helper(name)) {

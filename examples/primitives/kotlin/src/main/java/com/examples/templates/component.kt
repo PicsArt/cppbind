@@ -24,7 +24,7 @@ open class Component
 internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
         /**
@@ -46,7 +46,7 @@ internal constructor(_id: Long) : IAddressableRoot, AutoCloseable {
             if (objId == 0L) {
                 throw RuntimeException("Object is not allocated")
             }
-            return objId;
+            return objId
         }
     
     /**

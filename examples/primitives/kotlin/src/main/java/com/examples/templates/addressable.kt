@@ -49,7 +49,7 @@ open class AddressableImplRoot
 internal constructor(_id: Long) : IAddressableRoot {
     companion object {
         init {
-            System.loadLibrary("wrapper_jni");
+            System.loadLibrary("wrapper_jni")
         }
         
         /**

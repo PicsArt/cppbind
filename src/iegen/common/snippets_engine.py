@@ -59,10 +59,10 @@ class Action:
 class FileAction(Action):
     """Class represents file actions"""
 
-    def __init__(self, src_glob_tmpls, dest_glob_tmpl, variables_tmpl):
+    def __init__(self, src_glob_tmpls, dest_tmpl, variables_tmpl):
         super().__init__('file_action')
         self.src_glob_tmpls = src_glob_tmpls
-        self.dest_glob_tmpl = dest_glob_tmpl
+        self.dest_tmpl = dest_tmpl
         self.variables_tmpl = variables_tmpl
 
     def do(self, ctx):
@@ -86,8 +86,8 @@ class FileAction(Action):
 
         for src_file in [fl for gl in src_globs for fl in sorted(glob.glob(gl, recursive=True))]:
             context['file_name'] = src_file
-            if self.dest_glob_tmpl:
-                target_file = self.dest_glob_tmpl.render(context)
+            if self.dest_tmpl:
+                target_file = self.dest_tmpl.render(context)
                 if target_file:
                     self.do_main_action(src_file, target_file, context)
 

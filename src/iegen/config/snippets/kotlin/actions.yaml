@@ -24,7 +24,7 @@
       - "{{[vars.helpers_dir, '**/*.java'] | path_join}}"
     render_to: |
       {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-      {{path.join(vars.out_dir, vars.helpers_out_dir, file_rel_name)}}
+      {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
     variables:
       helper_includes: |

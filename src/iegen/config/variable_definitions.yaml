@@ -194,7 +194,7 @@ helpers_package_prefix:
 
 helpers_out_dir:
   inheritable: true
-  kotlin.default: '{{helpers_package_prefix|replace(".", path.sep)}}'
+  kotlin.default: '{{path.join(out_dir, helpers_package_prefix|replace(".", path.sep))}}'
   allowed_on: [ root ]
 
 helpers_include_prefix:

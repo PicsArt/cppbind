@@ -102,6 +102,7 @@ Now let's go through the variables one by one:
     - *cxx_base_out_dir* - The directory where iegen base classes are copied. If user does not want to use iegen base classes then there's no need to specify this variable.
     - *package_prefix* - Package prefix where generated files will be saved.
     - *helpers_package_prefix* - This is a path relative to **out_dir** where python helpers from **helpers_dir** are copied.
+    - *helpers_out_dir* - Directory where helper/util files must be copied to.
     - *helpers_include_prefix* - The generated python code might be used as a submodule. In this case we have to attach appropriate prefix to helper includes. This parameter is used for this purpose.
     - *common_helpers_dir* - This directory containing iegen standard helper files per language.
     - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language.

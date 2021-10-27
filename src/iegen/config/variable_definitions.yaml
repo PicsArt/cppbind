@@ -189,7 +189,12 @@ package_prefix:
 
 helpers_package_prefix:
   inheritable: true
-  default: '{{package_prefix}}'
+  default: '{{package_prefix + ".iegen"}}'
+  allowed_on: [ root ]
+
+helpers_out_dir:
+  inheritable: true
+  kotlin.default: '{{helpers_package_prefix|replace(".", path.sep)}}'
   allowed_on: [ root ]
 
 helpers_include_prefix:

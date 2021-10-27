@@ -29,7 +29,6 @@ public:
      * __API__
      * action: gen_method
      * kotlin.name: get
-     * kotlin.is_operator: False
      * throws: no_throw
      */
 	int& operator[](int i) {
@@ -43,7 +42,6 @@ public:
      * __API__
      * action: gen_method
      * kotlin.name: get
-     * kotlin.is_operator: False
      * throws: no_throw
      */
 	const int& operator[](std::string i) {

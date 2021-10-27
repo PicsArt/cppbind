@@ -5,8 +5,6 @@
 
 namespace Example {
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: shared_ptr
@@ -15,8 +13,6 @@ namespace Example {
 class Car {
     public:
     /**
-    * comments
-    *
     * __API__
     * action: gen_constructor
     */
@@ -32,8 +28,6 @@ class Car {
     }
 
     /**
-     * comments
-     *
      * __API__
      * action: gen_method
      * throws: no_throw
@@ -41,9 +35,35 @@ class Car {
     void setCostWithCarSharedPtr(std::shared_ptr<Car> sp) {
         _cost = sp.get()->cost();
     }
+
+     /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void setCostWithCar(Car sp) {
+        _cost = sp.cost();
+    }
+
     /**
-     * comments
-     *
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void setCostWithCarRef(Car& sp) {
+        _cost = sp.cost();
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void setCostWithCarPtr(Car* sp) {
+        _cost = sp->cost();
+    }
+
+    /**
      * __API__
      * action: gen_method
      * throws: no_throw

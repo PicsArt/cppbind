@@ -28,6 +28,17 @@ class SharedPtrApp {
             val car3 = Car(30000)
             cheapCar.setCostWithCarPtr(car3)
             assert(cheapCar.cost == car3.cost)
+
+            val carUsageObj = CarUsage(cheapCar)
+
+            val returnedCar = carUsageObj.getCar()
+            assert(returnedCar.cost == cheapCar.cost)
+
+            val returnedCarPtr = carUsageObj.getCarPtr()
+            assert(returnedCarPtr.cost == cheapCar.cost)
+
+            val returnedCarRef = carUsageObj.getCarRef()
+            assert(returnedCarRef.cost == cheapCar.cost)
             // [shared_ptr-usage]
 
        }

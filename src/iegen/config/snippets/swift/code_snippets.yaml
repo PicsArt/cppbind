@@ -494,7 +494,7 @@ property_getter:
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
-          auto result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
+          const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
           {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
@@ -574,7 +574,7 @@ getter:
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself){
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
-          auto result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
+          const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
           {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }

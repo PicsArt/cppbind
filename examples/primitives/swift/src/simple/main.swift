@@ -21,3 +21,9 @@ let path = "/path/to/root"
 let root = Root(_path: path)
 assert(root.path == path)
 // [root-usage]
+
+// test for checking how const& return type is handled by pybind
+let holder = Holder()
+print(holder.task.title)
+holder.task.setTitle(title: "My First Task Edited")
+assert(holder.task.title == "My First Task Edited")

@@ -22,8 +22,8 @@ assert(prj.tasks()[0].title == task1.title)
 
 // test for checking how const& return type is handled by pybind
 val holder = Holder()
-println(holder.task.title)
-//this raises bad allocation error as we create a copy of const reference uncomment after fix
+//this raises bad allocation error as we create a copy of const reference uncomment after fix #309
+//println(holder.task.title)
 //holder.task.setTitle("My First Task Edited")
 //assert(holder.task.title == "My First Task Edited")
 

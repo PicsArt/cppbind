@@ -321,14 +321,23 @@ std::shared_ptr:
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_base = args[0].cxx.root_type_name %}
+      {%- set pointee = args[0].cxx.type_name %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
+          {%- if pointee_base != pointee %}
           {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
+          {%- else %}
+          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{name}}));
+          {%- endif %}
       }
       {%- else %}
+      {%- if pointee_base != pointee %}
       {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
+      {%- else %}
+      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{name}}));
+      {%- endif %}
       {%- endif %}
     swift_to_sc: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}

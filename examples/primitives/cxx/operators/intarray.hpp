@@ -52,6 +52,20 @@ public:
          return arr[ii];
     }
 
+    /**
+     * __API__
+     * action: gen_method
+     * kotlin.name: get
+     * throws: no_throw
+     */
+	int operator[](double i) {
+	     int ii = static_cast<int>(i);
+         if( ii > SIZE ) {
+            return arr[0];
+         }
+         return arr[ii];
+    }
+
 private:
 	int arr[10];
 };

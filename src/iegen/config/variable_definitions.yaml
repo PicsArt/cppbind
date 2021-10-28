@@ -189,12 +189,12 @@ package_prefix:
 
 helpers_package_prefix:
   inheritable: true
-  default: '{{package_prefix}}'
+  default: '{{package_prefix}}{{"." if package_prefix}}iegen'
   allowed_on: [ root ]
 
-helpers_include_prefix:
+helpers_out_dir:
   inheritable: true
-  default: '{{helpers_package_prefix}}'
+  default: '{{path.abspath(path.join(out_dir, helpers_package_prefix|replace(".", path.sep)))}}'
   allowed_on: [ root ]
 
 common_helpers_dir:

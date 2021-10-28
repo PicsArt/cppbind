@@ -532,13 +532,13 @@ method:
       {%- endif %}
       {%- if not 'std::exception' in vars.throws %}
       catch (const std::exception& e) {
-            jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
       }
       {%- endif %}
       catch (...) {
-            jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
       }
@@ -744,13 +744,13 @@ getter:
       {%- endif %}
       {%- if not 'std::exception' in vars.throws %}
           catch (const std::exception& e) {
-              jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
+              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
           }
       {%- endif %}
           catch (...) {
-              jclass handlerCls = env->FindClass("exceptionUtils/ExceptionHandler");
+              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
           }

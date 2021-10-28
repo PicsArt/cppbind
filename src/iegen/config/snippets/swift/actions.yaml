@@ -23,12 +23,7 @@
       - "{{[vars.helpers_dir, '**/*.swift'] | path_join}}"
     copy_to: |
       {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-      {{path.join(vars.out_dir, file_rel_name)}}
-
-    variables:
-      helper_includes: |
-        {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-        {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
+      {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
 - file:
     files_glob:

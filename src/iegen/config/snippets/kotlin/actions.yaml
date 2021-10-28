@@ -29,7 +29,7 @@
     variables:
       helper_includes: |
         {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-        {{vars.helpers_package_prefix + '.' + path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
+        {{vars.helpers_package_prefix}}{{'.' if vars.helpers_package_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
 - file:
     files_glob:

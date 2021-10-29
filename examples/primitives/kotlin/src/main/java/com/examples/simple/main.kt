@@ -22,7 +22,7 @@ assert(prj.tasks()[0].title == task1.title)
 
 // test for checking how const& return type is handled by pybind
 val holder = Holder()
-assert(holder.task.title == "My First Task Edited")
+assert(holder.task.title == "Initial title")
 holder.task.setTitle("My First Task Edited")
 assert(holder.task.title == "My First Task Edited")
 

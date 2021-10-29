@@ -184,7 +184,8 @@ void* _Nonnull _func_CarUsage_getCarPtr(void* _Nonnull cself, ErrorObj* _Nonnull
 
         /// manually added
         void* cxx_to_c_result;
-        std::shared_ptr<Example::Car> result_shared_ptr = std::make_shared<Example::Car>(*result);
+        // std::shared_ptr<Example::Car> result_shared_ptr = std::make_shared<Example::Car>(*result);
+        std::shared_ptr<Example::Car> result_shared_ptr {const_cast<Example::Car*>(result), [](Example::Car* p) {}};
         cxx_to_c_result = reinterpret_cast<void*>(new std::shared_ptr<Example::Car>(std::static_pointer_cast<Example::Car>(result_shared_ptr)));
         return cxx_to_c_result;
 
@@ -212,7 +213,8 @@ void* _Nonnull _func_CarUsage_getCarRef(void* _Nonnull cself, ErrorObj* _Nonnull
 
         /// manually added
         void* cxx_to_c_result;
-        std::shared_ptr<Example::Car> result_shared_ptr = std::make_shared<Example::Car>(result);
+        // std::shared_ptr<Example::Car> result_shared_ptr = std::make_shared<Example::Car>(result);
+        std::shared_ptr<Example::Car> result_shared_ptr {const_cast<Example::Car*>(&result), [](Example::Car* p) {}};
         cxx_to_c_result = reinterpret_cast<void*>(new std::shared_ptr<Example::Car>(std::static_pointer_cast<Example::Car>(result_shared_ptr)));
         return cxx_to_c_result;
 

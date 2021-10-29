@@ -16,6 +16,13 @@ Notice that for swift we have also used **bases_list** variable to make the enum
 We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
 prefix string to enum field names in target language.
 
+If there are cases when some of original enum fields are for internal usage
+and user doesn't want to expose them in target language wrappers, then **enum_excluded_fields** variable can be used to specify
+the list of excluded fields. In case those fields are used as a default value for a function/constructor argument, iegen will
+skip that default value generation in target language wrappers. If user has a function which returns an excluded enum field,
+iegen terminates the main program during the function call and provides the user with an appropriate error message (except of python,
+since currently pybind sets some constraints on iegen).
+
 And the Frame struct using it:
 
 .. literalinclude:: /../examples/primitives/cxx/enums/frame.hpp

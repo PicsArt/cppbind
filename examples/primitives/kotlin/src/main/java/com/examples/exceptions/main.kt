@@ -2,7 +2,7 @@ package com.examples.exceptions
 
 import com.examples.exceptions.*
 import com.examples.exception_helpers.*
-import exceptionUtils.*
+import com.examples.iegen.exceptionUtils.*
 
 
 fun logger(errMsg: String) : Unit {

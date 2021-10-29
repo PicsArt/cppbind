@@ -102,7 +102,7 @@ Now let's go through the variables one by one:
     - *cxx_base_out_dir* - The directory where iegen base classes are copied. If user does not want to use iegen base classes then there's no need to specify this variable.
     - *package_prefix* - Package prefix where generated files will be saved.
     - *helpers_package_prefix* - This is a path relative to **out_dir** where python helpers from **helpers_dir** are copied.
-    - *helpers_include_prefix* - The generated python code might be used as a submodule. In this case we have to attach appropriate prefix to helper includes. This parameter is used for this purpose.
+    - *helpers_out_dir* - Directory where helper/util files must be copied to.
     - *common_helpers_dir* - This directory containing iegen standard helper files per language.
     - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language.
     - *helpers_dir* - Directory containing iegen helpers. This is different for each language.
@@ -118,6 +118,7 @@ Now let's go through the variables one by one:
     - *extra_headers* - Extra headers to be processed. For example standard exceptions headers which are required to generate target language bindings for them.
     - *target_arch* - Variable for setting target architecture.
     - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
+    - *enum_excluded_fields* - A list of enum field names which must be not exposed in target language.
 
 .. note::
 

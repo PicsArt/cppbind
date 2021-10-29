@@ -67,7 +67,7 @@ class WrapperGenerator:
         ir_builder.end_root()
 
         if Error.has_error():
-            raise Error.critical('Cannot continue: iegen error has occurred')
+            Error.critical('Cannot continue: iegen error has occurred')
 
         ir = ir_builder.ir
         logging.debug("IR is ready.")

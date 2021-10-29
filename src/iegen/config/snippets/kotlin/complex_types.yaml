@@ -61,7 +61,7 @@ $Object:
       {{cxx.root_type_name}}* {{target_name}}_baseptr = {{'&' if cxx.is_reference}}{{tmp_name}};
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
     kotlin_to_jdk: |
-      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.getObjId(){{' ?: 0L' if nullable|default(False)}}
+      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
       {%- if nullable|default(False)-%}
       val {{target_name}} = if ({{name}} == 0L) null else {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}})
@@ -84,8 +84,12 @@ $Enum:
       {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
     kotlin_to_jdk:
       val {{target_name}} = {{name}}.value
-    jdk_to_kotlin:
-      val {{target_name}} = {{target_type_name}}.getByValue({{name}})!!
+    jdk_to_kotlin: |
+      val {{target_name}}_optional = {{target_type_name}}.getByValue({{name}})
+      if ({{target_name}}_optional == null) {
+          {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
+      }
+      val {{target_name}} = {{target_name}}_optional!!
 
 const char *:
   custom:

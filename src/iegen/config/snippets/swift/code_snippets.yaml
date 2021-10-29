@@ -60,10 +60,12 @@ enum:
       {{vars.comment|make_doxygen_comment}}
       public enum {{vars.name}}: CUnsignedInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- for case in enum_cases -%}
+          {%- if case.name not in vars.enum_excluded_fields -%}
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
           case {{vars.enum_field_name_prefix + case.name}} = {{case.value}}
+          {%- endif %}
           {%- endfor %}
           {%- if vars.code_fragment %}
 
@@ -222,6 +224,9 @@ interface:
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
+    {%- if vars.is_proj_type -%}
+    #include "{{vars.prj_rel_file_name}}"
+    {%- endif -%}
     {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
@@ -242,14 +247,18 @@ constructor:
     head: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
       public convenience init(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}
       {%- elif arg.is_null_ptr %} = nil
@@ -303,12 +312,12 @@ constructor:
         {{owner_class.converter.c.target_type_name}} _Nonnull create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
         {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
 
-function:
+method:
   swift:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + owner_class.cxx.displayname + "." + cxx.displayname + " does not have such arguments.") -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {{vars.comment|make_doxygen_comment}}
       {%- set comma = joiner(', ') %}
@@ -321,7 +330,11 @@ function:
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
       {%- else -%}
       {%- if arg.is_literal %} = {{arg.default}}
       {%- elif arg.is_null_ptr %} = nil
@@ -444,6 +457,143 @@ function:
         {{owner_class.converter.c.target_type_name}} _Nonnull cself, {% endif -%}
         {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
 
+
+function:
+  swift:
+    body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.displayname)) -%}
+      {%- endif -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {% set comma = joiner(', ') %}
+      {{vars.comment|make_doxygen_comment}}
+      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}
+      {%- elif arg.is_null_ptr %} = nil
+      {%- endif %}
+      {%- endif %}
+      {%- endif %}
+      {%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+          {%- set call_args = [] %}
+          {%- for arg in args %}
+          {%- set converter = arg.converter.swift_to_sc %}
+          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent}}
+          {%- do call_args.append(converter.converted_name(arg.name))%}
+          {%- endfor %}
+          var err = ErrorObj()
+          {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+          {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
+          {%- if rconverter.c.target_type_name != 'void' %}
+          let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+          {{rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return)|indent}}
+          {%- else %}
+          {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+          {%- endif %}
+          {%- for arg in args %}
+          {%- if arg.converter.sc_cleanup %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet('swift_to_sc_' + arg.name) %}
+          {%- if cleanup_code_fragment %}
+          {{cleanup_code_fragment|indent}}
+          {%- endif %}
+          {%- endif %}
+          {%- endfor %}
+          let err_type = Int(err.err_type)
+          if (err_type != 0) {
+              switch(err_type) {
+                  {%- if 'no_throw' not in vars.throws %}
+                  {%- for exc_type in vars.throws %}
+                  case({{loop.index}}):
+                      throw {{get_type_info(exc_type).vars.name}}(err.err_ptr, true)
+                  {%- endfor %}
+                  {%- endif %}
+                  {%- if not 'std::exception' in vars.throws %}
+                  case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(err.err_ptr, true)
+                      ExceptionHandler.handleUncaughtException(exc_obj.what())
+                  {%- endif %}
+                  default:
+                      ExceptionHandler.handleUncaughtException("Uncaught Exception")
+              }
+          }
+          {%- if rconverter.c.target_type_name != 'void' %}
+          return {{rconverter.sc_to_swift.converted_name('result')}}
+          {%- endif %}
+      }
+  cc:
+    include: *var_method_cxx_include
+    body: |
+      {%- set comma = joiner(', ') %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix))}}(
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
+      {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err) {
+          {%- set call_args = [] %}
+          {%- for arg in args -%}
+          {%- set converter = arg.converter.c_to_cxx %}
+          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent(4)}}
+          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- endfor %}
+          {%- if rconverter.c.target_type_name != 'void' %}
+          try {
+              const auto& result = {{cxx.namespace}}::{{cxx.name}}
+                                   {%- if cxx.is_template -%}
+                                   <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                   {%- endif -%}({{call_args|join(', ')}});
+              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              return {{rconverter.cxx_to_c.converted_name('result')}};
+          }
+          {%- else %}
+          try {
+              {{cxx.name}}{%- if cxx.is_template -%}
+              <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+              {%- endif -%}({{call_args|join(', ')}});
+          }
+          {%- endif %}
+          {%- if 'no_throw' not in vars.throws %}
+          {%- for exc_type in vars.throws -%}
+          catch (const {{exc_type}}& e) {
+              err->err_type = {{loop.index}};
+              err->err_ptr = new {{exc_type}}(e);
+          }
+          {%- endfor %}
+          {%- endif %}
+          {%- if not 'std::exception' in vars.throws %}
+          catch (const std::exception& e) {
+              err->err_type = {{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}};
+              err->err_ptr = new std::exception(e);
+          }
+          {%- endif %}
+          catch (...) {
+              err->err_type = -1;
+          }
+
+          {%- if rconverter.c.target_type_name != 'void' %}
+          {{rconverter.c.target_type_name}} result;
+          return result;
+          {%- endif %}
+      }
+  ch:
+    body:
+      content: |
+        {%- set comma = joiner(', ') %}
+        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
+        {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
+        {%- for arg in args -%}
+        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}
+        {%- endfor -%}{{', ' if args}}ErrorObj* _Nonnull err);
+
+
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
     {%- macro gen_include(type_info) -%}
@@ -460,7 +610,7 @@ property_getter:
   swift:
     properties: |
       {%- if not cxx.is_public -%}
-        {%- do Error.critical(owner_class.cxx.displayname + "." + cxx.displayname + " is not a public field. Make it public or remove iegen API.") -%}
+        {%- do Error.critical("{}.{} is not a public field. Make it public or remove iegen API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {% set result_converter = rconverter.sc_to_swift %}
       {{vars.comment|make_doxygen_comment}}
@@ -542,7 +692,7 @@ getter:
           {% if setter is defined %}
           {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
           {%- if incorrect_nullable_args -%}
-            {%- do Error.critical(', '.join(incorrect_nullable_args) + " arguments are marked as nullable but " + setter.owner_class.cxx.displayname + "." + setter.cxx.displayname + " does not have such arguments.") -%}
+            {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
           {%- endif %}
           {% set converter = setter.args[0].converter.swift_to_sc %}
           set(value) {

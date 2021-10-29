@@ -506,7 +506,7 @@ method:
       {%- endif -%}
       {% if rconverter.jni.target_type_name != 'void' %}
       try {
-          auto result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
+          const auto& result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
                                               <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                               {%- endif -%}({{call_args|join(', ')}});
           {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
@@ -646,7 +646,7 @@ property_getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          auto result = {{this_converter.converted_name('id')}}->{{cxx.name}};
+          const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}};
           {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
@@ -773,7 +773,7 @@ getter:
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-              auto result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
+              const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
               {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }

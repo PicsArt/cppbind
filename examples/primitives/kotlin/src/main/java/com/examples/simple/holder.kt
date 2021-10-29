@@ -15,26 +15,20 @@ import com.examples.exception_helpers.*
 import com.examples.iegen.alias.*
 import com.examples.iegen.exceptionUtils.*
 
-/**
- * Class holding task information.
- */
-open class Task
+open class Holder
 internal constructor(_id: Long) : AutoCloseable {
     companion object {
         init {
             System.loadLibrary("wrapper_jni")
         }
         
-        /**
-         * Task Constructor.
-         */
-        protected fun construct_helper(title: String): Long {
-            val id = jConstructor(title)
+        protected fun construct_helper(): Long {
+            val id = jConstructor()
             return id
         }
 
         @JvmStatic
-        private external fun jConstructor(title: String): Long
+        private external fun jConstructor(): Long
     }
     
     protected var objId = _id
@@ -47,30 +41,15 @@ internal constructor(_id: Long) : AutoCloseable {
             return objId
         }
     
-    /**
-     * Task Constructor.
-     */
-    constructor(title: String): this(construct_helper(title)) {
+    constructor(): this(construct_helper()) {
     }
     
-    /**
-     * Get objects title.
-     */
-    val title: String
+    val task: Task
         get() {
-            val result = jTitle(id)
-            
-            return result
+            val result = jTask(id)
+            val jdk_to_kotlin_result = Task(result)
+            return jdk_to_kotlin_result
         }
-    
-    /**
-     * Get objects title.
-     */
-    fun setTitle(title: String): Unit {
-        val result = jSettitle(id, title)
-        
-        return result
-    }
 
     override fun close() {
         if (objId != 0L) {
@@ -87,7 +66,6 @@ internal constructor(_id: Long) : AutoCloseable {
     }
 
     ///// External wrapper functions ////////////
-    private external fun jTitle(id: Long): String
-    private external fun jSettitle(id: Long, title: String): Unit
+    private external fun jTask(id: Long): Long
     private external fun jFinalize(id: Long): Unit
 }

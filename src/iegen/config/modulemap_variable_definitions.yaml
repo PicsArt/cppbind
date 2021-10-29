@@ -1,0 +1,16 @@
+modulemap_file:
+  inheritable: true
+  default: IEGen
+  allowed_on: [ root ]
+
+modulemap_out_dir:
+  inheritable: true
+  default: "{{cxx_out_dir}}"
+  allowed_on: [ root ]
+
+modulemap_export:
+  inheritable: true
+  default: |
+    export *
+    module * { export * }
+  allowed_on: [ root ]

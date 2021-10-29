@@ -60,8 +60,6 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
 
-#  swift.c_wrapper_lib_name: Examples.CWrapper
-
 var_def:
   !join
   - !include variable_definitions.yaml

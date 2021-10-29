@@ -8,6 +8,13 @@ file:
   default: '{{_file_name}}'
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
+c_file:
+  inheritable: true
+  kotlin.default: '{{file}}'
+  python.default: '{{file}}'
+  swift.default: 'c_{{file}}'
+  allowed_on: [ class, class_template, struct, struct_template, enum ]
+
 file_full_name:
   inheritable: true
   default: '{{_file_full_name}}'
@@ -287,7 +294,7 @@ enum_field_name_prefix:
   default: ''
   allowed_on: [ enum ]
 
-modulemap_name:
-  inheritable: True
-  default: IEGen
+cxx_out_rel_path:
+  inheritable: true
+  default: "path.relpath(cxx_out_dir, out_prj_dir) "
   allowed_on: [ root ]

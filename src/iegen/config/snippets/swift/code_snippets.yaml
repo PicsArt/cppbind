@@ -12,7 +12,7 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, 'c_' + vars.file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.c_file]|map('replace', '.', pat_sep)|path_join}}.cpp
     scopes:
       - namespace
       - body
@@ -22,14 +22,14 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package]|map('replace', '.', pat_sep)|path_join, vars.out_prj_dir)}}/c_{{vars.file}}.h"
+      #include "{{path.relpath(vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package]|map('replace', '.', pat_sep)|path_join, vars.out_prj_dir)}}/{{vars.c_file}}.h"
       {{include}}
       {{namespace}}
 
       {{body}}
   ch:
     file_path: |
-      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, 'c_' + vars.file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.c_file]|map('replace', '.', pat_sep)|path_join}}.h
     scopes:
       - body
       - include

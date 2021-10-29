@@ -42,7 +42,8 @@ class TypeInfo:
                 is_pointer=self._cxx_type.is_pointer,
                 is_value_type=self._cxx_type.is_value,
                 is_reference=self._cxx_type.is_lval_reference,
-                pointee_unqualified_name=self._cxx_type.unqualified_pointee_name)
+                pointee_unqualified_name=self._cxx_type.unqualified_pointee_name,
+                is_const_qualified=self._cxx_type.is_const_qualified)
             if self._type_ctx:
                 self._cxx.namespace = self._type_ctx.namespace
                 self._cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)

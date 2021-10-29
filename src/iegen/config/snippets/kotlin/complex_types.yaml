@@ -58,7 +58,7 @@ $Object:
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{cxx.root_type_name}}* {{target_name}}_baseptr = {{'&' if cxx.is_reference}}{{tmp_name}};
+      {{cxx.root_type_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
     kotlin_to_jdk: |
       val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}

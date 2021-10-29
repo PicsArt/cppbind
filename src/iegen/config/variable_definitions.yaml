@@ -296,5 +296,5 @@ enum_field_name_prefix:
 
 cxx_out_rel_path:
   inheritable: true
-  default: "path.relpath(cxx_out_dir, out_prj_dir) "
+  default: "{{path.relpath(cxx_out_dir, out_prj_dir)}}"
   allowed_on: [ root ]

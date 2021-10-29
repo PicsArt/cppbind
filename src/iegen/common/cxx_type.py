@@ -135,6 +135,9 @@ class CXXType:
 
     @property
     def is_const_qualified(self):
+        # when self.type_ is string then only prefixed const qualified types are supported
+        # for example `int const &` is not supported
+        # in case of clang's Type all cases are supported
         return self.type_name.startswith('const')
 
     @property

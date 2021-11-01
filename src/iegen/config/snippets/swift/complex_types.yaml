@@ -43,21 +43,21 @@ $Object:
       {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- if cxx.root_type_name == pointee %}
+      {%- if root_type_name == pointee %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}});
       {%- else %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx.root_type_name}}*>({{name}}));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{root_type_name}}*>({{name}}));
       {%- endif %}
     cxx_to_c: |
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- if cxx.pointee_unqualified_name == cxx.root_type_name %}
+      {%- if cxx.pointee_unqualified_name == root_type_name %}
       auto {{target_name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
       {%- else %}
       auto value_ptr_{{name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
-      auto {{target_name}} = static_cast<{{cxx.root_type_name}}*>(value_ptr_{{name}});
+      auto {{target_name}} = static_cast<{{root_type_name}}*>(value_ptr_{{name}});
       {%- endif %}
     swift_to_sc: |
       let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
@@ -302,7 +302,7 @@ std::shared_ptr:
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_base = args[0].cxx.root_type_name %}
+      {%- set pointee_base = args[0].root_type_name %}
       {%- set is_nullable = nullable|default(False)%}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
@@ -324,7 +324,7 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_base = args[0].cxx.root_type_name %}
+      {%- set pointee_base = args[0].root_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};

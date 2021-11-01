@@ -5,7 +5,9 @@ from examples_lib.inheritance import (
     Square,
     GeometricFigure,
     MyVehicle,
-    DateTime
+    DateTime,
+    Mammal,
+    Dog
 )
 
 # [simple-inheritance-usage]
@@ -41,3 +43,9 @@ mv.vehicle = bicycle
 # mixed multiple inheritance with interface and class
 dt = DateTime(15, 1, 2015, 15, 15, 15)
 assert dt.datetime == "15:1:2015 15:15:15"
+
+# test inheritance when root base has no api
+mammal = Mammal()
+assert mammal.sound_type() == "default mammal sound"
+dog = Dog()
+assert dog.sound_type() == "barking"

@@ -20,7 +20,6 @@ assert(square.length == 5.0)
 assert(square.perimeter() == 20.0)
 // [multi-inheritance-usage]
 
-
 // other test cases
 let gf = GeometricFigure(p: square)
 assert(gf.parallelogram.cself == square.cself)
@@ -30,7 +29,12 @@ assert(gf.parallelogram.cself == rhombus.cself)
 let mv = MyVehicle(v: bicycle)
 mv.vehicle = bicycle
 
-
 // mixed multiple inheritance with interface and class
 let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
+
+// test inheritance when root base has no api
+let mammal = Mammal()
+assert(mammal.soundType() == "default mammal sound")
+let dog = Dog()
+assert(dog.soundType() == "barking")

@@ -41,10 +41,10 @@ $Object:
       {%- endif -%}
       {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
       {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- if cxx.root_type_name == pointee %}
+      {%- if root_type_name == pointee %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
-      auto base_{{name}} = reinterpret_cast<{{cxx.root_type_name}}*>({{name}});
+      auto base_{{name}} = reinterpret_cast<{{root_type_name}}*>({{name}});
       auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
     cxx_to_jni: |
@@ -58,7 +58,7 @@ $Object:
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{cxx.root_type_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
+      {{root_type_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
     kotlin_to_jdk: |
       val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
@@ -312,7 +312,7 @@ std::shared_ptr:
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_base = args[0].root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
       std::shared_ptr<{{pointee}}> {{target_name}} = nullptr;
@@ -338,7 +338,7 @@ std::shared_ptr:
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
       {%- set pointee = args[0].cxx.type_name %}
-      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_base = args[0].root_type_name if args[0].is_obj_type else pointee %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
       {%- if is_nullable %}

@@ -47,6 +47,12 @@ mv.close()
 rhombus.close()
 bicycle.close()
 rectangle.close()
+
+// test inheritance when root base has no api
+val mammal = Mammal()
+assert(mammal.soundType() == "default mammal sound")
+val dog = Dog()
+assert(dog.soundType() == "barking")
 }
 
 class InheritanceApp {

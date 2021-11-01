@@ -187,6 +187,10 @@ class Converter:
     def root_types_infos(self):
         return self._type_info.root_types_infos
 
+    @property
+    def root_type_name(self):
+        return self._type_info.root_type_name
+
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
@@ -195,6 +199,7 @@ class Converter:
             args_converters = self.args_converters
 
             root_types_infos = self.root_types_infos
+            root_type_name = self.root_type_name
 
             cxx = self.cxx
             # make api variables available in converter under vars

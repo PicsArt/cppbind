@@ -27,15 +27,6 @@ class TypeInfo:
     @property
     def cxx(self):
         if not hasattr(self, '_cxx'):
-            root_type_name = None
-            if self._type_ctx and self._type_ctx.kind_name != 'enum':
-                root_type_name = self._type_ctx.cxx_root_type_name
-                if root_type_name == self._type_ctx.cxx_type_name:
-                    # might be cases when cxx_type.type_name and self._type_ctx.cxx_type_name are different as we
-                    # retrieve self._type_ctx from the raw type
-                    # and in this case self._type_ctx.cxx_type_name is full name while cxx_type.type_name might
-                    # not contain namespace
-                    root_type_name = self._cxx_type.unqualified_pointee_name
             self._cxx = types.SimpleNamespace(
                 type_name=self._cxx_type.type_name,
                 pointee_name=self._cxx_type.pointee_name,
@@ -49,7 +40,6 @@ class TypeInfo:
                 self._cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
                 self._cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
                 self._cxx.kind_name = self._type_ctx.kind_name
-                self._cxx.root_type_name = root_type_name
                 self._cxx.displayname = self._type_ctx.cursor.displayname
 
         return self._cxx
@@ -82,6 +72,10 @@ class TypeInfo:
                     self._roots.append(self)
 
         return self._roots
+
+    @property
+    def root_type_name(self):
+        return self.root_types_infos[0].cxx.pointee_unqualified_name if self.root_types_infos else None
 
     @property
     def vars(self):

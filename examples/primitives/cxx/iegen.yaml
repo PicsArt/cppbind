@@ -55,9 +55,9 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
-  swift.file_postfix: ""
     - cxx/operators/intarray.hpp
     - cxx/globs/*.hpp
+  swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
   swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"

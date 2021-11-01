@@ -1,3 +1,6 @@
+#ifndef user_hpp
+#define user_hpp
+
 #include <string>
 
 /**
@@ -34,3 +37,4 @@ struct UserInfo {
     bool want_a_drink = false;
 };
 
+#endif

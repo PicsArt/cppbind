@@ -1,3 +1,6 @@
+#ifndef host_hpp
+#define host_hpp
+
 #include "cxx/user.hpp"
 
 /**
@@ -37,3 +40,4 @@ public:
     }
 };
 
+#endif

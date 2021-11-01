@@ -47,10 +47,27 @@ class TestContextDescriptor(unittest.TestCase):
         # asserts that an error is thrown when vars key is defined twice
         self._assert_duplicate_error_is_raised(self.ctx_desc.ROOT_SECTION_KEY)
 
-    def test_var_def_should_be_unique(self):
-        # negative case
-        # asserts that an error is thrown when var_def key is defined twice
-        self._assert_duplicate_error_is_raised(self.ctx_desc.VAR_DEF_SECTION_KEY)
+    def test_var_def_successfully_merged(self):
+        # positive case
+        # asserts that var_def defined in two places is successfully merged
+        self.ctx_desc.load_merge_ctx_def_map(
+            {self.ctx_desc.VAR_DEF_SECTION_KEY: YamlNode({'another_action': YamlNode({'default': 'test'})})},
+            self.ctx_desc._ContextDescriptor__ctx_def_map)
+
+        assert 'action' in self.ctx_desc._ContextDescriptor__ctx_def_map[self.ctx_desc.VAR_DEF_SECTION_KEY].value
+        assert 'another_action' in self.ctx_desc._ContextDescriptor__ctx_def_map[
+            self.ctx_desc.VAR_DEF_SECTION_KEY].value
+
+    def test_var_def_redefined_var(self):
+        file = 'test.iegen.yaml'
+        line = 1
+        with self.assertRaises(YamlKeyDuplicationError) as ctx:
+            self.ctx_desc.load_merge_ctx_def_map({self.ctx_desc.VAR_DEF_SECTION_KEY:
+                                                      YamlNode({'action': YamlNode({'default': 'test'}, line, file)})},
+                                                 self.ctx_desc._ContextDescriptor__ctx_def_map)
+        # assert error message
+        self.assertTrue(f"Redefinition of '{self.ctx_desc.VAR_DEF_SECTION_KEY}' "
+                        f"section in line {line} of {file}" in str(ctx.exception))
 
     def _assert_duplicate_error_is_raised(self, key):
         file = 'test.iegen.yaml'

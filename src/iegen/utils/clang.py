@@ -18,15 +18,6 @@ def template_type_name(type_):
     return name
 
 
-def get_all_overridden_cursors(cursor):
-    cursors = []
-    if cursor.get_overriden_cursors():
-        cursors += cursor.get_overriden_cursors()
-        for overridden in cursors:
-            cursors += get_all_overridden_cursors(overridden)
-    return cursors
-
-
 def is_overloaded(cursor):
     return bool([child for child in list(cursor.semantic_parent.get_children()) if
             child.spelling == cursor.spelling and child != cursor])
@@ -112,10 +103,15 @@ def extract_pure_comment(raw_comment, end_index=None):
     Returns:
         str: Characters removed type_name.
     """
-    end_index = end_index or len(raw_comment) - 1
-    return [comment_line.lstrip('/* ') for comment_line
-            in raw_comment[:end_index].splitlines()[:-1]]
+    end_index = end_index or len(raw_comment)
+    comment_lines = [comment_line.lstrip('/* ') for comment_line in raw_comment[:end_index].splitlines()]
 
+    if comment_lines and not comment_lines[0]:
+        comment_lines.pop(0)
+    if comment_lines and not comment_lines[-1]:
+        comment_lines.pop()
+
+    return comment_lines
 
 def replace_template_choice(type_name, template_choice):
     """

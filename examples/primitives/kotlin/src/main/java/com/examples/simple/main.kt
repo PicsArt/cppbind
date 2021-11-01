@@ -20,11 +20,11 @@ assert(prj.tasks().size == 1)
 assert(prj.tasks()[0].title == task1.title)
 // [project-usage]
 
-// [root-usage]
-val path = "/path/to/root"
-val root = Root(path)
-assert(root.path == path)
-// [root-usage]
+// test for checking how const& return type is handled by pybind
+val holder = Holder()
+assert(holder.task.title == "Initial title")
+holder.task.setTitle("My First Task Edited")
+assert(holder.task.title == "My First Task Edited")
 
 }
 

@@ -37,6 +37,17 @@ public:
         return _title;
     };
 
+     /**
+      * Get objects title.
+      * __API__
+      * action: gen_method
+      * throws: no_throw
+      *
+      */
+     void setTitle(const std::string& title) {
+        _title = title;
+    };
+
 
 protected:
     std::string _title;

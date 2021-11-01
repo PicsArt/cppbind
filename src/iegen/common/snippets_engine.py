@@ -15,7 +15,7 @@ from types import SimpleNamespace
 from jinja2 import Template
 
 import clang.cindex as cli
-from iegen import converter, logging
+from iegen import BANNER_LOGO, converter, logging
 from iegen.common import JINJA_UNIQUE_MARKER
 from iegen.common.cxx_type import CXXType
 from iegen.common.error import Error
@@ -59,15 +59,15 @@ class Action:
 class FileAction(Action):
     """Class represents file actions"""
 
-    def __init__(self, glob_tmpls, copy_to_tmpl, variables_tmpl):
+    def __init__(self, src_glob_tmpls, dest_tmpl, variables_tmpl):
         super().__init__('file_action')
-        self.glob_tmpls = glob_tmpls
-        self.copy_to_tmpl = copy_to_tmpl
+        self.src_glob_tmpls = src_glob_tmpls
+        self.dest_tmpl = dest_tmpl
         self.variables_tmpl = variables_tmpl
 
     def do(self, ctx):
         variables = {name: [] for name in self.variables_tmpl}
-        globs = [tmpl.render(ctx) for tmpl in self.glob_tmpls]
+        src_globs = [tmpl.render(ctx) for tmpl in self.src_glob_tmpls]
 
         def _make_context(ctx):
             def make():
@@ -75,6 +75,7 @@ class FileAction(Action):
                 path = os.path
                 pat_sep = os.sep
                 file_name = None
+                banner_logo = BANNER_LOGO
                 return locals()
 
             context = copy.copy(ctx)
@@ -82,22 +83,47 @@ class FileAction(Action):
             return context
 
         context = _make_context(ctx)
-        for file_name in [fl for gl in globs for fl in sorted(glob.glob(gl, recursive=True))]:
 
-            context['file_name'] = file_name
-            # take copy action
-            if self.copy_to_tmpl:
-                target_file = self.copy_to_tmpl.render(context)
+        for src_file in [fl for gl in src_globs for fl in sorted(glob.glob(gl, recursive=True))]:
+            context['file_name'] = src_file
+            if self.dest_tmpl:
+                target_file = self.dest_tmpl.render(context)
                 if target_file:
-                    os.makedirs(os.path.dirname(target_file), exist_ok=True)
-                    if not os.path.isfile(target_file) or not filecmp.cmp(file_name, target_file):
-                        shutil.copyfile(file_name, target_file)
+                    self.do_main_action(src_file, target_file, context)
 
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():
                 variables[var_name].append(tmpl.render(context))
 
         return variables
+
+
+class CopyFileAction(FileAction):
+    """Class represents file copy action"""
+
+    def do_main_action(self, src_file, target_file, context):
+        """Implementation logic of file copy action"""
+
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
+        if not os.path.isfile(target_file) or not filecmp.cmp(src_file, target_file):
+            shutil.copyfile(src_file, target_file)
+
+
+class RenderFileAction(CopyFileAction):
+    """Class represents template file render and copy action"""
+
+    def do_main_action(self, src_file, target_file, context):
+        """Implementation logic of file render action"""
+
+        os.makedirs(os.path.dirname(target_file), exist_ok=True)
+        src_file_content = JINJA2_ENV.from_string(open(src_file).read()).render(context)
+        target_file_content = None
+        if os.path.isfile(target_file):
+            target_file_content = open(target_file).read()
+
+        if target_file_content != src_file_content:
+            with open(target_file, 'w') as f:
+                f.write(src_file_content)
 
 
 class Converter:
@@ -370,13 +396,10 @@ class SnippetsEngine:
 
     def _load_actions(self, actions_info):
         def handle_file_action(info_dict):
-            glob_tmpls = info_dict['files_glob']
-            if not glob_tmpls.is_of_type(list):
-                glob_tmpls = [glob_tmpls.value]
-            glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in glob_tmpls]
-
-            copy_to_tmpl = info_dict.get('copy_to', None)
-            copy_to_tmpl = copy_to_tmpl and self.jinja2_env.from_string(copy_to_tmpl.value)
+            src_glob_tmpls = info_dict['files_glob']
+            if not src_glob_tmpls.is_of_type(list):
+                src_glob_tmpls = [src_glob_tmpls.value]
+            src_glob_tmpls = [self.jinja2_env.from_string(tmpl) for tmpl in src_glob_tmpls]
 
             variables = info_dict.get('variables', {})
             variables_tmpl = {}
@@ -384,7 +407,14 @@ class SnippetsEngine:
                 var_tmpl = self.jinja2_env.from_string(var_tmpl.value)
                 variables_tmpl[var_name] = var_tmpl
 
-            self.action_infos.append(FileAction(glob_tmpls, copy_to_tmpl, variables_tmpl))
+            if 'copy_to' in info_dict and info_dict['copy_to']:
+                self.action_infos.append(CopyFileAction(src_glob_tmpls,
+                                                        self.jinja2_env.from_string(info_dict['copy_to'].value),
+                                                        variables_tmpl))
+            elif 'render_to' in info_dict and info_dict['render_to']:
+                self.action_infos.append(RenderFileAction(src_glob_tmpls,
+                                                          self.jinja2_env.from_string(info_dict['render_to'].value),
+                                                          variables_tmpl))
 
         def handle_default(info_dict):
             Error.critical("undefined actions.")

@@ -45,7 +45,7 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
-  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers/examples_lib')}}"
+  python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
   python.package_prefix: examples_lib
@@ -53,7 +53,7 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
-  swift.file_postfix: _swgen
+  swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
   swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"

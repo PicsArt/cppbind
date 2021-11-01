@@ -52,8 +52,6 @@ def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
 def make_def_context(ctx):
     def make():
         # helper variables
-        pat_sep = os.sep
-        path = os.path
         helper = LANGUAGE_HELPER_MODULE
         marker = JINJA_UNIQUE_MARKER
         banner_logo = iegen.BANNER_LOGO

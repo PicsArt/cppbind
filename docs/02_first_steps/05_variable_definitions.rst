@@ -44,7 +44,7 @@ Here is the list of system variables:
  * **_current_working_dir** - current working directory
  * **_pure_comment**: doxygen comment without iegen API part
  * **_line_number**: line number of the source code which is being processed
- * **_file_full_name**: full path of the file which is being processed
+ * **_file_fullname**: full path of the file which is being processed
  * **_is_operator** - indicates whether the method is a c++ operator or not.
  * **_object_name** - name of the project which is being processed, e.g. class name, method name etc.
  * **_file_name** - full name of the file which is being processed.
@@ -68,7 +68,7 @@ Now let's go through the variables one by one:
 
     - *action* - Indicates what should be generated: class, method, etc. Details are :doc:`here </02_first_steps/06_api_configuration>`
     - *file* - Output file name.
-    - *file_full_name* - Full path of source file.
+    - *file_fullname* - Full path of source file.
     - *package* - Package name which with **package_prefix** is used for generating the final package ({package_prefix}.{package}).
     - *name* - Name of the class, method etc. If not specified then the original name is used.
     - *interface_name* - When action is gen_interface this will be used as a name for the generated interface.

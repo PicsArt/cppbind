@@ -21,14 +21,13 @@ vars: |
   swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
   swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
   swift.c_wrapper_lib_name: HelloExample.CWrapper
-  modulemap_file: public
-  modulemap_out_dir: .
+  swift.file_postfix: ""
+  modulemap_file_fullname: ./public.modulemap
 
 
 var_def:
   !join
   - !include variable_definitions.yaml
-  - !include modulemap_variable_definitions.yaml
 
 rules:
   swift.code_snippets:

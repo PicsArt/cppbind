@@ -138,8 +138,16 @@ class ContextDescriptor:
         if cls.VAR_DEF_SECTION_KEY in attrs:
             var_def_section = attrs[cls.VAR_DEF_SECTION_KEY]
             if cls.VAR_DEF_SECTION_KEY in ctx_def_map:
-                cls._raise_redefinition_error(cls.VAR_DEF_SECTION_KEY, var_def_section, ctx_def_map[cls.VAR_DEF_SECTION_KEY])
-            ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
+                intersection = var_def_section.value.keys() & ctx_def_map[cls.VAR_DEF_SECTION_KEY].value.keys()
+                if intersection:
+                    # raise error if variable is redefined
+                    redefined_var = intersection.pop()
+                    cls._raise_redefinition_error(cls.VAR_DEF_SECTION_KEY, var_def_section[redefined_var],
+                                                  ctx_def_map[cls.VAR_DEF_SECTION_KEY][redefined_var])
+                else:
+                    ctx_def_map[cls.VAR_DEF_SECTION_KEY].update(var_def_section)
+            else:
+                ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
 
         cls.load_merge_rules(attrs, ctx_def_map)
 

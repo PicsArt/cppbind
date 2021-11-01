@@ -1,7 +1,7 @@
 file:
   modulemap:
     file_path: |
-      {{vars.modulemap_out_dir + pat_sep + vars.modulemap_file}}.modulemap
+      {{vars.modulemap_file_fullname}}
     scopes:
       - header
     content: |
@@ -22,7 +22,7 @@ file:
 var_header_include: &var_header_include
   header:
     unique_content: |
-      header "{{vars.c_file + '.h'}}"
+      header "{{path.basename(vars.h_file_fullname)}}"
 
 interface:
   modulemap: *var_header_include

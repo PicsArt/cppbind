@@ -284,6 +284,8 @@ def init_jinja_env():
     env.tests['match_regexp'] = match_regexp
 
     env.globals['Error'] = Error
+    env.globals['path'] = os.path
+    env.globals['pat_sep'] = os.sep
 
     return env
 

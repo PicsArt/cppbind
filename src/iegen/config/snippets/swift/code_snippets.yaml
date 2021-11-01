@@ -1,7 +1,7 @@
 file:
   swift:
     file_path: |
-      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file]|map('replace', '.', pat_sep)|path_join}}.swift
+      {{vars.target_file_fullname}}
     scopes:
       - include
       - body
@@ -12,7 +12,7 @@ file:
       {{body}}
   cc:
     file_path: |
-      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.c_file]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{vars.c_file_fullname}}
     scopes:
       - namespace
       - body
@@ -22,14 +22,14 @@ file:
 
       #include <string.h>
       #include <memory>
-      #include "{{path.relpath(vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package]|map('replace', '.', pat_sep)|path_join, vars.out_prj_dir)}}/{{vars.c_file}}.h"
+      #include "{{path.relpath(vars.h_file_fullname, vars.out_prj_dir)}}"
       {{include}}
       {{namespace}}
 
       {{body}}
   ch:
     file_path: |
-      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.c_file]|map('replace', '.', pat_sep)|path_join}}.h
+      {{vars.h_file_fullname}}
     scopes:
       - body
       - include
@@ -70,13 +70,13 @@ enum:
           {%- endif %}
       }
 
-var_class_include: &var_class_include
+var_class_cxx_include: &var_class_cxx_include
     unique_content: |
       {%- if vars.is_proj_type -%}
       #include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- macro gen_include(type_info) -%}
-      {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+      {%- if type_info.vars and type_info.vars.is_proj_type -%}
       {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -131,7 +131,7 @@ class:
             {{body|string|indent}}
         }
   cc:
-    include: *var_class_include
+    include: *var_class_cxx_include
     namespace:
       unique_content: |
         {%- if cxx.namespace %}
@@ -199,7 +199,7 @@ interface:
             {{head|string|indent}}
         }
   cc:
-    include: *var_class_include
+    include: *var_class_cxx_include
     namespace:
       unique_content: |
         {%- if cxx.namespace %}

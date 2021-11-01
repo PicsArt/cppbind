@@ -79,7 +79,7 @@ file:
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
       #include <pybind11/pybind11.h>
-      #include "{{vars.pybind_module.split('.')[-1] + vars.file_postfix}}.hpp"
+      #include "{{path.relpath(vars.h_pybind_filename, vars.out_prj_dir)}}"
 
       namespace py = pybind11;
       void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
@@ -430,7 +430,7 @@ method:
                                                           {%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
-                                                          {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.target_file_fullname != vars.target_file_fullname else '' -%}
+                                                          {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
                                                           {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %}
@@ -559,7 +559,7 @@ getter:
       {%- endif -%}
       {%- endmacro -%}
       {%- set rconverter = rconverter.python %}
-      {%- set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.type_info.vars.target_file_fullname != vars.type_info.vars.target_file_fullname else '' %}
+      {%- set arg_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' %}
       @property
       @bind
       def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:

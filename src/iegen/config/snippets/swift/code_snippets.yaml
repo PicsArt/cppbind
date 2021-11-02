@@ -109,6 +109,9 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {{vars.comment|make_doxygen_comment}}
         public class {{converter.swift.target_type_name}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
@@ -174,6 +177,9 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {{vars.comment|make_doxygen_comment}}
         public protocol {{converter.swift.target_type_name}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 

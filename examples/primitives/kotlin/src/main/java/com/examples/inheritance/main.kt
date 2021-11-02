@@ -48,11 +48,17 @@ rhombus.close()
 bicycle.close()
 rectangle.close()
 
-// test inheritance when root base has no api
-val mammal = Mammal()
-assert(mammal.soundType() == "default mammal sound")
-val dog = Dog()
-assert(dog.soundType() == "barking")
+// test multiple inheritance in case some bases have API, others no
+val animal = AnimalImpl()
+assert(AnimalUsage.getAnimalTypeName(animal) == "animal")
+
+val aquaticAnimal = AquaticAnimal()
+assert(AnimalUsage.getAquaticAnimalTypeName(aquaticAnimal) == "aquatic")
+
+val frog = Frog()
+assert(AnimalUsage.getAnimalTypeName(frog) == "frog")
+// issue with reinterpret_cast
+// assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
 }
 
 class InheritanceApp {

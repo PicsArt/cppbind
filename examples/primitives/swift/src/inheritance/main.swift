@@ -33,8 +33,13 @@ mv.vehicle = bicycle
 let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
 
-// test inheritance when root base has no api
-let mammal = Mammal()
-assert(mammal.soundType() == "default mammal sound")
-let dog = Dog()
-assert(dog.soundType() == "barking")
+// test multiple inheritance in case some bases have API, others no
+let animal = AnimalImpl()
+assert(AnimalUsage.getAnimalTypeName(animal: animal) == "animal")
+
+let aquaticAnimal = AquaticAnimal()
+assert(AnimalUsage.getAquaticAnimalTypeName(animal: aquaticAnimal) == "aquatic")
+
+let frog = Frog()
+assert(AnimalUsage.getAnimalTypeName(animal: frog) == "frog")
+assert(AnimalUsage.getAquaticAnimalTypeName(animal: frog) == "frog")

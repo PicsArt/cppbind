@@ -6,8 +6,10 @@ from examples_lib.inheritance import (
     GeometricFigure,
     MyVehicle,
     DateTime,
-    Mammal,
-    Dog
+    AnimalUsage,
+    Animal,
+    AquaticAnimal,
+    Frog
 )
 
 # [simple-inheritance-usage]
@@ -44,8 +46,13 @@ mv.vehicle = bicycle
 dt = DateTime(15, 1, 2015, 15, 15, 15)
 assert dt.datetime == "15:1:2015 15:15:15"
 
-# test inheritance when root base has no api
-mammal = Mammal()
-assert mammal.sound_type() == "default mammal sound"
-dog = Dog()
-assert dog.sound_type() == "barking"
+# test multiple inheritance in case some bases have API, others no
+animal = Animal()
+assert AnimalUsage.get_animal_type_name(animal) == "animal"
+
+aquaticAnimal = AquaticAnimal()
+assert AnimalUsage.get_aquatic_animal_type_name(aquaticAnimal) == "aquatic"
+
+frog = Frog()
+assert AnimalUsage.get_animal_type_name(frog) == "frog"
+assert AnimalUsage.get_aquatic_animal_type_name(frog) == "frog"

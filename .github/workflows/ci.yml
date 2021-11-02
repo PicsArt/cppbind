@@ -13,7 +13,7 @@ jobs:
 
   build_macos:
 
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
@@ -47,9 +47,12 @@ jobs:
           pytest ./src/test/
 
       - name: Run examples tests
-        run: |
-          cd examples/primitives/
-          bazel test //...
+        run:  bazel test //...
+        working-directory: examples/primitives/
+
+      - name: Run modulemap example tests
+        run: xcodebuild test -scheme HelloExampleTests
+        working-directory: examples/feautures/modulemap/HelloExample
 
   build_ubuntu:
 

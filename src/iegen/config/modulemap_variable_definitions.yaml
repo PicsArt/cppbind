@@ -1,6 +1,6 @@
 modulemap_file_fullname:
   inheritable: true
-  default: "{{cxx_out_dir + pat_sep + 'IEGen'}}.modulemap"
+  default: "{{cxx_out_dir + pat_sep}}IEGen.modulemap"
   allowed_on: [ root ]
 
 modulemap_export:

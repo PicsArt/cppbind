@@ -13,7 +13,7 @@ jobs:
 
   build_macos:
 
-    runs-on: macos-11
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -50,9 +50,6 @@ jobs:
         run:  bazel test //...
         working-directory: examples/primitives/
 
-      - name: Run modulemap example tests
-        run: xcodebuild test -scheme HelloExampleTests
-        working-directory: examples/feautures/modulemap/HelloExample
 
   build_ubuntu:
 

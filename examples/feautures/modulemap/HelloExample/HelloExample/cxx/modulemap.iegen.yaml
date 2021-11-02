@@ -1,9 +1,7 @@
 rules:
   swift.code_snippets:
-    !join
-    - !include swift/modulemap_snippets.yaml
+    !include swift/modulemap_snippets.yaml
 
 
 var_def:
-  !join
-  - !include modulemap_variable_definitions.yaml
+  !include modulemap_variable_definitions.yaml

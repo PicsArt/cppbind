@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8CA071AA2731109F00D89836 /* exceptionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA071A92731109F00D89836 /* exceptionUtils.swift */; };
+		8CA071AC273110E300D89836 /* std_exc_classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA071AB273110E300D89836 /* std_exc_classes.swift */; };
 		8CD264FE2727F00600BA773E /* HelloExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CD264F32727F00500BA773E /* HelloExample.framework */; };
 		8CD265032727F00600BA773E /* HelloExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265022727F00600BA773E /* HelloExampleTests.swift */; };
 		8CD265042727F00600BA773E /* HelloExample.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD264F62727F00500BA773E /* HelloExample.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -24,10 +26,8 @@
 		8CD265372728237B00BA773E /* c_user.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265352728237B00BA773E /* c_user.cpp */; };
 		8CD2653A272823B800BA773E /* user.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 8CD26538272823B800BA773E /* user.hpp */; settings = {ATTRIBUTES = (Private, ); }; };
 		8CD2653B272823B800BA773E /* host.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 8CD26539272823B800BA773E /* host.hpp */; settings = {ATTRIBUTES = (Private, ); }; };
-		8CD2653D2728242B00BA773E /* std_exc_classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2653C2728242B00BA773E /* std_exc_classes.swift */; };
 		8CD265402728244100BA773E /* host.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2653E2728244000BA773E /* host.swift */; };
 		8CD265412728244100BA773E /* user.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2653F2728244100BA773E /* user.swift */; };
-		8CD26543272824C300BA773E /* exceptionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD26542272824C300BA773E /* exceptionUtils.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +42,8 @@
 
 /* Begin PBXFileReference section */
 		8C0EA64F272C43340007F606 /* public.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = public.modulemap; sourceTree = "<group>"; };
+		8CA071A92731109F00D89836 /* exceptionUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = exceptionUtils.swift; path = HelloExample/swift/src/iegen/exceptionUtils.swift; sourceTree = "<group>"; };
+		8CA071AB273110E300D89836 /* std_exc_classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = std_exc_classes.swift; path = HelloExample/swift/src/exception_helpers/std_exc_classes.swift; sourceTree = "<group>"; };
 		8CD264F32727F00500BA773E /* HelloExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HelloExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD264F62727F00500BA773E /* HelloExample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HelloExample.h; sourceTree = "<group>"; };
 		8CD264FD2727F00600BA773E /* HelloExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HelloExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -60,10 +62,8 @@
 		8CD265352728237B00BA773E /* c_user.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_user.cpp; path = HelloExample/swift/wrappers/hello/c_user.cpp; sourceTree = "<group>"; };
 		8CD26538272823B800BA773E /* user.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = user.hpp; path = HelloExample/cxx/user.hpp; sourceTree = "<group>"; };
 		8CD26539272823B800BA773E /* host.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = host.hpp; path = HelloExample/cxx/host.hpp; sourceTree = "<group>"; };
-		8CD2653C2728242B00BA773E /* std_exc_classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = std_exc_classes.swift; path = HelloExample/swift/src/exception_helpers/std_exc_classes.swift; sourceTree = "<group>"; };
 		8CD2653E2728244000BA773E /* host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = host.swift; path = HelloExample/swift/src/hello/host.swift; sourceTree = "<group>"; };
 		8CD2653F2728244100BA773E /* user.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = user.swift; path = HelloExample/swift/src/hello/user.swift; sourceTree = "<group>"; };
-		8CD26542272824C300BA773E /* exceptionUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = exceptionUtils.swift; path = HelloExample/swift/src/exceptionUtils.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,10 +88,10 @@
 		8CD264E92727F00500BA773E = {
 			isa = PBXGroup;
 			children = (
-				8CD26542272824C300BA773E /* exceptionUtils.swift */,
+				8CA071AB273110E300D89836 /* std_exc_classes.swift */,
+				8CA071A92731109F00D89836 /* exceptionUtils.swift */,
 				8CD2653E2728244000BA773E /* host.swift */,
 				8CD2653F2728244100BA773E /* user.swift */,
-				8CD2653C2728242B00BA773E /* std_exc_classes.swift */,
 				8CD26539272823B800BA773E /* host.hpp */,
 				8CD26538272823B800BA773E /* user.hpp */,
 				8CD265342728237B00BA773E /* c_host.cpp */,
@@ -257,10 +257,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8CD26543272824C300BA773E /* exceptionUtils.swift in Sources */,
+				8CA071AC273110E300D89836 /* std_exc_classes.swift in Sources */,
+				8CA071AA2731109F00D89836 /* exceptionUtils.swift in Sources */,
 				8CD265402728244100BA773E /* host.swift in Sources */,
 				8CD265412728244100BA773E /* user.swift in Sources */,
-				8CD2653D2728242B00BA773E /* std_exc_classes.swift in Sources */,
 				8CD265362728237B00BA773E /* c_host.cpp in Sources */,
 				8CD265372728237B00BA773E /* c_user.cpp in Sources */,
 				8CD265332728234F00BA773E /* c_std_exc_classes.cpp in Sources */,
@@ -416,9 +416,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -435,6 +438,8 @@
 				MODULEMAP_FILE = HelloExample/public.modulemap;
 				PRODUCT_BUNDLE_IDENTIFIER = com.examples.HelloExample;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -447,9 +452,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -466,6 +474,8 @@
 				MODULEMAP_FILE = HelloExample/public.modulemap;
 				PRODUCT_BUNDLE_IDENTIFIER = com.examples.HelloExample;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -477,6 +487,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -498,6 +509,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;

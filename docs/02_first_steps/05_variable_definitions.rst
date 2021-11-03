@@ -44,7 +44,7 @@ Here is the list of system variables:
  * **_current_working_dir** - current working directory
  * **_pure_comment**: doxygen comment without iegen API part
  * **_line_number**: line number of the source code which is being processed
- * **_file_full_name**: full path of the file which is being processed
+ * **_file_fullname**: full path of the file which is being processed
  * **_is_operator** - indicates whether the method is a c++ operator or not.
  * **_object_name** - name of the project which is being processed, e.g. class name, method name etc.
  * **_file_name** - full name of the file which is being processed.
@@ -68,7 +68,7 @@ Now let's go through the variables one by one:
 
     - *action* - Indicates what should be generated: class, method, etc. Details are :doc:`here </02_first_steps/06_api_configuration>`
     - *file* - Output file name.
-    - *file_full_name* - Full path of source file.
+    - *file_fullname* - Full path of source file.
     - *package* - Package name which with **package_prefix** is used for generating the final package ({package_prefix}.{package}).
     - *name* - Name of the class, method etc. If not specified then the original name is used.
     - *interface_name* - When action is gen_interface this will be used as a name for the generated interface.
@@ -119,6 +119,13 @@ Now let's go through the variables one by one:
     - *target_arch* - Variable for setting target architecture.
     - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
     - *enum_excluded_fields* - A list of enum field names which must be not exposed in target language.
+    - *cxx_out_rel_path* - C output relative path to project output directory. This variable is used for constructing generated C includes.
+    - *c_file_fullname* - Generated cpp file full name.
+    - *h_file_fullname* - Generated header file full name.
+    - *target_file_fullname* - Generated target language(e.g. swift, kotlin etc.) file full name.
+    - *pybind_module_filename* - Generated pybind file containing pybind module code.
+    - *c_pybind_filename* - Generated pybind cpp file containing code which binds all submodules.
+    - *h_pybind_filename* - Generated pybind header file containing includes of all submodules.
 
 .. note::
 

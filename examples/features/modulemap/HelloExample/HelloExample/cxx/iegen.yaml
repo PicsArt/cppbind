@@ -1,0 +1,43 @@
+type_vars:
+  !join
+  - !include std_exc_api.yaml
+
+
+vars: |
+  {%- set out_prj_dir = "." -%}
+  out_prj_dir: {{out_prj_dir}}
+  src_glob:
+    - cxx/**/*.h*
+  include_dirs:
+    - .
+  extra_headers:
+    - stdexcept
+    - new
+    - typeinfo
+  mac.clang_args:
+    - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  cxx_out_rel_path: ''
+  swift.package_prefix: ''
+  swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
+  swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
+  swift.c_wrapper_lib_name: HelloExample.CWrapper
+  swift.file_postfix: ""
+  modulemap_file_fullname: ./public.modulemap
+
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+rules:
+  swift.code_snippets:
+    !join
+    - !include swift/code_snippets.yaml
+
+  swift.type_converters:
+    !join
+    - !include "swift/*_types.yaml"
+
+  swift.actions:
+    !join
+    - !include swift/actions.yaml

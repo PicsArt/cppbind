@@ -42,15 +42,36 @@ class TestContextDescriptor(unittest.TestCase):
         self.assertEqual(value['action'].line_number, 8)
         self.assertEqual(value['action'].value['default'], None)
 
-    def test_vars_should_be_unique(self):
+    def test_vars_section_should_be_unique(self):
         # negative case
         # asserts that an error is thrown when vars key is defined twice
         self._assert_duplicate_error_is_raised(self.ctx_desc.ROOT_SECTION_KEY)
 
-    def test_var_def_should_be_unique(self):
+    def test_var_defs_successfully_merged(self):
+        # positive case
+        # asserts that var_def defined in two places is successfully merged
+        self.ctx_desc.load_merge_ctx_def_map(
+            {self.ctx_desc.VAR_DEF_SECTION_KEY: YamlNode({'another_action': YamlNode({'default': 'test'})})},
+            self.ctx_desc._ContextDescriptor__ctx_def_map)
+
+        assert 'action' in self.ctx_desc._ContextDescriptor__ctx_def_map[self.ctx_desc.VAR_DEF_SECTION_KEY].value
+        assert 'another_action' in self.ctx_desc._ContextDescriptor__ctx_def_map[
+            self.ctx_desc.VAR_DEF_SECTION_KEY].value
+
+    def test_variable_redefinition_is_not_allowed(self):
         # negative case
-        # asserts that an error is thrown when var_def key is defined twice
-        self._assert_duplicate_error_is_raised(self.ctx_desc.VAR_DEF_SECTION_KEY)
+        # asserts that an error is thrown when the same variable is defined twice
+        file = 'test.iegen.yaml'
+        line = 1
+        var = 'action'
+        with self.assertRaises(YamlKeyDuplicationError) as ctx:
+            self.ctx_desc.load_merge_ctx_def_map({self.ctx_desc.VAR_DEF_SECTION_KEY:
+                                                      YamlNode({f'{var}': YamlNode({'default': 'test'}, line, file)})},
+                                                 self.ctx_desc._ContextDescriptor__ctx_def_map)
+        # assert error message
+        self.assertTrue(f"{var}: "
+                        f"{self.ctx_desc._ContextDescriptor__ctx_def_map[self.ctx_desc.VAR_DEF_SECTION_KEY].line_number}"
+                        f" - {line}")
 
     def _assert_duplicate_error_is_raised(self, key):
         file = 'test.iegen.yaml'

@@ -91,5 +91,8 @@ employee = Employee(name="Jane Doe")
 pair1 = PairStudent(first="student", second=student)
 pair2 = PairEmployee(first="employee", second=employee)
 assert pair1.second.name == student.name
+pair1.second.name = "updated name"
+assert pair1.second == student
+assert student.name == "updated name"
 assert pair2.second.name == employee.name
 # [pair-examples]

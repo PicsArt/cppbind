@@ -10,3 +10,15 @@ counter1 += counter2
 assert(counter1.count == 3)
 assert(counter1 > counter2)
 // [operators-usage]
+
+// [subscript=operator-usage]
+var intArr = IntArrayImpl()
+assert(intArr[0] == 0)
+assert(intArr[9] == 9)
+assert(intArr["9"] == 9)
+assert(intArr[9.0] == 9)
+intArr[9] = 10
+assert(intArr[9] == 10)
+assert(intArr["9"] == 10)
+assert(intArr[9.0] == 10)
+// [subscript=operator-usage]

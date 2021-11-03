@@ -28,8 +28,8 @@ void* _Nonnull create_Car(int cost){
 
 int _prop_get_Car_cost(void* _Nonnull cself){
     std::shared_ptr<Example::Car> c_to_cxx_cself;
-    c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
-    auto result = c_to_cxx_cself->cost();
+    c_to_cxx_cself = *static_cast<std::shared_ptr<Example::Car>*>(cself);
+    const auto& result = c_to_cxx_cself->cost();
     
     return result;
 }
@@ -37,11 +37,11 @@ int _prop_get_Car_cost(void* _Nonnull cself){
 void _func_Car_setCostWithCarSharedPtr(void* _Nonnull cself, void* _Nonnull sp, ErrorObj* _Nonnull err){
     
     std::shared_ptr<Example::Car> c_to_cxx_sp;
-    c_to_cxx_sp = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(sp));
+    c_to_cxx_sp = *static_cast<std::shared_ptr<Example::Car>*>(sp);
   
     
     std::shared_ptr<Example::Car> c_to_cxx_cself;
-    c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
+    c_to_cxx_cself = *static_cast<std::shared_ptr<Example::Car>*>(cself);
     try {
         c_to_cxx_cself->setCostWithCarSharedPtr(c_to_cxx_sp);
     }
@@ -58,8 +58,8 @@ void _func_Car_setCostWithCar(void* _Nonnull cself, void* _Nonnull sp, ErrorObj*
     std::shared_ptr<Example::Car> c_to_cxx_sp_shared_ptr;
     c_to_cxx_sp_shared_ptr = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(sp));
     auto& c_to_cxx_sp = *c_to_cxx_sp_shared_ptr.get();
-  
-    
+
+
     std::shared_ptr<Example::Car> c_to_cxx_cself;
     c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
     try {
@@ -78,8 +78,8 @@ void _func_Car_setCostWithCarRef(void* _Nonnull cself, void* _Nonnull sp, ErrorO
     std::shared_ptr<Example::Car> c_to_cxx_sp_shared_ptr;
     c_to_cxx_sp_shared_ptr = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(sp));
     auto& c_to_cxx_sp = *c_to_cxx_sp_shared_ptr.get();
-  
-    
+
+
     std::shared_ptr<Example::Car> c_to_cxx_cself;
     c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
     try {
@@ -98,8 +98,8 @@ void _func_Car_setCostWithCarPtr(void* _Nonnull cself, void* _Nonnull sp, ErrorO
     std::shared_ptr<Example::Car> c_to_cxx_sp_shared_ptr;
     c_to_cxx_sp_shared_ptr = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(sp));
     auto c_to_cxx_sp = c_to_cxx_sp_shared_ptr.get();
-  
-    
+
+
     std::shared_ptr<Example::Car> c_to_cxx_cself;
     c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
     try {
@@ -117,12 +117,12 @@ void _func_Car_setCostWithCarPtr(void* _Nonnull cself, void* _Nonnull sp, ErrorO
 void* _Nonnull _func_Car_getNewCarSharedPtr(void* _Nonnull cself, ErrorObj* _Nonnull err){
     
     std::shared_ptr<Example::Car> c_to_cxx_cself;
-    c_to_cxx_cself = std::dynamic_pointer_cast<Example::Car>(*static_cast<std::shared_ptr<Example::Car>*>(cself));
+    c_to_cxx_cself = *static_cast<std::shared_ptr<Example::Car>*>(cself);
     try {
         const auto& result = c_to_cxx_cself->getNewCarSharedPtr();
         
         void* cxx_to_c_result;
-        cxx_to_c_result = reinterpret_cast<void*>(new std::shared_ptr<Example::Car>(std::static_pointer_cast<Example::Car>(result)));
+        cxx_to_c_result = reinterpret_cast<void*>(new std::shared_ptr<Example::Car>(result));
         return cxx_to_c_result;
     }
     catch (const std::exception& e) {
@@ -148,7 +148,7 @@ void* _Nonnull create_CarUsage(void* _Nonnull car){
 }
 
 void* _Nonnull _func_CarUsage_getCar(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::CarUsage*>(static_cast<Example::CarUsage*>(cself));
     try {
@@ -176,7 +176,7 @@ void* _Nonnull _func_CarUsage_getCar(void* _Nonnull cself, ErrorObj* _Nonnull er
 }
 
 void* _Nonnull _func_CarUsage_getCarPtr(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::CarUsage*>(static_cast<Example::CarUsage*>(cself));
     try {
@@ -205,7 +205,7 @@ void* _Nonnull _func_CarUsage_getCarPtr(void* _Nonnull cself, ErrorObj* _Nonnull
 }
 
 void* _Nonnull _func_CarUsage_getCarRef(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::CarUsage*>(static_cast<Example::CarUsage*>(cself));
     try {
@@ -237,7 +237,7 @@ void release_Plane(void* _Nonnull cself) {
 }
 
 void* _Nonnull create_Plane(int seats){
-    
+
     auto this_object = new Example::Plane(seats);
     return new std::shared_ptr<Example::Plane>(this_object);
 }
@@ -247,7 +247,7 @@ int _prop_get_Plane_seats(void* _Nonnull cself){
     /// changed to static_pointer_cast
     c_to_cxx_cself = std::static_pointer_cast<Example::Plane>(*static_cast<std::shared_ptr<std::enable_shared_from_this<Example::Plane>>*>(cself));
     auto result = c_to_cxx_cself->seats();
-    
+
     return result;
 }
 void release_PlaneUsage(void* _Nonnull cself) {
@@ -264,7 +264,7 @@ void* _Nonnull create_PlaneUsage(void* _Nonnull plane){
 }
 
 void* _Nonnull _func_PlaneUsage_getPlane(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::PlaneUsage*>(static_cast<Example::PlaneUsage*>(cself));
     try {
@@ -292,7 +292,7 @@ void* _Nonnull _func_PlaneUsage_getPlane(void* _Nonnull cself, ErrorObj* _Nonnul
 }
 
 void* _Nonnull _func_PlaneUsage_getPlanePtr(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::PlaneUsage*>(static_cast<Example::PlaneUsage*>(cself));
     try {
@@ -320,7 +320,7 @@ void* _Nonnull _func_PlaneUsage_getPlanePtr(void* _Nonnull cself, ErrorObj* _Non
 }
 
 void* _Nonnull _func_PlaneUsage_getPlaneRef(void* _Nonnull cself, ErrorObj* _Nonnull err){
-    
+
     // we might need to avoid dynamic_cast if there is no multiple inheritance
     auto c_to_cxx_cself = dynamic_cast<Example::PlaneUsage*>(static_cast<Example::PlaneUsage*>(cself));
     try {

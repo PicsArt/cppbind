@@ -22,26 +22,6 @@ cheapCar.setCostWithCarPtr(sp: car3)
 assert(cheapCar.cost == car3.cost)
 
 let carUsageObj = CarUsage(car: cheapCar)
-
 let returnedCar = carUsageObj.getCar()
 assert(returnedCar.cost == cheapCar.cost)
-
-let returnedCarPtr = carUsageObj.getCarPtr()
-assert(returnedCarPtr.cost == cheapCar.cost)
-
-let returnedCarRef = carUsageObj.getCarRef()
-assert(returnedCarRef.cost == cheapCar.cost)
-
-let plane = Plane(seats: 100)
-let planeUsageObj = PlaneUsage(plane: plane)
-
-let returnedPlane = planeUsageObj.getPlane()
-assert(returnedPlane.seats == plane.seats)
-
-let returnedPlanePtr = planeUsageObj.getPlanePtr()
-assert(returnedPlanePtr.seats == plane.seats)
-
-let returnedPlaneRef = planeUsageObj.getPlaneRef()
-assert(returnedPlaneRef.seats == plane.seats)
-
 // [shared_ptr-usage]

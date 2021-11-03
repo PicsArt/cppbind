@@ -97,6 +97,7 @@ class CarUsage {
     CarUsage(Car* car) : _car(car) {}
 
     /**
+     * Iegen supports only by value return in case shared_ref is set
      * __API__
      * action: gen_method
      * throws: no_throw
@@ -105,98 +106,8 @@ class CarUsage {
         return *_car;
     }
 
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-    Car* getCarPtr() {
-        return _car;
-    }
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-    Car& getCarRef() {
-        return *_car;
-    }
-
     private:
         Car* _car;
-};
-
-/**
- * __API__
- * action: gen_class
- * package: shared_ptr
- * shared_ref: True
- */
-class Plane : public std::enable_shared_from_this<Plane> {
-    public:
-   /**
-    * __API__
-    * action: gen_constructor
-    */
-    Plane(int seats) : _seats(seats) {}
-
-   /**
-    * value getter
-    *__API__
-    * action: gen_getter
-    * throws: no_throw
-    */
-    const int& seats() {
-        return _seats;
-    }
-
-    private:
-        int _seats;
-};
-
-/**
- * __API__
- * action: gen_class
- * package: shared_ptr
- */
-class PlaneUsage {
-    public:
-   /**
-    * __API__
-    * action: gen_constructor
-    */
-    PlaneUsage(Plane* plane) : _plane(plane) {}
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-    Plane getPlane() {
-        return *_plane;
-    }
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-    Plane* getPlanePtr() {
-        return _plane;
-    }
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-    Plane& getPlaneRef() {
-        return *_plane;
-    }
-
-    private:
-        Plane* _plane;
 };
 
 }

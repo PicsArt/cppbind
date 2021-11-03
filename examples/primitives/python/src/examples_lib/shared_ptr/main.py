@@ -21,12 +21,5 @@ cheap_car.set_cost_with_car_ptr(car3)
 assert cheap_car.cost == car3.cost
 
 car_usage_obj = CarUsage(cheap_car)
-
 returned_car = car_usage_obj.get_car()
 assert(returned_car.cost == cheap_car.cost)
-
-returned_car_ptr = car_usage_obj.get_car_ptr()
-assert(returned_car_ptr.cost == cheap_car.cost)
-
-returned_car_ref = car_usage_obj.get_car_ref()
-assert(returned_car_ref.cost == cheap_car.cost)

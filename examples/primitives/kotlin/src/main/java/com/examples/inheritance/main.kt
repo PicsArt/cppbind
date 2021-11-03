@@ -57,8 +57,12 @@ assert(AnimalUsage.getAquaticAnimalTypeName(aquaticAnimal) == "aquatic")
 
 val frog = Frog()
 assert(AnimalUsage.getAnimalTypeName(frog) == "frog")
-// issue with reinterpret_cast
-// assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
+assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
+
+val animalUsageObj = AnimalUsage()
+assert(animalUsageObj.getFrog().typeName() == "frog")
+assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
+assert(animalUsageObj.getAnimal().typeName() == "frog")
 }
 
 class InheritanceApp {

@@ -119,6 +119,12 @@ class AnimalUsage {
 public:
     /**
      * __API__
+     * action: gen_constructor
+     */
+    AnimalUsage() {}
+
+    /**
+     * __API__
      * action: gen_method
      * throws: no_throw
      */
@@ -134,6 +140,36 @@ public:
     static std::string getAquaticAnimalTypeName(const AquaticAnimal& animal) {
         return animal.typeName();
     }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const Animal& getAnimal() {
+        return frog;
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const AquaticAnimal& getAquaticAnimal() {
+        return frog;
+    }
+
+     /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const Frog& getFrog() {
+        return frog;
+    }
+
+private:
+    Frog frog;
 };
 
 }

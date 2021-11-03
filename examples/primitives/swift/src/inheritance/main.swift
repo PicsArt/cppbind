@@ -43,3 +43,8 @@ assert(AnimalUsage.getAquaticAnimalTypeName(animal: aquaticAnimal) == "aquatic")
 let frog = Frog()
 assert(AnimalUsage.getAnimalTypeName(animal: frog) == "frog")
 assert(AnimalUsage.getAquaticAnimalTypeName(animal: frog) == "frog")
+
+let animalUsageObj = AnimalUsage()
+assert(animalUsageObj.getFrog().typeName() == "frog")
+assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
+assert(animalUsageObj.getAnimal().typeName() == "frog")

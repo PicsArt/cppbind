@@ -45,7 +45,7 @@ $Object:
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
       auto base_{{name}} = reinterpret_cast<{{root_type_name}}*>({{name}});
-      auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
     cxx_to_jni: |
       {%- if root_types_infos[0].vars.shared_ref -%}

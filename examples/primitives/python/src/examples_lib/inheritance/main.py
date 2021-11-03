@@ -56,3 +56,8 @@ assert AnimalUsage.get_aquatic_animal_type_name(aquaticAnimal) == "aquatic"
 frog = Frog()
 assert AnimalUsage.get_animal_type_name(frog) == "frog"
 assert AnimalUsage.get_aquatic_animal_type_name(frog) == "frog"
+
+animal_usage_obj = AnimalUsage()
+assert(animal_usage_obj.get_frog().type_name() == "frog")
+assert(animal_usage_obj.get_aquatic_animal().type_name() == "frog")
+assert(animal_usage_obj.get_animal().type_name() == "frog")

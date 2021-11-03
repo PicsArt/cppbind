@@ -63,13 +63,15 @@ class TestContextDescriptor(unittest.TestCase):
         # asserts that an error is thrown when the same variable is defined twice
         file = 'test.iegen.yaml'
         line = 1
+        var = 'action'
         with self.assertRaises(YamlKeyDuplicationError) as ctx:
             self.ctx_desc.load_merge_ctx_def_map({self.ctx_desc.VAR_DEF_SECTION_KEY:
-                                                      YamlNode({'action': YamlNode({'default': 'test'}, line, file)})},
+                                                      YamlNode({f'{var}': YamlNode({'default': 'test'}, line, file)})},
                                                  self.ctx_desc._ContextDescriptor__ctx_def_map)
         # assert error message
-        self.assertTrue(f"Redefinition of '{self.ctx_desc.VAR_DEF_SECTION_KEY}' "
-                        f"section in line {line} of {file}" in str(ctx.exception))
+        self.assertTrue(f"{var}: "
+                        f"{self.ctx_desc._ContextDescriptor__ctx_def_map[self.ctx_desc.VAR_DEF_SECTION_KEY].line_number}"
+                        f" - {line}")
 
     def _assert_duplicate_error_is_raised(self, key):
         file = 'test.iegen.yaml'

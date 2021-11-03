@@ -206,7 +206,7 @@ class CXXIEGIRBuilder:
                 '_current_working_dir': os.getcwd(),
                 '_pure_comment': '',
                 '_line_number': node.line_number,
-                '_file_full_name': node.file_name,
+                '_file_fullname': node.file_name,
             }
 
         if node.type == NodeType.DIRECTORY_NODE:

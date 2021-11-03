@@ -5,8 +5,8 @@ Module is responsible for yaml config files loading, merging and context variabl
 import copy
 import glob
 import os
-
 from collections import defaultdict
+
 import yaml
 
 from iegen import default_config
@@ -138,8 +138,18 @@ class ContextDescriptor:
         if cls.VAR_DEF_SECTION_KEY in attrs:
             var_def_section = attrs[cls.VAR_DEF_SECTION_KEY]
             if cls.VAR_DEF_SECTION_KEY in ctx_def_map:
-                cls._raise_redefinition_error(cls.VAR_DEF_SECTION_KEY, var_def_section, ctx_def_map[cls.VAR_DEF_SECTION_KEY])
-            ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
+                intersection = var_def_section.keys() & ctx_def_map[cls.VAR_DEF_SECTION_KEY].keys()
+                if intersection:
+                    redefinitions = '\n'.join([f"{redefined_var}: {var_def_section[redefined_var].line_number} - "
+                                               f"{ctx_def_map[cls.VAR_DEF_SECTION_KEY][redefined_var].line_number}"
+                                               for redefined_var in intersection])
+                    raise YamlKeyDuplicationError(f"Variable definition duplicate(s) in\n"
+                                                  f"{ctx_def_map[cls.VAR_DEF_SECTION_KEY].file}"
+                                                  f" - {var_def_section.file}: \n{redefinitions}.")
+                else:
+                    ctx_def_map[cls.VAR_DEF_SECTION_KEY].update(var_def_section)
+            else:
+                ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
 
         cls.load_merge_rules(attrs, ctx_def_map)
 
@@ -187,6 +197,7 @@ class ContextDescriptor:
         """
         A method for loading/merging snippets related sections from yaml config files.
         """
+
         def merge_rules(rules, rules_map, path):
             """
             Method to merge current tree with global one and report errors
@@ -275,7 +286,8 @@ class ContextDescriptor:
             Error.critical("Iegen error: there is no any specified type converter snippet rule")
 
         code_snippets_languages = sorted(list(self.__ctx_def_map[ContextDescriptor.CODE_SNIPPETS_KEY].keys()))
-        type_converter_languages = sorted(list(self.__ctx_def_map[ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY].keys()))
+        type_converter_languages = sorted(
+            list(self.__ctx_def_map[ContextDescriptor.TYPE_CONVERTER_SNIPPETS_KEY].keys()))
         if code_snippets_languages != type_converter_languages:
             languages_with_diff = set(code_snippets_languages).symmetric_difference(set(type_converter_languages))
             Error.critical(f"Iegen error: code snippets and type converters must be both specified for a language. "

@@ -47,9 +47,9 @@ jobs:
           pytest ./src/test/
 
       - name: Run examples tests
-        run: |
-          cd examples/primitives/
-          bazel test //...
+        run:  bazel test //...
+        working-directory: examples/primitives/
+
 
   build_ubuntu:
 

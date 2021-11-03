@@ -74,7 +74,7 @@ $Object:
       {%- set pointee_base = cxx.root_type_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
-      {%- do Error.critical(pointee + ' has an invalid value for shared_ref variable. When shared_ref is set, iegen supports an object return only by value') -%}
+      {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
       {%- else %}
       {#- This section must be replaced with 'cxx_to_c' section of std::shared_ptr converter -#}
       {%- set is_nullable = nullable|default(False) %}

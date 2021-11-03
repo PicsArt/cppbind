@@ -24,8 +24,3 @@ Additionally **c_wrapper_lib_name** and **cxx_out_rel_path** should be properly 
 Here **cxx_out_rel_path** is set to an empty string to not generate a relative includes for iegen c helpers.
 
 For the full example follow the link: `Modulemap Example <https://github.com/PicsArt/iegen/tree/master/examples/feautures/modulemap/HelloExample>`_.
-
-
-
-
-

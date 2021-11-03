@@ -119,6 +119,13 @@ Now let's go through the variables one by one:
     - *target_arch* - Variable for setting target architecture.
     - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
     - *enum_excluded_fields* - A list of enum field names which must be not exposed in target language.
+    - *cxx_out_rel_path* - C output relative path to project output directory. This variable is used for constructing generated C includes.
+    - *c_file_fullname* - Generated cpp file full name.
+    - *h_file_fullname* - Generated header file full name.
+    - *target_file_fullname* - Generated target language(e.g. swift, kotlin etc.) file full name.
+    - *pybind_module_filename* - Generated pybind file containing pybind module code.
+    - *c_pybind_filename* - Generated pybind cpp file containing code which binds all submodules.
+    - *h_pybind_filename* - Generated pybind header file containing includes of all submodules.
 
 .. note::
 

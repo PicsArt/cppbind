@@ -25,7 +25,6 @@ vars: |
   kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
   kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
   kotlin.package_prefix: com.hello_user
-  kotlin.c_wrapper_lib_name:
   kotlin.include_dirs:
     -  ./
     - /usr/lib/jvm/java-11-openjdk-amd64/include

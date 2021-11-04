@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
@@ -14,8 +14,13 @@ class TestContextManager(unittest.TestCase):
         self.config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_null_values/iegen.yaml'
         self.ctx_descriptor = ContextDescriptor(self.config_file)
         # mock to return correct variables from config file
-        ContextDescriptor.get_var_def = Mock(return_value=self.ctx_descriptor._ContextDescriptor__var_def)
+        self.var_def_patch = patch("iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def",
+                                   new=Mock(return_value=self.ctx_descriptor._ContextDescriptor__var_def))
+        self.var_def_patch.start()
         self.ctx_manager = ContextManager(self.ctx_descriptor, 'linux', 'kotlin')
+
+    def tearDown(self) -> None:
+        self.var_def_patch.stop()
 
     def test_evaluated_variable_values(self):
         root_ctx = {}

@@ -36,8 +36,11 @@ class ComparisonTestsBaseClass:
         for root, _, files in os.walk(gen_root):
             common_path = root[len(gen_root):]
             for file in files:
-                examples_file = os.path.join(examples_root, common_path, file)
-                gen_file = os.path.join(root, file)
+                # TODO remove this if there will be a proper solution for std exceptions order
+                if 'std_exc_classes' in file:
+                    continue
+                examples_file = os.path.abspath(os.path.join(examples_root, common_path, file))
+                gen_file = os.path.abspath(os.path.join(root, file))
                 print(f'comparing {examples_file}, {gen_file}')
                 with open(examples_file, "rt") as f1:
                     with open(gen_file, "rt") as f2:

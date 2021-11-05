@@ -162,6 +162,7 @@ void bindExamples(py::module& m) {
     py::module_ shared_ptr_shared_ptr = shared_ptr.def_submodule("shared_ptr", "shared_ptr");
 
     bindExampleCar(shared_ptr_shared_ptr);
+    bindExampleCarUsage(shared_ptr_shared_ptr);
     py::module_ simple = m.def_submodule("simple", "simple");
 
     py::module_ simple_holder = simple.def_submodule("holder", "holder");

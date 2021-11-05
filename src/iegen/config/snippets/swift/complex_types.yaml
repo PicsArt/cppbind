@@ -39,25 +39,70 @@ $Object:
     sc: "UnsafeMutableRawPointer"
   converters:
     c_to_cxx: |
+      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee_base = cxx.root_type_name -%}
+      {#- This section must be replaced with 'c_to_cxx' section of std::shared_ptr converter -#}
       {%- if root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
-      {%- endif -%}
-      {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- if cxx.root_type_name == pointee %}
+      {%- set is_nullable = nullable|default(False) -%}
+      std::shared_ptr<{{pointee}}> {{target_name}}_shared_ptr{{' = nullptr' if is_nullable}};
+      {%- if is_nullable %}
+      if ({{name}}) {
+          {%- if pointee_base == pointee %}
+          {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {%- else %}
+          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+          {%- endif %}
+      }
+      {%- else %}
+      {%- if pointee_base == pointee %}
+      {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {%- else %}
+      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+      {%- endif %}
+      {%- endif %}
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
+      {%- else %}
+      {%- if pointee_base == pointee %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}});
       {%- else %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{cxx.root_type_name}}*>({{name}}));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}));
+      {%- endif %}
       {%- endif %}
     cxx_to_c: |
+      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee_base = cxx.root_type_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
-      {%- endif -%}
-      {%- if cxx.pointee_unqualified_name == cxx.root_type_name %}
-      auto {{target_name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
+      {%- if not cxx.is_value_type -%}
+      {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
       {%- else %}
-      auto value_ptr_{{name}} = const_cast<{{cxx.pointee_unqualified_name}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{cxx.pointee_unqualified_name}}({{name}}) {%endif%});
-      auto {{target_name}} = static_cast<{{cxx.root_type_name}}*>(value_ptr_{{name}});
+      {#- This section must be replaced with 'cxx_to_c' section of std::shared_ptr converter -#}
+      {%- set is_nullable = nullable|default(False) %}
+      std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
+      {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+      {%- if is_nullable %}
+      if ({{name}}) {
+          {%- if pointee_base != pointee %}
+          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
+          {%- else %}
+          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
+          {%- endif %}
+      }
+      {%- else %}
+      {%- if pointee_base != pointee %}
+      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
+      {%- else %}
+      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
+      {%- endif %}
+      {%- endif %}
+      {%- endif %}
+      {%- else %}
+      {%- if pointee_base == pointee %}
+      auto {{target_name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      {%- else %}
+      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      auto {{target_name}} = static_cast<{{pointee_base}}*>(value_ptr_{{name}});
+      {%- endif %}
       {%- endif %}
     swift_to_sc: |
       let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
@@ -333,14 +378,14 @@ std::shared_ptr:
           {%- if pointee_base != pointee %}
           {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
           {%- else %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{name}}));
+          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_base != pointee %}
       {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}})));
       {%- else %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>({{name}}));
+      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
       {%- endif %}
       {%- endif %}
     swift_to_sc: |

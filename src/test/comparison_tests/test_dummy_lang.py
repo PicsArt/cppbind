@@ -1,37 +1,28 @@
 import os
 import shutil
 import unittest
-from unittest.mock import patch, Mock
 
-from iegen.context_manager.ctx_desc import ContextDescriptor
 from .base import ComparisonTestsBaseClass
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-class TestDummyLang(unittest.TestCase, ComparisonTestsBaseClass):
+class TestDummyLang(ComparisonTestsBaseClass, unittest.TestCase):
 
     def __init__(self, methodName='runTest'):
-        ctx_descriptor = ContextDescriptor(os.path.join(SCRIPT_DIR,
-                                                        '../../../examples/tests/my_lang_iegen.yaml'))
-        unittest.TestCase.__init__(self, methodName=methodName)
+        source_glob = '**/*iegen.yaml'
+        examples_dir = os.path.join(SCRIPT_DIR, '../../../examples/tests/')
         ComparisonTestsBaseClass.__init__(self,
-                                          examples_dir=os.path.join(SCRIPT_DIR, '../../../examples/tests/'),
-                                          ctx_descriptor=ctx_descriptor,
+                                          examples_dir=examples_dir,
+                                          source_glob=source_glob,
                                           languages=['my_lang'])
+        unittest.TestCase.__init__(self, methodName=methodName)
 
     def setUp(self) -> None:
-        self.var_def_patch = patch("iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def",
-                                   new=Mock(return_value=self.ctx_descriptor._ContextDescriptor__var_def))
-        self.var_def_patch.start()
-        os.makedirs('tmp')
-        os.chdir('tmp')
-        shutil.copytree(os.path.join(SCRIPT_DIR, '../../../examples/tests/cxx'), './cxx')
-
-    def tearDown(self) -> None:
-        self.var_def_patch.stop()
-        os.chdir(self.test_dir)
-        shutil.rmtree('tmp')
+        super().setUp()
+        shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
+        shutil.copytree(os.path.join(self.examples_root, 'my_lang_snippets'), './my_lang_snippets')
+        shutil.copyfile(os.path.join(self.examples_root, 'my_lang_iegen.yaml'), './my_lang_iegen.yaml')
 
 
 if __name__ == '__main__':

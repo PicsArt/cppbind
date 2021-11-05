@@ -4,6 +4,10 @@ import shutil
 import sys
 import types
 import unittest
+from unittest.mock import patch
+
+from iegen.common.config import config
+from iegen.context_manager.ctx_desc import ContextDescriptor
 
 from iegen.runner import run
 
@@ -12,17 +16,32 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class ComparisonTestsBaseClass:
 
-    def __init__(self, examples_dir, ctx_descriptor, languages=None):
+    def __init__(self, examples_dir, source_glob, languages=None):
         self.languages = languages or ['kotlin', 'swift', 'python']
         self.test_dir = os.getcwd()
         self.gen_root = './'
         self.examples_root = examples_dir
-        self.ctx_descriptor = ctx_descriptor
+        self.source_glob = source_glob
+
+    def setUp(self) -> None:
+        config.application.context_def_glob = self.source_glob
+        os.makedirs('tmp')
+        os.chdir('tmp')
+
+    def tearDown(self) -> None:
+        del config.application.context_def_glob
+        os.chdir(self.test_dir)
+        # clear all generate file
+        shutil.rmtree('tmp')
 
     def test_compare(self):
-
+        ctx_descriptor = ContextDescriptor(self.source_glob)
         # run iegen
-        run(types.SimpleNamespace(plat_lang_options=self.languages), self.ctx_descriptor)
+
+        with patch("iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def") as var_def_mock:
+            # mock to get actual variables not only default ones
+            var_def_mock.return_value = ctx_descriptor._ContextDescriptor__var_def
+            run(types.SimpleNamespace(plat_lang_options=self.languages), ctx_descriptor)
 
         # remove source to not compare
         source_path = self.gen_root + 'cxx'
@@ -33,6 +52,7 @@ class ComparisonTestsBaseClass:
         diff_files = []
         gen_root = self.gen_root
         examples_root = self.examples_root
+
         for root, _, files in os.walk(gen_root):
             common_path = root[len(gen_root):]
             for file in files:

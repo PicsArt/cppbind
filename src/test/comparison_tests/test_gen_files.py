@@ -2,14 +2,12 @@ import os
 import shutil
 import unittest
 
-from iegen.common.config import config
-from iegen.context_manager.ctx_desc import ContextDescriptor
 from test.comparison_tests.base import ComparisonTestsBaseClass
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-class TestFilesIdentical(unittest.TestCase, ComparisonTestsBaseClass):
+class TestFilesIdentical(ComparisonTestsBaseClass, unittest.TestCase, ):
 
     def __init__(self, methodName='runTest'):
         source_glob = 'cxx/**/*iegen.yaml'
@@ -23,7 +21,6 @@ class TestFilesIdentical(unittest.TestCase, ComparisonTestsBaseClass):
         # copy example sources and config
         shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
         shutil.copyfile(os.path.join(self.examples_root, 'iegen_config.cfg'), './iegen_config.cfg')
-
 
 
 if __name__ == '__main__':

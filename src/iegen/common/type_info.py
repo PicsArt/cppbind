@@ -1,13 +1,13 @@
 import types
 
-from cachetools import cached
 
 import iegen.utils.clang as cutil
+from iegen.common.cache import cached
 from iegen.common.cxx_type import CXXType
 from iegen.ir.exec_rules import Context
 
 
-@cached(cache={}, key=lambda ctx, cxx_type: 11 * hash(ctx.runner.language) + hash(cxx_type))
+@cached(cache={}, key=lambda ctx, cxx_type: hash(cxx_type))
 def create_type_info(ctx: Context, cxx_type: CXXType):
     return TypeInfo(ctx, cxx_type)
 

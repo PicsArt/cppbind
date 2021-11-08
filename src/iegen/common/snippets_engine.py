@@ -7,7 +7,6 @@ import filecmp
 import glob
 import os
 import shutil
-from cachetools import cached
 
 from collections.abc import MutableMapping
 from types import SimpleNamespace
@@ -17,6 +16,7 @@ from jinja2 import Template
 import clang.cindex as cli
 from iegen import BANNER_LOGO, converter, logging
 from iegen.common import JINJA_UNIQUE_MARKER
+from iegen.common.cache import cached
 from iegen.common.cxx_type import CXXType
 from iegen.common.error import Error
 from iegen.common.type_info import create_type_info
@@ -372,7 +372,7 @@ class SnippetsEngine:
             variables.update(vars_)
         return variables
 
-    @cached(cache={}, key=lambda self, ctx, cxx_type: 11 * hash(cxx_type) + hash(self.language))
+    @cached(cache={}, key=lambda self, ctx, cxx_type: hash(cxx_type))
     def build_type_converter(self,
                              ctx,
                              cxx_type):

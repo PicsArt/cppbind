@@ -6,9 +6,9 @@ import types
 import unittest
 from unittest.mock import patch
 
+from iegen.common.cache import clear_cache
 from iegen.common.config import config
 from iegen.context_manager.ctx_desc import ContextDescriptor
-
 from iegen.runner import run
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,15 +24,17 @@ class ComparisonTestsBaseClass:
         self.source_glob = source_glob
 
     def setUp(self) -> None:
+        self.initial_src_glob = config.application.context_def_glob
         config.application.context_def_glob = self.source_glob
         os.makedirs('tmp')
         os.chdir('tmp')
 
     def tearDown(self) -> None:
-        del config.application.context_def_glob
+        config.application.context_def_glob = self.initial_src_glob
         os.chdir(self.test_dir)
         # clear all generate file
         shutil.rmtree('tmp')
+        clear_cache()
 
     def test_compare(self):
         ctx_descriptor = ContextDescriptor(self.source_glob)

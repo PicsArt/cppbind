@@ -2,7 +2,6 @@ import os
 import shutil
 import unittest
 
-from iegen.common.config import config
 from test.comparison_tests.base import ComparisonTestsBaseClass
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))

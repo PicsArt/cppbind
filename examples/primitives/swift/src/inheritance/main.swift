@@ -34,3 +34,11 @@ mv.vehicle = bicycle
 // mixed multiple inheritance with interface and class
 let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
+
+
+// const shared_ptr tests
+let mb = MyBicycle(b: bicycle)
+mb.bicycle = bicycle
+let myNewBicycle = Bicycle(numberOfSeats: 2)
+mb.bicycle = myNewBicycle
+assert(myNewBicycle.numberOfSeats == mb.bicycle.numberOfSeats)

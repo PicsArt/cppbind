@@ -5,6 +5,7 @@
 #include <memory>
 #include "cxx/inheritance/parallelogram.hpp"
 #include "cxx/inheritance/vehicle.hpp"
+#include "cxx/inheritance/bicycle.hpp"
 
 namespace iegen::example {
 // [example]
@@ -81,6 +82,46 @@ public:
 
 private:
    std::shared_ptr<Vehicle> _vehicle;
+};
+
+
+/**
+ * __API__
+ * action: gen_class
+ * shared_ref: True
+ * package: inheritance
+ */
+class MyBicycle {
+public:
+
+    /**
+     * __API__
+     * action: gen_constructor
+     */
+    MyBicycle(const std::shared_ptr<Bicycle> & b) : _bicycle(b) {};
+
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    const std::shared_ptr<const Bicycle>& bicycle() {
+        return _bicycle;
+    };
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     */
+    void setBicycle(const std::shared_ptr<const Bicycle> &  b) {
+        _bicycle = b;
+    };
+
+
+private:
+   std::shared_ptr<const Bicycle> _bicycle;
 };
 
 

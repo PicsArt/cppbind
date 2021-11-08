@@ -50,6 +50,29 @@ class Car {
         _cost = sp.cost();
     }
 
+
+    /**
+     * comments
+     *
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void setCostWithCarConstSharedPtr(std::shared_ptr<const Car> sp) {
+        _cost = std::const_pointer_cast<Car>(sp)->cost();
+    }
+
+    /**
+     * comments
+     *
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    std::shared_ptr<const Car> makeConstSharedPtr(std::shared_ptr<Car> sp) {
+        return std::const_pointer_cast<const Car>(sp);
+    }
+
     /**
      * __API__
      * action: gen_method

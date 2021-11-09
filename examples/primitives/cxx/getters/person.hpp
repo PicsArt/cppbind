@@ -37,6 +37,7 @@ public:
      * __API__
      * action: gen_getter
      * throws: no_throw
+     * name: name
      */
     const std::string& fullName() {
         return _fullname;

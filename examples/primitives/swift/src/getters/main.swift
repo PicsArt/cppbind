@@ -11,13 +11,13 @@ assert(doubleNum.num == 1.0)
 
 // [person-usage]
 let person = Person(name: "John Doe", email: "john.doe@mail.com", age: 30)
-assert(person.fullName == "John Doe")
+assert(person.name == "John Doe")
 assert(person.age == 30)
 assert(person.email == "john.doe@mail.com")
 person.age = 25
 assert(person.age == 25)
-person.fullName = "Jane Doe"
-assert(person.fullName == "Jane Doe")
+person.name = "Jane Doe"
+assert(person.name == "Jane Doe")
 // [person-usage]
 
 // [template-get-usage]

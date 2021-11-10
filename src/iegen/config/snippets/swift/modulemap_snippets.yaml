@@ -1,0 +1,31 @@
+file:
+  modulemap:
+    file_path: |
+      {{vars.modulemap_file_fullname}}
+    scopes:
+      - header
+    content: |
+      {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
+
+      framework module {{vars.c_wrapper_lib_name.split('.')[0]}} {
+          umbrella header "{{vars.c_wrapper_lib_name.split('.')[0]}}.h"
+
+          {{vars.modulemap_export|indent(4)}}
+
+          explicit module {{vars.c_wrapper_lib_name.split('.')[-1]}} {
+              {{header|string|indent(8)}}
+              {{cxx_helper_includes|format_list('header "{}"')|join(new_line)|indent(8)}}
+              export *
+          }
+      }
+
+var_header_include: &var_header_include
+  header:
+    unique_content: |
+      header "{{path.basename(vars.h_file_fullname)}}"
+
+interface:
+  modulemap: *var_header_include
+
+class:
+  modulemap: *var_header_include

@@ -7,9 +7,8 @@
 
     variables:
       cxx_helper_includes: |
-        {%- set prj_rel = path.relpath(vars.cxx_out_dir, vars.out_prj_dir) -%}
         {%- set file_rel_name = path.relpath(file_name, vars.cxx_helpers_dir) -%}
-        {{[prj_rel, file_rel_name]| path_join}}
+        {{[vars.cxx_out_rel_path, file_rel_name]|path_join}}
 
 - file:
     files_glob: 

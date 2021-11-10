@@ -38,10 +38,6 @@ OPERATOR_MAPPING = {
 sort_imports = sort_code_string
 
 
-def cxx_rel_path(filepath, cxx_filepath):
-    return os.path.relpath(filepath, cxx_filepath)
-
-
 def get_operator_name(spelling):
     operator = spelling.replace('operator', '').strip()
     return OPERATOR_MAPPING.get(operator, spelling)

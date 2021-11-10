@@ -1,7 +1,7 @@
 file:
   kotlin:
     file_path: |
-      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt
+      {{vars.target_file_fullname}}
     scopes:
       - body
       - include
@@ -16,7 +16,7 @@ file:
       {{body}}
   cxx:
     file_path: |
-      {{vars.cxx_out_dir + pat_sep + [vars.package_prefix, vars.package, vars.file + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp
+      {{vars.c_file_fullname}}
     scopes:
       - namespace
       - body
@@ -69,7 +69,7 @@ var_class_cxx: &var_class_cxx
       #include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- macro gen_include(type_info) -%}
-      {%- if type_info.vars and type_info.vars.is_proj_type and (type_info.vars.package != vars.package or type_info.vars.file != vars.file) -%}
+      {%- if type_info.vars and type_info.vars.is_proj_type -%}
       {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}

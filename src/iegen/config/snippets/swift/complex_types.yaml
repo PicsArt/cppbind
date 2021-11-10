@@ -65,9 +65,9 @@ $Object:
       {%- if nullable|default(False) -%}
       let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
       if let {{name}} = {{name}} {
-          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+        {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       } else {
-          {{target_name}} = nil
+        {{target_name}} = nil
       }
       {%- else -%}
       let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
@@ -91,7 +91,7 @@ $Enum:
     sc_to_swift: |
       let {{target_name}}_optional = {{target_type_name}}(rawValue: {{name}})
       if ({{target_name}}_optional == nil) {
-          {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
+        {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
       let {{target_name}} = {{target_name}}_optional!
 
@@ -113,7 +113,7 @@ std::__cxx11::basic_string:
       let {{target_name}} = strdup({{name}})!
     sc_to_swift: |
       let {{target_name}} = String(cString: {{name}})
-      defer{
+      defer {
         {{name}}.deallocate()
       }
 
@@ -170,9 +170,9 @@ std::vector:
       {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
       {{target_name}}.size = Int64({{name}}.count)
       for _i in 0..<{{name}}.count {
-          let value_{{name}} = {{name}}[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
-          _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
+        let value_{{name}} = {{name}}[_i]
+        {{args[0].snippet('value_{}'.format(name))|indent(2)}}
+        _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
       }
     sc_to_swift: |
       let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
@@ -181,9 +181,9 @@ std::vector:
         _tmp_{{name}}_data.deallocate()
       }
       for _i in 0..<Int({{name}}.size) {
-          let value_{{name}} = _tmp_{{name}}_data[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
-          {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
+        let value_{{name}} = _tmp_{{name}}_data[_i]
+        {{args[0].snippet('value_{}'.format(name))|indent(2)}}
+        {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
       }
     sc_cleanup:
       source: swift
@@ -194,8 +194,8 @@ std::vector:
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
-            let {{name}}_item = {{name}}_data[_i]
-            {{cleanup_code_fragment|indent(4)}}
+          let {{name}}_item = {{name}}_data[_i]
+          {{cleanup_code_fragment|indent(2)}}
         }
         {%- endif %}
         {%- endif %}
@@ -245,28 +245,28 @@ std::map:
       {{target_name}}.size = Int64({{name}}.count)
       var _i_{{name}} = 0
       for (key_{{name}}, val_{{name}}) in {{name}} {
-          {{args[0].snippet('key_{}'.format(name))|indent(4)}}
-          {{args[1].snippet('val_{}'.format(name))|indent(4)}}
-          _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
-          _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
-          _i_{{name}} += 1
+        {{args[0].snippet('key_{}'.format(name))|indent(2)}}
+        {{args[1].snippet('val_{}'.format(name))|indent(2)}}
+        _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
+        _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
+        _i_{{name}} += 1
       }
     sc_to_swift: |
       let _tmp_k_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
       let _tmp_v_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: Int({{name}}.size))
       var {{target_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
       defer {
-          _tmp_k_{{name}}_data.deallocate()
-          _tmp_v_{{name}}_data.deallocate()
+        _tmp_k_{{name}}_data.deallocate()
+        _tmp_v_{{name}}_data.deallocate()
       }
       for _i_{{name}} in 0..<Int({{name}}.size) {
-          let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
-          let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
-          do {
-              {{args[0].snippet('key_{}'.format(name))|indent(8)}}
-              {{args[1].snippet('value_{}'.format(name))|indent(8)}}
-              {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
-          }
+        let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
+        let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
+        do {
+          {{args[0].snippet('key_{}'.format(name))|indent(4)}}
+          {{args[1].snippet('value_{}'.format(name))|indent(4)}}
+          {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
+        }
       }
     sc_cleanup:
       source: swift
@@ -277,8 +277,8 @@ std::map:
         {%- if cleanup_code_fragment %}
         let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for _i in 0..<Int({{name}}.size) {
-            let {{name}}_item = {{name}}_data[_i]
-            {{args[1].snippet('{}_item'.format(name))|indent(4)}}
+          let {{name}}_item = {{name}}_data[_i]
+          {{args[1].snippet('{}_item'.format(name))|indent(2)}}
         }
         {%- endif %}
         {%- endif %}

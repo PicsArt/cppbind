@@ -2,7 +2,6 @@
 Module is responsible for context variables evaluating for current node.
 """
 from collections import OrderedDict
-from unittest.mock import Mock
 
 from iegen import default_config
 from iegen.common.error import Error
@@ -79,16 +78,17 @@ class ContextManager:
         """
         ctx = ctx or OrderedDict()
         args = args or OrderedDict()
+        res = OrderedDict()
 
         # dummy object for identifying undefined and null value defined variables 
-        undefined = Mock()
+        undefined = object()
 
         # add all missing attributes
         for att_name, properties in self.ctx_desc.get_var_def().items():
             new_att_val = args.get(att_name, undefined)
 
             allowed = kind in properties["allowed_on"]
-            if new_att_val == undefined:
+            if new_att_val is undefined:
                 # check mandatory attribute existence
                 if kind in properties["required_on"]:
                     Error.error(f"Attribute '{att_name}' is mandatory attribute on {kind}.",
@@ -103,12 +103,12 @@ class ContextManager:
                         new_att_val = ctx.get(att_name, undefined)
 
                 if allowed:
-                    if new_att_val == undefined:
+                    if new_att_val is undefined:
                         # use default value
-                        new_att_val = ContextManager.get_attr_default_value(
+                        default_val_is_defined, new_att_val = ContextManager.get_attr_default_value(
                             properties, self.platform, self.language)
 
-                        if new_att_val != undefined:
+                        if default_val_is_defined:
                             new_att_val = VariableEvaluator.eval_var_value(properties,
                                                                            new_att_val,
                                                                            ctx,
@@ -135,7 +135,7 @@ class ContextManager:
                     # so we need to parse it to get correct type
                     new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
-            if new_att_val != undefined:
+            if new_att_val is not undefined:
                 # add attr to current node context so that it can be used for coming attributes
                 ctx[att_name] = new_att_val
                 res[att_name] = new_att_val
@@ -158,9 +158,9 @@ class ContextManager:
         # we search for specific key by descending order of priority
         for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
             if key in prop:
-                return prop[key].value
+                return True, prop[key].value
 
-        return undefined
+        return False, None
 
     def filter_by_plat_lang(self, var_values):
         """

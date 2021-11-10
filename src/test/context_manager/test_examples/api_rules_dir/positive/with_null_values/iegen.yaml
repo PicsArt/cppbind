@@ -42,7 +42,3 @@ var_def:
   var_g:
     inheritable: false
     allowed_on: [ root, dir ]
-
-
-
-

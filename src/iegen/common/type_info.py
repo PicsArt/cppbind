@@ -1,28 +1,25 @@
 import types
-
+from functools import lru_cache
 
 import iegen.utils.clang as cutil
-from iegen.common.cache import cached
 from iegen.common.cxx_type import CXXType
-from iegen.ir.exec_rules import Context
+from iegen.ir.exec_rules import RunRule
 
 
-@cached(cache={}, key=lambda ctx, cxx_type: hash(cxx_type))
-def create_type_info(ctx: Context, cxx_type: CXXType):
-    return TypeInfo(ctx, cxx_type)
+@lru_cache(maxsize=None)
+def create_type_info(runner: RunRule, cxx_type: CXXType):
+    return TypeInfo(runner, cxx_type)
 
 
 class TypeInfo:
 
-    def __init__(self, ctx, cxx_type):
-        self._ctx = ctx
+    def __init__(self, runner, cxx_type):
+        self._runner = runner
         self._cxx_type = cxx_type
         # get raw type to be able to find it's context(cxx type might be a typedef, pointer etc.)
         self._raw_type = cxx_type.raw_type
-        self._type_ctx = None
-        if self._raw_type.unqualified_type_name:
-            # for template types find exact context with appropriate template choice
-            self._type_ctx = ctx.lookup_ctx_by_name(self._raw_type.unqualified_type_name)
+        # get type context for cxx type
+        self._type_ctx = runner.get_context(cxx_type.raw_type.unqualified_type_name)
 
     @property
     def cxx(self):
@@ -57,7 +54,7 @@ class TypeInfo:
     @property
     def base_types_infos(self):
         if not hasattr(self, '_base_types_infos'):
-            self._base_types_infos = [create_type_info(self._ctx, CXXType(base_type, self._type_ctx.template_choice))
+            self._base_types_infos = [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
                                       for base_type in
                                       self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
         return self._base_types_infos
@@ -65,7 +62,7 @@ class TypeInfo:
     @property
     def arg_types_infos(self):
         if not hasattr(self, '_arg_types_infos'):
-            self._arg_types_infos = [create_type_info(self._ctx, t) for t in
+            self._arg_types_infos = [create_type_info(self._runner, t) for t in
                                      self._raw_type.template_argument_types] if self._raw_type.is_template else []
         return self._arg_types_infos
 
@@ -76,7 +73,7 @@ class TypeInfo:
             if self._type_ctx and self._type_ctx.kind_name != 'enum':
                 for parent in set(self._type_ctx.ancestors):
                     if not parent.base_types:
-                        self._roots.append(create_type_info(parent, CXXType(parent.cxx_type_name,
+                        self._roots.append(create_type_info(self._runner, CXXType(parent.cxx_type_name,
                                                                             self._type_ctx.template_choice)))
                 if not self._roots:
                     self._roots.append(self)

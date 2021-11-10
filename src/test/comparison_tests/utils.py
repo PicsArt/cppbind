@@ -6,7 +6,6 @@ import types
 import unittest
 from unittest.mock import patch
 
-from iegen.common.cache import clear_cache
 from iegen.common.config import config
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.runner import run
@@ -14,29 +13,29 @@ from iegen.runner import run
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 
-class ComparisonTestsBaseClass:
+class RunCompare:
 
-    def __init__(self, examples_dir, source_glob, languages=None):
+    def __init__(self, examples_root, source_glob, languages=None):
         self.languages = languages or ['kotlin', 'swift', 'python']
         self.test_dir = os.getcwd()
         self.gen_root = './'
-        self.examples_root = examples_dir
+        self.examples_root = examples_root
         self.source_glob = source_glob
 
-    def setUp(self) -> None:
+    def setup(self) -> None:
         self.initial_src_glob = config.application.context_def_glob
         config.application.context_def_glob = self.source_glob
         os.makedirs('tmp')
         os.chdir('tmp')
 
-    def tearDown(self) -> None:
+    def teardown(self) -> None:
         config.application.context_def_glob = self.initial_src_glob
         os.chdir(self.test_dir)
         # clear all generate file
         shutil.rmtree('tmp')
-        clear_cache()
 
-    def test_compare(self):
+    def run(self):
+        # run iegen with given config
         ctx_descriptor = ContextDescriptor(self.source_glob)
         # run iegen
 
@@ -45,23 +44,23 @@ class ComparisonTestsBaseClass:
             var_def_mock.return_value = ctx_descriptor._ContextDescriptor__var_def
             run(types.SimpleNamespace(plat_lang_options=self.languages), ctx_descriptor)
 
+    def compare(self):
+        # compares files from current directory with the files of examples root directory
         # remove source to not compare
         source_path = self.gen_root + 'cxx'
         if os.path.exists(source_path) and os.path.isdir(source_path):
             shutil.rmtree(source_path)
 
-        # compare generated files with golden ones
         diff_files = []
-        gen_root = self.gen_root
-        examples_root = self.examples_root
 
-        for root, _, files in os.walk(gen_root):
-            common_path = root[len(gen_root):]
+        # compare generated files with golden ones
+        for root, _, files in os.walk(self.gen_root):
+            common_path = root[len(self.gen_root):]
             for file in files:
                 # TODO remove this if there will be a proper solution for std exceptions order
                 if 'std_exc_classes' in file:
                     continue
-                examples_file = os.path.abspath(os.path.join(examples_root, common_path, file))
+                examples_file = os.path.abspath(os.path.join(self.examples_root, common_path, file))
                 gen_file = os.path.abspath(os.path.join(root, file))
                 print(f'comparing {examples_file}, {gen_file}')
                 with open(examples_file, "rt") as f1:

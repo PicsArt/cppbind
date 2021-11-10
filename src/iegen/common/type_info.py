@@ -74,10 +74,6 @@ class TypeInfo:
         return self._roots
 
     @property
-    def root_type_name(self):
-        return self.root_types_infos[0].cxx.pointee_unqualified_name if self.root_types_infos else None
-
-    @property
     def vars(self):
         return self._type_ctx.vars if self._type_ctx else None
 

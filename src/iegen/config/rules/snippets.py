@@ -188,7 +188,6 @@ def make_class_context(ctx):
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
             root_types_infos = _type_info.root_types_infos
-            root_type_name = _type_info.root_type_name
 
             return locals()
 

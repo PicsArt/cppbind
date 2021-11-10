@@ -6,7 +6,7 @@ from iegen.common.cxx_type import CXXType
 from iegen.ir.exec_rules import RunRule
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=512)
 def create_type_info(runner: RunRule, cxx_type: CXXType):
     return TypeInfo(runner, cxx_type)
 

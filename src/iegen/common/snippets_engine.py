@@ -373,7 +373,7 @@ class SnippetsEngine:
             variables.update(vars_)
         return variables
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=512)
     def build_type_converter(self, cxx_type):
 
         res = self._build_type_converter(cxx_type)

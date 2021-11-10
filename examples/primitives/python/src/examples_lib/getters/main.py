@@ -13,13 +13,13 @@ assert (doubleNum.num == 1.0)
 
 # [person-usage]
 person = Person("John Doe", "john.doe@mail.com", 30)
-assert (person.full_name == "John Doe")
+assert (person.name == "John Doe")
 assert (person.age == 30)
 assert (person.email == "john.doe@mail.com")
 person.age = 25
 assert (person.age == 25)
-person.full_name = "Jane Doe"
-assert (person.full_name == "Jane Doe")
+person.name = "Jane Doe"
+assert (person.name == "Jane Doe")
 # [person-usage]
 
 

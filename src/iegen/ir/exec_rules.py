@@ -138,10 +138,10 @@ class Context(BaseContext):
     @property
     def setter(self):
         if self.node.api != 'gen_getter':
-            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+            raise AttributeError(f"{self.__class__.__name__}.getter is invalid.")
 
         search_api = 'gen_setter'
-        name = self.vars.name
+        name = self.node.spelling
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
         search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
@@ -154,7 +154,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_getter'
-        name = self.vars.name
+        name = self.node.spelling
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
         search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],

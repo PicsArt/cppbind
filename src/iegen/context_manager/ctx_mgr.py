@@ -105,10 +105,10 @@ class ContextManager:
                 if allowed:
                     if new_att_val is undefined:
                         # use default value
-                        default_val_is_defined, new_att_val = ContextManager.get_attr_default_value(
-                            properties, self.platform, self.language)
+                        new_att_val = ContextManager.get_attr_default_value(
+                            properties, self.platform, self.language, undefined)
 
-                        if default_val_is_defined:
+                        if new_att_val is not undefined:
                             new_att_val = VariableEvaluator.eval_var_value(properties,
                                                                            new_att_val,
                                                                            ctx,
@@ -143,7 +143,7 @@ class ContextManager:
         return res
 
     @staticmethod
-    def get_attr_default_value(prop, plat, lang):
+    def get_attr_default_value(prop, plat, lang, default=None):
         """
         Retrieve language/platform specific default value for current variable.
         """
@@ -158,9 +158,9 @@ class ContextManager:
         # we search for specific key by descending order of priority
         for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
             if key in prop:
-                return True, prop[key].value
+                return prop[key].value
 
-        return False, None
+        return default
 
     def filter_by_plat_lang(self, var_values):
         """

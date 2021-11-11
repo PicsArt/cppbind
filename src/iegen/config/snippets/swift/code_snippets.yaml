@@ -109,6 +109,9 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {{vars.comment|make_doxygen_comment}}
         public class {{converter.swift.target_type_name}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
@@ -144,9 +147,9 @@ class:
       content: |
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} _Nonnull cself) {
             {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{cxx.root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself);
             {%- else %}
-            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{cxx.root_type_name}}*>(cself));
+            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself);
             {%- endif %}
         }
   ch:
@@ -170,6 +173,9 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {{vars.comment|make_doxygen_comment}}
         public protocol {{converter.swift.target_type_name}} {{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
@@ -212,9 +218,13 @@ interface:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{cxx.root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself);
             {%- else %}
-            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{cxx.root_type_name}}*>(cself));
+            {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
+            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself);
+            {%- else %}
+            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself));
+            {%- endif %}
             {%- endif %}
         }
   ch:
@@ -773,7 +783,7 @@ property_getter:
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}){
           {%- if owner_class.root.vars.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx.root_type_name}}>*>(cself)
+                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
                     );
           {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
@@ -854,7 +864,7 @@ getter:
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}){
           {%- if owner_class.root.vars.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx.root_type_name}}>*>(cself)
+                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
                     );
           {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}

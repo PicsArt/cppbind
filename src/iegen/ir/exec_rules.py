@@ -323,25 +323,6 @@ class Context(BaseContext):
         return self.cursor.type.spelling
 
     @property
-    def cxx_root_type_name(self):
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
-                                               cli.CursorKind.CLASS_DECL,
-                                               cli.CursorKind.CLASS_TEMPLATE]:
-            raise AttributeError(f"{self.__class__.__name__}.cxx_root_type_name is invalid.")
-        _root_cursor = cutil.get_base_cursor(self.cursor)
-        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
-
-        if self.is_template:
-            _root_cursor = cutil.get_base_cursor(self.cursor)
-            if _root_cursor == self.cursor:
-                cxx_root_type_name = self.cxx_type_name
-            else:
-                # todo add an example to check this
-                cxx_root_type_name = cutil.replace_template_choice(
-                    _root_cursor.displayname, self.template_choice)
-        return cxx_root_type_name
-
-    @property
     def overridden_contexts(self):
         if self.cursor.kind != cli.CursorKind.CXX_METHOD:
             raise AttributeError(f"{self.__class__.__name__}.overridden_contexts is invalid.")
@@ -362,8 +343,6 @@ class Context(BaseContext):
                 return contexts
             self._overridden_contexts = _get_overridden_contexts(self.cursor)
         return self._overridden_contexts
-
-
 
 
 class RunRule:

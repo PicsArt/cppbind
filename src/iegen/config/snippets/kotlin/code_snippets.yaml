@@ -93,7 +93,7 @@ var_class_cxx: &var_class_cxx
       {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
       {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface'), 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + cxx.root_type_name + '>').jni_to_cxx if root.vars.shared_ref else make_type_converter(cxx.root_type_name).jni_to_cxx %}
+          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.pointee_unqualified_name + '>').jni_to_cxx if root.vars.shared_ref else make_type_converter(root_types_infos[0].cxx.pointee_unqualified_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- if root.vars.shared_ref %}
           delete &{{jni_to_cxx_converter.converted_name('id')}};
@@ -380,14 +380,14 @@ constructor:
           {%- do call_args.append(converter.converted_name(arg.name)) -%}
           {%- endfor %}
           {%- if not owner_class.root.vars.shared_ref %}
-          {{owner_class.cxx.root_type_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+          {{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
           return reinterpret_cast<jlong>(baseptr);
           {%- else %}
           {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
           auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
-          {%- if owner_class.cxx.root_type_name != owner_class.cxx.type_name %}
-          std::shared_ptr<{{owner_class.cxx.root_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.cxx.root_type_name}}>(this_object);
-          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.root_type_name}}>(baseptr));
+          {%- if owner_class.root_types_infos[0].cxx.pointee_unqualified_name != owner_class.cxx.type_name %}
+          std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(this_object);
+          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(baseptr));
           {%- else %}
           return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
           {%- endif %}

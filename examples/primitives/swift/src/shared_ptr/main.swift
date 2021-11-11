@@ -25,3 +25,10 @@ let carUsageObj = CarUsage(car: cheapCar)
 let returnedCar = carUsageObj.getCar()
 assert(returnedCar.cost == cheapCar.cost)
 // [shared_ptr-usage]
+
+// const shared_ptr tests
+cheapCar.setCostWithCarConstSharedPtr(sp: newCar)
+assert(cheapCar.cost == newCar.cost)
+
+let constPtrCar = cheapCar.makeConstSharedPtr(sp: newCar)
+assert(constPtrCar.cost == newCar.cost)

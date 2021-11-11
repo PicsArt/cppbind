@@ -40,6 +40,15 @@ mv.vehicle = bicycle
 val dt = DateTime(15, 1, 2015, 15, 15, 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
 
+// const shared_ptr tests
+val mb = MyBicycle(bicycle)
+mb.bicycle = bicycle
+val myNewBicycle = Bicycle(2)
+mb.bicycle = myNewBicycle
+assert(myNewBicycle.numberOfSeats == mb.bicycle.numberOfSeats)
+
+
+
 // delete instances
 square.close()
 gf.close()

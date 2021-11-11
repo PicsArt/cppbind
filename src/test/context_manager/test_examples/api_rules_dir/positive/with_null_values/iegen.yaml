@@ -1,0 +1,44 @@
+vars:
+  var_b: null
+  var_c: CValue
+  var_g: GValue
+
+
+dir_vars:
+  - dir: "."
+    vars:
+      var_d: null
+      var_e: EValue
+
+var_def:
+  var_a:
+    inheritable: true
+    default: null
+    allowed_on: [ root ]
+
+  var_b:
+    inheritable: true
+    default: BDefault
+    allowed_on: [ root, dir ]
+
+  var_c:
+    inheritable: true
+    default: null
+    allowed_on: [ root ]
+
+  var_d:
+    inheritable: true
+    allowed_on: [ root, dir ]
+
+  var_e:
+    inheritable: true
+    default: EDefault
+    allowed_on: [ root, dir ]
+
+  var_f:
+    inheritable: true
+    allowed_on: [ root, dir ]
+
+  var_g:
+    inheritable: false
+    allowed_on: [ root, dir ]

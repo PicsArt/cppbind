@@ -34,6 +34,10 @@ Generated code for the target language looks as follows.
         .. literalinclude:: /../examples/primitives/swift/src/simple/task.swift
            :language: swift
 
+.. note::
+    By default iegen generates ``System.loadLibrary("wrapper_jni")`` for each kotlin class. To disable this behaviour define **c_wrapper_lib_name** with null value:
+    ``c_wrapper_lib_name: null`` or ``c_wrapper_lib_name:``.
+
 Now we are able to use them.
 
 .. tabs::

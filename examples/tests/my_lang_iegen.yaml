@@ -12,4 +12,4 @@ vars:
         - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
 
 var_def:
-    !include my_lang_var_def.yaml
+    !include my_lang_snippets/my_lang_var_def.yaml

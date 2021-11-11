@@ -147,7 +147,7 @@ class:
         {{'open ' if cxx.is_open}}class {{converter.kotlin.target_type_name}}
         internal constructor(_id: Long){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             companion object {
-                {%- if all_bases_are_interface %}
+                {%- if vars.c_wrapper_lib_name and all_bases_are_interface %}
                 init {
                     System.loadLibrary("{{vars.c_wrapper_lib_name}}")
                 }
@@ -247,9 +247,11 @@ interface:
         {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True)}}
         internal constructor(_id: Long) : {{converter.kotlin.target_type_name}} {
             companion object {
+                {%- if vars.c_wrapper_lib_name %}
                 init {
                     System.loadLibrary("{{vars.c_wrapper_lib_name}}")
                 }
+                {%- endif %}
                 {{companion|string|indent(8)}}
             }
 

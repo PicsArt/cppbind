@@ -7,9 +7,9 @@ import filecmp
 import glob
 import os
 import shutil
-from cachetools import cached
 
 from collections.abc import MutableMapping
+from functools import lru_cache
 from types import SimpleNamespace
 
 from jinja2 import Template
@@ -343,7 +343,8 @@ class SnippetsEngine:
     TYPES_KEY = 'types'
     CONVERTERS_KEY = 'converters'
 
-    def __init__(self, ctx_desc, platform, language):
+    def __init__(self, runner, ctx_desc, platform, language):
+        self.runner = runner
         self.platform = platform
         self.language = language
         self.ctx_desc = ctx_desc
@@ -372,13 +373,10 @@ class SnippetsEngine:
             variables.update(vars_)
         return variables
 
-    @cached(cache={}, key=lambda self, ctx, cxx_type: 11 * hash(cxx_type) + hash(self.language))
-    def build_type_converter(self,
-                             ctx,
-                             cxx_type):
+    @lru_cache(maxsize=512)
+    def build_type_converter(self, cxx_type):
 
-        res = self._build_type_converter(ctx,
-                                         cxx_type)
+        res = self._build_type_converter(cxx_type)
 
         if res is None:
             raise KeyError(f"Can not find type for {cxx_type.type_name}")
@@ -581,9 +579,9 @@ class SnippetsEngine:
                                                            converters=type_converters,
                                                            custom=custom)
 
-    def _create_type_info(self, ctx, search_name, cxx_type, template_args=None, **kwargs):
+    def _create_type_info(self, search_name, cxx_type, template_args=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
-        ref_ctx = ctx.find_by_type(search_name)
+        ref_ctx = self.runner.get_context(search_name)
         if ref_ctx is not None:
             if ref_ctx.cursor.kind == cli.CursorKind.ENUM_DECL:
                 search_name = ENUM_INFO_TYPE
@@ -596,7 +594,7 @@ class SnippetsEngine:
             # type info for given type is not available
             return None
 
-        type_info = create_type_info(ctx, cxx_type)
+        type_info = create_type_info(self.runner, cxx_type)
         type_converter = type_converter.make_type_converter(type_info)
 
         if template_args:
@@ -605,7 +603,6 @@ class SnippetsEngine:
         return type_converter
 
     def _build_type_converter(self,
-                              ctx: Context,
                               cxx_type: CXXType,
                               lookup_type: CXXType = None,
                               search_name: str = None):
@@ -619,34 +616,28 @@ class SnippetsEngine:
                       f"and template choice {template_choice}")
         type_info = None
         if not cxx_type.is_template:
-            type_info = self._create_type_info(ctx,
-                                               search_name,
+            type_info = self._create_type_info(search_name,
                                                cxx_type=cxx_type)
 
         if type_info is None:
             unqualified_name = lookup_type.unqualified_type_name
             if unqualified_name != search_name:
-                return self._build_type_converter(ctx,
-                                                  cxx_type,
+                return self._build_type_converter(cxx_type,
                                                   lookup_type,
                                                   search_name=unqualified_name)
             pointee_type = lookup_type.pointee_type
             if pointee_type != lookup_type:
-                return self._build_type_converter(ctx,
-                                                  cxx_type,
+                return self._build_type_converter(cxx_type,
                                                   pointee_type)
             if lookup_type.is_function_proto:
                 # here we assume lookup_type holds clang type
                 # update later when we will be able to parse lambda type from string
-                tmpl_args = [self._build_type_converter(ctx,
-                                                        CXXType(arg_type, cxx_type.template_choice))
+                tmpl_args = [self._build_type_converter(CXXType(arg_type, cxx_type.template_choice))
                              for arg_type in lookup_type.type_.argument_types()]
                 tmpl_args.append(
-                    self._build_type_converter(ctx,
-                                               CXXType(lookup_type.type_.get_result(), cxx_type.template_choice)))
+                    self._build_type_converter(CXXType(lookup_type.type_.get_result(), cxx_type.template_choice)))
 
-                type_info = self._create_type_info(ctx,
-                                                   FUNCTION_PROTO_INFO_TYPE,
+                type_info = self._create_type_info(FUNCTION_PROTO_INFO_TYPE,
                                                    cxx_type=cxx_type,
                                                    template_args=tmpl_args)
                 return type_info
@@ -655,8 +646,7 @@ class SnippetsEngine:
             # e.g. a::Stack<T> and a::Stack<Project>
             # might be a template typedef so get the canonical type and then proceed
             if lookup_type.is_template and not lookup_type.is_typedef:
-                tmpl_args = [self._build_type_converter(ctx,
-                                                        arg_type)
+                tmpl_args = [self._build_type_converter(arg_type)
                              for arg_type in lookup_type.template_argument_types]
 
                 # for the case when all arguments are exposed
@@ -672,20 +662,18 @@ class SnippetsEngine:
                     lookup_type = lookup_type.canonical_type
 
                 # at first search with full exposed name
-                type_info = self._create_type_info(ctx,
-                                                   lookup_type.type_name,
+                type_info = self._create_type_info(lookup_type.type_name,
                                                    cxx_type=cxx_type,
                                                    template_args=tmpl_args)
                 if not type_info:
                     # if not found with full name search without arguments
-                    type_info = self._create_type_info(ctx,
-                                                       lookup_type.template_type_name,
+                    type_info = self._create_type_info(lookup_type.template_type_name,
                                                        cxx_type=cxx_type,
                                                        template_args=tmpl_args)
                 return type_info
 
             canonical_type = lookup_type.canonical_type
             if canonical_type != lookup_type:
-                return self._build_type_converter(ctx, cxx_type, canonical_type)
+                return self._build_type_converter(cxx_type, canonical_type)
 
         return type_info

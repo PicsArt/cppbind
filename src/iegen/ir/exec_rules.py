@@ -138,10 +138,10 @@ class Context(BaseContext):
     @property
     def setter(self):
         if self.node.api != 'gen_getter':
-            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+            raise AttributeError(f"{self.__class__.__name__}.getter is invalid.")
 
         search_api = 'gen_setter'
-        name = self.vars.name
+        name = self.node.spelling
         if name.lower().startswith('get'):
             name = name[3:].lstrip('_')
         search_names = {f"set_{name}", "set" + name[:1].upper() + name[1:],
@@ -154,7 +154,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
         search_api = 'gen_getter'
-        name = self.vars.name
+        name = self.node.spelling
         if name.lower().startswith('set'):
             name = name[3:].lstrip('_')
         search_names = {f"get_{name}", "get" + name[:1].upper() + name[1:],
@@ -323,25 +323,6 @@ class Context(BaseContext):
         return self.cursor.type.spelling
 
     @property
-    def cxx_root_type_name(self):
-        if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
-                                               cli.CursorKind.CLASS_DECL,
-                                               cli.CursorKind.CLASS_TEMPLATE]:
-            raise AttributeError(f"{self.__class__.__name__}.cxx_root_type_name is invalid.")
-        _root_cursor = cutil.get_base_cursor(self.cursor)
-        cxx_root_type_name = _root_cursor.type.get_canonical().spelling
-
-        if self.is_template:
-            _root_cursor = cutil.get_base_cursor(self.cursor)
-            if _root_cursor == self.cursor:
-                cxx_root_type_name = self.cxx_type_name
-            else:
-                # todo add an example to check this
-                cxx_root_type_name = cutil.replace_template_choice(
-                    _root_cursor.displayname, self.template_choice)
-        return cxx_root_type_name
-
-    @property
     def overridden_contexts(self):
         if self.cursor.kind != cli.CursorKind.CXX_METHOD:
             raise AttributeError(f"{self.__class__.__name__}.overridden_contexts is invalid.")
@@ -362,8 +343,6 @@ class Context(BaseContext):
                 return contexts
             self._overridden_contexts = _get_overridden_contexts(self.cursor)
         return self._overridden_contexts
-
-
 
 
 class RunRule:

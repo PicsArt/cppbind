@@ -40,7 +40,7 @@ $Object:
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = cxx.root_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {#- This section must be replaced with 'c_to_cxx' section of std::shared_ptr converter -#}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
@@ -71,7 +71,7 @@ $Object:
       {%- endif %}
     cxx_to_c: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = cxx.root_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -348,7 +348,7 @@ std::shared_ptr:
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root = args[0].cxx.root_type_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
@@ -371,7 +371,7 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_root = args[0].cxx.root_type_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}

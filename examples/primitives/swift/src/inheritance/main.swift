@@ -20,7 +20,6 @@ assert(square.length == 5.0)
 assert(square.perimeter() == 20.0)
 // [multi-inheritance-usage]
 
-
 // other test cases
 let gf = GeometricFigure(p: square)
 assert(gf.parallelogram.cself == square.cself)
@@ -30,15 +29,22 @@ assert(gf.parallelogram.cself == rhombus.cself)
 let mv = MyVehicle(v: bicycle)
 mv.vehicle = bicycle
 
-
 // mixed multiple inheritance with interface and class
 let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
 
+// test multiple inheritance in case some bases have API, others no
+let animal = AnimalImpl()
+assert(AnimalUsage.getAnimalTypeName(animal: animal) == "animal")
 
-// const shared_ptr tests
-let mb = MyBicycle(b: bicycle)
-mb.bicycle = bicycle
-let myNewBicycle = Bicycle(numberOfSeats: 2)
-mb.bicycle = myNewBicycle
-assert(myNewBicycle.numberOfSeats == mb.bicycle.numberOfSeats)
+let aquaticAnimal = AquaticAnimal()
+assert(AnimalUsage.getAquaticAnimalTypeName(animal: aquaticAnimal) == "aquatic")
+
+let frog = Frog()
+assert(AnimalUsage.getAnimalTypeName(animal: frog) == "frog")
+assert(AnimalUsage.getAquaticAnimalTypeName(animal: frog) == "frog")
+
+let animalUsageObj = AnimalUsage()
+assert(animalUsageObj.getFrog().typeName() == "frog")
+assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
+assert(animalUsageObj.getAnimal().typeName() == "frog")

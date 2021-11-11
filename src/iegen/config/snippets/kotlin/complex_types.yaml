@@ -38,7 +38,7 @@ $Object:
     jni_to_cxx: |
       {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
       {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- set pointee_base = cxx.root_type_name %}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name %}
       {#- This section must be replaced with 'jni_to_cxx' section of std::shared_ptr converter -#}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) %}
@@ -66,12 +66,12 @@ $Object:
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
       auto base_{{name}} = reinterpret_cast<{{pointee_base}}*>({{name}});
-      auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
       {%- endif %}
     cxx_to_jni: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = cxx.root_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -105,7 +105,7 @@ $Object:
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{cxx.root_type_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
+      {{root_types_infos[0].cxx.pointee_unqualified_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
       {%- endif %}
     kotlin_to_jdk: |
@@ -361,7 +361,7 @@ std::shared_ptr:
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_root =  args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
@@ -385,7 +385,7 @@ std::shared_ptr:
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
-      {%- set pointee_root = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}

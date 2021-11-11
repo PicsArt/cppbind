@@ -13,7 +13,7 @@ class CXXType:
         self.template_choice = template_choice
 
     def __eq__(self, other):
-        return self.type_ == other.type_ and self.template_choice == other.template_choice
+        return self.type_name == other.type_name
 
     def __hash__(self):
         return hash(self.type_name)

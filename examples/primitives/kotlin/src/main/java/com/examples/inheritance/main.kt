@@ -56,6 +56,22 @@ mv.close()
 rhombus.close()
 bicycle.close()
 rectangle.close()
+
+// test multiple inheritance in case some bases have API, others no
+val animal = AnimalImpl()
+assert(AnimalUsage.getAnimalTypeName(animal) == "animal")
+
+val aquaticAnimal = AquaticAnimal()
+assert(AnimalUsage.getAquaticAnimalTypeName(aquaticAnimal) == "aquatic")
+
+val frog = Frog()
+assert(AnimalUsage.getAnimalTypeName(frog) == "frog")
+assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
+
+val animalUsageObj = AnimalUsage()
+assert(animalUsageObj.getFrog().typeName() == "frog")
+assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
+assert(animalUsageObj.getAnimal().typeName() == "frog")
 }
 
 class InheritanceApp {

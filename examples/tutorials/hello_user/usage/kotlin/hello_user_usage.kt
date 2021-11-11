@@ -6,6 +6,11 @@ import com.hello_user.hello.*
 class HelloUserApp {
 
     companion object {
+
+        init {
+            System.loadLibrary("wrapper_jni")
+        }
+
         @JvmStatic
         fun main(args: Array<String>) {
 

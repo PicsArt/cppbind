@@ -14,9 +14,9 @@ rules:
         cxx_to_jni: |
           {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not cxx.is_pointer}}{{name}});
         kotlin_to_jdk:
-          val {{target_name}} = {{name}}.getObjId()
+          val {{target_name|to_camel_case}} = {{name}}.getObjId()
         jdk_to_kotlin:
-          val {{target_name}} = {{target_type_name}}({{name}})
+          val {{target_name|to_camel_case}} = {{target_type_name}}({{name}})
 
   python.type_converters:
     iegen::example::Buffer:

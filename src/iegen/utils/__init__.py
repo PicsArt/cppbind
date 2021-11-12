@@ -122,8 +122,14 @@ def make_camel_case(string, sub_strings=None):
         for p in sub_strings:
             string = string.replace(p, make_camel_case(p))
         return string
-    init, *temp = string.split('_')
-    return ''.join([init, *map(str.title, temp)])
+    init, *temp = string.strip('_').split('_')
+    return ''.join([init, *map(_first_upper, temp)])
+
+
+def _first_upper(value):
+    if value:
+        return value[0].upper() + value[1:]
+    return value
 
 
 def clear_iegen_generated_files(directory):

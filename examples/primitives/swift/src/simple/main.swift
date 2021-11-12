@@ -18,7 +18,7 @@ assert(prj.tasks()[0].title == task1.title)
 
 // [root-usage]
 let path = "/path/to/root"
-let root = Root(_path: path)
+let root = Root(path: path)
 assert(root.path == path)
 // [root-usage]
 

@@ -67,24 +67,26 @@ rules:
           *_second_data_{{target_name}} = {{name}}.height;
           {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
         swift_to_sc: |
-          let _first_{{target_name}} = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-          let _second_{{target_name}} = UnsafeMutablePointer<Float>.allocate(capacity: 1)
+          {%- set t_name = target_name|to_camel_case -%}
+          let {{t_name}}First = UnsafeMutablePointer<Float>.allocate(capacity: 1)
+          let {{t_name}}Second = UnsafeMutablePointer<Float>.allocate(capacity: 1)
           defer {
-            _first_{{target_name}}.deallocate()
-            _second_{{target_name}}.deallocate()
+            {{t_name}}First.deallocate()
+            {{t_name}}Second.deallocate()
           }
-          var {{target_name}} = {{target_type_name}}()
-          {{target_name}}.first = UnsafeMutableRawPointer(_first_{{target_name}})
-          {{target_name}}.second = UnsafeMutableRawPointer(_second_{{target_name}})
-          _first_{{target_name}}[0] = {{name}}.0
-          _second_{{target_name}}[0] = {{name}}.1
+          var {{t_name}} = {{target_type_name}}()
+          {{t_name}}.first = UnsafeMutableRawPointer({{t_name}}First)
+          {{t_name}}.second = UnsafeMutableRawPointer({{t_name}}Second)
+          {{t_name}}First[0] = {{name}}.0
+          {{t_name}}Second[0] = {{name}}.1
         sc_to_swift: |
-          let _tmp_pair_first_{{name}}_data = UnsafeBufferPointer<Float>(start: {{name}}.first.assumingMemoryBound(to: Float.self), count: 1)
-          let _tmp_pair_second_{{name}}_data = UnsafeBufferPointer<Float>(start: {{name}}.second.assumingMemoryBound(to: Float.self), count: 1)
+          {%- set t_name = target_name|to_camel_case -%}
+          let {{name}}FirstData = UnsafeBufferPointer<Float>(start: {{name}}.first.assumingMemoryBound(to: Float.self), count: 1)
+          let {{name}}SecondData = UnsafeBufferPointer<Float>(start: {{name}}.second.assumingMemoryBound(to: Float.self), count: 1)
           defer {
-            _tmp_pair_first_{{name}}_data.deallocate()
-            _tmp_pair_second_{{name}}_data.deallocate()
+            {{name}}FirstData.deallocate()
+            {{name}}SecondData.deallocate()
           }
-          let first_{{target_name}} = _tmp_pair_first_{{name}}_data[0]
-          let second_{{target_name}} = _tmp_pair_second_{{name}}_data[0]
-          let {{target_name}}: (Float, Float) = (first_{{target_name}}, second_{{target_name}})
+          let {{t_name}}First = {{name}}FirstData[0]
+          let {{t_name}}Second = {{name}}SecondData[0]
+          let {{t_name}}: (Float, Float) = ({{t_name}}First, {{t_name}}Second)

@@ -14,7 +14,7 @@ do {
 }
 
 do {
-    let _ = try MiscExc.returnInteger(do_throw: true)
+    let _ = try MiscExc.returnInteger(doThrow: true)
     assert(false)
 } catch is StdOutOfRange {
 } catch {
@@ -22,7 +22,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "simple_child")
+    try MiscExc.raiseErrorByType(errType: "simple_child")
 } catch let err as SimpleChildException {
     assert(err.errNum() == 100)
 } catch {
@@ -44,7 +44,7 @@ func genUncaughtExceptions() {
 genUncaughtExceptions()
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "system")
+    try MiscExc.raiseErrorByType(errType: "system")
 } catch let err as SystemError {
     assert(err.what() == "system error")
 } catch {
@@ -52,7 +52,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "file")
+    try MiscExc.raiseErrorByType(errType: "file")
 } catch let err as FileError {
     assert(err.what() == "file error")
 } catch {
@@ -60,7 +60,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "file")
+    try MiscExc.raiseErrorByType(errType: "file")
 } catch let err as SystemError {
     assert(err.what() == "file error")
 } catch {
@@ -68,7 +68,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "runtime")
+    try MiscExc.raiseErrorByType(errType: "runtime")
 } catch let err as StdRuntimeError {
     assert(err.what() == "runtime error")
 } catch {
@@ -76,7 +76,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "runtime")
+    try MiscExc.raiseErrorByType(errType: "runtime")
 } catch let err as StdException {
     assert(err.what() == "runtime error")
 } catch {
@@ -84,14 +84,14 @@ do {
 }
 
 do {
-    let n = try MiscExc.returnInteger(do_throw: false)
+    let n = try MiscExc.returnInteger(doThrow: false)
     assert(n.value == 1)
 } catch {
     assert(false)
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "simple_base")
+    try MiscExc.raiseErrorByType(errType: "simple_base")
 } catch let err as SimpleBaseException {
     assert(err.errNum() == 200)
 } catch {
@@ -99,7 +99,7 @@ do {
 }
 
 do {
-    try MiscExc.raiseErrorByType(err_type: "")
+    try MiscExc.raiseErrorByType(errType: "")
 } catch let err as StdException {
     assert(err.what() == "std::exception")
 } catch {

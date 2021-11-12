@@ -38,9 +38,9 @@ int:
     c_to_cxx:
     cxx_to_c:
     swift_to_sc:
-      let {{target_name}} = CInt({{name}})
+      let {{target_name|to_camel_case}} = CInt({{name|to_camel_case}})
     sc_to_swift:
-      let {{target_name}} = Int({{name}})
+      let {{target_name|to_camel_case}} = Int({{name}})
 
 unsigned int:
   custom:
@@ -54,9 +54,9 @@ unsigned int:
     c_to_cxx:
     cxx_to_c:
     swift_to_sc:
-      let {{target_name}} = CUnsignedInt({{name}})
+      let {{target_name|to_camel_case}} = CUnsignedInt({{name|to_camel_case}})
     sc_to_swift:
-      let {{target_name}} = UInt({{name}})
+      let {{target_name|to_camel_case}} = UInt({{name}})
 
 short:
   custom:

@@ -46,7 +46,7 @@ assert(Mirror(reflecting: pairPrjPrj).children.count == 2)
 assert(pairPrjPrj.0.title == prj1.title)
 assert(pairPrjPrj.1.title == prj2.title)
 
-let root1 = Root(_path: "/path/to/root/")
+let root1 = Root(path: "/path/to/root/")
 let pairRootPrj = tm.makePair(arg0: root1, arg1: prj1)
 assert(Mirror(reflecting: pairRootPrj).children.count == 2)
 assert(pairRootPrj.0.path == root1.path)
@@ -57,7 +57,7 @@ assert(pairRootPrj.1.title == prj1.title)
 // [addressable-examples]
 let path = "/path/to/root/"
 let name = "root_name"
-let root = Root(_path: path)
+let root = Root(path: path)
 let addressableRoot = AddressableImplRoot(parent: root, name: name)
 assert(addressableRoot.absPath() == path + name)
 let component = Component(parent: root, name: name)
@@ -76,7 +76,7 @@ assert(wrapperPair.value.1 == "fourth")
 
 
 // [pair-examples]
-let student = Student(st_name: "John Doe")
+let student = Student(stName: "John Doe")
 let employee = Employee(name: "Jane Doe")
 let pair1 = PairStudent(first: "student", second: student)
 let pair2 = PairEmployee(first: "employee", second: employee)

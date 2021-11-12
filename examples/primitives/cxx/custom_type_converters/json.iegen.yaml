@@ -16,9 +16,9 @@ rules:
           auto {{name}}_str = {{name}}.dump();
           auto {{target_name}} = strdup({{name}}_str.c_str());
         swift_to_sc: |
-          let {{target_name}} = strdup({{name}})!
+          let {{target_name|to_camel_case}} = strdup({{name}})!
         sc_to_swift: |
-          let {{target_name}} = String(cString: {{name}}!)
+          let {{target_name|to_camel_case}} = String(cString: {{name}}!)
           defer {
             {{name}}!.deallocate()
           }

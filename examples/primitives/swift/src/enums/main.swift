@@ -1,18 +1,24 @@
+import XCTest
 import Wrapper
 
-// [color-usage]
-assert(Color.Red.rawValue == 1)
-assert(Color.Blue.rawValue == 20)
+class EnumsTests: XCTestCase {
 
-assert(String(describing: Color.Blue) == "20")
+    func test() throws {
+        // [color-usage]
+        assert(Color.Red.rawValue == 1)
+        assert(Color.Blue.rawValue == 20)
 
-let frame = Frame()
-frame.backgroundColor = Color.Red
-assert(frame.backgroundColor == Color.Red)
+        assert(String(describing: Color.Blue) == "20")
 
-// [color-usage]
+        let frame = Frame()
+        frame.backgroundColor = Color.Red
+        assert(frame.backgroundColor == Color.Red)
 
-assert(ColorShade.ShadeLight.rawValue == 1)
-assert(ColorShade.ShadeDark.rawValue == 2)
-frame.backgroundColorShade = ColorShade.ShadeDark
-assert(frame.backgroundColorShade == ColorShade.ShadeDark)
+        // [color-usage]
+
+        assert(ColorShade.ShadeLight.rawValue == 1)
+        assert(ColorShade.ShadeDark.rawValue == 2)
+        frame.backgroundColorShade = ColorShade.ShadeDark
+        assert(frame.backgroundColorShade == ColorShade.ShadeDark)
+    }
+}

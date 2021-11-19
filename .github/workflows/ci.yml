@@ -13,7 +13,7 @@ jobs:
 
   build_macos:
 
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
@@ -42,7 +42,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run examples tests
-        run:  bazel test //swift:all
+        run:  bazel test //swift:all --macos_minimum_os=11.6.1
         working-directory: examples/primitives/
 
 

@@ -41,7 +41,11 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Run examples tests
+      - name: Run unit tests
+        run: |
+          pytest ./src/test/
+
+      - name: Run examples tests for swift
         run:  bazel test //swift:all --macos_minimum_os=11.6.1
         working-directory: examples/primitives/
 
@@ -80,7 +84,7 @@ jobs:
         run: |
           pytest ./src/test/
 
-      - name: Run examples tests
+      - name: Run examples tests for kotlin and python
         run: |
           cd examples/primitives/
           bazel test //python:all //kotlin:all

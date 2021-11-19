@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, I325-string-return-bugfix ]
   pull_request:
     branches: [ master ]
 
@@ -13,7 +13,7 @@ jobs:
 
   build_macos:
 
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
@@ -41,13 +41,8 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Run unit tests
-        run: |
-          export ANDROID_NDK=/usr/local/share/android-ndk
-          pytest ./src/test/
-
       - name: Run examples tests
-        run:  bazel test //...
+        run:  bazel test //swift:all --macos_minimum_os=11.6.1
         working-directory: examples/primitives/
 
 
@@ -88,4 +83,4 @@ jobs:
       - name: Run examples tests
         run: |
           cd examples/primitives/
-          bazel test //...
+          bazel test //python:all //kotlin:all

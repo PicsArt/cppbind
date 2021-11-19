@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ master, I325-string-return-bugfix ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 

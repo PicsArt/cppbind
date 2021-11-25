@@ -132,8 +132,9 @@ class ContextDescriptor:
 
         for section in (cls.DIR_SECTION_KEY, cls.FILE_SECTION_KEY, cls.TYPE_SECTION_KEY):
             if section in attrs:
-                for item in attrs[section]:
-                    flatten_dict(item, section, [])
+                if attrs[section].value is not None:
+                    for item in attrs[section]:
+                        flatten_dict(item, section, [])
 
         if cls.VAR_DEF_SECTION_KEY in attrs:
             var_def_section = attrs[cls.VAR_DEF_SECTION_KEY]
@@ -146,8 +147,7 @@ class ContextDescriptor:
                     raise YamlKeyDuplicationError(f"Variable definition duplicate(s) in\n"
                                                   f"{ctx_def_map[cls.VAR_DEF_SECTION_KEY].file}"
                                                   f" - {var_def_section.file}: \n{redefinitions}.")
-                else:
-                    ctx_def_map[cls.VAR_DEF_SECTION_KEY].update(var_def_section)
+                ctx_def_map[cls.VAR_DEF_SECTION_KEY].update(var_def_section)
             else:
                 ctx_def_map[cls.VAR_DEF_SECTION_KEY] = var_def_section
 

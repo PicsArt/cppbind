@@ -9,6 +9,7 @@ from collections.abc import MutableMapping
 
 import yaml
 
+from iegen import Error
 from iegen.common.config import config, PROJECT_CONFIG_DIR
 
 
@@ -164,16 +165,20 @@ def construct_include(loader, node):
         for filename in filenames:
             for file_path in glob.glob(filename, recursive=True):
                 sub_yaml = None
-                with open(file_path, 'r') as file:
-                    if extension in ('yaml', 'yml'):
-                        sub_yaml = yaml.load(file, MyLoader)
-                        if sub_node is not None:
-                            for nselect in sub_node:
-                                if isinstance(sub_yaml, list):
-                                    nselect = int(nselect)
-                                sub_yaml = sub_yaml[nselect]
-                    else:
-                        raise Exception('can only include yaml file')
+                try:
+                    with open(file_path, 'r') as file:
+                        if extension in ('yaml', 'yml'):
+                            sub_yaml = yaml.load(file, MyLoader)
+                            if sub_node is not None:
+                                for nselect in sub_node:
+                                    if isinstance(sub_yaml, list):
+                                        nselect = int(nselect)
+                                    sub_yaml = sub_yaml[nselect]
+                        else:
+                            Error.critical(f'Can only include yaml file: {file_path} file has not supported extension "{extension}"')
+                except OSError as err:
+                    Error.critical(f"Cannot read file {file_path}: {err}")
+
                 rdata = join_nodes(rdata, sub_yaml)
 
         return rdata
@@ -230,7 +235,7 @@ def has_type(obj, type_cls):
     or is an instance of YamlNode which has value of given type.
     Used to eliminate some long checks.
     """
-    return isinstance(obj, YamlNode) and obj.is_of_type(type_cls) or isinstance(obj, type_cls)
+    return obj.is_of_type(type_cls) if isinstance(obj, YamlNode) else isinstance(obj, type_cls)
 
 
 def to_value(obj):

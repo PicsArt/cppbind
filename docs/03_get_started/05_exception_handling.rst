@@ -26,7 +26,7 @@ that the user hasn't forgotten about throw ability of method. The example of emp
 
 .. note::
     The exception list defined for swift getters/setters is ignored, since the language doesn't let us to throw an exception
-    from gettter/setter. So user need only to set **throws** variable to **no_throw** value.
+    from getter/setter. So user need only to set **throws** variable to **no_throw** value.
 
 In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions

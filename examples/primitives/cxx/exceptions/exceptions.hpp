@@ -166,6 +166,16 @@ class ThrowExc {
     // [throw-example]
     /**
      * __API__
+     * action: gen_constructor
+     * throws:
+     *   - std::invalid_argument
+     */
+     ThrowExc(bool do_throw=false) {
+        if (do_throw) throw std::invalid_argument("inv_arg");
+     }
+
+    /**
+     * __API__
      * action: gen_method
      * throws:
      *   - std::out_of_range
@@ -195,6 +205,32 @@ class ThrowExc {
         throw std::invalid_argument("return value error");
     }
     // [throw-example]
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws:
+     *   - std::invalid_argument
+     */
+    std::string prop() {
+        throw std::invalid_argument("inv_arg");
+        return _prop;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws:
+     *   - std::invalid_argument
+     *   - std::out_of_range
+     */
+     void setProp(std::string s) {
+        throw std::out_of_range("out_of_range");
+        _prop = s;
+     }
+
+     private:
+     std::string _prop = "prop";
 };
 
  /**
@@ -207,12 +243,42 @@ class NoThrowExc {
     public:
     /**
      * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+     NoThrowExc(bool do_throw=false) {
+        if (do_throw) throw std::invalid_argument("inv_arg");
+     }
+
+    /**
+     * __API__
      * action: gen_method
      * throws: no_throw
      */
     static void noop() {
         throw(1);
     }
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    std::string prop() {
+        return _prop;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     */
+     void setProp(std::string s) {
+        _prop = s;
+     }
+
+    private:
+    std::string _prop = "prop";
 };
 
 /**

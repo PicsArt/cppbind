@@ -134,12 +134,14 @@ class Converter:
                  snippet_name,
                  custom,
                  type_converter,
+                 make_type_converter_cb,
                  **kwargs):
         self._type_info = type_info
         self._type_converter = type_converter
         self._template_args = template_args
         self._snippet_name = snippet_name
         self.custom = custom
+        self._make_type_converter_cb = make_type_converter_cb
         self._context = self._make_context()
 
     def snippet(self, name, **kwargs):
@@ -206,6 +208,8 @@ class Converter:
             # helper functions
             helper = converter
 
+            make_type_converter = self._make_type_converter_cb
+
             return locals()
 
         context = make()
@@ -266,8 +270,9 @@ class TypeInfoCollector:
         self.target_type_infos = target_type_infos
         self.custom = custom
 
-    def make_type_converter(self, type_info):
+    def make_type_converter(self, type_info, make_type_converter_cb):
         return Adapter(type_info=type_info,
+                       make_type_converter_cb=make_type_converter_cb,
                        type_info_collector=self)
 
 
@@ -579,6 +584,9 @@ class SnippetsEngine:
                                                            converters=type_converters,
                                                            custom=custom)
 
+    def _make_type_converter(self, type_name, template_choice=None):
+        return self.build_type_converter(CXXType(type_name, template_choice))
+
     def _create_type_info(self, search_name, cxx_type, template_args=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
         ref_ctx = self.runner.get_context(search_name)
@@ -595,7 +603,7 @@ class SnippetsEngine:
             return None
 
         type_info = create_type_info(self.runner, cxx_type)
-        type_converter = type_converter.make_type_converter(type_info)
+        type_converter = type_converter.make_type_converter(type_info, make_type_converter_cb=self._make_type_converter)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])

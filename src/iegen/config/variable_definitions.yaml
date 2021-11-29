@@ -82,9 +82,8 @@ is_exception:
 throws:
   inheritable: false
   type: list
-  default: no_throw
   allowed_on: [ function, function_template, cxx_method, constructor ]
-  required_on: [ function, function_template, cxx_method ]
+  required_on: [ function, function_template, cxx_method, constructor ]
 
 bases_list:
   inheritable: false

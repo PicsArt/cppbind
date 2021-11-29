@@ -28,6 +28,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Animal() {}
 
@@ -51,6 +52,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     TerrestrialAnimal() {}
 
@@ -74,6 +76,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     AquaticAnimal() {}
 
@@ -97,6 +100,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Frog() {}
 
@@ -120,6 +124,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     AnimalUsage() {}
 

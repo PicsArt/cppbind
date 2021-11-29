@@ -18,6 +18,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Bicycle(int numberOfSeats) : Vehicle(numberOfSeats) {
         name = "bicycle";

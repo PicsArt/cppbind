@@ -49,6 +49,7 @@ struct Apple : public Fruit  {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Apple() : Fruit() {};
 
@@ -74,6 +75,7 @@ struct Pineapple : public Fruit  {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Pineapple() : Fruit() {};
 
@@ -100,6 +102,7 @@ class Fruits  {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Fruits(const std::vector<Fruit*>& fruits) : _fruits(fruits) {};
 

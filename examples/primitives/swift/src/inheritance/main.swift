@@ -30,7 +30,7 @@ func runInheritanceExamples() {
 
     let mv = MyVehicle(v: bicycle)
     mv.vehicle = bicycle
-    mv.vehicle.type() == "bicycle"
+    let _ = mv.vehicle.type() == "bicycle"
 
     // mixed multiple inheritance with interface and class
     let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)

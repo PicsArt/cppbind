@@ -28,6 +28,7 @@ struct VectorItem {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     VectorItem(int _value) : value(_value){};
 
@@ -47,6 +48,7 @@ struct VectorExamples {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     VectorExamples() {};
 

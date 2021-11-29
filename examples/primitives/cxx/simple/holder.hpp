@@ -16,6 +16,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Holder() : _task(Task("Initial title")){};
 

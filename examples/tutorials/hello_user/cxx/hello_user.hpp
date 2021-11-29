@@ -12,6 +12,7 @@ struct UserInfo {
      * Creates user
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     UserInfo(const std::string& user_name, unsigned int user_age) : age(user_age), name(user_name) {}
     /**
@@ -46,6 +47,7 @@ public:
      * Creates host
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Host() = default;
     /**

@@ -15,6 +15,7 @@ public:
      * Counter constructor.
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
 	Counter(int count) : _count(count) {}
 

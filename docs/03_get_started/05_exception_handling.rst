@@ -10,7 +10,7 @@ which must contain throwable exceptions. The definition of that list variable lo
     :start-after: [throw-example]
     :end-before: [throw-example]
 
-**throws** variable is mandatory for methods and functions (also for getters and setters). If a method doesn't throw
+**throws** variable is mandatory for methods, constructors and functions (also for getters and setters). If a method doesn't throw
 any exception, user must set the value of parameter to special **no_throw** value. This is made as a requirement to ensure
 that the user hasn't forgotten about throw ability of method. The example of empty exception list looks like:
 

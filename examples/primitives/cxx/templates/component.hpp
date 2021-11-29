@@ -26,6 +26,7 @@ public:
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      *
      */
     Component(const Root& parent, const std::string& name) : Addressable<Root>(parent, name){}

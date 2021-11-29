@@ -19,6 +19,7 @@ class NestedExamples {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     NestedExamples() {};
 

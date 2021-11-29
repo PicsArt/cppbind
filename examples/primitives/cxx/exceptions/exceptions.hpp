@@ -30,6 +30,7 @@ class SystemError : public std::exception {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SystemError(const std::string& message) :
         message(message) {};
@@ -60,6 +61,7 @@ class FileError : public SystemError {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     FileError(const std::string& message) :
         message(message) {};
@@ -96,6 +98,7 @@ class SimpleBaseException {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SimpleBaseException(const int err_num) :
         err_num(err_num) {};
@@ -135,6 +138,7 @@ class SimpleChildException : public SimpleBaseException {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SimpleChildException(const int err_num) :
         err_num(err_num) {};
@@ -292,6 +296,7 @@ class Integer {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     Integer(int n) : _n(n) {}
     /**

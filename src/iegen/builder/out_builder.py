@@ -143,7 +143,7 @@ class File(Scope):
                                               current_datetime())
                     f.write(content)
         except OSError as err:
-            Error.warning(f"Cannot do I/O operation with {self.file_path} file: {err}")
+            Error.critical(f"Cannot do I/O operation with {self.file_path} file: {err}")
 
     def register_scope(self, scope, dept=-1):
         assert self.scope_stack and scope.name

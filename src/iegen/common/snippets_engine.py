@@ -91,7 +91,7 @@ class FileAction(Action):
                     try:
                         self.do_main_action(src_file, target_file, context)
                     except OSError as err:
-                        Error.warning(f"Iegen couldn't do action: {err}")
+                        Error.error(f"Iegen couldn't do action: {err}")
 
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():

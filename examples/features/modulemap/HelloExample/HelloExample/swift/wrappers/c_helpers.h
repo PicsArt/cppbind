@@ -12,8 +12,6 @@
 #ifndef __C_HELPERS_H_
 #define __C_HELPERS_H_
 
-#include <cxxabi.h>
-
 typedef struct _CDataArray{
     void* data;
     long long size;
@@ -40,6 +38,5 @@ typedef struct _CDataObj {
     void* ptr;
 } CDataObj;
 
-const char* demangle(const char* name);
 
 #endif //__C_HELPERS_H_

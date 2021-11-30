@@ -16,7 +16,7 @@ with open("src/requirements.txt", "r") as f:
 
 setup(
     name='iegen',
-    version="0.0.20-beta2",
+    version="0.0.1",
     description="Image Engine Wrapper Generator.",
     packages=find_packages('src/.', exclude=['test*']),
     package_dir={'': 'src'},

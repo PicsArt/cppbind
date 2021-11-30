@@ -225,8 +225,11 @@ MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
 
 def load_yaml(file_path):
     """Load yaml file in specific dirs using MyLoader custom loader"""
-    with open(file_path) as file:
-        return yaml.load(file, MyLoader)
+    try:
+        with open(file_path) as file:
+            return yaml.load(file, MyLoader)
+    except OSError as err:
+        Error.critical(f"Cannot read file {file_path}: {err}")
 
 
 def has_type(obj, type_cls):

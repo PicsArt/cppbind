@@ -5,7 +5,7 @@ It generates bindings for python, swift and kotlin.
 The tool can be easily extended for other languages as well.
 Also, it can be customized to have generated bindings better feet to your needs.
 
-[Hello user example](https://github.com/PicsArt/iegen/tree/hello-tutorial/examples/tutorials/hello_user)
+[Hello user example](https://github.com/PicsArt/iegen/tree/master/examples/tutorials/hello_user)
 
 Documentation and tutorials available at
 [iegen docs](https://iegen.picsart.com/)

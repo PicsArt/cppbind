@@ -21,7 +21,7 @@ std::__1::basic_string:
 
 $Object:
   custom:
-    is_c_pointer_type: True
+    is_c_pointer_type: False
     tpostfix: |
       {%- for name in template_names or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
@@ -35,8 +35,8 @@ $Object:
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
-    c: "void*"
-    sc: "UnsafeMutableRawPointer"
+    c: "CDataObj"
+    sc: "CDataObj"
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
@@ -46,27 +46,27 @@ $Object:
       {%- set is_nullable = nullable|default(False) -%}
       std::shared_ptr<{{pointee}}> {{target_name}}_shared_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
-      if ({{name}}) {
+      if ({{name}}.ptr) {
           {%- if pointee_base == pointee %}
-          {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
           {%- else %}
-          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_base == pointee %}
-      {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- else %}
-      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr);
       {%- endif %}
       {%- endif %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if pointee_base == pointee %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}});
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- else %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
@@ -76,47 +76,66 @@ $Object:
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
       {%- else %}
-      {#- This section must be replaced with 'cxx_to_c' section of std::shared_ptr converter -#}
-      {%- set is_nullable = nullable|default(False) %}
       std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
-      {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
-      {%- if is_nullable %}
-      if ({{name}}) {
-          {%- if pointee_base != pointee %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
-          {%- else %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
-          {%- endif %}
-      }
-      {%- else %}
-      {%- if pointee_base != pointee %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
-      {%- else %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
-      {%- endif %}
-      {%- endif %}
+      {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) %}
+      {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, is_nullable=is_nullable)}}
       {%- endif %}
       {%- else %}
+      int code_{{name}} = 0;
+      {%- if vars.descendants %}
+      int status = 0;
+      const char * name = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
+      char* res = abi::__cxa_demangle(name, NULL, NULL, &status);
+      std::string demangled_{{name}} = (status==0) ? res : name;
+      free(res);
+      if (demangled_{{name}} == "{{vars.descendants[0]}}") {
+          code_{{name}} = 1;
+      } {% for descendant in vars.descendants[1:] -%}
+      else if (demangled_{{name}} == "{{descendant}}") {
+          code_{{name}} = {{loop.index + 1}};
+      } {% endfor %}
+      {%- endif %}
       {%- if pointee_base == pointee %}
-      auto {{target_name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      {{target_type_name}} {{target_name}} = {code_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
       {%- else %}
       auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
-      auto {{target_name}} = static_cast<{{pointee_base}}*>(value_ptr_{{name}});
+      {{target_type_name}} {{target_name}} = {code_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
       {%- endif %}
       {%- endif %}
     swift_to_sc: |
-      let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
-    sc_to_swift: |
       {%- if nullable|default(False) -%}
-      let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
-      if let {{name}} = {{name}} {
-          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
-      } else {
-          {{target_name}} = nil
+      let {{target_name}} = CDataObj(index: 0, ptr: {{name}}?.cself.ptr)
+      {%- else -%}
+      let {{target_name}} = {{name}}.cself
+      {%- endif -%}
+    sc_to_swift: |
+      {%- macro create_instance(type_name) -%}
+      {%- if nullable|default(False) -%}
+      if ({{name}}.ptr != nil) {
+          {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       }
       {%- else -%}
-      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+      {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
+      {%- endmacro -%}
+      var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
+      {%- if vars.descendants %}
+      let {{name|to_camel_case}}Index = Int({{name}}.index)
+      switch({{name|to_camel_case}}Index) {
+        {%- for descendant in vars.descendants %}
+        case({{loop.index}}):
+          {%- set converter = make_type_converter(descendant).swift %}
+          {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
+          {{create_instance(type)|indent(4)}}
+        {%- endfor %}
+        default:
+          {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+          {{create_instance(type + custom.tpostfix)}}
+      }
+      {%- else %}
+      {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+      {{create_instance(type + custom.tpostfix)}}
+      {%- endif %}
 
 $Enum:
   custom:
@@ -349,7 +368,7 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    is_c_pointer_type: True
+    is_c_pointer_type: False
     tname: "{{args_converters[0].swift.custom.tname}}"
   types:
     swift: "{{args[0].target_type_name}}"
@@ -367,18 +386,18 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False)%}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
-      if ({{name}}) {
+      if ({{name}}.ptr) {
           {%- if pointee_root == pointee_unqualified %}
-          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
           {%- else %}
-          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
+          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_root == pointee_unqualified %}
-      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- else %}
-      {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
+      {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
@@ -390,22 +409,38 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
-      {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+      int code_{{name}} = 0;
+      {%- if args[0].vars.descendants %}
+      auto& arg_pointee_{{name}} = *{{name}}.get();
+      int status = 0;
+      const char * name = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
+      char* res = abi::__cxa_demangle(name, NULL, NULL, &status);
+      std::string demangled_{{name}} = (status==0) ? res : name;
+      free(res);
+      if (demangled_{{name}} == "{{args[0].vars.descendants[0]}}") {
+          code_{{name}} = 1;
+      } {% for descendant in args[0].vars.descendants[1:] -%}
+      else if (demangled_{{name}} == "{{descendant}}") {
+          code_{{name}} = {{loop.index + 1}};
+      } {% endfor %}
+      {%- endif %}
+      void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
           {%- if pointee_root != pointee_unqualified %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
+          {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
           {%- else %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
+          {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{pointee}}>({{name}}));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_root != pointee_unqualified %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
+      {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
       {%- else %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
+      {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{pointee}}>({{name}}));
       {%- endif %}
       {%- endif %}
+      {{target_type_name}} {{target_name}} = {code_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
     sc_to_swift: |

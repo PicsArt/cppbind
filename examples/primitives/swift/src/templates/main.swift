@@ -30,11 +30,11 @@ class TemplatesTests: XCTestCase {
         let stackUsage = StackUsage()
         var res = stackUsage.firstItemOfSpecializedStack(p: stackPrj)
         assert(res.title == prj.title)
-        assert(res.cself == prj.cself)
+        assert(res.cself.ptr == prj.cself.ptr)
 
         res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
         assert(res.title == prj.title)
-        assert(res.cself == prj.cself)
+        assert(res.cself.ptr == prj.cself.ptr)
         // [stack-usage-examples]
 
         // [template-funcs-examples]
@@ -88,5 +88,10 @@ class TemplatesTests: XCTestCase {
         assert(pair1.second.name == student.name)
         assert(pair2.second.name == employee.name)
         // [pair-examples]
+
+        // [template-downcast-example]
+//         let containerHolder = ContainerHolder(stackNumber)
+//         assert(containerHolder is )
+        // [template-downcast-example]
     }
 }

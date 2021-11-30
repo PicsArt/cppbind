@@ -184,7 +184,7 @@ class Converter:
     @property
     def args_converters(self):
         return self._template_args
-    
+
     @property
     def root_types_infos(self):
         return self._type_info.root_types_infos
@@ -302,10 +302,10 @@ class TypeConvertorInfo(TargetTypeInfo):
 
     def snippet(self, name, context):
         if self.snippet_tmpl:
-            return self.snippet_tmpl.render(name=name,
-                                            target_name=self.converted_name(name),
-                                            target_type_name=self.target_type_name(context),
-                                            **context)
+            return self.snippet_tmpl.render({'name': name,
+                                             'target_name': self.converted_name(name),
+                                             'target_type_name': self.target_type_name(context),
+                                             **context})
         return ""
 
     def converted_name(self, name):

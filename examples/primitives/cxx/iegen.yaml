@@ -17,7 +17,11 @@ vars:
   out_prj_dir: "."
   cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
-    - cxx/**/*.h*
+    - cxx/templates/container.hpp
+    - cxx/**/stack.hpp
+    - cxx/**/project.hpp
+    - cxx/**/task.hpp
+    - cxx/**/number.hpp
   include_dirs:
     - .
   mac.include_dirs:
@@ -63,7 +67,6 @@ vars:
   swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
-    - cxx/templates/container.hpp
 
 var_def:
   !join

@@ -26,7 +26,8 @@ namespace iegen::example {
  *  - iegen::example::Stack<iegen::example::Number<int>>
  */
 class Container {
-
+public:
+    virtual ~Container() = default;
 };
 // [example]
 /**

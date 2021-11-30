@@ -90,8 +90,8 @@ class TemplatesTests: XCTestCase {
         // [pair-examples]
 
         // [template-downcast-example]
-//         let containerHolder = ContainerHolder(stackNumber)
-//         assert(containerHolder is )
+        let containerHolder = ContainerHolder(container: stackPrj)
+        assert(containerHolder.container is StackPrj)
         // [template-downcast-example]
     }
 }

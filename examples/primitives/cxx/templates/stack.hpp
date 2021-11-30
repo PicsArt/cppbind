@@ -12,6 +12,8 @@
 #include <memory>
 #include <string>
 
+#include "cxx/templates/container.hpp"
+
 
 namespace iegen::example {
 // [example]
@@ -30,7 +32,7 @@ namespace iegen::example {
  * package: templates
  */
 template <class T>
-class Stack {
+class Stack: public Container {
 
     public:
     /**

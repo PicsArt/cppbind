@@ -32,10 +32,12 @@ class InheritanceTests: XCTestCase {
         gf.parallelogram = rhombus
         assert(gf.parallelogram is RhombusFigure)
         assert(gf.parallelogram.cself.ptr == rhombus.cself.ptr)
+        gf.nullableParallelogram = nil
+        assert(gf.nullableParallelogram == nil)
 
         let mv = MyVehicle(v: bicycle)
         mv.vehicle = bicycle
-        assert(mv.vehicle.type() == "bicycle")
+        assert(mv.vehicle!.type() == "bicycle")
 
         let mb = MyBicycle(b: bicycle)
         assert(mb.bicycle.type() == "bicycle")

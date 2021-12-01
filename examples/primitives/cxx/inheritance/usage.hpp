@@ -37,6 +37,26 @@ public:
 
     /**
      * __API__
+     * action: gen_getter
+     * throws: no_throw
+     * nullable_return: True
+     */
+    Parallelogram * nullableParallelogram() {
+        return _nullableParallelogram;
+    };
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     * nullable_arg: p
+     */
+    void setNullableParallelogram(Parallelogram * p) {
+        _nullableParallelogram = p;
+    };
+
+    /**
+     * __API__
      * action: gen_setter
      * throws: no_throw
      */
@@ -46,6 +66,7 @@ public:
 
 private:
     Parallelogram * _parallelogram;
+    Parallelogram * _nullableParallelogram;
 };
 
 
@@ -68,6 +89,7 @@ public:
      * __API__
      * action: gen_getter
      * throws: no_throw
+     * nullable_return: True
      */
     const std::shared_ptr<Vehicle> & vehicle() {
         return _vehicle;

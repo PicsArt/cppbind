@@ -9,16 +9,14 @@
  * Please do not change it manually.
  */
 
-#ifndef inheritance_usage_hpp
-#define inheritance_usage_hpp
+#ifndef templates_container_hpp
+#define templates_container_hpp
 
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
-void bindIegenExampleGeometricFigure(py::module& m);
-void bindIegenExampleMyVehicle(py::module& m);
-void bindIegenExampleMyBicycle(py::module& m);
-void bindIegenExampleMyCalendar(py::module& m);
+void bindIegenExampleContainer(py::module& m);
+void bindIegenExampleContainerHolder(py::module& m);
 
 #endif

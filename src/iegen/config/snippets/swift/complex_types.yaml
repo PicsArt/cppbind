@@ -72,6 +72,7 @@ $Object:
     cxx_to_c: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set is_nullable = nullable|default(False) -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -83,6 +84,7 @@ $Object:
       {%- else %}
       int code_{{name}} = 0;
       {%- if vars.descendants %}
+      {%- macro demangle() -%}
       int status = 0;
       const char * name = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
       char* res = abi::__cxa_demangle(name, NULL, NULL, &status);
@@ -94,6 +96,14 @@ $Object:
       else if (demangled_{{name}} == "{{descendant}}") {
           code_{{name}} = {{loop.index + 1}};
       } {% endfor %}
+      {%- endmacro %}
+      {%- if is_nullable %}
+      if ({{name}}) {
+          {{demangle()|indent(4)}}
+      }
+      {%- else %}
+      {{demangle()}}
+      {%- endif %}
       {%- endif %}
       {%- if pointee_base == pointee %}
       {{target_type_name}} {{target_name}} = {code_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
@@ -410,7 +420,7 @@ std::shared_ptr:
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       int code_{{name}} = 0;
-      {%- if args[0].vars.descendants %}
+      {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
       int status = 0;
       const char * name = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
@@ -423,10 +433,13 @@ std::shared_ptr:
       else if (demangled_{{name}} == "{{descendant}}") {
           code_{{name}} = {{loop.index + 1}};
       } {% endfor %}
-      {%- endif %}
+      {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
+          {%- if args[0].vars.descendants %}
+          {{demangle()|indent(4)}}
+          {%- endif %}
           {%- if pointee_root != pointee_unqualified %}
           {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
           {%- else %}
@@ -434,6 +447,9 @@ std::shared_ptr:
           {%- endif %}
       }
       {%- else %}
+      {%- if args[0].vars.descendants %}
+      {{demangle()}}
+      {%- endif %}
       {%- if pointee_root != pointee_unqualified %}
       {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
       {%- else %}

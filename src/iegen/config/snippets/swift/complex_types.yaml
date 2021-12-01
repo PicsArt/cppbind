@@ -57,7 +57,7 @@ $Object:
       {%- if pointee_base == pointee %}
       {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- else %}
-      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr);
+      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();

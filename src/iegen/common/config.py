@@ -17,7 +17,13 @@ PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
-clang_lib = find_library('clang') or find_library('clang-9') or find_library('clang-6')
+clang_lib = find_library('clang')
+
+if clang_lib is None:
+    for version in range(13, 5, -1):
+        clang_lib = find_library(f'clang-{version}')
+        if clang_lib:
+            break
 
 if clang_lib is None:
     print("clang dev is not installed. Please read README.md")

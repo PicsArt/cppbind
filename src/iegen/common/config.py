@@ -18,7 +18,7 @@ DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
 clang_lib = find_library('clang')
 
-if not clang_lib:
+if clang_lib is None:
     for version in range(13, 5, -1):
         clang_lib = find_library(f'clang-{version}')
         if clang_lib:

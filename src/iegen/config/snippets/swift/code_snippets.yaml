@@ -624,6 +624,7 @@ function:
           {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
           {%- if rconverter.c.target_type_name != 'void' %}
           let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+          {{rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return)|indent}}
           {%- else %}
           {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
           {%- endif %}
@@ -654,7 +655,6 @@ function:
               }
           }
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return)|indent}}
           return {{rconverter.sc_to_swift.converted_name('result')}}
           {%- endif %}
       }

@@ -46,7 +46,7 @@ jobs:
           pytest ./src/test/
 
       - name: Run examples tests for all languages
-        run:  bazel test //... --macos_minimum_os=11.6.1
+        run:  bazel test //... --macos_minimum_os=11.6.1 --test_output=all
         working-directory: examples/primitives/
 
 
@@ -85,5 +85,5 @@ jobs:
           pytest ./src/test/
 
       - name: Run examples tests for all languages
-        run: bazel test //...
+        run: bazel test //... --test_output=all
         working-directory: examples/primitives/

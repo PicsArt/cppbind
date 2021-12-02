@@ -62,7 +62,7 @@ def make_def_context(ctx):
             return SNIPPETS_ENGINE.build_type_converter_with_typename(type_name, template_choice)
 
         def get_type_info(type_name, template_choice=None):
-            converter = SNIPPETS_ENGINE.build_type_converter_with_typename(type_name, template_choice, template_choice)
+            converter = SNIPPETS_ENGINE.build_type_converter_with_typename(type_name, template_choice)
             if converter:
                 return getattr(converter, LANGUAGE)._type_info
             Error.critical(f'No type info found for: {type_name} with template choice - {template_choice}')

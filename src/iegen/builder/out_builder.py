@@ -5,7 +5,7 @@ to generated output.
 import copy
 import os
 
-from iegen import logging, current_datetime
+from iegen import logging, current_datetime, Error
 from iegen.builder import is_output_changed, OUTPUT_MODIFICATION_KEY
 
 TAB_STR = '    '
@@ -127,20 +127,23 @@ class File(Scope):
         logging.info(f"Writing output for {self.name} into {self.file_path}")
         os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         content = str(self)
-        if os.path.exists(self.file_path):
-            with open(self.file_path, 'r+') as f:
-                old = f.read()
-                if is_output_changed(old, content):
-                    f.seek(0)
-                    f.truncate()
+        try:
+            if os.path.exists(self.file_path):
+                with open(self.file_path, 'r+') as f:
+                    old = f.read()
+                    if is_output_changed(old, content):
+                        f.seek(0)
+                        f.truncate()
+                        content = content.replace(OUTPUT_MODIFICATION_KEY,
+                                                  current_datetime())
+                        f.write(content)
+            else:
+                with open(self.file_path, 'w') as f:
                     content = content.replace(OUTPUT_MODIFICATION_KEY,
                                               current_datetime())
                     f.write(content)
-        else:
-            with open(self.file_path, 'w') as f:
-                content = content.replace(OUTPUT_MODIFICATION_KEY,
-                                          current_datetime())
-                f.write(content)
+        except OSError as err:
+            Error.critical(f"Cannot do I/O operation with {self.file_path} file: {err}")
 
     def register_scope(self, scope, dept=-1):
         assert self.scope_stack and scope.name
@@ -193,7 +196,7 @@ class Builder:
 
     def __init__(self):
         self._current_dept = 0
-        self._files = dict()
+        self._files = {}
 
     def dump_outputs(self):
         for _, fl in self._files.items():
@@ -257,4 +260,4 @@ class Builder:
 
         for file_name, fl in self._files.items():
             s_len = len(fl._scope_stack)
-            fl._scope_stack += [dict()] * (self._current_dept - s_len)
+            fl._scope_stack += [{}] * (self._current_dept - s_len)

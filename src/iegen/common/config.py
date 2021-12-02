@@ -11,6 +11,7 @@ from ctypes.util import find_library
 
 import clang.cindex as cli
 from iegen.common import PROJECT_CONFIG_DIR
+from .error import Error
 
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
@@ -41,8 +42,11 @@ def read_config(config_file=None):
         }
     )
 
-    with open(config_file) as file:
-        config.read_file(file)
+    try:
+        with open(config_file) as file:
+            config.read_file(file)
+    except OSError as err:
+        Error.critical(f"Cannot read config file {config_file}: {err}")
 
     return config
 

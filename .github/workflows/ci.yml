@@ -13,7 +13,7 @@ jobs:
 
   build_macos:
 
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - uses: actions/checkout@v2
@@ -43,11 +43,10 @@ jobs:
 
       - name: Run unit tests
         run: |
-          export ANDROID_NDK=/usr/local/share/android-ndk
           pytest ./src/test/
 
-      - name: Run examples tests
-        run:  bazel test //...
+      - name: Run examples tests for all languages
+        run:  bazel test //... --macos_minimum_os=11.6.1 --test_output=all
         working-directory: examples/primitives/
 
 
@@ -71,7 +70,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install flake8 pytest
           if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
-          sudo apt-get install -y libclang-9-dev nlohmann-json3-dev
+          sudo apt-get install -y libclang-12-dev nlohmann-json3-dev
           python setup.py install
 
       - name: Lint with flake8
@@ -85,7 +84,6 @@ jobs:
         run: |
           pytest ./src/test/
 
-      - name: Run examples tests
-        run: |
-          cd examples/primitives/
-          bazel test //...
+      - name: Run examples tests for all languages
+        run: bazel test //... --test_output=all
+        working-directory: examples/primitives/

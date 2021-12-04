@@ -3,14 +3,14 @@ import Wrapper
 
 func runNullableExamples() {
     // [nullables-usage]
-    let n1 = NumInt(val_: 1)
-    let n2 = NumInt(val_: 2)
+    let n1 = NumInt(val: 1)
+    let n2 = NumInt(val: 2)
 
     var res1 = NullableUtils.max(first: n1, second: n2)
     assert(res1!.value == n2.value)
 
-    let d1 = NumDouble(val_: 1.0)
-    let d2 = NumDouble(val_: 2.0)
+    let d1 = NumDouble(val: 1.0)
+    let d2 = NumDouble(val: 2.0)
 
     var res2 = NullableUtils.max(first: d1, second: d2)
     assert(res2!.value == d2.value)

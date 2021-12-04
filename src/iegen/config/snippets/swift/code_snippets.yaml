@@ -466,6 +466,7 @@ method:
         {%- endfor %}
         var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
+        let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- else %}
         {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
@@ -496,7 +497,6 @@ method:
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
-        let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
         {%- if conversion %}
         {{conversion|indent(2)}}

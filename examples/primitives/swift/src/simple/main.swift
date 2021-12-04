@@ -20,7 +20,7 @@ func runSimpleExamples() {
 
     // [root-usage]
     let path = "/path/to/root"
-    let root = Root(_path: path)
+    let root = Root(path: path)
     assert(root.path == path)
     // [root-usage]
 

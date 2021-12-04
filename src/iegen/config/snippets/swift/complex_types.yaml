@@ -138,7 +138,8 @@ $Enum:
       {% set t_name = target_name|to_camel_case %}
       let {{t_name}}Optional = {{target_type_name}}(rawValue: {{name}})
       if ({{t_name}}Optional == nil) {
-        {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
+        {{"ExceptionHandler.handleUncaughtException(
+        \"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
       let {{t_name}} = {{t_name}}Optional!
 
@@ -225,7 +226,9 @@ std::vector:
       }
     sc_to_swift: |
       {%- set t_name = target_name|to_camel_case -%}
-      let _{{name}}Buffer = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
+      let _{{name}}Buffer = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
       var {{t_name}}: [{{args[0].target_type_name}}] = []
       defer {
         _{{name}}Buffer.deallocate()
@@ -290,8 +293,10 @@ std::map:
     swift_to_sc: |
       {%- set name = name|to_camel_case -%}
       {%- set t_name = target_name|to_camel_case -%}
-      let _{{t_name}}Key = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      let _{{t_name}}Val = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+      let _{{t_name}}Key = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(
+        capacity: {{name}}.count)
+      let _{{t_name}}Val = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(
+        capacity: {{name}}.count)
       var {{t_name}} = {{target_type_name}}()
       {{t_name}}.keys = UnsafeMutableRawPointer(_{{t_name}}Key)
       {{t_name}}.values = UnsafeMutableRawPointer(_{{t_name}}Val)
@@ -306,8 +311,12 @@ std::map:
       }
     sc_to_swift: |
       {%- set t_name = target_name|to_camel_case -%}
-      let {{name}}BufferKey = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
-      let {{name}}BufferVal = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: Int({{name}}.size))
+      let {{name}}BufferKey = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
+      let {{name}}BufferVal = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(
+        start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
       var {{t_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
       defer {
         {{name}}BufferKey.deallocate()
@@ -452,8 +461,12 @@ std::pair:
       _{{t_name}}First[0] = {{args[0].converted_name('{}First'.format(name))|to_camel_case}}
       _{{t_name}}Second[0] = {{args[1].converted_name('{}Second'.format(name))|to_camel_case}}
     sc_to_swift: |
-      let _{{name}}FirstData = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: 1)
-      let _{{name}}SecondData = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: 1)
+      let _{{name}}FirstData = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: 1)
+      let _{{name}}SecondData = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(
+        start: {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self),
+        count: 1)
       defer {
         _{{name}}FirstData.deallocate()
         _{{name}}SecondData.deallocate()

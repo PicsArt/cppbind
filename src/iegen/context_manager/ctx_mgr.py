@@ -16,8 +16,6 @@ from iegen.ir.ast import (
 from iegen.parser.ieg_api_parser import APIParser
 
 ALL_PLATFORMS = sorted(list(default_config.platforms))
-# key to identify whether the variable or or it's default is undefined or is set to None
-UNDEFINED = '~%undef%*'
 
 
 class ContextManager:
@@ -82,12 +80,15 @@ class ContextManager:
         args = args or OrderedDict()
         res = OrderedDict()
 
+        # dummy object for identifying undefined and null value defined variables 
+        undefined = object()
+
         # add all missing attributes
         for att_name, properties in self.ctx_desc.get_var_def().items():
-            new_att_val = args.get(att_name, UNDEFINED)
+            new_att_val = args.get(att_name, undefined)
 
             allowed = kind in properties["allowed_on"]
-            if new_att_val == UNDEFINED:
+            if new_att_val is undefined:
                 # check mandatory attribute existence
                 if kind in properties["required_on"]:
                     Error.error(f"Attribute '{att_name}' is mandatory attribute on {kind}.",
@@ -99,15 +100,15 @@ class ContextManager:
                 if properties.get('inheritable'):
                     # directory based nodes may not have parent
                     if ctx:
-                        new_att_val = ctx.get(att_name, UNDEFINED)
+                        new_att_val = ctx.get(att_name, undefined)
 
                 if allowed:
-                    if new_att_val == UNDEFINED:
+                    if new_att_val is undefined:
                         # use default value
                         new_att_val = ContextManager.get_attr_default_value(
-                            properties, self.platform, self.language)
+                            properties, self.platform, self.language, undefined)
 
-                        if new_att_val != UNDEFINED:
+                        if new_att_val is not undefined:
                             new_att_val = VariableEvaluator.eval_var_value(properties,
                                                                            new_att_val,
                                                                            ctx,
@@ -128,13 +129,13 @@ class ContextManager:
                                                                location)
 
             # now we need to process variables of value and set value
-            if new_att_val not in (None, UNDEFINED):
+            if new_att_val not in (None, undefined):
                 if isinstance(new_att_val, str):
                     # vars can have different types than string,
                     # so we need to parse it to get correct type
                     new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
-            if new_att_val != UNDEFINED:
+            if new_att_val is not undefined:
                 # add attr to current node context so that it can be used for coming attributes
                 ctx[att_name] = new_att_val
                 res[att_name] = new_att_val
@@ -142,7 +143,7 @@ class ContextManager:
         return res
 
     @staticmethod
-    def get_attr_default_value(prop, plat, lang):
+    def get_attr_default_value(prop, plat, lang, default=None):
         """
         Retrieve language/platform specific default value for current variable.
         """
@@ -159,7 +160,7 @@ class ContextManager:
             if key in prop:
                 return prop[key].value
 
-        return UNDEFINED
+        return default
 
     def filter_by_plat_lang(self, var_values):
         """

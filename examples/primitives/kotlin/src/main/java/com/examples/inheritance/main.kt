@@ -40,6 +40,15 @@ mv.vehicle = bicycle
 val dt = DateTime(15, 1, 2015, 15, 15, 15)
 assert(dt.datetime == "15:1:2015 15:15:15")
 
+// const shared_ptr tests
+val mb = MyBicycle(bicycle)
+mb.bicycle = bicycle
+val myNewBicycle = Bicycle(2)
+mb.bicycle = myNewBicycle
+assert(myNewBicycle.numberOfSeats == mb.bicycle.numberOfSeats)
+
+
+
 // delete instances
 square.close()
 gf.close()
@@ -47,6 +56,22 @@ mv.close()
 rhombus.close()
 bicycle.close()
 rectangle.close()
+
+// test multiple inheritance in case some bases have API, others no
+val animal = AnimalImpl()
+assert(AnimalUsage.getAnimalTypeName(animal) == "animal")
+
+val aquaticAnimal = AquaticAnimal()
+assert(AnimalUsage.getAquaticAnimalTypeName(aquaticAnimal) == "aquatic")
+
+val frog = Frog()
+assert(AnimalUsage.getAnimalTypeName(frog) == "frog")
+assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
+
+val animalUsageObj = AnimalUsage()
+assert(animalUsageObj.getFrog().typeName() == "frog")
+assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
+assert(animalUsageObj.getAnimal().typeName() == "frog")
 }
 
 class InheritanceApp {

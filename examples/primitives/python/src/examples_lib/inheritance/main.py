@@ -5,7 +5,11 @@ from examples_lib.inheritance import (
     Square,
     GeometricFigure,
     MyVehicle,
-    DateTime
+    DateTime,
+    AnimalUsage,
+    Animal,
+    AquaticAnimal,
+    Frog
 )
 
 # [simple-inheritance-usage]
@@ -41,3 +45,20 @@ mv.vehicle = bicycle
 # mixed multiple inheritance with interface and class
 dt = DateTime(15, 1, 2015, 15, 15, 15)
 assert dt.datetime == "15:1:2015 15:15:15"
+
+# test multiple inheritance in case some bases have API, others no
+animal = Animal()
+assert AnimalUsage.get_animal_type_name(animal) == "animal"
+
+aquaticAnimal = AquaticAnimal()
+assert AnimalUsage.get_aquatic_animal_type_name(aquaticAnimal) == "aquatic"
+
+frog = Frog()
+assert AnimalUsage.get_animal_type_name(frog) == "frog"
+assert AnimalUsage.get_aquatic_animal_type_name(frog) == "frog"
+
+# currently we have an seg fault issue in this example
+# animal_usage_obj = AnimalUsage()
+# assert animal_usage_obj.get_frog().type_name() == "frog"
+# assert animal_usage_obj.get_aquatic_animal().type_name() == "frog"
+# assert animal_usage_obj.get_animal().type_name() == "frog"

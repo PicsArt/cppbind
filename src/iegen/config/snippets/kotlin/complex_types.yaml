@@ -36,30 +36,78 @@ $Object:
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- if root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
-      {%- endif -%}
       {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
       {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- if cxx.root_type_name == pointee %}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name %}
+      {#- This section must be replaced with 'jni_to_cxx' section of std::shared_ptr converter -#}
+      {%- if root_types_infos[0].vars.shared_ref -%}
+      {%- set is_nullable = nullable|default(False) %}
+      {%- if is_nullable %}
+      std::shared_ptr<{{pointee}}> {{target_name}}_shared_ptr = nullptr;
+      if ({{name}}) {
+          {%- if pointee_base != pointee %}
+          auto {{target_name}}_shared_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_shared_baseptr);
+          {%- else %}
+          {{target_name}}_shared_ptr = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {%- endif %}
+      }
+      {%- else %}
+      {%- if pointee_base != pointee %}
+      auto& {{target_name}}_shared_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
+      std::shared_ptr<{{pointee}}> {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_shared_baseptr);
+      {%- else %}
+      std::shared_ptr<{{pointee}}>& {{target_name}}_shared_ptr = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {%- endif %}
+      {%- endif %}
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}{{target_name}}_shared_ptr.get();
+      {%- else %}
+      {%- if pointee_base == pointee %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
-      auto base_{{name}} = reinterpret_cast<{{cxx.root_type_name}}*>({{name}});
-      auto {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      auto base_{{name}} = reinterpret_cast<{{pointee_base}}*>({{name}});
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      {%- endif %}
       {%- endif %}
     cxx_to_jni: |
+      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
-      {%- endif -%}
-      {%- set pointee = cxx.pointee_unqualified_name %}
+      {%- if not cxx.is_value_type -%}
+      {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
+      {%- else %}
+      {#- This section must be replaced with 'cxx_to_jni' section of std::shared_ptr converter -#}
+      {%- set is_nullable = nullable|default(False) %}
+      std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
+      {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
+      {%- if is_nullable %}
+      if ({{name}}) {
+          {%- if pointee_base != pointee %}
+          std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_case<{{pointee_base}}>({{name}}_shared_ptr);
+          {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+          {%- else %}
+          {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
+          {%- endif %}
+      }
+      {%- else %}
+      {%- if pointee_base != pointee %}
+      std::shared_ptr<{{pointee_base}}>& {{target_name}}_baseptr = std::static_pointer_case<{{pointee_base}}>({{name}}_shared_ptr);
+      {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+      {%- else %}
+      {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
+      {%- endif %}
+      {%- endif %}
+      {%- endif %}
+      {%- else %}
       {%- if cxx.is_value_type -%}
       {%- set tmp_name = '_' + name %}
       {{pointee}}* {{tmp_name}} = new {{pointee}}({{name}});
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{cxx.root_type_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
+      {{root_types_infos[0].cxx.pointee_unqualified_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_name}}*>({{'&' if cxx.is_reference}}{{tmp_name}});
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
+      {%- endif %}
     kotlin_to_jdk: |
       val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
@@ -311,23 +359,23 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_root =  args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
+      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
       std::shared_ptr<{{pointee}}> {{target_name}} = nullptr;
       if ({{name}}) {
-          {%- if pointee_base != pointee %}
-          auto {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+          {%- if pointee_root != pointee_unqualified %}
+          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*reinterpret_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
           {%- else %}
           {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
           {%- endif %}
       }
       {%- else %}
-      {%- if pointee_base != pointee %}
-      auto& {{target_name}}_baseptr = *reinterpret_cast<std::shared_ptr<{{pointee_base}}>*>({{name}});
-      std::shared_ptr<{{pointee}}> {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>({{target_name}}_baseptr);
+      {%- if pointee_root != pointee_unqualified %}
+      std::shared_ptr<{{pointee}}> {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*reinterpret_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
       {%- else %}
       std::shared_ptr<{{pointee}}>& {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>({{name}});
       {%- endif %}
@@ -337,23 +385,23 @@ std::shared_ptr:
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
-      {%- set pointee_base = args[0].cxx.root_type_name if args[0].is_obj_type else pointee %}
+      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       {{target_type_name}} {{target_name}}{{' = 0' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if pointee_base != pointee %}
-          std::shared_ptr<{{pointee_base}}> {{target_name}}_baseptr = std::static_pointer_case<{{pointee_base}}>({{name}});
-          {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+          {%- if pointee_root != pointee_unqualified %}
+          {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
           {%- else %}
           {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
           {%- endif %}
       }
       {%- else %}
-      {%- if pointee_base != pointee %}
-      std::shared_ptr<{{pointee_base}}>& {{target_name}}_baseptr = std::static_pointer_case<{{pointee_base}}>({{name}});
-      {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee_base}}>({{target_name}}_baseptr));
+      {%- if pointee_root != pointee_unqualified %}
+      {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
       {%- else %}
       {{target_name}} = reinterpret_cast<jlong>(new std::shared_ptr<{{pointee}}>({{name}}));
       {%- endif %}

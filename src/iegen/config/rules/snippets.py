@@ -33,9 +33,9 @@ def set_language(language):
         logging.info(f"Helper module is not found for '{language}' language")
 
 
-def load_snippets_engine(ctx_desc, platform, language):
+def load_snippets_engine(runner, ctx_desc, platform, language):
     global SNIPPETS_ENGINE
-    SNIPPETS_ENGINE = SnippetsEngine(ctx_desc, platform, language)
+    SNIPPETS_ENGINE = SnippetsEngine(runner, ctx_desc, platform, language)
     SNIPPETS_ENGINE.load()
 
 
@@ -43,7 +43,7 @@ def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
     global SNIPPETS_ENGINE, GLOBAL_VARIABLES
     # load snippets
 
-    load_snippets_engine(ctx_desc, platform, language)
+    load_snippets_engine(ctx.runner, ctx_desc, platform, language)
 
     GLOBAL_VARIABLES = SNIPPETS_ENGINE.do_actions({'vars': ctx.vars})
 
@@ -59,13 +59,12 @@ def make_def_context(ctx):
         vars = ctx.vars
 
         def make_type_converter(type_name, template_choice=None):
-            return SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_name,
-                                                                     template_choice))
+            return SNIPPETS_ENGINE.build_type_converter(CXXType(type_name, template_choice))
 
         def get_type_info(type_name, template_choice=None):
             cxx_type = CXXType(type_name,
                                template_choice)
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, cxx_type)
+            converter = SNIPPETS_ENGINE.build_type_converter(cxx_type)
             if converter:
                 return getattr(converter, LANGUAGE)._type_info
             Error.critical(f'No type info found for: {cxx_type.type_name}')
@@ -86,11 +85,10 @@ def make_func_context(ctx):
     def make():
         args = [
             types.SimpleNamespace(
-                converter=SNIPPETS_ENGINE.build_type_converter(ctx,
-                                                               CXXType(type_=arg.type,
+                converter=SNIPPETS_ENGINE.build_type_converter(CXXType(type_=arg.type,
                                                                        template_choice=ctx.template_choice)),
-                type_info=create_type_info(ctx, CXXType(type_=arg.type,
-                                                        template_choice=ctx.template_choice)),
+                type_info=create_type_info(ctx.runner, CXXType(type_=arg.type,
+                                                               template_choice=ctx.template_choice)),
                 name=arg.name,
                 default=arg.default.value,
                 cursor=arg.cursor,
@@ -107,8 +105,8 @@ def make_func_context(ctx):
         if hasattr(ctx, 'result_type'):
             _cxx_type = CXXType(type_=ctx.result_type,
                                 template_choice=ctx.template_choice)
-            rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
-            return_type_info = create_type_info(ctx, _cxx_type)
+            rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
+            return_type_info = create_type_info(ctx.runner, _cxx_type)
 
         if ctx.parent_context:
             owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
@@ -117,7 +115,7 @@ def make_func_context(ctx):
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_names = ctx.template_names
-        template_type_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=template_arg_type)) for
+        template_type_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(type_=template_arg_type)) for
                                     template_arg_type in template_choice.values()] if template_choice else []
 
         cxx = types.SimpleNamespace(
@@ -176,12 +174,12 @@ def make_class_context(ctx):
             # for such cases we use string type name
             _cxx_type = CXXType(type_=ctx.cxx_type_name,
                                 template_choice=ctx.template_choice)
-            _type_info = create_type_info(ctx, _cxx_type)
+            _type_info = create_type_info(ctx.runner, _cxx_type)
 
-            converter = SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(type_=ctx.cxx_type_name,
-                                                                          template_choice=ctx.template_choice))
+            converter = SNIPPETS_ENGINE.build_type_converter(CXXType(type_=ctx.cxx_type_name,
+                                                                     template_choice=ctx.template_choice))
 
-            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(ctx, CXXType(base_type, ctx.template_choice))
+            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
 
             cxx = _type_info.cxx
@@ -233,8 +231,8 @@ def make_member_context(ctx):
         # helper variables
         _cxx_type = CXXType(type_=ctx.cursor.type,
                             template_choice=ctx.template_choice)
-        return_type_info = create_type_info(ctx, _cxx_type)
-        rconverter = SNIPPETS_ENGINE.build_type_converter(ctx, _cxx_type)
+        return_type_info = create_type_info(ctx.runner, _cxx_type)
+        rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
 
         owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
 

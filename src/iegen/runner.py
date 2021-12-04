@@ -11,7 +11,6 @@ import iegen
 from iegen import default_config, logging, LOG_LEVELS
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.out_builder import Builder
-from iegen.common.cache import clear_cache
 from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import to_value
 from iegen.context_manager.ctx_desc import ContextDescriptor
@@ -44,7 +43,6 @@ class WrapperGenerator:
             f"{', '.join(list(map(lambda x: x[0] + '.' + x[1], plat_lang_options)))} options.")
         for plat, lang in plat_lang_options:
             WrapperGenerator.run_for(plat, lang, ctx_desc, cmd_line_args)
-            clear_cache()
 
     @staticmethod
     def run_for(platform, language, ctx_desc, var_values):

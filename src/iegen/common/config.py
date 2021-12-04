@@ -11,12 +11,19 @@ from ctypes.util import find_library
 
 import clang.cindex as cli
 from iegen.common import PROJECT_CONFIG_DIR
+from .error import Error
 
 PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
-clang_lib = find_library('clang') or find_library('clang-9') or find_library('clang-6')
+clang_lib = find_library('clang')
+
+if clang_lib is None:
+    for version in range(13, 5, -1):
+        clang_lib = find_library(f'clang-{version}')
+        if clang_lib:
+            break
 
 if clang_lib is None:
     print("clang dev is not installed. Please read README.md")
@@ -41,8 +48,11 @@ def read_config(config_file=None):
         }
     )
 
-    with open(config_file) as file:
-        config.read_file(file)
+    try:
+        with open(config_file) as file:
+            config.read_file(file)
+    except OSError as err:
+        Error.critical(f"Cannot read config file {config_file}: {err}")
 
     return config
 

@@ -112,6 +112,9 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
@@ -157,9 +160,9 @@ class:
       content: |
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} _Nonnull cself) {
             {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{cxx.root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself);
             {%- else %}
-            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{cxx.root_type_name}}*>(cself));
+            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself);
             {%- endif %}
         }
   ch:
@@ -183,6 +186,9 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
+        {%- if root_types_infos|length > 1 -%}
+        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
+        {%- endif -%}
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
@@ -241,9 +247,13 @@ interface:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} _Nonnull cself){
             {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{cxx.root_type_name}}>*>(cself);
+            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself);
             {%- else %}
-            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{cxx.root_type_name}}*>(cself));
+            {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
+            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself);
+            {%- else %}
+            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself));
+            {%- endif %}
             {%- endif %}
         }
   ch:
@@ -456,11 +466,6 @@ method:
         {%- endfor %}
         var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
-        let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
-        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
-        {%- if conversion %}
-        {{conversion|indent(2)}}
-        {%- endif %}
         {%- else %}
         {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
@@ -491,6 +496,11 @@ method:
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
+        let result = {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
+        {%- if conversion %}
+        {{conversion|indent(2)}}
+        {%- endif %}
         return {{rconverter.sc_to_swift.converted_name('result')|to_camel_case}}
         {%- endif %}
       }
@@ -562,7 +572,7 @@ method:
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.c.target_type_name}} result;
+          {{rconverter.c.target_type_name}} result{{' = nullptr' if rconverter.c.custom.is_c_pointer_type}};
           return result;
           {%- endif %}
       }
@@ -677,10 +687,6 @@ function:
         {%- set c_func_name = helper.get_c_func_name("{}_{}{}{}".format(namespace, vars.name, overloading_prefix, template_postfix)) %}
         {%- if rconverter.c.target_type_name != 'void' %}
         let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
-        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
-        {%- if conversion %}
-        {{conversion|indent(2)}}
-        {%- endif %}
         {%- else %}
         {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
@@ -711,6 +717,10 @@ function:
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
+        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
+        {%- if conversion %}
+        {{conversion|indent(2)}}
+        {%- endif %}
         return {{rconverter.sc_to_swift.converted_name('result')|to_camel_case}}
         {%- endif %}
       }{{new_line}}
@@ -850,7 +860,7 @@ property_getter:
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}){
           {%- if owner_class.root.vars.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx.root_type_name}}>*>(cself)
+                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
                     );
           {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
@@ -941,7 +951,7 @@ getter:
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}){
           {%- if owner_class.root.vars.shared_ref %}
           auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.cxx.root_type_name}}>*>(cself)
+                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
                     );
           {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}

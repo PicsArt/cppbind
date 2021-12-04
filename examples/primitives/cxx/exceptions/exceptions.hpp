@@ -6,6 +6,8 @@
 #include <exception>
 #include <stdexcept>
 
+#include "cxx/simple/task.hpp"
+
 namespace iegen::example {
 
 /**
@@ -171,6 +173,26 @@ class ThrowExc {
      */
     static int getByKey(const std::map<int, int>& m, int key) {
         return m.at(key);
+    }
+
+    /**
+     * Throws exception with return value of type string.
+     * __API__
+     * action: gen_method
+     * throws: std::invalid_argument
+     */
+    static std::string throwsWithReturnValueString() {
+        throw std::invalid_argument("return value error");
+    }
+
+    /**
+     * Throws exception with return value of iegen type.
+     * __API__
+     * action: gen_method
+     * throws: std::invalid_argument
+     */
+    static iegen::example::Task* throwsWithReturnValuePtr() {
+        throw std::invalid_argument("return value error");
     }
     // [throw-example]
 };

@@ -16,6 +16,23 @@ func runExceptionExamples() {
         assert(false)
     }
 
+    // assert everything is ok for returned pointer value when an exception is raised
+    do {
+      let _ = try ThrowExc.throwsWithReturnValuePtr()
+    } catch let err as StdInvalidArgument {
+      assert(err.what() == "return value error")
+    } catch {
+      assert(false)
+    }
+
+    // assert everything is ok for returned string value when an exception is raised
+    do {
+        let _ = try ThrowExc.throwsWithReturnValueString()
+    } catch let err as StdInvalidArgument {
+        assert(err.what() == "return value error")
+    } catch {
+        assert(false)
+    }
 
     do {
         let _ = try MiscExc.returnInteger(do_throw: true)

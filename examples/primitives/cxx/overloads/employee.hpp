@@ -17,12 +17,14 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Employee(const std::string& name) : _name(name) {};
 
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Employee(int age, const std::string& email = "") : _age(age), _email(email) {};
 

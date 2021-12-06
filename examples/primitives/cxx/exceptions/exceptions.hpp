@@ -6,6 +6,8 @@
 #include <exception>
 #include <stdexcept>
 
+#include "cxx/simple/task.hpp"
+
 namespace iegen::example {
 
 /**
@@ -28,6 +30,7 @@ class SystemError : public std::exception {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SystemError(const std::string& message) :
         message(message) {};
@@ -58,6 +61,7 @@ class FileError : public SystemError {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     FileError(const std::string& message) :
         message(message) {};
@@ -94,6 +98,7 @@ class SimpleBaseException {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SimpleBaseException(const int err_num) :
         err_num(err_num) {};
@@ -133,6 +138,7 @@ class SimpleChildException : public SimpleBaseException {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     SimpleChildException(const int err_num) :
         err_num(err_num) {};
@@ -164,6 +170,16 @@ class ThrowExc {
     // [throw-example]
     /**
      * __API__
+     * action: gen_constructor
+     * throws:
+     *   - std::invalid_argument
+     */
+     ThrowExc(bool do_throw=false) {
+        if (do_throw) throw std::invalid_argument("inv_arg");
+     }
+
+    /**
+     * __API__
      * action: gen_method
      * throws:
      *   - std::out_of_range
@@ -172,7 +188,53 @@ class ThrowExc {
     static int getByKey(const std::map<int, int>& m, int key) {
         return m.at(key);
     }
+
+    /**
+     * Throws exception with return value of type string.
+     * __API__
+     * action: gen_method
+     * throws: std::invalid_argument
+     */
+    static std::string throwsWithReturnValueString() {
+        throw std::invalid_argument("return value error");
+    }
+
+    /**
+     * Throws exception with return value of iegen type.
+     * __API__
+     * action: gen_method
+     * throws: std::invalid_argument
+     */
+    static iegen::example::Task* throwsWithReturnValuePtr() {
+        throw std::invalid_argument("return value error");
+    }
     // [throw-example]
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws:
+     *   - std::invalid_argument
+     */
+    std::string prop() {
+        throw std::invalid_argument("inv_arg");
+        return _prop;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws:
+     *   - std::invalid_argument
+     *   - std::out_of_range
+     */
+     void setProp(std::string s) {
+        throw std::out_of_range("out_of_range");
+        _prop = s;
+     }
+
+     private:
+     std::string _prop = "prop";
 };
 
  /**
@@ -185,12 +247,42 @@ class NoThrowExc {
     public:
     /**
      * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+     NoThrowExc(bool do_throw=false) {
+        if (do_throw) throw std::invalid_argument("inv_arg");
+     }
+
+    /**
+     * __API__
      * action: gen_method
      * throws: no_throw
      */
     static void noop() {
         throw(1);
     }
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    std::string prop() {
+        return _prop;
+    }
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     */
+     void setProp(std::string s) {
+        _prop = s;
+     }
+
+    private:
+    std::string _prop = "prop";
 };
 
 /**
@@ -204,6 +296,7 @@ class Integer {
     /**
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     Integer(int n) : _n(n) {}
     /**

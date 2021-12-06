@@ -19,3 +19,4 @@ type_vars:
           - type: "WithExternalAPIComments(std::string)"
             vars:
               action: gen_constructor
+              throws: no_throw

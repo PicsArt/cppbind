@@ -20,6 +20,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     DateTime(int d, int mo, int y, int h, int mi, int s) : Time(h, mi, s), Date(d, mo, y) {
         std::string format = "%s %s";

@@ -158,7 +158,7 @@ std::__cxx11::basic_string:
       let {{target_name}} = strdup({{name}})!
     sc_to_swift: |
       let {{target_name}} = String(cString: {{name}})
-      defer{
+      defer {
         {{name}}.deallocate()
       }
 

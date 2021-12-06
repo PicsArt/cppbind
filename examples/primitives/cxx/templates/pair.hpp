@@ -29,6 +29,7 @@ class Pair {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Pair(const T& first, const V& second) : _first(first), _second(second) {};
 

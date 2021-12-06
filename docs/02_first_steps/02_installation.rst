@@ -106,7 +106,7 @@ Dev installation
 .. code-block:: bash
 
     pip3 install -r src/requirements.txt
-    python3 setup.py install develop
+    python3 setup.py develop
 
 Installation is complete to test run the command\ :
 

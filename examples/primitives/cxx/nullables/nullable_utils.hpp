@@ -20,6 +20,7 @@ struct NumberInt {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     NumberInt(int val_) : value(val_) {}
 
@@ -42,6 +43,7 @@ struct NumberDouble {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     NumberDouble(double val_) : value(val_) {}
 
@@ -68,6 +70,7 @@ struct Utils {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      * nullable_arg:
      *   - num
      */

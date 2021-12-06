@@ -1,5 +1,3 @@
-
-
 /**
  * An example class comment.
  * __API__
@@ -13,7 +11,4 @@ class ExampleClass {
     * action: gen_constructor
     */
     ExampleClass() {}
-
-
 };
-

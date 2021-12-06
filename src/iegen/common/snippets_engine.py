@@ -21,7 +21,6 @@ from iegen.common.cxx_type import CXXType
 from iegen.common.error import Error
 from iegen.common.type_info import create_type_info
 from iegen.common.yaml_process import to_value
-from iegen.ir.exec_rules import Context
 from iegen.utils import JINJA2_ENV
 
 OBJECT_INFO_TYPE = '$Object'
@@ -89,7 +88,10 @@ class FileAction(Action):
             if self.dest_tmpl:
                 target_file = self.dest_tmpl.render(context)
                 if target_file:
-                    self.do_main_action(src_file, target_file, context)
+                    try:
+                        self.do_main_action(src_file, target_file, context)
+                    except OSError as err:
+                        Error.error(f"Iegen couldn't do action: {err}")
 
             # update variables
             for var_name, tmpl in self.variables_tmpl.items():

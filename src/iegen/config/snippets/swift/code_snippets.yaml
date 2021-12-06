@@ -130,6 +130,7 @@ class:
             deinit {
                 if owner {
                     release_{{converter.swift.target_type_name}}(cself)
+                    cself.type?.deallocate()
                 }
             }
             {%endif%}
@@ -203,6 +204,7 @@ interface:
             deinit {
               if owner {
                 release_{{converter.swift.get_target_type_name(interface_class=True)}}(cself)
+                cself.type?.deallocate()
               }
             }
 
@@ -307,12 +309,12 @@ constructor:
         {% endfor %}
           auto this_object = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
           {%- if owner_class.root.vars.shared_ref %}
-          return {0, new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object)};
+          return {strdup("{{owner_class.cxx.type_name}}"), new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object)};
           {%- else %}
           {%- if owner_class.root.cxx.type_name == owner_class.cxx.type_name %}
-          return {0, this_object};
+          return {strdup("{{owner_class.cxx.type_name}}"), this_object};
           {%- else %}
-          return {0, static_cast<{{owner_class.root.cxx.type_name}}*>(this_object)};
+          return {strdup("{{owner_class.cxx.type_name}}"), static_cast<{{owner_class.root.cxx.type_name}}*>(this_object)};
           {%- endif %}
           {%- endif %}
       }
@@ -433,12 +435,14 @@ method:
               {%- if 'no_throw' not in vars.throws %}
               {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
-                      throw {{get_type_info(exc_type).vars.name}}(CDataObj(index: 0, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info(exc_type) %}
+                      throw {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
-                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CDataObj(index: 0, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info("std::exception") %}
+                      let exc_obj = {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -643,16 +647,18 @@ function:
                   {%- if 'no_throw' not in vars.throws %}
                   {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
-                      throw {{get_type_info(exc_type).vars.name}}(CDataObj(index: 0, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info(exc_type) %}
+                      throw {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
                   {%- endfor %}
                   {%- endif %}
                   {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
-                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CDataObj(index: 0, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info("std::exception") %}
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
                   {%- endif %}
                   default:
-                      ExceptionHandler.handleUncaughtException("Uncaught Exception")
+                      print("Unknown type")
               }
           }
           {%- if rconverter.c.target_type_name != 'void' %}

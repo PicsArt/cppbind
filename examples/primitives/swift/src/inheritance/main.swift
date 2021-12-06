@@ -67,6 +67,7 @@ class InheritanceTests: XCTestCase {
         let myCalendar = MyCalendar(events: [dateEvent])
         myCalendar.addEvent(e: dateTimeEvent)
         let events = myCalendar.events
+        assert(events[0] is MyDate)
         assert(!(events[0] is DateTime))
         assert(events[1] is DateTime)
     }

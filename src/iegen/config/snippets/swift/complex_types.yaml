@@ -35,8 +35,8 @@ $Object:
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
-    c: "CDataObj"
-    sc: "CDataObj"
+    c: "CObject"
+    sc: "CObject"
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
@@ -82,20 +82,15 @@ $Object:
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, is_nullable=is_nullable)}}
       {%- endif %}
       {%- else %}
-      int code_{{name}} = 0;
+      char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
       {%- if vars.descendants %}
       {%- macro demangle() -%}
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
       int status = 0;
-      const char * name = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
-      char* res = abi::__cxa_demangle(name, NULL, NULL, &status);
-      std::string demangled_{{name}} = (status==0) ? res : name;
-      free(res);
-      if (demangled_{{name}} == "{{vars.descendants[0]}}") {
-          code_{{name}} = 1;
-      } {% for descendant in vars.descendants[1:] -%}
-      else if (demangled_{{name}} == "{{descendant}}") {
-          code_{{name}} = {{loop.index + 1}};
-      } {% endfor %}
+      char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
+      if (status == 0) {
+          type_{{name}} = demangled_{{name}};
+      }
       {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
@@ -106,15 +101,15 @@ $Object:
       {%- endif %}
       {%- endif %}
       {%- if pointee_base == pointee %}
-      {{target_type_name}} {{target_name}} = {code_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
       {%- else %}
       auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
-      {{target_type_name}} {{target_name}} = {code_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
       {%- endif %}
       {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
-      let {{target_name}} = CDataObj(index: 0, ptr: {{name}}?.cself.ptr)
+      let {{target_name}} = CObject(type: {{name}}?.cself.type, ptr: {{name}}?.cself.ptr)
       {%- else -%}
       let {{target_name}} = {{name}}.cself
       {%- endif -%}
@@ -130,17 +125,17 @@ $Object:
       {%- endmacro -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
       {%- if vars.descendants %}
-      let {{name|to_camel_case}}Index = Int({{name}}.index)
+      let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
       switch({{name|to_camel_case}}Index) {
         {%- for descendant in vars.descendants %}
-        case({{loop.index}}):
+        case("{{descendant}}"):
           {%- set converter = make_type_converter(descendant).swift %}
           {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
           {{create_instance(type)|indent(4)}}
         {%- endfor %}
         default:
           {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
-          {{create_instance(type + custom.tpostfix)}}
+          {{create_instance(type + custom.tpostfix)|indent(4)}}
       }
       {%- else %}
       {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
@@ -419,20 +414,15 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
-      int code_{{name}} = 0;
+      char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
       int status = 0;
-      const char * name = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
-      char* res = abi::__cxa_demangle(name, NULL, NULL, &status);
-      std::string demangled_{{name}} = (status==0) ? res : name;
-      free(res);
-      if (demangled_{{name}} == "{{args[0].vars.descendants[0]}}") {
-          code_{{name}} = 1;
-      } {% for descendant in args[0].vars.descendants[1:] -%}
-      else if (demangled_{{name}} == "{{descendant}}") {
-          code_{{name}} = {{loop.index + 1}};
-      } {% endfor %}
+      char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
+      if (status == 0) {
+          type_{{name}} = demangled_{{name}};
+      }
       {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
@@ -456,7 +446,7 @@ std::shared_ptr:
       {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{pointee}}>({{name}}));
       {%- endif %}
       {%- endif %}
-      {{target_type_name}} {{target_name}} = {code_{{name}}, {{target_name}}_ptr};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
     sc_to_swift: |

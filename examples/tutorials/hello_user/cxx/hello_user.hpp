@@ -1,5 +1,4 @@
 #include <string>
-#include "hello_user_2.hpp"
 
 
 /**

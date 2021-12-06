@@ -5,7 +5,7 @@ import glob
 import os
 
 import clang.cindex as cli
-from iegen.utils import get_excluded_files
+from iegen.utils import extract_files_from_glob
 
 class CXXParserFilter:
     """
@@ -18,7 +18,7 @@ class CXXParserFilter:
 
     def __init__(self, include_files=None, exclude_glob=None):
         self.include_files = include_files
-        self.exclude_files = get_excluded_files(exclude_glob)
+        self.exclude_files = extract_files_from_glob(exclude_glob) if exclude_glob else []
 
     def include_files():
         """
@@ -73,12 +73,13 @@ class CXXParserFilter:
     def filter_by_file(self, node):
         if node.extent.start.file is None:
             return True
-        for file in self.exclude_files:
-            if file in node.extent.start.file.name:
-                return True
+        if self.exclude_files is not None:
+            for file in self.exclude_files:
+                if file in node.extent.start.file.name:
+                    return True
         if self.include_files:
             return node.extent.start.file.name not in self.include_files
         return False
 
-
+cxx_ieg_filter = CXXParserFilter()
 

@@ -9,8 +9,9 @@ import re
 import clang.cindex as cli
 from iegen import logging
 from iegen.common.error import Error
+from iegen.parser.filter import cxx_ieg_filter
 import iegen.utils.clang as cutil
-from iegen.utils import get_excluded_files
+from iegen.utils import extract_files_from_glob
 
 class CXXParser:
     """
@@ -45,7 +46,7 @@ class CXXParser:
 
         logging.info("parsing files: {}".format(' '.join(src_glob)))
 
-        all_excluded_files = get_excluded_files(src_exclude_glob)
+        all_excluded_files = extract_files_from_glob(src_exclude_glob)
 
         # using list to keep files order constant
         all_files = []

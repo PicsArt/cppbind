@@ -26,14 +26,14 @@ class DefaultValueKind(enum.IntEnum):
     NULL_PTR = 4
 
 
-def get_excluded_files(src_exclude_glob):
-    all_excluded_files = set()
-    for file in src_exclude_glob:
+def extract_files_from_glob(src_glob):
+    all_extracted_files = set()
+    for file in src_glob:
         abs_paths = (os.path.abspath(file_path)
                      for file_path in glob.glob(file.strip(), recursive=True))
-        all_excluded_files.update(abs_paths)
+        all_extracted_files.update(abs_paths)
 
-    return all_excluded_files
+    return all_extracted_files
 
 
 

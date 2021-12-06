@@ -4,14 +4,14 @@ This is a small hello user library.
 
 Here we have a c++ source code(under cxx directory) and generated bindings for swift, kotlin and python.
 
-You can find generated code for each language under a folder named by the language.
+You can find generated bindings under kotlin, swift and python directories.
 This is configured in **cxx/iegen.yaml** file.
 
 In this example we use bazel for build.
 
 To generate the wrappers yourself use the following command:
  ```bash
- iegen kotlin swift python
+ iegen run kotlin swift python
  ```
 
 For iegen installation and configuration check the documentation [iegen docs](https://iegen.picsart.com).

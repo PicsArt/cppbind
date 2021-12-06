@@ -24,6 +24,7 @@ class Number {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Number(const T& n): num(n) {}
 

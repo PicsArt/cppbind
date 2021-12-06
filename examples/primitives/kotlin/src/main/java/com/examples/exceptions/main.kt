@@ -12,6 +12,8 @@ fun logger(errMsg: String) : Unit {
 fun genUncaughtExceptions() {
     ExceptionHandler.setUncaughtExceptionHandler({errMsg -> logger(errMsg)})
     NoThrowExc.noop()
+    // check throwing constructor
+    NoThrowExc(true);
     ExceptionHandler.unsetUncaughtExceptionHandler()
 }
 
@@ -27,6 +29,34 @@ class ExceptionsApp {
                 ThrowExc.getByKey(mapOf(1 to 1), 0)
             } catch (e: StdOutOfRange) {
                 assert(e.what().contains("map::at"))
+            } catch (e: Exception) {
+                assert(false)
+            }
+
+            // assert everything is ok for returned pointer value when an exception is raised
+            try {
+              ThrowExc.throwsWithReturnValuePtr()
+            } catch (e: StdInvalidArgument) {
+                assert(e.what() == "return value error")
+            } catch (e: Exception) {
+              assert(false)
+            }
+
+            // assert everything is ok for returned string value when an exception is raised
+            try {
+                ThrowExc.throwsWithReturnValueString()
+            } catch (e: StdInvalidArgument) {
+                assert(e.what() == "return value error")
+            } catch (e: Exception) {
+                assert(false)
+            }
+
+            // checking throwing constructor
+            try {
+                ThrowExc(true)
+                assert(false)
+            } catch (e: StdInvalidArgument) {
+                assert(e.what() == "inv_arg")
             } catch (e: Exception) {
                 assert(false)
             }
@@ -51,6 +81,9 @@ class ExceptionsApp {
             // [exceptions-usage]
 
             genUncaughtExceptions()
+
+            // check non-throwing constructor
+            NoThrowExc()
 
             try {
                 MiscExc.raiseErrorByType("system")
@@ -115,6 +148,30 @@ class ExceptionsApp {
                 assert(false)
             }
 
+            // checking properties
+            val obj1 = NoThrowExc()
+            assert(obj1.prop == "prop")
+            obj1.prop = "new_prop"
+            assert(obj1.prop == "new_prop")
+
+            val obj2 = ThrowExc()
+            try {
+                obj2.prop
+                assert(false)
+            } catch (e: StdInvalidArgument) {
+                assert(e.what() == "inv_arg")
+            } catch(e: Exception) {
+                assert(false)
+            }
+
+            try {
+                obj2.prop = "new_prop"
+                assert(false)
+            } catch (e: StdOutOfRange) {
+                assert(e.what() == "out_of_range")
+            } catch(e: Exception) {
+                assert(false)
+            }
        }
     }
 

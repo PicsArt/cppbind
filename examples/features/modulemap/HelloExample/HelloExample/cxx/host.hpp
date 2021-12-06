@@ -15,6 +15,7 @@ public:
      * Creates host
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Host() = default;
     /**

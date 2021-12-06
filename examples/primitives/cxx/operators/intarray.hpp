@@ -18,6 +18,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
 	IntArray() {
 	    for(int i = 0; i < SIZE; i++) {

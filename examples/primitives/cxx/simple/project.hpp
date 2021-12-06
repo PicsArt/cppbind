@@ -21,6 +21,7 @@ public:
      * Project constructor.
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Project(const std::string& title) : _title(title) {};
 

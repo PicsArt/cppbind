@@ -69,6 +69,7 @@ class BufferUsage {
     * __API__
     * kotlin.action: gen_constructor
     * python.action: gen_constructor
+    * throws: no_throw
     */
     BufferUsage() {};
 

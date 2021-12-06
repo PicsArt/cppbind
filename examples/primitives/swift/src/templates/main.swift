@@ -28,11 +28,11 @@ func runTemplateExamples() {
     let stackUsage = StackUsage()
     var res = stackUsage.firstItemOfSpecializedStack(p: stackPrj)
     assert(res.title == prj.title)
-    assert(res.cself == prj.cself)
+    assert(res.cself.ptr == prj.cself.ptr)
 
     res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
     assert(res.title == prj.title)
-    assert(res.cself == prj.cself)
+    assert(res.cself.ptr == prj.cself.ptr)
     // [stack-usage-examples]
 
     // [template-funcs-examples]

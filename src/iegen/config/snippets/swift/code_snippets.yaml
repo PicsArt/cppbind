@@ -306,7 +306,7 @@ constructor:
       {%- endif %}
       {%- endif %}
       {%- endif -%}
-      {%- endfor-%}) {
+      {%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}{
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
@@ -316,7 +316,8 @@ constructor:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case) %}
         {%- endfor %}
-        self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}), true)
+        var err = ErrorObj()
+        self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
         {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}

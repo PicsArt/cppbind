@@ -615,7 +615,7 @@ class SnippetsEngine:
             return None
 
         type_info = create_type_info(self.runner, cxx_type)
-        type_converter = type_converter.make_type_converter(type_info, make_type_converter_cb=self._make_type_converter)
+        type_converter = type_converter.make_type_converter(type_info)
 
         if template_args:
             type_converter.set_template_args([arg for arg in template_args if arg])

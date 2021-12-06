@@ -33,6 +33,15 @@ func runExceptionExamples() {
         assert(false)
     }
 
+    // checking throwing constructor
+    do {
+        let _ = try ThrowExc(do_throw: true)
+    } catch let err as StdInvalidArgument {
+        assert(err.what() == "inv_arg")
+    } catch {
+        assert(false)
+    }
+
     do {
         let _ = try MiscExc.returnInteger(do_throw: true)
         assert(false)
@@ -58,10 +67,15 @@ func runExceptionExamples() {
     func genUncaughtExceptions() {
         ExceptionHandler.setUncaughtExceptionHandler(logger)
         NoThrowExc.noop()
+        // check throwing constructor
+        let _ = NoThrowExc(do_throw: true)
         ExceptionHandler.unsetUncaughtExceptionHandler()
     }
 
     genUncaughtExceptions()
+
+    // check non-throwing constructor
+    let _ =  NoThrowExc()
 
     do {
         try MiscExc.raiseErrorByType(err_type: "system")
@@ -125,6 +139,13 @@ func runExceptionExamples() {
     } catch {
         assert(false)
     }
+
+     // check non-throwing properties
+     // we can't check throwing properties for swift since swift supports throwable getters only for versions >= 5.5
+     let obj = NoThrowExc()
+     assert(obj.prop == "prop")
+     obj.prop = "new_prop"
+     assert(obj.prop == "new_prop")
 }
 
 

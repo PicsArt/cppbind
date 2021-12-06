@@ -22,6 +22,7 @@ public:
      * Task Constructor.
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      *
      */
     Task(const std::string& title) : _title(title) {};

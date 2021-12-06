@@ -38,7 +38,18 @@ public class UserInfo  {
 
         let swift_to_sc_user_name = strdup(user_name)!
         let swift_to_sc_user_age = CUnsignedInt(user_age)
-        self.init(create_UserInfo(swift_to_sc_user_name, swift_to_sc_user_age), true)
+        var err = ErrorObj()
+        self.init(create_UserInfo(swift_to_sc_user_name, swift_to_sc_user_age, &err), true)
+        let err_type = Int(err.err_type)
+        if (err_type != 0) {
+            switch(err_type) {
+                case(1):
+                    let exc_obj = StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     
     /**
@@ -109,7 +120,18 @@ public class Host  {
      */
     public convenience init() {
 
-        self.init(create_Host(), true)
+        var err = ErrorObj()
+        self.init(create_Host(&err), true)
+        let err_type = Int(err.err_type)
+        if (err_type != 0) {
+            switch(err_type) {
+                case(1):
+                    let exc_obj = StdException(err.err_ptr, true)
+                    ExceptionHandler.handleUncaughtException(exc_obj.what())
+                default:
+                    ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            }
+        }
     }
     
     /**

@@ -23,6 +23,7 @@ public:
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Root(const std::string& _path) : path(_path) {};
 

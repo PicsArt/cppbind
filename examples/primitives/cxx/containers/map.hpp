@@ -28,6 +28,7 @@ struct MapItem {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     MapItem(int _value) : value(_value){};
 
@@ -47,6 +48,7 @@ struct MapExamples {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     MapExamples() {};
 

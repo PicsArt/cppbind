@@ -11,7 +11,6 @@ func runOverloadExamples() {
     assert(utils.concatenate(first: "a", second: "b", third: "c") == "abc")
 
     // constructor overloading
-    let john = "John Doe"
     let john_email = "john@email.com"
     let jane = "Jane Doe"
     let jane_email = "jane@email.com"

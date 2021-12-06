@@ -19,6 +19,7 @@ struct JsonExamples {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     JsonExamples() {};
 

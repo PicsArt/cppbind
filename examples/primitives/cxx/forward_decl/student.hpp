@@ -21,12 +21,14 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Student(const std::string& st_name) : name(st_name) {};
 
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Student(const std::vector<Teacher*>& teachers) : _teachers(teachers) {};
 

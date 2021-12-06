@@ -17,6 +17,7 @@ struct Item {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      * package: pkg
      */
     Item(const std::string& _value) : value(_value) {}
@@ -26,6 +27,7 @@ struct Item {
      *
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Item() : value("default value") {}
 

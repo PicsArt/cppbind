@@ -27,6 +27,7 @@ public:
      /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     MyCar(int numberOfSeats) : Car(numberOfSeats) {
         name = "mycar";

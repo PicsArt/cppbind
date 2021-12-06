@@ -381,19 +381,50 @@ constructor:
           {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent(4)}}
           {%- do call_args.append(converter.converted_name(arg.name)) -%}
           {%- endfor %}
-          {%- if not owner_class.root.vars.shared_ref %}
-          {{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-          return reinterpret_cast<jlong>(baseptr);
-          {%- else %}
-          {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-          auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
-          {%- if owner_class.root_types_infos[0].cxx.pointee_unqualified_name != owner_class.cxx.type_name %}
-          std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(this_object);
-          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(baseptr));
-          {%- else %}
-          return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
+          {%- if 'no_throw' not in vars.throws %}
+          void* err_ptr = nullptr;
           {%- endif %}
+          try {
+              {%- if not owner_class.root.vars.shared_ref %}
+              {{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+              return reinterpret_cast<jlong>(baseptr);
+              {%- else %}
+              {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+              auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
+              {%- if owner_class.root_types_infos[0].cxx.pointee_unqualified_name != owner_class.cxx.type_name %}
+              std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(this_object);
+              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>(baseptr));
+              {%- else %}
+              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
+              {%- endif %}
+              {%- endif %}
+          }
+          {%- if 'no_throw' not in vars.throws %}
+          {%- for exc_type in vars.throws -%}
+          catch (const {{exc_type}}& e) {
+              err_ptr = new {{exc_type}}(e);
+              {%- set exc_vars = get_type_info(exc_type).vars %}
+              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+              jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
+              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
+              env->Throw(jthrowable(excObj));
+          }
+          {%- endfor %}
           {%- endif %}
+          {%- if not 'std::exception' in vars.throws %}
+          catch (const std::exception& e) {
+                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+          }
+          {%- endif %}
+          catch (...) {
+                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+          }
+          jobjectid result;
+          return result;
       }
 
 method:
@@ -731,7 +762,7 @@ getter:
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- macro gen_exc_try_block() -%}
+      {%- macro gen_exc_try_block(vars) -%}
       {%- if 'no_throw' not in vars.throws %}
       {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
@@ -779,7 +810,7 @@ getter:
               {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
-          {{gen_exc_try_block()}}
+          {{gen_exc_try_block(vars)}}
 
           {{rconverter.jni.target_type_name}} result;
           return result;
@@ -798,6 +829,6 @@ getter:
           try {
              {{this_converter.converted_name('id')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.args[0].name)}});
           }
-          {{gen_exc_try_block()}}
+          {{gen_exc_try_block(setter.vars)}}
       }
       {% endif %}

@@ -25,6 +25,7 @@ struct Addressable {
     * comments
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
   Addressable(const T& parent, const std::string& name);
 

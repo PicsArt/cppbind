@@ -15,6 +15,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Rectangle(double length, double width) : Parallelogram() {
         _length = length;

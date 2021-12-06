@@ -22,6 +22,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Date(int d, int m, int y) : day(d), month(m), year(y) {
         std::string format = "%d:%d:%d";

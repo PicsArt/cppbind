@@ -38,12 +38,14 @@ class Stack: public Container {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Stack() {};
 
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Stack(T& st) {};
 

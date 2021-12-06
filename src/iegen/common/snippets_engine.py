@@ -136,14 +136,14 @@ class Converter:
                  snippet_name,
                  custom,
                  type_converter,
-                 make_type_converter_cb,
+                 type_converter_builder,
                  **kwargs):
         self._type_info = type_info
         self._type_converter = type_converter
         self._template_args = template_args
         self._snippet_name = snippet_name
-        self.custom = custom
-        self._make_type_converter_cb = make_type_converter_cb
+        self._custom = custom
+        self._type_converter_builder = type_converter_builder
         self._context = self._make_context()
 
     def snippet(self, name, **kwargs):
@@ -210,7 +210,7 @@ class Converter:
             # helper functions
             helper = converter
 
-            make_type_converter = self._make_type_converter_cb
+            make_type_converter = self._type_converter_builder
 
             return locals()
 
@@ -221,15 +221,20 @@ class Converter:
         self._expose_namespace(context, 'cxx')
         self._expose_namespace(context, 'vars')
 
+        # evaluate custom sections jinja expressions
+        self._eval_custom(context)
+
+        return context
+
+    def _eval_custom(self, context):
         custom = SimpleNamespace()
         # evaluate custom fields one by one to make available by defined order
-        for k, v in self.custom.__dict__.items():
+        for k, v in self._custom.__dict__.items():
             setattr(custom, k, v.render(context) if isinstance(v, Template) else v)
+            # to make accessible for coming fields
             context['custom'] = custom
 
         self.custom = custom
-
-        return context
 
     def _expose_namespace(self, context, name):
         if context[name]:
@@ -266,16 +271,17 @@ class Adapter:
 
 class TypeInfoCollector:
 
-    def __init__(self, name, target_type_infos, converters, custom):
+    def __init__(self, name, target_type_infos, converters, custom, **kwargs):
         self.name = name
         self.converters = converters
         self.target_type_infos = target_type_infos
         self.custom = custom
+        self.kwargs = kwargs
 
-    def make_type_converter(self, type_info, make_type_converter_cb):
+    def make_type_converter(self, type_info):
         return Adapter(type_info=type_info,
-                       make_type_converter_cb=make_type_converter_cb,
-                       type_info_collector=self)
+                       type_info_collector=self,
+                       **self.kwargs)
 
 
 class TargetTypeInfo:
@@ -584,7 +590,11 @@ class SnippetsEngine:
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,
                                                            converters=type_converters,
-                                                           custom=custom)
+                                                           custom=custom,
+                                                           type_converter_builder=self.build_type_converter_with_typename)
+
+    def build_type_converter_with_typename(self, type_name, template_choice=None):
+        return self.build_type_converter(CXXType(type_name, template_choice))
 
     def _make_type_converter(self, type_name, template_choice=None):
         return self.build_type_converter(CXXType(type_name, template_choice))

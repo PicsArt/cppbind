@@ -658,7 +658,7 @@ function:
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
                   {%- endif %}
                   default:
-                      print("Unknown type")
+                      ExceptionHandler.handleUncaughtException("Uncaught Exception")
               }
           }
           {%- if rconverter.c.target_type_name != 'void' %}

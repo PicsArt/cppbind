@@ -446,20 +446,13 @@ class RunRule:
         context.set_template_ctx(template_ctx)
         func(context, builder)
 
-    def create_context(self, node):
-        assert node is not None
-        if node.api:
-            return self.all_contexts.setdefault(node.full_displayname,
-                                                Context(self, node))
-        return None
-
     def get_context(self, type_name):
         return self.all_contexts.get(type_name, None)
 
     def allocate_all_contexts(self):
         logging.debug("Allocating context for all nodes")
         for node in self.ir.walk():
-            if node.api is not None:
+            if node.api not in (None, Node.API_NONE):
                 self.all_contexts.setdefault(node.full_displayname,
                                              Context(self, node))
                 if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:

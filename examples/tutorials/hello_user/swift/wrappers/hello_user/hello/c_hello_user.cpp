@@ -19,12 +19,23 @@ void release_UserInfo(void* _Nonnull cself) {
     delete static_cast<UserInfo*>(cself);
 }
 
-void* _Nonnull create_UserInfo(char* _Nonnull user_name, unsigned int user_age){
+void* _Nonnull create_UserInfo(char* _Nonnull user_name, unsigned int user_age, ErrorObj* _Nonnull err){
     auto c_to_cxx_user_name = std::string(user_name);
     free(user_name);
     
-    auto this_object = new UserInfo(c_to_cxx_user_name, user_age);
-    return this_object;
+    try {
+        auto this_object = new UserInfo(c_to_cxx_user_name, user_age);
+        return this_object;
+    }
+    catch (const std::exception& e) {
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->err_type = -1;
+    }
+    void* result = nullptr;
+    return result;
 }
 unsigned int _prop_get_UserInfo_age(void* _Nonnull cself){
     auto c_to_cxx_cself = static_cast<UserInfo*>(cself);
@@ -55,9 +66,20 @@ void release_Host(void* _Nonnull cself) {
     delete static_cast<Host*>(cself);
 }
 
-void* _Nonnull create_Host(){
-    auto this_object = new Host();
-    return this_object;
+void* _Nonnull create_Host(ErrorObj* _Nonnull err){
+    try {
+        auto this_object = new Host();
+        return this_object;
+    }
+    catch (const std::exception& e) {
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->err_type = -1;
+    }
+    void* result = nullptr;
+    return result;
 }
 
 char* _Nonnull _func_Host_hello(void* _Nonnull cself, void* _Nonnull user, ErrorObj* _Nonnull err){

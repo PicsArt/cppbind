@@ -21,6 +21,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Person(const std::string& name, const std::string& email, int age) : _email(email), _age(age), _fullname(name) {}
 

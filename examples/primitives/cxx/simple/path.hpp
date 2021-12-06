@@ -16,6 +16,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Path(const std::string& _value) : value(_value) {};
 

@@ -20,9 +20,20 @@ void release_PairExamples(void* _Nonnull cself) {
     delete static_cast<iegen::example::PairExamples*>(cself);
 }
 
-void* _Nonnull create_PairExamples(){
-    auto this_object = new iegen::example::PairExamples();
-    return this_object;
+void* _Nonnull create_PairExamples(ErrorObj* _Nonnull err){
+    try {
+        auto this_object = new iegen::example::PairExamples();
+        return this_object;
+    }
+    catch (const std::exception& e) {
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->err_type = -1;
+    }
+    void* result = nullptr;
+    return result;
 }
 
 CDataPair _func_PairExamples_sumIntPairs(void* _Nonnull cself, CDataPair p1, CDataPair p2, ErrorObj* _Nonnull err){

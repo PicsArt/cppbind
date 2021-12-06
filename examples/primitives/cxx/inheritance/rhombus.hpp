@@ -18,6 +18,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Rhombus(double diagonal1, double diagonal2) : Parallelogram() {
            _diagonal1 = diagonal1;

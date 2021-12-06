@@ -16,6 +16,7 @@ struct Utils {
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Utils() {};
 

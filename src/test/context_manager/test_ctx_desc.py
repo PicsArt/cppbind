@@ -104,9 +104,9 @@ class TestContextDescriptor(unittest.TestCase):
         # positive test case
         # asserts config is properly loaded for different scenarios
         results = {
-            'with_many_files': 'a176d1e4fee490bdd04f0749e654c836',
-            'with_nested_cfg': 'be98d78aa365a5ea45a835ff2b11c737',
-            'with_mixed_cfg': 'a176d1e4fee490bdd04f0749e654c836',
+            'with_many_files': 'a70b8888c8b57d68b0eab77826f05f15',
+            'with_nested_cfg': 'ea8e1ee7063bb12b19cdca52843941e0',
+            'with_mixed_cfg': 'a70b8888c8b57d68b0eab77826f05f15',
             'with_simple_cfg': '6d4025adf843640d3ecdcfb7522bfc8e',
             'with_jinja_expr': '46060b5c7a6b72174f7729e6ce2f1ca0'
         }

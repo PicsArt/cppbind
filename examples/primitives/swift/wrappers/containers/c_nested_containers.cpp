@@ -20,9 +20,20 @@ void release_NestedExamples(void* _Nonnull cself) {
     delete static_cast<iegen::example::NestedExamples*>(cself);
 }
 
-void* _Nonnull create_NestedExamples(){
-    auto this_object = new iegen::example::NestedExamples();
-    return this_object;
+void* _Nonnull create_NestedExamples(ErrorObj* _Nonnull err){
+    try {
+        auto this_object = new iegen::example::NestedExamples();
+        return this_object;
+    }
+    catch (const std::exception& e) {
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->err_type = -1;
+    }
+    void* result = nullptr;
+    return result;
 }
 
 void _func_NestedExamples_setNestedIntVector(void* _Nonnull cself, CDataArray v, ErrorObj* _Nonnull err){

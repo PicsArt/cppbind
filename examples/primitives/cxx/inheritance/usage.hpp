@@ -21,6 +21,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     GeometricFigure(Parallelogram * p) : _parallelogram(p) {};
 
@@ -59,6 +60,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     MyVehicle(const std::shared_ptr<Vehicle> & v) : _vehicle(v) {};
 
@@ -97,6 +99,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     MyBicycle(const std::shared_ptr<Bicycle> & b) : _bicycle(b) {};
 

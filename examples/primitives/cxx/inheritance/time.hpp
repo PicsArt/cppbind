@@ -18,6 +18,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      */
     Time(int h, int m, int s) : hours(h), minutes(m), seconds(s) {
         std::string format = "%d:%d:%d";

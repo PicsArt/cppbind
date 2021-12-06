@@ -18,6 +18,7 @@ class Car {
     *
     * __API__
     * action: gen_constructor
+    * throws: no_throw
     */
     Car(int cost) : _cost(cost) {}
 

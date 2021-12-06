@@ -20,9 +20,20 @@ void release_Host(void* _Nonnull cself) {
     delete static_cast<Host*>(cself);
 }
 
-void* _Nonnull create_Host(){
-    auto this_object = new Host();
-    return this_object;
+void* _Nonnull create_Host(ErrorObj* _Nonnull err){
+    try {
+        auto this_object = new Host();
+        return this_object;
+    }
+    catch (const std::exception& e) {
+        err->err_type = 1;
+        err->err_ptr = new std::exception(e);
+    }
+    catch (...) {
+        err->err_type = -1;
+    }
+    void* result = nullptr;
+    return result;
 }
 
 char* _Nonnull _func_Host_hello(void* _Nonnull cself, void* _Nonnull user, ErrorObj* _Nonnull err){

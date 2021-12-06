@@ -10,7 +10,9 @@ func runExceptionExamples() {
 
     do {
         let _ = try ThrowExc.getByKey(m: [1 : 1], key: 0)
-    } catch is StdOutOfRange {
+    } catch let err as StdOutOfRange {
+        // error messages are different on macos and linux
+        assert(err.what() == "map::at" || err.what().contains("key not found"))
     } catch {
         assert(false)
     }
@@ -29,6 +31,15 @@ func runExceptionExamples() {
         let _ = try ThrowExc.throwsWithReturnValueString()
     } catch let err as StdInvalidArgument {
         assert(err.what() == "return value error")
+    } catch {
+        assert(false)
+    }
+
+    // checking throwing constructor
+    do {
+        let _ = try ThrowExc(doThrow: true)
+    } catch let err as StdInvalidArgument {
+        assert(err.what() == "inv_arg")
     } catch {
         assert(false)
     }
@@ -58,10 +69,15 @@ func runExceptionExamples() {
     func genUncaughtExceptions() {
         ExceptionHandler.setUncaughtExceptionHandler(logger)
         NoThrowExc.noop()
+        // check throwing constructor
+        let _ = NoThrowExc(doThrow: true)
         ExceptionHandler.unsetUncaughtExceptionHandler()
     }
 
     genUncaughtExceptions()
+
+    // check non-throwing constructor
+    let _ =  NoThrowExc()
 
     do {
         try MiscExc.raiseErrorByType(errType: "system")
@@ -125,6 +141,13 @@ func runExceptionExamples() {
     } catch {
         assert(false)
     }
+
+     // check non-throwing properties
+     // we can't check throwing properties for swift since swift supports throwable getters only for versions >= 5.5
+     let obj = NoThrowExc()
+     assert(obj.prop == "prop")
+     obj.prop = "new_prop"
+     assert(obj.prop == "new_prop")
 }
 
 

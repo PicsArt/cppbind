@@ -18,6 +18,7 @@ public:
     /**
      * __API__
      * action: gen_constructor
+     * throws: no_throw
      *
      */
     Square(double side) : Rhombus(side * sqrt(2), side * sqrt(2)), Rectangle(side, side) {};

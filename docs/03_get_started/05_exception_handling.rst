@@ -10,7 +10,7 @@ which must contain throwable exceptions. The definition of that list variable lo
     :start-after: [throw-example]
     :end-before: [throw-example]
 
-**throws** variable is mandatory for methods and functions (also for getters and setters). If a method doesn't throw
+**throws** variable is mandatory for methods, constructors and functions (also for getters and setters). If a method doesn't throw
 any exception, user must set the value of parameter to special **no_throw** value. This is made as a requirement to ensure
 that the user hasn't forgotten about throw ability of method. The example of empty exception list looks like:
 
@@ -26,7 +26,7 @@ that the user hasn't forgotten about throw ability of method. The example of emp
 
 .. note::
     The exception list defined for swift getters/setters is ignored, since the language doesn't let us to throw an exception
-    from gettter/setter. So user need only to set **throws** variable to **no_throw** value.
+    from getter/setter. So user need only to set **throws** variable to **no_throw** value.
 
 In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions

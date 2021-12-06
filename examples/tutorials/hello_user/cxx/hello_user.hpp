@@ -1,6 +1,5 @@
 #include <string>
 
-
 /**
  * Structure to describe user.
  * __API__

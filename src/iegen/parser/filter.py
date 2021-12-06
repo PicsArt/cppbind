@@ -82,4 +82,3 @@ class CXXParserFilter:
         return False
 
 cxx_ieg_filter = CXXParserFilter()
-

@@ -142,7 +142,7 @@ def run_package():
     # register clean sub parser
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
                                          parents=[parent_parser])
-    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.', )
+    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.',)
     clean_parser.set_defaults(func=clean)
 
     # register init sub parser

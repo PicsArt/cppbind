@@ -36,8 +36,6 @@ def extract_files_from_glob(src_glob):
     return all_extracted_files
 
 
-
-
 def load_from_paths(loader, path_name, default_dirs):
     for dir_ in default_dirs:
         try:

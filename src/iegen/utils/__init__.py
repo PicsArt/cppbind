@@ -3,6 +3,7 @@ Common utils that can by used from different modules
 """
 import enum
 import errno
+import glob
 import importlib.util
 import os
 import re
@@ -23,6 +24,18 @@ class DefaultValueKind(enum.IntEnum):
     ENUM = 2
     LITERAL = 3
     NULL_PTR = 4
+
+
+def get_excluded_files(src_exclude_glob):
+    all_excluded_files = set()
+    for file in src_exclude_glob:
+        abs_paths = (os.path.abspath(file_path)
+                     for file_path in glob.glob(file.strip(), recursive=True))
+        all_excluded_files.update(abs_paths)
+
+    return all_excluded_files
+
+
 
 
 def load_from_paths(loader, path_name, default_dirs):

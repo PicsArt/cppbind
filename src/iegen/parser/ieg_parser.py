@@ -9,9 +9,8 @@ import re
 import clang.cindex as cli
 from iegen import logging
 from iegen.common.error import Error
-from iegen.parser.filter import cxx_ieg_filter
 import iegen.utils.clang as cutil
-
+from iegen.utils import get_excluded_files
 
 class CXXParser:
     """
@@ -36,7 +35,6 @@ class CXXParser:
         Parses cxx files and returns generator of TranslationUnit s
         """
         index = cli.Index.create()
-
         # build parser arguments
         args = ['-x', 'c++', '--std=c++17'] + clang_args + ['-I' + includeDir.strip()
                                                             for includeDir in
@@ -47,11 +45,7 @@ class CXXParser:
 
         logging.info("parsing files: {}".format(' '.join(src_glob)))
 
-        all_excluded_files = set()
-        for file in src_exclude_glob:
-            abs_paths = (os.path.abspath(file_path)
-                         for file_path in glob.glob(file.strip(), recursive=True))
-            all_excluded_files.update(abs_paths)
+        all_excluded_files = get_excluded_files(src_exclude_glob)
 
         # using list to keep files order constant
         all_files = []

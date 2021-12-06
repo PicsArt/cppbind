@@ -16,6 +16,7 @@ from iegen.common.yaml_process import to_value
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.exec_rules import RunRule
+from iegen.parser.filter import CXXParserFilter
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     clear_iegen_generated_files,
@@ -50,7 +51,6 @@ class WrapperGenerator:
 
         logging.info(f"Start running wrapper generator for "
                      f"{language} language for {platform} platform.")
-        parser = CXXParser()
 
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ctx_mgr)
@@ -62,6 +62,10 @@ class WrapperGenerator:
                            Run `iegen init` command under project's root directory to create an initial config file.""")
 
         logging.debug("Start parsing and building IR.")
+
+        cxx_ieg_filter = CXXParserFilter(exclude_glob=root_ctx['src_exclude_glob'])
+        parser = CXXParser(filter_=cxx_ieg_filter)
+
         parser.parse(ir_builder, **root_ctx)
 
         ir_builder.end_root()
@@ -138,7 +142,7 @@ def run_package():
     # register clean sub parser
     clean_parser = sub_parser.add_parser('clean', help='Clean all iegen generated files from directory.',
                                          parents=[parent_parser])
-    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.',)
+    clean_parser.add_argument('dir', help='Directory from where all iegen generated files will be deleted.', )
     clean_parser.set_defaults(func=clean)
 
     # register init sub parser

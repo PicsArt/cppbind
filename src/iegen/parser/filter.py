@@ -1,9 +1,11 @@
 """
 Filter module decides which clang cursor needs to be processed and which one needs to be skipped.
 """
+import glob
+import os
 
 import clang.cindex as cli
-
+from iegen.utils import get_excluded_files
 
 class CXXParserFilter:
     """
@@ -14,9 +16,9 @@ class CXXParserFilter:
         cli.CursorKind.CXX_BASE_SPECIFIER
     ]
 
-    def __init__(self, include_files=None):
-
+    def __init__(self, include_files=None, exclude_glob=None):
         self.include_files = include_files
+        self.exclude_files = get_excluded_files(exclude_glob)
 
     def include_files():
         """
@@ -71,9 +73,12 @@ class CXXParserFilter:
     def filter_by_file(self, node):
         if node.extent.start.file is None:
             return True
+        for file in self.exclude_files:
+            if file in node.extent.start.file.name:
+                return True
         if self.include_files:
             return node.extent.start.file.name not in self.include_files
         return False
 
 
-cxx_ieg_filter = CXXParserFilter()
+

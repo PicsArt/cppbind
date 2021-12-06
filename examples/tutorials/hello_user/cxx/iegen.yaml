@@ -13,6 +13,8 @@ vars: |
   out_prj_dir: {{out_prj_dir}}
   src_glob:
     - cxx/**/*.h*
+  src_exclude_glob:
+    - cxx/*_2.hpp
   include_dirs:
     - .
   extra_headers:

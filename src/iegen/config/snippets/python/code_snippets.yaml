@@ -256,6 +256,9 @@ var_class: &var_class
             {%- if body %}
             {{body|string|indent}}
             {%- endif %}
+            {%- if (not cxx.is_abstract, not constructor_body, not properties, not body)|all %}
+            pass
+            {%- endif %}
   python_init:
     include:
       unique_content: |

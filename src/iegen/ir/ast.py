@@ -228,6 +228,7 @@ class CXXNode(ClangNode):
 
     def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
         super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+        self.direct_descendants = []
 
     @property
     def type(self):
@@ -248,3 +249,30 @@ class CXXNode(ClangNode):
     @property
     def is_function_template(self):
         return self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE
+    
+    @property
+    def is_class_or_struct(self):
+        return self.clang_cursor.kind in (cli.CursorKind.STRUCT_DECL,
+                                          cli.CursorKind.CLASS_DECL,
+                                          cli.CursorKind.CLASS_TEMPLATE)
+
+    @property
+    def descendants(self):
+        """List of all descendants of struct/class node"""
+        if not self.is_class_or_struct:
+            return None
+
+        # logic for caching
+        if not hasattr(self, '__descendants'):
+            descendants = []
+            # recursively construct list of descendants
+            for direct_desc in self.direct_descendants:
+                for node_name in direct_desc.descendants:
+                    if node_name not in descendants:
+                        descendants.append(node_name)
+
+            descendants.extend([node.full_displayname for node in self.direct_descendants])
+
+            self.__descendants = descendants
+
+        return self.__descendants

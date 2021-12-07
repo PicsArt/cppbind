@@ -46,6 +46,7 @@ class CXXIEGIRBuilder:
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
+        self._cxx_node_map = {}
 
     def start_root(self, var_values=None):
         """
@@ -138,9 +139,14 @@ class CXXIEGIRBuilder:
         current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
 
+        cursor_display_name = get_full_displayname(cursor)
+
         if not APIParser.has_api(cursor.raw_comment) and \
-                not self.ctx_mgr.ctx_desc.has_yaml_api(get_full_displayname(cursor)):
+                not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
             return
+
+        # put node in node map to be able to find node/cursor by its name
+        self._cxx_node_map[cursor_display_name] = current_node
 
         self.__update_internal_vars(current_node)
 
@@ -152,7 +158,7 @@ class CXXIEGIRBuilder:
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
 
-        res = self.ctx_mgr.eval_clang_attrs(get_full_displayname(cursor),
+        res = self.ctx_mgr.eval_clang_attrs(cursor_display_name,
                                             current_node.kind_name,
                                             api_section,
                                             ctx,
@@ -162,6 +168,14 @@ class CXXIEGIRBuilder:
             current_node.api = api
             current_node.args = args
             current_node.pure_comment = pure_comment
+
+    def end_cursor(self, cursor, *args, **kwargs):
+        node = self.node_stack.pop()
+        if node.api or node.children:  # node has API call or child with API call
+            parent_node = self.node_stack[-1]
+            parent_node.add_children(node)
+        # cursor is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(node.full_displayname, None)
 
     def get_parent_args(self):
         """
@@ -260,14 +274,6 @@ class CXXIEGIRBuilder:
 
         return sys_vars
 
-    def end_cursor(self, cursor, *args, **kwargs):
-        node = self.node_stack.pop()
-        if node.api or node.children:  # node has API call or child with API call
-            parent_node = self.node_stack[-1]
-            parent_node.add_children(node)
-        # cursor is processed it cannot be a parent anymore delete it's args if they're present
-        self._parent_arg_mapping.pop(node.full_displayname, None)
-
     def get_full_ctx(self, pure_comment=None):
         """
         Construct full context: system variables + pure comment + parent context
@@ -285,3 +291,7 @@ class CXXIEGIRBuilder:
         if parent_args:
             ctx.update(parent_args)
         return ctx
+
+    def get_cxx_node_map(self):
+        """Public method to get node map"""
+        return self._cxx_node_map

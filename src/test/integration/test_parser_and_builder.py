@@ -5,6 +5,7 @@ import types
 from unittest.mock import patch, MagicMock
 
 from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.builder.ir_post_processor import IRPostProcessor
 from iegen.common.error import IEGError
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
@@ -365,3 +366,34 @@ def test_cmd_line_ctx_positive():
         assert ir_builder.ir.args['a'] == 'CmdLineValueOfBUsedInA', \
             "command line context must be available when evaluating root context"
         assert ir_builder.ir.args['b'] == 'CmdLineValueOfB', "command line context must overwrite root one"
+
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/ir_process"))
+def test_descendants_list(clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+    clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'descendants.hpp')]
+
+    parser = CXXParser()
+    ir_builder = CXXIEGIRBuilder(ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+
+    ir_builder.start_root()
+    parser.parse(ir_builder, **clang_cfg)
+    ir_builder.end_root()
+
+    ir_post_processor = IRPostProcessor(ir_builder.ir, ir_builder.get_cxx_node_map())
+    ir = ir_post_processor.process_ir()
+
+    cls_nodes = ir.children[0].children[0].children
+    cls_node_map = {cls_node.full_displayname : cls_node for cls_node in cls_nodes}
+
+    # check descendants list for each class node
+    assert cls_node_map["C1"].descendants == ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
+    assert cls_node_map["C2"].descendants == ['C4', 'C5']
+    assert cls_node_map["C3"].descendants == ['C10', 'C9', 'C7', 'C8', 'C6']
+    assert cls_node_map["C4"].descendants == []
+    assert cls_node_map["C5"].descendants == []
+    assert cls_node_map["C6"].descendants == ['C10', 'C9', 'C7', 'C8']
+    assert cls_node_map["C7"].descendants == ['C10', 'C9']
+    assert cls_node_map["C8"].descendants == ['C10', 'C9']
+    assert cls_node_map["C9"].descendants == ['C10']
+    assert cls_node_map["C10"].descendants == []

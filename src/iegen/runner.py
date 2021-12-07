@@ -10,6 +10,7 @@ import sys
 import iegen
 from iegen import default_config, logging, LOG_LEVELS
 from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.builder.ir_post_processor import IRPostProcessor
 from iegen.builder.out_builder import Builder
 from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import to_value
@@ -69,7 +70,8 @@ class WrapperGenerator:
         if Error.has_error():
             Error.critical('Cannot continue: iegen error has occurred')
 
-        ir = ir_builder.ir
+        ir_post_processor = IRPostProcessor(ir_builder.ir, ir_builder.get_cxx_node_map())
+        ir = ir_post_processor.process_ir()
         logging.debug("IR is ready.")
 
         run_rule = RunRule(ir, ctx_desc, platform, language)

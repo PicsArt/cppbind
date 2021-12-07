@@ -355,7 +355,7 @@ constructor:
           catch (...) {
               err->err_type = -1;
           }
-          {{owner_class.converter.c.target_type_name}} result{{' = nullptr' if owner_class.converter.c.custom.is_c_pointer_type}};
+          {{owner_class.converter.c.target_type_name}} result{};
           return result;
       }
   ch:
@@ -560,7 +560,7 @@ method:
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.c.target_type_name}} result{{' = nullptr' if rconverter.c.custom.is_c_pointer_type}};
+          {{rconverter.c.target_type_name}} result{};
           return result;
           {%- endif %}
       }
@@ -756,7 +756,7 @@ function:
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.c.target_type_name}} result;
+          {{rconverter.c.target_type_name}} result{};
           return result;
           {%- endif %}
       }

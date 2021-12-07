@@ -128,10 +128,7 @@ class:
                 self.owner = _owner
             }
             deinit {
-                if owner {
-                    release_{{converter.swift.target_type_name}}(cself)
-                    cself.type?.deallocate()
-                }
+              release_{{converter.swift.target_type_name}}(cself, owner)
             }
             {%endif%}
             {{head|string|indent}}
@@ -147,17 +144,20 @@ class:
         {%- endif %}
     body:
       content: |
-        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself) {
-            {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
-            {%- else %}
-            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
-            {%- endif %}
+        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner) {
+            delete cself.type;
+            if (owner) {
+                {%- if root.vars.shared_ref %}
+                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                {%- else %}
+                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
+                {%- endif %}
+            }
         }
   ch:
     body:
       content: |
-        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself);
+        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner);
 
 
 interface:
@@ -202,10 +202,7 @@ interface:
               self.owner = _owner
             }
             deinit {
-              if owner {
-                release_{{converter.swift.get_target_type_name(interface_class=True)}}(cself)
-                cself.type?.deallocate()
-              }
+              release_{{converter.swift.get_target_type_name(interface_class=True)}}(cself, owner)
             }
 
             {{head|string|indent}}
@@ -219,21 +216,24 @@ interface:
         {%- endif %}
     body:
       content: |
-        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself){
-            {%- if root.vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
-            {%- else %}
-            {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
-            delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
-            {%- else %}
-            delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr));
-            {%- endif %}
-            {%- endif %}
+        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner){
+            delete cself.type;
+            if (owner) {
+                {%- if root.vars.shared_ref %}
+                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                {%- else %}
+                {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
+                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
+                {%- else %}
+                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr));
+                {%- endif %}
+                {%- endif %}
+            }
         }
   ch:
     body:
       content: |
-        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself);
+        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner);
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
@@ -301,12 +301,14 @@ constructor:
               {%- if 'no_throw' not in vars.throws %}
               {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
-                      throw {{get_type_info(exc_type).vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info(exc_type) %}
+                      throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
-                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      {%- set exc_info = get_type_info("std::exception") %}
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -476,13 +478,13 @@ method:
               {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
                       {%- set exc_info = get_type_info(exc_type) %}
-                      throw {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
               {%- endfor %}
               {%- endif %}
               {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
                       {%- set exc_info = get_type_info("std::exception") %}
-                      let exc_obj = {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      let exc_obj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
               {%- endif %}
                   default:
@@ -688,13 +690,13 @@ function:
                   {%- for exc_type in vars.throws %}
                   case({{loop.index}}):
                       {%- set exc_info = get_type_info(exc_type) %}
-                      throw {{exc_info.vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
                   {%- endfor %}
                   {%- endif %}
                   {%- if not 'std::exception' in vars.throws %}
                   case({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
                       {%- set exc_info = get_type_info("std::exception") %}
-                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CObject(type: nil, ptr: err.err_ptr), true)
+                      let exc_obj = {{get_type_info("std::exception").vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
                       ExceptionHandler.handleUncaughtException(exc_obj.what())
                   {%- endif %}
                   default:

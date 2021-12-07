@@ -82,7 +82,11 @@ $Object:
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, is_nullable=is_nullable)}}
       {%- endif %}
       {%- else %}
+      {%- if not vars.descendants %}
       char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      {%- else %}
+      char* type_{{name}} = nullptr;
+      {%- endif %}
       {%- if vars.descendants %}
       {%- macro demangle() -%}
       const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
@@ -90,11 +94,15 @@ $Object:
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
+      } else {
+          type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
       }
       {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
           {{demangle()|indent(4)}}
+      } else {
+          type_result = strdup("{{cxx.pointee_unqualified_name}}");
       }
       {%- else %}
       {{demangle()}}
@@ -127,15 +135,15 @@ $Object:
       {%- if vars.descendants %}
       let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
       switch({{name|to_camel_case}}Index) {
-        {%- for descendant in vars.descendants %}
-        case("{{descendant}}"):
-          {%- set converter = make_type_converter(descendant).swift %}
-          {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
-          {{create_instance(type)|indent(4)}}
-        {%- endfor %}
-        default:
-          {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
-          {{create_instance(type + custom.tpostfix)|indent(4)}}
+      {%- for descendant in vars.descendants %}
+      case("{{descendant}}"):
+        {%- set converter = make_type_converter(descendant).swift %}
+        {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
+        {{create_instance(type)|indent(4)}}
+      {%- endfor %}
+      default:
+        {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+        {{create_instance(type + custom.tpostfix)|indent(4)}}
       }
       {%- else %}
       {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
@@ -414,7 +422,11 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
+      {%- if not args[0].vars.descendants %}
       char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      {%- else %}
+      char* type_{{name}} = nullptr;
+      {%- endif %}
       {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
       const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
@@ -422,6 +434,8 @@ std::shared_ptr:
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
+      } else {
+          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       }
       {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
@@ -431,19 +445,21 @@ std::shared_ptr:
           {{demangle()|indent(4)}}
           {%- endif %}
           {%- if pointee_root != pointee_unqualified %}
-          {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
+          {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
           {%- else %}
-          {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{pointee}}>({{name}}));
+          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
+      } else {
+          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       }
       {%- else %}
       {%- if args[0].vars.descendants %}
       {{demangle()}}
       {%- endif %}
       {%- if pointee_root != pointee_unqualified %}
-      {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
+      {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
       {%- else %}
-      {{target_name}}_ptr = reinterpret_cast<void*>(new std::shared_ptr<{{pointee}}>({{name}}));
+      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
       {%- endif %}
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};

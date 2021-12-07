@@ -67,26 +67,25 @@ rules:
           *_second_data_{{target_name}} = {{name}}.height;
           {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
         swift_to_sc: |
-          {%- set t_name = target_name|to_camel_case -%}
-          let {{t_name}}First = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-          let {{t_name}}Second = UnsafeMutablePointer<Float>.allocate(capacity: 1)
+          let {{target_name}}First = UnsafeMutablePointer<Float>.allocate(capacity: 1)
+          let {{target_name}}Second = UnsafeMutablePointer<Float>.allocate(capacity: 1)
           defer {
-            {{t_name}}First.deallocate()
-            {{t_name}}Second.deallocate()
+            {{target_name}}First.deallocate()
+            {{target_name}}Second.deallocate()
           }
-          var {{t_name}} = {{target_type_name}}()
-          {{t_name}}.first = UnsafeMutableRawPointer({{t_name}}First)
-          {{t_name}}.second = UnsafeMutableRawPointer({{t_name}}Second)
-          {{t_name}}First[0] = {{name}}.0
-          {{t_name}}Second[0] = {{name}}.1
+          var {{target_name}} = {{target_type_name}}()
+          {{target_name}}.first = UnsafeMutableRawPointer({{target_name}}First)
+          {{target_name}}.second = UnsafeMutableRawPointer({{target_name}}Second)
+          {{target_name}}First[0] = {{name}}.0
+          {{target_name}}Second[0] = {{name}}.1
         sc_to_swift: |
-          {%- set t_name = target_name|to_camel_case -%}
+
           let {{name}}FirstData = UnsafeBufferPointer<Float>(start: {{name}}.first.assumingMemoryBound(to: Float.self), count: 1)
           let {{name}}SecondData = UnsafeBufferPointer<Float>(start: {{name}}.second.assumingMemoryBound(to: Float.self), count: 1)
           defer {
             {{name}}FirstData.deallocate()
             {{name}}SecondData.deallocate()
           }
-          let {{t_name}}First = {{name}}FirstData[0]
-          let {{t_name}}Second = {{name}}SecondData[0]
-          let {{t_name}}: (Float, Float) = ({{t_name}}First, {{t_name}}Second)
+          let {{target_name}}First = {{name}}FirstData[0]
+          let {{target_name}}Second = {{name}}SecondData[0]
+          let {{target_name}}: (Float, Float) = ({{target_name}}First, {{target_name}}Second)

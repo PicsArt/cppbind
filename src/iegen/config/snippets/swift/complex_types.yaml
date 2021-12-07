@@ -105,18 +105,18 @@ $Object:
       {%- endif %}
       {%- endif %}
     swift_to_sc: |
-      let {{target_name|to_camel_case}} = {{name|to_camel_case}}{{'?' if nullable|default(False)}}.cself
+      let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
     sc_to_swift: |
-      {%- set t_name = target_name|to_camel_case %}
+      {%- set target_name = target_name %}
       {%- if nullable|default(False) -%}
-      let {{t_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
+      let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
       if let {{name}} = {{name}} {
-        {{t_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+        {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       } else {
-        {{t_name}} = nil
+        {{target_name}} = nil
       }
       {%- else -%}
-      let {{t_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
 
 $Enum:
@@ -133,15 +133,15 @@ $Enum:
     cxx_to_c: |
       {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
     swift_to_sc: |
-      let {{target_name|to_camel_case}} = {{name|to_camel_case}}.rawValue
+      let {{target_name}} = {{name}}.rawValue
     sc_to_swift: |
-      {% set t_name = target_name|to_camel_case %}
-      let {{t_name}}Optional = {{target_type_name}}(rawValue: {{name}})
-      if ({{t_name}}Optional == nil) {
+      {% set target_name = target_name %}
+      let {{target_name}}Optional = {{target_type_name}}(rawValue: {{name}})
+      if ({{target_name}}Optional == nil) {
         {{"ExceptionHandler.handleUncaughtException(
         \"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
-      let {{t_name}} = {{t_name}}Optional!
+      let {{target_name}} = {{target_name}}Optional!
 
 std::__cxx11::basic_string:
   custom:
@@ -158,9 +158,9 @@ std::__cxx11::basic_string:
     cxx_to_c: |
       auto {{target_name}} = strdup({{name}}.data());
     swift_to_sc: |
-      let {{target_name|to_camel_case}} = strdup({{name|to_camel_case}})!
+      let {{target_name}} = strdup({{name}})!
     sc_to_swift: |
-      let {{target_name|to_camel_case}} = String(cString: {{name}})
+      let {{target_name}} = String(cString: {{name}})
       defer {
         {{name}}.deallocate()
       }
@@ -181,9 +181,9 @@ char *:
     c_to_cxx:
     cxx_to_c:
     swift_to_sc: |
-      let {{target_name|to_camel_case}} = {{name|to_camel_case}}.cString(using: String.Encoding.utf8){{'!' if not nullable|default(False)}}
+      let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8){{'!' if not nullable|default(False)}}
     sc_to_swift: |
-      let {{target_name|to_camel_case}} = String(cString: {{name}}{{'!' if nullable|default(False)}})
+      let {{target_name}} = String(cString: {{name}}{{'!' if nullable|default(False)}})
 
 std::vector:
   custom:
@@ -213,36 +213,32 @@ std::vector:
           _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
-      {%- set name = name|to_camel_case -%}
-      {%- set t_name = target_name|to_camel_case -%}
-      let _{{t_name}}Data = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      var {{t_name}} = {{target_type_name}}()
-      {{t_name}}.data = UnsafeMutableRawPointer(_{{t_name}}Data)
-      {{t_name}}.size = Int64({{name}}.count)
+      let _{{target_name}}Data = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+      var {{target_name}} = {{target_type_name}}()
+      {{target_name}}.data = UnsafeMutableRawPointer(_{{target_name}}Data)
+      {{target_name}}.size = Int64({{name}}.count)
       for i in 0..<{{name}}.count {
         let {{name}}Val = {{name}}[i]
         {{args[0].snippet('{}Val'.format(name))|indent(2)}}
-        _{{t_name}}Data[i] = {{args[0].converted_name('{}Val'.format(name))|to_camel_case}}
+        _{{target_name}}Data[i] = {{args[0].converted_name('{}Val'.format(name))|to_camel_case}}
       }
     sc_to_swift: |
-      {%- set t_name = target_name|to_camel_case -%}
       let _{{name}}Buffer = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
         start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
         count: Int({{name}}.size))
-      var {{t_name}}: [{{args[0].target_type_name}}] = []
+      var {{target_name}}: [{{args[0].target_type_name}}] = []
       defer {
         _{{name}}Buffer.deallocate()
       }
       for i in 0..<Int({{name}}.size) {
         let {{name}}Value = _{{name}}Buffer[i]
         {{args[0].snippet('{}Value'.format(name))|indent(2)}}
-        {{t_name}}.append({{args[0].converted_name('{}Value'.format(name))|to_camel_case}})
+        {{target_name}}.append({{args[0].converted_name('{}Value'.format(name))|to_camel_case}})
       }
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
-        {%- set name = name|to_camel_case -%}
         {%- if args[0] %}
         {%- set cleanup_code_fragment = args[0].snippet('{}Item'.format(name)) %}
         {%- if cleanup_code_fragment %}
@@ -291,33 +287,30 @@ std::map:
           }
       }
     swift_to_sc: |
-      {%- set name = name|to_camel_case -%}
-      {%- set t_name = target_name|to_camel_case -%}
-      let _{{t_name}}Key = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(
+      let _{{target_name}}Key = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(
         capacity: {{name}}.count)
-      let _{{t_name}}Val = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(
+      let _{{target_name}}Val = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(
         capacity: {{name}}.count)
-      var {{t_name}} = {{target_type_name}}()
-      {{t_name}}.keys = UnsafeMutableRawPointer(_{{t_name}}Key)
-      {{t_name}}.values = UnsafeMutableRawPointer(_{{t_name}}Val)
-      {{t_name}}.size = Int64({{name}}.count)
+      var {{target_name}} = {{target_type_name}}()
+      {{target_name}}.keys = UnsafeMutableRawPointer(_{{target_name}}Key)
+      {{target_name}}.values = UnsafeMutableRawPointer(_{{target_name}}Val)
+      {{target_name}}.size = Int64({{name}}.count)
       var {{name}}Idx = 0
       for ({{name}}Key, {{name}}Val) in {{name}} {
         {{args[0].snippet('{}Key'.format(name))|indent(2)}}
         {{args[1].snippet('{}Val'.format(name))|indent(2)}}
-        _{{t_name}}Key[{{name}}Idx] = {{args[0].converted_name('{}Key'.format(name))|to_camel_case}}
-        _{{t_name}}Val[{{name}}Idx] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
+        _{{target_name}}Key[{{name}}Idx] = {{args[0].converted_name('{}Key'.format(name))|to_camel_case}}
+        _{{target_name}}Val[{{name}}Idx] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
         {{name}}Idx += 1
       }
     sc_to_swift: |
-      {%- set t_name = target_name|to_camel_case -%}
       let {{name}}BufferKey = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
         start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
         count: Int({{name}}.size))
       let {{name}}BufferVal = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(
         start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self),
         count: Int({{name}}.size))
-      var {{t_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
+      var {{target_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
       defer {
         {{name}}BufferKey.deallocate()
         {{name}}BufferVal.deallocate()
@@ -328,14 +321,13 @@ std::map:
         do {
           {{args[0].snippet('{}Key'.format(name))|indent(4)}}
           {{args[1].snippet('{}Val'.format(name))|indent(4)}}
-          {{t_name}}[{{args[0].converted_name('{}Key'.format(name))|to_camel_case}}] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
+          {{target_name}}[{{args[0].converted_name('{}Key'.format(name))|to_camel_case}}] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
         }
       }
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
-        {%- set name = name|to_camel_case -%}
         {%- if args[1] %}
         {%- set cleanup_code_fragment = args[1].snippet('{}Item'.format(name)) %}
         {%- if cleanup_code_fragment %}
@@ -412,7 +404,6 @@ std::shared_ptr:
       {%- endif %}
       {%- endif %}
     swift_to_sc: |
-      {%- set name = name|to_camel_case -%}
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
     sc_to_swift: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
@@ -443,23 +434,21 @@ std::pair:
       *_second_data_{{target_name}} = {{args[1].converted_name('second_{}'.format(name))}};
       {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
     swift_to_sc: |
-      {%- set name = name|to_camel_case -%}
-      {%- set t_name = target_name|to_camel_case -%}
-      let _{{t_name}}First = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
-      let _{{t_name}}Second = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
+      let _{{target_name}}First = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
+      let _{{target_name}}Second = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
       defer {
-        _{{t_name}}First.deallocate()
-        _{{t_name}}Second.deallocate()
+        _{{target_name}}First.deallocate()
+        _{{target_name}}Second.deallocate()
       }
-      var {{t_name}} = {{target_type_name}}()
-      {{t_name}}.first = UnsafeMutableRawPointer(_{{t_name}}First)
-      {{t_name}}.second = UnsafeMutableRawPointer(_{{t_name}}Second)
+      var {{target_name}} = {{target_type_name}}()
+      {{target_name}}.first = UnsafeMutableRawPointer(_{{target_name}}First)
+      {{target_name}}.second = UnsafeMutableRawPointer(_{{target_name}}Second)
       let {{name}}First = {{name}}.0
       let {{name}}Second = {{name}}.1
       {{args[0].snippet('{}First'.format(name))}}
       {{args[1].snippet('{}Second'.format(name))}}
-      _{{t_name}}First[0] = {{args[0].converted_name('{}First'.format(name))|to_camel_case}}
-      _{{t_name}}Second[0] = {{args[1].converted_name('{}Second'.format(name))|to_camel_case}}
+      _{{target_name}}First[0] = {{args[0].converted_name('{}First'.format(name))|to_camel_case}}
+      _{{target_name}}Second[0] = {{args[1].converted_name('{}Second'.format(name))|to_camel_case}}
     sc_to_swift: |
       let _{{name}}FirstData = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
         start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
@@ -475,4 +464,4 @@ std::pair:
       let {{name}}Second = _{{name}}SecondData[0]
       {{args[0].snippet('{}First'.format(name))}}
       {{args[1].snippet('{}Second'.format(name))}}
-      let {{target_name|to_camel_case}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})
+      let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})

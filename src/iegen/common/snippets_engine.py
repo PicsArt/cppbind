@@ -306,7 +306,7 @@ class TypeConvertorInfo(TargetTypeInfo):
         return ""
 
     def converted_name(self, name):
-        return f'{self.name}_{name}' if self.snippet_tmpl else name
+        return f"{self.name.replace('_', '')}{name}" if self.snippet_tmpl else name
 
 
 class ScopeInfo:

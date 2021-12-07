@@ -314,13 +314,13 @@ constructor:
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case) %}
+        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
         {%- endfor %}
         var err = ErrorObj()
         self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
-        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
         {%- if cleanup_code_fragment %}
         {{cleanup_code_fragment|indent(2)}}
         {%- endif %}
@@ -421,7 +421,7 @@ method:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case) %}
+          {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
           {%- endfor %}
           let result = {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_'), overloading_prefix))}}({{call_args|join(', ')}})
           {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
@@ -430,13 +430,13 @@ method:
           {%- endif %}
           {%- for arg in args %}
           {%- if arg.converter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
           {%- endif %}
           {%- endfor %}
-          return {{rconverter.sc_to_swift.converted_name('result')|to_camel_case}}
+          return {{rconverter.sc_to_swift.converted_name('result')}}
         }
         {%- if not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
         {%- set res_converter = rconverter.swift_to_sc %}
@@ -449,24 +449,24 @@ method:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case) %}
+          {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
           {%- endfor %}
           {%- set conversion = res_converter.snippet('value', nullable=vars.nullable_return) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          {%- do call_args.append(res_converter.converted_name('value')|to_camel_case) %}
+          {%- do call_args.append(res_converter.converted_name('value')) %}
           {{helper.get_c_func_name("{}_{}{}".format(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), overloading_prefix))}}({{call_args|join(', ')}})
           {%- for arg in args %}
           {%- if arg.converter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
           {%- endif %}
           {%- endfor %}
           {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(res_converter.converted_name('value')|to_camel_case) %}
+          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(res_converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
@@ -503,7 +503,7 @@ method:
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case)%}
+        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
         {%- endfor %}
         var err = ErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -513,7 +513,7 @@ method:
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
-        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
         {%- if cleanup_code_fragment %}
         {{cleanup_code_fragment|indent(2)}}
         {%- endif %}
@@ -542,7 +542,7 @@ method:
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        return {{rconverter.sc_to_swift.converted_name('result')|to_camel_case}}
+        return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
       }
       {%- endif %}{{new_line}}
@@ -721,7 +721,7 @@ function:
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name)|to_camel_case)%}
+        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
         {%- endfor %}
         var err = ErrorObj()
         {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
@@ -733,7 +733,7 @@ function:
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
-        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name)|to_camel_case) %}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
         {%- if cleanup_code_fragment %}
         {{cleanup_code_fragment|indent(2)}}
         {%- endif %}
@@ -762,7 +762,7 @@ function:
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        return {{rconverter.sc_to_swift.converted_name('result')|to_camel_case}}
+        return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
       }{{new_line}}
   cc:
@@ -861,7 +861,7 @@ property_getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          return {{result_converter.converted_name('result')|to_camel_case}}
+          return {{result_converter.converted_name('result')}}
         }
         {%- if vars.action == 'gen_property_setter' %}
         {%- set converter = rconverter.swift_to_sc %}
@@ -871,9 +871,9 @@ property_getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself, {{converter.converted_name('value')|to_camel_case}})
+          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself, {{converter.converted_name('value')}})
           {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')|to_camel_case) %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
@@ -899,13 +899,7 @@ property_getter:
       }
       {%- if vars.action == 'gen_property_setter' %}
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}){
-          {%- if owner_class.root.vars.shared_ref %}
-          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
-                    );
-          {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
-          {%- endif %}
           {{rconverter.c_to_cxx.snippet(vars.name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{cxx.name}} = {{rconverter.c_to_cxx.converted_name(vars.name)}};
       }
@@ -941,7 +935,7 @@ getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          return {{result_converter.converted_name('result')|to_camel_case}}
+          return {{result_converter.converted_name('result')}}
         }
         {%- if setter is defined %}
         {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list %}
@@ -955,9 +949,9 @@ getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')|to_camel_case}})
+          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
           {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')|to_camel_case) %}
+          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
@@ -990,13 +984,7 @@ getter:
       {%- if setter is defined %}
       {% set converter = setter.args[0].converter.c_to_cxx %}
       void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} _Nonnull cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}){
-          {%- if owner_class.root.vars.shared_ref %}
-          auto c_to_cxx_cself = std::dynamic_pointer_cast<{{owner_class.cxx.type_name}}>(
-                    *static_cast<std::shared_ptr<{{owner_class.root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself)
-                    );
-          {%- else %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
-          {%- endif %}
           {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.args[0].name)}});
       }

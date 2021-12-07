@@ -57,7 +57,10 @@ frog = Frog()
 assert AnimalUsage.get_animal_type_name(frog) == "frog"
 assert AnimalUsage.get_aquatic_animal_type_name(frog) == "frog"
 
-# currently we have an seg fault issue in this example
+# currently we have an issue in this example (seg fault + wrong copy address) which is a pybind bug
+# Issue link in pybind: https://github.com/pybind/pybind11/issues/3514
+# Issue discussion link: https://github.com/pybind/pybind11/discussions/3506
+#
 # animal_usage_obj = AnimalUsage()
 # assert animal_usage_obj.get_frog().type_name() == "frog"
 # assert animal_usage_obj.get_aquatic_animal().type_name() == "frog"

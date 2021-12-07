@@ -310,7 +310,7 @@ constructor:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -417,7 +417,7 @@ method:
           {%- set call_args = ['cself'] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -445,7 +445,7 @@ method:
           {%- set call_args = ['cself'] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -476,7 +476,7 @@ method:
       }
       {%- else -%}
       {%- if vars.is_operator -%}
-      public static func {{operator}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+      public static func {{operator}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
       {%- set call_args = ['cself.cself'] -%}
       {%- else -%}
       {%- set override = cxx.is_override and not is_interface_override -%}
@@ -499,7 +499,7 @@ method:
       {%endif%}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -717,7 +717,7 @@ function:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -873,7 +873,7 @@ property_getter:
           {%- endif %}
           _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself, {{converter.converted_name('value')|to_camel_case}})
           {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name(arg.name)|to_camel_case) %}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')|to_camel_case) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}

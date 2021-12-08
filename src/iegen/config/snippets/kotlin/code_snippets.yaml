@@ -193,7 +193,11 @@ class:
              * Finalize and deletes the object
              */
             protected fun finalize() {
-                //close()
+                // temporary fix until kotlin ownership will be supported
+                // github issues:
+                // https://github.com/PicsArt/iegen/issues/349
+                // https://github.com/PicsArt/iegen/issues/348
+                // close()
             }
             {%- endif %}
             {%- if private_external %}
@@ -279,7 +283,11 @@ interface:
             * Finalize and deletes the object
             */
             protected fun finalize() {
-                //close()
+                // temporary fix until kotlin ownership will be supported
+                // github issues:
+                // https://github.com/PicsArt/iegen/issues/349
+                // https://github.com/PicsArt/iegen/issues/348
+                // close()
             }
             {% endif %}
             ///// External wrapper functions ////////////

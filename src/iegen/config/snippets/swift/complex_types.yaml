@@ -117,7 +117,7 @@ $Object:
       {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
-      let {{target_name}} = CObject(type: {{name}}?.cself.type, ptr: {{name}}?.cself.ptr){# when the swift object is null we pass CObject with nulls to not deallocate the type name in c#}
+      let {{target_name}} = {{name}}?.cself ?? CObject(type: nil, ptr: nil){# when the swift object is null we pass CObject with nulls to not deallocate the type name in c#}
       {%- else -%}
       let {{target_name}} = {{name}}.cself
       {%- endif -%}

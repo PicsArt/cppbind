@@ -1,4 +1,4 @@
-- file:
+\- file:
     files_glob: 
       - "{{[vars.helpers_dir, '**/*.py'] | path_join}}"
     copy_to: |
@@ -15,7 +15,7 @@
       - "{{[vars.cxx_base_source_dir, '**/*.h*'] | path_join}}"
       - "{{[vars.cxx_base_source_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {%- if vars.cxx_base_out_dir is defined -%}
+      {%- if vars.cxx_base_out_dir -%}
       {%- set file_rel_name = path.relpath(file_name, vars.cxx_base_source_dir) -%}
       {{path.join(vars.cxx_base_out_dir, file_rel_name)}}
       {%- endif -%}

@@ -18,7 +18,7 @@ func runGlobalsExamples() {
     assert(pairPrjPrj.0.title == prj1.title)
     assert(pairPrjPrj.1.title == prj2.title)
 
-    let root1 = Root(_path: "/path/to/root/")
+    let root1 = Root(path: "/path/to/root/")
     let pairRootPrj = makePair(arg0: root1, arg1: prj1)
     assert(Mirror(reflecting: pairRootPrj).children.count == 2)
     assert(pairRootPrj.0.path == root1.path)

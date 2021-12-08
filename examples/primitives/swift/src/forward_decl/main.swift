@@ -3,8 +3,8 @@ import Wrapper
 
 func runForwardDeclExamples() {
     // [forward-decl-usage]
-    let student1 = Student(st_name: "John Doe")
-    let student2 = Student(st_name: "Jane Doe")
+    let student1 = Student(stName: "John Doe")
+    let student2 = Student(stName: "Jane Doe")
     let teacher1 = Teacher()
     let teacher2 = Teacher()
 

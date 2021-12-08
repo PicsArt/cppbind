@@ -596,9 +596,6 @@ class SnippetsEngine:
     def build_type_converter_with_typename(self, type_name, template_choice=None):
         return self.build_type_converter(CXXType(type_name, template_choice))
 
-    def _make_type_converter(self, type_name, template_choice=None):
-        return self.build_type_converter(CXXType(type_name, template_choice))
-
     def _create_type_info(self, search_name, cxx_type, template_args=None, **kwargs):
         logging.debug(f"Finding type for {search_name}")
         ref_ctx = self.runner.get_context(search_name)

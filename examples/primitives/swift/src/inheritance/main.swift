@@ -24,13 +24,21 @@ func runInheritanceExamples() {
 
     // other test cases
     let gf = GeometricFigure(p: square)
-    assert(gf.parallelogram.cself == square.cself)
+    assert(gf.parallelogram is Square)
+    assert(gf.parallelogram.cself.ptr == square.cself.ptr)
     gf.parallelogram = rhombus
-    assert(gf.parallelogram.cself == rhombus.cself)
+    assert(gf.parallelogram is RhombusFigure)
+    assert(gf.parallelogram.cself.ptr == rhombus.cself.ptr)
+    gf.nullableParallelogram = nil
+    assert(gf.nullableParallelogram == nil)
 
     let mv = MyVehicle(v: bicycle)
     mv.vehicle = bicycle
-    let _ = mv.vehicle.type() == "bicycle"
+    assert(mv.vehicle!.type() == "bicycle")
+    assert(mv.vehicle is Bicycle)
+
+    let mb = MyBicycle(b: bicycle)
+    assert(mb.bicycle.type() == "bicycle")
 
     // mixed multiple inheritance with interface and class
     let dt = DateTime(d: 15, mo: 1, y: 2015, h: 15, mi: 15, s: 15)
@@ -51,6 +59,14 @@ func runInheritanceExamples() {
     assert(animalUsageObj.getFrog().typeName() == "frog")
     assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
     assert(animalUsageObj.getAnimal().typeName() == "frog")
+
+    let dateEvent = MyDate(d: 12, m: 12, y: 2021)
+    let dateTimeEvent = DateTime(d: 11, mo: 12, y: 2021, h: 12, mi: 12, s: 12)
+    let myCalendar = MyCalendar(events: [dateEvent])
+    myCalendar.addEvent(e: dateTimeEvent)
+    let events = myCalendar.events
+    assert(!(events[0] is DateTime))
+    assert(events[1] is DateTime)
 }
 
 #if os(Linux)

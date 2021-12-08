@@ -31,14 +31,12 @@ val gf = GeometricFigure(square)
 assert(gf.parallelogram.id == square.id)
 gf.parallelogram = rhombus
 assert(gf.parallelogram.id == rhombus.id)
+gf.nullableParallelogram = null
+assert(gf.nullableParallelogram == null)
 
 val mv = MyVehicle(bicycle)
 mv.vehicle = bicycle
-
-
-// mixed multiple inheritance with interface and class
-val dt = DateTime(15, 1, 2015, 15, 15, 15)
-assert(dt.datetime == "15:1:2015 15:15:15")
+assert(mv.vehicle!!.type() == "bicycle")
 
 // const shared_ptr tests
 val mb = MyBicycle(bicycle)
@@ -47,7 +45,9 @@ val myNewBicycle = Bicycle(2)
 mb.bicycle = myNewBicycle
 assert(myNewBicycle.numberOfSeats == mb.bicycle.numberOfSeats)
 
-
+// mixed multiple inheritance with interface and class
+val dt = DateTime(15, 1, 2015, 15, 15, 15)
+assert(dt.datetime == "15:1:2015 15:15:15")
 
 // delete instances
 square.close()

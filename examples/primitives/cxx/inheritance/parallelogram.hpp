@@ -8,6 +8,10 @@ namespace iegen::example {
  * action: gen_interface
  * shared_ref: False
  * package: inheritance
+ * swift.descendants:
+ *  - iegen::example::Rectangle
+ *  - iegen::example::Rhombus
+ *  - iegen::example::Square
  */
 class Parallelogram {
 public:

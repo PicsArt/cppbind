@@ -107,7 +107,6 @@ $Object:
     swift_to_sc: |
       let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
     sc_to_swift: |
-      {%- set target_name = target_name %}
       {%- if nullable|default(False) -%}
       let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
       if let {{name}} = {{name}} {
@@ -135,7 +134,6 @@ $Enum:
     swift_to_sc: |
       let {{target_name}} = {{name}}.rawValue
     sc_to_swift: |
-      {% set target_name = target_name %}
       let {{target_name}}Optional = {{target_type_name}}(rawValue: {{name}})
       if ({{target_name}}Optional == nil) {
         {{"ExceptionHandler.handleUncaughtException(

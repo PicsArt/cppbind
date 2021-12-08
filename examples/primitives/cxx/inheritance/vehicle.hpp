@@ -10,6 +10,8 @@ namespace iegen::example {
  * action: gen_class
  * shared_ref: True
  * package: inheritance
+ * swift.descendants:
+ *  - iegen::example::Bicycle
  */
 class Vehicle {
 public:

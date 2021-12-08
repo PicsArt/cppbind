@@ -10,9 +10,7 @@ func runExceptionExamples() {
 
     do {
         let _ = try ThrowExc.getByKey(m: [1 : 1], key: 0)
-    } catch let err as StdOutOfRange {
-        // error messages are different on macos and linux
-        assert(err.what() == "map::at" || err.what().contains("key not found"))
+    } catch is StdOutOfRange {
     } catch {
         assert(false)
     }

@@ -291,6 +291,7 @@ class TypeConvertorInfo(TargetTypeInfo):
         super().__init__(*args, **kwargs)
         self.source_type_info = source_type_info
         self.snippet_tmpl = snippet_tmpl
+        self._converted_prefix = self.name.replace('_', '')
 
     def source_type_name(self, context):
         if self.source_type_info is None:
@@ -306,7 +307,7 @@ class TypeConvertorInfo(TargetTypeInfo):
         return ""
 
     def converted_name(self, name):
-        return f"{self.name.replace('_', '')}{name}" if self.snippet_tmpl else name
+        return f"{self._converted_prefix}{name}" if self.snippet_tmpl else name
 
 
 class ScopeInfo:

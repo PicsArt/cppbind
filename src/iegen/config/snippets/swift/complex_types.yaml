@@ -164,8 +164,22 @@ std::__cxx11::basic_string:
       }
 
 std::string_view:
-  std::__cxx11::basic_string
-
+  custom:
+    is_c_pointer_type: True
+    tname: String
+  types:
+    swift: String
+    c: char*
+    sc: UnsafeMutablePointer<CChar>
+  converters:
+    c_to_cxx: |
+      {{make_type_converter('std::string').c_to_cxx.snippet(name)}}
+    cxx_to_c: |
+      {{make_type_converter('std::string').cxx_to_c.snippet(name)}}
+    swift_to_sc: |
+      {{make_type_converter('std::string').swift_to_sc.snippet(name)}}
+    sc_to_swift: |
+      {{make_type_converter('std::string').sc_to_swift.snippet(name)}}
 
 char *:
   custom:

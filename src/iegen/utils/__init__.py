@@ -122,7 +122,7 @@ def make_camel_case(string, sub_strings=None):
         for p in sub_strings:
             string = string.replace(p, make_camel_case(p))
         return string
-    init, *temp = string.split('_')
+    init, *temp = string.strip('_').split('_')
     return ''.join([init, *map(str.title, temp)])
 
 

@@ -136,7 +136,6 @@ class:
 
           deinit {
             release_{{converter.swift.target_type_name}}(cself, owner)
-          }
           }{{new_line}}
           {%- endif %}
           {%- if head %}
@@ -232,7 +231,6 @@ interface:
 
           deinit {
             release_{{converter.swift.get_target_type_name(interface_class=True)}}(cself, owner)
-          }
           }{{new_line}}
           {%- if head %}
           {{head|string|indent(2)}}

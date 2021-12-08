@@ -18,7 +18,7 @@ class CXXParserFilter:
 
     def __init__(self, include_files=None, exclude_glob=None):
         self.include_files = include_files
-        self.exclude_files = extract_files_from_glob(exclude_glob) if exclude_glob else []
+        self.exclude_files = extract_files_from_glob(exclude_glob) if exclude_glob else None
 
     def include_files():
         """

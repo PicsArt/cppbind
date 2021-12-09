@@ -23,7 +23,8 @@ from iegen.utils import (
     get_host_platform,
     get_var_real_type,
     load_rule_module,
-    copy_yaml_config_template
+    copy_yaml_config_template,
+    extract_files_from_glob
 )
 
 
@@ -63,7 +64,8 @@ class WrapperGenerator:
 
         logging.debug("Start parsing and building IR.")
 
-        cxx_ieg_filter = CXXParserFilter(exclude_glob=root_ctx['src_exclude_glob'])
+        exclude_files = extract_files_from_glob(root_ctx['src_exclude_glob']) if root_ctx['src_exclude_glob'] else None
+        cxx_ieg_filter = CXXParserFilter(exclude_files=exclude_files)
         parser = CXXParser(filter_=cxx_ieg_filter)
 
         parser.parse(ir_builder, **root_ctx)

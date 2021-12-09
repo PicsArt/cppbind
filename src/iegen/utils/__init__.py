@@ -27,6 +27,13 @@ class DefaultValueKind(enum.IntEnum):
 
 
 def extract_files_from_glob(src_glob):
+    """
+    Finds all the pathnames matching a specified pattern
+    Args:
+        src_glob(list): Pathname
+    Returns:
+        list: List of files that matches the path specified in the function argument
+    """
     all_extracted_files = set()
     for file in src_glob:
         abs_paths = (os.path.abspath(file_path)

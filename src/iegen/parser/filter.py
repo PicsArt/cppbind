@@ -5,7 +5,7 @@ import glob
 import os
 
 import clang.cindex as cli
-from iegen.utils import extract_files_from_glob
+
 
 class CXXParserFilter:
     """
@@ -16,9 +16,9 @@ class CXXParserFilter:
         cli.CursorKind.CXX_BASE_SPECIFIER
     ]
 
-    def __init__(self, include_files=None, exclude_glob=None):
+    def __init__(self, include_files=None, exclude_files=None):
         self.include_files = include_files
-        self.exclude_files = extract_files_from_glob(exclude_glob) if exclude_glob else None
+        self.exclude_files = exclude_files
 
     def include_files():
         """
@@ -74,9 +74,8 @@ class CXXParserFilter:
         if node.extent.start.file is None:
             return True
         if self.exclude_files is not None:
-            for file in self.exclude_files:
-                if file in node.extent.start.file.name:
-                    return True
+            if node.extent.start.file.name in self.exclude_files:
+                return True
         if self.include_files:
             return node.extent.start.file.name not in self.include_files
         return False

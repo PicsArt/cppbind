@@ -53,7 +53,8 @@ class CXXParserFilter:
             True if cursor needs to be processed
 
         """
-        if self.filter_by_file(node.extent.start.file.name) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
+        file = node.extent.start.file
+        if file is None or self.filter_by_file(file.name) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
             return True
 
         return False
@@ -71,8 +72,6 @@ class CXXParserFilter:
         return False
 
     def filter_by_file(self, file):
-        if file is None:
-            return True
         if self.exclude_files is not None:
             if file in self.exclude_files:
                 return True

@@ -12,7 +12,7 @@ from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import NodeType, Node
 from iegen.parser.filter import CXXParserFilter
 from iegen.parser.ieg_parser import CXXParser
-from iegen.utils import extract_files_from_glob
+from iegen.utils import absolute_path_from_glob
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_REL_PATH = '../test_cxx_inputs'
@@ -377,7 +377,7 @@ def test_src_exclude_glob(clang_config):
 
     clang_cfg['src_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'main.hpp'))]
     clang_cfg['src_exclude_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'module.hpp'))]
-    exclude_files = extract_files_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
+    exclude_files = absolute_path_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
     cxx_ieg_filter = CXXParserFilter(exclude_files=exclude_files)
     parser = CXXParser(filter_=cxx_ieg_filter)
     ctx_desc = ContextDescriptor(None)

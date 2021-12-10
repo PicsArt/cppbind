@@ -11,7 +11,7 @@ from iegen import logging
 from iegen.common.error import Error
 from iegen.parser.filter import cxx_ieg_filter
 import iegen.utils.clang as cutil
-from iegen.utils import extract_files_from_glob
+
 
 class CXXParser:
     """
@@ -46,15 +46,13 @@ class CXXParser:
 
         logging.info("parsing files: {}".format(' '.join(src_glob)))
 
-        all_excluded_files = extract_files_from_glob(src_exclude_glob)
-
         # using list to keep files order constant
         all_files = []
         for file in src_glob:
             files_glob = sorted(glob.glob(file.strip(), recursive=True))
             for file_path in files_glob:
                 abs_fp = os.path.abspath(file_path)
-                if abs_fp not in all_excluded_files:
+                if not self.filter.filter_by_file(abs_fp):
                     all_files.append(abs_fp)
 
         # logging.debug(f"parsing found files: {all_files}")

@@ -26,21 +26,21 @@ class DefaultValueKind(enum.IntEnum):
     NULL_PTR = 4
 
 
-def extract_files_from_glob(src_glob):
+def absolute_path_from_glob(src_glob):
     """
-    Finds all the pathnames matching a specified pattern
+    Finds all the absolute file paths matching a specified pattern
     Args:
-        src_glob(list): Pathname
+        src_glob(list): List of glob paths
     Returns:
-        list: List of files that matches the path specified in the function argument
+        list: List of absolute paths
     """
-    all_extracted_files = set()
+    all_absolute_paths = set()
     for file in src_glob:
         abs_paths = (os.path.abspath(file_path)
                      for file_path in glob.glob(file.strip(), recursive=True))
-        all_extracted_files.update(abs_paths)
+        all_absolute_paths.update(abs_paths)
 
-    return all_extracted_files
+    return all_absolute_paths
 
 
 def load_from_paths(loader, path_name, default_dirs):

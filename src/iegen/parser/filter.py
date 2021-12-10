@@ -53,7 +53,7 @@ class CXXParserFilter:
             True if cursor needs to be processed
 
         """
-        if self.filter_by_file(node) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
+        if self.filter_by_file(node.extent.start.file.name) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
             return True
 
         return False
@@ -70,14 +70,14 @@ class CXXParserFilter:
         """
         return False
 
-    def filter_by_file(self, node):
-        if node.extent.start.file is None:
+    def filter_by_file(self, file):
+        if file is None:
             return True
         if self.exclude_files is not None:
-            if node.extent.start.file.name in self.exclude_files:
+            if file in self.exclude_files:
                 return True
         if self.include_files:
-            return node.extent.start.file.name not in self.include_files
+            return file not in self.include_files
         return False
 
 cxx_ieg_filter = CXXParserFilter()

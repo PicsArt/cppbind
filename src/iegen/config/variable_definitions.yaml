@@ -217,7 +217,7 @@ helpers_dir:
 
 cxx_base_source_dir:
   inheritable: true
-  default: base
+  default: '{{path.abspath(path.join(_iegen_extras_dir, "base"))}}'
   allowed_on: [ root ]
 
 file_postfix:

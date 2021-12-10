@@ -380,7 +380,7 @@ def test_descendants_list(clang_config):
     parser.parse(ir_builder, **clang_cfg)
     ir_builder.end_root()
 
-    ir = IRPostProcessor.process_ir(ir_builder.ir)
+    ir = IRPostProcessor().process_ir(ir_builder.ir)
 
     cls_nodes = ir.children[0].children[0].children
     cls_node_map = {cls_node.full_displayname : cls_node for cls_node in cls_nodes}

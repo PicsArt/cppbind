@@ -8,7 +8,7 @@
  * __API__
  * action: gen_function
  * package: globs
- * file: GlobUtils
+ * swift.file: GlobUtils
  * throws: no_throw
  */
 std::string concat(const std::string& str1, const std::string& str2) {
@@ -16,11 +16,23 @@ std::string concat(const std::string& str1, const std::string& str2) {
 }
 
 /**
+ * A global function example.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ */
+std::string concat(const std::string& str1, const std::string& str2, const std::string& str3) {
+    return str1 + str2 +str3;
+}
+
+/**
  * A global template function example.
  * __API__
  * action: gen_function
  * package: globs
- * file: GlobUtils
+ * swift.file: GlobUtils
  * throws: no_throw
  * template:
  *   T:
@@ -38,7 +50,7 @@ namespace iegen::example {
      * __API__
      * action: gen_function
      * package: globs
-     * file: GlobUtils
+     * swift.file: GlobUtils
      * throws: no_throw
      * template:
      *   T:

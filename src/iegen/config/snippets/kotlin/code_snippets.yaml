@@ -5,6 +5,8 @@ file:
     scopes:
       - body
       - include
+      - glob_external
+      - glob_init
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
@@ -13,7 +15,16 @@ file:
       {%- set exc_vars = get_type_info("std::exception").vars %}
       {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
       {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
+      {%- if glob_init %}
+      {{glob_init}}
+      {%- endif %}
+      {%- if body %}
       {{body}}
+      {%- endif %}
+      {%- if glob_external %}
+
+      {{glob_external}}
+      {%- endif %}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -315,6 +326,9 @@ var_method_kotlin_include: &var_method_kotlin_include
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
+    {%- if vars.is_proj_type -%}
+    #include "{{vars.prj_rel_file_name}}"
+    {%- endif -%}
     {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
@@ -604,6 +618,134 @@ method:
           {{call_code(owner_class.cxx.type_name + "::", call_args)|indent(4)}}
           {%- endif %}
       }
+
+
+function:
+  kotlin:
+    include: *var_method_kotlin_include
+    body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- if incorrect_nullable_args -%}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+      {%- endif -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {%- set comma = joiner(', ') -%}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
+      {%- endif %}
+      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+      {%- if arg.default -%}
+      {%- if arg.is_enum %}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- endif -%}
+      {%- else -%}
+      {%- if arg.is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- elif arg.is_null_ptr %} = null
+      {%- endif %}
+      {%- endif %}
+      {%- endif -%}
+      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
+          {%- set call_args = [] -%}
+          {%- set result_converter = rconverter.jdk_to_kotlin -%}
+          {%- for arg in args %}
+          {%- set converter = arg.converter.kotlin_to_jdk -%}
+          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) -%}
+          {%- if conversion %}
+          {{conversion|indent}}
+          {%- endif %}
+          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- endfor %}
+          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
+          return {{result_converter.converted_name('result')}}
+      }
+    glob_external: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- set comma = joiner(', ') -%}
+      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+    glob_init:
+      unique_content: |
+        {%- if vars.c_wrapper_lib_name %}
+        val INIT = run {
+            System.loadLibrary("{{vars.c_wrapper_lib_name}}");
+        }
+        {%- endif %}
+
+
+  cxx:
+    include: *var_method_cxx_include
+    body: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set jni_args=["JNIEnv* env, jclass cls"] + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
+      {%- macro args_snippet(args, call_args) %}
+      {%- for arg in args -%}
+      {%- set converter = arg.converter.jni_to_cxx %}
+      {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+      {%- if conversion %}
+      {{conversion|indent(0)}}
+      {%- endif %}
+      {%- do call_args.append(converter.converted_name(arg.name))%}
+      {%- endfor %}
+      {%- endmacro %}
+      {%- macro call_code(call_args) %}
+      {%- if 'no_throw' not in vars.throws %}
+      void* err_ptr = nullptr;
+      {%- endif -%}
+      {%- if rconverter.jni.target_type_name != 'void' %}
+      try {
+          const auto& result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
+                                              <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                              {%- endif -%}({{call_args|join(', ')}});
+          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          return {{rconverter.cxx_to_jni.converted_name('result')}};
+      }
+      {%- else %}
+      try {
+          {{cxx.namespace}}::{{cxx.name}}({{call_args|join(', ')}});
+          return;
+      }
+      {%- endif %}
+      {%- if 'no_throw' not in vars.throws %}
+      {%- for exc_type in vars.throws -%}
+      catch (const {{exc_type}}& e) {
+          err_ptr = new {{exc_type}}(e);
+          {%- set exc_vars = get_type_info(exc_type).vars %}
+          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+          jmethodID constructor = env->GetMethodID(excCls, "<init>", "(J)V");
+          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr));
+          env->Throw(jthrowable(excObj));
+      }
+      {%- endfor %}
+      {%- endif %}
+      {%- if not 'std::exception' in vars.throws %}
+      catch (const std::exception& e) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+      }
+      {%- endif %}
+      catch (...) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+      }
+
+      {% if rconverter.jni.target_type_name != 'void' -%}
+      {{rconverter.jni.target_type_name}} result;
+      return result;
+      {%- endif %}
+      {%- endmacro %}
+      {%- set owner_name = vars.file|capitalize + 'Kt' %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
+          {%- set call_args = [] %}
+          {{args_snippet(args, call_args)|indent(4)}}
+          {{call_code(call_args)|indent(4)}}
+      }
+
 
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |

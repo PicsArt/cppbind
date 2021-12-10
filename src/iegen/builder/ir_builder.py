@@ -20,7 +20,6 @@ from iegen.ir.ast import (
     RootNode
 )
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.utils.clang import get_full_displayname
 from iegen.utils import get_android_ndk_sysroot
 
 
@@ -46,7 +45,6 @@ class CXXIEGIRBuilder:
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
-        self._cxx_node_map = {}
 
     def start_root(self, var_values=None):
         """
@@ -83,6 +81,9 @@ class CXXIEGIRBuilder:
 
             dir_node = DirectoryNode(dir_name, file_name=file_name)
             self.node_stack.append(dir_node)
+
+            self.ir.insert_into_node_map(dir_name, dir_node)
+
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
             location = SimpleNamespace(file_name=dir_node.file_name,
@@ -114,6 +115,9 @@ class CXXIEGIRBuilder:
         current_node = FileNode(tu.cursor)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
+
+        self.ir.insert_into_node_map(tu.spelling, current_node)
+
         self.__update_internal_vars(current_node)
         ctx = self.get_full_ctx()
 
@@ -139,14 +143,14 @@ class CXXIEGIRBuilder:
         current_node = CXXNode(cursor)
         self.node_stack.append(current_node)
 
-        cursor_display_name = get_full_displayname(cursor)
+        cursor_display_name = current_node.full_displayname
 
         if not APIParser.has_api(cursor.raw_comment) and \
                 not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
             return
 
         # put node in node map to be able to find node/cursor by its name
-        self._cxx_node_map[cursor_display_name] = current_node
+        self.ir.insert_into_node_map(cursor_display_name, current_node)
 
         self.__update_internal_vars(current_node)
 
@@ -291,7 +295,3 @@ class CXXIEGIRBuilder:
         if parent_args:
             ctx.update(parent_args)
         return ctx
-
-    def get_cxx_node_map(self):
-        """Public method to get node map"""
-        return self._cxx_node_map

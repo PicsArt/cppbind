@@ -380,20 +380,21 @@ def test_descendants_list(clang_config):
     parser.parse(ir_builder, **clang_cfg)
     ir_builder.end_root()
 
-    ir_post_processor = IRPostProcessor(ir_builder.ir, ir_builder.get_cxx_node_map())
-    ir = ir_post_processor.process_ir()
+    ir = IRPostProcessor.process_ir(ir_builder.ir)
 
     cls_nodes = ir.children[0].children[0].children
     cls_node_map = {cls_node.full_displayname : cls_node for cls_node in cls_nodes}
 
+    get_nodes_display_names = lambda nodes: [node.full_displayname for node in nodes]
+
     # check descendants list for each class node
-    assert cls_node_map["C1"].descendants == ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
-    assert cls_node_map["C2"].descendants == ['C4', 'C5']
-    assert cls_node_map["C3"].descendants == ['C10', 'C9', 'C7', 'C8', 'C6']
-    assert cls_node_map["C4"].descendants == []
-    assert cls_node_map["C5"].descendants == []
-    assert cls_node_map["C6"].descendants == ['C10', 'C9', 'C7', 'C8']
-    assert cls_node_map["C7"].descendants == ['C10', 'C9']
-    assert cls_node_map["C8"].descendants == ['C10', 'C9']
-    assert cls_node_map["C9"].descendants == ['C10']
-    assert cls_node_map["C10"].descendants == []
+    assert get_nodes_display_names(cls_node_map["C1"].descendants)== ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
+    assert get_nodes_display_names(cls_node_map["C2"].descendants)== ['C4', 'C5']
+    assert get_nodes_display_names(cls_node_map["C3"].descendants)== ['C10', 'C9', 'C7', 'C8', 'C6']
+    assert get_nodes_display_names(cls_node_map["C4"].descendants)== []
+    assert get_nodes_display_names(cls_node_map["C5"].descendants)== []
+    assert get_nodes_display_names(cls_node_map["C6"].descendants)== ['C10', 'C9', 'C7', 'C8']
+    assert get_nodes_display_names(cls_node_map["C7"].descendants)== ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C8"].descendants)== ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C9"].descendants)== ['C10']
+    assert get_nodes_display_names(cls_node_map["C10"].descendants) == []

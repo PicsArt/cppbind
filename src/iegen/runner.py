@@ -70,8 +70,7 @@ class WrapperGenerator:
         if Error.has_error():
             Error.critical('Cannot continue: iegen error has occurred')
 
-        ir_post_processor = IRPostProcessor(ir_builder.ir, ir_builder.get_cxx_node_map())
-        ir = ir_post_processor.process_ir()
+        ir = IRPostProcessor.process_ir(ir_builder.ir)
         logging.debug("IR is ready.")
 
         run_rule = RunRule(ir, ctx_desc, platform, language)

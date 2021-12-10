@@ -144,6 +144,7 @@ class RootNode(Node):
     def __init__(self):
         super().__init__(Node.API_NONE, None, None, None, None)
         self.name = RootNode.ROOT_KEY
+        self.__node_map = {}
 
     def __repr__(self):
         return f"RootNode({self.__dict__})"
@@ -167,6 +168,12 @@ class RootNode(Node):
     @property
     def displayname(self):
         return self.name
+
+    def insert_into_node_map(self, node_name, node):
+        self.__node_map[node_name] = node
+
+    def get_node_map(self):
+        return self.__node_map
 
 
 class ClangNode(Node, ABC):
@@ -267,11 +274,11 @@ class CXXNode(ClangNode):
             descendants = []
             # recursively construct list of descendants
             for direct_desc in self.direct_descendants:
-                for node_name in direct_desc.descendants:
-                    if node_name not in descendants:
-                        descendants.append(node_name)
+                for node in direct_desc.descendants:
+                    if node not in descendants:
+                        descendants.append(node)
 
-            descendants.extend([node.full_displayname for node in self.direct_descendants])
+            descendants.extend(self.direct_descendants)
 
             self.__descendants = descendants
 

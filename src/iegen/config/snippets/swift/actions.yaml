@@ -1,6 +1,6 @@
 - file:
     files_glob: 
-      "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
+      - "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
     copy_to: |
       {%- set file_rel_name = path.relpath(file_name, vars.cxx_helpers_dir) -%}
       {{path.join(vars.cxx_out_dir, file_rel_name)}}

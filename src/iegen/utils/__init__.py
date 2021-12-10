@@ -122,7 +122,7 @@ def make_camel_case(string, sub_strings=None):
         for p in sub_strings:
             string = string.replace(p, make_camel_case(p))
         return string
-    init, *temp = string.split('_')
+    init, *temp = string.strip('_').split('_')
     return ''.join([init, *map(str.title, temp)])
 
 
@@ -271,6 +271,8 @@ def init_jinja_env():
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
 
+    env.filters['all'] = all
+    env.filters['any'] = any
     env.filters['path_join'] = path_join
     env.filters['format_list'] = format_list
     env.filters['to_snake_case'] = make_snake_case

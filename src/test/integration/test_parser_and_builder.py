@@ -11,7 +11,9 @@ from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import NodeType, Node
+from iegen.parser.filter import CXXParserFilter
 from iegen.parser.ieg_parser import CXXParser
+from iegen.utils import absolute_path_from_glob
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_REL_PATH = '../test_cxx_inputs'
@@ -366,6 +368,28 @@ def test_cmd_line_ctx_positive():
         assert ir_builder.ir.args['a'] == 'CmdLineValueOfBUsedInA', \
             "command line context must be available when evaluating root context"
         assert ir_builder.ir.args['b'] == 'CmdLineValueOfB', "command line context must overwrite root one"
+
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/exclude_glob"))
+def test_src_exclude_glob(clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+
+    plat, lang = 'linux', 'python'
+
+    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'main.hpp'))]
+    clang_cfg['src_exclude_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'module.hpp'))]
+    exclude_files = absolute_path_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
+    cxx_ieg_filter = CXXParserFilter(exclude_files=exclude_files)
+    parser = CXXParser(filter_=cxx_ieg_filter)
+    ctx_desc = ContextDescriptor(None)
+    ctx_mgr = ContextManager(ctx_desc, plat, lang)
+
+    processor = CXXIEGIRBuilder(ctx_mgr)
+    processor.start_root()
+    parser.parse(processor, **clang_cfg)
+
+    assert len(processor.ir.children[0].children[0].children) == 1
+    assert processor.ir.children[0].children[0].children[0].full_displayname == 'TestStruct'
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/ir_process"))

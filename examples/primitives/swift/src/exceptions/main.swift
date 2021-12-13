@@ -10,9 +10,7 @@ func runExceptionExamples() {
 
     do {
         let _ = try ThrowExc.getByKey(m: [1 : 1], key: 0)
-    } catch let err as StdOutOfRange {
-        // error messages are different on macos and linux
-        assert(err.what() == "map::at" || err.what().contains("key not found"))
+    } catch is StdOutOfRange {
     } catch {
         assert(false)
     }
@@ -37,7 +35,7 @@ func runExceptionExamples() {
 
     // checking throwing constructor
     do {
-        let _ = try ThrowExc(do_throw: true)
+        let _ = try ThrowExc(doThrow: true)
     } catch let err as StdInvalidArgument {
         assert(err.what() == "inv_arg")
     } catch {
@@ -45,7 +43,7 @@ func runExceptionExamples() {
     }
 
     do {
-        let _ = try MiscExc.returnInteger(do_throw: true)
+        let _ = try MiscExc.returnInteger(doThrow: true)
         assert(false)
     } catch is StdOutOfRange {
     } catch {
@@ -53,7 +51,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "simple_child")
+        try MiscExc.raiseErrorByType(errType: "simple_child")
     } catch let err as SimpleChildException {
         assert(err.errNum() == 100)
     } catch {
@@ -70,7 +68,7 @@ func runExceptionExamples() {
         ExceptionHandler.setUncaughtExceptionHandler(logger)
         NoThrowExc.noop()
         // check throwing constructor
-        let _ = NoThrowExc(do_throw: true)
+        let _ = NoThrowExc(doThrow: true)
         ExceptionHandler.unsetUncaughtExceptionHandler()
     }
 
@@ -80,7 +78,7 @@ func runExceptionExamples() {
     let _ =  NoThrowExc()
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "system")
+        try MiscExc.raiseErrorByType(errType: "system")
     } catch let err as SystemError {
         assert(err.what() == "system error")
     } catch {
@@ -88,7 +86,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "file")
+        try MiscExc.raiseErrorByType(errType: "file")
     } catch let err as FileError {
         assert(err.what() == "file error")
     } catch {
@@ -96,7 +94,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "file")
+        try MiscExc.raiseErrorByType(errType: "file")
     } catch let err as SystemError {
         assert(err.what() == "file error")
     } catch {
@@ -104,7 +102,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "runtime")
+        try MiscExc.raiseErrorByType(errType: "runtime")
     } catch let err as StdRuntimeError {
         assert(err.what() == "runtime error")
     } catch {
@@ -112,7 +110,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "runtime")
+        try MiscExc.raiseErrorByType(errType: "runtime")
     } catch let err as StdException {
         assert(err.what() == "runtime error")
     } catch {
@@ -120,14 +118,14 @@ func runExceptionExamples() {
     }
 
     do {
-        let n = try MiscExc.returnInteger(do_throw: false)
+        let n = try MiscExc.returnInteger(doThrow: false)
         assert(n.value == 1)
     } catch {
         assert(false)
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "simple_base")
+        try MiscExc.raiseErrorByType(errType: "simple_base")
     } catch let err as SimpleBaseException {
         assert(err.errNum() == 200)
     } catch {
@@ -135,7 +133,7 @@ func runExceptionExamples() {
     }
 
     do {
-        try MiscExc.raiseErrorByType(err_type: "")
+        try MiscExc.raiseErrorByType(errType: "")
     } catch let err as StdException {
         assert(err.what() == "std::exception")
     } catch {

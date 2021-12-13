@@ -3,6 +3,7 @@ Common utils that can by used from different modules
 """
 import enum
 import errno
+import glob
 import importlib.util
 import os
 import re
@@ -23,6 +24,23 @@ class DefaultValueKind(enum.IntEnum):
     ENUM = 2
     LITERAL = 3
     NULL_PTR = 4
+
+
+def absolute_path_from_glob(src_glob):
+    """
+    Finds all the absolute file paths matching a specified pattern
+    Args:
+        src_glob(list): List of glob paths
+    Returns:
+        list: List of absolute paths
+    """
+    all_absolute_paths = set()
+    for file in src_glob:
+        abs_paths = (os.path.abspath(file_path)
+                     for file_path in glob.glob(file.strip(), recursive=True))
+        all_absolute_paths.update(abs_paths)
+
+    return all_absolute_paths
 
 
 def load_from_paths(loader, path_name, default_dirs):
@@ -122,7 +140,7 @@ def make_camel_case(string, sub_strings=None):
         for p in sub_strings:
             string = string.replace(p, make_camel_case(p))
         return string
-    init, *temp = string.split('_')
+    init, *temp = string.strip('_').split('_')
     return ''.join([init, *map(str.title, temp)])
 
 
@@ -271,6 +289,8 @@ def init_jinja_env():
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
 
+    env.filters['all'] = all
+    env.filters['any'] = any
     env.filters['path_join'] = path_join
     env.filters['format_list'] = format_list
     env.filters['to_snake_case'] = make_snake_case

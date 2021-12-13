@@ -227,7 +227,7 @@ helpers_dir:
 
 cxx_base_source_dir:
   inheritable: true
-  default: base
+  default: '{{path.abspath(path.join(_iegen_extras_dir, "base"))}}'
   allowed_on: [ root ]
 
 file_postfix:
@@ -341,3 +341,8 @@ h_pybind_filename:
   inheritable: true
   python.default: "{{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
   allowed_on: [ root ]
+
+descendants:
+  inheritable: false
+  default: []
+  allowed_on: [ class, class_template, struct, struct_template ]

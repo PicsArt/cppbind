@@ -21,7 +21,7 @@ std::__1::basic_string:
 
 $Object:
   custom:
-    is_c_pointer_type: True
+    is_c_pointer_type: False
     tpostfix: |
       {%- for name in template_names or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
@@ -35,8 +35,8 @@ $Object:
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
-    c: "void*"
-    sc: "UnsafeMutableRawPointer"
+    c: "CObject"
+    sc: "CObject"
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
@@ -46,77 +46,109 @@ $Object:
       {%- set is_nullable = nullable|default(False) -%}
       std::shared_ptr<{{pointee}}> {{target_name}}_shared_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
-      if ({{name}}) {
+      if ({{name}}.ptr) {
           {%- if pointee_base == pointee %}
-          {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
           {%- else %}
-          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+          {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_base == pointee %}
-      {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {{target_name}}_shared_ptr = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- else %}
-      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}));
+      {{target_name}}_shared_ptr = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{pointee_base}}>*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if pointee_base == pointee %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}});
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- else %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set is_nullable = nullable|default(False) -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
       {%- else %}
-      {#- This section must be replaced with 'cxx_to_c' section of std::shared_ptr converter -#}
-      {%- set is_nullable = nullable|default(False) %}
       std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
-      {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+      {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) %}
+      {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, is_nullable=is_nullable)}}
+      {%- endif %}
+      {%- else %}
+      {%- if not vars.descendants %}
+      char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      {%- else %}
+      char* type_{{name}} = nullptr;
+      {%- endif %}
+      {%- if vars.descendants %}
+      {%- macro demangle() -%}
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
+      int status = 0;
+      char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
+      if (status == 0) {
+          type_{{name}} = demangled_{{name}};
+      } else {
+          type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      }
+      {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if pointee_base != pointee %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
-          {%- else %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
-          {%- endif %}
+          {{demangle()|indent(4)}}
+      } else {
+          type_result = strdup("{{cxx.pointee_unqualified_name}}");
       }
       {%- else %}
-      {%- if pointee_base != pointee %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee_base}}>(std::static_pointer_cast<{{pointee_base}}>({{name}}_shared_ptr)));
-      {%- else %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}_shared_ptr));
+      {{demangle()}}
       {%- endif %}
       {%- endif %}
-      {%- endif %}
-      {%- else %}
       {%- if pointee_base == pointee %}
-      auto {{target_name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
       {%- else %}
       auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
-      auto {{target_name}} = static_cast<{{pointee_base}}*>(value_ptr_{{name}});
+      {{target_type_name}} {{target_name}} = {type_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
       {%- endif %}
       {%- endif %}
     swift_to_sc: |
-      let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cself
-    sc_to_swift: |
       {%- if nullable|default(False) -%}
-      let {{target_name}}: {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}?
-      if let {{name}} = {{name}} {
-          {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
-      } else {
-          {{target_name}} = nil
+      let {{target_name}} = {{name}}?.cself ?? CObject(type: nil, ptr: nil){# when the swift object is null we pass CObject with nulls to not deallocate the type name in c#}
+      {%- else -%}
+      let {{target_name}} = {{name}}.cself
+      {%- endif -%}
+    sc_to_swift: |
+      {%- macro create_instance(type_name) -%}
+      {%- if nullable|default(False) -%}
+      if ({{name}}.ptr != nil) {
+          {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       }
       {%- else -%}
-      let {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+      {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
+      {%- endmacro -%}
+      var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
+      {%- if vars.descendants %}
+      let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
+      switch({{name|to_camel_case}}Index) {
+      {%- for descendant in vars.descendants %}
+      case("{{descendant}}"):
+        {%- set converter = make_type_converter(descendant).swift %}
+        {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
+        {{create_instance(type)|indent(4)}}
+      {%- endfor %}
+      default:
+        {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+        {{create_instance(type + custom.tpostfix)|indent(4)}}
+      }
+      {%- else %}
+      {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+      {{create_instance(type + custom.tpostfix)}}
+      {%- endif %}
 
 $Enum:
   custom:
@@ -134,11 +166,12 @@ $Enum:
     swift_to_sc: |
       let {{target_name}} = {{name}}.rawValue
     sc_to_swift: |
-      let {{target_name}}_optional = {{target_type_name}}(rawValue: {{name}})
-      if ({{target_name}}_optional == nil) {
-          {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
+      let {{target_name}}Optional = {{target_type_name}}(rawValue: {{name}})
+      if ({{target_name}}Optional == nil) {
+        {{"ExceptionHandler.handleUncaughtException(
+        \"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
-      let {{target_name}} = {{target_name}}_optional!
+      let {{target_name}} = {{target_name}}Optional!
 
 std::__cxx11::basic_string:
   custom:
@@ -163,8 +196,22 @@ std::__cxx11::basic_string:
       }
 
 std::string_view:
-  std::__cxx11::basic_string
-
+  custom:
+    is_c_pointer_type: True
+    tname: String
+  types:
+    swift: String
+    c: char*
+    sc: UnsafeMutablePointer<CChar>
+  converters:
+    c_to_cxx: |
+      {{make_type_converter('std::string').c_to_cxx.snippet(name)}}
+    cxx_to_c: |
+      {{make_type_converter('std::string').cxx_to_c.snippet(name)}}
+    swift_to_sc: |
+      {{make_type_converter('std::string').swift_to_sc.snippet(name)}}
+    sc_to_swift: |
+      {{make_type_converter('std::string').sc_to_swift.snippet(name)}}
 
 char *:
   custom:
@@ -210,37 +257,39 @@ std::vector:
           _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
-      let _data_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+      let _{{target_name}}Data = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
       var {{target_name}} = {{target_type_name}}()
-      {{target_name}}.data = UnsafeMutableRawPointer(_data_{{target_name}})
+      {{target_name}}.data = UnsafeMutableRawPointer(_{{target_name}}Data)
       {{target_name}}.size = Int64({{name}}.count)
-      for _i in 0..<{{name}}.count {
-          let value_{{name}} = {{name}}[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
-          _data_{{target_name}}[_i] = {{args[0].converted_name('value_{}'.format(name))}}
+      for i in 0..<{{name}}.count {
+        let {{name}}Val = {{name}}[i]
+        {{args[0].snippet('{}Val'.format(name))|indent(2)}}
+        _{{target_name}}Data[i] = {{args[0].converted_name('{}Val'.format(name))|to_camel_case}}
       }
     sc_to_swift: |
-      let _tmp_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
+      let _{{name}}Buffer = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
       var {{target_name}}: [{{args[0].target_type_name}}] = []
       defer {
-        _tmp_{{name}}_data.deallocate()
+        _{{name}}Buffer.deallocate()
       }
-      for _i in 0..<Int({{name}}.size) {
-          let value_{{name}} = _tmp_{{name}}_data[_i]
-          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
-          {{target_name}}.append({{args[0].converted_name('value_{}'.format(name))}})
+      for i in 0..<Int({{name}}.size) {
+        let {{name}}Value = _{{name}}Buffer[i]
+        {{args[0].snippet('{}Value'.format(name))|indent(2)}}
+        {{target_name}}.append({{args[0].converted_name('{}Value'.format(name))|to_camel_case}})
       }
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
         {%- if args[0] %}
-        {%- set cleanup_code_fragment = args[0].snippet('{}_item'.format(name)) %}
+        {%- set cleanup_code_fragment = args[0].snippet('{}Item'.format(name)) %}
         {%- if cleanup_code_fragment %}
-        let {{name}}_data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
-        for _i in 0..<Int({{name}}.size) {
-            let {{name}}_item = {{name}}_data[_i]
-            {{cleanup_code_fragment|indent(4)}}
+        let {{name}}Data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
+        for i in 0..<Int({{name}}.size) {
+          let {{name}}Item = {{name}}Data[i]
+          {{cleanup_code_fragment|indent(2)}}
         }
         {%- endif %}
         {%- endif %}
@@ -282,48 +331,54 @@ std::map:
           }
       }
     swift_to_sc: |
-      let _key_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
-      let _val_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: {{name}}.count)
+      let _{{target_name}}Key = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(
+        capacity: {{name}}.count)
+      let _{{target_name}}Val = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(
+        capacity: {{name}}.count)
       var {{target_name}} = {{target_type_name}}()
-      {{target_name}}.keys = UnsafeMutableRawPointer(_key_{{target_name}})
-      {{target_name}}.values = UnsafeMutableRawPointer(_val_{{target_name}})
+      {{target_name}}.keys = UnsafeMutableRawPointer(_{{target_name}}Key)
+      {{target_name}}.values = UnsafeMutableRawPointer(_{{target_name}}Val)
       {{target_name}}.size = Int64({{name}}.count)
-      var _i_{{name}} = 0
-      for (key_{{name}}, val_{{name}}) in {{name}} {
-          {{args[0].snippet('key_{}'.format(name))|indent(4)}}
-          {{args[1].snippet('val_{}'.format(name))|indent(4)}}
-          _key_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
-          _val_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}}
-          _i_{{name}} += 1
+      var {{name}}Idx = 0
+      for ({{name}}Key, {{name}}Val) in {{name}} {
+        {{args[0].snippet('{}Key'.format(name))|indent(2)}}
+        {{args[1].snippet('{}Val'.format(name))|indent(2)}}
+        _{{target_name}}Key[{{name}}Idx] = {{args[0].converted_name('{}Key'.format(name))|to_camel_case}}
+        _{{target_name}}Val[{{name}}Idx] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
+        {{name}}Idx += 1
       }
     sc_to_swift: |
-      let _tmp_k_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: Int({{name}}.size))
-      let _tmp_v_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: Int({{name}}.size))
+      let {{name}}BufferKey = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.keys.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
+      let {{name}}BufferVal = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(
+        start: {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self),
+        count: Int({{name}}.size))
       var {{target_name}}: [{{args_converters[0].swift.target_type_name}}:{{args_converters[1].swift.target_type_name}}] = [:]
       defer {
-          _tmp_k_{{name}}_data.deallocate()
-          _tmp_v_{{name}}_data.deallocate()
+        {{name}}BufferKey.deallocate()
+        {{name}}BufferVal.deallocate()
       }
-      for _i_{{name}} in 0..<Int({{name}}.size) {
-          let key_{{name}} = _tmp_k_{{name}}_data[_i_{{name}}]
-          let value_{{name}} = _tmp_v_{{name}}_data[_i_{{name}}]
-          do {
-              {{args[0].snippet('key_{}'.format(name))|indent(8)}}
-              {{args[1].snippet('value_{}'.format(name))|indent(8)}}
-              {{target_name}}[{{args[0].converted_name('key_{}'.format(name))}}] = {{args[1].converted_name('value_{}'.format(name))}}
-          }
+      for {{name}}Idx in 0..<Int({{name}}.size) {
+        let {{name}}Key = {{name}}BufferKey[{{name}}Idx]
+        let {{name}}Val = {{name}}BufferVal[{{name}}Idx]
+        do {
+          {{args[0].snippet('{}Key'.format(name))|indent(4)}}
+          {{args[1].snippet('{}Val'.format(name))|indent(4)}}
+          {{target_name}}[{{args[0].converted_name('{}Key'.format(name))|to_camel_case}}] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
+        }
       }
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
         {%- if args[1] %}
-        {%- set cleanup_code_fragment = args[1].snippet('{}_item'.format(name)) %}
+        {%- set cleanup_code_fragment = args[1].snippet('{}Item'.format(name)) %}
         {%- if cleanup_code_fragment %}
-        let {{name}}_data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
-        for _i in 0..<Int({{name}}.size) {
-            let {{name}}_item = {{name}}_data[_i]
-            {{args[1].snippet('{}_item'.format(name))|indent(4)}}
+        let {{name}}Data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
+        for i in 0..<Int({{name}}.size) {
+          let {{name}}Item = {{name}}Data[i]
+          {{args[1].snippet('{}Item'.format(name))|indent(2)}}
         }
         {%- endif %}
         {%- endif %}
@@ -335,7 +390,7 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    is_c_pointer_type: True
+    is_c_pointer_type: False
     tname: "{{args_converters[0].swift.custom.tname}}"
   types:
     swift: "{{args[0].target_type_name}}"
@@ -353,18 +408,18 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False)%}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
-      if ({{name}}) {
+      if ({{name}}.ptr) {
           {%- if pointee_root == pointee_unqualified %}
-          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
           {%- else %}
-          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
+          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
           {%- endif %}
       }
       {%- else %}
       {%- if pointee_root == pointee_unqualified %}
-      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}});
+      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- else %}
-      {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}));
+      {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
@@ -376,22 +431,47 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
-      {{target_type_name}} {{target_name}}{{' = nullptr' if is_nullable}};
+      {%- if not args[0].vars.descendants %}
+      char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      {%- else %}
+      char* type_{{name}} = nullptr;
+      {%- endif %}
+      {%- macro demangle() %}
+      auto& arg_pointee_{{name}} = *{{name}}.get();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
+      int status = 0;
+      char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
+      if (status == 0) {
+          type_{{name}} = demangled_{{name}};
+      } else {
+          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      }
+      {%- endmacro %}
+      void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if pointee_root != pointee_unqualified %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
-          {%- else %}
-          {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
+          {%- if args[0].vars.descendants %}
+          {{demangle()|indent(4)}}
           {%- endif %}
+          {%- if pointee_root != pointee_unqualified %}
+          {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
+          {%- else %}
+          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+          {%- endif %}
+      } else {
+          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       }
       {%- else %}
+      {%- if args[0].vars.descendants %}
+      {{demangle()}}
+      {%- endif %}
       {%- if pointee_root != pointee_unqualified %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}})));
+      {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
       {%- else %}
-      {{target_name}} = reinterpret_cast<{{target_type_name}}>(new std::shared_ptr<{{pointee}}>({{name}}));
+      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
       {%- endif %}
       {%- endif %}
+      {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
     sc_to_swift: |
@@ -423,30 +503,34 @@ std::pair:
       *_second_data_{{target_name}} = {{args[1].converted_name('second_{}'.format(name))}};
       {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
     swift_to_sc: |
-      let _first_{{target_name}} = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
-      let _second_{{target_name}} = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
+      let _{{target_name}}First = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
+      let _{{target_name}}Second = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
       defer {
-        _first_{{target_name}}.deallocate()
-        _second_{{target_name}}.deallocate()
+        _{{target_name}}First.deallocate()
+        _{{target_name}}Second.deallocate()
       }
       var {{target_name}} = {{target_type_name}}()
-      {{target_name}}.first = UnsafeMutableRawPointer(_first_{{target_name}})
-      {{target_name}}.second = UnsafeMutableRawPointer(_second_{{target_name}})
-      let first_{{name}} = {{name}}.0
-      let second_{{name}} = {{name}}.1
-      {{args[0].snippet('first_{}'.format(name))}}
-      {{args[1].snippet('second_{}'.format(name))}}
-      _first_{{target_name}}[0] = {{args[0].converted_name('first_{}'.format(name))}}
-      _second_{{target_name}}[0] = {{args[1].converted_name('second_{}'.format(name))}}
+      {{target_name}}.first = UnsafeMutableRawPointer(_{{target_name}}First)
+      {{target_name}}.second = UnsafeMutableRawPointer(_{{target_name}}Second)
+      let {{name}}First = {{name}}.0
+      let {{name}}Second = {{name}}.1
+      {{args[0].snippet('{}First'.format(name))}}
+      {{args[1].snippet('{}Second'.format(name))}}
+      _{{target_name}}First[0] = {{args[0].converted_name('{}First'.format(name))|to_camel_case}}
+      _{{target_name}}Second[0] = {{args[1].converted_name('{}Second'.format(name))|to_camel_case}}
     sc_to_swift: |
-      let _tmp_pair_first_{{name}}_data = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self), count: 1)
-      let _tmp_pair_second_{{name}}_data = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(start: {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self), count: 1)
+      let _{{name}}FirstData = UnsafeBufferPointer<{{args_converters[0].sc.target_type_name}}>(
+        start: {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self),
+        count: 1)
+      let _{{name}}SecondData = UnsafeBufferPointer<{{args_converters[1].sc.target_type_name}}>(
+        start: {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self),
+        count: 1)
       defer {
-        _tmp_pair_first_{{name}}_data.deallocate()
-        _tmp_pair_second_{{name}}_data.deallocate()
+        _{{name}}FirstData.deallocate()
+        _{{name}}SecondData.deallocate()
       }
-      let first_{{name}} = _tmp_pair_first_{{name}}_data[0]
-      let second_{{name}} = _tmp_pair_second_{{name}}_data[0]
-      {{args[0].snippet('first_{}'.format(name))}}
-      {{args[1].snippet('second_{}'.format(name))}}
-      let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}})
+      let {{name}}First = _{{name}}FirstData[0]
+      let {{name}}Second = _{{name}}SecondData[0]
+      {{args[0].snippet('{}First'.format(name))}}
+      {{args[1].snippet('{}Second'.format(name))}}
+      let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})

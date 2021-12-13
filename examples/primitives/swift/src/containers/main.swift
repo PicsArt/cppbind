@@ -4,7 +4,7 @@ import Wrapper
 func runContainerExamples() {
     // [map-usage]
     let mapUsage = MapExamples()
-    let item1 = MapItem(_value: 5)
+    let item1 = MapItem(value: 5)
     mapUsage.addStringMap(info: ["a": "1"])
     mapUsage.addIntMap(info: [1 : 1])
     mapUsage.addMixedMap(info: ["a" : item1])
@@ -30,8 +30,8 @@ func runContainerExamples() {
     assert(strVec.count == 2)
     assert(strVec[1] == "b")
 
-    let item2 = VectorItem(_value: 5)
-    let item3 = VectorItem(_value: 1)
+    let item2 = VectorItem(value: 5)
+    let item3 = VectorItem(value: 1)
     vecUsage.addObjVector(v: [item2, item3])
     let objVec = vecUsage.getObjVector()
     assert(objVec.count == 2)

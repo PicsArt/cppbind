@@ -33,4 +33,10 @@ typedef struct _ErrorObj {
     void * err_ptr;
 } ErrorObj;
 
+typedef struct _CObject {
+    char* type;
+    void* ptr;
+} CObject;
+
+
 #endif //__C_HELPERS_H_

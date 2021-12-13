@@ -55,7 +55,6 @@ vars:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
     - cxx/operators/intarray.hpp
-    - cxx/globs/*.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

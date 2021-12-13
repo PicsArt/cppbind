@@ -143,3 +143,5 @@ venv.bak/
 
 # xcode
 **/xcuserdata/
+
+**/xcshareddata/

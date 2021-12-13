@@ -20,7 +20,6 @@ from iegen.ir.ast import (
     RootNode
 )
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.utils.clang import get_full_displayname
 from iegen.utils import get_android_ndk_sysroot
 
 
@@ -80,8 +79,9 @@ class CXXIEGIRBuilder:
             if self.ctx_mgr.ctx_desc.has_yaml_api(dir_name):
                 file_name = self.ctx_mgr.ctx_desc.get_api_def_filename(dir_name)
 
-            dir_node = DirectoryNode(dir_name, file_name=file_name)
+            dir_node = DirectoryNode(dir_name, file_name=file_name, root=self.ir)
             self.node_stack.append(dir_node)
+
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
             location = SimpleNamespace(file_name=dir_node.file_name,
@@ -103,16 +103,17 @@ class CXXIEGIRBuilder:
             if len(self.node_stack) > 0:
                 parent_node = self.node_stack[-1]
                 if node not in parent_node.children:
-                    parent_node.add_children(node)
+                    parent_node.add_child(node)
             self._processed_dirs[dir_name] = node
 
     def start_tu(self, tu, *args, **kwargs):
         """
         Create file node and eval its context.
         """
-        current_node = FileNode(tu.cursor)
+        current_node = FileNode(tu.cursor, root=self.ir)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
+
         self.__update_internal_vars(current_node)
         ctx = self.get_full_ctx()
 
@@ -127,7 +128,7 @@ class CXXIEGIRBuilder:
         if tu_node.api or tu_node.children:  # node has API call or child whit API call
             if len(self.node_stack) > 0:
                 parent_node = self.node_stack[-1]
-                parent_node.add_children(tu_node)
+                parent_node.add_child(tu_node)
         # tu is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
@@ -135,11 +136,13 @@ class CXXIEGIRBuilder:
         """
         Create a node wrapper for current cursor and eval its context.
         """
-        current_node = CXXNode(cursor)
+        current_node = CXXNode(cursor, root=self.ir)
         self.node_stack.append(current_node)
 
+        cursor_display_name = current_node.full_displayname
+
         if not APIParser.has_api(cursor.raw_comment) and \
-                not self.ctx_mgr.ctx_desc.has_yaml_api(get_full_displayname(cursor)):
+                not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
             return
 
         self.__update_internal_vars(current_node)
@@ -152,7 +155,7 @@ class CXXIEGIRBuilder:
         location = SimpleNamespace(file_name=cursor.extent.start.file.name,
                                    line_number=cursor.extent.start.line)
 
-        res = self.ctx_mgr.eval_clang_attrs(get_full_displayname(cursor),
+        res = self.ctx_mgr.eval_clang_attrs(cursor_display_name,
                                             current_node.kind_name,
                                             api_section,
                                             ctx,
@@ -162,6 +165,14 @@ class CXXIEGIRBuilder:
             current_node.api = api
             current_node.args = args
             current_node.pure_comment = pure_comment
+
+    def end_cursor(self, cursor, *args, **kwargs):
+        node = self.node_stack.pop()
+        if node.api or node.children:  # node has API call or child with API call
+            parent_node = self.node_stack[-1]
+            parent_node.add_child(node)
+        # cursor is processed it cannot be a parent anymore delete it's args if they're present
+        self._parent_arg_mapping.pop(node.full_displayname, None)
 
     def get_parent_args(self):
         """
@@ -259,14 +270,6 @@ class CXXIEGIRBuilder:
         sys_vars['_get_git_repo_url'] = _get_git_repo_url
 
         return sys_vars
-
-    def end_cursor(self, cursor, *args, **kwargs):
-        node = self.node_stack.pop()
-        if node.api or node.children:  # node has API call or child with API call
-            parent_node = self.node_stack[-1]
-            parent_node.add_children(node)
-        # cursor is processed it cannot be a parent anymore delete it's args if they're present
-        self._parent_arg_mapping.pop(node.full_displayname, None)
 
     def get_full_ctx(self, pure_comment=None):
         """

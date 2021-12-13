@@ -5,6 +5,7 @@ import types
 from unittest.mock import patch, MagicMock
 
 from iegen.builder.ir_builder import CXXIEGIRBuilder
+from iegen.builder.ir_post_processor import IRPostProcessor
 from iegen.common.error import IEGError
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
@@ -389,3 +390,35 @@ def test_src_exclude_glob(clang_config):
 
     assert len(processor.ir.children[0].children[0].children) == 1
     assert processor.ir.children[0].children[0].children[0].full_displayname == 'TestStruct'
+
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/ir_process"))
+def test_descendants_list(clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+    clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'descendants.hpp')]
+
+    parser = CXXParser()
+    ir_builder = CXXIEGIRBuilder(ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+
+    ir_builder.start_root()
+    parser.parse(ir_builder, **clang_cfg)
+    ir_builder.end_root()
+
+    ir = IRPostProcessor().process_ir(ir_builder.ir)
+
+    cls_nodes = ir.children[0].children[0].children
+    cls_node_map = {cls_node.full_displayname : cls_node for cls_node in cls_nodes}
+
+    get_nodes_display_names = lambda nodes: [node.full_displayname for node in nodes]
+
+    # check descendants list for each class node
+    assert get_nodes_display_names(cls_node_map["C1"].descendants)== ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
+    assert get_nodes_display_names(cls_node_map["C2"].descendants)== ['C4', 'C5']
+    assert get_nodes_display_names(cls_node_map["C3"].descendants)== ['C10', 'C9', 'C7', 'C8', 'C6']
+    assert get_nodes_display_names(cls_node_map["C4"].descendants)== []
+    assert get_nodes_display_names(cls_node_map["C5"].descendants)== []
+    assert get_nodes_display_names(cls_node_map["C6"].descendants)== ['C10', 'C9', 'C7', 'C8']
+    assert get_nodes_display_names(cls_node_map["C7"].descendants)== ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C8"].descendants)== ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C9"].descendants)== ['C10']
+    assert get_nodes_display_names(cls_node_map["C10"].descendants) == []

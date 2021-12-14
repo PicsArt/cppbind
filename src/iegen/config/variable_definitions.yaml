@@ -185,7 +185,7 @@ package_prefix:
   kotlin.default: com.picsart.example_lib
   python.default: example_lib
   swift.default: com.picsart.example_lib
-  allowed_on: [ root ]
+  allowed_on: [ root, dir, file, class, class_template, struct, struct_template, enum ]
 
 helpers_package_prefix:
   inheritable: true
@@ -195,6 +195,16 @@ helpers_package_prefix:
 helpers_out_dir:
   inheritable: true
   default: '{{path.abspath(path.join(out_dir, helpers_package_prefix|replace(".", path.sep)))}}'
+  allowed_on: [ root ]
+
+exception_helpers_package:
+  inheritable: true
+  default: exception_helpers
+  allowed_on: [ root ]
+
+exception_file_name:
+  inheritable: true
+  default: std_exc_classes
   allowed_on: [ root ]
 
 common_helpers_dir:

@@ -1,7 +1,7 @@
 package com.examples.exceptions
 
 import com.examples.exceptions.*
-import com.examples.exception_helpers.*
+import com.examples.iegen.exception_helpers.*
 import com.examples.iegen.exceptionUtils.*
 
 

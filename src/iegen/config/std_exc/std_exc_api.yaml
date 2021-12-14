@@ -3,8 +3,9 @@
     action: gen_class
     python.action:
     name: StdException
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
     is_exception: True
     {% if c_wrapper_build_name is defined -%}
     swift.include: "{{c_wrapper_build_name}}"
@@ -25,93 +26,105 @@
     action: gen_class
     python.action:
     name: StdRuntimeError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::logic_error"
   vars:
     action: gen_class
     python.action:
     name: StdLogicError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::bad_alloc"
   vars:
     action: gen_class
     python.action:
     name: StdBadAlloc
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::bad_cast"
   vars:
     action: gen_class
     python.action:
     name: StdBadCast
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::bad_typeid"
   vars:
     action: gen_class
     python.action:
     name: StdBadTypeId
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::overflow_error"
   vars:
     action: gen_class
     python.action:
     name: StdOverflowError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::range_error"
   vars:
     action: gen_class
     python.action:
     name: StdRangeError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::underflow_error"
   vars:
     action: gen_class
     python.action:
     name: StdUnderflowError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::invalid_argument"
   vars:
     action: gen_class
     python.action:
     name: StdInvalidArgument
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::length_error"
   vars:
     action: gen_class
     python.action:
     name: StdLengthError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::out_of_range"
   vars:
     action: gen_class
     python.action:
     name: StdOutOfRange
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"
 
 - type: "std::domain_error"
   vars:
     action: gen_class
     python.action:
     name: StdDomainError
-    package: exception_helpers
-    file: std_exc_classes
+    package_prefix: "{{helpers_package_prefix}}"
+    package: "{{exception_helpers_package}}"
+    file: "{{exception_file_name}}"

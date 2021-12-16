@@ -344,5 +344,5 @@ h_pybind_filename:
 
 descendants:
   inheritable: false
-  default: []
+  default: null
   allowed_on: [ class, class_template, struct, struct_template ]

@@ -3,6 +3,7 @@
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 from enum import Enum
+from sortedcontainers import SortedSet
 
 import clang.cindex as cli
 import iegen.utils.clang as cutil
@@ -23,15 +24,19 @@ FILE_KIND_NAME = "file"
 class Node(ABC):
     API_NONE = 'none'
 
-    def __init__(self, api=None, args=None, parent=None, children=None, pure_comment=None):
+    def __init__(self, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
         self.api = api
         self.pure_comment = pure_comment
         self.args = args or OrderedDict()
+        self.root = root
         self.parent = parent
         self._children = children or []
 
     def __eq__(self, other):
         return self.full_displayname == other.full_displayname
+
+    def __lt__(self, other):
+        return self.full_displayname < other.full_displayname
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -61,15 +66,13 @@ class Node(ABC):
     def children(self):
         return self._children
 
-    def add_children(self, node):
-        """TODO: Docstring for add_children.
-
-        :node: TODO
-        :returns: TODO
-
-        """
+    def add_child(self, node):
+        """Add child node to parent node"""
         node.parent = self
         self._children.append(node)
+
+        # put node in node map to be able to find node by its name
+        node.root._node_map[node.full_displayname] = node
 
     @property
     def ancestor_with_api(self):
@@ -82,18 +85,6 @@ class Node(ABC):
             self._ancestor_with_api = node
 
         return self._ancestor_with_api
-
-    @property
-    def root(self):
-        if not self.parent:
-            return None
-        root_node = self.parent
-        while True:
-            if root_node.parent:
-                root_node = root_node.parent
-            else:
-                break
-        return root_node
 
     def walk_preorder(self):
 
@@ -108,8 +99,8 @@ class Node(ABC):
 
 class DirectoryNode(Node):
 
-    def __init__(self, name, file_name=None, api=None, args=None, parent=None, children=None, pure_comment=None):
-        super().__init__(api, args, parent, children, pure_comment)
+    def __init__(self, name, file_name=None, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+        super().__init__(api, args, root, parent, children, pure_comment)
         self.name = name
         self._file_name = file_name
 
@@ -142,8 +133,9 @@ class RootNode(Node):
     ROOT_KEY = '__root__'
 
     def __init__(self):
-        super().__init__(Node.API_NONE, None, None, None, None)
+        super().__init__(api=Node.API_NONE, args=None, root=self, parent=None, children=None, pure_comment=None)
         self.name = RootNode.ROOT_KEY
+        self._node_map = {}
 
     def __repr__(self):
         return f"RootNode({self.__dict__})"
@@ -151,6 +143,14 @@ class RootNode(Node):
     def walk(self):
         for node in self.walk_preorder():
             yield node
+
+    def find_node(self, node_display_name):
+        """Returns node in IR by its display name"""
+        return self._node_map.get(node_display_name)
+
+    def _get_all_nodes(self):
+        """Returns map of all nodes"""
+        return self._node_map.values()
 
     @property
     def type(self):
@@ -171,8 +171,8 @@ class RootNode(Node):
 
 class ClangNode(Node, ABC):
 
-    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
-        super().__init__(api, args, parent, children, pure_comment)
+    def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+        super().__init__(api, args, root, parent, children, pure_comment)
         self.clang_cursor = clang_cursor
 
     @property
@@ -210,8 +210,8 @@ class ClangNode(Node, ABC):
 
 class FileNode(ClangNode):
 
-    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
-        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+    def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, root, parent, children, pure_comment)
 
     @property
     def type(self):
@@ -223,11 +223,17 @@ class FileNode(ClangNode):
         assert self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT
         return FILE_KIND_NAME
 
+    @property
+    def full_displayname(self):
+        return self.clang_cursor.extent.start.file.name
+
 
 class CXXNode(ClangNode):
 
-    def __init__(self, clang_cursor, api=None, args=None, parent=None, children=None, pure_comment=None):
-        super().__init__(clang_cursor, api, args, parent, children, pure_comment)
+    def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+        super().__init__(clang_cursor, api, args, root, parent, children, pure_comment)
+        # keep direct descendants in sorted set to have deterministic order of nodes
+        self.direct_descendants = SortedSet()
 
     @property
     def type(self):
@@ -248,3 +254,47 @@ class CXXNode(ClangNode):
     @property
     def is_function_template(self):
         return self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE
+
+    @property
+    def is_class_or_struct(self):
+        return self.clang_cursor.kind in (cli.CursorKind.STRUCT_DECL,
+                                          cli.CursorKind.CLASS_DECL,
+                                          cli.CursorKind.CLASS_TEMPLATE)
+
+    @property
+    def base_type_specifier_nodes(self):
+        if not self.is_class_or_struct:
+            return None
+
+        if not hasattr(self, '__base_type_specifier_nodes'):
+            base_type_specifier_nodes = []
+            for base_specifier in self.clang_cursor.get_children():
+                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+                    base_node = self.root.find_node(base_specifier.type.spelling)
+                    if base_node:
+                        base_type_specifier_nodes.append(base_node)
+
+            self.__base_type_specifier_nodes = base_type_specifier_nodes
+
+        return self.__base_type_specifier_nodes
+
+    @property
+    def descendants(self):
+        """List of all descendants of struct/class node"""
+        if not self.is_class_or_struct:
+            return None
+
+        # logic for caching
+        if not hasattr(self, '__descendants'):
+            descendants = []
+            # recursively construct list of descendants
+            for direct_desc in self.direct_descendants:
+                for node in direct_desc.descendants:
+                    if node not in descendants:
+                        descendants.append(node)
+
+            descendants.extend(self.direct_descendants)
+
+            self.__descendants = descendants
+
+        return self.__descendants

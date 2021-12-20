@@ -104,7 +104,8 @@ def extract_pure_comment(raw_comment, end_index=None):
         str: Characters removed type_name.
     """
     end_index = end_index or len(raw_comment)
-    comment_lines = [(comment_line.lstrip(' ')).lstrip('/*!') for comment_line in raw_comment[:end_index].splitlines()]
+    comment_lines = [(comment_line.lstrip(' ')).lstrip('/*!').lstrip(' ')
+                     for comment_line in raw_comment[:end_index].splitlines()]
 
     if comment_lines and not comment_lines[0]:
         comment_lines.pop(0)

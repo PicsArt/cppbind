@@ -29,7 +29,7 @@ file:
       {%- else %}
       {%- set bind_import = 'from bind_utils import *' %}
       {%- endif %}
-      {%- set helpers = helper_includes|reject('match_regexp', '^[a-zA-Z_.]+exceptions$')|format_list('from {} import *')|join(new_line) %}{# exclude rxceptions as currently they are not used #}
+      {%- set helpers = helper_includes|format_list('from {} import *')|join_unique %}
       {{[future_import, typing_import, pybind_import, include, helpers, bind_import]|join(new_line)|sort_python_code}}
       {{body}}
       {{''}}

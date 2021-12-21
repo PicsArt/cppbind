@@ -5,8 +5,8 @@ file:
     scopes:
       - body
       - include
-      - glob_external
       - glob_init
+      - glob_external
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 

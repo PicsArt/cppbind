@@ -58,7 +58,7 @@ class MetaclassBase(type):
         # get the wrapper´s module
         module = importlib.import_module(self.__module__)
         # get pybind´s corresponding module
-        pybind_module = getattr(module, 'pybind_' + _find_module(self))
+        pybind_module = _load_pybind_module(self, module)
         # check if wrapper instance is instance of pybind type
         return isinstance(instance, getattr(pybind_module, self.__name__))
 
@@ -80,7 +80,7 @@ class OriginalMethodsMetaclass(MetaclassBase):
         # get the wrapper´s module
         module = importlib.import_module(future_class_attrs['__module__'])
         # get pybind´s corresponding module
-        pybind_module = getattr(module, 'pybind_' + _find_module(cls))
+        pybind_module = _load_pybind_module(cls, module)
         pybind_class = getattr(pybind_module, future_class_name)
         originals = {}
         # exclude itself and type
@@ -118,7 +118,7 @@ class EnumMetaclass(MetaclassBase):
         # get the wrapper´s module
         module = importlib.import_module(future_class_attrs['__module__'])
         # get pybind´s corresponding module
-        pybind_module = getattr(module, 'pybind_' + _find_module(cls))
+        pybind_module = _load_pybind_module(cls, module)
         pybind_class = getattr(pybind_module, future_class_name)
         for attr in pybind_class.__dict__:
             if attr in future_class_attrs and attr not in ('__doc__', '__qualname__', '__module__', '__new__'):
@@ -134,10 +134,14 @@ def _new_object(pybind_type, cls, *args, **kwargs):
     return pybind_type(*args, **kwargs)
 
 
-def _find_module(cls):
+def _load_pybind_module(cls, module):
     """Retrieves last part from the module´s full module name."""
     cls_module = cls.__module__
     if cls_module == '__main__':
         filename = sys.modules[cls_module].__file__
         cls_module = os.path.splitext(os.path.basename(filename))[0]
-    return cls_module.split('.')[-1]
+    module_name = cls_module.split('.')[-1]
+    pybind_module = getattr(module, f'pybind_{module_name}', None)
+    if pybind_module is None:
+        raise ImportError(f'Could not load corresponding pybind module for: {module.__name__}')
+    return pybind_module

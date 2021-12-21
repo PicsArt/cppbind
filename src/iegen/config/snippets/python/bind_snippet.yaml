@@ -10,8 +10,6 @@ content: |
   import re
   from functools import cached_property
 
-  from .exceptions import IEGENError
-
   __all__ = ['bind']
 
 
@@ -69,7 +67,7 @@ content: |
           module_name = f'pybind_{self.original_function.__module__.split(".")[-1]}'
           module = getattr(importlib.import_module(self.original_function.__module__), module_name, None)
           if module is None:
-              raise IEGENError(f'Could not load corresponding pybind module for: {self.original_function.__module__}')
+              raise ImportError(f'Could not load corresponding pybind module for: {self.original_function.__module__}')
           return module
 
       def validate_arg_value(self, arg_name, arg_value):

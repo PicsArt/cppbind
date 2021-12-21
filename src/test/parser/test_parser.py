@@ -217,77 +217,124 @@ def test_attr_type_mismatch_negative():
 
 
 @pytest.mark.parametrize(
-    "test_data",
+    "test_data, result",
     [
-        """
-            /**
-             *  ... text ...
-             *  __API__
-             *  action: gen_method
-             */
-        """,
-        """
-            /**
-                ... text ...
-                __API__
-                action: gen_method
-            */
-        """,
-        """
-            /*!
-             *  ... text ...
-             *  __API__
-             *  action: gen_method
-             */
-        """,
-        """
-            /*!
-                ... text ...
-                __API__
-                action: gen_method
-            */
-        """,
-        """
-            ///
-            /// ... text ...
-            /// __API__
-            /// action: gen_method
-            ///
-        """,
-        """
-            //!
-            //! ... text ...
-            //! __API__
-            //! action: gen_method
-            //!
-        """,
-        """
-            /********************************************//**
-             *  ... text ...
-             *  __API__
-             *  action: gen_method
-             ***********************************************/
-        """,
-        """
-            /////////////////////////////////////////////////
-            /// ... text ...
-            /// __API__
-            /// action: gen_method
-            /////////////////////////////////////////////////
-        """,
-        """
-            /************************************************
-             *  ... text ...
-             *  __API__
-             *  action: gen_method
-             ***********************************************/
-        """
+        (
+            """
+                /**
+                 *  ... text ...
+                 *  __API__
+                 *  action: gen_method
+                 */
+             """,
+            "... text ..."
+        ),
+        (
+            """
+                /**
+                    ... text ...
+                    __API__
+                    action: gen_method
+                */
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /*!
+                 *  ... text ...
+                 *  __API__
+                 *  action: gen_method
+                 */
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /*!
+                    ... text ...
+                    __API__
+                    action: gen_method
+                */
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                ///
+                /// ... text ...
+                /// __API__
+                /// action: gen_method
+                ///
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                //!
+                //! ... text ...
+                //! __API__
+                //! action: gen_method
+                //!
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /********************************************//**
+                 *  ... text ...
+                 *  __API__
+                 *  action: gen_method
+                 ***********************************************/
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /////////////////////////////////////////////////
+                /// ... text ...
+                /// __API__
+                /// action: gen_method
+                /////////////////////////////////////////////////
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /************************************************
+                 *  ... text ...
+                 *  __API__
+                 *  action: gen_method
+                 ***********************************************/
+            """,
+            "... text ..."
+        ),
+        (
+            """
+                /**
+                 *  **... text ...**
+                 *  __API__
+                 *  action: gen_method
+                 */
+            """,
+            "**... text ...**"
+        ),
+        (
+            """
+                //!
+                //! ///... text ...///
+                //! __API__
+                //! action: gen_method
+                //!
+            """,
+            "///... text ...///"
+        )
     ]
 )
-def test_doxygen_comments(test_data):
+def test_doxygen_comments(test_data, result):
     parser = APIParser(ContextDescriptor(None), 'linux', 'swift')
 
     pure_comment, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section)
     assert args['action'] == 'gen_method'
-    assert pure_comment[1] == '... text ...'
+    assert pure_comment[1] == result

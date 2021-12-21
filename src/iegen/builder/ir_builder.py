@@ -21,6 +21,7 @@ from iegen.ir.ast import (
 )
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils import get_android_ndk_sysroot
+import iegen.utils.clang as cutil
 
 
 class CXXPrintProcessor:
@@ -37,9 +38,9 @@ class CXXIEGIRBuilder:
     Class to build intermediate representation.
     """
 
-    def __init__(self, ctx_mgr):
+    def __init__(self, ir, ctx_mgr):
+        self.ir = ir
         self.ctx_mgr = ctx_mgr
-        self.ir = RootNode()
         self.node_stack = []
         self._sys_vars = {}
         self._processed_dirs = {}
@@ -136,8 +137,11 @@ class CXXIEGIRBuilder:
         """
         Create a node wrapper for current cursor and eval its context.
         """
-        current_node = CXXNode(cursor, root=self.ir)
+        current_node, new_created = self.__get_node(cursor)
         self.node_stack.append(current_node)
+
+        if not new_created:
+            return
 
         cursor_display_name = current_node.full_displayname
 
@@ -173,6 +177,16 @@ class CXXIEGIRBuilder:
             parent_node.add_child(node)
         # cursor is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(node.full_displayname, None)
+
+    def __get_node(self, cursor):
+        """Private method to create a new cxx node or return the cached one if it has been created earlier"""
+        cursor_signature = cutil.get_signature(cursor)
+        node = self.ir.find_node(cursor_signature)
+        if node is not None:
+            return node, False
+
+        # second arg shows whether the node was created or retrieved
+        return CXXNode(cursor, root=self.ir), True
 
     def get_parent_args(self):
         """

@@ -10,8 +10,8 @@ from iegen.common.error import IEGError
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
-from iegen.ir.ast import NodeType, Node
-from iegen.parser.filter import CXXParserFilter
+from iegen.ir.ast import NodeType, Node, RootNode
+from iegen.parser.filter import CXXParserFilter, CXXIegFilter
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import absolute_path_from_glob
 
@@ -37,7 +37,7 @@ def test_parser_with_dir_api(clang_config):
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
-    processor = CXXIEGIRBuilder(ctx_mgr)
+    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
     CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
     processor.start_root()
     parser.parse(processor, **clang_cfg)
@@ -70,7 +70,7 @@ def test_parser_with_file_api(clang_config):
     parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
-    processor = CXXIEGIRBuilder(ctx_mgr)
+    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
     CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 
     processor.start_root()
@@ -102,7 +102,7 @@ def test_jinja_attrs(clang_config):
 
     plat, lang = 'linux', 'swift'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -126,7 +126,7 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         context_def_glob = os.path.join(test_dir, 'example_iegen.yaml')
 
         ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
         ir_builder.start_root()
         parser.parse(ir_builder, **clang_cfg)
@@ -206,7 +206,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
@@ -226,7 +226,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
         context_def_glob = os.path.join(test_dir, 'with_wrong_order_iegen.yaml')
         ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
@@ -244,7 +244,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_diff_nodes.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root()
 
         try:
@@ -262,7 +262,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             load_yaml(os.path.join(test_dir, "var_def_with_unavailable_var.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
@@ -287,7 +287,7 @@ def test_empty_gen_rule(clang_config):
     parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -318,7 +318,7 @@ def test_root_config(clang_config):
 
     parser = CXXParser()
     ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -346,7 +346,7 @@ def test_sys_vars_available_in_api(clang_config):
         clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'with_sys_vars_in_api.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root()
         parser.parse(ir_builder, **clang_cfg)
 
@@ -363,7 +363,7 @@ def test_cmd_line_ctx_positive():
             load_yaml(os.path.join(os.getcwd(), "var_def.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(os.path.join(os.getcwd(), "iegen.yaml")), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root(types.SimpleNamespace(b='CmdLineValueOfB'))
         assert ir_builder.ir.args['a'] == 'CmdLineValueOfBUsedInA', \
             "command line context must be available when evaluating root context"
@@ -384,7 +384,7 @@ def test_src_exclude_glob(clang_config):
     ctx_desc = ContextDescriptor(None)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
-    processor = CXXIEGIRBuilder(ctx_mgr)
+    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
     processor.start_root()
     parser.parse(processor, **clang_cfg)
 
@@ -398,7 +398,7 @@ def test_descendants_list(clang_config):
     clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'descendants.hpp')]
 
     parser = CXXParser()
-    ir_builder = CXXIEGIRBuilder(ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+    ir_builder = CXXIEGIRBuilder(RootNode(), ContextManager(ContextDescriptor(None), 'linux', 'swift'))
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -412,13 +412,36 @@ def test_descendants_list(clang_config):
     get_nodes_display_names = lambda nodes: [node.full_displayname for node in nodes]
 
     # check descendants list for each class node
-    assert get_nodes_display_names(cls_node_map["C1"].descendants)== ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
-    assert get_nodes_display_names(cls_node_map["C2"].descendants)== ['C4', 'C5']
-    assert get_nodes_display_names(cls_node_map["C3"].descendants)== ['C10', 'C9', 'C7', 'C8', 'C6']
-    assert get_nodes_display_names(cls_node_map["C4"].descendants)== []
-    assert get_nodes_display_names(cls_node_map["C5"].descendants)== []
-    assert get_nodes_display_names(cls_node_map["C6"].descendants)== ['C10', 'C9', 'C7', 'C8']
-    assert get_nodes_display_names(cls_node_map["C7"].descendants)== ['C10', 'C9']
-    assert get_nodes_display_names(cls_node_map["C8"].descendants)== ['C10', 'C9']
-    assert get_nodes_display_names(cls_node_map["C9"].descendants)== ['C10']
+    assert get_nodes_display_names(cls_node_map["C1"].descendants) == ['C4', 'C5', 'C10', 'C9', 'C7', 'C8', 'C6', 'C2', 'C3']
+    assert get_nodes_display_names(cls_node_map["C2"].descendants) == ['C4', 'C5']
+    assert get_nodes_display_names(cls_node_map["C3"].descendants) == ['C10', 'C9', 'C7', 'C8', 'C6']
+    assert get_nodes_display_names(cls_node_map["C4"].descendants) == []
+    assert get_nodes_display_names(cls_node_map["C5"].descendants) == []
+    assert get_nodes_display_names(cls_node_map["C6"].descendants) == ['C10', 'C9', 'C7', 'C8']
+    assert get_nodes_display_names(cls_node_map["C7"].descendants) == ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C8"].descendants) == ['C10', 'C9']
+    assert get_nodes_display_names(cls_node_map["C9"].descendants) == ['C10']
     assert get_nodes_display_names(cls_node_map["C10"].descendants) == []
+
+
+@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/node_reuse"))
+def test_node_reuse(clang_config):
+    clang_cfg = copy.deepcopy(clang_config)
+    clang_cfg['src_glob'] = [os.path.join(os.getcwd(), '*.hpp')]
+
+    ir = RootNode()
+    parser = CXXParser(filter_=CXXIegFilter(ir))
+    ir_builder = CXXIEGIRBuilder(ir, ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+
+    ir_builder.start_root()
+    parser.parse(ir_builder, **clang_cfg)
+    ir_builder.end_root()
+
+    main_file_node = ir.children[0].children[0]
+    incl_file_node = ir.children[0].children[1]
+    main_ns_node = main_file_node.children[0]
+    main_ns_node_from_incl = incl_file_node.children[0]
+    incl_ns_node = incl_file_node.children[1]
+
+    assert main_ns_node is main_ns_node_from_incl, "two namespaces from the same file are not equivalent"
+    assert main_ns_node is not incl_ns_node, "two namespaces from different files are equivalent"

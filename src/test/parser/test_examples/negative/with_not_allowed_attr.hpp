@@ -9,7 +9,7 @@ namespace iegen::example {
  * shared_ref: true
  * package: example
  */
-struct Item {
+struct Item2 {
 
     /**
      * Error: not allowed 'package' attribute on constructor node

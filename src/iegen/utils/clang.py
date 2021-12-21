@@ -1,6 +1,7 @@
 """
 Helper functions working with clang
 """
+import os
 import re
 import sys
 from ctypes import *
@@ -64,6 +65,16 @@ def get_full_displayname(cursor):
     spellings = [a.displayname for a in ancestors[1::] if a.displayname != '']
     spellings.append(cursor.spelling if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
     return join_type_parts(spellings)
+
+
+def get_signature(cursor):
+    full_displayname = get_full_displayname(cursor)
+    if cursor.kind == cli.CursorKind.NAMESPACE:
+        # namespace cursors coming from #include directives has relative file name
+        return join_type_parts([os.path.abspath(cursor.extent.start.file.name),
+                                str(cursor.extent.start.line),
+                                full_displayname])
+    return full_displayname
 
 
 def is_final_cursor(cursor):

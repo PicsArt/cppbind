@@ -1,20 +1,50 @@
 """
 Filter module decides which clang cursor needs to be processed and which one needs to be skipped.
 """
-import glob
-import os
 
-import clang.cindex as cli
+import iegen.utils.clang as cutil
+from iegen.parser.ieg_parser import CXXParser
 
 
-class CXXParserFilter:
+class CXXComposerFilter:
+    """Class to compose CXXFilers to be able to combine them"""
+
+    def __init__(self, *filters):
+        self.__filters = filters
+
+    def filter_cursor(self, cursor):
+        """Composer method to call all `filter_cursor` methods of registered filters"""
+        return any(filter_.filter_cursor(cursor) for filter_ in self.__filters)
+
+    def filter_by_file(self, file):
+        """Composer method to call all `filter_by_file` methods of registered filters"""
+        return any(filter_.filter_by_file(file) for filter_ in self.__filters)
+
+    def filter_cursor_children(self, cursor):
+        """Composer method to call all `filter_cursor_children` methods of registered filters"""
+        return any(filter_.filter_cursor_children(cursor) for filter_ in self.__filters)
+
+
+class CXXFilter:
+    """Base class for CXX filter classes"""
+
+    def filter_cursor(self, cursor):
+        """Default implementation of `filter_cursor`"""
+        return False
+
+    def filter_by_file(self, file):
+        """Default implementation of `filter_by_file`"""
+        return False
+
+    def filter_cursor_children(self, cursor):
+        """Default implementation of `filter_cursor_children`"""
+        return False
+
+
+class CXXParserFilter(CXXFilter):
     """
     Simple filter implementation to skip unnecessary records for AST of clang.
     """
-
-    DISALLOWED_CXX_KINDS = [
-        cli.CursorKind.CXX_BASE_SPECIFIER
-    ]
 
     def __init__(self, include_files=None, exclude_files=None):
         self.include_files = include_files
@@ -43,32 +73,29 @@ class CXXParserFilter:
 
     include_files = property(**include_files(), doc=include_files.__doc__)
 
-    def filter_cursor(self, node):
-        """Function test whether or not node needs to be processed.
+    @staticmethod
+    def __has_disallowed_cxx_kind(cursor):
+        """Private static method to check whether cursor kind is disallowed for parsing"""
+        return cursor.kind.is_reference()
+
+    def filter_cursor(self, cursor):
+        """Function test whether or not cursor needs to be processed.
 
         args:
-            node: Node that need to be tested
+            cursor: cursor that need to be tested
 
         Returns:
             True if cursor needs to be processed
 
         """
-        file = node.extent.start.file
-        if file is None or self.filter_by_file(file.name) or node.kind in CXXParserFilter.DISALLOWED_CXX_KINDS:
+        if cutil.is_declaration(cursor) or CXXParser.is_implementation(cursor) \
+                or CXXParserFilter.__has_disallowed_cxx_kind(cursor):
             return True
 
-        return False
+        file = cursor.extent.start.file
+        if file is None or self.filter_by_file(file.name):
+            return True
 
-    def filter_cursor_children(self, node):
-        """Function test whether or not nodes children needs to be processed.
-
-        args:
-            node: Node that need to be tested
-
-        Returns:
-            True if cursor needs to be processed
-
-        """
         return False
 
     def filter_by_file(self, file):
@@ -79,4 +106,22 @@ class CXXParserFilter:
             return file not in self.include_files
         return False
 
-cxx_ieg_filter = CXXParserFilter()
+
+class CXXIegFilter(CXXFilter):
+    """Clang cursor filter which has some dependencies on some IEGEN internal structures (e.g. IR)"""
+
+    def __init__(self, ir):
+        self.__ir = ir
+
+    def filter_cursor_children(self, cursor):
+        """
+        Function test whether or not cursor children needs to be processed.
+
+        args:
+            cursor: cursor that need to be tested
+        Returns:
+            True if cursor needs to be processed
+        """
+
+        # condition to not process cursor children if current cursor-based node is already in node_map
+        return self.__ir.find_node(cutil.get_signature(cursor)) is not None

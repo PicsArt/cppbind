@@ -13,7 +13,7 @@ file:
       {%- set exc_vars = get_type_info("std::exception").vars %}
       {%- set exc_include = 'import ' + exc_vars.package_prefix + '.' + exc_vars.package + '.*' %}
       {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
-      {{body}}
+      {{body}}{{new_line}}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -30,7 +30,7 @@ file:
       {{include}}
       {{namespace}}
 
-      {{body}}
+      {{body}}{{new_line}}
 
 package:
 

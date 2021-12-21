@@ -11,8 +11,7 @@ file:
       {%- if code_fragment %}
       {{code_fragment}}
       {%- else %}
-      {{''}}
-      {%- endif %}
+      {%- endif %}{{new_line}}
   python:
     file_path: |
       {{vars.target_file_fullname}}
@@ -31,8 +30,7 @@ file:
       {%- endif %}
       {%- set helpers = helper_includes|format_list('from {} import *')|join_unique %}
       {{[future_import, typing_import, pybind_import, include, helpers, bind_import]|join(new_line)|sort_python_code}}
-      {{body}}
-      {{''}}
+      {{body}}{{new_line}}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -50,7 +48,7 @@ file:
 
       namespace py = pybind11;
 
-      {{body|string}}
+      {{body|string}}{{new_line}}
   hpp:
     file_path: |
       {{vars.h_file_fullname}}
@@ -69,7 +67,7 @@ file:
 
       {{body|string}}
 
-      #endif
+      #endif{{new_line}}
   pybind_module_cxx:
     file_path: |
       {{vars.c_pybind_filename}}
@@ -84,7 +82,7 @@ file:
       namespace py = pybind11;
       void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
           {{body|string|indent}}
-      }
+      }{{new_line}}
   pybind_module_hpp:
     file_path: |
       {{vars.h_pybind_filename}}
@@ -103,7 +101,7 @@ file:
       namespace py = pybind11;
       void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m);
 
-      #endif
+      #endif{{new_line}}
   pybind_package:
     file_path: |
       {{vars.pybind_module_filename}}
@@ -126,8 +124,7 @@ file:
           parent = {{parent_module}};
           {%- endfor %}
           bind{{vars.pybind_module.replace('.', '_').split('_')|map('capitalize')|join}}(parent);
-      }
-
+      }{{new_line}}
   bind: !include bind_snippet.yaml
 
 var_pybind_module_cxx: &var_pybind_module

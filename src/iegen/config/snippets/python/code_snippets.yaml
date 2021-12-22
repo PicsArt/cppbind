@@ -491,13 +491,13 @@ function:
   python:
     include: *var_method_python_include
     body: |
-      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
-      {%- if incorrect_nullable_args -%}
-      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
-      {%- endif -%}
-      {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
-      {%- set comma = joiner(', ') -%}
-      {%- set rconverter = rconverter.python %}
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
+      {%- if incorrect_nullable_args %}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
+      {%- endif %}
+      {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' %}
+      {%- set comma = joiner(', ') %}
+      {% set rconverter = rconverter.python %}
       @bind
       def {{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}({%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
                                       {%- for arg in args -%}

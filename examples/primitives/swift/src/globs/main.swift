@@ -3,8 +3,10 @@ import Wrapper
 
 func runGlobalsExamples() {
     // [glob-func-examples]
-    let res = concat(str1: "Hello ", str2: "Johnny")
-    assert(res == "Hello Johnny" )
+    var res = concat(str1: "Hello ", str2: "Johnny")
+    assert(res == "Hello Johnny")
+    res = concat(str1: "Hello ", str2: "Johnny ", str3: "Jane")
+    assert(res == "Hello Johnny Jane")
 
     let maxInt = max(arg0: 2, arg1: 5)
     assert(maxInt == 5)
@@ -24,6 +26,25 @@ func runGlobalsExamples() {
     assert(pairRootPrj.0.path == root1.path)
     assert(pairRootPrj.1.title == prj1.title)
     // [glob-func-examples]
+
+    var color = optionalColor()
+    assert(color == Color.Red)
+    color = optionalColor(c: Color.Blue)
+    assert(color == Color.Blue)
+
+    var intVal = optionalInt()
+    assert(intVal == 5)
+    intVal = optionalInt(i: 8)
+    assert(intVal == 8)
+
+    var optProj = optionalFDPtr()
+    assert(optProj == nil)
+    optProj = optionalFDPtr(project: prj1)
+    assert(optProj?.title == prj1.title)
+
+    // just calling function with no return value and arguments
+    doNothing()
+
 }
 
 

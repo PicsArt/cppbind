@@ -24,7 +24,7 @@ file:
       {%- if glob_external %}
 
       {{glob_external}}
-      {%- endif %}
+      {%- endif %}{{new_line}}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -41,7 +41,7 @@ file:
       {{include}}
       {{namespace}}
 
-      {{body}}
+      {{body}}{{new_line}}
 
 package:
 

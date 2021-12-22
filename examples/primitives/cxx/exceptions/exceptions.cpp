@@ -1,4 +1,3 @@
-
 #include "cxx/exceptions/exceptions.hpp"
 
 void iegen::exceptions::throwExc(bool do_throw) {

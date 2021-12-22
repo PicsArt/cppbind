@@ -672,8 +672,6 @@ function:
             System.loadLibrary("{{vars.c_wrapper_lib_name}}");
         }
         {%- endif %}
-
-
   cxx:
     include: *var_method_cxx_include
     body: |

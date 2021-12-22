@@ -6,51 +6,9 @@
 #include "cxx/enums/color.hpp"
 #include "cxx/simple/project.hpp"
 
-/** A global function with enum default value.
- * __API__
- * action: gen_function
- * package: globs
- * swift.file: GlobUtils
- * throws: no_throw
- */
-iegen::example::Color optionalColor(iegen::example::Color c = iegen::example::Color::Red) {
-    return c;
-}
-
-/** A global function with pointer default value.
- * __API__
- * action: gen_function
- * package: globs
- * swift.file: GlobUtils
- * throws: no_throw
- * nullable_return: True
- */
-iegen::example::Project* optionalFDPtr(iegen::example::Project* project = nullptr) {
-    return project;
-}
-
-/** A global function with no return value.
- * __API__
- * action: gen_function
- * package: globs
- * swift.file: GlobUtils
- * throws: no_throw
- */
-void doNothing() {
-}
-
-/** A global function with primitive default value.
- * __API__
- * action: gen_function
- * package: globs
- * swift.file: GlobUtils
- * throws: no_throw
- */
-int optionalInt(int i = 5) {
-    return i;
-}
 
 
+// [example]
 /**
  * A global overloaded function example.
  * __API__
@@ -111,6 +69,51 @@ namespace iegen::example {
     std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
     }
+}
+
+/** A global function with enum default value.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ */
+iegen::example::Color optionalColor(iegen::example::Color c = iegen::example::Color::Red) {
+    return c;
+}
+
+/** A global function with pointer default value and nullable return value.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ * nullable_return: True
+ */
+iegen::example::Project* optionalFDPtr(iegen::example::Project* project = nullptr) {
+    return project;
+}
+// [example]
+
+/** A global function with no return value.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ */
+void doNothing() {
+}
+
+/** A global function with primitive default value.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ */
+int optionalInt(int i = 5) {
+    return i;
 }
 
 #endif

@@ -346,6 +346,7 @@ var_method_python_include: &var_method_python_include
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
+    {{marker}}#include "{{vars.prj_rel_file_name}}"
     {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
@@ -475,6 +476,87 @@ method:
       {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
       {%- endif -%}
       {%- endfor -%});
+
+
+
+function:
+  python_init:
+    include:
+      unique_content: |
+        {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
+        from .{{vars.file + vars.file_postfix}} import {{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}
+  python:
+    include: *var_method_python_include
+    body: |
+      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
+      {%- if incorrect_nullable_args %}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
+      {%- endif %}
+      {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' %}
+      {%- set comma = joiner(', ') %}
+      {% set rconverter = rconverter.python %}
+      @bind
+      def {{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}({%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
+                                      {%- for arg in args -%}
+                                      {%- set arg_converter = arg.converter.python %}
+                                      {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
+                                      {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+                                      {%- if arg.default -%}
+                                      {%- if arg.is_enum %}
+                                      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+                                      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. Iegen is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+                                      {%- else %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+                                      {%- endif -%}
+                                      {%- else -%}
+                                      {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                      {%- else %} = None
+                                      {%- endif %}
+                                      {%- endif %}
+                                      {%- endif -%}
+                                      {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_package}}{{rconverter.target_type_name}}{{']' if vars.nullable_return}}:
+          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
+          pass
+  bind: *var_bind_method
+  hpp:
+    body: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
+      void {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}(py::module& m);
+  cxx:
+    include: *var_method_cxx_include
+    body: |
+      {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
+      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name|to_camel_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}(py::module& m) {
+          {%- set comma = joiner(', ') %}
+          m.def("{{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+          , py::overload_cast<
+          {%- for arg in args -%}
+          {{comma()}}{{arg.type_info.cxx.type_name}}
+          {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+          {%- else -%}
+          , &{{cxx.namespace}}::{{cxx.name}}
+          {%- endif -%}
+          {%- if cxx.is_template -%}
+          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+          {%- endif -%}
+          {{', ' if args}}
+          {%- set comma = joiner(', ') -%}
+          {%- for arg in args -%}
+          {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+          {%- endif -%}
+          {%- endfor -%});
+      }{{new_line}}
+  pybind_module_hpp: *var_pybind_module_hpp
+  pybind_module_cxx:
+    body:
+      unique_content: |
+        {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
+        {%- set package_name = vars.package|replace('.', '_') -%}
+        {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
+        {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
+        {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}({{package_name}}_{{vars.file}});
+  pybind_package:
+    body:
 
 var_bind_getter: &var_bind_getter
   converter:

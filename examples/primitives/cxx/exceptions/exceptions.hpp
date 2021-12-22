@@ -159,6 +159,19 @@ class SimpleChildException : public SimpleBaseException {
 }
 
 namespace iegen::exceptions {
+
+/**
+ * An example of a global function throwing an exception.
+ * __API__
+ * action: gen_function
+ * package: exceptions
+ * file: throw_exceptions
+ * throws:
+ *   - std::invalid_argument
+ */
+void throwExc(bool do_throw=false);
+
+
  /**
  * __API__
  * action: gen_class

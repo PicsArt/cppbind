@@ -8,6 +8,7 @@ content: |
   import importlib
   import inspect
   import re
+  from functools import cached_property
 
   __all__ = ['bind']
 
@@ -20,11 +21,11 @@ content: |
       def __init__(self, original_function, is_overloaded=False):
           self.original_function = original_function
           self.is_overloaded = is_overloaded
-          self._init_args_signature()
-          self._init_default_args()
-          self._init_optionals()
+          self.__init_args_signature()
+          self.__init_default_args()
+          self.__init_optionals()
 
-      def _init_args_signature(self):
+      def __init_args_signature(self):
           signature = inspect.getfullargspec(self.original_function)
           annotations = signature.annotations
           args_names = signature.args
@@ -35,19 +36,39 @@ content: |
           self.args_names = args_names
           self.annotations = annotations
 
-      def _init_optionals(self):
+      def __init_optionals(self):
           self.optionals = set()
           for arg_name, type_hint in self.annotations.items():
               if re.match(r'^Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]$', type_hint) is not None:
                   self.optionals.add(arg_name)
 
-      def _init_default_args(self):
+      def __init_default_args(self):
           signature = inspect.signature(self.original_function)
           self.defaults = {
               k: v.default
               for k, v in signature.parameters.items()
               if v.default is not inspect.Parameter.empty
           }
+
+      @cached_property
+      def is_function(self):
+          return self.classname is None
+
+      @cached_property
+      def is_property(self):
+          if self.classname is None:
+              return False
+          parent = getattr(self.pybind_module, f'{self.classname}')
+          return isinstance(getattr(parent, self.name), property)
+
+      @cached_property
+      def pybind_module(self):
+          # loads pybind module which should be imported in corresponding iegen module
+          module_name = f'pybind_{self.original_function.__module__.split(".")[-1]}'
+          module = getattr(importlib.import_module(self.original_function.__module__), module_name, None)
+          if module is None:
+              raise ImportError(f'Could not load corresponding pybind module for: {self.original_function.__module__}')
+          return module
 
       def validate_arg_value(self, arg_name, arg_value):
           if arg_value is None and arg_name not in self.optionals:
@@ -61,6 +82,10 @@ content: |
 
       @property
       def classname(self):
+          # for global functions __qualname__ is only the function name
+          if '.' not in self.original_function.__qualname__:
+              return None
+          # for methods __qualname__ is <ClassName>.<FunctionName>
           return self.original_function.__qualname__.split('.')[0]
 
       @property
@@ -146,7 +171,7 @@ content: |
 
   class bind:
       """
-      Decorator which is responsible for binding wrapper classes with actual pybind classes.
+      Decorator which is responsible for binding wrapper classes and functions with actual pybind classes and functions.
       For overloaded method it appends the overloaded options to it´s docstring.
       """
 
@@ -191,10 +216,10 @@ content: |
 
       def __call__(self, *args, **kwargs):
           """
-          This is called when the decorator is decorated with other decorators.
-          Particularly in case of properties and static methods.
+          This is called when a function is decorated with this decorator or a method which is already decorated with other decorators
+          like properties and static methods which are already decorated with @property and @classmethod correspondingly.
           """
-          if inspect.isclass(args[0]):
+          if args and inspect.isclass(args[0]):
               # for python <= 3.8
               # case of static method, e.g decorated with @classmethod
               # update self docstring to add overload docstring
@@ -213,19 +238,29 @@ content: |
               result = cls.originals[self.fn.name].__get__(self.fn.name)(*all_args, **all_kwargs)
               self.fn.validate_return_value(result)
               return result
-          # get the non pybind class
-          cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
-          original = cls.originals[self.fn.name]
-          if isinstance(original, property):
-              if len(args) == 2:
-                  # setter
-                  converted_args, _ = _validate_and_convert_args_kwargs(self.fn, args[1])
-                  return original.fset(args[0], *converted_args)
-              else:
-                  # getter
-                  result = original.fget(args[0])
-                  self.fn.validate_return_value(result)
-                  return result
+          if self.fn.is_function:
+              # case for global functions
+              # no overloading for global function
+              original_function = getattr(self.fn.pybind_module, self.fn.name)
+              all_args, all_kwargs = _validate_and_convert_args_kwargs(self.fn, *args, **kwargs)
+              result = original_function(*all_args, **all_kwargs)
+              self.fn.validate_return_value(result)
+              return result
+          if self.fn.is_property:
+              # case of properties, e.g decorated with @property
+              # get the non pybind class
+              cls = getattr(importlib.import_module(args[0].__module__), args[0].__class__.__name__)
+              original = cls.originals[self.fn.name]
+              if isinstance(original, property):
+                  if len(args) == 2:
+                      # setter
+                      converted_args, _ = _validate_and_convert_args_kwargs(self.fn, args[1])
+                      return original.fset(args[0], *converted_args)
+                  else:
+                      # getter
+                      result = original.fget(args[0])
+                      self.fn.validate_return_value(result)
+                      return result
 
 
   def _convert_arg(arg, type_hint):

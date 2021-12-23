@@ -140,12 +140,29 @@ func runExceptionExamples() {
         assert(false)
     }
 
-     // check non-throwing properties
-     // we can't check throwing properties for swift since swift supports throwable getters only for versions >= 5.5
-     let obj = NoThrowExc()
-     assert(obj.prop == "prop")
-     obj.prop = "new_prop"
-     assert(obj.prop == "new_prop")
+    // check non-throwing properties
+    // we can't check throwing properties for swift since swift supports throwable getters only for versions >= 5.5
+    let obj = NoThrowExc()
+    assert(obj.prop == "prop")
+    obj.prop = "new_prop"
+    assert(obj.prop == "new_prop")
+
+    // global functions exception handling
+    // should throw
+    do {
+        try throwExc(doThrow: true)
+        assert(false)
+    } catch let err as StdInvalidArgument {
+        assert(err.what() == "inv_arg")
+    } catch {
+        assert(false)
+    }
+    // should not throw
+    do {
+        try throwExc(doThrow: false)
+    } catch {
+        assert(false)
+    }
 }
 
 

@@ -266,13 +266,6 @@ class SourceLocation(Structure):
         """
         return conf.lib.clang_getLocationForOffset(tu, file, offset)
 
-    def is_from_main_file(self):
-        """
-        Determines whether this source location is in the main file of its
-        corresponding translation unit.
-        """
-        return conf.lib.clang_Location_isFromMainFile(self)
-
     @property
     def file(self):
         """Get the file represented by this source location."""
@@ -3776,10 +3769,6 @@ functionList = [
   ("clang_getLocationForOffset",
    [TranslationUnit, File, c_uint],
    SourceLocation),
-
-  ("clang_Location_isFromMainFile",
-   [SourceLocation],
-   bool),
 
   ("clang_getNullCursor",
    None,

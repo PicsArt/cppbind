@@ -28,7 +28,7 @@ file:
       {{include}}
       {{namespace}}
 
-      {{body}}
+      {{body}}{{new_line}}
   ch:
     file_path: |
       {{vars.h_file_fullname}}
@@ -52,7 +52,7 @@ file:
       #if __cplusplus
       }
       #endif
-      #endif /* ifndef _C_{{vars.file}}_WRAPPER_ */
+      #endif /* ifndef _C_{{vars.file}}_WRAPPER_ */{{new_line}}
 
 package:
 

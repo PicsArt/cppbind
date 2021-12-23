@@ -91,7 +91,7 @@ def make_func_context(ctx):
                 default=arg.default.value,
                 cursor=arg.cursor,
                 type=arg.type,
-                is_enum=arg.type.kind == cli.TypeKind.ENUM,
+                is_enum=arg.type.get_canonical().kind == cli.TypeKind.ENUM,
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
                 is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),

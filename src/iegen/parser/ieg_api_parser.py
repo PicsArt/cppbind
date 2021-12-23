@@ -52,11 +52,11 @@ class APIParser:
         if api_section is None:
             return None, OrderedDict()
 
-        # skip comment start/end
-        skip_pattern = r'^\s*(\*/|/\*)\s*$'
+        # skip comment end
+        skip_pattern = r'^\s*(/\*|\*+/|\/+|//!)\s*$'
 
         # keep empty lines or empty comments
-        comment_pattern = r'^\s*(\*+|/{2,})\s*'
+        comment_pattern = r'^\s*(\*|/{3,}|\//!)\s*'
 
         lines = api_section.splitlines()
         yaml_lines = []

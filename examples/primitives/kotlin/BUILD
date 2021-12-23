@@ -171,6 +171,14 @@ kt_jvm_test(
     main_class = "com.examples.optionals.OptionalsApp",
 )
 
+kt_jvm_test(
+    name = "globs",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.globs.GlobsApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

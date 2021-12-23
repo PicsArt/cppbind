@@ -172,6 +172,23 @@ class ExceptionsApp {
             } catch(e: Exception) {
                 assert(false)
             }
+
+            // global functions exception handling
+            // should throw
+            try {
+                throwExc(true)
+                assert(false)
+            } catch (e: StdInvalidArgument) {
+                assert(e.what() == "inv_arg")
+            } catch(e: Exception) {
+                assert(false)
+            }
+            // should not throw
+            try {
+                throwExc(false)
+            } catch(e: Exception) {
+                assert(false)
+            }
        }
     }
 

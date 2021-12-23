@@ -47,3 +47,8 @@ def validate_template_getter_setter(cxx, vars, owner_class, setter):
         Error.critical(
             f'Template getter/setter should have the same template argument types: '
             f'{parent}.{cxx.displayname} and {parent}.{setter["cxx"].displayname}.')
+
+
+def get_map_cxx_operator_name(name):
+    return name[8:] if name.startswith("operator") else name
+

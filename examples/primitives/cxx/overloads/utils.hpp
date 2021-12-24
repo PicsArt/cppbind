@@ -59,6 +59,28 @@ struct Utils {
     std::string concatenate(std::string first, std::string second, std::string third) {
         return first + second + third;
     }
+
+     /**
+     * Sub two ints.
+     * __API__
+     * action: gen_method
+     * name: minus
+     * throws: no_throw
+     */
+    static int sub(int first, int second) {
+        return first - second;
+    }
+
+    /**
+     * Sub two floats.
+     * __API__
+     * action: gen_method
+     * name: minus
+     * throws: no_throw
+     */
+    static float sub(float first, float second) {
+        return first - second;
+    }
 };
 // [example]
 }

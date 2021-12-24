@@ -185,9 +185,3 @@ class CXXParser:
         if not (self.filter and self.filter.filter_cursor_children(cursor)):
             for child in cursor.get_children():
                 self._process_cursor(child, processor)
-
-    @staticmethod
-    def is_implementation(cursor):
-        if cursor.lexical_parent and cursor.semantic_parent:
-            return cursor.lexical_parent != cursor.semantic_parent
-        return False

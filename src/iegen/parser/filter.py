@@ -88,11 +88,12 @@ class CXXParserFilter(CXXFilter):
             True if cursor needs to be processed
 
         """
-        if cutil.is_declaration(cursor) or CXXParser.is_implementation(cursor) \
+        if cutil.is_declaration(cursor) or cutil.is_implementation(cursor) \
                 or CXXParserFilter.__has_disallowed_cxx_kind(cursor):
             return True
 
         file = cursor.extent.start.file
+        # file is None especially in case of unexposed cursor types
         if file is None or self.filter_by_file(file.name):
             return True
 

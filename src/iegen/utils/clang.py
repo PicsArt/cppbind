@@ -88,6 +88,12 @@ def is_final_cursor(cursor):
     return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
 
 
+def is_implementation(cursor):
+    if cursor.lexical_parent and cursor.semantic_parent:
+        return cursor.lexical_parent != cursor.semantic_parent
+    return False
+
+
 def get_base_cursor(cursor):
     """
     Returns the base class cursor for the given cursor.

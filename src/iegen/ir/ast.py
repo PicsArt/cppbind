@@ -77,8 +77,11 @@ class Node(ABC):
         node.parent = self
         self._children.append(node)
 
-        # put node in node map to be able to find node by its name
-        node.root._node_map[node.signature] = node
+        # if signature is empty (e.g. for unexposed types) we assume the node to be not searchable/reusable
+        # existence of unexposed cursor types can be dependant on platform (we have many of them on linux)
+        if node.signature:
+            # put node in node map to be able to find node by its name
+            node.root._node_map[node.signature] = node
 
     @cached_property
     def ancestor_with_api(self):

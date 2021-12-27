@@ -413,7 +413,7 @@ method:
       {% endif -%}
       {%- set comma = joiner(', ') -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-      {%- set operator = helper.get_map_cxx_operator_name(vars.name) -%}
+      {%- set operator = helper.get_cxx_operator_name(vars.name) -%}
       {%- if vars.is_operator and operator == '[]' -%}
       {# subscript operator #}
       public subscript({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}
@@ -557,7 +557,7 @@ method:
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif %}
-      {%- set operator = helper.get_map_cxx_operator_name(vars.name) -%}
+      {%- set operator = helper.get_cxx_operator_name(vars.name) -%}
       {%- set comma = joiner(', ') -%}
       {%- if vars.is_operator and operator == '[]' -%}
       subscript({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{% endfor %}) -> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} { get {{'set ' if not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference}}}
@@ -569,7 +569,7 @@ method:
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') %}
-      {%- set operator = helper.get_map_cxx_operator_name(vars.name) %}
+      {%- set operator = helper.get_cxx_operator_name(vars.name) %}
       {%- set is_subscript_operator = vars.is_operator and operator == '[]' %}
       {%- if not is_subscript_operator %}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix, template_postfix))}}(
@@ -672,7 +672,7 @@ method:
       content: |
         {%- set comma = joiner(', ') -%}
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-        {%- set operator = helper.get_map_cxx_operator_name(vars.name) -%}
+        {%- set operator = helper.get_cxx_operator_name(vars.name) -%}
         {%- set is_subscript_operator = vars.is_operator and operator == '[]' -%}
         {%- if not is_subscript_operator -%}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name("{}_{}{}{}".format(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, overloading_prefix, template_postfix))}}(

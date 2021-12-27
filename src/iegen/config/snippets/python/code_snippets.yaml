@@ -449,7 +449,7 @@ method:
           {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
           pass
 
-      {%- set operator = helper.get_map_cxx_operator_name(vars.name) -%}
+      {%- set operator = helper.get_cxx_operator_name(vars.name) -%}
       {%- if vars.is_operator and operator == '[]' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
 
       @bind
@@ -492,9 +492,9 @@ method:
       {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
       {%- endif -%}
       {%- endfor -%});
-      {%- set operator = helper.get_map_cxx_operator_name(vars.name) -%}
+      {%- set operator = helper.get_cxx_operator_name(vars.name) -%}
       {%- if vars.is_operator and operator == '[]' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self, {{args[0].type_info.cxx.type_name}} i, {{return_type_info.cxx.pointee_unqualified_name}} v){self[i] = v;});
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.pointee_unqualified_name}} v){ self[{{args[0].name|to_snake_case}}] = v; });
       {%- endif %}
 
 

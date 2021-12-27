@@ -10,6 +10,8 @@ assert(Utils.sum(2.0f, 3.0f) == 5.0f)
 val utils = Utils()
 assert(utils.concatenate("1", "2") == "12")
 assert(utils.concatenate("a", "b", "c") == "abc")
+assert(Utils.minus(3, 2) == 1)
+assert(Utils.minus(7.0f, 3.0f) == 4.0f)
 
 // constructor overloading
 val john = "John Doe"

@@ -112,9 +112,9 @@ $Object:
       val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
       {%- if nullable|default(False)-%}
-      val {{target_name}} = if ({{name}} == 0L) null else {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}})
+      val {{target_name}} = if ({{name}} == 0L) null else {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- else -%}
-      val {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}})
+      val {{target_name}} = {{vars.interface_class_name if vars.action == 'gen_interface' else target_type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
 
 $Enum:

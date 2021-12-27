@@ -9,6 +9,9 @@ utils = Utils()
 assert utils.concatenate("1", "2") == "12"
 assert utils.concatenate("a", "b", "c") == "abc"
 
+assert Utils.minus(3, 2) == 1
+assert Utils.minus(7.0, 3.0) == 4.0
+
 # constructor overloading
 john = 'John Doe'
 john_email = 'john@email.com'

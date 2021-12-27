@@ -54,11 +54,33 @@ internal constructor(_id: Long, _owner: Boolean = false) : AutoCloseable {
         }
         @JvmStatic
         private external fun jSum_1(first: Float, second: Float): Float
+
+        /**
+         * Sub two ints.
+         */
+        fun minus(first: Int, second: Int): Int {
+            val result = jMinus(first, second)
+
+            return result
+        }
+        @JvmStatic
+        private external fun jMinus(first: Int, second: Int): Int
+
+        /**
+         * Sub two floats.
+         */
+        fun minus(first: Float, second: Float): Float {
+            val result = jMinus_1(first, second)
+
+            return result
+        }
+        @JvmStatic
+        private external fun jMinus_1(first: Float, second: Float): Float
     }
     
     protected var objId = _id
     protected val owner = _owner
-    
+
     open val id: Long
         get() {
             if (objId == 0L) {

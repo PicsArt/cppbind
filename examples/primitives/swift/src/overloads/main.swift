@@ -10,6 +10,9 @@ func runOverloadExamples() {
     assert(utils.concatenate(first: "1", second: "2") == "12")
     assert(utils.concatenate(first: "a", second: "b", third: "c") == "abc")
 
+    assert(Utils.minus(first: 3, second: 2) == 1)
+    assert(Utils.minus(first: 7.0, second: 3.0) == 4.0)
+
     // constructor overloading
     let john_email = "john@email.com"
     let jane = "Jane Doe"

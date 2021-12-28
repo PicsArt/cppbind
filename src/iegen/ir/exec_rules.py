@@ -124,7 +124,7 @@ class Context(BaseContext):
 
         if not hasattr(self, '_overloading_prefix'):
             search_api = self.node.api
-            name = self.vars.name
+            name = self.node.spelling
             search_names = {name}
             overloads = self.find_adjacents(search_names, search_api)
             _overloading_prefix = ''

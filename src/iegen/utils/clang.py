@@ -88,12 +88,6 @@ def is_final_cursor(cursor):
     return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
 
 
-def is_implementation(cursor):
-    if cursor.lexical_parent and cursor.semantic_parent:
-        return cursor.lexical_parent != cursor.semantic_parent
-    return False
-
-
 def get_base_cursor(cursor):
     """
     Returns the base class cursor for the given cursor.
@@ -151,19 +145,6 @@ def replace_template_choice(type_name, template_choice):
         for typename, value in template_choice.items():
             replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
     return replaced
-
-
-def is_declaration(cursor):
-    """
-    Checks if the cursor is forward declaration or not.
-    Args:
-        cursor(Cursor): Clang Cursor.
-    Returns:
-        bool: True if the cursor is forward declaration and False otherwise.
-    """
-    # todo check also function
-    return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
-                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
 
 
 def get_libclang_full_path():

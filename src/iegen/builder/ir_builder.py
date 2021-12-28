@@ -70,6 +70,8 @@ class CXXIEGIRBuilder:
         node = self.node_stack.pop()
         assert node.name == RootNode.ROOT_KEY
         assert len(self.node_stack) == 0, "stack should be empty"
+        # set flag which shows that IR built process is completed
+        self.ir._set_built_flag()
 
     def start_dir(self, dir_name):
         """
@@ -137,16 +139,13 @@ class CXXIEGIRBuilder:
         """
         Create a node wrapper for current cursor and eval its context.
         """
-        current_node, new_created = self.__get_node(cursor)
+        current_node = self.__get_node(cursor)
         self.node_stack.append(current_node)
-
-        if not new_created:
-            return
 
         cursor_display_name = current_node.full_displayname
 
-        if not APIParser.has_api(cursor.raw_comment) and \
-                not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
+        if current_node.api is not None or (not APIParser.has_api(cursor.raw_comment) and
+                                            not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name)):
             return
 
         self.__update_internal_vars(current_node)
@@ -183,10 +182,9 @@ class CXXIEGIRBuilder:
         cursor_signature = cutil.get_signature(cursor)
         node = self.ir.find_node(cursor_signature)
         if node is not None:
-            return node, False
+            return node
 
-        # second arg shows whether the node was created or retrieved
-        return CXXNode(cursor, root=self.ir), True
+        return CXXNode(cursor, root=self.ir)
 
     def get_parent_args(self):
         """

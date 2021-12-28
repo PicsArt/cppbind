@@ -7,6 +7,7 @@ from functools import cached_property
 from sortedcontainers import SortedSet
 
 import clang.cindex as cli
+from iegen.common.error import Error
 import iegen.utils.clang as cutil
 
 
@@ -61,7 +62,7 @@ class Node(ABC):
     @property
     def signature(self):
         """Unique identifier of cursor"""
-        pass
+        return self.full_displayname
 
     @property
     @abstractmethod
@@ -134,10 +135,6 @@ class DirectoryNode(Node):
     def full_displayname(self):
         return self.name
 
-    @property
-    def signature(self):
-        return self.full_displayname
-
 
 class RootNode(Node):
     ROOT_KEY = '__root__'
@@ -146,6 +143,7 @@ class RootNode(Node):
         super().__init__(api=Node.API_NONE, args=None, root=self, parent=None, children=None, pure_comment=None)
         self.name = RootNode.ROOT_KEY
         self._node_map = {}
+        self.__is_ir_built = False
 
     def __repr__(self):
         return f"RootNode({self.__dict__})"
@@ -162,6 +160,14 @@ class RootNode(Node):
         """Returns map of all nodes"""
         return self._node_map.values()
 
+    def _is_built(self):
+        """Protected method to check whether IR is built or not"""
+        return self.__is_ir_built
+
+    def _set_built_flag(self):
+        """Protected method to set IR built flag to true"""
+        self.__is_ir_built = True
+
     @property
     def type(self):
         return NodeType.ROOT_NODE
@@ -169,10 +175,6 @@ class RootNode(Node):
     @property
     def full_displayname(self):
         return "Root"
-
-    @property
-    def signature(self):
-        return self.full_displayname
 
     @property
     def kind_name(self):
@@ -241,10 +243,6 @@ class FileNode(ClangNode):
     def full_displayname(self):
         return self.clang_cursor.extent.start.file.name
 
-    @property
-    def signature(self):
-        return self.full_displayname
-
 
 class CXXNode(ClangNode):
 
@@ -281,14 +279,17 @@ class CXXNode(ClangNode):
 
     @cached_property
     def base_type_specifier_nodes(self):
+        if not self.root._is_built():
+            Error.critical("IR is not completely built. Access to 'base_type_specifier_nodes' property is forbidden")
+
         if not self.is_class_or_struct:
             return None
 
         base_type_specifier_nodes = []
         for base_specifier in self.clang_cursor.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                # used 'referenced' property to get exact signature of referenced class/struct
-                base_node = self.root.find_node(cutil.get_signature(base_specifier.referenced))
+                # used canonical type spelling to support typedef cases
+                base_node = self.root.find_node(base_specifier.type.get_canonical().spelling)
                 if base_node:
                     base_type_specifier_nodes.append(base_node)
 
@@ -297,6 +298,10 @@ class CXXNode(ClangNode):
     @cached_property
     def descendants(self):
         """List of all descendants of struct/class node"""
+
+        if not self.root._is_built():
+            Error.critical("IR is not completely built. Access to 'descendants' property is forbidden")
+
         if not self.is_class_or_struct:
             return None
 

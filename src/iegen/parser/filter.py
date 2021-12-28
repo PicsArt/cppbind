@@ -2,8 +2,8 @@
 Filter module decides which clang cursor needs to be processed and which one needs to be skipped.
 """
 
+import clang.cindex as cli
 import iegen.utils.clang as cutil
-from iegen.parser.ieg_parser import CXXParser
 
 
 class CXXComposerFilter:
@@ -88,8 +88,20 @@ class CXXParserFilter(CXXFilter):
             True if cursor needs to be processed
 
         """
-        if cutil.is_declaration(cursor) or cutil.is_implementation(cursor) \
-                or CXXParserFilter.__has_disallowed_cxx_kind(cursor):
+
+        # skip struct/class/enum cursors which are not definitions
+        if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
+                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition():
+            return True
+
+        # skip function(template)/method cursors which are not declarations
+        if cursor.kind in [cli.CursorKind.FUNCTION_DECL, cli.CursorKind.FUNCTION_TEMPLATE,
+                           cli.CursorKind.CXX_METHOD, cli.CursorKind.CONSTRUCTOR]\
+                and cursor.lexical_parent != cursor.semantic_parent:
+            return True
+
+        # skip cursors which have disallowed kinds
+        if CXXParserFilter.__has_disallowed_cxx_kind(cursor):
             return True
 
         file = cursor.extent.start.file
@@ -108,7 +120,7 @@ class CXXParserFilter(CXXFilter):
         return False
 
 
-class CXXIegFilter(CXXFilter):
+class CXXOnceProcessingFilter(CXXFilter):
     """Clang cursor filter which has some dependencies on some IEGEN internal structures (e.g. IR)"""
 
     def __init__(self, ir):
@@ -126,3 +138,10 @@ class CXXIegFilter(CXXFilter):
 
         # condition to not process cursor children if current cursor-based node is already in node_map
         return self.__ir.find_node(cutil.get_signature(cursor)) is not None
+
+
+class CXXIegFilter(CXXComposerFilter):
+    """General purpose IEGEN filter"""
+    def __init__(self, ir, include_files=None, exclude_files=None):
+        super().__init__(CXXParserFilter(include_files, exclude_files),
+                         CXXOnceProcessingFilter(ir))

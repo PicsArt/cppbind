@@ -18,7 +18,7 @@ from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import RootNode
 from iegen.ir.exec_rules import RunRule
-from iegen.parser.filter import CXXComposerFilter, CXXIegFilter, CXXParserFilter
+from iegen.parser.filter import CXXIegFilter
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     clear_iegen_generated_files,
@@ -68,12 +68,12 @@ class WrapperGenerator:
         logging.debug("Start parsing and building IR.")
 
         exclude_files = absolute_path_from_glob(root_ctx['src_exclude_glob']) if root_ctx['src_exclude_glob'] else None
-        cxx_filter = CXXComposerFilter(CXXParserFilter(exclude_files=exclude_files),
-                                       CXXIegFilter(ir))
-        parser = CXXParser(filter_=cxx_filter)
+        cxx_ieg_filter = CXXIegFilter(exclude_files=exclude_files, ir=ir)
+        parser = CXXParser(filter_=cxx_ieg_filter)
         parser.parse(ir_builder, **root_ctx)
 
         ir_builder.end_root()
+        ir_builder.ir._set_built_flag()
 
         if Error.has_error():
             Error.critical('Cannot continue: iegen error has occurred')

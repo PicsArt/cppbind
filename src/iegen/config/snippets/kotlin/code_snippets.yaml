@@ -453,6 +453,7 @@ method:
       {%- endif -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
+      {%- set setter_var_name = 'value' -%}
       {%- if not cxx.is_static %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -496,7 +497,7 @@ method:
 
 
       {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun set(
-      {%- for arg in args -%}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}, v: {{rconverter.kotlin.target_type_name}}
+      {%- for arg in args -%}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
       {%- endfor-%}){
           {%- set call_args = ['id'] -%}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
@@ -509,9 +510,9 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, v)
+          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {%- else %}
-          jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, v)
+          jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {%- endif %}
       }
 
@@ -552,21 +553,23 @@ method:
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
+      {%- set setter_var_name = 'value' -%}
       private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
       @JvmStatic
-      private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} v: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
     interface_external: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
+      {%- set setter_var_name = 'value' -%}
       @JvmStatic
       external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
       @JvmStatic
-      external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} v: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
   cxx:
@@ -578,6 +581,7 @@ method:
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- set kotlin_type_info = owner_class.converter.kotlin %}
       {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name %}
+      {%- set setter_var_name = 'value' -%}
       {%- macro args_snippet(args, call_args) -%}
       {%- for arg in args -%}
       {%- set converter = arg.converter.jni_to_cxx %}
@@ -599,7 +603,7 @@ method:
       }
       {%- else %}
       try {
-          {{prefix}}{{cxx.name}}({{call_args|join(', ')}}){{' = v' if is_set_op}};
+          {{prefix}}{{cxx.name}}({{call_args|join(', ')}}){{' = ' + setter_var_name if is_set_op}};
           return;
       }
       {%- endif %}
@@ -637,7 +641,7 @@ method:
       {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, overloading_prefix, template_postfix) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
 
-      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' v' if is_set_op}}){
+      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}){
           {%- set call_args = [] %}
           {{args_snippet(args, call_args)|indent(4)}}
           {%- if not cxx.is_static %}

@@ -122,8 +122,7 @@ class CXXType:
 
     @property
     def is_value(self):
-        return self.type_.kind == cli.TypeKind.RECORD if isinstance(self.type_,
-                                                                    cli.Type) else not self.is_pointer and not self.is_lval_reference
+        return not self.is_pointer and not self.is_lval_reference
 
     @property
     def unqualified_type_name(self):

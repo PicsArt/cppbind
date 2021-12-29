@@ -316,16 +316,16 @@ c_file_fullname:
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 h_file_fullname:
-    inheritable: true
-    kotlin.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
-    python.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
-    swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
-    allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  inheritable: true
+  kotlin.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
+  python.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
+  swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
+  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 target_file_fullname:
-    inheritable: true
-    default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}"
-    allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  inheritable: true
+  default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}"
+  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 pybind_module_filename:
   inheritable: true

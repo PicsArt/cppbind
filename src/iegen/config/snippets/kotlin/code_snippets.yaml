@@ -579,18 +579,19 @@ method:
     include: *var_method_cxx_include
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, overloading_prefix, template_postfix) %}
       {%- set objid_args=["jobjectid id"]if not cxx.is_static else [] -%}
       {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
-      {%- macro args_snippet(args, call_args) %}
+      {%- set kotlin_type_info = owner_class.converter.kotlin %}
+      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name %}
+      {%- macro args_snippet(args, call_args) -%}
       {%- for arg in args -%}
       {%- set converter = arg.converter.jni_to_cxx %}
       {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)}}
       {%- do call_args.append(converter.converted_name(arg.name))%}
       {% endfor %}
-      {%- endmacro %}
-      {% macro call_code(prefix, call_args, is_set_op=false) -%}
+      {%- endmacro -%}
+      {%- macro call_code(prefix, call_args, is_set_op=false) -%}
       {%- if 'no_throw' not in vars.throws %}
       void* err_ptr = nullptr;
       {%- endif -%}
@@ -637,41 +638,27 @@ method:
       {{rconverter.jni.target_type_name}} result;
       return result;
       {%- endif %}
-      {%- endmacro %}
-      {%- set kotlin_type_info = owner_class.converter.kotlin %}
-      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name %}
+      {%- endmacro -%}
+      {%- macro gen_method(is_set_op=false) -%}
+      {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, overloading_prefix, template_postfix) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
+
+      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' v' if is_set_op}}){
           {%- set call_args = [] %}
           {{args_snippet(args, call_args)|indent(4)}}
           {%- if not cxx.is_static %}
           validateID(id);
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {{call_code(this_converter.converted_name('id') + "->", call_args)|indent(4)}}
+          {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op)|indent(4)}}
           {%- else %}
-          {{call_code(owner_class.cxx.type_name + "::", call_args)|indent(4)}}
+          {{call_code(owner_class.cxx.type_name + "::", call_args, is_set_op)|indent(4)}}
           {%- endif %}
       }
-
-
+      {%- endmacro -%}
+      {{gen_method()}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
-      {%- set func_name="j%s%s%s"|format('set'|capitalize, overloading_prefix, template_postfix) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
-
-
-      extern "C" JNIEXPORT void {{jni_name}}({{jni_args|join(', ')}}, {{rconverter.jni.target_type_name}} v){
-          {%- set call_args = [] %}
-          {{args_snippet(args, call_args)|indent(4)}}
-          {%- if not cxx.is_static %}
-          validateID(id);
-          {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
-          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op=true)|indent(4)}}
-          {%- else %}
-          {{call_code(owner_class.cxx.type_name + "::", call_args, is_set_op=true)|indent(4)}}
-          {%- endif %}
-      }
+      {{gen_method(is_set_op=true)}}
       {%- endif %}
 
 function:

@@ -109,9 +109,9 @@ $Object:
       {%- endif %}
       {%- endif %}
       {%- if pointee_base == pointee %}
-      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
       {%- else %}
-      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
       {{target_type_name}} {{target_name}} = {type_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
       {%- endif %}
       {%- endif %}

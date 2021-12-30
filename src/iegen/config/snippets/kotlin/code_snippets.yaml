@@ -493,7 +493,7 @@ method:
       }
 
 
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
+      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
 
 
       {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun set(
@@ -555,7 +555,7 @@ method:
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
       private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
+      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
       private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
@@ -567,7 +567,7 @@ method:
       {%- set setter_var_name = 'value' -%}
       @JvmStatic
       external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
+      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
       external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
@@ -655,7 +655,7 @@ method:
       }
       {%- endmacro -%}
       {{gen_method()}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_reference %}
+      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       {{gen_method(is_set_op=true)}}
       {%- endif %}
 

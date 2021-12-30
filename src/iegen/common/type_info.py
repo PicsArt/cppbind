@@ -29,7 +29,7 @@ class TypeInfo:
                 pointee_name=self._cxx_type.pointee_name,
                 is_pointer=self._cxx_type.is_pointer,
                 is_value_type=self._cxx_type.is_value,
-                is_reference=self._cxx_type.is_lval_reference,
+                is_lval_reference=self._cxx_type.is_lval_reference,
                 pointee_unqualified_name=self._cxx_type.unqualified_pointee_name,
                 unqualified_type_name=self._cxx_type.unqualified_type_name,
                 is_const_qualified=self._cxx_type.is_const_qualified)

@@ -59,6 +59,8 @@ class WrapperGenerator:
         ctx_mgr = ContextManager(ctx_desc, platform, language)
         ir_builder = CXXIEGIRBuilder(ir, ctx_mgr)
 
+        # Currently `start_root` method is used to evaluate root context and parser method needs root context
+        # that's why we call `start_root` here. Maybe later we'll move it into parser logic.
         root_ctx = ir_builder.start_root(var_values)
 
         if not root_ctx:
@@ -72,6 +74,7 @@ class WrapperGenerator:
         parser = CXXParser(filter_=cxx_ieg_filter)
         parser.parse(ir_builder, **root_ctx)
 
+        # `end_root` is called here to keep symmetry with the `start_root` call
         ir_builder.end_root()
         ir_builder.ir._set_built_flag()
 

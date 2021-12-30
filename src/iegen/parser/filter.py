@@ -6,7 +6,23 @@ import clang.cindex as cli
 import iegen.utils.clang as cutil
 
 
-class CXXComposerFilter:
+class CXXFilter:
+    """Base class for CXX filter classes"""
+
+    def filter_cursor(self, cursor):
+        """Default implementation of `filter_cursor`"""
+        return False
+
+    def filter_by_file(self, file):
+        """Default implementation of `filter_by_file`"""
+        return False
+
+    def filter_cursor_children(self, cursor):
+        """Default implementation of `filter_cursor_children`"""
+        return False
+
+
+class CXXComposerFilter(CXXFilter):
     """Class to compose CXXFilers to be able to combine them"""
 
     def __init__(self, *filters):
@@ -23,22 +39,6 @@ class CXXComposerFilter:
     def filter_cursor_children(self, cursor):
         """Composer method to call all `filter_cursor_children` methods of registered filters"""
         return any(filter_.filter_cursor_children(cursor) for filter_ in self.__filters)
-
-
-class CXXFilter:
-    """Base class for CXX filter classes"""
-
-    def filter_cursor(self, cursor):
-        """Default implementation of `filter_cursor`"""
-        return False
-
-    def filter_by_file(self, file):
-        """Default implementation of `filter_by_file`"""
-        return False
-
-    def filter_cursor_children(self, cursor):
-        """Default implementation of `filter_cursor_children`"""
-        return False
 
 
 class CXXParserFilter(CXXFilter):

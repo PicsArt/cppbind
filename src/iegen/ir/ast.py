@@ -86,6 +86,9 @@ class Node(ABC):
 
     @cached_property
     def ancestor_with_api(self):
+        if not self.root._is_built():
+            Error.internal("IR is not completely built. Access to 'ancestor_with_api' property is forbidden")
+
         node = self.parent
         while node:
             if node.api:
@@ -280,7 +283,7 @@ class CXXNode(ClangNode):
     @cached_property
     def base_type_specifier_nodes(self):
         if not self.root._is_built():
-            Error.critical("IR is not completely built. Access to 'base_type_specifier_nodes' property is forbidden")
+            Error.internal("IR is not completely built. Access to 'base_type_specifier_nodes' property is forbidden")
 
         if not self.is_class_or_struct:
             return None
@@ -300,7 +303,7 @@ class CXXNode(ClangNode):
         """List of all descendants of struct/class node"""
 
         if not self.root._is_built():
-            Error.critical("IR is not completely built. Access to 'descendants' property is forbidden")
+            Error.internal("IR is not completely built. Access to 'descendants' property is forbidden")
 
         if not self.is_class_or_struct:
             return None

@@ -46,10 +46,6 @@ def get_c_func_name(hint_name):
     return "_func_" + new_name
 
 
-def get_map_cxx_operator_name(name):
-    return name[8:] if name.startswith("operator") else name
-
-
 def imports_comparator(first: str, second: str):
     """
     Comparator for swift imports sorting.

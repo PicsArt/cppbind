@@ -76,7 +76,6 @@ class WrapperGenerator:
 
         # `end_root` is called here to keep symmetry with the `start_root` call
         ir_builder.end_root()
-        ir_builder.ir._set_built_flag()
 
         if Error.has_error():
             Error.critical('Cannot continue: iegen error has occurred')

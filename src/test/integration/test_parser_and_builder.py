@@ -437,11 +437,12 @@ def test_node_reuse(clang_config):
     parser.parse(ir_builder, **clang_cfg)
     ir_builder.end_root()
 
-    main_file_node = ir.children[0].children[0]
-    incl_file_node = ir.children[0].children[1]
-    main_ns_node = main_file_node.children[0]
-    main_ns_node_from_incl = incl_file_node.children[0]
-    incl_ns_node = incl_file_node.children[1]
+    incl_file_node, main_file_node = ir.children[0].children
+    incl_ns_node_from_main, incl_cls_node_from_main, incl_func_node_from_main, main_ns_node = main_file_node.children
+    incl_ns_node, incl_cls_node, incl_func_node = incl_file_node.children
 
-    assert main_ns_node is main_ns_node_from_incl, "two namespaces from the same file are not equivalent"
+    assert incl_ns_node is incl_ns_node_from_main, "two namespaces from the same file are not equivalent"
     assert main_ns_node is not incl_ns_node, "two namespaces from different files are equivalent"
+
+    assert incl_cls_node is incl_cls_node_from_main, "two function nodes from the same file are not equivalent"
+    assert incl_func_node is incl_func_node_from_main, "two function nodes from different files are equivalent"

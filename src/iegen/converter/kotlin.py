@@ -4,6 +4,31 @@ Helper codes for kotlin conversion
 from . import *
 
 
+OPERATOR_MAPPING = {
+    '*': 'times',
+    '-': 'minus',
+    '+': 'plus',
+    '/': 'div',
+    '==': 'equals',
+    '%': 'mod',
+    '&': 'and',
+    '|': 'or',
+    '|=': 'orAssign',
+    '^': 'xor',
+    '^=': 'xorAssign',
+    '~': 'inv',
+    '~=': 'invAssign',
+    '<<': 'shl',
+    '>>': 'shr',
+    '[]': 'get',
+}
+
+
+def get_operator_name(spelling):
+    operator = spelling.replace('operator', '').strip()
+    return OPERATOR_MAPPING.get(operator, spelling)
+
+
 def arg_str(type_name, name, default=None, **kwargs):
     arg_str = name + ': ' + type_name
     if default:

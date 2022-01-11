@@ -3,6 +3,7 @@ Processor module provides various processor for ieg parser
 """
 import copy
 import datetime
+import importlib
 import os
 from collections import OrderedDict
 from types import SimpleNamespace
@@ -198,6 +199,14 @@ class CXXIEGIRBuilder:
         self._parent_arg_mapping[direct_parent_name] = parent_args
         return parent_args
 
+    def get_operator_name(self, spelling):
+        lang = self.ctx_mgr.language
+        if lang == 'swift':
+            return spelling
+        converter_module = importlib.import_module(f'iegen.converter.{lang}')
+        res = converter_module.get_operator_name(spelling)
+        return res
+
     def __update_internal_vars(self, node):
         """
         Update internal variables depending current node type.
@@ -234,6 +243,7 @@ class CXXIEGIRBuilder:
                 '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
+                '_operator_name': self.get_operator_name(node.clang_cursor.spelling),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 

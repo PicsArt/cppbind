@@ -21,7 +21,7 @@ package:
 name:
   inheritable: false
   type: str
-  default: '{{_object_name}}'
+  default: '{{_operator_name if _is_operator else _object_name}}'
   allowed_on: [ cxx, file_system ]
 
 interface_name:

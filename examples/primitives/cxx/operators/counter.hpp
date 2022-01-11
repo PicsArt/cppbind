@@ -37,7 +37,6 @@ public:
      * Plus operator
      * __API__
      * action: gen_method
-     * kotlin.name: plus
      * throws: no_throw
      */
     Counter operator+(const Counter& counter) {
@@ -71,9 +70,8 @@ public:
 
     /**
      * __API__
-     * action: gen_method
-     * kotlin.name: add
-     * kotlin.is_operator: False
+     * python.action: gen_method
+     * swift.action: gen_method
      * throws: no_throw
      */
     Counter& operator +=(const Counter& counter) {

@@ -14,6 +14,8 @@ class OperatorsApp {
             var counter2 = Counter(2)
             var counter = counter1 + counter2
             assert(counter.count == 3)
+            counter += counter1
+            assert(counter.count == 4)
             assert(counter1 < counter2)
             assert(counter1 <= counter2)
             assert(counter2 > counter1)

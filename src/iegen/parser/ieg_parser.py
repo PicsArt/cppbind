@@ -9,7 +9,6 @@ import re
 import clang.cindex as cli
 from iegen import logging
 from iegen.common.error import Error
-from iegen.parser.filter import cxx_ieg_filter
 import iegen.utils.clang as cutil
 
 
@@ -23,7 +22,7 @@ class CXXParser:
 
     def __init__(self, filter_=None):
         self.current_file = None
-        self.filter = filter_ or cxx_ieg_filter
+        self.filter = filter_
 
     def parse_tu(self):
         """
@@ -31,7 +30,7 @@ class CXXParser:
         """
         return list(self.parse_x())
 
-    def parse_tu_x(self, clang_args, include_dirs, src_glob, src_exclude_glob, extra_headers, **kwargs):
+    def parse_tu_x(self, clang_args, include_dirs, src_glob, extra_headers, **kwargs):
         """
         Parses cxx files and returns generator of TranslationUnit s
         """
@@ -52,7 +51,7 @@ class CXXParser:
             files_glob = sorted(glob.glob(file.strip(), recursive=True))
             for file_path in files_glob:
                 abs_fp = os.path.abspath(file_path)
-                if not self.filter.filter_by_file(abs_fp):
+                if not (self.filter and self.filter.filter_by_file(abs_fp)):
                     all_files.append(abs_fp)
 
         # logging.debug(f"parsing found files: {all_files}")
@@ -95,7 +94,7 @@ class CXXParser:
 
     def parse_x(self, **kwargs):
         """
-        Pares cxx files and returns generator of cursors
+        Parses cxx files and returns generator of cursors
         """
         for tu in self.parse_tu_x(**kwargs):
             for cursor in self.cursor_walk(tu.cursor):
@@ -105,7 +104,7 @@ class CXXParser:
         """
         cursor_walk ast recursively by filtering using filter
         """
-        if self.filter.filter_cursor(cursor):
+        if self.filter and self.filter.filter_cursor(cursor):
             logging.debug(f"Filtering cursor: {cursor.spelling}")
             return
 
@@ -113,7 +112,7 @@ class CXXParser:
         yield cursor
 
         # now if needed dive into children
-        if not self.filter.filter_cursor_children(cursor):
+        if not (self.filter and self.filter.filter_cursor_children(cursor)):
             for child in cursor.get_children():
                 for descendant in self.cursor_walk(child):
                     yield descendant
@@ -166,14 +165,7 @@ class CXXParser:
         return sorted(dirs_to_search)
 
     def _process_cursor(self, cursor, processor):
-
-        if self.filter.filter_cursor(cursor):
-            return
-
-        if cutil.is_declaration(cursor):
-            return
-
-        if CXXParser.is_implementation(cursor):
+        if self.filter and self.filter.filter_cursor(cursor):
             return
 
         # process current cursor
@@ -190,12 +182,6 @@ class CXXParser:
             processor.end_cursor(cursor)
 
     def _process_cursor_children(self, cursor, processor):
-        if not self.filter.filter_cursor_children(cursor):
+        if not (self.filter and self.filter.filter_cursor_children(cursor)):
             for child in cursor.get_children():
                 self._process_cursor(child, processor)
-
-    @staticmethod
-    def is_implementation(cursor):
-        if cursor.lexical_parent and cursor.semantic_parent:
-            return cursor.lexical_parent != cursor.semantic_parent
-        return False

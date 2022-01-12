@@ -281,7 +281,7 @@ class Context(BaseContext):
         return next(self.find_adjacents(search_names, search_api), None)
 
     def find_adjacents(self, search_names, search_api=None):
-        return (self.find_by_type(node.full_displayname) for node in self.node.parent.children
+        return (self.find_by_type(node.signature) for node in self.node.parent.children
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
@@ -441,7 +441,7 @@ class RunRule:
             return
         logging.debug(f"Call API: {api.lstrip(api)} on {node.displayname}")
         func = getattr(rule, api)
-        context = self.get_context(node.full_displayname)
+        context = self.get_context(node.signature)
         # set current template context to generate code based on correct template choice
         context.set_template_ctx(template_ctx)
         func(context, builder)
@@ -453,7 +453,7 @@ class RunRule:
         logging.debug("Allocating context for all nodes")
         for node in self.ir.walk():
             if node.api not in (None, Node.API_NONE):
-                self.all_contexts.setdefault(node.full_displayname,
+                self.all_contexts.setdefault(node.signature,
                                              Context(self, node))
                 if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
                     # for template types also create a context with template choice

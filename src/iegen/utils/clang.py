@@ -1,6 +1,7 @@
 """
 Helper functions working with clang
 """
+import os
 import re
 import sys
 from ctypes import *
@@ -64,6 +65,16 @@ def get_full_displayname(cursor):
     spellings = [a.displayname for a in ancestors[1::] if a.displayname != '']
     spellings.append(cursor.spelling if cursor.kind == cli.CursorKind.CLASS_TEMPLATE else cursor.displayname)
     return join_type_parts(spellings)
+
+
+def get_signature(cursor):
+    full_displayname = get_full_displayname(cursor)
+    if cursor.kind == cli.CursorKind.NAMESPACE:
+        # namespace cursors coming from #include directives has relative file name
+        return join_type_parts([os.path.abspath(cursor.extent.start.file.name),
+                                str(cursor.extent.start.line),
+                                full_displayname])
+    return full_displayname
 
 
 def is_final_cursor(cursor):
@@ -134,19 +145,6 @@ def replace_template_choice(type_name, template_choice):
         for typename, value in template_choice.items():
             replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
     return replaced
-
-
-def is_declaration(cursor):
-    """
-    Checks if the cursor is forward declaration or not.
-    Args:
-        cursor(Cursor): Clang Cursor.
-    Returns:
-        bool: True if the cursor is forward declaration and False otherwise.
-    """
-    # todo check also function
-    return cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
-                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition()
 
 
 def get_libclang_full_path():

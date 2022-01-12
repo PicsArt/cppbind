@@ -8,12 +8,15 @@
  */
 class C1 {};
 
+// for checking node lookup in case of typedef
+typedef C1 C1Ref;
+
 /**
  * __API__
  * action: gen_class
  * package: test
  */
-class C2 : public C1 {};
+class C2 : public C1Ref {};
 
 /**
  * __API__
@@ -64,12 +67,14 @@ class C8 : public C6 {};
  */
 class C9 : public C7, public C8 {};
 
+typedef C9 C9Ref;
+
 /**
  * __API__
  * action: gen_class
  * package: test
  */
-class C10 : public C9 {};
+class C10 : public C9Ref {};
 
 
 #endif

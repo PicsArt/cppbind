@@ -3,9 +3,11 @@
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 from enum import Enum
+from functools import cached_property
 from sortedcontainers import SortedSet
 
 import clang.cindex as cli
+from iegen.common.error import Error
 import iegen.utils.clang as cutil
 
 
@@ -33,16 +35,16 @@ class Node(ABC):
         self._children = children or []
 
     def __eq__(self, other):
-        return self.full_displayname == other.full_displayname
+        return self.signature == other.signature
 
     def __lt__(self, other):
-        return self.full_displayname < other.full_displayname
+        return self.signature < other.signature
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(self.full_displayname)
+        return hash(self.signature)
 
     def __repr__(self):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
@@ -58,6 +60,11 @@ class Node(ABC):
         pass
 
     @property
+    def signature(self):
+        """Unique identifier of cursor"""
+        return self.full_displayname
+
+    @property
     @abstractmethod
     def kind_name(self):
         pass
@@ -71,20 +78,23 @@ class Node(ABC):
         node.parent = self
         self._children.append(node)
 
-        # put node in node map to be able to find node by its name
-        node.root._node_map[node.full_displayname] = node
+        # if signature is empty (e.g. for unexposed types) we assume the node to be not searchable/reusable
+        # existence of unexposed cursor types can be dependant on platform (we have many of them on linux)
+        if node.signature:
+            # put node in node map to be able to find node by its name
+            node.root._node_map[node.signature] = node
 
-    @property
+    @cached_property
     def ancestor_with_api(self):
-        if not hasattr(self, '_ancestor_with_api'):
-            node = self.parent
-            while node:
-                if node.api:
-                    return node
-                node = node.parent
-            self._ancestor_with_api = node
+        if not self.root._is_built():
+            Error.internal("IR is not completely built. Access to 'ancestor_with_api' property is forbidden")
 
-        return self._ancestor_with_api
+        node = self.parent
+        while node:
+            if node.api:
+                return node
+            node = node.parent
+        return node
 
     def walk_preorder(self):
 
@@ -136,6 +146,7 @@ class RootNode(Node):
         super().__init__(api=Node.API_NONE, args=None, root=self, parent=None, children=None, pure_comment=None)
         self.name = RootNode.ROOT_KEY
         self._node_map = {}
+        self.__is_ir_built = False
 
     def __repr__(self):
         return f"RootNode({self.__dict__})"
@@ -144,13 +155,21 @@ class RootNode(Node):
         for node in self.walk_preorder():
             yield node
 
-    def find_node(self, node_display_name):
-        """Returns node in IR by its display name"""
-        return self._node_map.get(node_display_name)
+    def find_node(self, node_signature):
+        """Returns node in IR by its unique signature"""
+        return self._node_map.get(node_signature)
 
     def _get_all_nodes(self):
         """Returns map of all nodes"""
         return self._node_map.values()
+
+    def _is_built(self):
+        """Protected method to check whether IR is built or not"""
+        return self.__is_ir_built
+
+    def _set_built_flag(self):
+        """Protected method to set IR built flag to true"""
+        self.__is_ir_built = True
 
     @property
     def type(self):
@@ -190,18 +209,18 @@ class ClangNode(Node, ABC):
         assert self.clang_cursor, "cursor is not provided"
         return self.clang_cursor.spelling
 
-    @property
+    @cached_property
     def full_displayname(self):
         assert self.clang_cursor, "cursor is not provided"
-        if not hasattr(self, '_full_displayname'):
-            self._full_displayname = cutil.get_full_displayname(self.clang_cursor)
+        return cutil.get_full_displayname(self.clang_cursor)
 
-        return self._full_displayname
+    @cached_property
+    def signature(self):
+        return cutil.get_signature(self.clang_cursor)
 
     @property
     def file_name(self):
-        file_name = self.clang_cursor.extent.start.file.name
-        return file_name
+        return self.clang_cursor.extent.start.file.name
 
     @property
     def line_number(self):
@@ -261,40 +280,41 @@ class CXXNode(ClangNode):
                                           cli.CursorKind.CLASS_DECL,
                                           cli.CursorKind.CLASS_TEMPLATE)
 
-    @property
+    @cached_property
     def base_type_specifier_nodes(self):
+        if not self.root._is_built():
+            Error.internal("IR is not completely built. Access to 'base_type_specifier_nodes' property is forbidden")
+
         if not self.is_class_or_struct:
             return None
 
-        if not hasattr(self, '__base_type_specifier_nodes'):
-            base_type_specifier_nodes = []
-            for base_specifier in self.clang_cursor.get_children():
-                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                    base_node = self.root.find_node(base_specifier.type.spelling)
-                    if base_node:
-                        base_type_specifier_nodes.append(base_node)
+        base_type_specifier_nodes = []
+        for base_specifier in self.clang_cursor.get_children():
+            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+                # used canonical type spelling to support typedef cases
+                base_node = self.root.find_node(base_specifier.type.get_canonical().spelling)
+                if base_node:
+                    base_type_specifier_nodes.append(base_node)
 
-            self.__base_type_specifier_nodes = base_type_specifier_nodes
+        return base_type_specifier_nodes
 
-        return self.__base_type_specifier_nodes
-
-    @property
+    @cached_property
     def descendants(self):
         """List of all descendants of struct/class node"""
+
+        if not self.root._is_built():
+            Error.internal("IR is not completely built. Access to 'descendants' property is forbidden")
+
         if not self.is_class_or_struct:
             return None
 
-        # logic for caching
-        if not hasattr(self, '__descendants'):
-            descendants = []
-            # recursively construct list of descendants
-            for direct_desc in self.direct_descendants:
-                for node in direct_desc.descendants:
-                    if node not in descendants:
-                        descendants.append(node)
+        descendants = []
+        # recursively construct list of descendants
+        for direct_desc in self.direct_descendants:
+            for node in direct_desc.descendants:
+                if node not in descendants:
+                    descendants.append(node)
 
-            descendants.extend(self.direct_descendants)
+        descendants.extend(self.direct_descendants)
 
-            self.__descendants = descendants
-
-        return self.__descendants
+        return descendants

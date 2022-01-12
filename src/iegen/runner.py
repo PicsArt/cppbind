@@ -16,8 +16,9 @@ from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import to_value
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
+from iegen.ir.ast import RootNode
 from iegen.ir.exec_rules import RunRule
-from iegen.parser.filter import CXXParserFilter
+from iegen.parser.filter import CXXIegFilter
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import (
     clear_iegen_generated_files,
@@ -54,9 +55,12 @@ class WrapperGenerator:
         logging.info(f"Start running wrapper generator for "
                      f"{language} language for {platform} platform.")
 
+        ir = RootNode()
         ctx_mgr = ContextManager(ctx_desc, platform, language)
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(ir, ctx_mgr)
 
+        # Currently `start_root` method is used to evaluate root context and parser method needs root context
+        # that's why we call `start_root` here. Maybe later we'll move it into parser logic.
         root_ctx = ir_builder.start_root(var_values)
 
         if not root_ctx:
@@ -66,11 +70,11 @@ class WrapperGenerator:
         logging.debug("Start parsing and building IR.")
 
         exclude_files = absolute_path_from_glob(root_ctx['src_exclude_glob']) if root_ctx['src_exclude_glob'] else None
-        cxx_ieg_filter = CXXParserFilter(exclude_files=exclude_files)
+        cxx_ieg_filter = CXXIegFilter(exclude_files=exclude_files, ir=ir)
         parser = CXXParser(filter_=cxx_ieg_filter)
-
         parser.parse(ir_builder, **root_ctx)
 
+        # `end_root` is called here to keep symmetry with the `start_root` call
         ir_builder.end_root()
 
         if Error.has_error():

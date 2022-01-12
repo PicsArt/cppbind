@@ -21,6 +21,7 @@ from iegen.ir.ast import (
 )
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils import get_android_ndk_sysroot
+import iegen.utils.clang as cutil
 
 
 class CXXPrintProcessor:
@@ -37,9 +38,9 @@ class CXXIEGIRBuilder:
     Class to build intermediate representation.
     """
 
-    def __init__(self, ctx_mgr):
+    def __init__(self, ir, ctx_mgr):
+        self.ir = ir
         self.ctx_mgr = ctx_mgr
-        self.ir = RootNode()
         self.node_stack = []
         self._sys_vars = {}
         self._processed_dirs = {}
@@ -69,6 +70,8 @@ class CXXIEGIRBuilder:
         node = self.node_stack.pop()
         assert node.name == RootNode.ROOT_KEY
         assert len(self.node_stack) == 0, "stack should be empty"
+        # set flag which shows that IR built process is completed
+        self.ir._set_built_flag()
 
     def start_dir(self, dir_name):
         """
@@ -136,13 +139,13 @@ class CXXIEGIRBuilder:
         """
         Create a node wrapper for current cursor and eval its context.
         """
-        current_node = CXXNode(cursor, root=self.ir)
+        current_node = self.__get_node(cursor)
         self.node_stack.append(current_node)
 
         cursor_display_name = current_node.full_displayname
 
-        if not APIParser.has_api(cursor.raw_comment) and \
-                not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
+        if current_node.api is not None or (not APIParser.has_api(cursor.raw_comment) and
+                                            not self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name)):
             return
 
         self.__update_internal_vars(current_node)
@@ -173,6 +176,15 @@ class CXXIEGIRBuilder:
             parent_node.add_child(node)
         # cursor is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(node.full_displayname, None)
+
+    def __get_node(self, cursor):
+        """Private method to create a new cxx node or return the cached one if it has been created earlier"""
+        cursor_signature = cutil.get_signature(cursor)
+        node = self.ir.find_node(cursor_signature)
+        if node is not None:
+            return node
+
+        return CXXNode(cursor, root=self.ir)
 
     def get_parent_args(self):
         """

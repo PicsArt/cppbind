@@ -55,10 +55,20 @@ func runInheritanceExamples() {
     assert(AnimalUsage.getAnimalTypeName(animal: frog) == "frog")
     assert(AnimalUsage.getAquaticAnimalTypeName(animal: frog) == "frog")
 
+    // test polymorphism
     let animalUsageObj = AnimalUsage()
     assert(animalUsageObj.getFrog().typeName() == "frog")
     assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
     assert(animalUsageObj.getAnimal().typeName() == "frog")
+
+    // test object downcasting
+    let frogObj = animalUsageObj.getFrog()
+    let aquaticAnimalObj = animalUsageObj.getAquaticAnimal()
+    let animalObj = animalUsageObj.getAnimal()
+    assert(frogObj is Frog)
+    assert(aquaticAnimalObj is Frog)
+    assert(animalObj is Frog)
+    assert(frogObj.cself.ptr == aquaticAnimalObj.cself.ptr && frogObj.cself.ptr == animalObj.cself.ptr)
 
     let dateEvent = MyDate(d: 12, m: 12, y: 2021)
     let dateTimeEvent = DateTime(d: 11, mo: 12, y: 2021, h: 12, mi: 12, s: 12)

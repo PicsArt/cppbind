@@ -100,6 +100,8 @@ Now let's go through the variables one by one:
     - *cxx_out_dir* - Root directory where all C wrappers will be stored.
     - *out_dir* - Directory where output files will be saved.
     - *cxx_base_out_dir* - The directory where iegen base classes are copied. If user does not want to use iegen base classes then there's no need to specify this variable.
+    - *is_proj_type* - Boolean showing whether the given type is user's type or is the type from standard/3pty lib.
+    - *prj_rel_file_name* - Source file name related to project root directory.
     - *package_prefix* - Package prefix where generated files will be saved.
     - *helpers_package_prefix* - This is a path relative to **out_dir** where python helpers from **helpers_dir** are copied.
     - *helpers_out_dir* - Directory where helper/util files must be copied to.
@@ -113,12 +115,12 @@ Now let's go through the variables one by one:
     - *extension* - Target language file extension.
     - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.
     - *c_wrapper_lib_name* - Library name for generated wrappers.
+    - *target_arch* - Variable for setting target architecture.
     - *clang_args* - Arguments passed to clang.
     - *src_glob* - File glob to define which source code files must be processed by clang.
     - *src_exclude_glob* - Patterns to exclude files from processing list.
     - *include_dirs* - Include directories required for parsing. These directories are passed to clang parser.
     - *extra_headers* - Extra headers to be processed. For example standard exceptions headers which are required to generate target language bindings for them.
-    - *target_arch* - Variable for setting target architecture.
     - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
     - *enum_excluded_fields* - A list of enum field names which must be not exposed in target language.
     - *cxx_out_rel_path* - C output relative path to project output directory. This variable is used for constructing generated C includes.
@@ -128,6 +130,7 @@ Now let's go through the variables one by one:
     - *pybind_module_filename* - Generated pybind file containing pybind module code.
     - *c_pybind_filename* - Generated pybind cpp file containing code which binds all submodules.
     - *h_pybind_filename* - Generated pybind header file containing includes of all submodules.
+    - *descendants* - List of descendant classes for current class.
 
 .. note::
 

@@ -201,9 +201,13 @@ class CXXIEGIRBuilder:
 
     def get_operator_name(self, spelling):
         lang = self.ctx_mgr.language
-        converter_module = importlib.import_module(f'iegen.converter.{lang}')
-        res = converter_module.get_operator_name(spelling)
-        return res
+        try:
+            converter_module = importlib.import_module(f'iegen.converter.{lang}')
+            res = converter_module.get_operator_name(spelling)
+            return res
+        except ModuleNotFoundError:
+            logging.info(f"Helper module is not found for '{lang}' language")
+            return spelling
 
     def __update_internal_vars(self, node):
         """

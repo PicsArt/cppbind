@@ -1,19 +1,10 @@
 Operator Overloading
 ^^^^^^^^^^^^^^^^^^^^
 
-In C++, we can make operators to work for user defined classes. This means C++ has the ability to
-provide the operators with a special meaning for a data type, this ability is known as operator overloading.
-For example, we can overload an operator ‘+’ in a class like String so that we can concatenate two strings
-by just using +.
-
-
-Overloading Arithmetic and Comparison Operators
-~~~~~~~~~~~~~~~~~~
-
-This is simple example of overloading arithmetic and comparison operators.
+This is example of overloading arithmetic and comparison operators.
 If the target language does not allows some of the operators to be overloaded or
 we simply just don't want to do overloading in the target language we can set **is_operator** variable
-to **False**. Also we can specify **name** for that operator so in target language will be used that name.
+to **False**. In that case we should also specify **name** for that operator so in target language will be used that name.
 
 
 .. literalinclude:: /../examples/primitives/cxx/operators/counter.hpp
@@ -23,13 +14,13 @@ to **False**. Also we can specify **name** for that operator so in target langua
 
 
 .. note::
-    As there is no **operator>** in kotlin we generated it as a standard function not a operator.
-    In this case it's very important to set **kotlin.is_operator** **False** and define name for the function using **kotlin.name** variable.
-    All comparisons in kotlin are translated into calls to **compareTo**, that is required to return **Int**. For that we have
-    **compareTo** operator. We can use **operator>** for python and swift and **compareTo** for kotlin but for the example we keep them both for all languages.
+    All comparisons in kotlin are translated into calls to **compareTo**, that is required to return **Int**.
+    That's why we have **compareTo** method in c++ with kotlin.is_operator set to True(This is mandatory as compareTo is not a c++ operator and by default is_operator is False for it ).
+    Also notice we do not have kotlin action for **operator>**.
 
-    And **+=** operator we are generating only for python and swift cause there is no return value for this in kotlin. We already have **+(plus)** operator in kotlin which
-    also covers **+=** case.
+.. note::
+    For **+=** operator we are generating bindings only for python and swift because for kotlin the signature of this operator is different and
+    we already have generated binding for **+** operator which covers also **+=** operator.
 
 And here are generated operators for target languages.
 
@@ -50,12 +41,38 @@ And here are generated operators for target languages.
         .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
            :language: swift
 
+.. note::
+    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.
 
-Overloading operator[]
+
+And the usage example:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
+           :language: kotlin
+           :start-after: [counter-usage]
+           :end-before: [counter-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
+           :language: py
+           :start-after: [counter-usage]
+           :end-before: [counter-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
+           :language: swift
+           :start-after: [counter-usage]
+           :end-before: [counter-usage]
+
+
+
+Overloading subscript operator
 ~~~~~~~~~~~~~~~~~~
-
-The Subscript or Array Index Operator is denoted by ‘[]’. This operator is
-generally used with arrays to retrieve and manipulate the array elements.
 
 Here is the example of overloading **operator[]**.
 
@@ -81,3 +98,27 @@ And here are overloaded subscript operators for target languages.
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
            :language: swift
+
+And the usage example:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
+           :language: kotlin
+           :start-after: [subscript-operator-usage]
+           :end-before: [subscript-operator-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
+           :language: py
+           :start-after: [subscript-operator-usage]
+           :end-before: [subscript-operator-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
+           :language: swift
+           :start-after: [subscript-operator-usage]
+           :end-before: [subscript-operator-usage]

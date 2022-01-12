@@ -46,7 +46,7 @@ public:
     /**
      * Comparison operator for kotlin
      * __API__
-     * action: gen_method
+     * kotlin.action: gen_method
      * kotlin.is_operator: True
      * kotlin.name: compareTo
      * throws: no_throw
@@ -59,9 +59,8 @@ public:
 
     /**
      * __API__
-     * action: gen_method
-     * kotlin.name: gt
-     * kotlin.is_operator: False
+     * python.action: gen_method
+     * swift.action: gen_method
      * throws: no_throw
      */
     bool operator>(const Counter& counter) {

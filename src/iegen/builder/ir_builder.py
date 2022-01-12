@@ -201,8 +201,6 @@ class CXXIEGIRBuilder:
 
     def get_operator_name(self, spelling):
         lang = self.ctx_mgr.language
-        if lang == 'swift':
-            return spelling
         converter_module = importlib.import_module(f'iegen.converter.{lang}')
         res = converter_module.get_operator_name(spelling)
         return res

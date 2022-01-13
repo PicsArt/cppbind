@@ -180,6 +180,10 @@ class Converter:
         return self._type_info.template_names
 
     @property
+    def descendants(self):
+        return self._type_info.descendants
+
+    @property
     def args(self):
         return [getattr(arg, self._snippet_name) for arg in self._template_args]
 
@@ -204,6 +208,8 @@ class Converter:
             # make api variables available in converter under vars
             vars = self.vars
             template_names = self.template_names
+
+            descendants = self.descendants
 
             # helper name spaces
 

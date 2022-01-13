@@ -22,11 +22,11 @@ class Error:
 
     @classmethod
     def has_error(cls):
-        """method to check whether error has ever occurred"""
+        """Method to check whether error has ever occurred"""
         return cls.__has_error
 
     @classmethod
-    def error(cls, msg, file=None, line=None):
+    def error(cls, msg, file=None, line=None, err_type_name=None):
         """Simple error type"""
         cls.__has_error = True
 
@@ -34,21 +34,26 @@ class Error:
             Error.critical(msg, file, line)
         else:
             cls.__error_limit -= 1
-            logging.error(cls.get_message(msg, file, line, "error"))
+            logging.error(cls.get_message(msg, file, line, err_type_name or "error"))
             cls.log_traceback(extract_stack())
 
     @classmethod
-    def critical(cls, msg, file=None, line=None):
+    def critical(cls, msg, file=None, line=None, err_type_name=None):
         """Critical error: it's not possible to proceed after this type of error"""
-        error_msg = cls.get_message(msg, file, line, "critical")
+        error_msg = cls.get_message(msg, file, line, err_type_name or "critical")
         logging.critical(error_msg)
         cls.log_traceback(extract_stack())
         raise IEGError(error_msg)
 
     @classmethod
-    def warning(cls, msg, file=None, line=None):
+    def warning(cls, msg, file=None, line=None, err_type_name=None):
         """Warning: execution of program is not stopped"""
-        logging.warning(cls.get_message(msg, file, line, "warning"))
+        logging.warning(cls.get_message(msg, file, line, err_type_name or "warning"))
+
+    @classmethod
+    def internal(cls, msg, file=None, line=None, err_type_name=None):
+        """Method to report internal errors"""
+        Error.critical(msg, file, line, err_type_name or "internal")
 
     @classmethod
     def get_message(cls, msg, file, line, err_type):

@@ -73,6 +73,7 @@ $Object:
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
+      {%- set descendants = vars.descendants or descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -82,12 +83,12 @@ $Object:
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, is_nullable=is_nullable)}}
       {%- endif %}
       {%- else %}
-      {%- if not vars.descendants %}
+      {%- if not descendants %}
       char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
-      {%- if vars.descendants %}
+      {%- if descendants %}
       {%- macro demangle() -%}
       const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
       int status = 0;
@@ -131,11 +132,12 @@ $Object:
       {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
       {%- endmacro -%}
+      {%- set descendants = vars.descendants or descendants -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
-      {%- if vars.descendants %}
+      {%- if descendants %}
       let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
       switch({{name|to_camel_case}}Index) {
-      {%- for descendant in vars.descendants %}
+      {%- for descendant in descendants %}
       case("{{descendant}}"):
         {%- set converter = make_type_converter(descendant).swift %}
         {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
@@ -431,7 +433,8 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
-      {%- if not args[0].vars.descendants %}
+      {%- set args0_descendants = args[0].vars.descendants or args[0].descendants -%}
+      {%- if not args0_descendants %}
       char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
@@ -450,7 +453,7 @@ std::shared_ptr:
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if args[0].vars.descendants %}
+          {%- if args0_descendants %}
           {{demangle()|indent(4)}}
           {%- endif %}
           {%- if pointee_root != pointee_unqualified %}
@@ -462,7 +465,7 @@ std::shared_ptr:
           type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       }
       {%- else %}
-      {%- if args[0].vars.descendants %}
+      {%- if args0_descendants %}
       {{demangle()}}
       {%- endif %}
       {%- if pointee_root != pointee_unqualified %}

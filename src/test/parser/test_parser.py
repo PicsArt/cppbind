@@ -11,7 +11,7 @@ from iegen.common.error import Error, IEGError
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
-from iegen.ir.ast import Node
+from iegen.ir.ast import Node, RootNode
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.parser.ieg_parser import CXXParser
 
@@ -114,7 +114,7 @@ def test_api_parser(test_data, res_md5):
 
         """
         /**
-        * commants
+        * comments
         *
         * __API__
         * action: gen_class
@@ -143,7 +143,7 @@ def test_parser_errors(clang_config):
 
     lang, plat = 'swift', 'linux'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
-    ir_builder = CXXIEGIRBuilder(ctx_mgr)
+    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
     ir_builder.start_root()
 
     for file in os.listdir(test_dir):
@@ -209,7 +209,7 @@ def test_attr_type_mismatch_negative():
             load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(ctx_mgr)
+        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
         Error._Error__has_error = False
         ir_builder.start_root()

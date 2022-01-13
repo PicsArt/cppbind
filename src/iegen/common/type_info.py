@@ -82,3 +82,8 @@ class TypeInfo:
     @property
     def template_choice(self):
         return self._type_ctx.template_choice if self._type_ctx else None
+
+    @property
+    def descendants(self):
+        return [descendant.full_displayname for descendant in self._type_ctx.node.descendants]\
+            if (self._type_ctx and self._type_ctx.node.descendants is not None) else None

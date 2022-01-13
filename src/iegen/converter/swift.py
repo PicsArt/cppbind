@@ -46,10 +46,6 @@ def get_c_func_name(hint_name):
     return "_func_" + new_name
 
 
-def get_operator_name(spelling):
-    return spelling
-
-
 def imports_comparator(first: str, second: str):
     """
     Comparator for swift imports sorting.

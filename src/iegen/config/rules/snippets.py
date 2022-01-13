@@ -14,7 +14,7 @@ from iegen.common.snippets_engine import (
     SnippetsEngine,
 )
 from iegen.common.type_info import create_type_info
-from iegen.utils import DefaultValueKind
+from iegen.utils import DefaultValueKind, get_language_helper_module
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -27,10 +27,7 @@ def set_language(language):
     global LANGUAGE
     LANGUAGE = language
     global LANGUAGE_HELPER_MODULE
-    try:
-        LANGUAGE_HELPER_MODULE = importlib.import_module(f'iegen.converter.{language}')
-    except ModuleNotFoundError:
-        logging.info(f"Helper module is not found for '{language}' language")
+    LANGUAGE_HELPER_MODULE = get_language_helper_module(language)
 
 
 def load_snippets_engine(runner, ctx_desc, platform, language):

@@ -21,7 +21,7 @@ from iegen.ir.ast import (
     RootNode
 )
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.utils import get_android_ndk_sysroot
+from iegen.utils import get_android_ndk_sysroot, get_language_helper_module
 
 
 class CXXPrintProcessor:
@@ -200,14 +200,10 @@ class CXXIEGIRBuilder:
         return parent_args
 
     def get_operator_name(self, spelling):
-        lang = self.ctx_mgr.language
-        try:
-            converter_module = importlib.import_module(f'iegen.converter.{lang}')
-            res = converter_module.get_operator_name(spelling)
-            return res
-        except ModuleNotFoundError:
-            logging.info(f"Helper module is not found for '{lang}' language")
-            return spelling
+        language = self.ctx_mgr.language
+        converter_module = get_language_helper_module(language)
+        res = converter_module.get_operator_name(spelling)
+        return res
 
     def __update_internal_vars(self, node):
         """

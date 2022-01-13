@@ -52,3 +52,8 @@ def validate_template_getter_setter(cxx, vars, owner_class, setter):
 def get_cxx_operator_name(name):
     return name[8:] if name.startswith("operator") else name
 
+
+def get_operator_name(spelling):
+    return spelling
+
+

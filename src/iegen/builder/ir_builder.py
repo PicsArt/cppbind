@@ -211,7 +211,7 @@ class CXXIEGIRBuilder:
         self._parent_arg_mapping[direct_parent_name] = parent_args
         return parent_args
 
-    def get_operator_name(self, spelling):
+    def __get_operator_name(self, spelling):
         language = self.ctx_mgr.language
         converter_module = get_language_helper_module(language)
         res = converter_module.get_operator_name(spelling)
@@ -253,7 +253,7 @@ class CXXIEGIRBuilder:
                 '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
-                '_operator_name': self.get_operator_name(node.clang_cursor.spelling),
+                '_operator_name': self.__get_operator_name(node.clang_cursor.spelling),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 

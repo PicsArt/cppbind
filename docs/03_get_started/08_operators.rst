@@ -1,9 +1,9 @@
 Operator Overloading
 ^^^^^^^^^^^^^^^^^^^^
 
-This is example of overloading arithmetic and comparison operators.
-If the target language does not allows some of the operators to be overloaded or
-we simply just don't want to do overloading in the target language we can set **is_operator** variable
+An example of overloading arithmetic and comparison operators.
+If the target language does not allow some of the operators to be overloaded or
+we just don't want to overload them in the target language we can set **is_operator** variable
 to **False**. In that case we should also specify **name** for that operator so in target language will be used that name.
 
 
@@ -40,9 +40,6 @@ And here are generated operators for target languages.
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
            :language: swift
-
-.. note::
-    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.
 
 
 And the usage example:
@@ -98,6 +95,9 @@ And here are overloaded subscript operators for target languages.
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
            :language: swift
+
+.. note::
+    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.
 
 And the usage example:
 

@@ -12,6 +12,8 @@ OPERATOR_MAPPING = {
     '==': 'equals',
     '%': 'mod',
     '&': 'and',
+    '!': 'not',
+    '()': 'invoke',
     '|': 'or',
     '|=': 'orAssign',
     '^': 'xor',

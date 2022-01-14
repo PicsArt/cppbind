@@ -80,10 +80,10 @@ func runInheritanceExamples() {
 
 
     let symbolUsageObj = SymbolUsage()
-    let textObj = Text()
     let digitObj = Digit()
-    print(symbolUsageObj.getTextType(t: textObj))
+    let textObj = Text()
     print(symbolUsageObj.getTextType(t: digitObj))
+    print(symbolUsageObj.getTextType(t: textObj))
 
 }
 

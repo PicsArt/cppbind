@@ -36,7 +36,7 @@ public:
  * action: gen_interface
  * package: inheritance
  */
-class Number : public virtual Symbol {
+class Number {
 public:
     /**
      * __API__
@@ -51,8 +51,11 @@ public:
      * throws: no_throw
      */
      std::string typeName() {
-        return "number";
+        return _type;
      }
+
+private:
+    std::string _type = "number";
 };
 
 /**
@@ -60,7 +63,7 @@ public:
  * action: gen_class
  * package: inheritance
  */
-class Text : public virtual Symbol {
+class Text {
 public:
     /**
      * __API__
@@ -69,14 +72,19 @@ public:
      */
     Text() {}
 
+    virtual ~Text() = default;
+
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
      */
-    std::string typeName()  {
-       return "text";
+    virtual std::string typeName()  {
+       return _type;
     }
+
+private:
+    std::string _type = "text";
 };
 
 /**
@@ -99,8 +107,12 @@ public:
      * throws: no_throw
      */
     std::string typeName() {
-       return "digit";
+       return _type;
     }
+
+private:
+    std::string _type = "digit";
+
 };
 
 /**

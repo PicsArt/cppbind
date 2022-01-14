@@ -73,7 +73,9 @@ public class SymbolImpl: Symbol {
 
 }
 
-public protocol Number: Symbol {
+public protocol Number {
+  var cself: CObject { get }
+
   func typeName() -> String
 }
 
@@ -132,7 +134,7 @@ public class NumberImpl: Number {
 
 }
 
-public class Text: Symbol {
+public class Text {
 
   public let cself: CObject
   public let owner: Bool

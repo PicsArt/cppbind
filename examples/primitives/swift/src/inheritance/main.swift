@@ -77,6 +77,14 @@ func runInheritanceExamples() {
     let events = myCalendar.events
     assert(!(events[0] is DateTime))
     assert(events[1] is DateTime)
+
+
+    let symbolUsageObj = SymbolUsage()
+    let textObj = Text()
+    let digitObj = Digit()
+    print(symbolUsageObj.getTextType(t: textObj))
+    print(symbolUsageObj.getTextType(t: digitObj))
+
 }
 
 #if os(Linux)

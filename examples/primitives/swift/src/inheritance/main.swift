@@ -78,12 +78,22 @@ func runInheritanceExamples() {
     assert(!(events[0] is DateTime))
     assert(events[1] is DateTime)
 
-
-    let symbolUsageObj = SymbolUsage()
+    // single root requirement removal test
+    var symbolUsageObj = SymbolUsage()
     let digitObj = Digit()
     let textObj = Text()
-    print(symbolUsageObj.getTextType(t: digitObj))
-    print(symbolUsageObj.getTextType(t: textObj))
+    let numberObj = NumberImpl()
+    assert(symbolUsageObj.getTextType(t: digitObj) ==  "digit")
+    assert(symbolUsageObj.getTextType(t: textObj) == "text")
+    assert(symbolUsageObj.getNumberType(n: digitObj) == "digit")
+    assert(symbolUsageObj.getNumberType(n: numberObj) == "number")
+    assert(digitObj.typeName() == "digit")
+    assert(textObj.typeName() == "text")
+    assert(numberObj.typeName() == "number")
+
+    symbolUsageObj = SymbolUsage(d: digitObj)
+    assert(symbolUsageObj.getTextPtr().typeName() == "digit")
+    assert(symbolUsageObj.getNumberPtr().typeName() == "digit")
 
 }
 

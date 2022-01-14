@@ -12,6 +12,7 @@ namespace iegen::example {
 /**
  * __API__
  * action: gen_class
+ * file: datetime
  * shared_ref: True
  * package: inheritance
  */

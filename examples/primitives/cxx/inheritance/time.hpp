@@ -10,6 +10,7 @@ namespace iegen::example {
 /**
  * __API__
  * action: gen_interface
+ * file: datetime
  * shared_ref: True
  * package: inheritance
  */

@@ -211,12 +211,6 @@ class CXXIEGIRBuilder:
         self._parent_arg_mapping[direct_parent_name] = parent_args
         return parent_args
 
-    def __get_operator_name(self, spelling):
-        language = self.ctx_mgr.language
-        converter_module = get_language_helper_module(language)
-        res = converter_module.get_operator_name(spelling)
-        return res
-
     def __update_internal_vars(self, node):
         """
         Update internal variables depending current node type.
@@ -253,7 +247,7 @@ class CXXIEGIRBuilder:
                 '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
-                '_operator_name': self.__get_operator_name(node.clang_cursor.spelling),
+                '_helper_module': get_language_helper_module(self.ctx_mgr.language),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 

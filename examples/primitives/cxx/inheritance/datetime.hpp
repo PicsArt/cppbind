@@ -10,6 +10,8 @@
 namespace iegen::example {
 // [example]
 /**
+ * datetime.hpp is parsed before time.hpp and it contains DateTime class which is inherited from Time(declared in time.hpp).
+ * We generate bindings for these two classes in the same datetime file to validate their order.
  * __API__
  * action: gen_class
  * file: datetime

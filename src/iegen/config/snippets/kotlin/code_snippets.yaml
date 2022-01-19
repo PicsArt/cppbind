@@ -102,7 +102,15 @@ var_class_cxx: &var_class_cxx
   body:
     content: |
       {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-      {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface'), 'jFinalize') %}
+      {%- macro gen_jni_owner_name(owner_class) -%}{#this should be a shared macro#}
+      {%- if owner_class -%}
+      {%- set kotlin_type_info = owner_class.converter.kotlin -%}
+      {%- set owner_name = kotlin_type_info.get_target_type_name(interface_class=vars.action == 'gen_interface') -%}
+      {{gen_jni_owner_name(owner_class.owner_class)}}{{helper.map_to_jni_name(owner_name)}}_00024
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set owner_name = gen_jni_owner_name(owner_class) + converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
+      {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
           {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.pointee_unqualified_name + '>').jni_to_cxx if root.vars.shared_ref else make_type_converter(root_types_infos[0].cxx.pointee_unqualified_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -387,8 +395,14 @@ constructor:
   cxx:
     include: *var_method_cxx_include
     body: |
+      {%- macro gen_jni_owner_name(owner_class) -%}{#this should be a shared macro#}
+      {%- if owner_class -%}
       {%- set kotlin_type_info = owner_class.converter.kotlin -%}
-      {%- set owner_name = kotlin_type_info.get_target_type_name(interface_class=True) if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {%- set owner_name = kotlin_type_info.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') -%}
+      {{gen_jni_owner_name(owner_class.owner_class)}}{{helper.map_to_jni_name(owner_name)}}_00024
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set owner_name = gen_jni_owner_name(owner_class)[:-6] %}{#remove trailing _00024#}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, 'jConstructor' + overloading_prefix) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
@@ -580,7 +594,14 @@ method:
       {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- set kotlin_type_info = owner_class.converter.kotlin %}
-      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name %}
+      {%- macro gen_jni_owner_name(owner_class) -%}{#this should be a shared macro#}
+      {%- if owner_class -%}
+      {%- set kotlin_type_info = owner_class.converter.kotlin -%}
+      {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {{gen_jni_owner_name(owner_class.owner_class)}}{{helper.map_to_jni_name(owner_name)}}_00024
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set owner_name = gen_jni_owner_name(owner_class)[:-6] %}{#remove trailing _00024#}
       {%- set setter_var_name = 'value' -%}
       {%- macro args_snippet(args, call_args) -%}
       {%- for arg in args -%}
@@ -775,7 +796,7 @@ function:
       return result;
       {%- endif %}
       {%- endmacro %}
-      {%- set owner_name = vars.file|capitalize + 'Kt' %}
+      {%- set owner_name = helper.map_to_jni_name(vars.file|capitalize + 'Kt') %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
           {%- set call_args = [] %}
@@ -858,8 +879,14 @@ property_getter:
   cxx:
     include: *var_getter_cxx_include
     body: |
+      {%- macro gen_jni_owner_name(owner_class) -%}{#this should be a shared macro#}
+      {%- if owner_class -%}
       {%- set kotlin_type_info = owner_class.converter.kotlin -%}
       {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {{gen_jni_owner_name(owner_class.owner_class)}}{{helper.map_to_jni_name(owner_name)}}_00024
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set owner_name = gen_jni_owner_name(owner_class)[:-6] %}{#remove trailing _00024#}
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
@@ -982,8 +1009,14 @@ getter:
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
+      {%- macro gen_jni_owner_name(owner_class) -%}{#this should be a shared macro#}
+      {%- if owner_class -%}
       {%- set kotlin_type_info = owner_class.converter.kotlin -%}
       {%- set owner_name = kotlin_type_info.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else kotlin_type_info.target_type_name -%}
+      {{gen_jni_owner_name(owner_class.owner_class)}}{{helper.map_to_jni_name(owner_name)}}_00024
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- set owner_name = gen_jni_owner_name(owner_class)[:-6] %}{#remove trailing _00024#}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owner_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){

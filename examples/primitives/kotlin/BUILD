@@ -179,6 +179,14 @@ kt_jvm_test(
     main_class = "com.examples.globs.GlobsApp",
 )
 
+kt_jvm_test(
+    name = "nested_types",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.nested_types.NestedTypesApp",
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

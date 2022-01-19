@@ -78,6 +78,10 @@ Now let's go through the variables one by one:
     - *include* - Additional includes that will be added in the generated file.
     - | *code_fragment* - Code snippets which will be appended to the target code depending on what was tagged with this variable.
       | For example if enum is tagged with this variable then code fragment will be appended to the generated enum.
+    - | *header_code_fragment* - Code snippets which will be added right before the generated part of code.
+      | For example if enum is tagged with this variable then code fragment will be added before the generated enum.
+    - | *header_code_fragment* - Code snippets which will be added right after the generated part of code.
+      | For example if enum is tagged with this variable then code fragment will be added after the generated enum.
     - *include_cxx* - Additional c++ includes which will be added to generated C wrappers.
     - *shared_ref* - This variable is to manage how the object will be hold. If set to false then the generated wrapper will create a regular pointer, otherwise a shared pointer.
     - *template* - This variable is used for template types/functions to specify all possible types for template parameters. More details are here: :doc:`Templates </03_get_started/06_templates>`.

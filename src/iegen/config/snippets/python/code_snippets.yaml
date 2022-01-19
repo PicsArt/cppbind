@@ -155,6 +155,9 @@ var_pybind_module_hpp: &var_pybind_module_hpp
 enum:
   python:
     body: |
+      {%- if vars.header_code_fragment %}{# this should be a shareable macro #}
+      {{vars.header_code_fragment|join(2 * new_line)}}{{new_line}}
+      {%- endif %}
       {% set m = 'pybind_' + vars.file + vars.file_postfix %}
 
       class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=EnumMetaclass):
@@ -173,6 +176,9 @@ enum:
           {%- if vars.code_fragment %}
 
           {{vars.code_fragment|join(2 * new_line)|indent(4)}}
+          {%- endif %}
+          {%- if vars.footer_code_fragment %}{# this should be a shareable macro #}
+          {{new_line}}{{vars.footer_code_fragment|join(2 * new_line)}}
           {%- endif %}
   python_init:
     include:
@@ -226,6 +232,9 @@ var_class: &var_class
         - properties
         - body
       content: |
+        {%- if vars.header_code_fragment %}{# this should be a shareable macro #}
+        {{vars.header_code_fragment|join(2 * new_line)}}{{new_line}}
+        {%- endif %}
         {%- set bases_specifiers = [] -%}
         {%- for base_type_converter in base_types_converters|map(attribute='python') -%}
         {%- set base_type_package = base_type_converter.vars.file + '.' if base_type_converter.is_obj_type and base_type_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
@@ -255,6 +264,9 @@ var_class: &var_class
             {%- endif %}
             {%- if (not cxx.is_abstract, not constructor_body, not properties, not body)|all %}
             pass
+            {%- endif %}
+            {%- if vars.footer_code_fragment %}{# this should be a shareable macro #}
+            {{new_line}}{{marker}}{{vars.footer_code_fragment|join_unique}}{{marker}}
             {%- endif %}
   python_init:
     include:

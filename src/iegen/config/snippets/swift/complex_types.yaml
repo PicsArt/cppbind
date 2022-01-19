@@ -476,9 +476,9 @@ std::shared_ptr:
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent(0)}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
     sc_to_swift: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent(0)}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
 
 std::pair:
   custom:

@@ -5,7 +5,7 @@
 #include <string>
 
 namespace iegen::example {
-
+// [example]
 /**
  * __API__
  * action: gen_class
@@ -89,7 +89,7 @@ struct List {
 private:
     std::list<Item*> items;
 };
-
+// [example]
 }
 
 #endif /* nested_examples_h */

@@ -111,7 +111,7 @@ $Object:
       {%- macro create_instance(type_name) -%}
       {%- if nullable|default(False) -%}
       if ({{name}}.ptr != nil) {
-          {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+        {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       }
       {%- else -%}
       {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
@@ -126,11 +126,11 @@ $Object:
       case("{{descendant}}"):
         {%- set converter = make_type_converter(descendant).swift %}
         {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
-        {{create_instance(type)|indent(4)}}
+        {{create_instance(type)|indent(2)}}
       {%- endfor %}
       default:
         {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
-        {{create_instance(type + custom.tpostfix)|indent(4)}}
+        {{create_instance(type + custom.tpostfix)|indent(2)}}
       }
       {%- else %}
       {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
@@ -461,9 +461,9 @@ std::shared_ptr:
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
     sc_to_swift: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
 
 std::pair:
   custom:

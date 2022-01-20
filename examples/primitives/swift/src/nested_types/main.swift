@@ -24,7 +24,7 @@ assert(list.back.value.value == value1.value)
 }
 
 #if os(Linux)
-runMiscExamples()
+runNestedTypeExamples()
 #elseif os(OSX)
 class NestedTypeTests: XCTestCase {
 

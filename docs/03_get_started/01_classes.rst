@@ -116,3 +116,47 @@ And the usage example:
             :language: swift
             :start-after: [project-usage]
             :end-before: [project-usage]
+
+Nested Types
+~~~~~~~~~~~~
+
+Let's now generate bindings for nested types.
+Here's a small example:
+
+.. literalinclude:: /../examples/primitives/cxx/nested_types/list.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+And here are the generated bindings for the above types:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
+           :language: kotlin
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/nested_types/list.swift
+           :language: swift
+
+As we can see nested types are nested in target languages as well.
+
+And here are some usage examples:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/main.kt
+            :language: kotlin
+            :start-after: [nested-types-usage]
+            :end-before: [nested-types-usage]
+
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/nested_types/main.swift
+            :language: swift
+            :start-after: [nested-types-usage]
+            :end-before: [nested-types-usage]

@@ -8,7 +8,7 @@ import pytest
 import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
-from iegen.common.error import Error, IEGError
+from iegen.common.error import IEGError
 from iegen.common.yaml_process import load_yaml
 from iegen.context_manager.ctx_desc import ContextDescriptor
 from iegen.context_manager.ctx_mgr import ContextManager
@@ -148,11 +148,9 @@ def test_parser_errors(clang_config):
     ir_builder.start_root()
 
     for file in os.listdir(test_dir):
-        Error._Error__has_error = False
-
-        clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
-        parser.parse(ir_builder, **clang_cfg)
-        assert Error.has_error() is True, "Must cause an error"
+        with pytest.raises(IEGError):
+            clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
+            parser.parse(ir_builder, **clang_cfg)
 
 
 def test_file_api_positive():
@@ -189,32 +187,29 @@ def test_dir_api_positive():
 def test_var_def_validation():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples/jinja_attr/positive')
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+            pytest.raises(IEGError, match=r"Variable 'b' is required on 'dir' node*"):
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         # add dummy 'required_on' node without having it in 'allowed_on' list
         var_def_mock.return_value['b']['required_on'] = ['dir']
 
-        Error._Error__has_error = False
         ContextDescriptor(None)
-
-        assert Error.has_error() is True, "variable cannot be required on a node on which it is not allowed"
 
 
 def test_attr_type_mismatch_negative():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/negative')
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+            pytest.raises(IEGError, match=r"Type mismatch*"):
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
         ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
 
-        Error._Error__has_error = False
         ir_builder.start_root()
-        assert Error.has_error() is True, "evaluation of an expression must fail if its type doesn't match required one"
 
 
 @pytest.mark.parametrize(
@@ -250,24 +245,23 @@ def test_attr_type_mismatch_negative():
               inheritable: false
               default: null
               allowed_on: [root]
-              options: [1, 2]
+              type: int
+              options: [1, 4]
             """,
             """
-             * C: "{{1+3}}"
+             * C: "{{1+1}}"
             """
         )
     ]
 )
 def test_attr_options_negative(var_def, api_section):
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock,\
+            pytest.raises(IEGError, match=r"Value mismatch*"):
+
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
-        Error._Error__has_error = False
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
         ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
-
-    assert Error.has_error() is True, "If the variable value is not in the options list," \
-                                      "evaluation of an expression must fail "
 
 
 @pytest.mark.parametrize(
@@ -317,11 +311,11 @@ def test_attr_options_positive(var_def, api_section):
 
     with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
-
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
-        ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
-
-    assert Error.has_error() is False
+        try:
+            ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
+        except IEGError as e:
+            assert False, e
 
 
 @pytest.mark.parametrize(

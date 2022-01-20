@@ -722,7 +722,7 @@ function:
       {%- set converter = arg.converter.jni_to_cxx %}
       {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
       {%- if conversion %}
-      {{conversion|indent(0)}}
+      {{conversion}}
       {%- endif %}
       {%- do call_args.append(converter.converted_name(arg.name))%}
       {%- endfor %}

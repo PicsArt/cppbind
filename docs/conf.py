@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     'sphinx_tabs.tabs',
+    'sphinx_toolbox.collapse',
 ]
 
 autosummary_generate = True

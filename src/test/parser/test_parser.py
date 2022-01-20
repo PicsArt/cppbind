@@ -5,6 +5,7 @@ import types
 from unittest.mock import patch
 
 import pytest
+import yaml
 
 from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
 from iegen.common.error import Error, IEGError
@@ -214,6 +215,113 @@ def test_attr_type_mismatch_negative():
         Error._Error__has_error = False
         ir_builder.start_root()
         assert Error.has_error() is True, "evaluation of an expression must fail if its type doesn't match required one"
+
+
+@pytest.mark.parametrize(
+    "var_def, api_section",
+    [
+        (
+            """
+            A:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              options: [opt_1, opt_2]
+            """,
+            """
+             * A: opt_3
+            """
+        ),
+        (
+            """
+            B:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              options: [1, 2, 3]
+            """,
+            """
+             * B: 4
+            """
+        ),
+        (
+            """
+            C:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              options: [1, 2]
+            """,
+            """
+             * C: "{{1+3}}"
+            """
+        )
+    ]
+)
+def test_attr_options_negative(var_def, api_section):
+
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
+        Error._Error__has_error = False
+        ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
+        ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
+
+    assert Error.has_error() is True, "If the variable value is not in the options list," \
+                                      "evaluation of an expression must fail "
+
+
+@pytest.mark.parametrize(
+    "var_def, api_section",
+    [
+        (
+            """
+            A:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              options: [opt_1, opt_2]
+            """,
+            """
+             * A: opt_1
+            """
+        ),
+        (
+            """
+            B:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              type: int
+              options: [1,2]
+            """,
+            """
+             * B: "{{1+1}}"
+            """
+        ),
+        (
+            """
+            C:
+              inheritable: false
+              default: null
+              allowed_on: [root]
+              type: dict
+              options: [{i:1},{j:2}]
+            """,
+            """
+             * C: {i:1}
+            """
+        ),
+    ]
+)
+def test_attr_options_positive(var_def, api_section):
+
+    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
+
+        ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
+        ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
+
+    assert Error.has_error() is False
 
 
 @pytest.mark.parametrize(

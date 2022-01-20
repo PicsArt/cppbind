@@ -189,7 +189,7 @@ def get_var_real_type(type_name):
         return None
 
     try:
-        res = eval(type_name.value)
+        res = eval(type_name)
     except (NameError, SyntaxError, TypeError) as err:
         Error.critical(f"'{type_name.value}' cannot be used as a value for 'type' "
                        f"parameter since it's not python primitive type: {err}",

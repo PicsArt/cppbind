@@ -53,12 +53,17 @@ class VariableEvaluator:
         Method to eval/load variable value according to its type
         """
         # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
-        actual_type = get_var_real_type(prop.get('type')) or type(to_value(val))
+        actual_type = get_var_real_type(to_value(prop.get('type'))) or type(to_value(val))
         # if 'type' is not defined and default value is null, actual_type still can be None
         # we still check val since for some languages/platforms it can be null
         if actual_type and val is not None:
             # we evaluate jinja expression when type is str, or when we have type mismatch
             if actual_type is str or not has_type(val, actual_type):
+                if not has_type(val, str):
+                    Error.error(f"Type mismatch for '{att_name}' variable: "
+                                f"it has value of {type(val)} type instead of required {actual_type}",
+                                location.file_name if location else None,
+                                location.line_number if location else None)
                 try:
                     val = JINJA2_ENV.from_string(to_value(val)).render(ctx)
                 except (JinjaUndefinedError, TypeError) as err:

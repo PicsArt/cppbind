@@ -37,7 +37,7 @@ namespace iegen::example {
  * action: gen_interface
  * package: inheritance
  */
-class Number {
+class Sign {
 public:
     int id = 1;
     /**
@@ -45,9 +45,9 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Number() {}
+    Sign() {}
 
-    virtual ~Number() = default;
+    virtual ~Sign() = default;
 
     /**
      * __API__
@@ -55,12 +55,12 @@ public:
      * throws: no_throw
      */
      virtual std::string typeName() {
-        std::cout << "Calling Number::typeName()" << std::endl;
+        std::cout << "Calling Sign::typeName()" << std::endl;
         return _type;
      }
 
 private:
-    std::string _type = "number";
+    std::string _type = "sign";
 };
 
 /**
@@ -100,7 +100,7 @@ private:
  * action: gen_class
  * package: inheritance
  */
-class Digit : public Number, public Text {
+class Digit : public Sign, public Text {
 public:
     int id = 3;
     /**
@@ -161,8 +161,8 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    std::string getNumberType(Number* n) {
-        std::cout << "Calling SymbolUsage::getNumberType()" << std::endl;
+    std::string getSignType(Sign* n) {
+        std::cout << "Calling SymbolUsage::getSignType()" << std::endl;
         return n->typeName();
     }
 
@@ -181,8 +181,8 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-     Number* getNumberPtr() {
-        std::cout << "Calling SymbolUsage::getNumberPtr()" << std::endl;
+     Sign* getSignPtr() {
+        std::cout << "Calling SymbolUsage::getSignPtr()" << std::endl;
         return _d;
      }
 

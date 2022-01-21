@@ -9,7 +9,11 @@ from examples_lib.inheritance import (
     AnimalUsage,
     Animal,
     AquaticAnimal,
-    Frog
+    Frog,
+    SymbolUsage,
+    Sign,
+    Text,
+    Digit
 )
 
 # [simple-inheritance-usage]
@@ -65,3 +69,22 @@ assert AnimalUsage.get_aquatic_animal_type_name(frog) == "frog"
 # assert animal_usage_obj.get_frog().type_name() == "frog"
 # assert animal_usage_obj.get_aquatic_animal().type_name() == "frog"
 # assert animal_usage_obj.get_animal().type_name() == "frog"
+
+# testing multiple inheritance without single root
+
+symbol_usage_obj = SymbolUsage()
+digit_obj = Digit()
+text_obj = Text()
+sign_obj = Sign()
+
+assert symbol_usage_obj.get_text_type(digit_obj) == "digit"
+assert symbol_usage_obj.get_text_type(text_obj) == "text"
+assert symbol_usage_obj.get_sign_type(digit_obj) == "digit"
+assert symbol_usage_obj.get_sign_type(sign_obj) == "sign"
+assert digit_obj.type_name() == "digit"
+assert text_obj.type_name() == "text"
+assert sign_obj.type_name() == "sign"
+
+symbol_usage_obj = SymbolUsage(digit_obj)
+assert (symbol_usage_obj.get_text_ptr().type_name() == "digit")
+assert (symbol_usage_obj.get_sign_ptr().type_name() == "digit")

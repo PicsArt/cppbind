@@ -65,7 +65,6 @@ func runInheritanceExamples() {
     let frogObj = animalUsageObj.getFrog()
     let aquaticAnimalObj = animalUsageObj.getAquaticAnimal()
     let animalObj = animalUsageObj.getAnimal()
-    assert(frogObj is Frog)
     assert(aquaticAnimalObj is Frog)
     assert(animalObj is Frog)
     assert(frogObj.cself.ptr == aquaticAnimalObj.cself.ptr && frogObj.cself.ptr == animalObj.cself.ptr)
@@ -78,22 +77,23 @@ func runInheritanceExamples() {
     assert(!(events[0] is DateTime))
     assert(events[1] is DateTime)
 
-    // single root requirement removal test
+    // testing multiple inheritance without single root
     var symbolUsageObj = SymbolUsage()
     let digitObj = Digit()
     let textObj = Text()
-    let numberObj = NumberImpl()
+    let signObj = SignImpl()
+
     assert(symbolUsageObj.getTextType(t: digitObj) ==  "digit")
     assert(symbolUsageObj.getTextType(t: textObj) == "text")
-    assert(symbolUsageObj.getNumberType(n: digitObj) == "digit")
-    assert(symbolUsageObj.getNumberType(n: numberObj) == "number")
+    assert(symbolUsageObj.getSignType(n: digitObj) == "digit")
+    assert(symbolUsageObj.getSignType(n: signObj) == "sign")
     assert(digitObj.typeName() == "digit")
     assert(textObj.typeName() == "text")
-    assert(numberObj.typeName() == "number")
+    assert(signObj.typeName() == "sign")
 
     symbolUsageObj = SymbolUsage(d: digitObj)
     assert(symbolUsageObj.getTextPtr().typeName() == "digit")
-    assert(symbolUsageObj.getNumberPtr().typeName() == "digit")
+    assert(symbolUsageObj.getSignPtr().typeName() == "digit")
 
 }
 

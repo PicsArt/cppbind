@@ -21,6 +21,7 @@ file:
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
+      #include <iostream>
       #include <string.h>
       #include <cxxabi.h>
       #include <memory>
@@ -113,9 +114,6 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
-        {%- if root_types_infos|length > 1 -%}
-        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
-        {%- endif -%}
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
@@ -161,9 +159,9 @@ class:
             delete cself.type;
             if (owner) {
                 {%- if root.vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.pointee_unqualified_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
+                delete static_cast<{{cxx.pointee_unqualified_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -188,9 +186,6 @@ interface:
         - body
       content: |
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
-        {%- if root_types_infos|length > 1 -%}
-        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
-        {%- endif -%}
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
@@ -249,13 +244,9 @@ interface:
             delete cself.type;
             if (owner) {
                 {%- if root.vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.pointee_unqualified_name}}>*>(cself.ptr);
                 {%- else %}
-                {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
-                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
-                {%- else %}
-                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr));
-                {%- endif %}
+                delete static_cast<{{cxx.pointee_unqualified_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -269,19 +260,30 @@ var_method_cxx_include: &var_method_cxx_include
     {%- if vars.is_proj_type -%}
     #include "{{vars.prj_rel_file_name}}"
     {%- endif -%}
-    {%- macro gen_include(type_info) -%}
+    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
+    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- for descendant in (type_info.vars.descendants or type_info.descendants) -%}
+    {#- generate includes for descendants list of an argument -#}
+    {{gen_include(get_type_info(descendant))}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
     {%- for arg in args -%}
     {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(return_type_info, gen_desc_incl=false)}}
+    {%- endif -%}
+    {#- generate includes for descendants list of `this` if the node is method -#}
+    {%- if owner_class is defined -%}
+    {{gen_include(owner_class)}}
     {%- endif -%}
 
 constructor:
@@ -365,13 +367,9 @@ constructor:
           try {
               auto this_object = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               {%- if owner_class.root.vars.shared_ref %}
-              return {strdup("{{owner_class.cxx.type_name}}"), new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object)};
+              return {strdup("{{owner_class.cxx.type_name}}"), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)};
               {%- else %}
-              {%- if owner_class.root.cxx.type_name == owner_class.cxx.type_name %}
               return {strdup("{{owner_class.cxx.type_name}}"), this_object};
-              {%- else %}
-              return {strdup("{{owner_class.cxx.type_name}}"), static_cast<{{owner_class.root.cxx.type_name}}*>(this_object)};
-              {%- endif %}
               {%- endif %}
           }
           {%- if 'no_throw' not in vars.throws %}
@@ -843,15 +841,23 @@ function:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_include(type_info) -%}
+    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
+    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- for descendant in (type_info.vars.descendants or type_info.descendants) -%}
+    {#- generate includes for descendants list of an argument -#}
+    {{gen_include(get_type_info(descendant))}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(return_type_info, gen_desc_incl=false)}}
+    {{gen_include(owner_class)}}
 
 property_getter:
   swift:

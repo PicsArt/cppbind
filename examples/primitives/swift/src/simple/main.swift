@@ -26,7 +26,7 @@ func runSimpleExamples() {
 
     // test for checking how const& return type is handled by pybind
     let holder = Holder()
-    print(holder.task.title)
+    assert(holder.task.title == "Initial title")
     holder.task.setTitle(title: "My First Task Edited")
     assert(holder.task.title == "My First Task Edited")
 }

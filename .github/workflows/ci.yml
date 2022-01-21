@@ -5,7 +5,7 @@ name: Python application
 
 on:
   push:
-    branches: [ master ]
+    branches: [ IEG-407-fix_macos_build ]
   pull_request:
     branches: [ master ]
 

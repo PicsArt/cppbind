@@ -48,8 +48,8 @@ package:
 enum:
   kotlin:
     body: |
-      {%- if vars.header_code_fragment %}{# this should be a shareable macro #}
-      {{vars.header_code_fragment|join(2 * new_line)}}{{new_line}}
+      {%- if vars.header_code_fragment %}
+      {{new_line}}{{vars.header_code_fragment}}{{new_line}}
       {%- endif %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -75,8 +75,8 @@ enum:
           {{vars.code_fragment|join(2 * new_line)|indent(4)}}
           {%- endif %}
       }
-      {%- if vars.footer_code_fragment %}{# this should be a shareable macro #}
-      {{new_line}}{{vars.footer_code_fragment|join(2 * new_line)}}
+      {%- if vars.footer_code_fragment %}
+      {{new_line}}{{vars.footer_code_fragment}}
       {%- endif %}{{new_line}}
 
 var_class_cxx: &var_class_cxx
@@ -154,8 +154,8 @@ class:
         - companion
         - private_external
       content: |
-        {%- if vars.header_code_fragment -%}{# this should be a shareable macro #}
-        {{vars.header_code_fragment|join(2 * new_line)}}
+        {%- if vars.header_code_fragment -%}
+        {{new_line}}{{vars.header_code_fragment}}
         {% endif -%}
         {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
@@ -234,8 +234,8 @@ class:
             private external fun jFinalize(id: Long): Unit
             {%- endif %}
         }
-        {%- if vars.footer_code_fragment %}{# this should be a shareable macro #}
-        {{new_line}}{{vars.footer_code_fragment|join(2 * new_line)}}
+        {%- if vars.footer_code_fragment %}
+        {{new_line}}{{vars.footer_code_fragment}}
         {% endif -%}
   cxx: *var_class_cxx
 
@@ -250,8 +250,8 @@ interface:
         - companion
         - interface_external
       content: |
-        {%- if vars.header_code_fragment -%}{# this should be a shareable macro #}
-        {{vars.header_code_fragment|join(2 * new_line)}}
+        {%- if vars.header_code_fragment -%}
+        {{new_line}}{{vars.header_code_fragment}}
         {% endif -%}
         {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
         {%- if ancestors|selectattr('vars.shared_ref', 'equalto', True)|list|length not in (0, ancestors|length) %}
@@ -321,8 +321,8 @@ interface:
             ///// External wrapper functions ////////////
             private external fun jFinalize(id: Long): Unit
         }
-        {%- if vars.footer_code_fragment %}{# this should be a shareable macro #}
-        {{new_line}}{{vars.footer_code_fragment|join(2 * new_line)}}
+        {%- if vars.footer_code_fragment %}
+        {{new_line}}{{vars.footer_code_fragment}}
         {% endif -%}
   cxx: *var_class_cxx
 

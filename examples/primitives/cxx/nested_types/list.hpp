@@ -11,14 +11,14 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: nested_types
- * kotlin.header_code_fragment:
- *  - typealias Item = List.Item
- * kotlin.footer_code_fragment:
- *  - typealias Value = List.Item.Value
- * swift.header_code_fragment:
- *  - public typealias Item = List.Item
- * swift.footer_code_fragment:
- *  - public typealias Value = List.Item.Value
+ * kotlin.header_code_fragment: |
+ *  typealias Item = List.Item
+ * kotlin.footer_code_fragment: |
+ *  typealias Value = List.Item.Value
+ * swift.header_code_fragment: |
+ *  public typealias Item = List.Item
+ * swift.footer_code_fragment: |
+ *  public typealias Value = List.Item.Value
  */
 struct List {
 

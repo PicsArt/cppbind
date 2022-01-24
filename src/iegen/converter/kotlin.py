@@ -15,7 +15,23 @@ def arg_str(type_name, name, default=None, **kwargs):
     return arg_str
 
 
-def get_jni_func_name(package_name, class_name, method_name, args_type_name=None):
+def get_owners_names(owner_class, impl_member=False):
+    owners = []
+    while owner_class:
+        converter = owner_class.converter.kotlin
+        action = owner_class.vars.action
+        if impl_member:
+            # constructors and destructors are moved to implementation classes in case of gen_interface
+            owners.append(converter.get_target_type_name(interface_class=action == 'gen_interface'))
+        else:
+            # methods, getters etc. go to helper class in case if gen_interface
+            owners.append(
+                converter.target_type_name + 'Helper' if action == 'gen_interface' else converter.target_type_name)
+        owner_class = owner_class.owner_class
+    return owners
+
+
+def get_jni_func_name(package_name, owners_names, method_name, args_type_name=None):
     def fix_name(name):
         for s, r in [('_', '_1'), ('.', '_'), (';', '_2'), ('[', '_3')]:
             name = name.replace(s, r)
@@ -34,7 +50,8 @@ def get_jni_func_name(package_name, class_name, method_name, args_type_name=None
         jstring='Ljava_lang_String_2',
     )
     package_name = fix_name(package_name)
-    class_name = fix_name(class_name)
+    # consider nested types as well
+    class_name = '_00024'.join([fix_name(owner) for owner in reversed(owners_names)])
     method_name = fix_name(method_name)
     if args_type_name is None or any((a not in args_type_signature for a in args_type_name)):
         return f'Java_{package_name}_{class_name}_{method_name}'

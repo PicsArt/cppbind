@@ -106,8 +106,10 @@ def make_func_context(ctx):
             rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
             return_type_info = create_type_info(ctx.runner, _cxx_type)
 
-        if ctx.parent_context:
-            owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+        # global functions do not have owner_class
+        owner_class = types.SimpleNamespace(
+            **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
+            'gen_class', 'gen_interface') else None
 
         overloading_prefix = ctx.overloading_prefix
         # capturing template related properties since we use single context with different template choice
@@ -180,6 +182,10 @@ def make_class_context(ctx):
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]
 
+            # nested types have their owner_class
+            owner_class = types.SimpleNamespace(
+                **make_class_context(ctx.parent_context)) if ctx.parent_context else None
+
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
             root_types_infos = _type_info.root_types_infos
@@ -232,7 +238,9 @@ def make_member_context(ctx):
         return_type_info = create_type_info(ctx.runner, _cxx_type)
         rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
 
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context))
+        owner_class = types.SimpleNamespace(
+            **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
+            'gen_class', 'gen_interface') else None
 
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     displayname=ctx.cursor.displayname,

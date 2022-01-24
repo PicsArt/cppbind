@@ -128,22 +128,10 @@ Here's a small example:
    :start-after: [example]
    :end-before: [example]
 
-And here are the generated bindings for the above types:
+.. note::
+    Here we used **header_code_fragment** and **footer_code_fragment** variables to create type aliases for nested types.
 
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
-           :language: kotlin
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/nested_types/list.swift
-           :language: swift
-
-As we can see nested types are nested in target languages as well.
-
-And here are some usage examples:
+Some usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -160,3 +148,22 @@ And here are some usage examples:
             :language: swift
             :start-after: [nested-types-usage]
             :end-before: [nested-types-usage]
+
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
+               :language: kotlin
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/nested_types/list.swift
+               :language: swift
+
+
+|

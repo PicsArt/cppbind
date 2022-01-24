@@ -59,6 +59,9 @@ package:
 enum:
   swift:
     body: |
+      {%- if vars.header_code_fragment -%}
+      {{vars.header_code_fragment}}{{new_line}}
+      {% endif -%}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
@@ -75,7 +78,10 @@ enum:
 
         {{vars.code_fragment|join(2 * new_line)|indent(2)}}
         {%- endif %}
-      }{{new_line}}
+      }
+      {%- if vars.footer_code_fragment -%}
+      {{new_line}}{{vars.footer_code_fragment}}
+      {%- endif %}{{new_line}}
 
 var_class_cxx_include: &var_class_cxx_include
     unique_content: |
@@ -110,6 +116,9 @@ class:
         - body
         - private_external
       content: |
+        {%- if vars.header_code_fragment -%}
+        {{vars.header_code_fragment}}{{new_line}}
+        {% endif -%}
         {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
@@ -147,7 +156,10 @@ class:
           {%- if body %}
           {{body|string|indent(2)}}
           {%- endif %}
-        }{{new_line}}
+        }
+        {%- if vars.footer_code_fragment %}
+        {{new_line}}{{vars.footer_code_fragment}}
+        {%- endif %}{{new_line}}
   cc:
     include: *var_class_cxx_include
     namespace:
@@ -187,6 +199,9 @@ interface:
         - properties
         - body
       content: |
+        {%- if vars.header_code_fragment -%}
+        {{vars.header_code_fragment}}{{new_line}}
+        {% endif -%}
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
         {%- if root_types_infos|length > 1 -%}
         {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
@@ -235,7 +250,10 @@ interface:
           {%- if head %}
           {{head|string|indent(2)}}
           {%- endif %}
-        }{{new_line}}
+        }
+        {%- if vars.footer_code_fragment %}
+        {{new_line}}{{vars.footer_code_fragment}}
+        {%- endif %}{{new_line}}
   cc:
     include: *var_class_cxx_include
     namespace:

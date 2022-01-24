@@ -3,10 +3,10 @@ package com.examples.nested_types
 
 fun use() {
 // [nested-types-usage]
-val value1 = List.Item.Value(1)
+val value1 = Value(1)
 val value2 = List.Item.Value(3)
 
-val item1 = List.Item(value1)
+val item1 = Item(value1)
 val item2 = List.Item(value2)
 
 val list = List()

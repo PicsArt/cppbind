@@ -9,41 +9,38 @@ DECL_IMPORT_PREFIX_REGEX = r'^(import class |import enum |import func |import st
 TEST_IMPORT_PREFIX = '@testable'
 
 
-def get_c_func_name(hint_name):
-    new_name = hint_name
-    if "operator" in new_name:
-        not_allowed = {
-            '*': '_mul_',
-            '*=': '_imul_',
-            '-': '_sub_',
-            '-=': '_isub_',
-            '+': '_add_',
-            '+=': '_iadd_',
-            '/': '_truediv_',
-            '/=': '_itruediv_',
-            '<': '_lt_',
-            '<=': '_le_',
-            '>': '_gt_',
-            '>=': '_ge_',
-            '==': '_eq_',
-            '!=': '_ne_',
-            '%': '_mod_',
-            '&': '_and_',
-            '|': '_or_',
-            '|=': '_ior_',
-            '^': '_xor_',
-            '^=': '_ixor_',
-            '~': '_invert_',
-            '~=': '_iinvert_',
-            '<<': '_lshift_',
-            '>>': '_rshift_',
-            '[]': '_getitem_',
-        }
-        # we need to consider to use regular expression to avoid multiple passes thought string
-        operator = new_name[new_name.rfind("operator") + 8:]
-        if operator in not_allowed:
-            new_name = new_name.replace(operator, not_allowed[operator])
-    return "_func_" + new_name
+def get_c_func_name(prefix, name, postfix):
+    new_name = name
+    not_allowed = {
+        '*': '_mul_',
+        '*=': '_imul_',
+        '-': '_sub_',
+        '-=': '_isub_',
+        '+': '_add_',
+        '+=': '_iadd_',
+        '/': '_truediv_',
+        '/=': '_itruediv_',
+        '<': '_lt_',
+        '<=': '_le_',
+        '>': '_gt_',
+        '>=': '_ge_',
+        '==': '_eq_',
+        '!=': '_ne_',
+        '%': '_mod_',
+        '&': '_and_',
+        '|': '_or_',
+        '|=': '_ior_',
+        '^': '_xor_',
+        '^=': '_ixor_',
+        '~': '_invert_',
+        '~=': '_iinvert_',
+        '<<': '_lshift_',
+        '>>': '_rshift_',
+        '[]': '_getitem_',
+    }
+    if name in not_allowed:
+        new_name = not_allowed[name]
+    return f"_func_{prefix}_{new_name}{postfix}"
 
 
 def imports_comparator(first: str, second: str):
@@ -72,3 +69,7 @@ def imports_comparator(first: str, second: str):
         return -1
     else:
         return 1 if first > second else -1
+
+
+def get_operator_name(name):
+    return name[8:] if name.startswith("operator") else name

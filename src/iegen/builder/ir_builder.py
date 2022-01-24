@@ -3,6 +3,7 @@ Processor module provides various processor for ieg parser
 """
 import copy
 import datetime
+import importlib
 import os
 from collections import OrderedDict
 from types import SimpleNamespace
@@ -20,7 +21,7 @@ from iegen.ir.ast import (
     RootNode
 )
 from iegen.parser.ieg_api_parser import APIParser
-from iegen.utils import get_android_ndk_sysroot
+from iegen.utils import get_android_ndk_sysroot, get_language_helper_module
 import iegen.utils.clang as cutil
 
 
@@ -246,6 +247,7 @@ class CXXIEGIRBuilder:
                 '_source_modification_time': CXXIEGIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.clang_cursor.displayname.startswith('operator'),
                 '_object_name': node.clang_cursor.spelling,
+                '_helper_module': get_language_helper_module(self.ctx_mgr.language),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 

@@ -49,7 +49,7 @@ enum:
   kotlin:
     body: |
       {%- if vars.header_code_fragment %}
-      {{new_line}}{{vars.header_code_fragment}}{{new_line}}
+      {{new_line}}{{vars.header_code_fragment}}
       {%- endif %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -77,7 +77,7 @@ enum:
       }
       {%- if vars.footer_code_fragment %}
       {{new_line}}{{vars.footer_code_fragment}}
-      {%- endif %}{{new_line}}
+      {%- endif %}
 
 var_class_cxx: &var_class_cxx
   include:

@@ -1,16 +1,18 @@
-#ifndef symbol_hpp
-#define symbol_hpp
+#ifndef shared_ptr_symbol_hpp
+#define shared_ptr_symbol_hpp
 
 #include <string>
+#include <memory>
 
 namespace iegen::example {
 
 /**
  * __API__
  * action: gen_interface
- * package: inheritance
+ * package: shared_ptr
+ * shared_ref: True
  */
-class Sign {
+class SignShared {
 public:
     int id = 1;
 
@@ -19,9 +21,9 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Sign() {}
+    SignShared() {}
 
-    virtual ~Sign() = default;
+    virtual ~SignShared() = default;
 
     /**
      * __API__
@@ -39,9 +41,10 @@ private:
 /**
  * __API__
  * action: gen_class
- * package: inheritance
+ * package: shared_ptr
+ * shared_ref: True
  */
-class Text {
+class TextShared {
 public:
     int id = 2;
     /**
@@ -49,9 +52,9 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Text() {}
+    TextShared() {}
 
-    virtual ~Text() = default;
+    virtual ~TextShared() = default;
 
     /**
      * __API__
@@ -69,9 +72,10 @@ private:
 /**
  * __API__
  * action: gen_class
- * package: inheritance
+ * package: shared_ptr
+ * shared_ref: True
  */
-class Digit : public Sign, public Text {
+class DigitShared : public SignShared, public TextShared {
 public:
     int id = 3;
     /**
@@ -79,7 +83,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Digit() {}
+    DigitShared() {}
 
     /**
      * __API__
@@ -97,30 +101,30 @@ private:
 /**
  * __API__
  * action: gen_class
- * package: inheritance
+ * package: shared_ptr
  */
-class SymbolUsage {
+class SymbolUsageShared {
 public:
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    SymbolUsage() {}
+    SymbolUsageShared() {}
 
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    SymbolUsage(Digit* d) : _d(d) {}
+    SymbolUsageShared(std::shared_ptr<DigitShared> d) : _d(d) {}
 
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
      */
-    std::string getTextType(Text* t) {
+    std::string getTextType(std::shared_ptr<TextShared> t) {
         return t->typeName();
     }
 
@@ -129,7 +133,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    std::string getSignType(Sign* s) {
+    std::string getSignType(std::shared_ptr<SignShared> s) {
         return s->typeName();
     }
 
@@ -138,7 +142,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    int getTextId(Text* t) {
+    int getTextId(std::shared_ptr<TextShared> t) {
         return t->id;
     }
 
@@ -147,7 +151,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    int getSignId(Sign* s) {
+    int getSignId(std::shared_ptr<SignShared> s) {
         return s->id;
     }
 
@@ -156,7 +160,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-     Text* getTextPtr() {
+     std::shared_ptr<TextShared> getTextPtr() {
         return _d;
      }
 
@@ -165,12 +169,12 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-     Sign* getSignPtr() {
+     std::shared_ptr<SignShared> getSignPtr() {
         return _d;
      }
 
 private:
-    Digit* _d;
+    std::shared_ptr<DigitShared> _d;
 };
 
 }

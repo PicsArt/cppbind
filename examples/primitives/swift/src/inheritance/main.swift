@@ -83,10 +83,11 @@ func runInheritanceExamples() {
     let textObj = Text()
     let signObj = SignImpl()
 
-    assert(symbolUsageObj.getTextType(t: digitObj) ==  "digit")
+    // test virtual methods
+    assert(symbolUsageObj.getTextType(t: digitObj) == "digit")
     assert(symbolUsageObj.getTextType(t: textObj) == "text")
-    assert(symbolUsageObj.getSignType(n: digitObj) == "digit")
-    assert(symbolUsageObj.getSignType(n: signObj) == "sign")
+    assert(symbolUsageObj.getSignType(s: digitObj) == "digit")
+    assert(symbolUsageObj.getSignType(s: signObj) == "sign")
     assert(digitObj.typeName() == "digit")
     assert(textObj.typeName() == "text")
     assert(signObj.typeName() == "sign")
@@ -95,6 +96,15 @@ func runInheritanceExamples() {
     assert(symbolUsageObj.getTextPtr().typeName() == "digit")
     assert(symbolUsageObj.getSignPtr().typeName() == "digit")
 
+    // test members
+    assert(symbolUsageObj.getTextId(t: digitObj) == 2)
+    assert(symbolUsageObj.getTextId(t: textObj) == 2)
+    assert(symbolUsageObj.getSignId(s: digitObj) == 1)
+    assert(symbolUsageObj.getSignId(s: signObj) == 1)
+
+    // test return object correct casting
+    assert(symbolUsageObj.getTextId(t: symbolUsageObj.getTextPtr()) == 2)
+    assert(symbolUsageObj.getSignId(s: symbolUsageObj.getSignPtr()) == 1)
 }
 
 #if os(Linux)

@@ -446,8 +446,10 @@ std::shared_ptr:
       if ({{name}}) {
           {%- if args0_descendants %}
           {{demangle()|indent(4)}}
-          {%- endif %}
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+          {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+          {%- endif %}
       } else {
           type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       }
@@ -455,7 +457,11 @@ std::shared_ptr:
       {%- if args0_descendants %}
       {{demangle()}}
       {%- endif %}
+      {%- if args0_descendants %}
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+      {%- else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+      {%- endif %}
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |

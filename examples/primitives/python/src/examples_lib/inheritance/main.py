@@ -77,6 +77,7 @@ digit_obj = Digit()
 text_obj = Text()
 sign_obj = Sign()
 
+# test virtual methods
 assert symbol_usage_obj.get_text_type(digit_obj) == "digit"
 assert symbol_usage_obj.get_text_type(text_obj) == "text"
 assert symbol_usage_obj.get_sign_type(digit_obj) == "digit"
@@ -86,5 +87,15 @@ assert text_obj.type_name() == "text"
 assert sign_obj.type_name() == "sign"
 
 symbol_usage_obj = SymbolUsage(digit_obj)
-assert (symbol_usage_obj.get_text_ptr().type_name() == "digit")
-assert (symbol_usage_obj.get_sign_ptr().type_name() == "digit")
+assert symbol_usage_obj.get_text_ptr().type_name() == "digit"
+assert symbol_usage_obj.get_sign_ptr().type_name() == "digit"
+
+# test members
+assert symbol_usage_obj.get_text_id(digit_obj) == 2
+assert symbol_usage_obj.get_text_id(text_obj) == 2
+assert symbol_usage_obj.get_sign_id(digit_obj) == 1
+assert symbol_usage_obj.get_sign_id(sign_obj) == 1
+
+# test return object correct casting
+assert symbol_usage_obj.get_text_id(symbol_usage_obj.get_text_ptr()) == 2
+assert symbol_usage_obj.get_sign_id(symbol_usage_obj.get_sign_ptr()) == 1

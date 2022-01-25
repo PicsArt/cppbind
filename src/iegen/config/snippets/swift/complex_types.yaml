@@ -102,6 +102,7 @@ $Object:
       {%- endif %}
       {%- endif %}
       auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if descendants else 'value_ptr_' + name}}};
       {%- endif %}
     swift_to_sc: |
@@ -114,7 +115,7 @@ $Object:
       {%- macro create_instance(type_name) -%}
       {%- if nullable|default(False) -%}
       if ({{name}}.ptr != nil) {
-          {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+        {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       }
       {%- else -%}
       {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
@@ -129,11 +130,11 @@ $Object:
       case("{{descendant}}"):
         {%- set converter = make_type_converter(descendant).swift %}
         {%- set type = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
-        {{create_instance(type)|indent(4)}}
+        {{create_instance(type)|indent(2)}}
       {%- endfor %}
       default:
         {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
-        {{create_instance(type + custom.tpostfix)|indent(4)}}
+        {{create_instance(type + custom.tpostfix)|indent(2)}}
       }
       {%- else %}
       {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
@@ -446,6 +447,7 @@ std::shared_ptr:
       if ({{name}}) {
           {%- if args0_descendants %}
           {{demangle()|indent(4)}}
+          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
           {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
           {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
@@ -465,9 +467,9 @@ std::shared_ptr:
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
     sc_to_swift: |
-      {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
+      {{args[0].snippet(name, nullable=nullable|default(False))}}
 
 std::pair:
   custom:

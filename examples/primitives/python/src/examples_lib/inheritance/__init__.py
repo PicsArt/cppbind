@@ -18,7 +18,7 @@ from .vehicle_pygen import Vehicle
 from .bicycle_pygen import Bicycle
 from .car_pygen import MyCar
 from .date_pygen import Date
-from .time_pygen import Time
+from .datetime_pygen import Time
 from .datetime_pygen import DateTime
 from .parallelogram_pygen import Parallelogram
 from .rectangle_pygen import Rectangle

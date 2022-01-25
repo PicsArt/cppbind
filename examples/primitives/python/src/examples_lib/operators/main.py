@@ -3,7 +3,7 @@ from examples_lib.operators.counter_pygen import Counter
 from examples_lib.operators.intarray_pygen import IntArray
 
 
-# [counter - usage]
+# [counter-usage]
 counter1 = Counter(1)
 counter2 = Counter(2)
 counter = counter1 + counter2
@@ -12,7 +12,7 @@ assert counter1 < counter2
 assert counter2 > counter1
 counter1 += counter2
 assert counter1.count == 3
-# [counter - usage]
+# [counter-usage]
 
 # [subscript-operator-usage]
 intArr = IntArray()

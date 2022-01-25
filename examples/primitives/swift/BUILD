@@ -120,6 +120,12 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "nested_types",
+    srcs = ["src/nested_types/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

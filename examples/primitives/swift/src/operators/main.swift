@@ -2,7 +2,7 @@ import XCTest
 import Wrapper
 
 func runOperatorExamples() {
-    // [operators-usage]
+    // [counter-usage]
     let counter1 = Counter(count: 1)
     let counter2 = Counter(count: 2)
     let counter = counter1 + counter2
@@ -11,9 +11,9 @@ func runOperatorExamples() {
     counter1 += counter2
     assert(counter1.count == 3)
     assert(counter1 > counter2)
-    // [operators-usage]
+    // [counter-usage]
 
-    // [subscript=operator-usage]
+    // [subscript-operator-usage]
     var intArr = IntArrayImpl()
     assert(intArr[0] == 0)
     assert(intArr[9] == 9)
@@ -23,7 +23,7 @@ func runOperatorExamples() {
     assert(intArr[9] == 10)
     assert(intArr["9"] == 10)
     assert(intArr[9.0] == 10)
-    // [subscript=operator-usage]
+    // [subscript-operator-usage]
 }
 
 #if os(Linux)

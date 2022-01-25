@@ -9,7 +9,8 @@ import os
 import re
 import shutil
 import sys
-from functools import cmp_to_key
+import logging
+from functools import cmp_to_key, lru_cache
 
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
@@ -315,3 +316,15 @@ def init_jinja_env():
 
 
 JINJA2_ENV = init_jinja_env()
+
+
+@lru_cache
+def get_language_helper_module(language):
+    try:
+        language_helper_module = importlib.import_module(f'iegen.converter.{language}')
+        logging.info(f"Loaded helper module for '{language}' language")
+    except ModuleNotFoundError:
+        language_helper_module = importlib.import_module('iegen.converter')
+        logging.info(f"Helper module is not found for '{language}' language, loading default instead")
+
+    return language_helper_module

@@ -17,7 +17,7 @@ file:
               {{cxx_helper_includes|format_list('header "{}"')|join(new_line)|indent(8)}}
               export *
           }
-      }
+      }{{new_line}}
 
 var_header_include: &var_header_include
   header:

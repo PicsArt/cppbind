@@ -40,7 +40,7 @@ $Object:
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set descendants = (vars.descendants or descendants) -%}
+      {%- set descendants = vars.descendants or descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}

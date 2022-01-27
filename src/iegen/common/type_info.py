@@ -32,6 +32,7 @@ class TypeInfo:
                 is_lval_reference=self._cxx_type.is_lval_reference,
                 pointee_unqualified_name=self._cxx_type.unqualified_pointee_name,
                 unqualified_type_name=self._cxx_type.unqualified_type_name,
+                unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,
                 is_const_qualified=self._cxx_type.is_const_qualified)
             if self._type_ctx:
                 self._cxx.namespace = self._type_ctx.namespace

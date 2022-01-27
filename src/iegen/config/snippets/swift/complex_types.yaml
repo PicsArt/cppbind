@@ -39,8 +39,8 @@ $Object:
     sc: "CObject"
   converters:
     c_to_cxx: |
-      {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set pointee = cxx.unqualified_canonical_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.unqualified_canonical_type_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
@@ -55,8 +55,8 @@ $Object:
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
-      {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set pointee = cxx.unqualified_canonical_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.unqualified_canonical_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants or descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
@@ -69,7 +69,7 @@ $Object:
       {%- endif %}
       {%- else %}
       {%- if not descendants %}
-      char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -81,14 +81,14 @@ $Object:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
           {{demangle()|indent(4)}}
       } else {
-          type_result = strdup("{{cxx.pointee_unqualified_name}}");
+          type_result = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {{demangle()}}

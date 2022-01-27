@@ -117,8 +117,8 @@ class CXXType:
 
     @property
     def is_pointer(self):
-        return self.type_.kind == cli.TypeKind.POINTER if isinstance(self.type_,
-                                                                     cli.Type) else self.type_.strip().endswith('*')
+        return self.type_.get_canonical().kind == cli.TypeKind.POINTER if isinstance(self.type_, cli.Type)\
+            else self.type_.strip().endswith('*')
 
     @property
     def is_value(self):

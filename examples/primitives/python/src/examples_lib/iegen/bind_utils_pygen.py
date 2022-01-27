@@ -12,7 +12,7 @@ import functools
 import importlib
 import inspect
 import re
-from functools import cached_property
+from functools import lru_cache
 
 __all__ = ['bind']
 
@@ -54,18 +54,21 @@ class Function:
             if v.default is not inspect.Parameter.empty
         }
 
-    @cached_property
+    @property
+    @lru_cache(None)
     def is_function(self):
         return self.classname is None
 
-    @cached_property
+    @property
+    @lru_cache(None)
     def is_property(self):
         if self.classname is None:
             return False
         parent = getattr(self.pybind_module, f'{self.classname}')
         return isinstance(getattr(parent, self.name), property)
 
-    @cached_property
+    @property
+    @lru_cache(None)
     def pybind_module(self):
         # loads pybind module which should be imported in corresponding iegen module
         module_name = f'pybind_{self.original_function.__module__.split(".")[-1]}'

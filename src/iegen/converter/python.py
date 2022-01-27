@@ -32,6 +32,12 @@ OPERATOR_MAPPING = {
     '~=': '__iinvert__',
     '<<': '__lshift__',
     '>>': '__rshift__',
+    '<<=': '__ilshift__',
+    '>>=': '__irshift__',
+    '&=': '__iand__',
+    '%=': '__imod__',
+    'bool': '__bool__',
+    '()': '__call__',
     '[]': '__getitem__',
 }
 

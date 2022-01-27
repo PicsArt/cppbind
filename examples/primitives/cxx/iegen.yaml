@@ -17,7 +17,7 @@ vars:
   out_prj_dir: "."
   cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
-    - cxx/**/*.hpp
+    - cxx/**/*.h*
   include_dirs:
     - .
   mac.include_dirs:
@@ -53,6 +53,7 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
+    - cxx/nested_types/*.h*
   swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

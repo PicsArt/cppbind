@@ -251,6 +251,19 @@ def test_attr_type_mismatch_negative():
             """
              * C: "{{1+1}}"
             """
+        ),
+        (
+            """
+            D:
+              inheritable: false
+              default: 4
+              allowed_on: [root]
+              type: int
+              options: [1, 2, 3]
+            """,
+            """
+             * D: 5
+            """
         )
     ]
 )
@@ -305,6 +318,19 @@ def test_attr_options_negative(var_def, api_section):
              * C: {i:1}
             """
         ),
+        (
+            """
+            D:
+              inheritable: false
+              default: 4
+              allowed_on: [root]
+              type: int
+              options: [1, 2, 3]
+            """,
+            """
+             * D: 3
+            """
+        )
     ]
 )
 def test_attr_options_positive(var_def, api_section):

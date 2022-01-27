@@ -2,13 +2,13 @@
     files_glob: 
       - "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.split('.') %}
+      {% set fname_split = file_name.rsplit('.', 1) %}
       {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
       {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
     variables:
       cxx_helper_includes: |
-        {% set fname_split = file_name.split('.') %}
+        {% set fname_split = file_name.rsplit('.', 1) %}
         {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
         {{[vars.cxx_out_rel_path, file_rel_name]|path_join}}
 
@@ -16,7 +16,7 @@
     files_glob: 
       "{{[vars.cxx_helpers_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.split('.') %}
+      {% set fname_split = file_name.rsplit('.', 1) %}
       {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
       {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
@@ -24,7 +24,7 @@
     files_glob: 
       - "{{[vars.helpers_dir, '**/*.swift'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.split('.') %}
+      {% set fname_split = file_name.rsplit('.', 1) %}
       {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.helpers_dir) -%}
       {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
@@ -34,7 +34,7 @@
       - "{{[vars.cxx_base_source_dir, '**/*.c*'] | path_join}}"
     copy_to: |
       {%- if vars.cxx_base_out_dir -%}
-      {% set fname_split = file_name.split('.') %}
+      {% set fname_split = file_name.rsplit('.', 1) %}
       {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_base_source_dir) -%}
       {{path.join(vars.cxx_base_out_dir, file_rel_name)}}
       {%- endif -%}

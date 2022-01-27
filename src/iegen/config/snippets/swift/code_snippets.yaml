@@ -356,13 +356,13 @@ constructor:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
@@ -546,13 +546,13 @@ method:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
@@ -765,13 +765,13 @@ function:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:

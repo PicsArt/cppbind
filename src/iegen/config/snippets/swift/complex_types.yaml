@@ -76,7 +76,7 @@ $Object:
       {%- endif %}
       {%- else %}
       {%- if not descendants %}
-      char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -88,14 +88,14 @@ $Object:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
           {{demangle()|indent(4)}}
       } else {
-          type_result = strdup("{{cxx.pointee_unqualified_name}}");
+          type_result = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {{demangle()}}
@@ -427,7 +427,7 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False) %}
       {%- set args0_descendants = args[0].vars.descendants or args[0].descendants -%}
       {%- if not args0_descendants %}
-      char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -439,7 +439,7 @@ std::shared_ptr:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
@@ -453,7 +453,7 @@ std::shared_ptr:
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {%- if args0_descendants %}

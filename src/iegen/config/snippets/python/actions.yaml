@@ -2,13 +2,14 @@
     files_glob: 
       - "{{[vars.helpers_dir, '**/*.py'] | path_join}}"
     copy_to: |
-      {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
+      {% set fname_split = file_name.split('.') %}
+      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.helpers_dir) -%}
       {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
     variables:
       helper_includes: |
         {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-        {{vars.helpers_package_prefix}}{{'.' if vars.helpers_package_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
+        {{vars.helpers_package_prefix}}{{'.' if vars.helpers_package_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.') + vars.file_postfix}}
 
 - file:
     files_glob:

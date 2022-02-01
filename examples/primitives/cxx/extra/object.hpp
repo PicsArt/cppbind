@@ -37,7 +37,7 @@ public:
      * throws: no_throw
      * python.name: __repr__
      */
-    virtual std::string toReprString() const;
+    virtual std::string toDebugString() const;
 
     /**
      * String representation for user readability

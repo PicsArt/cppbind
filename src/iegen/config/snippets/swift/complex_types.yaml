@@ -226,7 +226,7 @@ std::vector:
     sc: "CDataArray"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_canonical_type_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
 
@@ -292,7 +292,7 @@ std::map:
     sc: "CDataMap"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_canonical_type_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
@@ -388,9 +388,9 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_canonical_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.unqualified_canonical_type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
@@ -413,14 +413,14 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.unqualified_canonical_type_name %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_canonical_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       {%- set args0_descendants = args[0].vars.descendants or args[0].descendants -%}
       {%- if not args0_descendants %}
-      char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -432,7 +432,7 @@ std::shared_ptr:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
@@ -447,7 +447,7 @@ std::shared_ptr:
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {%- if args0_descendants %}
@@ -479,7 +479,7 @@ std::pair:
       auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
       {{args[0].snippet('first_tmp_{}'.format(name))}}
       {{args[1].snippet('second_tmp_{}'.format(name))}}
-      {{cxx.pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
+      {{cxx.unqualified_canonical_type_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
       auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
       auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};

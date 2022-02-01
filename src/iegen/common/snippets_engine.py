@@ -639,7 +639,7 @@ class SnippetsEngine:
         logging.debug(f"Creating type converter for {search_name} "
                       f"and template choice {template_choice}")
         type_info = None
-        if not cxx_type.is_template:
+        if not lookup_type.is_template:
             type_info = self._create_type_info(search_name,
                                                cxx_type=cxx_type)
 

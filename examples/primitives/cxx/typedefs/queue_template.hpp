@@ -1,7 +1,8 @@
-#ifndef queue_int_hpp
-#define queue_int_hpp
+#ifndef queue_template_hpp
+#define queue_template_hpp
 
 #include <vector>
+#include <string>
 
 namespace iegen::example {
 
@@ -9,21 +10,25 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: typedefs
+ * template:
+ *   T:
+ *     - type: std::string
  */
-class QueueInt {
+template <class T>
+class Queue {
 public:
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    QueueInt() {}
+    Queue() {}
 
-    int front() const {
+    T front() const {
         return _elements[0];
     }
 
-    int back() const {
+    T back() const {
         return _elements[_elements.size() - 1];
     }
 
@@ -32,7 +37,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    void push_back(int element) {
+    void push_back(T element) {
         _elements.push_back(element);
     }
 
@@ -46,35 +51,37 @@ public:
     }
 
 private:
-    std::vector<int> _elements;
+    std::vector<T> _elements;
 };
 
-using QueueIntType = QueueInt;
-using QueueIntPtrType = QueueInt*;
-using ConstQueueIntType = const QueueInt;
-using IntType = int;
-using ConstIntType = const int;
+using QueueStdStringType = Queue<std::string>;
+using QueueStdStringPtrType = Queue<std::string>*;
+using ConstQueueStdStringType = const Queue<std::string>;
+using StdStringType = std::string;
+using ConstStdStringType = const std::string;
+using VectorOfStringsType = std::vector<std::string>;
 
 /**
  * __API__
  * action: gen_class
  * package: typedefs
  */
-class QueueIntUsage {
+class QueueUsage {
 public:
     /**
+     * We don't have support for `Queue<StdStringType>` specification since we don't have mechanism for `canonical_type` deduction for strings
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    QueueIntUsage(QueueIntPtrType q) : saved_queue(q) {}
+    QueueUsage(QueueStdStringPtrType q) : saved_queue(q) {}
 
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
      */
-    static ConstIntType getSize(ConstQueueIntType q) {
+    static int getSize(QueueStdStringType q) {
         return q.get_size();
     }
 
@@ -83,7 +90,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static IntType getLastElement(QueueIntType* q) {
+    static StdStringType getLastElement(QueueStdStringPtrType q) {
         return q->back();
     }
 
@@ -92,8 +99,8 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static IntType getFirstElement(QueueIntPtrType q) {
-        return q->front();
+    static ConstStdStringType getFirstElement(ConstQueueStdStringType q) {
+        return q.front();
     }
 
     /**
@@ -101,11 +108,12 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static QueueIntType getInvQueue(std::vector<int> v) {
-        QueueIntType res_q;
+    static QueueStdStringType getRevQueue(VectorOfStringsType v) {
+        QueueStdStringType res_q;
 
-        for (int i : v) {
-            res_q.push_back(-i);
+        for (StdStringType s : v) {
+            reverse(s.begin(), s.end());
+            res_q.push_back(s);
         }
 
         return res_q;
@@ -116,7 +124,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    QueueIntPtrType getSavedQueue() {
+    QueueStdStringPtrType getSavedQueue() {
         return saved_queue;
     }
 
@@ -124,13 +132,13 @@ public:
      * __API__
      * action: gen_property_getter
      */
-    QueueIntType empty_queue;
+    QueueStdStringType empty_queue;
 
     /**
      * __API__
      * action: gen_property_getter
      */
-    QueueIntPtrType saved_queue;
+    QueueStdStringPtrType saved_queue;
 };
 
 }

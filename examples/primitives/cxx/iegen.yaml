@@ -61,10 +61,6 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
 
-
-  swift.src_glob:
-    - cxx/typedefs/*.hpp
-
 var_def:
   !join
   - !include variable_definitions.yaml

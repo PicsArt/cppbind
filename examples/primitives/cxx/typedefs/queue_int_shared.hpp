@@ -1,7 +1,8 @@
-#ifndef queue_int_hpp
-#define queue_int_hpp
+#ifndef queue_int_shared_hpp
+#define queue_int_shared_hpp
 
 #include <vector>
+#include <memory>
 
 namespace iegen::example {
 
@@ -9,15 +10,16 @@ namespace iegen::example {
  * __API__
  * action: gen_class
  * package: typedefs
+ * shared_ref: True
  */
-class QueueInt {
+class QueueIntShared {
 public:
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    QueueInt() {}
+    QueueIntShared() {}
 
     int front() const {
         return _elements[0];
@@ -41,7 +43,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    int get_size() const {
+    const int get_size() const {
         return _elements.size();
     }
 
@@ -49,33 +51,31 @@ private:
     std::vector<int> _elements;
 };
 
-using QueueIntType = QueueInt;
-using QueueIntPtrType = QueueInt*;
-using ConstQueueIntType = const QueueInt;
-using IntType = int;
-using ConstIntType = const int;
+using SharedPtrOfQueueIntSharedType = std::shared_ptr<QueueIntShared>;
+using ConstSharedPtrOfQueueIntSharedType = const std::shared_ptr<QueueIntShared>;
+using SharedPtrOfConstQueueIntSharedType = std::shared_ptr<const QueueIntShared>;
 
 /**
  * __API__
  * action: gen_class
  * package: typedefs
  */
-class QueueIntUsage {
+class QueueIntSharedUsage {
 public:
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
-    QueueIntUsage(QueueIntPtrType q) : saved_queue(q) {}
+    QueueIntSharedUsage(SharedPtrOfQueueIntSharedType q) : saved_queue(q) {}
 
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
      */
-    static ConstIntType getSize(ConstQueueIntType q) {
-        return q.get_size();
+    static const int getSize(std::shared_ptr<QueueIntShared> q) {
+        return q->get_size();
     }
 
     /**
@@ -83,7 +83,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static IntType getLastElement(QueueIntType* q) {
+    static int getLastElement(ConstSharedPtrOfQueueIntSharedType q) {
         return q->back();
     }
 
@@ -92,7 +92,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static IntType getFirstElement(QueueIntPtrType q) {
+    static int getFirstElement(SharedPtrOfConstQueueIntSharedType q) {
         return q->front();
     }
 
@@ -101,14 +101,14 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    static QueueIntType getInvQueue(std::vector<int> v) {
-        QueueIntType res_q;
+    static std::shared_ptr<QueueIntShared> getInvQueue(std::vector<int> v) {
+        QueueIntShared res_q;
 
         for (int i : v) {
             res_q.push_back(-i);
         }
 
-        return res_q;
+        return std::make_shared<QueueIntShared>(res_q);
     }
 
     /**
@@ -116,7 +116,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    QueueIntPtrType getSavedQueue() {
+    SharedPtrOfQueueIntSharedType getSavedQueue() {
         return saved_queue;
     }
 
@@ -124,13 +124,7 @@ public:
      * __API__
      * action: gen_property_getter
      */
-    QueueIntType empty_queue;
-
-    /**
-     * __API__
-     * action: gen_property_getter
-     */
-    QueueIntPtrType saved_queue;
+    SharedPtrOfQueueIntSharedType saved_queue;
 };
 
 }

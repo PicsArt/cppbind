@@ -14,7 +14,7 @@ rules:
           jfloat width_{{name}} = elems[0];
           jfloat height_{{name}} = elems[1];
           env->ReleaseFloatArrayElements({{name}}, elems, 0);
-          {{target_type_name}} {{target_name}} = {{cxx_pointee_unqualified_name}}(width_{{name}}, height_{{name}});
+          {{target_type_name}} {{target_name}} = {{cxx_unqualified_canonical_type_name}}(width_{{name}}, height_{{name}});
         cxx_to_jni: |
           jfloat width_{{name}} = {{name}}.width;
           jfloat height_{{name}} = {{name}}.height;

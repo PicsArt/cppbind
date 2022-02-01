@@ -2,23 +2,23 @@
     files_glob:
       "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.rsplit('.', 1) %}
-      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
       {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
     variables:
       cxx_helper_includes: |
-        {% set fname_split = file_name.rsplit('.', 1) %}
+        {% set filename, file_extension = path.splitext(file_name) %}
         {%- set prj_rel = path.relpath(vars.cxx_out_dir, vars.out_prj_dir) -%}
-        {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
+        {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
         {{[prj_rel, file_rel_name]| path_join}}
 
 - file:
     files_glob:
       "{{[vars.cxx_helpers_dir, '**/*.c*'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.rsplit('.', 1) %}
-      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_helpers_dir) -%}
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
       {{path.join(vars.cxx_out_dir, file_rel_name)}}
 
 - file:
@@ -26,14 +26,14 @@
       - "{{[vars.helpers_dir, '**/*.kt'] | path_join}}"
       - "{{[vars.helpers_dir, '**/*.java'] | path_join}}"
     render_to: |
-      {% set fname_split = file_name.rsplit('.', 1) %}
-      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.helpers_dir) -%}
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.helpers_dir) -%}
       {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
     variables:
       helper_includes: |
-        {% set fname_split = file_name.rsplit('.', 1) %}
-        {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.helpers_dir) -%}
+        {% set filename, file_extension = path.splitext(file_name) %}
+        {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.helpers_dir) -%}
         {{vars.helpers_package_prefix}}{{'.' if vars.helpers_package_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
 - file:
@@ -42,7 +42,7 @@
       - "{{[vars.cxx_base_source_dir, '**/*.c*'] | path_join}}"
     copy_to: |
       {%- if vars.cxx_base_out_dir -%}
-      {% set fname_split = file_name.rsplit('.', 1) %}
-      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.cxx_base_source_dir) -%}
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_base_source_dir) -%}
       {{path.join(vars.cxx_base_out_dir, file_rel_name)}}
       {%- endif -%}

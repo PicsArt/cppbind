@@ -2,8 +2,8 @@
     files_glob: 
       - "{{[vars.helpers_dir, '**/*.py'] | path_join}}"
     copy_to: |
-      {% set fname_split = file_name.rsplit('.', 1) %}
-      {%- set file_rel_name = path.relpath(fname_split[0] + vars.file_postfix + '.' + fname_split[1], vars.helpers_dir) -%}
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.helpers_dir) -%}
       {{path.join(vars.helpers_out_dir, file_rel_name)}}
 
     variables:

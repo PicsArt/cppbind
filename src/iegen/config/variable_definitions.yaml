@@ -2,6 +2,7 @@ action:
   inheritable: false
   default: null
   allowed_on: [ cxx, file_system ]
+  options: [gen_package, gen_enum, gen_class, gen_interface, gen_constructor, gen_method, gen_function, gen_getter, gen_property_getter, gen_property_setter, gen_setter]
 
 file:
   inheritable: true

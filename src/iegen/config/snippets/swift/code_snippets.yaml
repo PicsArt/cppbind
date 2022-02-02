@@ -25,6 +25,7 @@ file:
       #include <string.h>
       #include <cxxabi.h>
       #include <memory>
+      #include <type_traits>
       #include "{{path.relpath(vars.h_file_fullname, vars.out_prj_dir)}}"
       {{include}}
       {{namespace}}
@@ -168,6 +169,9 @@ class:
     body:
       content: |
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner) {
+            {%- if (vars.descendants or descendants) %}
+            static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
+            {%- endif %}
             delete cself.type;
             if (owner) {
                 {%- if root.vars.shared_ref %}
@@ -259,6 +263,9 @@ interface:
     body:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner){
+            {%- if (vars.descendants or descendants) %}
+            static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
+            {%- endif %}
             delete cself.type;
             if (owner) {
                 {%- if root.vars.shared_ref %}

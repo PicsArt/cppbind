@@ -47,6 +47,7 @@ $Object:
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
       {%- else %}
+      {%- if descendants -%}
       {{pointee}}* {{target_name}}_ptr = nullptr;
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, "{{cxx.unqualified_canonical_type_name}}") == 0)
@@ -61,6 +62,9 @@ $Object:
           }
       }
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_ptr;
+      {%- else %}
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
+      {%- endif %}
       {%- endif %}
     cxx_to_c: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
@@ -398,6 +402,7 @@ std::shared_ptr:
       {%- set args0_descendants = args[0].vars.descendants or args[0].descendants %}
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
+      {%- if args0_descendants -%}
       if (strcmp({{name}}.type, "{{args[0].cxx.unqualified_canonical_type_name}}") == 0)
           {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- for args0_descendant in args0_descendants %}
@@ -408,6 +413,9 @@ std::shared_ptr:
           std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
           exit(1);
       }
+      {%- else -%}
+      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
+      {%- endif -%}
       {%- endmacro %}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}

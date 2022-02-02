@@ -35,8 +35,8 @@ $Object:
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
-    c: "CObject"
-    sc: "CObject"
+    c: "IEGenCObject"
+    sc: "IEGenCObject"
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
@@ -111,7 +111,7 @@ $Object:
       {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
-      let {{target_name}} = {{name}}?.cself ?? CObject(type: nil, ptr: nil){# when the swift object is null we pass CObject with nulls to not deallocate the type name in c#}
+      let {{target_name}} = {{name}}?.cself ?? IEGenCObject(type: nil, ptr: nil){# when the swift object is null we pass IEGenCObject with nulls to not deallocate the type name in c#}
       {%- else -%}
       let {{target_name}} = {{name}}.cself
       {%- endif -%}
@@ -155,9 +155,9 @@ $Enum:
     sc: CUnsignedInt
   converters:
     c_to_cxx: |
-      auto {{target_name}} = ({{target_type_name}}){{name}};
+      auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     cxx_to_c: |
-      {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
+      {{target_type_name}} {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     swift_to_sc: |
       let {{target_name}} = {{name}}.rawValue
     sc_to_swift: |
@@ -230,8 +230,8 @@ std::vector:
     tname: "Array{{args_converters[0].swift.custom.tname}}"
   types:
     swift: "Array<{{args[0].target_type_name}}>"
-    c: "CDataArray"
-    sc: "CDataArray"
+    c: "IEGenCDataArray"
+    sc: "IEGenCDataArray"
   converters:
     c_to_cxx: |
       {{cxx.pointee_unqualified_name}} {{target_name}};
@@ -245,7 +245,7 @@ std::vector:
       }
     cxx_to_c: |
       auto _data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
-      {{target_type_name}} {{target_name}} = { _data_{{target_name}}, (long long){{name}}.size() };
+      {{target_type_name}} {{target_name}} = { _data_{{target_name}}, static_cast<long long>({{name}}.size()) };
       for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
           auto& value_{{name}} = {{name}}[_i_{{name}}];
           {{args[0].snippet('value_{}'.format(name))|indent(4)}}
@@ -296,8 +296,8 @@ std::map:
     tname: "Dictionary{{args_converters[0].swift.custom.tname}}{{args_converters[1].swift.custom.tname}}"
   types:
     swift: "Dictionary<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
-    c: "CDataMap"
-    sc: "CDataMap"
+    c: "IEGenCDataMap"
+    sc: "IEGenCDataMap"
   converters:
     c_to_cxx: |
       {{cxx.pointee_unqualified_name}} {{target_name}};
@@ -312,7 +312,7 @@ std::map:
     cxx_to_c: |
       auto _k_data_{{target_name}} = new {{args_converters[0].c.target_type_name}} [{{name}}.size()];
       auto _v_data_{{target_name}} = new {{args_converters[1].c.target_type_name}} [{{name}}.size()];
-      {{target_type_name}} {{target_name}} = { _k_data_{{target_name}}, _v_data_{{target_name}}, (long long){{name}}.size() };
+      {{target_type_name}} {{target_name}} = { _k_data_{{target_name}}, _v_data_{{target_name}}, static_cast<long long>({{name}}.size()) };
       size_t _i_{{name}} = 0;
       for (auto& value_{{name}} : {{name}}) {
           const auto& key_{{name}} = value_{{name}}.first;
@@ -485,8 +485,8 @@ std::pair:
     tname: "Pair{{args_converters[0].swift.custom.tname}}{{args_converters[1].swift.custom.tname}}"
   types:
     swift: "({{args[0].target_type_name}}, {{args[1].target_type_name}})"
-    c: "CDataPair"
-    sc: "CDataPair"
+    c: "IEGenCDataPair"
+    sc: "IEGenCDataPair"
   converters:
     c_to_cxx: |
       auto first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);

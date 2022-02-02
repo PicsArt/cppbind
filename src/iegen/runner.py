@@ -178,7 +178,7 @@ def run_package():
         # add arguments for setting context variables from command line
         for name, prop in ctx_desc.get_var_def().items():
             if 'cmd_line' in prop.get('allowed_on'):
-                var_type = get_var_real_type(prop.get('type'))
+                var_type = get_var_real_type(to_value(prop.get('type')))
                 var_desc = to_value(prop.get('description'))
 
                 plat_lang_options = [f"--{plat}.{lang}.{name}" for plat in default_config.platforms

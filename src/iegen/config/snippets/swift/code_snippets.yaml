@@ -173,9 +173,9 @@ class:
             delete cself.type;
             if (owner) {
                 {%- if root.vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.unqualified_canonical_type_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{root_types_infos[0].cxx.unqualified_canonical_type_name}}*>(cself.ptr);
+                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -270,9 +270,9 @@ interface:
                 delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
                 {%- else %}
                 {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
-                delete static_cast<{{root_types_infos[0].cxx.unqualified_canonical_type_name}}*>(cself.ptr);
+                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}*>(cself.ptr);
                 {%- else %}
-                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.unqualified_canonical_type_name}}*>(cself.ptr));
+                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}*>(cself.ptr));
                 {%- endif %}
                 {%- endif %}
             }
@@ -383,12 +383,12 @@ constructor:
           try {
               auto this_object = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               {%- if owner_class.root.vars.shared_ref %}
-              return {strdup("{{owner_class.cxx.type_name}}"), new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object)};
+              return {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), new std::shared_ptr<{{owner_class.root.cxx.type_name}}>(this_object)};
               {%- else %}
               {%- if owner_class.root.cxx.type_name == owner_class.cxx.type_name %}
-              return {strdup("{{owner_class.cxx.type_name}}"), this_object};
+              return {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), this_object};
               {%- else %}
-              return {strdup("{{owner_class.cxx.type_name}}"), static_cast<{{owner_class.root.cxx.type_name}}*>(this_object)};
+              return {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), static_cast<{{owner_class.root.cxx.type_name}}*>(this_object)};
               {%- endif %}
               {%- endif %}
           }

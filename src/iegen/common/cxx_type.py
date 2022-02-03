@@ -133,6 +133,13 @@ class CXXType:
         return cutil.get_unqualified_type_name(self.pointee_name)
 
     @property
+    def unqualified_pointee_referenced_name(self):
+        """Returns canonical unqualified name when the type is typedef on pointer"""
+        return self.raw_type.unqualified_type_name if \
+            (isinstance(self.type_, cli.Type) and self.is_typedef and self.is_pointer) \
+            else self.unqualified_pointee_name
+
+    @property
     def is_const_qualified(self):
         # when self.type_ is string then only prefixed const qualified types are supported
         # for example `int const &` is not supported

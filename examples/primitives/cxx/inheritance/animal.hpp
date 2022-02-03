@@ -94,6 +94,7 @@ public:
  * __API__
  * action: gen_class
  * package: inheritance
+ * descendants: []
  */
 class Frog : public SideClass<std::string>, public TerrestrialAnimal, public AquaticAnimal {
 public:
@@ -113,6 +114,14 @@ public:
        return "frog";
     }
 };
+
+/**
+ * Empty class to help checking the empty case of descendants list
+ * __API__
+ * action: gen_class
+ * package: inheritance
+ */
+class LittleFrog : public Frog {};
 
 /**
  * __API__

@@ -53,8 +53,8 @@ rules:
         is_c_pointer_type: False
       types:
         swift: "(Float, Float)"
-        c: "CDataPair"
-        sc: "CDataPair"
+        c: "IEGenCDataPair"
+        sc: "IEGenCDataPair"
       converters:
         c_to_cxx: |
           auto first_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.first);

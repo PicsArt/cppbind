@@ -30,7 +30,7 @@ std::string demangleCPPName(const char* symbol) {
     }
 }
 
-std::string Object::toReprString() const {
+std::string Object::toDebugString() const {
     char res[96];
     auto cn = className();
     snprintf(res, sizeof(res), "<0x%08zx: %s>", reinterpret_cast<std::size_t>(this), cn.c_str());
@@ -38,7 +38,7 @@ std::string Object::toReprString() const {
 }
 
 std::string Object::toString() const {
-    return toReprString();
+    return toDebugString();
 }
 
 std::string Object::className() const {
@@ -65,7 +65,7 @@ std::size_t Object::hash() const {
 }
 
 std::string Object::debugInfo() const {
-    return toReprString();
+    return toDebugString();
 }
 
 size_t Object::bytesCount() const {

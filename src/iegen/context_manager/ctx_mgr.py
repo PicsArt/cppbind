@@ -5,6 +5,7 @@ from collections import OrderedDict
 
 from iegen import default_config
 from iegen.common.error import Error
+from iegen.common.yaml_process import to_value
 from iegen.context_manager.var_eval import VariableEvaluator
 from iegen.ir.ast import (
     Node,
@@ -135,6 +136,15 @@ class ContextManager:
                     # so we need to parse it to get correct type
                     new_att_val = self.ieg_api_parser.parse_attr(att_name, new_att_val)
 
+            options = ContextManager.get_var_property_value(properties, self.platform, self.language, 'options')
+
+            if new_att_val not in (None, undefined) and options is not None:
+                if new_att_val not in options:
+                    Error.error(f"Value mismatch for '{att_name}' variable: "
+                                f"value {new_att_val} is not in list of allowed options",
+                                location.file_name if location else None,
+                                location.line_number if location else None)
+
             if new_att_val is not undefined:
                 # add attr to current node context so that it can be used for coming attributes
                 ctx[att_name] = new_att_val
@@ -143,22 +153,26 @@ class ContextManager:
         return res
 
     @staticmethod
-    def get_attr_default_value(prop, plat, lang, default=None):
+    def get_attr_default_value(props, plat, lang, default=None):
+        return ContextManager.get_var_property_value(props, plat, lang, 'default', default)
+
+    @staticmethod
+    def get_var_property_value(props, plat, lang, prop, default=None):
         """
         Retrieve language/platform specific default value for current variable.
         """
 
         # detect illegal specification of plat/lang option
-        if plat + '.default' in prop and lang + '.default' in prop:
+        if plat + f'.{prop}' in props and lang + f'.{prop}' in props:
             Error.critical(
                 f"Conflict of attributes in attributes definition file: {plat}.default and {lang}.default: "
                 f"only one of them must be defined separately, or they must be both specified")
 
         # if plat/lang specific key is preset, return corresponding section
         # we search for specific key by descending order of priority
-        for key in (plat + '.' + lang + '.default', plat + '.default', lang + '.default', 'default'):
-            if key in prop:
-                return prop[key].value
+        for key in (plat + '.' + lang + f'.{prop}', plat + f'.{prop}', lang + f'.{prop}', prop):
+            if key in props:
+                return to_value(props[key])
 
         return default
 

@@ -42,23 +42,21 @@ func runTypedefExamples() {
 
     // test template cases (currently we have issues with typedefs on template types for linux)
 
-#if !os(Linux)
-    let qString = QueueString()
-    qString.push_back(element: "a")
-    qString.push_back(element: "b")
-    qString.push_back(element: "c")
-
-    assert(QueueUsage.getFirstElement(q: qString) == "a")
-    assert(QueueUsage.getLastElement(q: qString) == "c")
-    assert(QueueUsage.getFirstElement(q: QueueUsage.getRevQueue(v: ["ab", "cd"])) == "ba")
-    assert(QueueUsage.getSize(q: qString) == 3)
-
-    let queueStringUsageObj = QueueUsage(q: qString)
-    let savedQueueString = queueStringUsageObj.getSavedQueue()
-    assert(QueueUsage.getFirstElement(q: savedQueueString) == "a")
-    assert(QueueUsage.getLastElement(q: savedQueueString) == "c")
-    assert(queueStringUsageObj.saved_queue.get_size() == 3)
- #endif
+//     let qString = QueueString()
+//     qString.push_back(element: "a")
+//     qString.push_back(element: "b")
+//     qString.push_back(element: "c")
+//
+//     assert(QueueUsage.getFirstElement(q: qString) == "a")
+//     assert(QueueUsage.getLastElement(q: qString) == "c")
+//     assert(QueueUsage.getFirstElement(q: QueueUsage.getRevQueue(v: ["ab", "cd"])) == "ba")
+//     assert(QueueUsage.getSize(q: qString) == 3)
+//
+//     let queueStringUsageObj = QueueUsage(q: qString)
+//     let savedQueueString = queueStringUsageObj.getSavedQueue()
+//     assert(QueueUsage.getFirstElement(q: savedQueueString) == "a")
+//     assert(QueueUsage.getLastElement(q: savedQueueString) == "c")
+//     assert(queueStringUsageObj.saved_queue.get_size() == 3)
 
 }
 

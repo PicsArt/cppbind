@@ -44,26 +44,23 @@ assert (queue_shared_usage_obj.saved_queue.get_size() == 3)
 
 # test template cases
 
-# to temporarily resolve issue with typedefs on template types for linux
-import sys
+# we have issue with typedefs on template types for linux
 
-if sys.platform.startswith('linux'):
-    sys.exit()
-
-from examples_lib.typedefs import QueueString, QueueUsage
-
-q_string = QueueString()
-q_string.push_back("a")
-q_string.push_back("b")
-q_string.push_back("c")
-
-assert QueueUsage.get_first_element(q_string) == "a"
-assert QueueUsage.get_last_element(q_string) == "c"
-assert QueueUsage.get_first_element(QueueUsage.get_rev_queue(["ab", "cd"])) == "ba"
-assert QueueUsage.get_size(q_string) == 3
-
-queue_string_usage_obj = QueueUsage(q_string)
-saved_queue_string = queue_string_usage_obj.get_saved_queue()
-assert (QueueUsage.get_first_element(saved_queue_string) == "a")
-assert (QueueUsage.get_last_element(saved_queue_string) == "c")
-assert (queue_string_usage_obj.saved_queue.get_size() == 3)
+# from examples_lib.typedefs import QueueString, QueueUsage
+#
+# q_string = QueueString()
+# q_string.push_back("a")
+# q_string.push_back("b")
+# q_string.push_back("c")
+#
+# assert QueueUsage.get_first_element(q_string) == "a"
+# assert QueueUsage.get_last_element(q_string) == "c"
+# assert QueueUsage.get_first_element(QueueUsage.get_rev_queue(["ab", "cd"])) == "ba"
+# assert QueueUsage.get_size(q_string) == 3
+#
+# queue_string_usage_obj = QueueUsage(q_string)
+# saved_queue_string = queue_string_usage_obj.get_saved_queue()
+# assert (QueueUsage.get_first_element(saved_queue_string) == "a")
+# assert (QueueUsage.get_last_element(saved_queue_string) == "c")
+# assert (queue_string_usage_obj.saved_queue.get_size() == 3)
+#

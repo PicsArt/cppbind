@@ -55,18 +55,12 @@ vars:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
     - cxx/nested_types/*.h*
-  linux.python.src_exclude_glob:
-    - cxx/exceptions/*.h*
-    - cxx/containers/json.hpp
-    - cxx/nested_types/*.h*
     - cxx/typedefs/queue_template.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
   swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"
   swift.src_exclude_glob:
-    - cxx/functionals/*.hpp
-  linux.swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/typedefs/queue_template.hpp
 

@@ -353,7 +353,7 @@ constructor:
         {%- endif %}
         {%- endfor %}
         if err.type != nil {
-        let errorType = String(cString: err.type!)
+          let errorType = String(cString: err.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}
@@ -547,7 +547,7 @@ method:
         {%- endif %}
         {%- endfor %}
         if err.type != nil {
-        let errorType = String(cString: err.type!)
+          let errorType = String(cString: err.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}
@@ -766,8 +766,7 @@ function:
         {%- endif %}
         {%- endfor %}
         if err.type != nil {
-        let errorType = String(cString: err.type!)
-
+          let errorType = String(cString: err.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}

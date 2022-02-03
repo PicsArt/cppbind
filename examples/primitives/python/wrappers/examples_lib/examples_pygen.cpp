@@ -108,6 +108,7 @@ void bindExamples(py::module& m) {
     bindIegenExampleTerrestrialAnimal(inheritance_animal);
     bindIegenExampleAquaticAnimal(inheritance_animal);
     bindIegenExampleFrog(inheritance_animal);
+    bindIegenExampleLittleFrog(inheritance_animal);
     bindIegenExampleAnimalUsage(inheritance_animal);
     py::module_ inheritance_base = inheritance.def_submodule("base", "base");
 

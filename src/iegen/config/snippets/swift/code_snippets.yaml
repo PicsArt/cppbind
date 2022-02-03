@@ -171,7 +171,7 @@ class:
       content: |
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner) {
-            {%- if (vars.descendants or descendants) %}
+            {%- if (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
             {%- endif %}
             free(cself.type);
@@ -268,7 +268,7 @@ interface:
     body:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner){
-            {%- if (vars.descendants or descendants) %}
+            {%- if (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
             {%- endif %}
             free(cself.type);
@@ -299,7 +299,7 @@ var_method_cxx_include: &var_method_cxx_include
     {%- endfor -%}
     {#- `is defined` check is done for enum types (enums don't have descendants) -#}
     {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
-    {%- for descendant in (type_info.vars.descendants or type_info.descendants) -%}
+    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
     {#- generate includes for descendants list of an argument -#}
     {{gen_include(get_type_info(descendant))}}
     {%- endfor -%}
@@ -876,7 +876,7 @@ var_getter_cxx_include: &var_getter_cxx_include
     {%- endfor -%}
     {#- `is defined` check is done for enum types (enums don't have descendants) -#}
     {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
-    {%- for descendant in (type_info.vars.descendants or type_info.descendants) -%}
+    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
     {#- generate includes for descendants list of an argument -#}
     {{gen_include(get_type_info(descendant))}}
     {%- endfor -%}

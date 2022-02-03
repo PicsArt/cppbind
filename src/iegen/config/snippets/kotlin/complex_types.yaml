@@ -71,7 +71,7 @@ $Object:
       {%- else %}
       {%- set tmp_name = name %}
       {%- endif %}
-      {{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}* {{target_name}}_baseptr = const_cast<{{cxx.unqualified_canonical_type_name}}*>({{'&' if cxx.is_lval_reference}}{{tmp_name}});
+      {{root_types_infos[0].cxx.pointee_unqualified_referenced_name}}* {{target_name}}_baseptr = const_cast<{{cxx.pointee_unqualified_referenced_name}}*>({{'&' if cxx.is_lval_reference}}{{tmp_name}});
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
       {%- endif %}
     kotlin_to_jdk: |

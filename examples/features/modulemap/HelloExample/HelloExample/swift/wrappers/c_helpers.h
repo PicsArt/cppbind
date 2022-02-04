@@ -12,31 +12,31 @@
 #ifndef __C_HELPERS_H_
 #define __C_HELPERS_H_
 
-typedef struct _CDataArray{
+typedef struct _IEGenCDataArray{
     void* data;
     long long size;
-} CDataArray;
+} IEGenCDataArray;
 
-typedef struct _CDataPair{
+typedef struct _IEGenCDataPair{
     void* first;
     void* second;
-} CDataPair;
+} IEGenCDataPair;
 
-typedef struct _CDataMap{
+typedef struct _IEGenCDataMap{
     void* keys;
     void* values;
     long long size;
-} CDataMap;
+} IEGenCDataMap;
 
-typedef struct _ErrorObj {
+typedef struct _IEGenCErrorObj {
     int err_type;
     void * err_ptr;
-} ErrorObj;
+} IEGenCErrorObj;
 
-typedef struct _CObject {
+typedef struct _IEGenCObject {
     char* type;
     void* ptr;
-} CObject;
+} IEGenCObject;
 
 
 #endif //__C_HELPERS_H_

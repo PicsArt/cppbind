@@ -5,8 +5,8 @@ class HelloUser {
 
     static func main() {
 
-        let user = UserInfo(user_name: "John", user_age: 22)
-        let young_user = UserInfo(user_name: "Kate", user_age: 18)
+        let user = UserInfo(userName: "John", userAge: 22)
+        let young_user = UserInfo(userName: "Kate", userAge: 18)
 
         let host = Host()
 

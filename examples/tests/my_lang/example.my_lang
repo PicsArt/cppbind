@@ -10,7 +10,7 @@ public class Example  {
 
         
     // Calling converter for std::map
-    var mylangtocm = CDataMap()
+    var mylangtocm = IEGenCDataMap()
     mylangtocm.keys = Pointer(_key_mylangtocm)
     mylangtocm.values = Pointer(_val_mylangtocm)
     mylangtocm.size = myLangInt(m.count)
@@ -21,7 +21,7 @@ public class Example  {
         assign mylangtockey_m = int(key_m)
         
         // Calling converter for std::map
-        var mylangtocval_m = CDataMap()
+        var mylangtocval_m = IEGenCDataMap()
         mylangtocval_m.keys = Pointer(_key_mylangtocval_m)
         mylangtocval_m.values = Pointer(_val_mylangtocval_m)
         mylangtocval_m.size = myLangInt(val_m.count)

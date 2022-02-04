@@ -21,6 +21,7 @@ file:
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
+      #include <stdlib.h>
       #include <string.h>
       #include <cxxabi.h>
       #include <memory>
@@ -169,8 +170,9 @@ class:
         {%- endif %}
     body:
       content: |
+        {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner) {
-            delete cself.type;
+            free(cself.type);
             if (owner) {
                 {%- if root.vars.shared_ref %}
                 delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
@@ -179,10 +181,13 @@ class:
                 {%- endif %}
             }
         }
+        {%- endif -%}
   ch:
     body:
       content: |
+        {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner);
+        {%- endif -%}
 
 
 interface:
@@ -264,7 +269,7 @@ interface:
     body:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner){
-            delete cself.type;
+            free(cself.type);
             if (owner) {
                 {%- if root.vars.shared_ref %}
                 delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
@@ -337,7 +342,7 @@ constructor:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
         {%- endfor %}
-        var err = ErrorObj()
+        var err = IEGenCErrorObj()
         self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
@@ -354,13 +359,13 @@ constructor:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
@@ -373,7 +378,7 @@ constructor:
     body: |
       {%- set comma = joiner(', ') %}
       {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err){
+      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCErrorObj* _Nonnull err){
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {% set converter = arg.converter.c_to_cxx %}
@@ -409,7 +414,7 @@ constructor:
           catch (...) {
               err->err_type = -1;
           }
-          {{owner_class.converter.c.target_type_name}} result{};
+          {{owner_class.converter.c.target_type_name}} result {};
           return result;
       }
   ch:
@@ -417,7 +422,7 @@ constructor:
       content: |
         {%- set comma = joiner(', ') %}
         {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
+        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCErrorObj* _Nonnull err);
 
 method:
   swift:
@@ -527,7 +532,7 @@ method:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
         {%- endfor %}
-        var err = ErrorObj()
+        var err = IEGenCErrorObj()
         {%- if rconverter.c.target_type_name != 'void' %}
         let result = {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix + template_postfix)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- else %}
@@ -548,13 +553,13 @@ method:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
@@ -590,7 +595,7 @@ method:
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix + template_postfix)}}(
       {%- if not cxx.is_static -%}
       {{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err){
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCErrorObj* _Nonnull err){
         {%- set call_args = [] %}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
@@ -635,7 +640,7 @@ method:
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.c.target_type_name}} result{};
+          {{rconverter.c.target_type_name}} result {};
           return result;
           {%- endif %}
       }
@@ -692,7 +697,7 @@ method:
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, overloading_prefix + template_postfix)}}(
         {%- if not cxx.is_static -%}
         {{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err);
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCErrorObj* _Nonnull err);
         {%- else %}
         {# subscript operator #}
         {%- set comma = joiner(', ') %}
@@ -744,7 +749,7 @@ function:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
         {%- endfor %}
-        var err = ErrorObj()
+        var err = IEGenCErrorObj()
         {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- set c_func_name = helper.get_c_func_name(namespace, vars.name, overloading_prefix + template_postfix) %}
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -767,13 +772,13 @@ function:
           {%- for exc_type in vars.throws %}
           case ({{loop.index}}):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            throw {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ({{vars.throws|length + 1 if 'no_throw' not in vars.throws else 1}}):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(CObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
+            let excObj = {{exc_info.vars.name}}(IEGenCObject(type: strdup("{{exc_info.cxx.pointee_unqualified_name}}"), ptr: err.err_ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
@@ -796,7 +801,7 @@ function:
       {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(namespace, vars.name, overloading_prefix + template_postfix)}}(
       {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
-      {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}ErrorObj* _Nonnull err) {
+      {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCErrorObj* _Nonnull err) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
@@ -838,7 +843,7 @@ function:
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
-          {{rconverter.c.target_type_name}} result{};
+          {{rconverter.c.target_type_name}} result {};
           return result;
           {%- endif %}
       }
@@ -852,7 +857,7 @@ function:
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
         {%- for arg in args -%}
         {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}
-        {%- endfor -%}{{', ' if args}}ErrorObj* _Nonnull err);
+        {%- endfor -%}{{', ' if args}}IEGenCErrorObj* _Nonnull err);
 
 
 var_getter_cxx_include: &var_getter_cxx_include

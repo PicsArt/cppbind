@@ -55,8 +55,7 @@ jobs:
       - name: Install python modules
         run: |
           python3 -m pip install --upgrade pip
-          if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
-          sudo apt-get install -y libclang-9-dev
+          if [ -f docs/requirements.txt ]; then pip install -r docs/requirements.txt; fi
 
       - name: Generate files
         run: make html

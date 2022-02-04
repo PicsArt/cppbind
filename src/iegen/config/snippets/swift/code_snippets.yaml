@@ -369,8 +369,8 @@ constructor:
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            ExceptionHandler.handleUncaughtException("Uncaught Exception")
             err.type.deallocate()
+            ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
       }{{new_line}}
@@ -564,8 +564,8 @@ method:
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            ExceptionHandler.handleUncaughtException("Uncaught Exception")
             err.type.deallocate()
+            ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -784,8 +784,8 @@ function:
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            ExceptionHandler.handleUncaughtException("Uncaught Exception")
             err.type.deallocate()
+            ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}

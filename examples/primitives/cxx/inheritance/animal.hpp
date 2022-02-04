@@ -94,6 +94,7 @@ public:
  * __API__
  * action: gen_class
  * package: inheritance
+ * descendants: []
  */
 class Frog : public SideClass<std::string>, public TerrestrialAnimal, public AquaticAnimal {
 public:
@@ -115,6 +116,22 @@ public:
 };
 
 /**
+ *  Class to help checking the empty case of descendants list
+ * __API__
+ * action: gen_class
+ * package: inheritance
+ */
+class LittleFrog : public Frog {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    LittleFrog() {}
+};
+
+/**
  * __API__
  * action: gen_class
  * package: inheritance
@@ -127,6 +144,13 @@ public:
      * throws: no_throw
      */
     AnimalUsage() {}
+
+   /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    AnimalUsage(LittleFrog little_frog) : _little_frog(little_frog) {}
 
     /**
      * __API__
@@ -164,7 +188,7 @@ public:
         return frog;
     }
 
-     /**
+    /**
      * __API__
      * action: gen_method
      * throws: no_throw
@@ -173,8 +197,19 @@ public:
         return frog;
     }
 
+    /**
+     * Method to check that any downcast is not done when descendants=[]
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    const Frog& getLittleFrog() {
+        return _little_frog;
+    }
+
 private:
     Frog frog;
+    LittleFrog _little_frog;
 };
 
 }

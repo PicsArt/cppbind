@@ -363,7 +363,7 @@ constructor:
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
-          case ("{{"std::exception"}}"):
+          case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
             let excObj = {{exc_info.vars.name}}(IEGenCObject(type: err.type, ptr: err.ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
@@ -557,7 +557,7 @@ method:
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
-          case ("{{"std::exception"}}"):
+          case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
             let excObj = {{exc_info.vars.name}}(IEGenCObject(type: err.type, ptr: err.ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())
@@ -776,7 +776,7 @@ function:
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
-          case ("{{"std::exception"}}"):
+          case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
             let excObj = {{exc_info.vars.name}}(IEGenCObject(type: err.type, ptr: err.ptr), true)
             ExceptionHandler.handleUncaughtException(excObj.what())

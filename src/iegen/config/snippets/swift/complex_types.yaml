@@ -58,7 +58,7 @@ $Object:
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
-      {%- set descendants = vars.descendants or descendants -%}
+      {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -117,7 +117,7 @@ $Object:
       {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
       {%- endif -%}
       {%- endmacro -%}
-      {%- set descendants = vars.descendants or descendants -%}
+      {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
       {%- if descendants %}
       let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
@@ -418,7 +418,7 @@ std::shared_ptr:
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
-      {%- set args0_descendants = args[0].vars.descendants or args[0].descendants -%}
+      {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
       {%- if not args0_descendants %}
       char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
       {%- else %}

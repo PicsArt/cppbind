@@ -10,9 +10,9 @@ rules:
         jdk: Long
       converters:
         jni_to_cxx: |
-          auto {{target_name}} = {{'*' if not cxx.is_pointer}}reinterpret_cast<{{cxx_pointee_unqualified_referenced_name}}*>({{name}});
+          auto {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}reinterpret_cast<{{cxx_pointee_unqualified_name}}*>({{name}});
         cxx_to_jni: |
-          {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not cxx.is_pointer}}{{name}});
+          {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{name}});
         kotlin_to_jdk:
           val {{target_name}} = {{name}}.getObjId()
         jdk_to_kotlin:

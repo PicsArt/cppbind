@@ -39,24 +39,24 @@ $Object:
     sc: "IEGenCObject"
   converters:
     c_to_cxx: |
-      {%- set pointee = cxx.pointee_unqualified_referenced_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_referenced_name -%}
+      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if pointee_base == pointee %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- else %}
       // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}.ptr));
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}.ptr));
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
-      {%- set pointee = cxx.pointee_unqualified_referenced_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_referenced_name -%}
+      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants or descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
@@ -75,7 +75,7 @@ $Object:
       {%- endif %}
       {%- if descendants %}
       {%- macro demangle() -%}
-      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
       int status = 0;
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
@@ -95,9 +95,9 @@ $Object:
       {%- endif %}
       {%- endif %}
       {%- if pointee_base == pointee %}
-      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer or cxx.canonical_type.is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
       {%- else %}
-      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer or cxx.canonical_type.is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
       {{target_type_name}} {{target_name}} = {type_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
       {%- endif %}
       {%- endif %}
@@ -226,7 +226,7 @@ std::vector:
     sc: "IEGenCDataArray"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_referenced_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
 
@@ -292,7 +292,7 @@ std::map:
     sc: "IEGenCDataMap"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_referenced_name}} {{target_name}};
+      {{cxx.pointee_unqualified_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
@@ -388,9 +388,9 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.pointee_unqualified_referenced_name %}
+      {%- set pointee_unqualified = args[0].cxx.pointee_unqualified_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_referenced_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
@@ -413,8 +413,8 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_referenced_name %}
-      {%- set pointee_unqualified = args[0].cxx.pointee_unqualified_referenced_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
+      {%- set pointee_unqualified = args[0].cxx.pointee_unqualified_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
@@ -426,7 +426,7 @@ std::shared_ptr:
       {%- endif %}
       {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
-      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}arg_pointee_{{name}}).name();
       int status = 0;
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
@@ -479,7 +479,7 @@ std::pair:
       auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
       {{args[0].snippet('first_tmp_{}'.format(name))}}
       {{args[1].snippet('second_tmp_{}'.format(name))}}
-      {{cxx.pointee_unqualified_referenced_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
+      {{cxx.pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
       auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
       auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};

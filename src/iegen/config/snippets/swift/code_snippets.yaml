@@ -370,6 +370,7 @@ constructor:
           {%- endif %}
           default:
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            err.type.deallocate()
           }
         }
       }{{new_line}}
@@ -564,6 +565,7 @@ method:
           {%- endif %}
           default:
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            err.type.deallocate()
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -783,6 +785,7 @@ function:
           {%- endif %}
           default:
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
+            err.type.deallocate()
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}

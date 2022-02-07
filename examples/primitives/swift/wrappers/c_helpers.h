@@ -28,11 +28,6 @@ typedef struct _IEGenCDataMap{
     long long size;
 } IEGenCDataMap;
 
-typedef struct _IEGenCErrorObj {
-    int err_type;
-    void * err_ptr;
-} IEGenCErrorObj;
-
 typedef struct _IEGenCObject {
     char* type;
     void* ptr;

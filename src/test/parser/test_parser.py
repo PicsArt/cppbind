@@ -181,7 +181,7 @@ def test_dir_api_positive():
 
     assert api == 'gen_package'
     assert args['name'] == 'inputs'
-    assert args['code_fragment'] == ['import json']
+    assert args['code_fragment'] == 'import json'
 
 
 def test_var_def_validation():

@@ -21,30 +21,39 @@ from examples_lib.iegen.metaclass_pygen import *
 
 class StackUsage(metaclass=OriginalMethodsMetaclass):
     """
-    Documentation generated from: `cxx/templates/stack_usage.hpp#L19
-    <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L19>`_
+    Documentation generated from: `cxx/templates/stack_usage.hpp#L21
+    <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L21>`_
     """
     
     @bind
     def __init__(self):
         """
-        Documentation generated from: `cxx/templates/stack_usage.hpp#L26
-        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L26>`_
+        Documentation generated from: `cxx/templates/stack_usage.hpp#L28
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L28>`_
         """
         pass
     
     @bind
     def first_item_of_specialized_stack(self, p: stack.StackPrj) -> project.Project:
         """
-        Documentation generated from: `cxx/templates/stack_usage.hpp#L33
-        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L33>`_
+        Documentation generated from: `cxx/templates/stack_usage.hpp#L35
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L35>`_
         """
         pass
 
     @bind
     def first_item_of_template_stack(self, arg0: stack.StackPrj) -> project.Project:
         """
-        Documentation generated from: `cxx/templates/stack_usage.hpp#L45
-        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L45>`_
+        Documentation generated from: `cxx/templates/stack_usage.hpp#L47
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L47>`_
+        """
+        pass
+
+    @bind
+    def first_item_of_specialized_stack_with_typedef_arg(self, p: stack.StackPrj) -> project.Project:
+        """
+        Example to check typedef argument types
+        Documentation generated from: `cxx/templates/stack_usage.hpp#L64
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/stack_usage.hpp#L64>`_
         """
         pass

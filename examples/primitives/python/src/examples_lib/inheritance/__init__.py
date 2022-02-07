@@ -25,6 +25,10 @@ from .parallelogram_pygen import Parallelogram
 from .rectangle_pygen import Rectangle
 from .rhombus_pygen import RhombusFigure
 from .square_pygen import Square
+from .symbol_pygen import Sign
+from .symbol_pygen import Text
+from .symbol_pygen import Digit
+from .symbol_pygen import SymbolUsage
 from .usage_pygen import GeometricFigure
 from .usage_pygen import MyVehicle
 from .usage_pygen import MyBicycle

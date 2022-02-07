@@ -39,6 +39,9 @@ stack_usage = StackUsage()
 res = stack_usage.first_item_of_specialized_stack(p=stack_prj)
 assert res.title == prj.title
 
+res = stack_usage.first_item_of_specialized_stack_with_typedef_arg(p=stack_prj)
+assert res.title == prj.title
+
 res = stack_usage.first_item_of_template_stack(arg0=stack_prj)
 assert res.title == prj.title
 # [stack-usage-examples]

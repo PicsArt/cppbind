@@ -35,15 +35,16 @@ extension AddressableRoot {
    */
   public func absPath() -> String {
 
-    var err = IEGenCErrorObj()
+    var err = IEGenCObject()
     let result = _func_AddressableRoot_absPath(cself, &err)
-    let errorType = Int(err.err_type)
-    if errorType != 0 {
+    if err.type != nil {
+      let errorType = String(cString: err.type!)
       switch errorType {
-      case (1):
-        let excObj = StdException(IEGenCObject(type: strdup("std::exception"), ptr: err.err_ptr), true)
+      case ("std::exception"):
+        let excObj = StdException(err, true)
         ExceptionHandler.handleUncaughtException(excObj.what())
       default:
+        err.type.deallocate()
         ExceptionHandler.handleUncaughtException("Uncaught Exception")
       }
     }
@@ -76,15 +77,16 @@ public class AddressableImplRoot: AddressableRoot {
   public convenience init(parent: Root, name: String) {
     let swifttoscparent = parent.cself
     let swifttoscname = strdup(name)!
-    var err = IEGenCErrorObj()
+    var err = IEGenCObject()
     self.init(create_AddressableRoot(swifttoscparent, swifttoscname, &err), true)
-    let errorType = Int(err.err_type)
-    if errorType != 0 {
+    if err.type != nil {
+      let errorType = String(cString: err.type!)
       switch errorType {
-      case (1):
-        let excObj = StdException(IEGenCObject(type: strdup("std::exception"), ptr: err.err_ptr), true)
+      case ("std::exception"):
+        let excObj = StdException(err, true)
         ExceptionHandler.handleUncaughtException(excObj.what())
       default:
+        err.type.deallocate()
         ExceptionHandler.handleUncaughtException("Uncaught Exception")
       }
     }

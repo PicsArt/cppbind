@@ -3,5 +3,4 @@ dir_vars:
     vars:
       action: gen_package
       name: inputs
-      python.code_fragment:
-        - import json
+      python.code_fragment: import json

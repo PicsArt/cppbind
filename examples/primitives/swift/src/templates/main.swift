@@ -30,6 +30,10 @@ func runTemplateExamples() {
     assert(res.title == prj.title)
     assert(res.cself.ptr == prj.cself.ptr)
 
+    res = stackUsage.firstItemOfSpecializedStackWithTypedefArg(p: stackPrj)
+    assert(res.title == prj.title)
+    assert(res.cself.ptr == prj.cself.ptr)
+
     res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
     assert(res.title == prj.title)
     assert(res.cself.ptr == prj.cself.ptr)

@@ -46,8 +46,8 @@ include:
 
 code_fragment:
   inheritable: false
-  type: list
-  default: [ ]
+  type: str
+  default: null
   allowed_on: [ dir, file, enum ]
 
 header_code_fragment:

@@ -175,9 +175,9 @@ class:
             free(cself.type);
             if (owner) {
                 {%- if root.vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
+                delete static_cast<{{root_types_infos[0].cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -272,12 +272,12 @@ interface:
             free(cself.type);
             if (owner) {
                 {%- if root.vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{root_types_infos[0].cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
-                {%- if cxx.type_name == root_types_infos[0].cxx.pointee_unqualified_name %}
-                delete static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr);
+                {%- if cxx.type_name == root_types_infos[0].cxx.unqualified_resolved_type_name %}
+                delete static_cast<{{root_types_infos[0].cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- else %}
-                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.pointee_unqualified_name}}*>(cself.ptr));
+                delete dynamic_cast<{{cxx.type_name}}*>(static_cast<{{root_types_infos[0].cxx.unqualified_resolved_type_name}}*>(cself.ptr));
                 {%- endif %}
                 {%- endif %}
             }

@@ -11,6 +11,7 @@ namespace iegen::example {
 // [example]
 /**
  * Addressable is a base class for all the objects, that have abs path.
+ * FIXME: swift.descendants is given manually since we have an issue with descendants list formation for templates (#410)
  * __API__
  * action: gen_interface
  * template:
@@ -18,6 +19,8 @@ namespace iegen::example {
  *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
+ * swift.descendants:
+ *   - iegen::example::Component
  */
 template <typename T>
 struct Addressable {

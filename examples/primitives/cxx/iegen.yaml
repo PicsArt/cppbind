@@ -45,6 +45,8 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
+    - cxx/inheritance/symbol.hpp
+    - cxx/shared_ptr/shared_ptr_symbol.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"

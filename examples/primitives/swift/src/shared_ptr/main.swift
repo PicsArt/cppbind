@@ -35,6 +35,35 @@ func runSharedPtrExamples() {
 
     let constPtrCar = cheapCar.makeConstSharedPtr(sp: newCar)
     assert(constPtrCar.cost == newCar.cost)
+
+    // testing multiple inheritance without single root in case of shared_ref=True
+    var symbolUsageObj = SymbolUsageShared()
+    let digitObj = DigitShared()
+    let textObj = TextShared()
+    let signObj = SignSharedImpl()
+
+    // test virtual methods
+    assert(symbolUsageObj.getTextType(t: digitObj) == "digit")
+    assert(symbolUsageObj.getTextType(t: textObj) == "text")
+    assert(symbolUsageObj.getSignType(s: digitObj) == "digit")
+    assert(symbolUsageObj.getSignType(s: signObj) == "sign")
+    assert(digitObj.typeName() == "digit")
+    assert(textObj.typeName() == "text")
+    assert(signObj.typeName() == "sign")
+
+    symbolUsageObj = SymbolUsageShared(d: digitObj)
+    assert(symbolUsageObj.getTextPtr().typeName() == "digit")
+    assert(symbolUsageObj.getSignPtr().typeName() == "digit")
+
+    // test members
+    assert(symbolUsageObj.getTextId(t: digitObj) == 2)
+    assert(symbolUsageObj.getTextId(t: textObj) == 2)
+    assert(symbolUsageObj.getSignId(s: digitObj) == 1)
+    assert(symbolUsageObj.getSignId(s: signObj) == 1)
+
+    // test return object correct casting
+    assert(symbolUsageObj.getTextId(t: symbolUsageObj.getTextPtr()) == 2)
+    assert(symbolUsageObj.getSignId(s: symbolUsageObj.getSignPtr()) == 1)
 }
 
 #if os(Linux)

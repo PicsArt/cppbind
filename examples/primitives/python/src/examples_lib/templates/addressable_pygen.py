@@ -21,16 +21,17 @@ from examples_lib.iegen.metaclass_pygen import *
 class AddressableRoot(metaclass=OriginalMethodsMetaclass):
     """
     Addressable is a base class for all the objects, that have abs path.
-    Documentation generated from: `cxx/templates/addressable.hpp#L22
-    <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L22>`_
+    FIXME: swift.descendants is given manually since we have an issue with descendants list formation for templates (#410)
+    Documentation generated from: `cxx/templates/addressable.hpp#L25
+    <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L25>`_
     """
     
     @bind
     def __init__(self, parent: root.Root, name: str):
         """
         comments
-        Documentation generated from: `cxx/templates/addressable.hpp#L30
-        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L30>`_
+        Documentation generated from: `cxx/templates/addressable.hpp#L33
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L33>`_
         """
         pass
     
@@ -40,7 +41,7 @@ class AddressableRoot(metaclass=OriginalMethodsMetaclass):
         comments
         @brief Get object's abs path based on parent's abs path and object's name
         @return the abs path of the object
-        Documentation generated from: `cxx/templates/addressable.hpp#L40
-        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L40>`_
+        Documentation generated from: `cxx/templates/addressable.hpp#L43
+        <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/templates/addressable.hpp#L43>`_
         """
         pass

@@ -34,6 +34,10 @@ var res = stackUsage.firstItemOfSpecializedStack(stackPrj)
 assert(res.title == prj.title)
 assert(res.id == prj.id)
 
+res = stackUsage.firstItemOfSpecializedStackWithTypedefArg(stackPrj)
+assert(res.title == prj.title)
+assert(res.id == prj.id)
+
 res = stackUsage.firstItemOfTemplateStack(stackPrj)
 assert(res.title == prj.title)
 assert(res.id == prj.id)

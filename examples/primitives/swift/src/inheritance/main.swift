@@ -65,7 +65,6 @@ func runInheritanceExamples() {
     let frogObj = animalUsageObj.getFrog()
     let aquaticAnimalObj = animalUsageObj.getAquaticAnimal()
     let animalObj = animalUsageObj.getAnimal()
-    assert(frogObj is Frog)
     assert(aquaticAnimalObj is Frog)
     assert(animalObj is Frog)
     assert(frogObj.cself.ptr == aquaticAnimalObj.cself.ptr && frogObj.cself.ptr == animalObj.cself.ptr)
@@ -82,6 +81,35 @@ func runInheritanceExamples() {
     let events = myCalendar.events
     assert(!(events[0] is DateTime))
     assert(events[1] is DateTime)
+
+    // testing multiple inheritance without single root
+    var symbolUsageObj = SymbolUsage()
+    let digitObj = Digit()
+    let textObj = Text()
+    let signObj = SignImpl()
+
+    // test virtual methods
+    assert(symbolUsageObj.getTextType(t: digitObj) == "digit")
+    assert(symbolUsageObj.getTextType(t: textObj) == "text")
+    assert(symbolUsageObj.getSignType(s: digitObj) == "digit")
+    assert(symbolUsageObj.getSignType(s: signObj) == "sign")
+    assert(digitObj.typeName() == "digit")
+    assert(textObj.typeName() == "text")
+    assert(signObj.typeName() == "sign")
+
+    symbolUsageObj = SymbolUsage(d: digitObj)
+    assert(symbolUsageObj.getTextPtr().typeName() == "digit")
+    assert(symbolUsageObj.getSignPtr().typeName() == "digit")
+
+    // test members
+    assert(symbolUsageObj.getTextId(t: digitObj) == 2)
+    assert(symbolUsageObj.getTextId(t: textObj) == 2)
+    assert(symbolUsageObj.getSignId(s: digitObj) == 1)
+    assert(symbolUsageObj.getSignId(s: signObj) == 1)
+
+    // test return object correct casting
+    assert(symbolUsageObj.getTextId(t: symbolUsageObj.getTextPtr()) == 2)
+    assert(symbolUsageObj.getSignId(s: symbolUsageObj.getSignPtr()) == 1)
 }
 
 #if os(Linux)

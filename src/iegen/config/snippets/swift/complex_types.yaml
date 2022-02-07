@@ -40,23 +40,34 @@ $Object:
   converters:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
       auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
       {%- else %}
-      {%- if pointee_base == pointee %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
+      {%- if descendants -%}
+      {{pointee}}* {{target_name}}_ptr = nullptr;
+      if ({{name}}.ptr) {
+          if (strcmp({{name}}.type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+              {{target_name}}_ptr = static_cast<{{pointee}}*>({{name}}.ptr);
+          {%- for descendant in descendants %}
+          else if (strcmp({{name}}.type, "{{descendant}}") == 0)
+              {{target_name}}_ptr = static_cast<{{descendant}}*>({{name}}.ptr);
+          {%- endfor %}
+          else {
+              std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
+              exit(1);
+          }
+      }
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_ptr;
       {%- else %}
-      // we might need to avoid dynamic_cast if there is no multiple inheritance
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}dynamic_cast<{{pointee}}*>(static_cast<{{pointee_base}}*>({{name}}.ptr));
+      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
@@ -69,7 +80,7 @@ $Object:
       {%- endif %}
       {%- else %}
       {%- if not descendants %}
-      char* type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -81,25 +92,22 @@ $Object:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       {%- if is_nullable %}
       if ({{name}}) {
           {{demangle()|indent(4)}}
       } else {
-          type_result = strdup("{{cxx.pointee_unqualified_name}}");
+          type_result = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {{demangle()}}
       {%- endif %}
       {%- endif %}
-      {%- if pointee_base == pointee %}
-      {{target_type_name}} {{target_name}} = {type_{{name}}, const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%})};
-      {%- else %}
       auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
-      {{target_type_name}} {{target_name}} = {type_{{name}}, static_cast<{{pointee_base}}*>(value_ptr_{{name}})};
-      {%- endif %}
+      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
+      {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if descendants else 'value_ptr_' + name}}};
       {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
@@ -385,42 +393,49 @@ std::shared_ptr:
     sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
+      {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
+      {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants %}
       {%- set is_nullable = nullable|default(False) %}
+      {%- macro gen_cast_block() -%}
+      {%- if args0_descendants -%}
+      if (strcmp({{name}}.type, "{{args[0].cxx.unqualified_canonical_type_name}}") == 0)
+          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
+      {%- for args0_descendant in args0_descendants %}
+      else if (strcmp({{name}}.type, "{{args0_descendant}}") == 0)
+          {{target_name}} = *static_cast<std::shared_ptr<{{args0_descendant}}>*>({{name}}.ptr);
+      {%- endfor %}
+      else {
+          std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
+          exit(1);
+      }
+      {%- else -%}
+      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
+      {%- endif -%}
+      {%- endmacro %}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}.ptr) {
-          {%- if pointee_root == pointee_unqualified %}
-          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
-          {%- else %}
-          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
-          {%- endif %}
+          {{gen_cast_block()}}
       }
       {%- else %}
-      {%- if pointee_root == pointee_unqualified %}
-      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
-      {%- else %}
-      {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*static_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>({{name}}.ptr));
-      {%- endif %}
+      {{gen_cast_block()}}
       {%- endif %}
     cxx_to_c: |
-      {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
+      {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name %}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
       {%- if not args0_descendants %}
-      char* type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+      char* type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
       {%- endif %}
@@ -432,7 +447,7 @@ std::shared_ptr:
       if (status == 0) {
           type_{{name}} = demangled_{{name}};
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
       void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
@@ -440,21 +455,20 @@ std::shared_ptr:
       if ({{name}}) {
           {%- if args0_descendants %}
           {{demangle()|indent(4)}}
-          {%- endif %}
-          {%- if pointee_root != pointee_unqualified %}
-          {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
+          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
           {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
       } else {
-          type_{{name}} = strdup("{{args[0].cxx.pointee_unqualified_name}}");
+          type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {%- if args0_descendants %}
       {{demangle()}}
       {%- endif %}
-      {%- if pointee_root != pointee_unqualified %}
-      {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
+      {%- if args0_descendants %}
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
       {%- else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
       {%- endif %}

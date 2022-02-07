@@ -9,6 +9,8 @@
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
 
+using StackProjectType = iegen::example::Stack<iegen::example::Project>;
+
 namespace iegen::example {
 // [example]
 /**
@@ -50,6 +52,16 @@ class StackUsage  {
     // not supported usage example
     template <typename V>
     V* usage3(Stack<V>* p) {
+        return p->top();
+    };
+
+    /**
+     * Example to check typedef argument types
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    Project* firstItemOfSpecializedStackWithTypedefArg(StackProjectType* p) {
         return p->top();
     };
 

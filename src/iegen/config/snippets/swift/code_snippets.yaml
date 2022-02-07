@@ -79,7 +79,7 @@ enum:
         {%- endfor %}
         {%- if vars.code_fragment %}
 
-        {{vars.code_fragment|join(2 * new_line)|indent(2)}}
+        {{vars.code_fragment|indent(2)}}
         {%- endif %}
       }
       {%- if vars.footer_code_fragment -%}

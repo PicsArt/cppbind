@@ -5,9 +5,10 @@ dir_vars:
       action: gen_package
       name: simple
       package: simple
-      python.code_fragment:
-        - import json
-        - >
+      python.code_fragment: |
+          import json
+
+
           def pretty_print(json_str):
               parsed = json.loads(json_str)
               print(json.dumps(parsed, indent=4, sort_keys=True))
@@ -17,9 +18,10 @@ dir_vars:
       action: gen_package
       name: overloads
       package: overloads
-      python.code_fragment:
-        - import json
-        - >
+      python.code_fragment: |
+          import json
+
+
           def pretty_print(json_str):
               parsed = json.loads(json_str)
               print(json.dumps(parsed, indent=4, sort_keys=True))
@@ -29,9 +31,10 @@ dir_vars:
       action: gen_package
       name: operators
       package: operators
-      python.code_fragment:
-        - import json
-        - >
+      python.code_fragment: |
+          import json
+
+
           def pretty_print(json_str):
               parsed = json.loads(json_str)
               print(json.dumps(parsed, indent=4, sort_keys=True))

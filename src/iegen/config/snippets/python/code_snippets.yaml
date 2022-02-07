@@ -141,7 +141,7 @@ package:
       unique_content: |
         {%- if vars.code_fragment -%}
         {{marker}}
-        {{vars.code_fragment|join(3 * new_line)}}
+        {{vars.code_fragment}}
         {%- endif -%}
     include:
       unique_content: |
@@ -174,7 +174,7 @@ enum:
               return self.value
           {%- if vars.code_fragment %}
 
-          {{vars.code_fragment|join(2 * new_line)|indent(4)}}
+          {{vars.code_fragment|indent(4)}}
           {%- endif %}
           {%- if vars.footer_code_fragment %}
           {{new_line}}{{vars.footer_code_fragment}}

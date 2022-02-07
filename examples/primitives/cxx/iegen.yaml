@@ -8,8 +8,8 @@ dir_vars:
       python.action: gen_package
       python.name: ''
       python.package: ''
-      python.code_fragment:
-        - from buffer import *
+      python.code_fragment: |
+        from buffer import *
       project_dir: '{{_current_working_dir}}'
       project_link: 'https://github.com/PicsArt/iegen/tree/master/examples/primitives'
 

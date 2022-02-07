@@ -1,3 +1,5 @@
+.. _var-def-label:
+
 Variable Definitions
 ^^^^^^^^^^^^^^^^^^^^
 

@@ -2,9 +2,13 @@ import XCTest
 import Wrapper
 
 func runGlobalsExamples() {
-// [glob-func-examples]
+
+// [simple-usage-example]
 var res = concat(str1: "Hello ", str2: "Johnny")
 assert(res == "Hello Johnny")
+// [simple-usage-example]
+
+// [glob-func-examples]
 res = concat(str1: "Hello ", str2: "Johnny ", str3: "Jane")
 assert(res == "Hello Johnny Jane")
 

@@ -46,6 +46,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     const std::vector<Teacher*>& teachers() const {
         return _teachers;

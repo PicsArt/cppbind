@@ -126,6 +126,12 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "rv_policies",
+    srcs = ["src/rv_policies/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

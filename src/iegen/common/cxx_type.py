@@ -116,13 +116,18 @@ class CXXType:
             not self.type_.strip().endswith('&&') and self.type_.strip().endswith('&')
 
     @property
+    def is_rval_reference(self):
+        return self.type_.kind == cli.TypeKind.RVALUEREFERENCE if isinstance(self.type_, cli.Type) else \
+            self.type_.strip().endswith('&&')
+
+    @property
     def is_pointer(self):
         return self.type_.kind == cli.TypeKind.POINTER if isinstance(self.type_,
                                                                      cli.Type) else self.type_.strip().endswith('*')
 
     @property
     def is_value(self):
-        return not self.is_pointer and not self.is_lval_reference
+        return not self.is_pointer and not self.is_lval_reference and not self.is_rval_reference
 
     @property
     def unqualified_type_name(self):

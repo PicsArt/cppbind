@@ -574,7 +574,7 @@ method:
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
-        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
+        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -620,7 +620,7 @@ method:
                                    {%- else%}{{owner_class.cxx.type_name}}::{% endif %}{{cxx.name}}
                                    {%- if cxx.is_template -%}
                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
-              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(8)}}
               return {{rconverter.cxx_to_c.converted_name('result')}};
           }
         {%- else %}
@@ -667,7 +667,7 @@ method:
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}
                                {%- if cxx.is_template -%}
                                <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(8)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
           {%- else %}
           {{this_converter.converted_name('cself')}}->{{cxx.name}}({{call_args|join(', ')}});
@@ -794,7 +794,7 @@ function:
           }
         }
         {%- if rconverter.c.target_type_name != 'void' %}
-        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
+        {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -822,7 +822,7 @@ function:
                                    {%- if cxx.is_template -%}
                                    <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                    {%- endif -%}({{call_args|join(', ')}});
-              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(8)}}
               return {{rconverter.cxx_to_c.converted_name('result')}};
           }
           {%- else %}
@@ -900,7 +900,7 @@ property_getter:
       public var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} {
         get {
           let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself)
-          {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return) %}
+          {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -937,7 +937,7 @@ property_getter:
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
-          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if vars.action == 'gen_property_setter' %}
@@ -974,7 +974,7 @@ getter:
                                            {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} {
         get {
           let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}(cself)
-          {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return) %}
+          {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -1021,7 +1021,7 @@ getter:
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
-          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if setter is defined %}

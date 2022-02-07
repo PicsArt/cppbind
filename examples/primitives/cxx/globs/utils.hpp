@@ -7,10 +7,9 @@
 #include "cxx/simple/project.hpp"
 
 
-
-// [example]
+// [simple-example]
 /**
- * A global overloaded function example.
+ * A global function example.
  * __API__
  * action: gen_function
  * package: globs
@@ -20,7 +19,9 @@
 std::string concat(const std::string& str1, const std::string& str2) {
     return str1 + str2;
 }
+// [simple-example]
 
+// [example]
 /**
  * A global overloaded function example.
  * __API__
@@ -64,12 +65,14 @@ namespace iegen::example {
      *     - type: iegen::example::Root
      *   V:
      *     - type: iegen::example::Project
+     * return_value_policy: reference
      */
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
     }
 }
+// [example]
 
 /** A global function with enum default value.
  * __API__
@@ -89,11 +92,12 @@ iegen::example::Color optionalColor(iegen::example::Color c = iegen::example::Co
  * swift.file: GlobUtils
  * throws: no_throw
  * nullable_return: True
+ * return_value_policy: reference
  */
 iegen::example::Project* optionalFDPtr(iegen::example::Project* project = nullptr) {
     return project;
 }
-// [example]
+
 
 /** A global function with no return value.
  * __API__

@@ -2,11 +2,13 @@ from examples_lib.enums import Color
 from examples_lib.globs import *
 from examples_lib.simple import Project, Root
 
-prj1 = Project("My first project")
 
-# [glob-func-examples]
+# [simple-usage-example]
 res = concat("Hello ", "Johnny")
 assert res == "Hello Johnny"
+# [simple-usage-example]
+
+# [glob-func-examples]
 res = concat1("Hello ", "Johnny ", "Jane")
 assert res == "Hello Johnny Jane"
 

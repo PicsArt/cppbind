@@ -229,6 +229,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "rv_policies",
+    srcs = ["src/examples_lib/rv_policies/main.py"],
+    main = "src/examples_lib/rv_policies/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

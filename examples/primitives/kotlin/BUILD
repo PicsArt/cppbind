@@ -180,6 +180,15 @@ kt_jvm_test(
 )
 
 kt_jvm_test(
+    name = "rv_policies",
+    srcs = glob(["src/**/*.kt"]),
+    data = [":libwrapper_jni"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    deps=["@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7"],
+    main_class = "com.examples.rv_policies.RVPApp",
+)
+
+kt_jvm_test(
     name = "nested_types",
     srcs = glob(["src/**/*.kt"]),
     data = [":libwrapper_jni"],

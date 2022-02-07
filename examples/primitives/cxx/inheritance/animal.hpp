@@ -174,6 +174,8 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * python.return_value_policy: reference_internal
+     * return_value_policy: reference
      */
     const Animal& getAnimal() {
         return frog;
@@ -183,6 +185,8 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * python.return_value_policy: reference_internal
+     * return_value_policy: reference
      */
     const AquaticAnimal& getAquaticAnimal() {
         return frog;
@@ -192,6 +196,8 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * python.return_value_policy: reference_internal
+     * return_value_policy: reference
      */
     const Frog& getFrog() {
         return frog;
@@ -202,6 +208,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     const Frog& getLittleFrog() {
         return _little_frog;

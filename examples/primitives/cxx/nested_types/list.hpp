@@ -90,6 +90,7 @@ struct List {
      * __API__
      * action: gen_getter
      * throws: no_throw
+     * return_value_policy: reference
      */
     Item* back() {
         return items.back();

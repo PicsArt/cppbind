@@ -127,6 +127,12 @@ swift_test(
 )
 
 swift_test(
+    name = "rv_policies",
+    srcs = ["src/rv_policies/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
+swift_test(
     name = "typedefs",
     srcs = ["src/typedefs/main.swift"],
     deps = [":sw_examples_library"],

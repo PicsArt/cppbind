@@ -44,6 +44,7 @@ class TemplateMethods  {
      *     - type: iegen::example::Root
      *   V:
      *     - type: iegen::example::Project
+     * return_value_policy: reference
      */
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {

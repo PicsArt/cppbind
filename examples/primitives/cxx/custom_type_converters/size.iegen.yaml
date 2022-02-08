@@ -79,7 +79,6 @@ rules:
           {{target_name}}First[0] = {{name}}.0
           {{target_name}}Second[0] = {{name}}.1
         sc_to_swift: |
-
           let {{name}}FirstData = UnsafeBufferPointer<Float>(start: {{name}}.first.assumingMemoryBound(to: Float.self), count: 1)
           let {{name}}SecondData = UnsafeBufferPointer<Float>(start: {{name}}.second.assumingMemoryBound(to: Float.self), count: 1)
           defer {

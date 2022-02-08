@@ -4,9 +4,12 @@ import com.examples.simple.*
 import com.examples.enums.*
 
 fun use() {
-// [glob-func-examples]
+// [simple-usage-example]
 var res = concat("Hello ", "Johnny")
 assert(res == "Hello Johnny" )
+// [simple-usage-example]
+
+// [glob-func-examples]
 res = concat("Hello ", "Johnny ", "Jane")
 assert(res == "Hello Johnny Jane")
 

@@ -45,6 +45,7 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
+    - cxx/**/factory.hpp
     - cxx/inheritance/symbol.hpp
     - cxx/shared_ptr/shared_ptr_symbol.hpp
     - cxx/typedefs/queue_template.hpp
@@ -57,6 +58,7 @@ vars:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
     - cxx/nested_types/*.h*
+    - cxx/**/factory.hpp
     - cxx/typedefs/queue_template.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
@@ -65,6 +67,7 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/typedefs/queue_template.hpp
+    - cxx/**/factory.hpp
 
 var_def:
   !join

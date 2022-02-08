@@ -31,6 +31,7 @@ class TypeInfo:
                 is_pointer=self._cxx_type.is_pointer,
                 is_value_type=self._cxx_type.is_value,
                 is_lval_reference=self._cxx_type.is_lval_reference,
+                is_rval_reference=self._cxx_type.is_rval_reference,
                 unqualified_resolved_type_name=self._cxx_type.unqualified_resolved_type_name,
                 unqualified_type_name=self._cxx_type.unqualified_type_name,
                 unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,

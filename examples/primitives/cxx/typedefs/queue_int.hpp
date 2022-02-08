@@ -115,6 +115,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     QueueIntPtrType getSavedQueue() {
         return saved_queue;

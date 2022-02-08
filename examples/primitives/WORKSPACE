@@ -18,7 +18,7 @@ http_archive(
     urls = ["https://github.com/pybind/pybind11_bazel/archive/%s.zip" % rules_pybind_sha],
 )
 
-pybind_version = "2.6.2"
+pybind_version = "2.9.0"
 
 http_archive(
     name = "pybind11",

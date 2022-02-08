@@ -1,0 +1,235 @@
+Functions
+^^^^^^^^^
+
+For binding global and member functions, respectively, **gen_function** and **gen_method** actions should be used.
+
+Global functions
+~~~~~~~~~~~~~~~~
+
+Let's bind a simple global function.
+Here is the source code of it:
+
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+   :language: cpp
+   :start-after: [simple-example]
+   :end-before: [simple-example]
+
+After **__API__** tag we have four variables which are instructions for iegen.
+With `action: gen_function` we define what should be generated in the target language.
+`package` variable indicates what will be the package for generated `concat` function and `file` indicates
+in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
+which means that it's value will be used only for generated swift bindings and for other languages the default value will be used
+i.e. source file name. And finally variable `throws` is to define what exceptions `concat` can throw.
+In this case it's value is **no_throw** which means it will not throw any exception.
+For more details on variables, see :ref:`var-def-label`.
+
+And here is a small code using generated bindings:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
+           :language: kotlin
+           :start-after: [simple-usage-example]
+           :end-before: [simple-usage-example]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
+           :language: py
+           :start-after: [simple-usage-example]
+           :end-before: [simple-usage-example]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
+           :language: swift
+           :start-after: [simple-usage-example]
+           :end-before: [simple-usage-example]
+
+Let's bind more complex examples like template ``makePair`` and ``max``, overloaded ``concat`` etc.
+
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+Code using generated functions:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
+           :language: kotlin
+           :start-after: [glob-func-examples]
+           :end-before: [glob-func-examples]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
+           :language: py
+           :start-after: [glob-func-examples]
+           :end-before: [glob-func-examples]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
+           :language: swift
+           :start-after: [glob-func-examples]
+           :end-before: [glob-func-examples]
+
+
+Here we have overloaded ``concat`` for kotlin and swift but for python it's slightly different
+as there's no overloading for python. We have two methods ``concat`` and ``concat1`` in python.
+Similarly for template function we have an overloaded function for each template combination for kotlin and swift.
+In case of python a postfix generated from argument types is appended to the function name.
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/utils.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/utils_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/globs/GlobUtils.swift
+               :language: swift
+
+|
+
+
+Static and overloaded methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's now bind a struct with static and overloaded methods:
+
+.. literalinclude:: /../examples/primitives/cxx/overloads/utils.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+
+As you can see overloaded or static methods are like regular methods. There's nothing special to add in the **API** for them.
+
+.. note::
+    Python does not have method overloading, but here with bind decorator we have overloaded sum and concatenate methods.
+    Sum is also a classmethod as it was static in the original code.
+
+
+We are ready to use the generated bindings:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/main.kt
+           :language: kotlin
+           :start-after: [overload-usage]
+           :end-before: [overload-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/main.py
+           :language: py
+           :start-after: [overload-usage]
+           :end-before: [overload-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/overloads/main.swift
+           :language: swift
+           :start-after: [overload-usage]
+           :end-before: [overload-usage]
+
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/utils_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/overloads/Utils.swift
+               :language: swift
+
+|
+
+
+Return value policies
+~~~~~~~~~~~~~~~~~~~~~
+
+C++ and other languages may differently manage memory and lifetime of the objects.
+Just by return value type iegen cannot decide whether the wrapper language should take care of deallocating the returned object
+or C++ is responsible for that.
+For this reason iegen provides a variable named **return_value_policy**.
+Using this variable user can override the default policies.
+
+Let's take a look at the following example:
+
+.. literalinclude:: /../examples/primitives/cxx/rv_policies/singleton.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+In this example we have two members returning the same singleton instance by reference and by pointer.
+The default return value policy for member functions is **automatic** which falls back to **take_ownership** for pointers.
+This means ownership is given to the wrapper language which is responsible for deallocating the returned object.
+In case of references it falls back to **copy** policy which creates a copy of returned object and the owner of it is the target language.
+Notice that the generated code for the first one in case if the default policy is used won't compile as the copy constructor is deleted.
+In this example the default policies for both cases are not what we want.
+For both cases we have specified **reference** policy to not pass the ownership to the wrapper language or to not create a new copy.
+
+Now let's take a look to another example:
+
+.. literalinclude:: /../examples/primitives/cxx/rv_policies/factory.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+Here we have a factory method ``create``. In this case the default policy is the right policy as it refers to
+the returned object and gives the ownership to the target language.
+
+.. note::
+    The default policy for getters and methods are different. It's different for each language as well.
+    For getters and properties the default policy for python is **reference_internal**.
+    For kotlin and swift it's **reference** as iegen does not support **reference_internal** for them yet.
+    For methods the default policy is **automatic** for all supported languages.
+
+.. note::
+    Object caching for kotlin and swift are not supported yet,
+    that's why each function call creates a new wrapper object with different
+    ownership depending on the function's return value policy.
+
+Supported return values policies are:
+
+    * **copy** - Create a new object and give the ownership to the target language. The lifetimes of these two objects are decoupled.
+    * **move** - Move the returned object into a new one and give the ownership to the target language. The lifetimes of these two objects are decoupled.
+    * **take_ownership** - Reference an existing object but give the ownership to the target language. Target language is responsible for deallocating it.
+    * **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
+    * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
+    * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
+    * **reference_internal** - Supported only for python. This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of it's parent object i.e. parent object won't be deallocated until the returned object is not deallocated.
+
+.. note::
+    If the object is returned by value or by rvalue reference then **copy** and **move** are used respectively.
+
+.. note::
+    For shared pointers **take_ownership** is always used.

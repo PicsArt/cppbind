@@ -10,7 +10,7 @@ Let's generate a wrapper code for the following custom type.
    :end-before: [example]
 
 
-In a code above we are exporting all public methods and constructors.
+In a code above we are exporting all public members and constructors.
 
 .. note::
     Notice that the title method is marked as a getter, so it

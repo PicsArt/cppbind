@@ -51,6 +51,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     const std::vector<Task*>& tasks() const {
         return _tasks;

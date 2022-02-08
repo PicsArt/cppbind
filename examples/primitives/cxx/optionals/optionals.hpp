@@ -38,6 +38,7 @@ public:
      * action: gen_method
      * throws: no_throw
      * nullable_return: True
+     * return_value_policy: reference
      */
 	Task* optionalPtrWithNullptrDefault(Task* task = nullptr) {
 	    return task;
@@ -48,6 +49,7 @@ public:
      * action: gen_method
      * throws: no_throw
      * nullable_return: True
+     * return_value_policy: reference
      */
 	Task* optionalPtrWithNullDefault(Task* task = NULL) {
 	    return task;
@@ -58,6 +60,7 @@ public:
      * action: gen_method
      * throws: no_throw
      * nullable_return: True
+     * return_value_policy: reference
      */
 	Project* optionalFDPtrWithNullptrDefault(Project* project = nullptr) {
 	    return project;

@@ -69,6 +69,7 @@ class Stack: public Container {
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
      T* top() const {
         return _elements.back();

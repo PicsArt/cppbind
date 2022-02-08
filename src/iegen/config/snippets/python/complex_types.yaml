@@ -50,13 +50,21 @@ $Object:
   custom:
     pname: object
     tpostfix: |
+      {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_names or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
       {%- endfor -%}
+    namespace: |
+      {#- this is an internal section no need to define in user defined custom converters #}
+      {%- if parent_type_info -%}
+      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {{converter.python.target_type_name}}.
+      {%- endif -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
   types:
     python: |
+      {{custom.namespace if not definition|default(False)}}
       {%- if interface_class|default(False) -%}
       {{vars.interface_class_name}}{{custom.tpostfix}}
       {%- else -%}

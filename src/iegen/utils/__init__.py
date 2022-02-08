@@ -126,7 +126,7 @@ def make_snake_case(string, sub_strings=None):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', string).lower()
 
 
-def make_camel_case(string, sub_strings=None):
+def make_camel_case(string, sub_strings=None, capitalize=False):
     """
     Returns camel cased version of input string if sub_strings is None.
     If sub_strings is specified then only replaces all sub_string
@@ -142,7 +142,7 @@ def make_camel_case(string, sub_strings=None):
             string = string.replace(p, make_camel_case(p))
         return string
     init, *temp = string.strip('_').split('_')
-    return ''.join([init, *map(str.title, temp)])
+    return ''.join([init.title() if capitalize else init, *map(str.title, temp)])
 
 
 def clear_iegen_generated_files(directory):

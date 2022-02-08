@@ -56,7 +56,6 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
-    - cxx/nested_types/*.h*
     - cxx/**/factory.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""

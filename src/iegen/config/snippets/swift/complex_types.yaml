@@ -23,13 +23,21 @@ $Object:
   custom:
     is_c_pointer_type: False
     tpostfix: |
+      {#- this is an internal section no need to define in user defined custom converters -#}
       {%- for name in template_names or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
       {%- endfor -%}
+    namespace: |
+      {#- this is an internal section no need to define in user defined custom converters -#}
+      {%- if parent_type_info -%}
+      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {{converter.swift.target_type_name}}.
+      {%- endif -%}
     tname: |
       {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
   types:
     swift: |
+      {{custom.namespace if not definition|default(False)}}
       {%- if interface_class|default(False) -%}
       {{vars.interface_class_name}}{{custom.tpostfix}}
       {%- else -%}
@@ -167,11 +175,11 @@ $Object:
         {{create_instance(type)|indent(2)}}
       {%- endfor %}
       default:
-        {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+        {%- set type = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
         {{create_instance(type + custom.tpostfix)|indent(2)}}
       }
       {%- else %}
-      {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+      {%- set type = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
       {{create_instance(type + custom.tpostfix)}}
       {%- endif %}
 

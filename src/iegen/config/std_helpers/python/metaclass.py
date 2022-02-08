@@ -98,6 +98,8 @@ class OriginalMethodsMetaclass(MetaclassBase):
             if attr in future_class_attrs and attr != '__new__':
                 # replace pybind method with wrapper method
                 setattr(pybind_class, attr, future_class_attrs[attr])
+        # there's no nesting in pybind using this to support nested types
+        setattr(pybind_class, '__qualname__', future_class_attrs['__qualname__'])
         setattr(cls, 'originals', originals)
         # set __new__ to return pybind instance
         setattr(cls, '__new__', functools.partial(_new_object, pybind_class))

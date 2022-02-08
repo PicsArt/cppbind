@@ -253,6 +253,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "nested_types",
+    srcs = ["src/examples_lib/nested_types/main.py"],
+    main = "src/examples_lib/nested_types/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

@@ -128,7 +128,7 @@ class:
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
-        public class {{converter.swift.target_type_name}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}}
+        public class {{converter.swift.get_target_type_name(definition=True)}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}}
                                 {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
                                 {{', ' if bases_specifiers else ' : Error'}}
                                 {%- endif %} {
@@ -144,7 +144,7 @@ class:
           }
 
           deinit {
-            release_{{converter.swift.target_type_name}}(cself, owner)
+            release_{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
           }{{new_line}}
           {%- endif %}
           {%- if head %}
@@ -170,7 +170,7 @@ class:
     body:
       content: |
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
-        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner) {
+        void release_{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
             {%- if (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
@@ -188,7 +188,7 @@ class:
     body:
       content: |
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
-        void release_{{converter.swift.target_type_name}}({{converter.c.target_type_name}} cself, bool owner);
+        void release_{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner);
         {%- endif -%}
 
 
@@ -213,7 +213,7 @@ interface:
         {%- if vars.comment -%}
         {{vars.comment|make_doxygen_comment}}
         {% endif -%}
-        public protocol {{converter.swift.target_type_name}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
+        public protocol {{converter.swift.get_target_type_name(definition=True)}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
           {%- if not base_types_converters %}
           var cself: {{converter.sc.target_type_name}} { get }{{new_line}}
@@ -229,7 +229,7 @@ interface:
           {%- endif %}
         }
 
-        extension {{converter.swift.target_type_name}} {
+        extension {{converter.swift.get_target_type_name(definition=True)}} {
           {%- if properties %}
           {{properties|string|indent(2)}}
           {%- endif %}
@@ -238,7 +238,7 @@ interface:
           {%- endif %}
         }
 
-        public class {{converter.swift.get_target_type_name(interface_class=True)}}: {{converter.swift.target_type_name}} {
+        public class {{converter.swift.get_target_type_name(interface_class=True, definition=True)}}: {{converter.swift.target_type_name}} {
           public let cself: {{converter.sc.target_type_name}}
           public let owner: Bool
 
@@ -249,7 +249,7 @@ interface:
           }
 
           deinit {
-            release_{{converter.swift.get_target_type_name(interface_class=True)}}(cself, owner)
+            release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}(cself, owner)
           }{{new_line}}
           {%- if head %}
           {{head|string|indent(2)}}
@@ -267,7 +267,7 @@ interface:
         {%- endif %}
     body:
       content: |
-        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner){
+        void release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner){
             {%- if (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
@@ -283,7 +283,7 @@ interface:
   ch:
     body:
       content: |
-        void release_{{converter.swift.get_target_type_name(interface_class=True)}}({{converter.c.target_type_name}} cself, bool owner);
+        void release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner);
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content: |
@@ -352,7 +352,7 @@ constructor:
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
         {%- endfor %}
         var err = IEGenCObject()
-        self.init(create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
+        self.init(create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
         {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
@@ -387,7 +387,7 @@ constructor:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+      {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
       {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err){
         {%- set call_args = [] -%}
         {%- for arg in args -%}
@@ -427,7 +427,7 @@ constructor:
     body:
       content: |
         {%- set comma = joiner(', ') %}
-        {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+        {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
         {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
 
 method:
@@ -899,7 +899,7 @@ property_getter:
       {% endif -%}
       public var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} {
         get {
-          let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself)
+          let result = _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}(cself)
           {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
@@ -914,7 +914,7 @@ property_getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}(cself, {{converter.converted_name('value')}})
+          _prop_set_{{owner_class.converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}(cself, {{converter.converted_name('value')}})
           {%- if rconverter.sc_cleanup %}
           {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
@@ -933,7 +933,7 @@ property_getter:
   cc:
     include: *var_getter_cxx_include
     body: |
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself){
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself){
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
@@ -941,7 +941,7 @@ property_getter:
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {%- if vars.action == 'gen_property_setter' %}
-      void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}){
+      void _prop_set_{{owner_class.converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}){
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           {{rconverter.c_to_cxx.snippet(vars.name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{cxx.name}} = {{rconverter.c_to_cxx.converted_name(vars.name)}};
@@ -950,9 +950,9 @@ property_getter:
   ch:
     body:
       content: |
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself);
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself);
         {%- if vars.action == 'gen_property_setter' %}
-        void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}});
+        void _prop_set_{{owner_class.converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}});
         {% endif %}
 
 getter:
@@ -973,7 +973,7 @@ getter:
                                            {%- else %}{{vars.name}}
                                            {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} {
         get {
-          let result = _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}(cself)
+          let result = _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}(cself)
           {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
@@ -992,7 +992,7 @@ getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
+          _prop_set_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
           {%- if rconverter.sc_cleanup %}
           {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
@@ -1017,7 +1017,7 @@ getter:
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself){
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself){
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
@@ -1026,7 +1026,7 @@ getter:
       }
       {%- if setter is defined %}
       {% set converter = setter.args[0].converter.c_to_cxx %}
-      void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}){
+      void _prop_set_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}){
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.args[0].name)}});
@@ -1036,9 +1036,9 @@ getter:
     body:
       content: |
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself);
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself);
         {%- if setter is defined %}
         {% set converter = setter.args[0].converter.c %}
-        void _prop_set_{{owner_class.converter.swift.target_type_name}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}}
+        void _prop_set_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}}
         {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}});
         {% endif %}

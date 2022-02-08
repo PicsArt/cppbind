@@ -54,6 +54,14 @@ class TypeInfo:
         return self._base_types_infos
 
     @property
+    def parent_type_info(self):
+        if not hasattr(self, '_parent_type_info'):
+            self._parent_type_info = create_type_info(self._runner, CXXType(self._type_ctx.parent_context.cxx_type_name,
+                                                                            self._type_ctx.template_choice)) \
+                if self._type_ctx and self._type_ctx.parent_context else None
+        return self._parent_type_info
+
+    @property
     def arg_types_infos(self):
         if not hasattr(self, '_arg_types_infos'):
             self._arg_types_infos = [create_type_info(self._runner, t) for t in
@@ -68,7 +76,7 @@ class TypeInfo:
                 for parent in set(self._type_ctx.ancestors):
                     if not parent.base_types:
                         self._roots.append(create_type_info(self._runner, CXXType(parent.cxx_type_name,
-                                                                            self._type_ctx.template_choice)))
+                                                                                  self._type_ctx.template_choice)))
                 if not self._roots:
                     self._roots.append(self)
 
@@ -88,5 +96,5 @@ class TypeInfo:
 
     @property
     def descendants(self):
-        return [descendant.full_displayname for descendant in self._type_ctx.node.descendants]\
+        return [descendant.full_displayname for descendant in self._type_ctx.node.descendants] \
             if (self._type_ctx and self._type_ctx.node.descendants is not None) else None

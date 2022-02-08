@@ -35,8 +35,10 @@ file:
     file_path: |
       {{vars.c_file_fullname}}
     scopes:
-      - body
       - include
+      - header
+      - body
+      - footer
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
@@ -48,16 +50,18 @@ file:
 
       namespace py = pybind11;
 
-      {{body|string}}{{new_line}}
+      {{header}}
+          {{body|string|indent(4)}}
+      {{footer}}{{new_line}}
   hpp:
     file_path: |
       {{vars.h_file_fullname}}
     scopes:
-      - body
+      - header
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      {% set filename = [vars.package, vars.file]|map('replace', '.', '_')|join('_') -%}
+      {% set filename = [vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_') -%}
       #ifndef {{filename}}_hpp
       #define {{filename}}_hpp
 
@@ -65,7 +69,7 @@ file:
 
       namespace py = pybind11;
 
-      {{body|string}}
+      {{header}}
 
       #endif{{new_line}}
   pybind_module_cxx:
@@ -80,6 +84,7 @@ file:
       #include "{{path.relpath(vars.h_pybind_filename, vars.out_prj_dir)}}"
 
       namespace py = pybind11;
+
       void bind{{vars.pybind_module.replace('.', '_')|capitalize|to_camel_case}}(py::module& m) {
           {{body|string|indent}}
       }{{new_line}}
@@ -133,7 +138,7 @@ var_pybind_module_cxx: &var_pybind_module
       {%- set package_name = vars.package|replace('.', '_') -%}
       {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
       {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
-      {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name if cxx.kind_name == 'enum' else converter.python.target_type_name}}({{package_name}}_{{vars.file}});
+      {{marker}}bind{{[vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_')|to_camel_case(capitalize=True)}}({{package_name}}_{{vars.file}});
 
 package:
   python_init:
@@ -151,6 +156,20 @@ var_pybind_module_hpp: &var_pybind_module_hpp
   include:
     unique_content: |
       #include "{{path.relpath(vars.h_file_fullname, vars.out_prj_dir)}}"
+
+var_hpp_header: &var_hpp_header
+  unique_content: |
+    void bind{{[vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_')|to_camel_case(capitalize=True)}}(py::module& m);
+
+
+var_cxx_header: &var_cxx_header
+  unique_content: |
+    void bind{{[vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_')|to_camel_case(capitalize=True)}}(py::module& m) {
+
+var_cxx_footer: &var_cxx_footer
+  unique_content: |
+    } /* bind{{[vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_')|to_camel_case(capitalize=True)}} */
+
 
 enum:
   python:
@@ -184,8 +203,13 @@ enum:
       unique_content: |
         from .{{vars.file + vars.file_postfix}} import {{vars.name}}
   cxx:
+    header: *var_cxx_header
+    footer: *var_cxx_footer
     body: |
-      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name}}(py::module& m) {
+      {
+          {%- if cxx.namespace %}
+          using namespace {{cxx.namespace}};
+          {%- endif %}
           py::enum_<{{cxx.type_name}}>(m, "{{vars.name}}")
               {%- for case in enum_cases %}
               {%- if case.name not in vars.enum_excluded_fields %}
@@ -197,8 +221,7 @@ enum:
       unique_content: |
         #include "{{vars.prj_rel_file_name}}"
   hpp:
-    body: |
-      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name}}(py::module& m);
+    header: *var_hpp_header
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_package:
@@ -242,7 +265,7 @@ var_class: &var_class
         {%- do bases_specifiers.extend(vars.bases_list) -%}
         {%- do bases_specifiers.append('metaclass=OriginalMethodsMetaclass') %}
 
-        class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
+        class {{converter.python.get_target_type_name(definition=True)}}({{bases_specifiers|join(', ')}}):
             {%- if vars.comment %}
             {{vars.comment|make_py_docstring|indent}}
             {%- endif %}
@@ -270,8 +293,12 @@ var_class: &var_class
   python_init:
     include:
       unique_content: |
+        {%- if not converter.python.parent_type_info -%}{#- do not generate an import for nested type in __init__.py -#}
         from .{{vars.file + vars.file_postfix}} import {{converter.python.target_type_name}}
+        {%- endif -%}
   cxx:
+    header: *var_cxx_header
+    footer: *var_cxx_footer
     include:
       unique_content: |
         {%- if vars.is_proj_type -%}
@@ -296,7 +323,7 @@ var_class: &var_class
       scopes:
         - body
       content: |
-        void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + converter.python.target_type_name}}(py::module& m) {
+        {
             {%- if cxx.namespace %}
             using namespace {{cxx.namespace}};
             {%- endif %}
@@ -309,12 +336,11 @@ var_class: &var_class
                                          , {% for base_info in base_types_infos -%}
                                          {{comma()}}{{base_info.cxx.type_name}}
                                          {%- endfor -%}
-                                         {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
-        {{body|string|indent}}
+                                         {%- endif %}> {{converter.python.get_target_type_name(definition=True)|decapitalize}}(m, "{{converter.python.get_target_type_name(definition=True)}}"{{', py::is_final()' if not cxx.is_open}});
+            {{body|string|indent(4)}}
         }
   hpp:
-    body: |
-      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + converter.python.target_type_name}}(py::module& m);
+    header: *var_hpp_header
   pybind_module_cxx: *var_pybind_module
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_package:
@@ -407,15 +433,15 @@ constructor:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def(py::init<{%- for arg in args -%}
-                                                                                   {{comma()}}{{arg.type_info.cxx.type_name}}
-                                                                                   {%- endfor -%}>(){{', ' if args}}
-                                                                                    {%- set comma = joiner(', ') -%}
-                                                                                    {%- for arg in args -%}
-                                                                                    {{comma()}}py::arg("{{arg.name|to_snake_case}}")
-                                                                                    {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
-                                                                                    {%- endif -%}
-                                                                                    {%- endfor -%});
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def(py::init<{%- for arg in args -%}
+                                                                                          {{comma()}}{{arg.type_info.cxx.type_name}}
+                                                                                          {%- endfor -%}>(){{', ' if args}}
+                                                                                          {%- set comma = joiner(', ') -%}
+                                                                                          {%- for arg in args -%}
+                                                                                          {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+                                                                                          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+                                                                                          {%- endif -%}
+                                                                                          {%- endfor -%});
 
 
 
@@ -477,7 +503,7 @@ method:
     body: |
       {%- set _name = vars.name|to_snake_case -%}
       {%- set comma = joiner(', ') -%}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<
       {%- for arg in args -%}
       {{comma()}}{{arg.type_info.cxx.type_name}}
@@ -497,7 +523,7 @@ method:
       {%- endfor -%}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- set setter_var_name = 'value' -%}
       {%- if vars.is_operator and vars.name == '__getitem__' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; });
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; });
       {%- endif %}
 
 
@@ -541,34 +567,32 @@ function:
           pass
   bind: *var_bind_method
   hpp:
-    body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
-      void {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}(py::module& m);
+    header: *var_hpp_header
   cxx:
     include: *var_method_cxx_include
+    header: *var_cxx_header
+    footer: *var_cxx_footer
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
-      void {{'bind' + cxx.namespace.split('::')|map('capitalize')|join + vars.name|to_camel_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}(py::module& m) {
-          {%- set comma = joiner(', ') %}
-          m.def("{{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
-          , py::overload_cast<
-          {%- for arg in args -%}
-          {{comma()}}{{arg.type_info.cxx.type_name}}
-          {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
-          {%- else -%}
-          , &{{cxx.namespace}}::{{cxx.name}}
-          {%- endif -%}
-          {%- if cxx.is_template -%}
-          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-          {%- endif -%}
-          {{', ' if args}}
-          {%- set comma = joiner(', ') -%}
-          {%- for arg in args -%}
-          {{comma()}}py::arg("{{arg.name|to_snake_case}}")
-          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
-          {%- endif -%}
-          {%- endfor -%}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      }{{new_line}}
+      {%- set comma = joiner(', ') %}
+      m.def("{{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+      , py::overload_cast<
+      {%- for arg in args -%}
+      {{comma()}}{{arg.type_info.cxx.type_name}}
+      {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+      {%- else -%}
+      , &{{cxx.namespace}}::{{cxx.name}}
+      {%- endif -%}
+      {%- if cxx.is_template -%}
+      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+      {%- endif -%}
+      {{', ' if args}}
+      {%- set comma = joiner(', ') -%}
+      {%- for arg in args -%}
+      {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+      {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+      {%- endif -%}
+      {%- endfor -%}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_module_cxx:
     body:
@@ -577,7 +601,7 @@ function:
         {%- set package_name = vars.package|replace('.', '_') -%}
         {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
         {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
-        {{marker}}bind{{cxx.namespace.split('::')|map('capitalize')|join}}{{vars.name}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}({{package_name}}_{{vars.file}});
+        {{marker}}bind{{[vars.package_prefix, vars.package, vars.file]|map('replace', '.', '_')|join('_')|to_camel_case(capitalize=True)}}({{package_name}}_{{vars.file}});
   pybind_package:
     body:
 
@@ -643,11 +667,11 @@ property_getter:
     include: *var_getter_cxx_include
     body: |
       {%- set _name = vars.name|to_snake_case -%}
-      {%- if vars.action == 'gen_property_setter' %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      {%- else %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      {%- endif %}
+      {%- if vars.action == 'gen_property_setter' -%}
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {%- else -%}
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {%- endif -%}
 
 getter:
   python:
@@ -699,8 +723,8 @@ getter:
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
-      {% if setter is defined %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}});
+      {%- if setter is defined %}
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}});
       {%- else %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}, {%- if vars.return_value_policy %} py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- endif %}

@@ -529,8 +529,8 @@ std::pair:
     sc: "IEGenCDataPair"
   converters:
     c_to_cxx: |
-      auto first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
-      auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
+      auto& first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
+      auto& second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
       {{args[0].snippet('first_tmp_{}'.format(name))}}
       {{args[1].snippet('second_tmp_{}'.format(name))}}
       {{cxx.unqualified_resolved_type_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };

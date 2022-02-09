@@ -231,6 +231,9 @@ var_class: &var_class
         - properties
         - body
       content: |
+        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
+        {%- endif %}
         {%- if vars.header_code_fragment %}
         {{vars.header_code_fragment}}{{new_line}}
         {%- endif %}
@@ -302,7 +305,7 @@ var_class: &var_class
             {%- endif %}
             {% set comma = joiner(', ') -%}
             {% set shared_ptr = 'std::shared_ptr<' + cxx.type_name + '>' -%}
-            py::class_<{{cxx.type_name}} {%- if root.vars.shared_ref -%}
+            py::class_<{{cxx.type_name}} {%- if vars.shared_ref -%}
                                           , std::shared_ptr<{{cxx.type_name}}>
                                          {%- endif %}
                                          {%- if base_types_converters -%}

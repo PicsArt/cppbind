@@ -41,7 +41,7 @@ $Object:
     c_to_cxx: |
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
-      {%- if root_types_infos[0].vars.shared_ref -%}
+      {%- if vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
@@ -70,7 +70,7 @@ $Object:
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
-      {%- if root_types_infos[0].vars.shared_ref -%}
+      {%- if vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
       {%- else %}
@@ -393,7 +393,7 @@ std::shared_ptr:
     sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
+      {%- if args[0].vars and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
@@ -426,7 +426,7 @@ std::shared_ptr:
       {{gen_cast_block()}}
       {%- endif %}
     cxx_to_c: |
-      {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
+      {%- if args[0].vars and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}

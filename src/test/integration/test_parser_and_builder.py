@@ -3,6 +3,7 @@ import datetime
 import os
 import types
 from unittest.mock import patch, MagicMock
+import pytest
 
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.ir_post_processor import IRPostProcessor
@@ -14,6 +15,8 @@ from iegen.ir.ast import NodeType, Node, RootNode
 from iegen.parser.filter import CXXParserFilter, CXXIegFilter
 from iegen.parser.ieg_parser import CXXParser
 from iegen.utils import absolute_path_from_glob
+from iegen.runner import WrapperGenerator
+
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_REL_PATH = '../test_cxx_inputs'
@@ -446,3 +449,9 @@ def test_node_reuse(clang_config):
 
     assert incl_cls_node is incl_cls_node_from_main, "two function nodes from the same file are not equivalent"
     assert incl_func_node is incl_func_node_from_main, "two function nodes from different files are equivalent"
+
+
+def test_shared_ref():
+    with pytest.raises(IEGError, match=r"Child_A ancestors have different values for shared_ref variable"):
+        ctx_desc = ContextDescriptor("test_examples/shared_ref_validation/iegen.yaml")
+        WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)

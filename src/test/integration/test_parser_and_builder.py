@@ -453,5 +453,5 @@ def test_node_reuse(clang_config):
 
 def test_shared_ref():
     with pytest.raises(IEGError, match=r"Child_A ancestors have different values for shared_ref variable"):
-        ctx_desc = ContextDescriptor("test_examples/shared_ref_validation/iegen.yaml")
+        ctx_desc = ContextDescriptor("*/**/shared_ref.yaml")
         WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)

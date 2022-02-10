@@ -67,6 +67,8 @@
 #include "python/wrappers/examples_lib/templates/stack_usage_pygen.hpp"
 #include "python/wrappers/examples_lib/templates/template_methods_pygen.hpp"
 #include "python/wrappers/examples_lib/templates/wrapper_pygen.hpp"
+#include "python/wrappers/examples_lib/typedefs/queue_int_pygen.hpp"
+#include "python/wrappers/examples_lib/typedefs/queue_int_shared_pygen.hpp"
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;

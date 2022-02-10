@@ -132,6 +132,12 @@ swift_test(
     deps = [":sw_examples_library"],
 )
 
+swift_test(
+    name = "typedefs",
+    srcs = ["src/typedefs/main.swift"],
+    deps = [":sw_examples_library"],
+)
+
 filegroup(
     name = "examples_files",
     srcs = glob([

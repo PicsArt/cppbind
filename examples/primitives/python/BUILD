@@ -242,6 +242,18 @@ py_test(
 )
 
 py_test(
+    name = "typedefs",
+    srcs = ["src/examples_lib/typedefs/main.py"],
+    main = "src/examples_lib/typedefs/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+
+py_test(
     name = "nested_types",
     srcs = ["src/examples_lib/nested_types/main.py"],
     main = "src/examples_lib/nested_types/main.py",

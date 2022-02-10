@@ -47,13 +47,13 @@ $Object:
     sc: "IEGenCObject"
   converters:
     c_to_cxx: |
-      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee = cxx.unqualified_resolved_type_name -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_shared_ptr.get();
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if descendants -%}
       {{pointee}}* {{target_name}}_ptr = nullptr;
@@ -69,16 +69,16 @@ $Object:
               exit(1);
           }
       }
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}{{target_name}}_ptr;
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_ptr;
       {%- else %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{'*' if not cxx_is_pointer}}static_cast<{{pointee}}*>({{name}}.ptr);
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
       {%- if value_policy is not defined -%}
       {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
-      {%- set pointee = cxx.pointee_unqualified_name -%}
+      {%- set pointee = cxx.unqualified_resolved_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
@@ -97,7 +97,7 @@ $Object:
       {%- endif %}
       {%- if descendants %}
       {%- macro demangle() -%}
-      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}{{name}}).name();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
       int status = 0;
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
@@ -118,7 +118,7 @@ $Object:
       {%- endif %}
       {%- macro apply_rv_policy() -%}
       const_cast<{{pointee}}*>(
-      {%- if cxx_is_pointer -%}
+      {%- if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
       {%- if value_policy == 'reference_internal' -%}
       {%- do Error.critical(value_policy + ' policy for pointers is not supported for swift yet.') -%}
       {%- endif -%}
@@ -153,7 +153,7 @@ $Object:
       {%- endif -%}
       {%- macro create_instance(type_name) -%}
       {%- set lvalue_owner_swift = cxx_is_lval_reference and value_policy in ('take_ownership', 'automatic', 'automatic_reference', 'copy', 'move') -%}
-      {%- set pointer_owner_swift = cxx_is_pointer and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
+      {%- set pointer_owner_swift = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
       {%- set owner = ', true' if  cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_swift or pointer_owner_swift else '' -%}
       {%- if nullable|default(False) -%}
       if ({{name}}.ptr != nil) {
@@ -272,7 +272,7 @@ std::vector:
     sc: "IEGenCDataArray"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_resolved_type_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.data);
 
@@ -338,7 +338,7 @@ std::map:
     sc: "IEGenCDataMap"
   converters:
     c_to_cxx: |
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_resolved_type_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
@@ -432,9 +432,9 @@ std::shared_ptr:
   converters:
     c_to_cxx: |
       {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
-      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].target_type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants %}
@@ -465,9 +465,9 @@ std::shared_ptr:
       {%- endif %}
     cxx_to_c: |
       {%- if args[0].vars and args[0].root_types_infos|rejectattr('vars.shared_ref', 'equalto', True)|list -%}
-      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
@@ -479,7 +479,7 @@ std::shared_ptr:
       {%- endif %}
       {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
-      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer}}arg_pointee_{{name}}).name();
+      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}arg_pointee_{{name}}).name();
       int status = 0;
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
       if (status == 0) {
@@ -529,11 +529,11 @@ std::pair:
     sc: "IEGenCDataPair"
   converters:
     c_to_cxx: |
-      auto first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
-      auto second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
+      auto& first_tmp_{{name}} = *reinterpret_cast<{{args_converters[0].c.target_type_name}}*>({{name}}.first);
+      auto& second_tmp_{{name}} = *reinterpret_cast<{{args_converters[1].c.target_type_name}}*>({{name}}.second);
       {{args[0].snippet('first_tmp_{}'.format(name))}}
       {{args[1].snippet('second_tmp_{}'.format(name))}}
-      {{cxx.pointee_unqualified_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
+      {{cxx.unqualified_resolved_type_name}} {{target_name}} { {{args[0].converted_name('first_tmp_{}'.format(name))}}, {{args[1].converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
       auto _first_data_{{target_name}} = new {{args_converters[0].c.target_type_name}};
       auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};

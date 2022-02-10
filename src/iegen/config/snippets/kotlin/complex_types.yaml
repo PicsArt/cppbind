@@ -44,28 +44,28 @@ $Object:
     jdk: Long
   converters:
     jni_to_cxx: |
-      {%- set dereferencer = '*' if not cxx_is_pointer else '' %}
-      {%- set pointee = cxx.pointee_unqualified_name %}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name %}
+      {%- set dereferencer = '*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer) else '' %}
+      {%- set pointee = cxx.unqualified_resolved_type_name %}
+      {%- set pointee_base = root_types_infos[0].cxx.unqualified_resolved_type_name %}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) %}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.jni_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}{{target_name}}_shared_ptr.get();
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if pointee_base == pointee %}
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>({{name}});
       {%- else %}
       auto base_{{name}} = reinterpret_cast<{{pointee_base}}*>({{name}});
-      auto{{'&' if not cxx_is_pointer}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
       {%- endif %}
       {%- endif %}
     cxx_to_jni: |
       {%- if value_policy is not defined -%}
       {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
-      {%- set pointee = cxx.pointee_unqualified_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.pointee_unqualified_name -%}
+      {%- set pointee = cxx.unqualified_resolved_type_name -%}
+      {%- set pointee_base = root_types_infos[0].cxx.unqualified_resolved_type_name -%}
       {%- if root_types_infos[0].vars.shared_ref -%}
       {%- if not cxx.is_value_type -%}
       {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case iegen supports object return only by value or wrapped into shared_ptr') -%}
@@ -77,7 +77,7 @@ $Object:
       {%- else %}
       {%- macro apply_rv_policy() -%}
       const_cast<{{pointee}}*>(
-      {%- if cxx_is_pointer -%}
+      {%- if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
       {%- if value_policy == 'reference_internal' -%}
       {%- do Error.critical(value_policy + ' policy for pointers is not supported for kotlin yet.') -%}
       {%- endif -%}
@@ -96,7 +96,7 @@ $Object:
       {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
       {%- endif -%})
       {%- endmacro -%}
-      {{root_types_infos[0].cxx.pointee_unqualified_name}}* {{target_name}}_baseptr = {{apply_rv_policy()}};
+      {{root_types_infos[0].cxx.unqualified_resolved_type_name}}* {{target_name}}_baseptr = {{apply_rv_policy()}};
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>({{target_name}}_baseptr);
       {%- endif %}
     kotlin_to_jdk: |
@@ -107,7 +107,7 @@ $Object:
       {%- endif -%}
       {%- macro create_instance(type_name) -%}
       {%- set lvalue_owner_kt = cxx_is_lval_reference and value_policy in ('copy', 'move', 'automatic', 'automatic_reference', 'take_ownership') -%}
-      {%- set pointer_owner_kt = cxx_is_pointer and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
+      {%- set pointer_owner_kt = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
       {%- set owner = ', true' if cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_kt or pointer_owner_kt else '' -%}
       {%- if nullable|default(False) -%}
       val {{target_name}} = if ({{name}} == 0L) null else {{type_name}}({{name}}{{owner}})
@@ -198,7 +198,7 @@ std::vector:
     jni_to_cxx: |
       {%- set tmp_name = '_' + target_name %}
       {%- set jni_array_get = 'iegen::get{}Array'.format(args[0].custom.pname) %}
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_resolved_type_name}} {{target_name}};
       auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
       for (auto& value_{{tmp_name}} : {{tmp_name}}) {
           {{args[0].snippet('value_{}'.format(tmp_name))|indent}}
@@ -261,7 +261,7 @@ std::map:
       {%- set tmp_val_name = 'tmp_val_' + target_name %}
       {%- set jni_array_get_k = 'iegen::get{}Array'.format(args[0].custom.pname) %}
       {%- set jni_array_get_v = 'iegen::get{}Array'.format(args[1].custom.pname) %}
-      {{cxx.pointee_unqualified_name}} {{target_name}};
+      {{cxx.unqualified_resolved_type_name}} {{target_name}};
       auto {{tmp_name}} = iegen::extract_jni_pair(env, {{name}});
       auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
       auto {{tmp_val_name}} = {{jni_array_get_v}}(env, {{tmp_name}}.second);
@@ -359,11 +359,11 @@ std::shared_ptr:
   converters:
     jni_to_cxx: |
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root =  args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_root =  args[0].root_types_infos[0].cxx.unqualified_resolved_type_name if args[0].is_obj_type else pointee %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False)%}
       {%- if is_nullable%}
@@ -384,11 +384,11 @@ std::shared_ptr:
       {%- endif %}
     cxx_to_jni: |
       {%- if args[0].vars and not args[0].root_types_infos[0].vars.shared_ref -%}
-      {%- do Error.critical(args[0].cxx.pointee_unqualified_name + ' has an invalid value for shared_ref variable.') -%}
+      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.pointee_unqualified_name if args[0].is_obj_type else pointee %}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_type_name %}
+      {%- set pointee_root = args[0].root_types_infos[0].cxx.unqualified_resolved_type_name if args[0].is_obj_type else pointee %}
+      {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
       {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
@@ -439,7 +439,7 @@ std::pair:
       auto second_{{name}} = {{extract_second}}(env, secondObject_{{name}});
       {{args[0].snippet('first_{}'.format(name))}}
       {{args[1].snippet('second_{}'.format(name))}}
-      {{cxx.pointee_unqualified_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}});
+      {{cxx.unqualified_resolved_type_name}} {{target_name}} = std::make_pair({{args[0].converted_name('first_{}'.format(name))}}, {{args[1].converted_name('second_{}'.format(name))}});
     cxx_to_jni: |
       auto first_{{name}} = {{name}}.first;
       auto second_{{name}} = {{name}}.second;

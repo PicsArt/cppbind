@@ -72,6 +72,7 @@ public:
      * python.action: gen_method
      * swift.action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     Counter& operator +=(const Counter& counter) {
         this->_count += counter.count();

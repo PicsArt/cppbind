@@ -23,13 +23,21 @@ $Object:
   custom:
     is_c_pointer_type: False
     tpostfix: |
+      {#- this is an internal section no need to define in user defined custom converters -#}
       {%- for name in template_names or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
       {%- endfor -%}
+    namespace: |
+      {#- this is an internal section no need to define in user defined custom converters -#}
+      {%- if parent_type_info -%}
+      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {{converter.swift.target_type_name}}.
+      {%- endif -%}
     tname: |
       {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
   types:
     swift: |
+      {{custom.namespace if not definition|default(False)}}
       {%- if interface_class|default(False) -%}
       {{vars.interface_class_name}}{{custom.tpostfix}}
       {%- else -%}
@@ -67,6 +75,9 @@ $Object:
       {%- endif %}
       {%- endif %}
     cxx_to_c: |
+      {%- if value_policy is not defined -%}
+      {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
+      {%- endif -%}
       {%- set pointee = cxx.pointee_unqualified_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
@@ -105,7 +116,28 @@ $Object:
       {{demangle()}}
       {%- endif %}
       {%- endif %}
-      auto value_ptr_{{name}} = const_cast<{{pointee}}*>({%if cxx_is_pointer%}{{name}}{%elif cxx_is_lval_reference%} &{{name}} {%else%} new {{pointee}}({{name}}) {%endif%});
+      {%- macro apply_rv_policy() -%}
+      const_cast<{{pointee}}*>(
+      {%- if cxx_is_pointer -%}
+      {%- if value_policy == 'reference_internal' -%}
+      {%- do Error.critical(value_policy + ' policy for pointers is not supported for swift yet.') -%}
+      {%- endif -%}
+      {%- if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
+      {%- elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
+      {%- elif value_policy in ('automatic_reference', 'reference', 'automatic', 'take_ownership') -%} {{name}}
+      {%- endif -%}
+      {%- elif cxx_is_lval_reference -%}
+      {%- if value_policy == 'reference_internal' -%}
+      {%- do Error.critical(value_policy + ' policy for lvalue references is not supported for swift yet.') -%}
+      {%- endif -%}
+      {%- if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
+      {%- elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+      {%- elif value_policy in ('reference', 'take_ownership') -%} &{{name}}
+      {%- endif -%}
+      {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
+      {%- endif -%})
+      {%- endmacro %}
+      auto value_ptr_{{name}} = {{apply_rv_policy()}};
       {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if descendants else 'value_ptr_' + name}}};
       {%- endif %}
@@ -116,13 +148,19 @@ $Object:
       let {{target_name}} = {{name}}.cself
       {%- endif -%}
     sc_to_swift: |
+      {%- if value_policy is not defined -%}
+      {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
+      {%- endif -%}
       {%- macro create_instance(type_name) -%}
+      {%- set lvalue_owner_swift = cxx_is_lval_reference and value_policy in ('take_ownership', 'automatic', 'automatic_reference', 'copy', 'move') -%}
+      {%- set pointer_owner_swift = cxx_is_pointer and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
+      {%- set owner = ', true' if  cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_swift or pointer_owner_swift else '' -%}
       {%- if nullable|default(False) -%}
       if ({{name}}.ptr != nil) {
-        {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+          {{target_name}} = {{type_name}}({{name}}{{owner}})
       }
       {%- else -%}
-      {{target_name}} = {{type_name}}({{name}}{% if cxx_is_value_type%}, true{%endif%})
+      {{target_name}} = {{type_name}}({{name}}{{owner}})
       {%- endif -%}
       {%- endmacro -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
@@ -137,11 +175,11 @@ $Object:
         {{create_instance(type)|indent(2)}}
       {%- endfor %}
       default:
-        {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+        {%- set type = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
         {{create_instance(type + custom.tpostfix)|indent(2)}}
       }
       {%- else %}
-      {%- set type = vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+      {%- set type = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
       {{create_instance(type + custom.tpostfix)}}
       {%- endif %}
 
@@ -248,7 +286,7 @@ std::vector:
       {{target_type_name}} {{target_name}} = { _data_{{target_name}}, static_cast<long long>({{name}}.size()) };
       for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
           auto& value_{{name}} = {{name}}[_i_{{name}}];
-          {{args[0].snippet('value_{}'.format(name))|indent(4)}}
+          {{args[0].snippet('value_{}'.format(name), value_policy=value_policy)|indent(4)}}
           _data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
@@ -271,7 +309,7 @@ std::vector:
       }
       for i in 0..<Int({{name}}.size) {
         let {{name}}Value = _{{name}}Buffer[i]
-        {{args[0].snippet('{}Value'.format(name))|indent(2)}}
+        {{args[0].snippet('{}Value'.format(name), value_policy=value_policy)|indent(2)}}
         {{target_name}}.append({{args[0].converted_name('{}Value'.format(name))|to_camel_case}})
       }
     sc_cleanup:
@@ -318,8 +356,8 @@ std::map:
           const auto& key_{{name}} = value_{{name}}.first;
           const auto& val_{{name}} = value_{{name}}.second;
           {
-              {{args[0].snippet('key_{}'.format(name))|indent(8)}}
-              {{args[1].snippet('val_{}'.format(name))|indent(8)}}
+              {{args[0].snippet('key_{}'.format(name), value_policy=value_policy)|indent(8)}}
+              {{args[1].snippet('val_{}'.format(name), value_policy=value_policy)|indent(8)}}
               _k_data_{{target_name}}[_i_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}};
               _v_data_{{target_name}}[_i_{{name}}] = {{args[1].converted_name('val_{}'.format(name))}};
               _i_{{name}} += 1;
@@ -358,8 +396,8 @@ std::map:
         let {{name}}Key = {{name}}BufferKey[{{name}}Idx]
         let {{name}}Val = {{name}}BufferVal[{{name}}Idx]
         do {
-          {{args[0].snippet('{}Key'.format(name))|indent(4)}}
-          {{args[1].snippet('{}Val'.format(name))|indent(4)}}
+          {{args[0].snippet('{}Key'.format(name), value_policy=value_policy)|indent(4)}}
+          {{args[1].snippet('{}Val'.format(name), value_policy=value_policy)|indent(4)}}
           {{target_name}}[{{args[0].converted_name('{}Key'.format(name))|to_camel_case}}] = {{args[1].converted_name('{}Val'.format(name))|to_camel_case}}
         }
       }
@@ -477,7 +515,9 @@ std::shared_ptr:
     swift_to_sc: |
       {{args[0].snippet(name, nullable=nullable|default(False))}}
     sc_to_swift: |
-      {{args[0].snippet(name, nullable=nullable|default(False))}}
+      {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
+    # for shared pointers we always use take_ownership
+    # although for now take_ownership is not working as expected as we do not have object caching yet
 
 std::pair:
   custom:
@@ -499,8 +539,8 @@ std::pair:
       auto _second_data_{{target_name}} = new {{args_converters[1].c.target_type_name}};
       const auto& first_{{name}} = {{name}}.first;
       const auto& second_{{name}} = {{name}}.second;
-      {{args[0].snippet('first_{}'.format(name))}}
-      {{args[1].snippet('second_{}'.format(name))}}
+      {{args[0].snippet('first_{}'.format(name), value_policy=value_policy)}}
+      {{args[1].snippet('second_{}'.format(name), value_policy=value_policy)}}
       *_first_data_{{target_name}} = {{args[0].converted_name('first_{}'.format(name))}};
       *_second_data_{{target_name}} = {{args[1].converted_name('second_{}'.format(name))}};
       {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
@@ -533,6 +573,6 @@ std::pair:
       }
       let {{name}}First = _{{name}}FirstData[0]
       let {{name}}Second = _{{name}}SecondData[0]
-      {{args[0].snippet('{}First'.format(name))}}
-      {{args[1].snippet('{}Second'.format(name))}}
+      {{args[0].snippet('{}First'.format(name), value_policy=value_policy)}}
+      {{args[1].snippet('{}Second'.format(name), value_policy=value_policy)}}
       let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})

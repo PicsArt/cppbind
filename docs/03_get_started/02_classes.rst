@@ -10,7 +10,7 @@ Let's generate a wrapper code for the following custom type.
    :end-before: [example]
 
 
-In a code above we are exporting all public methods and constructors.
+In a code above we are exporting all public members and constructors.
 
 .. note::
     Notice that the title method is marked as a getter, so it
@@ -141,6 +141,11 @@ Some usage examples:
             :start-after: [nested-types-usage]
             :end-before: [nested-types-usage]
 
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/main.py
+            :start-after: [nested-types-usage]
+            :end-before: [nested-types-usage]
 
     .. tab:: swift
 
@@ -160,10 +165,14 @@ Some usage examples:
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
                :language: kotlin
 
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/list.py
+               :language: python
+
         .. tab:: swift
 
             .. literalinclude:: /../examples/primitives/swift/src/nested_types/list.swift
                :language: swift
-
 
 |

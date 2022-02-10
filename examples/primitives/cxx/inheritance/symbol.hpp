@@ -155,6 +155,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
      Text* getTextPtr() {
         return _d;
@@ -164,6 +165,7 @@ public:
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
      Sign* getSignPtr() {
         return _d;

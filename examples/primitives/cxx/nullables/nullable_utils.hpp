@@ -83,6 +83,7 @@ struct Utils {
      * nullable_arg:
      *   - first
      * nullable_return: True
+     * return_value_policy: reference
      */
     static NumberDouble* max(NumberDouble* first, NumberDouble* second) {
         if (first && second) {
@@ -126,6 +127,7 @@ struct Utils {
      * __API__
      * action: gen_method
      * throws: no_throw
+     * return_value_policy: reference
      */
     static NumberDouble* checkNonnullReturn() {
         return nullptr;
@@ -136,6 +138,7 @@ struct Utils {
      * action: gen_getter
      * throws: no_throw
      * nullable_return: True
+     * return_value_policy: reference
      */
     NumberDouble* nullable() {
         return numDouble;
@@ -155,6 +158,7 @@ struct Utils {
      * __API__
      * action: gen_getter
      * throws: no_throw
+     * return_value_policy: reference
      */
     NumberDouble* nonNull() {
         return numDouble;
@@ -173,6 +177,7 @@ struct Utils {
      * __API__
      * action: gen_property_setter
      * nullable_return: True
+     * return_value_policy: reference
      */
     NumberDouble* numDouble;
 

@@ -108,8 +108,8 @@ var_class_cxx: &var_class_cxx
   body:
     content: |
       {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-      {%- set owners_names = [converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface')] + helper.get_owners_names(owner_class, impl_member=True) %}
-      {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, 'jFinalize') %}
+      {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
+      {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
           {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.pointee_unqualified_name + '>').jni_to_cxx if vars.shared_ref else make_type_converter(root_types_infos[0].cxx.pointee_unqualified_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -125,8 +125,12 @@ var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
     {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
     {%- macro gen_import(converter) -%}
+    {%- if converter.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
+    {%- endif -%}
     {%- endif -%}
     {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
@@ -165,7 +169,7 @@ class:
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        {{'open ' if cxx.is_open}}class {{converter.kotlin.target_type_name}}
+        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(definition=True)}}
         internal constructor(_id: Long, _owner: Boolean = false){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             companion object {
                 {%- if vars.c_wrapper_lib_name and all_bases_are_interface %}
@@ -259,7 +263,7 @@ interface:
         {% if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        interface {{converter.kotlin.target_type_name}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
+        interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
             val id: Long
             {%- endif %}
@@ -268,14 +272,14 @@ interface:
         }
 
         {% if interface_external %}
-        class {{converter.kotlin.target_type_name}}Helper {
+        class {{converter.kotlin.get_target_type_name(definition=True)}}Helper {
             companion object {
                 {{interface_external|string|indent(8)}}
             }
         }
         {% endif %}
 
-        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True)}}
+        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True, definition=True)}}
         internal constructor(_id: Long, _owner: Boolean = false) : {{converter.kotlin.target_type_name}} {
             companion object {
                 {%- if vars.c_wrapper_lib_name %}
@@ -326,9 +330,13 @@ interface:
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
+    {%- if converter.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
+    {%- endif %}
     {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
@@ -396,8 +404,11 @@ constructor:
       protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}): Long {
           {%- set call_args = [] %}
           {%- for arg in args %}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent}}
+          {%- set converter = arg.converter.kotlin_to_jdk %}
+          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- if conversion %}
+          {{conversion|indent}}
+          {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           val id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
@@ -409,8 +420,8 @@ constructor:
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- set owners_names = helper.get_owners_names(owner_class, impl_member=True) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, 'jConstructor' + overloading_prefix) %}
+      {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + overloading_prefix) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}
@@ -509,7 +520,7 @@ method:
           {%- else %}
           val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
+          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           return {{result_converter.converted_name('result')}}
       }
 
@@ -521,7 +532,6 @@ method:
       {%- for arg in args -%}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
       {%- endfor-%}){
           {%- set call_args = ['id'] -%}
-          {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
           {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) -%}
@@ -563,7 +573,7 @@ method:
           {%- else %}
           val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
-          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
+          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- set comma = joiner(', ') %}
@@ -571,6 +581,7 @@ method:
       private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     private_external: |
+      {%- if owner_class.vars.action == 'gen_class' -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
@@ -581,7 +592,9 @@ method:
       private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
+      {%- endif -%}
     interface_external: |
+      {%- if owner_class.vars.action == 'gen_interface' -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
@@ -593,6 +606,7 @@ method:
       external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
+      {%- endif %}
   cxx:
     include: *var_method_cxx_include
     body: |
@@ -600,7 +614,7 @@ method:
       {%- set objid_args=["jobjectid id"]if not cxx.is_static else [] -%}
       {%- set jni_args=["JNIEnv* env, jobject obj"] + objid_args
         + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
-      {%- set owners_names = helper.get_owners_names(owner_class) %}
+      {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set setter_var_name = 'value' -%}
       {%- macro args_snippet(args, call_args) -%}
       {%- for arg in args -%}
@@ -618,7 +632,7 @@ method:
           const auto& result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
                                               <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                               {%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- else %}
@@ -659,7 +673,7 @@ method:
       {%- endmacro -%}
       {%- macro gen_method(is_set_op=false) -%}
       {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, overloading_prefix, template_postfix) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
 
       extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}){
           {%- set call_args = [] %}
@@ -717,7 +731,7 @@ function:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
-          {{result_converter.snippet('result', nullable=vars.nullable_return)|indent}}
+          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
     glob_external: |
@@ -756,7 +770,7 @@ function:
           const auto& result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
                                               <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                               {%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- else %}
@@ -795,7 +809,7 @@ function:
       return result;
       {%- endif %}
       {%- endmacro %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, [vars.file|capitalize + 'Kt'], func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, vars.file|capitalize + 'Kt', func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}({{jni_args|join(', ')}}){
           {%- set call_args = [] %}
           {{args_snippet(args, call_args)|indent(4)}}
@@ -806,9 +820,13 @@ function:
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
+    {%- if converter.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
     {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
     {%- endif -%}
+    {%- endif %}
     {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
@@ -846,7 +864,7 @@ property_getter:
               {%- else %}
               val result = j{{vars.name|capitalize}}(id)
               {%- endif %}
-              {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
           {%- if vars.action == 'gen_property_setter' %}
@@ -861,11 +879,14 @@ property_getter:
           }
           {% endif %}
     private_external: |
+      {%- if owner_class.vars.action == 'gen_class' -%}
       private external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if vars.action == 'gen_property_setter' %}
       private external fun jSet{{vars.name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
+      {%- endif %}
     interface_external: |
+      {%- if owner_class.vars.action == 'gen_interface' %}
 
       @JvmStatic
       external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
@@ -874,23 +895,24 @@ property_getter:
       @JvmStatic
       external fun jSet{{vars.name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}): Unit
       {%- endif %}
+      {%- endif %}
   cxx:
     include: *var_getter_cxx_include
     body: |
-      {%- set owners_names = helper.get_owners_names(owner_class) %}
+      {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}};
-          {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(4)}}
+          {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
       {%- if vars.action == 'gen_property_setter' %}
       {% set func_name="jSet%s"|format(vars.name|lower) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, func_name) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -925,7 +947,7 @@ getter:
               {%- else %}
               val result = j{{vars.name|capitalize}}{{template_postfix}}(id)
               {%- endif %}
-              {{result_converter.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
               return {{result_converter.converted_name('result')}}
           }
           {%- if setter is defined %}
@@ -950,12 +972,15 @@ getter:
           {%- endif %}
           {%- endif %}
     private_external: |
+      {%- if owner_class.vars.action == 'gen_class' -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       private external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%- if setter is defined %}
       private external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
       {%- endif %}
+      {%- endif %}
     interface_external: |
+      {%- if owner_class.vars.action == 'gen_interface' -%}
       {% set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       @JvmStatic
       external fun j{{vars.name|capitalize}}{{template_postfix}}(id: Long): {{rconverter.jdk.target_type_name}}
@@ -963,6 +988,7 @@ getter:
 
       @JvmStatic
       external fun j{{setter.vars.name|capitalize}}{{template_postfix}}(id: Long, value: {{setter.args[0].converter.jdk.target_type_name}}): Unit
+      {%- endif %}
       {%- endif %}
   cxx:
     include: *var_getter_cxx_include
@@ -1000,8 +1026,8 @@ getter:
       {%- else %}
       {%- set template_args = '' %}
       {%- endif %}
-      {%- set owners_names = helper.get_owners_names(owner_class) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, func_name) %}
+      {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
@@ -1011,7 +1037,7 @@ getter:
           {%- endif %}
           try {
               const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
-              {{rconverter.cxx_to_jni.snippet('result', nullable=vars.nullable_return)|indent(8)}}
+              {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
               return {{rconverter.cxx_to_jni.converted_name('result')}};
           }
           {{gen_exc_try_block(vars)}}
@@ -1021,7 +1047,7 @@ getter:
       }
       {%- if setter is defined %}
       {% set func_name="j%s%s"|format(setter.vars.name|capitalize, template_postfix) %}
-      {%- set jni_setter_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, owners_names, func_name) %}
+      {%- set jni_setter_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
       extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}

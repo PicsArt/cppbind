@@ -10,7 +10,7 @@ func runRVPoliciesExamples() {
     do {
         let holder = ValuesHolder()
 
-        let valuePtr = holder.getPtrDefault()
+        let _ = holder.getPtrDefault()
         // if we call here holder.getPtrDefault() again then there will ba an
         // attempt to deallocate the original cpp object for the second time
     }

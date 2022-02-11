@@ -127,15 +127,18 @@ class CXXType:
 
     @property
     def is_value(self):
-        return not self.is_pointer and not self.is_lval_reference and not self.is_rval_reference
+        return not self.canonical_type.is_pointer and not self.canonical_type.is_lval_reference
 
     @property
     def unqualified_type_name(self):
         return cutil.get_unqualified_type_name(self.type_name)
 
     @property
-    def unqualified_pointee_name(self):
-        return cutil.get_unqualified_type_name(self.pointee_name)
+    def unqualified_resolved_type_name(self):
+        """Returns unqualified type name if the type is not typedef on pointer, otherwise returns canonical name"""
+        return self.raw_type.unqualified_type_name if \
+            (isinstance(self.type_, cli.Type) and self.is_typedef and self.canonical_type.is_pointer) \
+            else cutil.get_unqualified_type_name(self.pointee_name)
 
     @property
     def is_const_qualified(self):

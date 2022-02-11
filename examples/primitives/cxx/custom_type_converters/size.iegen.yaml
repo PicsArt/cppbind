@@ -14,7 +14,7 @@ rules:
           jfloat width_{{name}} = elems[0];
           jfloat height_{{name}} = elems[1];
           env->ReleaseFloatArrayElements({{name}}, elems, 0);
-          {{target_type_name}} {{target_name}} = {{cxx_pointee_unqualified_name}}(width_{{name}}, height_{{name}});
+          {{target_type_name}} {{target_name}} = {{cxx_unqualified_resolved_type_name}}(width_{{name}}, height_{{name}});
         cxx_to_jni: |
           jfloat width_{{name}} = {{name}}.width;
           jfloat height_{{name}} = {{name}}.height;
@@ -57,8 +57,8 @@ rules:
         sc: "IEGenCDataPair"
       converters:
         c_to_cxx: |
-          auto first_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.first);
-          auto second_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.second);
+          auto& first_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.first);
+          auto& second_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.second);
           {{target_type_name}} {{target_name}} { first_tmp_{{name}}, second_tmp_{{name}} };
         cxx_to_c: |
           auto _first_data_{{target_name}} = new float;

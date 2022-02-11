@@ -48,6 +48,7 @@ vars:
     - cxx/**/factory.hpp
     - cxx/inheritance/symbol.hpp
     - cxx/shared_ptr/shared_ptr_symbol.hpp
+    - cxx/typedefs/queue_template.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
@@ -57,12 +58,14 @@ vars:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
     - cxx/**/factory.hpp
+    - cxx/typedefs/queue_template.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
   swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
+    - cxx/typedefs/queue_template.hpp
     - cxx/**/factory.hpp
 
 var_def:

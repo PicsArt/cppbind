@@ -178,14 +178,14 @@ class:
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
             {%- if (vars.descendants if vars.descendants is not none else descendants) %}
-            static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
+            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
             free(cself.type);
             if (owner) {
                 {%- if vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{cxx.pointee_unqualified_name}}*>(cself.ptr);
+                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -281,14 +281,14 @@ interface:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner){
             {%- if (vars.descendants if vars.descendants is not none else descendants) %}
-            static_assert(std::has_virtual_destructor<{{cxx.pointee_unqualified_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.pointee_unqualified_name)}});
+            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
             free(cself.type);
             if (owner) {
                 {%- if vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx.pointee_unqualified_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{cxx.pointee_unqualified_name}}*>(cself.ptr);
+                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- endif %}
             }
         }
@@ -410,9 +410,9 @@ constructor:
           try {
               auto this_object = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               {%- if owner_class.vars.shared_ref %}
-              return {strdup("{{owner_class.cxx.type_name}}"), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)};
+              return {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)};
               {%- else %}
-              return {strdup("{{owner_class.cxx.type_name}}"), this_object};
+              return {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), this_object};
               {%- endif %}
           }
           {%- if 'no_throw' not in vars.throws %}

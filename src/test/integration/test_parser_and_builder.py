@@ -1,9 +1,9 @@
 import copy
 import datetime
 import os
+import pytest
 import types
 from unittest.mock import patch, MagicMock
-import pytest
 
 from iegen.builder.ir_builder import CXXIEGIRBuilder
 from iegen.builder.ir_post_processor import IRPostProcessor
@@ -14,8 +14,8 @@ from iegen.context_manager.ctx_mgr import ContextManager
 from iegen.ir.ast import NodeType, Node, RootNode
 from iegen.parser.filter import CXXParserFilter, CXXIegFilter
 from iegen.parser.ieg_parser import CXXParser
-from iegen.utils import absolute_path_from_glob
 from iegen.runner import WrapperGenerator
+from iegen.utils import absolute_path_from_glob
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))

@@ -156,7 +156,7 @@ class:
         {% endif -%}
         {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id, _owner)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
+        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
         {%- if root_types_infos|length > 1 -%}
         {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
         {%- endif -%}
@@ -170,7 +170,7 @@ class:
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
         {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(definition=True)}}
-        internal constructor(_id: Long, _owner: Boolean = false){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
+        internal constructor(obj: IEGenObject){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
             companion object {
                 {%- if vars.c_wrapper_lib_name and all_bases_are_interface %}
                 init {
@@ -180,8 +180,8 @@ class:
                 {{companion|string|indent(8)}}
             }
             {% if all_bases_are_interface %}
-            protected var objId = _id
-            protected val owner = _owner
+            protected var objId = obj.id
+            protected val owner = obj.owner
             {%- endif %}
             {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
@@ -277,7 +277,7 @@ interface:
         {% endif %}
 
         {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True, definition=True)}}
-        internal constructor(_id: Long, _owner: Boolean = false) : {{converter.kotlin.target_type_name}} {
+        internal constructor(obj : IEGenObject) : {{converter.kotlin.target_type_name}} {
             companion object {
                 {%- if vars.c_wrapper_lib_name %}
                 init {
@@ -287,8 +287,8 @@ interface:
                 {{companion|string|indent(8)}}
             }
 
-            protected var objId = _id
-            protected val owner = _owner
+            protected var objId = obj.id
+            protected val owner = obj.owner
             override val id: Long
                 get() {
                     if (objId == 0L) {
@@ -391,7 +391,7 @@ constructor:
       {%- endif %}
       {%- endif %}
       {%- endif -%}
-      {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}}), true) {
+      {%- endfor -%}): this(IEGenObject(construct_helper({{args|join(', ', attribute='name')}}), true)) {
       }
     companion: |
       {%- if vars.comment %}
@@ -450,8 +450,11 @@ constructor:
               err_ptr = new {{exc_type}}(e);
               {%- set exc_vars = get_type_info(exc_type).vars %}
               jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
-              jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jclass iegObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}}");
+              jmethodID iegConstructor = env->GetMethodID(iegObjClass, "<init>", "(JZ)V");
+              jobject iegObj = env->NewObject(iegObjClass, iegConstructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}};)V");
+              jobject excObj = env->NewObject(excCls, excConstructor, iegObj);
               env->Throw(jthrowable(excObj));
           }
           {%- endfor %}
@@ -644,8 +647,11 @@ method:
           err_ptr = new {{exc_type}}(e);
           {%- set exc_vars = get_type_info(exc_type).vars %}
           jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
-          jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jclass iegObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}}");
+          jmethodID iegConstructor = env->GetMethodID(iegObjClass, "<init>", "(JZ)V");
+          jobject iegObj = env->NewObject(iegObjClass, iegConstructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}};)V");
+          jobject excObj = env->NewObject(excCls, excConstructor, iegObj);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
@@ -782,8 +788,11 @@ function:
           err_ptr = new {{exc_type}}(e);
           {%- set exc_vars = get_type_info(exc_type).vars %}
           jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
-          jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jclass iegObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}}");
+          jmethodID iegConstructor = env->GetMethodID(iegObjClass, "<init>", "(JZ)V");
+          jobject iegObj = env->NewObject(iegObjClass, iegConstructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}};)V");
+          jobject excObj = env->NewObject(excCls, excConstructor, iegObj);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
@@ -997,8 +1006,11 @@ getter:
               err_ptr = new {{exc_type}}(e);
               {%- set exc_vars = get_type_info(exc_type).vars %}
               jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
-              jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jclass iegObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}}");
+              jmethodID iegConstructor = env->GetMethodID(iegObjClass, "<init>", "(JZ)V");
+              jobject iegObj = env->NewObject(iegObjClass, iegConstructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.IEGenObject']|map('replace', '.', pat_sep)|path_join}};)V");
+              jobject excObj = env->NewObject(excCls, excConstructor, iegObj);
               env->Throw(jthrowable(excObj));
           }
       {%- endfor %}

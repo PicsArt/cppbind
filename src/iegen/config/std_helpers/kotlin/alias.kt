@@ -5,3 +5,5 @@ package {{vars.helpers_package_prefix + '.' + path.splitext(file_rel_name)[0].re
 
 typealias StringArray = Array<String>
 typealias ObjectArray = Array<Any>
+
+data class IEGenObject(val id : Long, val owner : Boolean = false)

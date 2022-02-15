@@ -110,9 +110,9 @@ $Object:
       {%- set pointer_owner_kt = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
       {%- set owner = ', true' if cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_kt or pointer_owner_kt else '' -%}
       {%- if nullable|default(False) -%}
-      val {{target_name}} = if ({{name}} == 0L) null else {{type_name}}({{name}}{{owner}})
+      val {{target_name}} = if ({{name}} == 0L) null else {{type_name}}(IEGenObject({{name}}{{owner}}))
       {%- else -%}
-      val {{target_name}} = {{type_name}}({{name}}{{owner}})
+      val {{target_name}} = {{type_name}}(IEGenObject({{name}}{{owner}}))
       {%- endif -%}
       {%- endmacro -%}
       {%- set type_name = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else target_type_name -%}

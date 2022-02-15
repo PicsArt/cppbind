@@ -56,20 +56,23 @@ $Object:
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- else %}
       {%- if descendants -%}
-      {{pointee}}* {{target_name}}_ptr = nullptr;
+      {%- set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') -%}
+      {{pointee}}* {{result_target_name}} = nullptr;
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, "{{cxx.unqualified_canonical_type_name}}") == 0)
-              {{target_name}}_ptr = static_cast<{{pointee}}*>({{name}}.ptr);
+              {{result_target_name}} = static_cast<{{pointee}}*>({{name}}.ptr);
           {%- for descendant in descendants %}
           else if (strcmp({{name}}.type, "{{descendant}}") == 0)
-              {{target_name}}_ptr = static_cast<{{descendant}}*>({{name}}.ptr);
+              {{result_target_name}} = static_cast<{{descendant}}*>({{name}}.ptr);
           {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
               exit(1);
           }
       }
-      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_ptr;
+      {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
+      auto& {{target_name}} = *{{result_target_name}};
+      {%- endif %}
       {%- else %}
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- endif %}

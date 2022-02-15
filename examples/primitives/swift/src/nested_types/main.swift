@@ -21,8 +21,8 @@ list.pop_back()
 assert(list.back.value.value == value1.value)
 
 let listWrapper = ListWrapper()
-list.push_back(item: item1)
-assert(list.back.value.value == item1.value.value)
+listWrapper.push_back(item: item1)
+assert(listWrapper.back.value.value == item1.value.value)
 
 // [nested-types-usage]
 }

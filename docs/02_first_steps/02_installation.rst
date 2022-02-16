@@ -105,10 +105,31 @@ Dev installation
 
 .. code-block:: bash
 
-    pip3 install -r src/requirements.txt
+    python3 -m pip install -r src/requirements.txt
     python3 setup.py develop
 
-Installation is complete to test run the command\ :
+User installation
+^^^^^^^^^^^^^^^^^
+
+``iegen`` is built as a standard python package and can be installed using ``pip`` with the following command.
+
+.. code-block:: bash
+
+    python3 -m pip install iegen
+
+If you are going to use it as a standalone command line application we recommend using ``pipx`` instead.
+``pipx`` creates an isolated environment for each application and its associated packages and makes the application available from the shell.
+Using ``pipx`` will also prevent dependency conflicts between ``iegen`` and other packages within the current environment.
+To install iegen with ``pipx`` use the following commands:
+
+.. code-block:: bash
+
+    python3 -m pip install pipx
+    python3 -m pipx ensurepath
+    python3 -m pipx install iegen
+
+
+To test the installation run the following command\ :
 
 .. code-block:: bash
 

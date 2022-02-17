@@ -111,9 +111,9 @@ var_class_cxx: &var_class_cxx
       {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
       {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.unqualified_resolved_type_name + '>').jni_to_cxx if root.vars.shared_ref else make_type_converter(root_types_infos[0].cxx.unqualified_resolved_type_name).jni_to_cxx %}
+          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.unqualified_resolved_type_name + '>').jni_to_cxx if vars.shared_ref else make_type_converter(root_types_infos[0].cxx.unqualified_resolved_type_name).jni_to_cxx %}
           {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {%- if root.vars.shared_ref %}
+          {%- if vars.shared_ref %}
           delete &{{jni_to_cxx_converter.converted_name('id')}};
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};
@@ -161,10 +161,10 @@ class:
         {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
         {%- endif -%}
         {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
-        {%- do Error.critical(cxx.name + 'has more than 1 non abstract base type.') %}
+        {%- do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
         {%- endif %}
-        {%- if ancestors|selectattr('vars.shared_ref', 'equalto', True)|list|length not in (0, ancestors|length) %}
-        {%- do Error.critical(cxx.name + 'ancestors have different values for shared_ref variable.') %}
+        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
@@ -251,8 +251,11 @@ interface:
         {{new_line}}{{vars.header_code_fragment}}
         {% endif -%}
         {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
-        {%- if ancestors|selectattr('vars.shared_ref', 'equalto', True)|list|length not in (0, ancestors|length) %}
-        {%- do Error.critical(cxx.name + 'ancestors have different values for shared_ref variable.') %}
+        {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+        {%- do Error.critical(cxx.type_name + ' interface cannot inherit from a class.') %}
+        {%- endif %}
+        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}
         {%- if root_types_infos|length > 1 %}
         {%- do Error.critical(cxx.type_name + ' has more than one root type.') %}
@@ -430,7 +433,7 @@ constructor:
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-              {%- if not owner_class.root.vars.shared_ref %}
+              {%- if not owner_class.vars.shared_ref %}
               {{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               return reinterpret_cast<jlong>(baseptr);
               {%- else %}
@@ -677,7 +680,7 @@ method:
           {{args_snippet(args, call_args)|indent(4)}}
           {%- if not cxx.is_static %}
           validateID(id);
-          {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
+          {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op)|indent(4)}}
           {%- else %}
@@ -899,7 +902,7 @@ property_getter:
       {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
-      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
+      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -1025,7 +1028,7 @@ getter:
       {%- endif %}
       {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
-      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.root.vars.shared_ref else owner_class.converter.jni_to_cxx %}
+      {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}

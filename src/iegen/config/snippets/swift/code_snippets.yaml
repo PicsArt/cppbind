@@ -177,7 +177,7 @@ class:
       content: |
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
-            {%- if (vars.descendants if vars.descendants is not none else descendants) %}
+            {%- if not vars.shared_ref and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
             free(cself.type);
@@ -280,7 +280,7 @@ interface:
     body:
       content: |
         void release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner){
-            {%- if (vars.descendants if vars.descendants is not none else descendants) %}
+            {%- if not vars.shared_ref and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
             free(cself.type);

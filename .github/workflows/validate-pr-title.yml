@@ -20,6 +20,7 @@ jobs:
     steps:
     
       - name: Login to JIRA
+        if: github.event.pull_request.draft == false
         uses: atlassian/gajira-login@master
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -28,6 +29,7 @@ jobs:
           
       
       - name: Find in commit messages
+        if: github.event.pull_request.draft == false
         id: find
         uses: atlassian/gajira-find-issue-key@master
         with:
@@ -35,7 +37,7 @@ jobs:
           from: "" 
           
       - name: Comment under PR in case issue does not exist
-        if: steps.find.outputs.issue == ''
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue == ''
         uses: mshick/add-pr-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -43,13 +45,13 @@ jobs:
           message: ":red_circle: **Cannot find a matching issue in Jira**"              
       
       - name: Stop workflow in case no matching issue in Jira
-        if: steps.find.outputs.issue == ''
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue == ''
         run:  |
                 echo 'No matching issue in Jira'
                 exit 1
       
       - name: Comment under the PR the Jira Issue link
-        if: steps.find.outputs.issue != ''
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
         uses: mshick/add-pr-comment@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

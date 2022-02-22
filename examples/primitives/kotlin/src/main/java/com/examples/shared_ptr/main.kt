@@ -42,6 +42,40 @@ class SharedPtrApp {
             val constPtrCar = cheapCar.makeConstSharedPtr(newCar)
             assert(constPtrCar.cost == newCar.cost)
 
+            // testing multiple inheritance without single root in case of shared_ref=True
+            var symbolUsageObj = SymbolUsageShared()
+            val digitObj = DigitShared()
+            val textObj = TextShared()
+            val signObj = SignSharedImpl()
+
+            // test virtual methods
+            assert(symbolUsageObj.getTextType(digitObj) == "digit")
+            assert(symbolUsageObj.getTextType(textObj) == "text")
+            assert(symbolUsageObj.getSignType(digitObj) == "digit")
+            assert(symbolUsageObj.getSignType(signObj) == "sign")
+            assert(digitObj.typeName() == "digit")
+            assert(textObj.typeName() == "text")
+            assert(signObj.typeName() == "sign")
+
+            symbolUsageObj = SymbolUsageShared(digitObj)
+            assert(symbolUsageObj.getTextPtr().typeName() == "digit")
+            assert(symbolUsageObj.getSignPtr().typeName() == "digit")
+
+            // test members
+            assert(symbolUsageObj.getTextId(digitObj) == 2)
+            assert(symbolUsageObj.getTextId(textObj) == 2)
+            assert(symbolUsageObj.getSignId(digitObj) == 1)
+            assert(symbolUsageObj.getSignId(signObj) == 1)
+
+            // test return object correct casting
+            assert(symbolUsageObj.getTextId(symbolUsageObj.getTextPtr()) == 2)
+            assert(symbolUsageObj.getSignId(symbolUsageObj.getSignPtr()) == 1)
+
+            // test finalize destructors
+            textObj.close()
+            signObj.close()
+            digitObj.close()
+            symbolUsageObj.close()
 
        }
     }

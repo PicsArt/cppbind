@@ -141,7 +141,7 @@ $Object:
       {%- endif -%})
       {%- endmacro %}
       auto value_ptr_{{name}} = {{apply_rv_policy()}};
-      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
+      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if descendants else 'value_ptr_' + name}}};
       {%- endif %}
     swift_to_sc: |
@@ -496,7 +496,7 @@ std::shared_ptr:
       if ({{name}}) {
           {%- if args0_descendants %}
           {{demangle()|indent(4)}}
-          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after #389) -#}
+          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
           {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
           {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});

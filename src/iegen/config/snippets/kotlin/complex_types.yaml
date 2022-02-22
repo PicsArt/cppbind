@@ -46,7 +46,7 @@ $Object:
     jni_to_cxx: |
       {%- set dereferencer = '*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer) else '' %}
       {%- set pointee = cxx.unqualified_resolved_type_name %}
-      {%- set pointee_base = root_types_infos[0].cxx.unqualified_resolved_type_name %}
+      {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if vars.shared_ref -%}
       {%- set is_nullable = nullable|default(False) %}
       {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
@@ -55,11 +55,26 @@ $Object:
       {%- else %}
       auto iegen_obj_{{name}} = reinterpret_cast<IEGenCObject*>({{name}});
       auto iegen_obj_{{name}}_ptr = iegen_obj_{{name}} ? iegen_obj_{{name}}->ptr : nullptr;
-      {%- if pointee_base == pointee %}
-      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}reinterpret_cast<{{pointee}}*>(iegen_obj_{{name}}_ptr);
+      {%- if descendants %}
+      {%- set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
+      {{pointee}}* {{result_target_name}} = nullptr;
+      if (iegen_obj_{{name}}_ptr) {
+          if (strcmp(iegen_obj_{{name}}->type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+              {{result_target_name}} = static_cast<{{pointee}}*>(iegen_obj_{{name}}_ptr);
+          {%- for descendant in descendants %}
+          else if (strcmp(iegen_obj_{{name}}->type, "{{descendant}}") == 0)
+              {{result_target_name}} = static_cast<{{descendant}}*>(iegen_obj_{{name}}_ptr);
+          {%- endfor %}
+          else {
+              std::cerr << "Unexpected object type: " << iegen_obj_{{name}}->type << std::endl;
+              exit(1);
+          }
+      }
+      {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
+      auto& {{target_name}} = *{{result_target_name}};
+      {%- endif %}
       {%- else %}
-      auto base_{{name}} = reinterpret_cast<{{pointee_base}}*>(iegen_obj_{{name}}_ptr);
-      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}dynamic_cast<{{pointee}}*>(base_{{name}});
+      auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{dereferencer}}static_cast<{{pointee}}*>(iegen_obj_{{name}}_ptr);
       {%- endif %}
       {%- endif %}
     cxx_to_jni: |
@@ -67,7 +82,6 @@ $Object:
       {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
       {%- set pointee = cxx.unqualified_resolved_type_name -%}
-      {%- set pointee_base = root_types_infos[0].cxx.unqualified_resolved_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- if vars.shared_ref -%}
@@ -99,7 +113,7 @@ $Object:
       {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
       {%- endif -%})
       {%- endmacro -%}
-      {{root_types_infos[0].cxx.unqualified_resolved_type_name}}* {{target_name}}_baseptr = {{apply_rv_policy()}};
+      {{cxx.unqualified_resolved_type_name}}* {{target_name}}_ptr = {{apply_rv_policy()}};
       char* type_{{name}} = {{'strdup("{}")'.format(cxx.unqualified_canonical_type_name) if not descendants else 'nullptr'}};
       {%- macro demangle() -%}
       const char* name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
@@ -117,13 +131,15 @@ $Object:
           {%- if descendants %}
           {{demangle()|indent(4)}}
           {%- endif %}
-          iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{target_name}}_baseptr};
+          {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
+          iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if descendants else target_name + '_ptr'}}};
       }
       {%- else %}
       {%- if descendants %}
       {{demangle()}}
       {%- endif %}
-      IEGenCObject* iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{target_name}}_baseptr};
+      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
+      IEGenCObject* iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if descendants else target_name + '_ptr'}}};
       {%- endif %}
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(iegen_obj_{{target_name}});
       {%- endif %}
@@ -410,37 +426,42 @@ std::shared_ptr:
       {%- if args[0].vars and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set pointee_root =  args[0].root_types_infos[0].cxx.unqualified_resolved_type_name if args[0].is_obj_type else pointee %}
-      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
-      {%- set is_nullable = nullable|default(False)%}
+      {%- set is_nullable = nullable|default(False) %}
+      {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants %}
+      {%- macro gen_cast_block() -%}
+      {%- if args0_descendants -%}
+      if (strcmp(iegen_obj_{{name}}->type, "{{args[0].cxx.unqualified_canonical_type_name}}") == 0)
+          {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>(iegen_obj_{{name}}_ptr);
+      {%- for args0_descendant in args0_descendants %}
+      else if (strcmp(iegen_obj_{{name}}->type, "{{args0_descendant}}") == 0)
+          {{target_name}} = *static_cast<std::shared_ptr<{{args0_descendant}}>*>(iegen_obj_{{name}}_ptr);
+      {%- endfor %}
+      else {
+          std::cerr << "Unexpected object type: " << iegen_obj_{{name}}->type << std::endl;
+          exit(1);
+      }
+      {%- else -%}
+      {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>(iegen_obj_{{name}}_ptr);
+      {%- endif -%}
+      {%- endmacro %}
       auto iegen_obj_{{name}} = reinterpret_cast<IEGenCObject*>({{name}});
-      {%- if is_nullable%}
-      std::shared_ptr<{{pointee}}> {{target_name}} = nullptr;
-      if (iegen_obj_{{name}}) {
-          {%- if pointee_root != pointee_unqualified %}
-          {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*reinterpret_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>(iegen_obj_{{name}}->ptr));
-          {%- else %}
-          {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>(iegen_obj_{{name}}->ptr);
-          {%- endif %}
+      auto iegen_obj_{{name}}_ptr = iegen_obj_{{name}} ? iegen_obj_{{name}}->ptr : nullptr;
+      std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
+      {%- if is_nullable %}
+      if (iegen_obj_{{name}}_ptr) {
+          {{gen_cast_block()}}
       }
       {%- else %}
-      {%- if pointee_root != pointee_unqualified %}
-      std::shared_ptr<{{pointee}}> {{target_name}} = std::dynamic_pointer_cast<{{pointee}}>(*reinterpret_cast<std::shared_ptr<{{const_qualifier}}{{pointee_root}}>*>(iegen_obj_{{name}}->ptr));
-      {%- else %}
-      std::shared_ptr<{{pointee}}>& {{target_name}} = *reinterpret_cast<std::shared_ptr<{{pointee}}>*>(iegen_obj_{{name}}->ptr);
-      {%- endif %}
+      {{gen_cast_block()}}
       {%- endif %}
     cxx_to_jni: |
       {%- if args[0].vars and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
-      {%- set pointee_root = args[0].root_types_infos[0].cxx.unqualified_resolved_type_name if args[0].is_obj_type else pointee %}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
-      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
       {%- macro demangle() %}
@@ -454,16 +475,15 @@ std::shared_ptr:
           type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
-      char* type_{{name}} = {{'strdup("{}")'.format(cxx.unqualified_canonical_type_name) if not args0_descendants else 'nullptr'}};
+      char* type_{{name}} = {{'strdup("{}")'.format(args[0].cxx.unqualified_canonical_type_name) if not args0_descendants else 'nullptr'}};
       void* {{target_name}}_ptr;
       IEGenCObject* iegen_obj_{{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}) {
           {%- if args0_descendants %}
           {{demangle()|indent(4)}}
-          {%- endif %}
-          {%- if pointee_root != pointee_unqualified %}
-          {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
+          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
           {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
@@ -472,9 +492,7 @@ std::shared_ptr:
       {%- else %}
       {%- if args0_descendants %}
       {{demangle()}}
-      {%- endif %}
-      {%- if pointee_root != pointee_unqualified %}
-      {{target_name}}_ptr = new std::shared_ptr<{{const_qualifier}}{{pointee_root}}>(std::static_pointer_cast<{{const_qualifier}}{{pointee_root}}>({{name}}));
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
       {%- else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
       {%- endif %}

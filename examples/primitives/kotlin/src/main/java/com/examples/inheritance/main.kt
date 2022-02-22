@@ -97,6 +97,41 @@ val events = myCalendar.events
 assert(!(events[0] is DateTime))
 assert(events[1] is DateTime)
 
+// testing multiple inheritance without single root
+var symbolUsageObj = SymbolUsage()
+val digitObj = Digit()
+val textObj = Text()
+val signObj = SignImpl()
+
+// test virtual methods
+assert(symbolUsageObj.getTextType(digitObj) == "digit")
+assert(symbolUsageObj.getTextType(textObj) == "text")
+assert(symbolUsageObj.getSignType(digitObj) == "digit")
+assert(symbolUsageObj.getSignType(signObj) == "sign")
+assert(digitObj.typeName() == "digit")
+assert(textObj.typeName() == "text")
+assert(signObj.typeName() == "sign")
+
+symbolUsageObj = SymbolUsage(digitObj)
+assert(symbolUsageObj.getTextPtr().typeName() == "digit")
+assert(symbolUsageObj.getSignPtr().typeName() == "digit")
+
+// test members
+assert(symbolUsageObj.getTextId(digitObj) == 2)
+assert(symbolUsageObj.getTextId(textObj) == 2)
+assert(symbolUsageObj.getSignId(digitObj) == 1)
+assert(symbolUsageObj.getSignId(signObj) == 1)
+
+// test return object correct casting
+assert(symbolUsageObj.getTextId(symbolUsageObj.getTextPtr()) == 2)
+assert(symbolUsageObj.getSignId(symbolUsageObj.getSignPtr()) == 1)
+
+// test finalize destructors
+textObj.close()
+signObj.close()
+digitObj.close()
+symbolUsageObj.close()
+
 }
 
 class InheritanceApp {

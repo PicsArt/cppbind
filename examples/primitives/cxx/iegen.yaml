@@ -46,8 +46,6 @@ vars:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
     - cxx/**/factory.hpp
-    - cxx/inheritance/symbol.hpp
-    - cxx/shared_ptr/shared_ptr_symbol.hpp
     - cxx/typedefs/queue_template.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen

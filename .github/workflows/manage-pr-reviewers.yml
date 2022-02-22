@@ -78,7 +78,6 @@ jobs:
                 
                 if [[ "$approverCount" -lt 2 ]]; then
                     echo 'More reviewers are needed in order for this Jira item to progress within its workflow.'
-                    exit 1
                 else
                     echo 'Minimum number of code reviewers passed. Change the Jira status.'
                     

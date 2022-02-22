@@ -225,6 +225,11 @@ class:
             {% if all_bases_are_interface %}
             protected var objId = _id
             protected val owner = _owner
+            private var refs: MutableList<Any> = mutableListOf()
+
+            {{'override ' if base_types_converters}}fun keepIEGenReference(ref: Any) {
+                refs.add(ref)
+            }{{new_line}}
             {%- endif %}
             {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
@@ -306,6 +311,7 @@ interface:
         interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
             val id: Long
+            fun keepIEGenReference(ref: Any)
             {%- endif %}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -332,6 +338,12 @@ interface:
 
             protected var objId = _id
             protected val owner = _owner
+            private var refs: MutableList<Any> = mutableListOf()
+
+            override fun keepIEGenReference(ref: Any) {
+                refs.add(ref)
+            }
+
             override val id: Long
                 get() {
                     if (objId == 0L) {
@@ -534,9 +546,12 @@ method:
   kotlin:
     include: *var_method_kotlin_include
     body: |
+      {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
       {%- endif -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
@@ -576,6 +591,11 @@ method:
           val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+          {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+          {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+          {%- if conversion %}
+          {{conversion|indent(4)}}{% endif %}
+          {%- endif %}
           return {{result_converter.converted_name('result')}}
       }
 
@@ -753,6 +773,9 @@ function:
   kotlin:
     include: *var_method_kotlin_include
     body: |
+      {%- if vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, vars.file_fullname)) -%}
+      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
@@ -937,6 +960,11 @@ property_getter:
               val result = j{{vars.name|capitalize}}(id)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
+              {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+              {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+              {%- if conversion %}
+              {{conversion|indent(8)}}{% endif %}
+              {%- endif %}
               return {{result_converter.converted_name('result')}}
           }
           {%- if vars.action == 'gen_property_setter' %}
@@ -1020,6 +1048,11 @@ getter:
               val result = j{{vars.name|capitalize}}{{template_postfix}}(id)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
+              {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+              {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+              {%- if conversion %}
+              {{conversion|indent(8)}}{%- endif %}
+              {%- endif %}
               return {{result_converter.converted_name('result')}}
           }
           {%- if setter is defined %}

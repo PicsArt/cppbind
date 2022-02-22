@@ -151,7 +151,7 @@ std::function:
 
 std::map:
   custom:
-    tname: "Map{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Map{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
   types:
     python: dict
     pybind: dict
@@ -166,7 +166,7 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    tname: "{{args[0].custom.tname}}"
+    tname: "{{args_converters[0].python.custom.tname}}"
   types:
     python: "{{args[0].target_type_name}}"
     pybind: "{{args[0].target_type_name}}"
@@ -193,7 +193,7 @@ json:
 
 std::pair:
   custom:
-    tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Pair{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
   types:
     python: tuple
     pybind: tuple

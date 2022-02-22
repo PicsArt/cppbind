@@ -363,18 +363,11 @@ descendants:
 
 return_value_policy:
   inheritable: false
-  python.default: |
+  default: |
     {%- if action in ('gen_getter', 'gen_property_getter', 'gen_property_setter') -%}
     reference_internal
     {%- else -%}
     automatic
     {%- endif -%}
-  default: |
-    {%- if action in ('gen_getter', 'gen_property_getter', 'gen_property_setter') -%}
-    reference
-    {%- else -%}
-    automatic
-    {%- endif -%}
-  options: [ 'copy', 'move', 'take_ownership', 'reference', 'automatic', 'automatic_reference' ]
-  python.options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
+  options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
   allowed_on: [ cxx_method, function, function_template, field, constructor ]

@@ -422,19 +422,95 @@ public:
         return _valueRef;
     };
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void clean() {
+        // this method is to deallocate _valuePtr
+        // for testing purposes not using destructor
+        delete _valuePtr;
+    }
 
     ~ValuesHolder() {
         std::cout<<"values holder destructor"<<std::endl;
-        // not removing resources here for test cases
-        // _valueRef.reset();
-        // delete _valuePtr;
+        // not deallocating _valuePtr for testing purposes
     }
 
 private:
     Value* _valuePtr;
     std::shared_ptr<ValueSharedRef> _valueRef;
-
 };
+
+
+/**
+ * This is an example to test reference_internal policy.
+ * __API__
+ * action: gen_class
+ * package: rv_policies
+ */
+class AnotherValueHolder {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    AnotherValueHolder()
+           : _valuePtr(new Value("initial"))
+           , _valueRef(std::shared_ptr<ValueSharedRef>(new ValueSharedRef("initial"))) {};
+
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    Value* value() {
+        return _valuePtr;
+    };
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     * return_value_policy: reference
+     */
+    Value* valueReference() {
+        return _valuePtr;
+    };
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+    std::shared_ptr<ValueSharedRef> sharedValue() {
+        return _valueRef;
+    };
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     * return_value_policy: reference
+     */
+    std::shared_ptr<ValueSharedRef> sharedValueReference() {
+        return _valueRef;
+    };
+
+
+    ~AnotherValueHolder() {
+        std::cout<<"another holder destructor"<<std::endl;
+        delete _valuePtr;
+    }
+
+private:
+    Value* _valuePtr;
+    std::shared_ptr<ValueSharedRef> _valueRef;
+};
+
 // [example]
 }
 #endif

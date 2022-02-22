@@ -122,20 +122,14 @@ $Object:
       {%- macro apply_rv_policy() -%}
       const_cast<{{pointee}}*>(
       {%- if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
-      {%- if value_policy == 'reference_internal' -%}
-      {%- do Error.critical(value_policy + ' policy for pointers is not supported for swift yet.') -%}
-      {%- endif -%}
       {%- if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
       {%- elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
-      {%- elif value_policy in ('automatic_reference', 'reference', 'automatic', 'take_ownership') -%} {{name}}
+      {%- elif value_policy in ('automatic_reference', 'reference', 'reference_internal', 'automatic', 'take_ownership') -%} {{name}}
       {%- endif -%}
       {%- elif cxx_is_lval_reference -%}
-      {%- if value_policy == 'reference_internal' -%}
-      {%- do Error.critical(value_policy + ' policy for lvalue references is not supported for swift yet.') -%}
-      {%- endif -%}
       {%- if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
       {%- elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
-      {%- elif value_policy in ('reference', 'take_ownership') -%} &{{name}}
+      {%- elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
       {%- endif -%}
       {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
       {%- endif -%})
@@ -160,7 +154,7 @@ $Object:
       {%- set owner = ', true' if  cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_swift or pointer_owner_swift else '' -%}
       {%- if nullable|default(False) -%}
       if ({{name}}.ptr != nil) {
-          {{target_name}} = {{type_name}}({{name}}{{owner}})
+        {{target_name}} = {{type_name}}({{name}}{{owner}})
       }
       {%- else -%}
       {{target_name}} = {{type_name}}({{name}}{{owner}})
@@ -185,6 +179,15 @@ $Object:
       {%- set type = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
       {{create_instance(type + custom.tpostfix)}}
       {%- endif %}
+    swift_ref_internal: |
+      {%- if not nullable -%}
+      {{name}}.keepIEGenReference({{reference}})
+      {%- else -%}
+      if {{name}} != nil {
+        {{name}}!.keepIEGenReference({{reference}})
+      }
+      {%- endif -%}
+
 
 $Enum:
   custom:
@@ -330,6 +333,12 @@ std::vector:
         {%- endif %}
         {%- endif %}
         {{name}}.data.deallocate()
+    swift_ref_internal: |
+      {%- if args_converters[0].swift_ref_internal -%}
+      for value{{name}} in {{name}} {
+        {{args_converters[0].swift_ref_internal.snippet('value' + name, reference=reference, nullable=nullable)|indent(2)}}
+      }
+      {%- endif -%}
 
 std::map:
   custom:
@@ -420,6 +429,19 @@ std::map:
         {%- endif %}
         {{name}}.keys.deallocate()
         {{name}}.values.deallocate()
+    swift_ref_internal: |
+      {%- set arg0 = args_converters[0].swift_ref_internal %}
+      {%- set arg1 = args_converters[1].swift_ref_internal %}
+      {%- if arg0 or arg1 -%}
+      for ({{'key' + name if arg0 else '_'}}, {{'value' + name if arg1 else '_'}}) in {{name}} {
+        {%- if arg0 %}
+        {{arg0.snippet('key' + name, reference=reference, nullable=nullable)|indent(2)}}
+        {%- endif %}
+        {%- if arg1 %}
+        {{arg1.snippet('value' + name, reference=reference, nullable=nullable)|indent(2)}}
+        {%- endif %}
+      }
+      {%- endif -%}
 
 std::unordered_map:
   std::map
@@ -579,3 +601,10 @@ std::pair:
       {{args[0].snippet('{}First'.format(name), value_policy=value_policy)}}
       {{args[1].snippet('{}Second'.format(name), value_policy=value_policy)}}
       let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})
+    swift_ref_internal: |
+      {%- if args_converters[0].swift_ref_internal %}
+      {{args_converters[0].swift_ref_internal.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}
+      {%- endif %}
+      {%- if args_converters[1].swift_ref_internal %}
+      {{args_converters[1].swift_ref_internal.snippet(name + '.second', reference=reference, nullable=nullable)|indent(2)}}
+      {%- endif %}

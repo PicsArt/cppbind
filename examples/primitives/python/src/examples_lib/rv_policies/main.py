@@ -13,24 +13,28 @@ holder = ValuesHolder()
 value_ptr_copied = holder.get_ptr_copy()
 value_ptr_copied.name = "update"
 assert holder.get_ptr_copy().name == "initial"
+holder.clean()
 
 # RVP=move - a new object is created and the owner is python
 holder = ValuesHolder()
 value_ptr_moved = holder.get_ptr_move()
 value_ptr_moved.name = "update"
 assert holder.get_ptr_move().name == "initial"
+holder.clean()
 
 # RVP=reference - owner is cpp
 holder = ValuesHolder()
 value_ptr_ref = holder.get_ptr_reference()
 value_ptr_ref.name = "update"
 assert holder.get_ptr_reference().name == value_ptr_ref.name
+holder.clean()
 
 # RVP=automatic_reference - owner is cpp
 holder = ValuesHolder()
 value_ptr_auto_ref = holder.get_ptr_automatic_reference()
 value_ptr_auto_ref.name = "update"
 assert holder.get_ptr_automatic_reference().name == value_ptr_auto_ref.name
+holder.clean()
 
 # RVP in (automatic, take_ownership) - are handled similarly for pointers i.e new object is not created
 # and the owner is python
@@ -52,6 +56,7 @@ value_default = holder.get_value_default()
 value_default.name = "update"
 assert holder.get_value_default().name != "update"
 assert holder.get_value_default() != value_default
+holder.clean()
 
 holder = ValuesHolder()
 # RVP=copy - a new object is created and the owner is python
@@ -60,33 +65,44 @@ assert value_copied.name == "initial"
 value_copied.name = "update"
 # original instance is not updated
 assert holder.get_value_copy().name == "initial"
+holder.clean()
 
+holder = ValuesHolder()
 # RVP=move a new object is created and the owner is python
 value_moved = holder.get_value_move()
 value_moved.name = "update"
 # original instance is not updated
 assert holder.get_value_move().name == "initial"
+holder.clean()
 
 # RVP=reference and it's ignored as object is returned by value copy is used instead
+holder = ValuesHolder()
 value_by_ref = holder.get_value_reference()
 value_by_ref.name = "update"
 # original instance is not updated
 assert holder.get_value_reference().name == "initial"
+holder.clean()
 
 # RVP=automatic and it's ignored as object is returned by value copy is used instead
+holder = ValuesHolder()
 holder.get_value_automatic().name = "update"
 # original instance is not updated
 assert holder.get_value_automatic().name == "initial"
+holder.clean()
 
 # RVP=automatic_reference and it's ignored as object is returned by value copy is used instead
+holder = ValuesHolder()
 holder.get_value_automatic_reference().name = "update"
 # original instance is not updated
 assert holder.get_value_automatic_reference().name == "initial"
+holder.clean()
 
 # RVP=take_ownership and it's ignored as object is returned by value copy is used instead
+holder = ValuesHolder()
 holder.get_value_take_ownership().name = "update"
 # original instance is not updated
 assert holder.get_value_take_ownership().name == "initial"
+holder.clean()
 
 
 # return by reference
@@ -97,29 +113,35 @@ value_ref_default = holder.get_ref_default()
 value_ref_default.name = "update"
 assert holder.get_ref_default().name != "update"
 assert holder.get_ref_default() != value_ref_default
+holder.clean()
 
 # RVP=copy - a new object is created and the owner is python
 holder = ValuesHolder()
 value_ref_copied = holder.get_ref_copy()
 value_ref_copied.name = "update"
 assert holder.get_ref_copy().name == "initial"
+holder.clean()
 
 # RVP=move - a new object is created and the owner is python
+holder = ValuesHolder()
 value_ref_moved = holder.get_ref_move()
 value_ref_moved.name = "update"
 assert holder.get_ref_move().name == "initial"
+holder.clean()
 
 # RVP=automatic_reference - copy is used and a new object is created which owner is python
 holder = ValuesHolder()
 value_ref_auto_ref = holder.get_ref_automatic_reference()
 value_ref_auto_ref.name = "update"
 assert holder.get_ref_automatic_reference().name == "initial"
+holder.clean()
 
 # RVP=automatic - copy is used and a new object is created which owner is python
 holder = ValuesHolder()
 value_ref_automatic = holder.get_ref_automatic()
 value_ref_automatic.name = "update"
 assert holder.get_ref_automatic().name == "initial"
+holder.clean()
 
 # RVP=take_ownership - a new object is not created and the owner is python
 holder = ValuesHolder()
@@ -127,7 +149,7 @@ value_ref_take_ownership = holder.get_ref_take_ownership()
 value_ref_take_ownership.name = "update"
 assert holder.get_ref_take_ownership().name == value_ref_take_ownership.name
 
-# RVP=reference - owner is cpp after exiting the block python object will be deleted but cpp object won't be deallocated
+# RVP=reference - owner is cpp after python object will be deleted, cpp object won't be deallocated
 # but in this case as the above method returns the same instance with RVP=reference then this one returns
 # the same python cached instance which means the owner is python
 holder = ValuesHolder()
@@ -148,6 +170,7 @@ value_ref_default = holder.get_shared_ref_default()
 value_ref_default.name = "update"
 assert holder.get_shared_ref_default().name == "update"
 assert holder.get_shared_ref_default() == value_ref_default
+holder.clean()
 
 # RVP=copy - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -155,6 +178,7 @@ shared_ref_copied = holder.get_shared_ref_copy()
 assert shared_ref_copied.name == "initial"
 shared_ref_copied.name = "update"
 assert holder.get_shared_ref_copy().name == shared_ref_copied.name
+holder.clean()
 
 # RVP=move - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -162,6 +186,7 @@ shared_ref_moved = holder.get_shared_ref_move()
 assert shared_ref_moved.name == "initial"
 shared_ref_moved.name = "update"
 assert holder.get_shared_ref_move().name == shared_ref_moved.name
+holder.clean()
 
 # RVP=reference - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -169,6 +194,7 @@ shared_ref_reference = holder.get_shared_ref_reference()
 assert shared_ref_reference.name == "initial"
 shared_ref_reference.name = "update"
 assert holder.get_shared_ref_reference().name == shared_ref_reference.name
+holder.clean()
 
 # RVP=automatic - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -176,6 +202,7 @@ shared_ref_automatic = holder.get_shared_ref_automatic()
 assert shared_ref_automatic.name == "initial"
 shared_ref_automatic.name = "update"
 assert holder.get_shared_ref_automatic().name == shared_ref_automatic.name
+holder.clean()
 
 # RVP=automatic_reference - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -183,6 +210,7 @@ shared_ref_automatic_reference = holder.get_shared_ref_automatic_reference()
 assert shared_ref_automatic_reference.name == "initial"
 shared_ref_automatic_reference.name = "update"
 assert holder.get_shared_ref_automatic_reference().name == shared_ref_automatic_reference.name
+holder.clean()
 
 # RVP=take_ownership - reference counter is incremented and the owner is python
 holder = ValuesHolder()
@@ -190,6 +218,7 @@ shared_ref_take_ownership = holder.get_shared_ref_take_ownership()
 assert shared_ref_take_ownership.name == "initial"
 shared_ref_take_ownership.name = "update"
 assert holder.get_shared_ref_take_ownership().name == shared_ref_take_ownership.name
+holder.clean()
 
 value_ptr = Value("from python")
 value_ref = ValueSharedRef("from python")

@@ -29,9 +29,10 @@ fun use() {
         val valuePtrMoved = holder.getPtrMove()
         valuePtrMoved.name = "update"
         assert(holder.getPtrMove().name == "initial")
+        holder.clean()
     }
 
-    // RVP=reference - owner is cpp next after exiting the block pointer is not deleted
+    // RVP=reference - owner is cpp without calling clean next after use block pointer is not deleted
     run {
         val holder = ValuesHolder()
         val valuePtrRef = holder.getPtrReference()
@@ -40,9 +41,10 @@ fun use() {
             holder.getPtrReference()
                 .use { res -> assert(res.name == valuePtrRef.name) }
         }
+        holder.clean()
     }
 
-    // RVP=automatic_reference - owner is cpp next after exiting the block pointer is not deleted
+    // RVP=automatic_reference - owner is cpp without calling clean next after use block pointer is not deleted
     run {
         ValuesHolder().use { holder ->
             holder.getPtrAutomaticReference().use { valuePtrAutoRef ->
@@ -51,6 +53,7 @@ fun use() {
                     assert(res.name == valuePtrAutoRef.name)
                 }
             }
+            holder.clean()
         }
     }
 
@@ -80,6 +83,7 @@ fun use() {
         assert(value.name == "initial")
         value.name = "update"
         assert(holder.getValueDefault().name == "initial")
+        holder.clean()
     }
     run {
 
@@ -97,6 +101,7 @@ fun use() {
         valueMoved.name = "update"
         // original instance is not updated
         assert(holder.getValueMove().name == "initial")
+        holder.clean()
     }
 
     // RVP=reference - and it's ignored as object is returned by value copy is used instead
@@ -106,6 +111,7 @@ fun use() {
         valueRef.name = "update"
         // original instance is not updated
         assert(holder.getValueReference().name == "initial")
+        holder.clean()
     }
 
     // RVP=automatic - and it's ignored as object is returned by value copy is used instead
@@ -114,6 +120,7 @@ fun use() {
         holder.getValueAutomatic().name = "update"
         // original instance is not updated
         assert(holder.getValueAutomatic().name == "initial")
+        holder.clean()
     }
 
     // RVP=automatic_reference - and it's ignored as object is returned by value copy is used instead
@@ -122,6 +129,7 @@ fun use() {
         holder.getValueAutomaticReference().name = "update"
         // original instance is not updated
         assert(holder.getValueAutomaticReference().name == "initial")
+        holder.clean()
     }
 
     // RVP=take_ownership - and it's ignored as object is returned by value copy is used instead
@@ -130,6 +138,7 @@ fun use() {
         holder.getValueTakeOwnership().name = "update"
         // original instance is not updated
         assert(holder.getValueTakeOwnership().name == "initial")
+        holder.clean()
     }
 
 
@@ -143,6 +152,7 @@ fun use() {
         assert(value.name == "initial")
         value.name = "update"
         assert(holder.getRefDefault().name == "initial")
+        holder.clean()
     }
 
     run {
@@ -157,9 +167,10 @@ fun use() {
         val valueRefMoved = holder.getRefMove()
         valueRefMoved.name = "update"
         assert(holder.getRefMove().name == "initial")
+        holder.clean()
     }
 
-    // RVP=reference - owner is cpp after exiting the block kotlin object will be deleted but cpp object won't be deallocated
+    // RVP=reference - owner is cpp without calling clean after use block kotlin object will be deleted but cpp object won't be deallocated
     run {
         val holder = ValuesHolder()
         val valueRefRef = holder.getRefReference()
@@ -169,6 +180,7 @@ fun use() {
                 assert(res.name == valueRefRef.name)
             }
         }
+        holder.clean()
     }
 
     // RVP=automatic_reference - copy is used and a new object is created which owner is kotlin
@@ -177,6 +189,7 @@ fun use() {
         val valueRefAutoRef = holder.getRefAutomaticReference()
         valueRefAutoRef.name = "update"
         assert(holder.getRefAutomaticReference().name == "initial")
+        holder.clean()
     }
 
 
@@ -186,6 +199,7 @@ fun use() {
         val valueRefAutomatic = holder.getRefAutomatic()
         valueRefAutomatic.name = "update"
         assert(holder.getRefAutomatic().name == "initial")
+        holder.clean()
     }
 
     // RVP=take_ownership - new object is not created and the owner is kotlin
@@ -211,6 +225,7 @@ fun use() {
         assert(value.name == "initial")
         value.name = "update"
         assert(holder.getSharedRefDefault().name == "update")
+        holder.clean()
     }
 
     // RVP=copy - reference counter is incremented and the owner is kotlin
@@ -220,6 +235,7 @@ fun use() {
         assert(sharedRefCopied.name == "initial")
         sharedRefCopied.name = "update"
         assert(holder.getSharedRefCopy().name == sharedRefCopied.name)
+        holder.clean()
     }
 
     // RVP=move - reference counter is incremented and the owner is kotlin
@@ -229,6 +245,7 @@ fun use() {
         assert(sharedRefMoved.name == "initial")
         sharedRefMoved.name = "update"
         assert(holder.getSharedRefCopy().name == sharedRefMoved.name)
+        holder.clean()
     }
 
     // RVP=reference - reference counter is incremented and the owner is kotlin
@@ -238,6 +255,7 @@ fun use() {
         assert(sharedRefReference.name == "initial")
         sharedRefReference.name = "update"
         assert(holder.getSharedRefReference().name == sharedRefReference.name)
+        holder.clean()
     }
 
 
@@ -248,6 +266,7 @@ fun use() {
         assert(sharedRefAutomatic.name == "initial")
         sharedRefAutomatic.name = "update"
         assert(holder.getSharedRefAutomatic().name == sharedRefAutomatic.name)
+        holder.clean()
     }
 
     // RVP=automatic_reference - reference counter is incremented and the owner is kotlin
@@ -257,6 +276,7 @@ fun use() {
         assert(sharedRefAutomaticReference.name == "initial")
         sharedRefAutomaticReference.name = "update"
         assert(holder.getSharedRefAutomaticReference().name == sharedRefAutomaticReference.name)
+        holder.clean()
     }
 
     // RVP=take_ownership - reference counter is incremented and the owner is kotlin
@@ -269,6 +289,25 @@ fun use() {
             holder.getSharedRefTakeOwnership()
                 .use { res -> assert(res.name == sharedRefTakeOwnership.name) }
         }
+        holder.clean()
+    }
+
+    /// reference internal
+    // for kotlin reference_internal cannot be properly tested as we can't force a gc
+    run {
+        val holder = AnotherValueHolder()
+        // value keeps reference on it's parent i.e. on holder
+        val value = holder.value
+        assert(value.name == "initial")
+    }
+
+    // for shared pointers rvp is ignored and take_ownership is always used
+    run {
+        val holder = AnotherValueHolder()
+        val value = holder.sharedValue
+        holder.close()
+        // for shared pointers even if holder gets deleted still value will still hold a valid pointer
+        assert(value.name == "initial")
     }
 
 // [rv-policies-usage]

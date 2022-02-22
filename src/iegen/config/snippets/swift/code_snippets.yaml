@@ -142,15 +142,21 @@ class:
 
           public let cself: {{converter.sc.target_type_name}}
           public let owner: Bool
+          private var refs: [AnyObject]
 
           // internal main initializer
           internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
             self.cself = _cself
             self.owner = _owner
+            self.refs = []
           }
 
           deinit {
             release_{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
+          }
+
+          public func keepIEGenReference(_ object: AnyObject) {
+            self.refs.append(object)
           }{{new_line}}
           {%- endif %}
           {%- if head %}
@@ -229,6 +235,7 @@ interface:
 
           {%- if not base_types_converters %}
           var cself: {{converter.sc.target_type_name}} { get }{{new_line}}
+          func keepIEGenReference(_ object: AnyObject)
           {%- endif %}
           {%- if interface_head %}
           {{interface_head|string|indent(2)}}
@@ -253,15 +260,21 @@ interface:
         public class {{converter.swift.get_target_type_name(interface_class=True, definition=True)}}: {{converter.swift.target_type_name}} {
           public let cself: {{converter.sc.target_type_name}}
           public let owner: Bool
+          private var refs: [AnyObject]
 
           // internal main initializer
           internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
             self.cself = _cself
             self.owner = _owner
+            self.refs = []
           }
 
           deinit {
             release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}(cself, owner)
+          }
+
+          public func keepIEGenReference(_ object: AnyObject) {
+            self.refs.append(object)
           }{{new_line}}
           {%- if head %}
           {{head|string|indent(2)}}
@@ -481,6 +494,11 @@ method:
           {%- endif %}
           {%- endif %}
           {%- endfor %}
+          {%- if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+          {%- set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
+          {%- if conversion %}
+          {{conversion|indent(4)}}{% endif %}
+          {%- endif %}
           return {{rconverter.sc_to_swift.converted_name('result')}}
         }
         {%- if not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
@@ -524,6 +542,9 @@ method:
       public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
       {%- set call_args = ['cself.cself'] -%}
       {%- else -%}
+      {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+      {%- endif -%}
       {%- set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
@@ -589,6 +610,11 @@ method:
         {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
+        {%- endif %}
+        {%- if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+        {%- set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
+        {%- if conversion %}
+        {{conversion|indent(2)}}{% endif %}
         {%- endif %}
         return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
@@ -736,6 +762,9 @@ method:
 function:
   swift:
     body: |
+      {%- if vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, vars.file_fullname)) -%}
+      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.displayname)) -%}
@@ -916,6 +945,11 @@ property_getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
+          {%- if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+          {%- set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) -%}
+          {%- if conversion %}
+          {{conversion|indent(4)}}{% endif %}
+          {%- endif %}
           return {{result_converter.converted_name('result')}}
         }
         {%- if vars.action == 'gen_property_setter' %}
@@ -989,6 +1023,11 @@ getter:
           {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
+          {%- endif %}
+          {%- if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+          {%- set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
+          {%- if conversion %}
+          {{conversion|indent(4)}}{% endif %}
           {%- endif %}
           return {{result_converter.converted_name('result')}}
         }

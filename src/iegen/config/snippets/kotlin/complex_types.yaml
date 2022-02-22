@@ -95,20 +95,14 @@ $Object:
       {%- macro apply_rv_policy() -%}
       const_cast<{{pointee}}*>(
       {%- if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
-      {%- if value_policy == 'reference_internal' -%}
-      {%- do Error.critical(value_policy + ' policy for pointers is not supported for kotlin yet.') -%}
-      {%- endif -%}
       {%- if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
       {%- elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
-      {%- elif value_policy in ('automatic_reference', 'reference', 'automatic', 'take_ownership') -%} {{name}}
+      {%- elif value_policy in ('automatic_reference', 'reference', 'automatic', 'take_ownership', 'reference_internal') -%} {{name}}
       {%- endif -%}
       {%- elif cxx_is_lval_reference -%}
-      {%- if value_policy == 'reference_internal' -%}
-      {%- do Error.critical(value_policy + ' policy for lvalue references is not supported for kotlin yet.') -%}
-      {%- endif -%}
       {%- if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
       {%- elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
-      {%- elif value_policy in ('reference', 'take_ownership') -%} &{{name}}
+      {%- elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
       {%- endif -%}
       {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
       {%- endif -%})
@@ -183,6 +177,14 @@ $Object:
       {%- endmacro -%}
       {%- set type_name = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else target_type_name -%}
       {{create_instance(type_name)}}
+    kotlin_ref_internal: |
+      {%- if not nullable -%}
+      {{name}}.keepIEGenReference({{reference}})
+      {%- else -%}
+      {{name}}?.let {
+          {{name}}.keepIEGenReference({{reference}})
+      }
+      {%- endif -%}
 
 $Enum:
   custom:
@@ -254,7 +256,7 @@ std::string_view:
 std::vector:
   custom:
     pname: Object
-    tname: "List{{args[0].custom.tname}}"
+    tname: "List{{args_converters[0].kotlin.custom.tname}}"
   types:
     kotlin: "List<{{args[0].target_type_name}}>"
     jni: "{{args[0].target_type_name if args[0].custom.pname != 'Object' else 'jobject'}}Array"
@@ -310,11 +312,17 @@ std::vector:
           {{args[0].snippet(var_name, value_policy=value_policy)|indent}}
           {{target_name}}.add({{args[0].converted_name(var_name)}})
       }
+    kotlin_ref_internal: |
+      {%- if args_converters[0].kotlin_ref_internal -%}
+      for (value{{name}} in {{name}}) {
+          {{args_converters[0].kotlin_ref_internal.snippet('value' + name, reference=reference, nullable=nullable)|indent(4)}}
+      }
+      {%- endif -%}
 
 std::map:
   custom:
     pname: Object
-    tname: "Map{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Map{{args_converters[0].kotlin.custom.tname}}{{args_converters[1].kotlin.custom.tname}}"
   types:
     kotlin: "Map<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jmapobject
@@ -407,6 +415,19 @@ std::map:
           {{args[1].snippet('elem2_{}'.format(name), value_policy=value_policy)|indent}}
           {{target_name}}.put({{args[0].converted_name('elem1_{}'.format(name))}}, {{args[1].converted_name('elem2_{}'.format(name))}})
       }
+    kotlin_ref_internal: |
+      {%- set arg0 = args_converters[0].kotlin_ref_internal %}
+      {%- set arg1 = args_converters[1].kotlin_ref_internal %}
+      {%- if arg0 or arg1 -%}
+      for (({{'key' + name if arg0 else '_'}}, {{'value' + name if arg1 else '_'}}) in {{name}}) {
+          {%- if arg0 %}
+          {{arg0.snippet('key' + name, reference=reference, nullable=nullable)|indent(4)}}
+          {%- endif %}
+          {%- if arg1 %}
+          {{arg1.snippet('value' + name, reference=reference, nullable=nullable)|indent(4)}}
+          {%- endif %}
+      }
+      {%- endif -%}
 
 
 std::unordered_map:
@@ -416,7 +437,7 @@ std::unordered_map:
 std::shared_ptr:
   custom:
     pname: Long
-    tname: "{{args[0].custom.tname}}"
+    tname: "{{args_converters[0].kotlin.custom.tname}}"
   types:
     kotlin: "{{args[0].target_type_name}}"
     jni: jobjectid
@@ -509,7 +530,7 @@ std::shared_ptr:
 std::pair:
   custom:
     pname: Pair
-    tname: "Pair{{args[0].custom.tname}}{{args[1].custom.tname}}"
+    tname: "Pair{{args_converters[0].kotlin.custom.tname}}{{args_converters[1].kotlin.custom.tname}}"
   types:
     kotlin: "Pair<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jobject
@@ -559,6 +580,13 @@ std::pair:
       {{args[0].snippet('first_{}'.format(name), value_policy=value_policy)|indent}}
       {{args[1].snippet('second_{}'.format(name), value_policy=value_policy)|indent}}
       val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first_{}'.format(name))}}, {{args[0].converted_name('second_{}'.format(name))}})
+    kotlin_ref_internal: |
+      {%- if args_converters[0].kotlin_ref_internal %}
+      {{args_converters[0].kotlin_ref_internal.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}
+      {%- endif %}
+      {%- if args_converters[1].kotlin_ref_internal %}
+      {{args_converters[1].kotlin_ref_internal.snippet(name + '.second', reference=reference, nullable=nullable)|indent(2)}}
+      {%- endif %}
 
 std::__ndk1::pair:
   std::pair

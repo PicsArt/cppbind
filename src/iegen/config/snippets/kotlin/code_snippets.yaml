@@ -24,7 +24,9 @@ file:
       {%- if glob_external %}
 
       {{glob_external}}
-      {%- endif %}{{new_line}}
+      {%- endif %}
+
+      private external fun jGettypebyid(id: Long): String{{new_line}}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -37,11 +39,18 @@ file:
 
       #include "jni.h"
       #include <iostream>
+      #include <cxxabi.h>
+      #include <string.h>
       {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
       {{include}}
       {{namespace}}
 
-      {{body}}{{new_line}}
+      {{body}}
+
+      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, vars.file|capitalize + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
+          validateID(id);
+          return env->NewStringUTF(reinterpret_cast<IEGenCObject*>(id)->type);
+      }{{new_line}}
 
 package:
 
@@ -118,6 +127,8 @@ var_class_cxx: &var_class_cxx
           {%- else %}
           delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}
+          free(iegen_obj_id->type);
+          delete iegen_obj_id;
       }
       {%- endif %}
 
@@ -329,23 +340,31 @@ interface:
 
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
+    {%- macro gen_import(converter, gen_desc_import=false, gen_for_impl=false) -%}
     {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, gen_desc_import=gen_desc_import)}}
     {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
-    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.get_target_type_name(interface_class=(gen_for_impl and converter.vars.action == 'gen_interface'))}}
     {%- endif -%}
     {%- endif %}
     {%- for arg_converter in converter.args -%}
-    {{gen_import(arg_converter)}}
+    {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
+    {%- set desc_converter = make_type_converter(descendant).kotlin -%}
+    {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
     {%- for arg_converter in args|map(attribute='converter.kotlin') -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter.kotlin)}}
+    {#- we need imports for descendants only for return type and we need to import implementation classes for downcasting -#}
+    {{gen_import(rconverter.kotlin, gen_desc_import=true, gen_for_impl=true)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
@@ -435,15 +454,15 @@ constructor:
           try {
               {%- if not owner_class.vars.shared_ref %}
               {{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-              return reinterpret_cast<jlong>(baseptr);
+              return reinterpret_cast<jlong>(new IEGenCObject {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), baseptr});
               {%- else %}
               {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
               {%- if owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name != owner_class.cxx.type_name %}
               std::shared_ptr<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}>(this_object);
-              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}>(baseptr));
+              return reinterpret_cast<jlong>(new IEGenCObject {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}>(baseptr)});
               {%- else %}
-              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
+              return reinterpret_cast<jlong>(new IEGenCObject {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)});
               {%- endif %}
               {%- endif %}
           }
@@ -451,10 +470,11 @@ constructor:
           {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              {%- set exc_vars = get_type_info(exc_type).vars %}
-              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+              {%- set exc_info = get_type_info(exc_type) %}
+              jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                              new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
               env->Throw(jthrowable(excObj));
           }
           {%- endfor %}
@@ -645,10 +665,11 @@ method:
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          {%- set exc_vars = get_type_info(exc_type).vars %}
-          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+          {%- set exc_info = get_type_info(exc_type) %}
+          jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                          new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
@@ -783,10 +804,11 @@ function:
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          {%- set exc_vars = get_type_info(exc_type).vars %}
-          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+          {%- set exc_info = get_type_info(exc_type) %}
+          jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                          new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
@@ -819,19 +841,27 @@ function:
 
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
+    {%- macro gen_import(converter, gen_desc_import=false, gen_for_impl=false) -%}
     {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, gen_desc_import=gen_desc_import)}}
     {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
-    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.get_target_type_name(interface_class=(gen_for_impl and converter.vars.action == 'gen_interface'))}}
     {%- endif -%}
     {%- endif %}
     {%- for arg_converter in converter.args -%}
-    {{gen_import(arg_converter)}}
+    {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
+    {%- set desc_converter = make_type_converter(descendant).kotlin -%}
+    {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_import(rconverter.kotlin)}}
+    {#- we need imports for descendants only for return type and we need to import implementation classes for downcasting -#}
+    {{gen_import(rconverter.kotlin, gen_desc_import=true, gen_for_impl=true)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
@@ -998,10 +1028,11 @@ getter:
       {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              {%- set exc_vars = get_type_info(exc_type).vars %}
-              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+              {%- set exc_info = get_type_info(exc_type) %}
+              jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                              new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
               env->Throw(jthrowable(excObj));
           }
       {%- endfor %}

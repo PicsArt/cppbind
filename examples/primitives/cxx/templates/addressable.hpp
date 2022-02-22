@@ -19,7 +19,7 @@ namespace iegen::example {
  *     - type: iegen::example::Root
  * shared_ref: true
  * package: templates
- * swift.descendants:
+ * descendants:
  *   - iegen::example::Component
  */
 template <typename T>

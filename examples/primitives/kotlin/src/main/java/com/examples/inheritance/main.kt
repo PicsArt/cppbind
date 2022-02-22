@@ -28,15 +28,18 @@ assert(square.perimeter() == 20.0)
 
 // other test cases
 val gf = GeometricFigure(square)
-assert(gf.parallelogram.id == square.id)
+assert(gf.parallelogram is Square)
+assert(gf.parallelogram.equals(square))
 gf.parallelogram = rhombus
-assert(gf.parallelogram.id == rhombus.id)
+assert(gf.parallelogram is IRhombusFigure)
+assert(gf.parallelogram.equals(rhombus))
 gf.nullableParallelogram = null
 assert(gf.nullableParallelogram == null)
 
 val mv = MyVehicle(bicycle)
 mv.vehicle = bicycle
 assert(mv.vehicle!!.type() == "bicycle")
+assert(mv.vehicle is Bicycle)
 
 // const shared_ptr tests
 val mb = MyBicycle(bicycle)
@@ -68,10 +71,32 @@ val frog = Frog()
 assert(AnimalUsage.getAnimalTypeName(frog) == "frog")
 assert(AnimalUsage.getAquaticAnimalTypeName(frog) == "frog")
 
-val animalUsageObj = AnimalUsage()
+var animalUsageObj = AnimalUsage()
 assert(animalUsageObj.getFrog().typeName() == "frog")
 assert(animalUsageObj.getAquaticAnimal().typeName() == "frog")
 assert(animalUsageObj.getAnimal().typeName() == "frog")
+
+// test object downcasting
+val frogObj = animalUsageObj.getFrog()
+val aquaticAnimalObj = animalUsageObj.getAquaticAnimal()
+val animalObj = animalUsageObj.getAnimal()
+assert(aquaticAnimalObj is Frog)
+assert(animalObj is Frog)
+assert(frogObj.equals(aquaticAnimalObj) && frogObj.equals(animalObj))
+
+// test no downcasting when descendants=[] for Frog
+val littleFrogObj = LittleFrog()
+animalUsageObj = AnimalUsage(littleFrogObj)
+assert(!(animalUsageObj.getLittleFrog() is LittleFrog))
+
+val dateEvent = Date(2, 12, 2021)
+val dateTimeEvent = DateTime(11, 12, 2021, 12, 12, 12)
+val myCalendar = MyCalendar(listOf(dateEvent))
+myCalendar.addEvent(dateTimeEvent)
+val events = myCalendar.events
+assert(!(events[0] is DateTime))
+assert(events[1] is DateTime)
+
 }
 
 class InheritanceApp {

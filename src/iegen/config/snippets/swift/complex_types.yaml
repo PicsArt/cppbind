@@ -113,7 +113,7 @@ $Object:
       if ({{name}}) {
           {{demangle()|indent(4)}}
       } else {
-          type_result = strdup("{{cxx.unqualified_canonical_type_name}}");
+          type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
       {{demangle()}}

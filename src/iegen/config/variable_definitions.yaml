@@ -227,8 +227,9 @@ common_helpers_dir:
 
 cxx_helpers_dir:
   inheritable: true
+  kotlin.default: '{{path.join(common_helpers_dir, "kotlin/cxx")}}'
+  python.default: '{{path.join(common_helpers_dir, "python/cxx")}}'
   swift.default: '{{path.join(common_helpers_dir, "swift/cxx")}}'
-  default: '{{path.join(common_helpers_dir, "cxx")}}'
   allowed_on: [ root ]
 
 helpers_dir:

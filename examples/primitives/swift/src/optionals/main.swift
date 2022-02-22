@@ -24,7 +24,7 @@ func runOptionalExamples() {
     //
     // // non default value assertions
     let task = Task(title: "my task")
-    assert(op.optionalPtrWithNullptrDefault(task: task)!.cself.ptr == task.cself.ptr)
+    assert(op.optionalPtrWithNullptrDefault(task: task)!.equals(t: task))
     assert(op.optionalEnumWithDefault(c: Color.Blue) == Color.Blue)
     assert(op.optionalEnumWithDefaultAndFieldPrefix(c: ColorShade.ShadeDark) == ColorShade.ShadeDark)
     assert(op.optionalEnumWithInternalDefault(c: ColorShade.ShadeLight) == ColorShade.ShadeLight)

@@ -40,6 +40,15 @@ public:
      std::string typeName() const override {
         return "animal";
      }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    bool equals(Animal* a) const {
+        return this == a;
+    }
 };
 
 /**
@@ -113,6 +122,24 @@ public:
     std::string typeName() const override {
        return "frog";
     }
+};
+
+/**
+ * Class to check generated imports for descendants list for kotlin in case of nested types (also for interface types)
+ * __API__
+ * action: gen_interface
+ * swift.action:
+ * package: inheritance.mammals
+ */
+class Mammals {
+    public:
+    /**
+     * __API__
+     * action: gen_class
+     * swift.action:
+     * package: inheritance.mammals
+     */
+     class Dolphin : public AquaticAnimal {};
 };
 
 /**

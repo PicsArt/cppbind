@@ -76,7 +76,7 @@ jobs:
                 
                 echo 'Number of approved reviewers:' $approverCount
                 
-                if [[ "$approverCount" -lt 1 ]]; then
+                if [[ "$approverCount" -lt 2 ]]; then
                     echo 'More reviewers are needed in order for this Jira item to progress within its workflow.'
                     exit 1
                 else

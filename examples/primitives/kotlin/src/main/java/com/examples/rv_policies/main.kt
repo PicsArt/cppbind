@@ -306,8 +306,53 @@ fun use() {
         val holder = AnotherValueHolder()
         val value = holder.sharedValue
         holder.close()
-        // for shared pointers even if holder gets deleted still value will still hold a valid pointer
+        // for shared pointers even if holder gets deleted still value will hold a valid pointer
         assert(value.name == "initial")
+    }
+
+    /// keep alive policy
+    run {
+        var p2: Parent1
+        run {
+            val child1 = Child1("child1")
+            val child2 = Child2("child2")
+            val child3 = Child3Impl("child3")
+            p2 = Parent1("parent2", child1, child2, child3)
+        }
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(p2.child1.name == "child1")
+        assert(p2.child2.name == "child2")
+        assert(p2.child3.name == "child3")
+    }
+
+    // an example using container types
+    run {
+        // raw pointers
+        val p2 = Parent2("parent2")
+        run {
+            val child11 = Child1("child11")
+            val child12 = Child1("child12")
+            p2.addChildren1(listOf(child11, child12))
+        }
+        val children1 = p2.children1
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(children1[0].name == "child11")
+        assert(children1[1].name == "child12")
+    }
+
+    run {
+        // shared pointers no keep alive policy required
+        val p2 = Parent2("parent2")
+        run {
+            val child21 = Child2("child21")
+            val child22 = Child2("child22")
+            p2.addChildren2(listOf(child21, child22))
+        }
+        val children2 = p2.children2
+        assert(children2[0].name == "child21")
+        assert(children2[1].name == "child22")
     }
 
 // [rv-policies-usage]

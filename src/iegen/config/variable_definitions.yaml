@@ -371,3 +371,9 @@ return_value_policy:
     {%- endif -%}
   options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
   allowed_on: [ cxx_method, function, function_template, field, constructor ]
+
+keep_alive:
+  inheritable: false
+  default: []
+  type: list
+  allowed_on: [ cxx_method, function_template, field, constructor ]

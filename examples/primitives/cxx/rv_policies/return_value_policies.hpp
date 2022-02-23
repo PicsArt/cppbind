@@ -445,7 +445,7 @@ private:
 
 
 /**
- * This is an example to test reference_internal policy.
+ * A test example for reference_internal policy.
  * __API__
  * action: gen_class
  * package: rv_policies

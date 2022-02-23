@@ -1,6 +1,4 @@
 import copy
-import importlib
-import logging
 import types
 
 import clang.cindex as cli

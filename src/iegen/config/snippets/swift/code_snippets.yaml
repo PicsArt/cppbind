@@ -142,7 +142,7 @@ class:
 
           public let cself: {{converter.sc.target_type_name}}
           public let owner: Bool
-          private var refs: [AnyObject]
+          private var refs: [Any]
 
           // internal main initializer
           internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
@@ -155,7 +155,7 @@ class:
             release_{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
           }
 
-          public func keepIEGenReference(_ object: AnyObject) {
+          public func keepIEGenReference(_ object: Any) {
             self.refs.append(object)
           }{{new_line}}
           {%- endif %}
@@ -235,7 +235,7 @@ interface:
 
           {%- if not base_types_converters %}
           var cself: {{converter.sc.target_type_name}} { get }{{new_line}}
-          func keepIEGenReference(_ object: AnyObject)
+          func keepIEGenReference(_ object: Any)
           {%- endif %}
           {%- if interface_head %}
           {{interface_head|string|indent(2)}}
@@ -260,7 +260,7 @@ interface:
         public class {{converter.swift.get_target_type_name(interface_class=True, definition=True)}}: {{converter.swift.target_type_name}} {
           public let cself: {{converter.sc.target_type_name}}
           public let owner: Bool
-          private var refs: [AnyObject]
+          private var refs: [Any]
 
           // internal main initializer
           internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
@@ -273,7 +273,7 @@ interface:
             release_{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}(cself, owner)
           }
 
-          public func keepIEGenReference(_ object: AnyObject) {
+          public func keepIEGenReference(_ object: Any) {
             self.refs.append(object)
           }{{new_line}}
           {%- if head %}
@@ -378,6 +378,19 @@ constructor:
         {%- endfor %}
         var err = IEGenCObject()
         self.init(create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{overloading_prefix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
+        {#- This should go to shared macro -#}
+        {%- if vars.keep_alive %}
+        {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+        {%- if invalid_args  %}
+        {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+        {%- endif %}
+        {%- for arg_idx in vars.keep_alive %}
+        {%- set converter = args[arg_idx - 1].converter %}
+        {%- if converter.swift_keep_alive %}
+        {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(2)}}
+        {%- endif %}
+        {%- endfor %}
+        {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
         {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
@@ -458,6 +471,9 @@ constructor:
 method:
   swift:
     body: |
+      {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
@@ -520,6 +536,20 @@ method:
           {%- endif %}
           {%- do call_args.append(res_converter.converted_name('value')) %}
           {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), overloading_prefix)}}({{call_args|join(', ')}})
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.swift_keep_alive %}
+          {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- for arg in args %}
           {%- if arg.converter.sc_cleanup %}
           {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
@@ -542,9 +572,6 @@ method:
       public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
       {%- set call_args = ['cself.cself'] -%}
       {%- else -%}
-      {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
-      {%- endif -%}
       {%- set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
       {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
@@ -576,6 +603,22 @@ method:
         let result = {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix + template_postfix)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- else %}
         {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, overloading_prefix + template_postfix)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        {%- endif %}
+        {#- This should go to shared macro -#}
+        {%- if vars.keep_alive %}
+        {%- if cxx.is_static %}
+        {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
+        {%- endif %}
+        {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+        {%- if invalid_args  %}
+        {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+        {%- endif %}
+        {%- for arg_idx in vars.keep_alive %}
+        {%- set converter = args[arg_idx - 1].converter %}
+        {%- if converter.swift_keep_alive %}
+        {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(2)}}
+        {%- endif %}
+        {%- endfor %}
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
@@ -961,6 +1004,20 @@ property_getter:
           {{conversion|indent(4)}}
           {%- endif %}
           _prop_set_{{owner_class.converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}(cself, {{converter.converted_name('value')}})
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set args = [namespace(name='value', converter=rconverter)] %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.swift_keep_alive %}
+          {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- if rconverter.sc_cleanup %}
           {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
@@ -1044,6 +1101,19 @@ getter:
           {{conversion|indent(4)}}
           {%- endif %}
           _prop_set_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.overloading_prefix}}{{template_postfix}}(cself, {{converter.converted_name('value')}})
+          {%- if setter.vars.keep_alive %}
+          {%- set args = [namespace(name='value', converter=rconverter)] %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.swift_keep_alive %}
+          {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- if rconverter.sc_cleanup %}
           {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}

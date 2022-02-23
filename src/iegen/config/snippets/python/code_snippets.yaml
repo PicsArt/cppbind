@@ -444,7 +444,15 @@ constructor:
                                                                                           {{comma()}}py::arg("{{arg.name|to_snake_case}}")
                                                                                           {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
                                                                                           {%- endif -%}
-                                                                                          {%- endfor -%});
+                                                                                          {%- endfor -%}
+                                                                                          {#- This should go to shared macro -#}
+                                                                                          {%- if vars.keep_alive -%}
+                                                                                          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+                                                                                          {%- if invalid_args -%}
+                                                                                          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+                                                                                          {%- endif -%}
+                                                                                            , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+                                                                                          {%- endif %});
 
 
 
@@ -523,10 +531,31 @@ method:
       {{comma()}}py::arg("{{arg.name|to_snake_case}}")
       {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
       {%- endif -%}
-      {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {%- endfor -%}
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive and not (vars.is_operator and vars.name == '__getitem__') -%}
+      {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+      {%- if cxx.is_static -%}
+      {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(name, owner)) -%}
+      {%- endif -%}
+      {%- if invalid_args -%}
+      {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%- endif -%}
+      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+      {%- endif -%}
+      {%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- set setter_var_name = 'value' -%}
       {%- if vars.is_operator and vars.name == '__getitem__' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; });
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; }
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive -%}
+      {%- set args = args + [rconverter] %}
+      {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+      {%- if invalid_args -%}
+      {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%- endif -%}
+      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+      {%- endif -%});
       {%- endif %}
 
 
@@ -671,7 +700,17 @@ property_getter:
     body: |
       {%- set _name = vars.name|to_snake_case -%}
       {%- if vars.action == 'gen_property_setter' -%}
-      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}
+      {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif -%}
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive -%}
+      {%- set args = [rconverter] %}
+      {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+      {%- if invalid_args -%}
+      {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%- endif -%}
+      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+      {%- endif -%});
       {%- else -%}
       {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- endif -%}
@@ -727,7 +766,18 @@ getter:
       {%- set template_args = '' %}
       {%- endif %}
       {%- if setter is defined %}
-      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}});
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
+      {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}}
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive -%}
+      {%- set args = [rconverter] %}
+      {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+      {%- if invalid_args -%}
+      {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%- endif -%}
+      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+      {%- endif -%});
       {%- else %}
-      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
+      {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- endif %}

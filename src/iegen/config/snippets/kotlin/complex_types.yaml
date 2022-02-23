@@ -185,6 +185,8 @@ $Object:
           {{name}}.keepIEGenReference({{reference}})
       }
       {%- endif -%}
+    kotlin_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 $Enum:
   custom:
@@ -318,6 +320,8 @@ std::vector:
           {{args_converters[0].kotlin_ref_internal.snippet('value' + name, reference=reference, nullable=nullable)|indent(4)}}
       }
       {%- endif -%}
+    kotlin_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 std::map:
   custom:
@@ -428,6 +432,8 @@ std::map:
           {%- endif %}
       }
       {%- endif -%}
+    kotlin_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 
 std::unordered_map:
@@ -523,9 +529,9 @@ std::shared_ptr:
     kotlin_to_jdk: |
       {{args[0].snippet(name, nullable=nullable|default(False))|indent}}
     jdk_to_kotlin: |
+      {#- for shared pointers we always use take_ownership
+      although for now take_ownership is not working as expected as we do not have object caching yet -#}
       {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')|indent}}
-    # for shared pointers we always use take_ownership
-    # although for now take_ownership is not working as expected as we do not have object caching yet
 
 std::pair:
   custom:
@@ -587,6 +593,8 @@ std::pair:
       {%- if args_converters[1].kotlin_ref_internal %}
       {{args_converters[1].kotlin_ref_internal.snippet(name + '.second', reference=reference, nullable=nullable)|indent(2)}}
       {%- endif %}
+    kotlin_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 std::__ndk1::pair:
   std::pair

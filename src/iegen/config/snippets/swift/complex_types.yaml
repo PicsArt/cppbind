@@ -187,7 +187,8 @@ $Object:
         {{name}}!.keepIEGenReference({{reference}})
       }
       {%- endif -%}
-
+    swift_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 $Enum:
   custom:
@@ -339,6 +340,8 @@ std::vector:
         {{args_converters[0].swift_ref_internal.snippet('value' + name, reference=reference, nullable=nullable)|indent(2)}}
       }
       {%- endif -%}
+    swift_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 std::map:
   custom:
@@ -442,6 +445,8 @@ std::map:
         {%- endif %}
       }
       {%- endif -%}
+    swift_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})
 
 std::unordered_map:
   std::map
@@ -608,3 +613,5 @@ std::pair:
       {%- if args_converters[1].swift_ref_internal %}
       {{args_converters[1].swift_ref_internal.snippet(name + '.second', reference=reference, nullable=nullable)|indent(2)}}
       {%- endif %}
+    swift_keep_alive: |
+      {{name}}.keepIEGenReference({{reference}})

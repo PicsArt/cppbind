@@ -45,7 +45,9 @@ vars:
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/containers/pair.hpp
-    - cxx/**/factory.hpp
+    - cxx/**/policies_doc_examples.hpp
+    - cxx/inheritance/symbol.hpp
+    - cxx/shared_ptr/shared_ptr_symbol.hpp
     - cxx/typedefs/queue_template.hpp
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
@@ -55,7 +57,7 @@ vars:
   python.src_exclude_glob:
     - cxx/exceptions/*.h*
     - cxx/containers/json.hpp
-    - cxx/**/factory.hpp
+    - cxx/**/policies_doc_examples.hpp
     - cxx/typedefs/queue_template.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
@@ -64,7 +66,7 @@ vars:
   swift.src_exclude_glob:
     - cxx/functionals/*.hpp
     - cxx/typedefs/queue_template.hpp
-    - cxx/**/factory.hpp
+    - cxx/**/policies_doc_examples.hpp
 
 var_def:
   !join

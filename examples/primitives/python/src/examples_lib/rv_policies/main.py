@@ -1,4 +1,13 @@
-from examples_lib.rv_policies import ValuesHolder, Value, ValueSharedRef
+from examples_lib.rv_policies import (
+    ValuesHolder,
+    Value,
+    ValueSharedRef,
+    Child1,
+    Child2,
+    Child3,
+    Parent1,
+    Parent2,
+)
 
 # return raw pointer
 # RVP not specified the default is used i.e.take_ownership for pointers
@@ -227,3 +236,33 @@ holder_py = ValuesHolder(value_ptr, value_ref)
 # Case when the object is created in python i.e the owner is python.
 # In this case the cached object is always returned
 assert holder_py.get_ptr_automatic() == holder_py.get_ptr_copy() == holder_py.get_ptr_reference() == value_ptr
+
+# keep_alive
+child1 = Child1("child1")
+child2 = Child2("child2")
+child3 = Child3("child3")
+p2 = Parent1("parent2", child1, child2, child3)
+
+# NOTE: here we have a reference cycle as the default return value policy
+# for getters(reference_internal) is used alongside with keep_alive policy
+assert (p2.child1.name == "child1")
+assert (p2.child2.name == "child2")
+assert (p2.child3.name == "child3")
+
+p2 = Parent2("parent2")
+child11 = Child1("child11")
+child12 = Child1("child12")
+p2.add_children1([child11, child12])
+children1 = p2.children1
+# NOTE: here we have a reference cycle as the default return value policy
+# for getters(reference_internal) is used alongside with keep_alive policy
+assert (children1[0].name == "child11")
+assert (children1[1].name == "child12")
+
+p2 = Parent2("parent2")
+child21 = Child2("child21")
+child22 = Child2("child22")
+p2.add_children2([child21, child22])
+children2 = p2.children2
+assert (children2[0].name == "child21")
+assert (children2[1].name == "child22")

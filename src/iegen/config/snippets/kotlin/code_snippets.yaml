@@ -229,7 +229,7 @@ class:
 
             {{'override ' if base_types_converters}}fun keepIEGenReference(ref: Any) {
                 refs.add(ref)
-            }{{new_line}}
+            }
             {%- endif %}
             {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
@@ -466,6 +466,19 @@ constructor:
       {%- endif %}
       {%- endif -%}
       {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}}), true) {
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
       }
     companion: |
       {%- if vars.comment %}
@@ -546,17 +559,14 @@ method:
   kotlin:
     include: *var_method_kotlin_include
     body: |
-      {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
-      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
       {%- endif -%}
+      {%- if not cxx.is_static %}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
-      {%- if not cxx.is_static %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
@@ -591,6 +601,18 @@ method:
           val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+          {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
           {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
           {%- if conversion %}
@@ -619,6 +641,20 @@ method:
           {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {%- else %}
           jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- endif %}
       }
 
@@ -626,8 +662,15 @@ method:
 
       {%- endif %}
     companion: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if cxx.is_static %}
+      {%- if vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+      {%- endif -%}
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive %}
+      {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
+      {%- endif %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set comma = joiner(', ') -%}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -976,6 +1019,20 @@ property_getter:
               {%- else %}
               jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}})
               {%- endif %}
+              {#- This should go to shared macro -#}
+              {%- if vars.keep_alive %}
+              {%- set args = [namespace(name='value', converter=rconverter)] %}
+              {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+              {%- if invalid_args  %}
+              {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+              {%- endif %}
+              {%- for arg_idx in vars.keep_alive %}
+              {%- set converter = args[arg_idx - 1].converter %}
+              {%- if converter.kotlin_keep_alive %}
+              {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(8)}}
+              {%- endif %}
+              {%- endfor %}
+              {%- endif %}
           }
           {% endif %}
     private_external: |
@@ -1072,6 +1129,19 @@ getter:
               {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
               {%- else %}
               j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
+              {%- endif %}
+              {%- if setter.vars.keep_alive %}
+              {%- set args = [namespace(name='value', converter=rconverter)] %}
+              {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+              {%- if invalid_args  %}
+              {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+              {%- endif %}
+              {%- for arg_idx in vars.keep_alive %}
+              {%- set converter = args[arg_idx - 1].converter %}
+              {%- if converter.kotlin_keep_alive %}
+              {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(8)}}
+              {%- endif %}
+              {%- endfor %}
               {%- endif %}
           }
           {%- endif %}

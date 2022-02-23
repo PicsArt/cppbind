@@ -72,7 +72,7 @@ public:
      * throws: no_throw
      * nullable_return: True
      */
-	const std::shared_ptr<Person>& optionalSharedPtrWithNullptrDefault(const std::shared_ptr<Person>& person = nullptr) {
+	std::shared_ptr<Person> optionalSharedPtrWithNullptrDefault(std::shared_ptr<Person> person = nullptr) {
 	    return person;
 	}
 	/**

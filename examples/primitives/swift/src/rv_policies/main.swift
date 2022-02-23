@@ -316,6 +316,56 @@ func runRVPoliciesExamples() {
     }
 
 
+    /// keep alive policy
+    do {
+        var p2: Parent1
+        do {
+            let child1 = Child1(name: "child1")
+            let child2 = Child2(name: "child2")
+            let child3 = Child3Impl(name: "child3")
+            p2 = Parent1(name: "parent2", child1: child1, child2: child2, child3: child3)
+        }
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(p2.child1.name == "child1")
+        assert(p2.child2.name == "child2")
+        assert(p2.child3.name == "child3")
+        do {
+            let child3 = Child3Impl(name: "child3update")
+            p2.child3 = child3
+        }
+        assert(p2.child3.name == "child3update")
+    }
+
+    // an example using container types
+    do {
+        // raw pointers
+        let p2 = Parent2(name: "parent2")
+        do {
+            let child11 = Child1(name: "child11")
+            let child12 = Child1(name: "child12")
+            p2.addChildren1(c: [child11, child12])
+        }
+        let children1 = p2.children1
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(children1[0].name == "child11")
+        assert(children1[1].name == "child12")
+    }
+
+    do {
+        // shared pointers no keep alive policy required
+        let p2 = Parent2(name: "parent2")
+        do {
+            let child21 = Child2(name: "child21")
+            let child22 = Child2(name: "child22")
+            p2.addChildren2(c: [child21, child22])
+        }
+        let children2 = p2.children2
+        assert(children2[0].name == "child21")
+        assert(children2[1].name == "child22")
+    }
+
     // [rv-policies-usage]
 
 }

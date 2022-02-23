@@ -1,3 +1,4 @@
+cached-property==1.5.2
 GitPython==3.1.17
 ipdb==0.13.3
 isort==5.9.3

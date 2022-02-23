@@ -1,5 +1,6 @@
 import types
 from functools import lru_cache
+from cached_property import cached_property
 
 import iegen.utils.clang as cutil
 from iegen.common.cxx_type import CXXType
@@ -21,66 +22,59 @@ class TypeInfo:
         # get type context for cxx type
         self._type_ctx = runner.get_context(cxx_type.raw_type.unqualified_type_name)
 
-    @property
+    @cached_property
     def cxx(self):
-        if not hasattr(self, '_cxx'):
-            self._cxx = types.SimpleNamespace(
-                type_name=self._cxx_type.type_name,
-                pointee_name=self._cxx_type.pointee_name,
-                canonical_type=self._cxx_type.canonical_type,
-                is_pointer=self._cxx_type.is_pointer,
-                is_value_type=self._cxx_type.is_value,
-                is_lval_reference=self._cxx_type.is_lval_reference,
-                is_rval_reference=self._cxx_type.is_rval_reference,
-                unqualified_resolved_type_name=self._cxx_type.unqualified_resolved_type_name,
-                unqualified_type_name=self._cxx_type.unqualified_type_name,
-                unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,
-                is_const_qualified=self._cxx_type.is_const_qualified)
-            if self._type_ctx:
-                self._cxx.namespace = self._type_ctx.namespace
-                self._cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
-                self._cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
-                self._cxx.kind_name = self._type_ctx.kind_name
-                self._cxx.displayname = self._type_ctx.cursor.displayname
+        _cxx = types.SimpleNamespace(
+            type_name=self._cxx_type.type_name,
+            pointee_name=self._cxx_type.pointee_name,
+            canonical_type=self._cxx_type.canonical_type,
+            is_pointer=self._cxx_type.is_pointer,
+            is_value_type=self._cxx_type.is_value,
+            is_lval_reference=self._cxx_type.is_lval_reference,
+            is_rval_reference=self._cxx_type.is_rval_reference,
+            unqualified_resolved_type_name=self._cxx_type.unqualified_resolved_type_name,
+            unqualified_type_name=self._cxx_type.unqualified_type_name,
+            unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,
+            is_const_qualified=self._cxx_type.is_const_qualified)
+        if self._type_ctx:
+            _cxx.namespace = self._type_ctx.namespace
+            _cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
+            _cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
+            _cxx.kind_name = self._type_ctx.kind_name
+            _cxx.displayname = self._type_ctx.cursor.displayname
 
-        return self._cxx
+        return _cxx
 
-    @property
+    @cached_property
     def base_types_infos(self):
-        if not hasattr(self, '_base_types_infos'):
-            self._base_types_infos = [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
-                                      for base_type in
-                                      self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
-        return self._base_types_infos
+        return [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
+                                  for base_type in
+                                  self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
 
-    @property
+    @cached_property
     def parent_type_info(self):
-        if not hasattr(self, '_parent_type_info'):
-            self._parent_type_info = create_type_info(self._runner, CXXType(self._type_ctx.parent_context.cxx_type_name,
-                                                                            self._type_ctx.template_choice)) \
-                if self._type_ctx and self._type_ctx.parent_context else None
-        return self._parent_type_info
+        _parent_type_info = create_type_info(self._runner, CXXType(self._type_ctx.parent_context.cxx_type_name,
+                                                                        self._type_ctx.template_choice)) \
+            if self._type_ctx and self._type_ctx.parent_context else None
+        return _parent_type_info
 
-    @property
+    @cached_property
     def arg_types_infos(self):
-        if not hasattr(self, '_arg_types_infos'):
-            self._arg_types_infos = [create_type_info(self._runner, t) for t in
-                                     self._raw_type.template_argument_types] if self._raw_type.is_template else []
-        return self._arg_types_infos
+        return [create_type_info(self._runner, t) for t in
+                                 self._raw_type.template_argument_types] if self._raw_type.is_template else []
 
-    @property
+    @cached_property
     def root_types_infos(self):
-        if not hasattr(self, '_roots'):
-            self._roots = []
-            if self._type_ctx and self._type_ctx.kind_name != 'enum':
-                for parent in set(self._type_ctx.ancestors):
-                    if not parent.base_types:
-                        self._roots.append(create_type_info(self._runner, CXXType(parent.cxx_type_name,
-                                                                                  self._type_ctx.template_choice)))
-                if not self._roots:
-                    self._roots.append(self)
+        roots = []
+        if self._type_ctx and self._type_ctx.kind_name != 'enum':
+            for parent in set(self._type_ctx.ancestors):
+                if not parent.base_types:
+                    roots.append(create_type_info(self._runner, CXXType(parent.cxx_type_name,
+                                                                        self._type_ctx.template_choice)))
+            if not roots:
+                roots.append(self)
 
-        return self._roots
+        return roots
 
     @property
     def vars(self):

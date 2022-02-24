@@ -4,6 +4,12 @@ from examples_lib.simple import Project, Root
 
 
 # [simple-usage-example]
+mulInt = mul(5, 4)
+assert mulInt == 20
+
+mulInt = mul_three(5, 4, 3)
+assert mulInt == 60
+
 res = concat("Hello ", "Johnny")
 assert res == "Hello Johnny"
 # [simple-usage-example]

@@ -1,0 +1,13 @@
+vars:
+  src_glob:
+    - "*/**/negative_shared_ref.hpp"
+
+rules:
+  swift.code_snippets:
+    !join
+    - !include swift/code_snippets.yaml
+
+  swift.type_converters:
+    !join
+    - !include "swift/*_types.yaml"
+

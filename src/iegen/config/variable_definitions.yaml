@@ -227,8 +227,9 @@ common_helpers_dir:
 
 cxx_helpers_dir:
   inheritable: true
+  kotlin.default: '{{path.join(common_helpers_dir, "kotlin/cxx")}}'
+  python.default: '{{path.join(common_helpers_dir, "python/cxx")}}'
   swift.default: '{{path.join(common_helpers_dir, "swift/cxx")}}'
-  default: '{{path.join(common_helpers_dir, "cxx")}}'
   allowed_on: [ root ]
 
 helpers_dir:
@@ -242,6 +243,12 @@ cxx_base_source_dir:
   inheritable: true
   default: '{{path.abspath(path.join(_iegen_extras_dir, "base"))}}'
   allowed_on: [ root ]
+
+overloading_postfix:
+  inheritable: false
+  type: str
+  default: null
+  allowed_on: [ function, function_template, cxx_method, constructor ]
 
 file_postfix:
   inheritable: true
@@ -362,18 +369,17 @@ descendants:
 
 return_value_policy:
   inheritable: false
-  python.default: |
+  default: |
     {%- if action in ('gen_getter', 'gen_property_getter', 'gen_property_setter') -%}
     reference_internal
     {%- else -%}
     automatic
     {%- endif -%}
-  default: |
-    {%- if action in ('gen_getter', 'gen_property_getter', 'gen_property_setter') -%}
-    reference
-    {%- else -%}
-    automatic
-    {%- endif -%}
-  options: [ 'copy', 'move', 'take_ownership', 'reference', 'automatic', 'automatic_reference' ]
-  python.options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
+  options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
   allowed_on: [ cxx_method, function, function_template, field, constructor ]
+
+keep_alive:
+  inheritable: false
+  default: []
+  type: list
+  allowed_on: [ cxx_method, function_template, field, constructor ]

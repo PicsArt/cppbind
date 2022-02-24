@@ -25,10 +25,10 @@ func runInheritanceExamples() {
     // other test cases
     let gf = GeometricFigure(p: square)
     assert(gf.parallelogram is Square)
-    assert(gf.parallelogram.cself.ptr == square.cself.ptr)
+    assert(gf.parallelogram.equals(p: square))
     gf.parallelogram = rhombus
     assert(gf.parallelogram is RhombusFigure)
-    assert(gf.parallelogram.cself.ptr == rhombus.cself.ptr)
+    assert(gf.parallelogram.equals(p: rhombus))
     gf.nullableParallelogram = nil
     assert(gf.nullableParallelogram == nil)
 
@@ -67,7 +67,7 @@ func runInheritanceExamples() {
     let animalObj = animalUsageObj.getAnimal()
     assert(aquaticAnimalObj is Frog)
     assert(animalObj is Frog)
-    assert(frogObj.cself.ptr == aquaticAnimalObj.cself.ptr && frogObj.cself.ptr == animalObj.cself.ptr)
+    assert(frogObj.equals(a: aquaticAnimalObj) && frogObj.equals(a: animalObj))
 
     // test no downcasting when descendants=[] for Frog
     let littleFrogObj = LittleFrog()

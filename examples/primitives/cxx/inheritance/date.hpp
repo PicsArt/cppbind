@@ -14,7 +14,7 @@ namespace iegen::example {
  * shared_ref: True
  * package: inheritance
  * swift.name: MyDate
- * swift.descendants:
+ * descendants:
  *  - iegen::example::DateTime
  */
 class Date : public virtual Base {

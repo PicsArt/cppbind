@@ -1,0 +1,59 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, ready_for_review, synchronize]
+    branches:
+    - master
+    
+env:
+  GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+  GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
+  
+jobs:
+  Validate-PR-Title:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      outputIssueId: ${{ steps.find.outputs.issue }}
+    
+    steps:
+    
+      - name: Login to JIRA
+        if: github.event.pull_request.draft == false
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          
+      
+      - name: Find in commit messages
+        if: github.event.pull_request.draft == false
+        id: find
+        uses: atlassian/gajira-find-issue-key@master
+        with:
+          string: "${{ github.event.pull_request.title }}"
+          from: "" 
+          
+      - name: Comment under PR in case issue does not exist
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue == ''
+        uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          message: ":red_circle: **Cannot find a matching issue in Jira**"              
+      
+      - name: Stop workflow in case no matching issue in Jira
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue == ''
+        run:  |
+                echo 'No matching issue in Jira'
+                exit 1
+      
+      - name: Comment under the PR the Jira Issue link
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
+        uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          message: "Jira Issue Link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.find.outputs.issue }}"

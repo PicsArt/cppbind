@@ -286,6 +286,9 @@ def init_jinja_env():
     def decapitalize(input_):
         return input_[0].lower() + input_[1:]
 
+    def increment(input_, value=1):
+        return input_ + value
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
@@ -305,6 +308,7 @@ def init_jinja_env():
     env.filters['make_py_docstring'] = make_py_docstring
     env.filters['make_py_comment'] = make_py_comment
     env.filters['decapitalize'] = decapitalize
+    env.filters['increment'] = increment
 
     env.tests['match_regexp'] = match_regexp
 

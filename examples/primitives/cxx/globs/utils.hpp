@@ -16,6 +16,33 @@
  * swift.file: GlobUtils
  * throws: no_throw
  */
+static int mul(int first, int second) {
+    return first * second;
+}
+
+
+// [simple-example]
+/**
+ * A global function example.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ * overloading_postfix: Three
+ */
+static int mul(int first, int second, int third) {
+    return first * second * third;
+}
+
+/**
+ * A global function example.
+ * __API__
+ * action: gen_function
+ * package: globs
+ * swift.file: GlobUtils
+ * throws: no_throw
+ */
 std::string concat(const std::string& str1, const std::string& str2) {
     return str1 + str2;
 }

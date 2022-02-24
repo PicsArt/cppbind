@@ -29,7 +29,7 @@ assert(op.optionalEnumWithDefaultAndFieldPrefix() == ColorShade.ShadeLight)
 // non default value assertions
 val task = Task("my task")
 assert(op.optionalStringViewWithDefault("test") == "test")
-assert(op.optionalPtrWithNullptrDefault(task)!!.id == task.id)
+assert(op.optionalPtrWithNullptrDefault(task)!!.equals(task))
 assert(op.optionalEnumWithDefault(Color.Blue) == Color.Blue)
 assert(op.optionalEnumWithDefaultAndFieldPrefix(ColorShade.ShadeDark) == ColorShade.ShadeDark)
 assert(op.optionalEnumWithInternalDefault(ColorShade.ShadeLight) == ColorShade.ShadeLight)

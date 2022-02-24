@@ -6,6 +6,7 @@ import os
 import types
 
 import clang.cindex as cli
+from cached_property import cached_property
 import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
@@ -18,11 +19,9 @@ class BaseContext:
         self.runner = runner
         self.node = node or runner.ir
 
-    @property
+    @cached_property
     def vars(self):
-        if not hasattr(self, '_vars'):
-            self._vars = types.SimpleNamespace(**self.node.args)
-        return self._vars
+        return types.SimpleNamespace(**self.node.args)
 
 
 class Context(BaseContext):
@@ -114,24 +113,23 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.returns is invalid.")
         return self.node.clang_cursor.result_type
 
-    @property
-    def overloading_prefix(self):
+    @cached_property
+    def overloading_postfix(self):
         if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD,
                                                cli.CursorKind.FUNCTION_DECL,
                                                cli.CursorKind.CONSTRUCTOR,
                                                cli.CursorKind.FUNCTION_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
 
-        if not hasattr(self, '_overloading_prefix'):
-            search_api = self.node.api
-            name = self.node.spelling
-            search_names = {name}
-            overloads = self.find_adjacents(search_names, search_api)
-            _overloading_prefix = ''
-            for i, ctx in enumerate(overloads):
-                if ctx == self:
-                    _overloading_prefix = f'_{i}' if i != 0 else ''
-                    break
+        search_api = self.node.api
+        name = self.node.spelling
+        search_names = {name}
+        overloads = self.find_adjacents(search_names, search_api)
+        _overloading_prefix = ''
+        for i, ctx in enumerate(overloads):
+            if ctx == self:
+                _overloading_prefix = f'_{i}' if i != 0 else ''
+                break
 
         return _overloading_prefix
 
@@ -174,7 +172,7 @@ class Context(BaseContext):
             for base_specifier in self.base_types_specifier_cursor
         ]
 
-    @property
+    @cached_property
     def ancestors(self):
 
         if self.node.clang_cursor.kind not in [cli.CursorKind.STRUCT_DECL,
@@ -182,17 +180,14 @@ class Context(BaseContext):
                                                cli.CursorKind.CLASS_TEMPLATE]:
             raise AttributeError(f"{self.__class__.__name__}.ancestors is invalid.")
 
-        if not hasattr(self, '_ancestors'):
-            def walk(base_types):
-                for base in base_types:
-                    base = self.find_by_type(base)
-                    for _base in walk(base.base_types):
-                        yield _base
-                    yield base
+        def walk(base_types):
+            for base in base_types:
+                base = self.find_by_type(base)
+                for _base in walk(base.base_types):
+                    yield _base
+                yield base
 
-            self._ancestors = list(walk(self.base_types))
-
-        return self._ancestors
+        return list(walk(self.base_types))
 
 
     @property
@@ -322,27 +317,25 @@ class Context(BaseContext):
             return cutil.replace_template_choice(cxx_type_name, template_choice)
         return self.cursor.type.spelling
 
-    @property
+    @cached_property
     def overridden_contexts(self):
         if self.cursor.kind != cli.CursorKind.CXX_METHOD:
             raise AttributeError(f"{self.__class__.__name__}.overridden_contexts is invalid.")
 
-        if not hasattr(self, '_overridden_contexts'):
-            def _get_overridden_contexts(cursor):
-                contexts = []
-                ancestors = self.parent_context.ancestors
-                if cursor.get_overriden_cursors():
-                    for overridden in cursor.get_overriden_cursors():
-                        func_ctx = self.find_by_type(cutil.get_full_displayname(overridden))
-                        parent_ctx = self.find_by_type(cutil.get_full_displayname(overridden.lexical_parent))
-                        # if overridden method has not api but is parent has then consider it as well
-                        if parent_ctx in ancestors:
-                            if func_ctx:
-                                contexts.append(func_ctx)
-                            contexts += _get_overridden_contexts(overridden)
-                return contexts
-            self._overridden_contexts = _get_overridden_contexts(self.cursor)
-        return self._overridden_contexts
+        def _get_overridden_contexts(cursor):
+            contexts = []
+            ancestors = self.parent_context.ancestors
+            if cursor.get_overriden_cursors():
+                for overridden in cursor.get_overriden_cursors():
+                    func_ctx = self.find_by_type(cutil.get_full_displayname(overridden))
+                    parent_ctx = self.find_by_type(cutil.get_full_displayname(overridden.lexical_parent))
+                    # if overridden method has not api but is parent has then consider it as well
+                    if parent_ctx in ancestors:
+                        if func_ctx:
+                            contexts.append(func_ctx)
+                        contexts += _get_overridden_contexts(overridden)
+            return contexts
+        return _get_overridden_contexts(self.cursor)
 
 
 class RunRule:

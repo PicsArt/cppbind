@@ -3,7 +3,7 @@
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 from enum import Enum
-from functools import cached_property
+from cached_property import cached_property
 from sortedcontainers import SortedSet
 
 import clang.cindex as cli

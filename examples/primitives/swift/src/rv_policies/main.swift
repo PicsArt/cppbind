@@ -17,7 +17,7 @@ func runRVPoliciesExamples() {
 
     do {
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         // RVP=copy - a new object is created and the owner is swift
         let valuePtrCopied = holder.getPtrCopy()
         valuePtrCopied.name = "update"
@@ -29,17 +29,19 @@ func runRVPoliciesExamples() {
         assert(holder.getPtrMove().name == "initial")
     }
 
-    // RVP=reference - owner is cpp next after exiting the block pointer is not deleted
+    // RVP=reference - owner is cpp without the clean pointer is not deleted
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valuePtrRef = holder.getPtrReference()
         valuePtrRef.name = "update"
         assert(holder.getPtrReference().name == valuePtrRef.name)
     }
 
-    // RVP=automatic_reference - owner is cpp next after exiting the block pointer is not deleted
+    // RVP=automatic_reference - owner is cpp without the clean pointer is not deleted
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valuePtrAutoRef = holder.getPtrAutomaticReference()
         valuePtrAutoRef.name = "update"
         assert(holder.getPtrAutomaticReference().name == valuePtrAutoRef.name)
@@ -63,7 +65,7 @@ func runRVPoliciesExamples() {
     // RVP not specified the default is used i.e. copy for values
     do {
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         let value = holder.getValueDefault()
         assert(value.name == "initial")
         value.name = "update"
@@ -73,7 +75,7 @@ func runRVPoliciesExamples() {
     do {
 
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         // RVP=copy - a new object is created and the owner is swift
         let valueCopied = holder.getValueCopy()
         assert(valueCopied.name == "initial")
@@ -91,6 +93,7 @@ func runRVPoliciesExamples() {
     // RVP=reference - and it's ignored as object is returned by value copy is used instead
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valueRef = holder.getValueReference()
         valueRef.name = "update"
         // original instance is not updated
@@ -100,6 +103,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic - and it's ignored as object is returned by value copy is used instead
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         holder.getValueAutomatic().name = "update"
         // original instance is not updated
         assert(holder.getValueAutomatic().name == "initial")
@@ -108,6 +112,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic_reference - and it's ignored as object is returned by value copy is used instead
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         holder.getValueAutomaticReference().name = "update"
         // original instance is not updated
         assert(holder.getValueAutomaticReference().name == "initial")
@@ -116,6 +121,7 @@ func runRVPoliciesExamples() {
     // RVP=take_ownership - and it's ignored as object is returned by value copy is used instead
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         holder.getValueTakeOwnership().name = "update"
         // original instance is not updated
         assert(holder.getValueTakeOwnership().name == "initial")
@@ -127,7 +133,7 @@ func runRVPoliciesExamples() {
     // RVP not specified the default is used i.e. copy for methods returning a reference
     do {
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         let value = holder.getRefDefault()
         assert(value.name == "initial")
         value.name = "update"
@@ -136,7 +142,7 @@ func runRVPoliciesExamples() {
 
     do {
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         // RVP=copy - a new object is created and the owner is swift
         let valueRefCopied = holder.getRefCopy()
         valueRefCopied.name = "update"
@@ -148,9 +154,10 @@ func runRVPoliciesExamples() {
         assert(holder.getRefMove().name == "initial")
     }
 
-    // RVP=reference - owner is cpp after exiting the block swift object will be deleted but cpp object won't be deallocated
+    // RVP=reference - owner is cpp without calling clean after exiting the block swift object will be deleted but cpp object won't be deallocated
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valueRefRef = holder.getRefReference()
         valueRefRef.name = "update"
         assert(holder.getRefReference().name == valueRefRef.name)
@@ -159,6 +166,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic_reference - copy is used and a new object is created which owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valueRefAutoRef = holder.getRefAutomaticReference()
         valueRefAutoRef.name = "update"
         assert(holder.getRefAutomaticReference().name == "initial")
@@ -168,6 +176,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic - copy is used and a new object is created which owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let valueRefAutomatic = holder.getRefAutomatic()
         valueRefAutomatic.name = "update"
         assert(holder.getRefAutomatic().name == "initial")
@@ -190,7 +199,7 @@ func runRVPoliciesExamples() {
     // RVP not specified the default is used i.e. take_ownership is used
     do {
         let holder = ValuesHolder()
-
+        defer { holder.clean() }
         let value = holder.getSharedRefDefault()
         assert(value.name == "initial")
         value.name = "update"
@@ -200,6 +209,7 @@ func runRVPoliciesExamples() {
     // RVP=copy - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefCopied = holder.getSharedRefCopy()
         assert(sharedRefCopied.name == "initial")
         sharedRefCopied.name = "update"
@@ -209,6 +219,7 @@ func runRVPoliciesExamples() {
     // RVP=move - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefMoved = holder.getSharedRefMove()
         assert(sharedRefMoved.name == "initial")
         sharedRefMoved.name = "update"
@@ -218,6 +229,7 @@ func runRVPoliciesExamples() {
     // RVP=reference - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefReference = holder.getSharedRefReference()
         assert(sharedRefReference.name == "initial")
         sharedRefReference.name = "update"
@@ -228,6 +240,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefAutomatic = holder.getSharedRefAutomatic()
         assert(sharedRefAutomatic.name == "initial")
         sharedRefAutomatic.name = "update"
@@ -237,6 +250,7 @@ func runRVPoliciesExamples() {
     // RVP=automatic_reference - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefAutomaticReference = holder.getSharedRefAutomaticReference()
         assert(sharedRefAutomaticReference.name == "initial")
         sharedRefAutomaticReference.name = "update"
@@ -246,10 +260,110 @@ func runRVPoliciesExamples() {
     // RVP=take_ownership - reference counter is incremented and the owner is swift
     do {
         let holder = ValuesHolder()
+        defer { holder.clean() }
         let sharedRefTakeOwnership = holder.getSharedRefTakeOwnership()
         assert(sharedRefTakeOwnership.name == "initial")
         sharedRefTakeOwnership.name = "update"
         assert(holder.getSharedRefTakeOwnership().name == sharedRefTakeOwnership.name)
+    }
+
+    /// reference internal
+    // the default policy for getters and properties
+    do {
+        var value: SwValue?
+        do {
+            let holder = AnotherValueHolder()
+            value = holder.value
+            assert(holder.value.cself.ptr == value!.cself.ptr)
+        }
+        // value is not deleted as it keeps reference on it's parent i.e. on holder
+        assert(value!.name == "initial")
+    }
+
+    // rvp = reference
+    do {
+        var value: SwValue?
+        do {
+            let holder = AnotherValueHolder()
+            value = holder.valueReference
+            assert(holder.valueReference.cself.ptr == value!.cself.ptr)
+        }
+        // value is deleted holder keeps an invalid pointer
+    }
+
+    // the default policy for getters and properties for shared pointers it's ignored and take_ownership is always used
+    do {
+        var value: ValueSharedRef?
+        do {
+            let holder = AnotherValueHolder()
+            value = holder.sharedValue
+            assert(holder.sharedValue.cself.ptr != value!.cself.ptr)
+        }
+        // value is not deleted as it keeps reference on it's parent i.e. on holder
+        assert(value!.name == "initial")
+    }
+
+    // rvp = reference but still take_ownership is used
+    do {
+        var value: ValueSharedRef?
+        do {
+            let holder = AnotherValueHolder()
+            value = holder.sharedValueReference
+            assert(holder.sharedValueReference.cself.ptr != value!.cself.ptr)
+        }
+        // for shared pointers rvp is ignored reference count is incremented and ownership is given to swift
+        assert(value!.name == "initial")
+    }
+
+
+    /// keep alive policy
+    do {
+        var p2: Parent1
+        do {
+            let child1 = Child1(name: "child1")
+            let child2 = Child2(name: "child2")
+            let child3 = Child3Impl(name: "child3")
+            p2 = Parent1(name: "parent2", child1: child1, child2: child2, child3: child3)
+        }
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(p2.child1.name == "child1")
+        assert(p2.child2.name == "child2")
+        assert(p2.child3.name == "child3")
+        do {
+            let child3 = Child3Impl(name: "child3update")
+            p2.child3 = child3
+        }
+        assert(p2.child3.name == "child3update")
+    }
+
+    // an example using container types
+    do {
+        // raw pointers
+        let p2 = Parent2(name: "parent2")
+        do {
+            let child11 = Child1(name: "child11")
+            let child12 = Child1(name: "child12")
+            p2.addChildren1(c: [child11, child12])
+        }
+        let children1 = p2.children1
+        // NOTE: here we will have a reference cycle after adding object caching and
+        // with default return value policy for getters(reference_internal) for non shared_ref types
+        assert(children1[0].name == "child11")
+        assert(children1[1].name == "child12")
+    }
+
+    do {
+        // shared pointers no keep alive policy required
+        let p2 = Parent2(name: "parent2")
+        do {
+            let child21 = Child2(name: "child21")
+            let child22 = Child2(name: "child22")
+            p2.addChildren2(c: [child21, child22])
+        }
+        let children2 = p2.children2
+        assert(children2[0].name == "child21")
+        assert(children2[1].name == "child22")
     }
 
     // [rv-policies-usage]

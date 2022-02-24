@@ -5,6 +5,12 @@ import com.examples.enums.*
 
 fun use() {
 // [simple-usage-example]
+var mulInt = mul(5, 4)
+assert(mulInt == 20)
+
+var mulInt1 = mul(5, 4, 3)
+assert(mulInt1 == 60)
+
 var res = concat("Hello ", "Johnny")
 assert(res == "Hello Johnny" )
 // [simple-usage-example]

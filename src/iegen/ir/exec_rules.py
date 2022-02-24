@@ -114,7 +114,7 @@ class Context(BaseContext):
         return self.node.clang_cursor.result_type
 
     @cached_property
-    def overloading_prefix(self):
+    def overloading_postfix(self):
         if self.node.clang_cursor.kind not in [cli.CursorKind.CXX_METHOD,
                                                cli.CursorKind.FUNCTION_DECL,
                                                cli.CursorKind.CONSTRUCTOR,

@@ -565,7 +565,7 @@ function:
     include:
       unique_content: |
         {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
-        from .{{vars.file + vars.file_postfix}} import {{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}
+        from .{{vars.file + vars.file_postfix}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
   python:
     include: *var_method_python_include
     body: |
@@ -577,7 +577,7 @@ function:
       {%- set comma = joiner(', ') %}
       {% set rconverter = rconverter.python %}
       @bind
-      def {{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{template_postfix}}({%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
+      def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}({%- set rtype_package = rconverter.vars.file + '.' if rconverter.is_obj_type and rconverter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
                                       {%- for arg in args -%}
                                       {%- set arg_converter = arg.converter.python %}
                                       {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
@@ -607,7 +607,7 @@ function:
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') %}
-      m.def("{{vars.name|to_snake_case}}{{overloading_prefix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+      m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<
       {%- for arg in args -%}
       {{comma()}}{{arg.type_info.cxx.type_name}}

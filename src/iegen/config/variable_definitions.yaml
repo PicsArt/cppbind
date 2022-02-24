@@ -244,6 +244,12 @@ cxx_base_source_dir:
   default: '{{path.abspath(path.join(_iegen_extras_dir, "base"))}}'
   allowed_on: [ root ]
 
+overloading_postfix:
+  inheritable: false
+  type: str
+  default: null
+  allowed_on: [ function, function_template, cxx_method, constructor ]
+
 file_postfix:
   inheritable: true
   default: _gen

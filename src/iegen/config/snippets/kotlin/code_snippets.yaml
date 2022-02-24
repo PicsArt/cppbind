@@ -495,17 +495,17 @@ constructor:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          val id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
+          val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({{call_args|join(', ')}})
           return id
       }
       {% set comma = joiner(', ') %}
       @JvmStatic
-      private external fun jConstructor{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
+      private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
   cxx:
     include: *var_method_cxx_include
     body: |
       {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + overloading_prefix) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix)) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}
@@ -596,9 +596,9 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
@@ -638,9 +638,9 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {%- else %}
-          jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {#- This should go to shared macro -#}
           {%- if vars.keep_alive %}
           {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
@@ -687,16 +687,16 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- set comma = joiner(', ') %}
       @JvmStatic
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     private_external: |
       {%- if owner_class.vars.action == 'gen_class' -%}
@@ -704,10 +704,10 @@ method:
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
-      private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -718,10 +718,10 @@ method:
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
       @JvmStatic
-      external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
-      external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
       {%- endif %}
@@ -791,7 +791,7 @@ method:
       {%- endif %}
       {%- endmacro -%}
       {%- macro gen_method(is_set_op=false) -%}
-      {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
 
       extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}){
@@ -852,14 +852,14 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
     glob_external: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set comma = joiner(', ') -%}
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
     glob_init:
       unique_content: |
         {%- if vars.c_wrapper_lib_name %}
@@ -871,7 +871,7 @@ function:
     include: *var_method_cxx_include
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none and cxx.is_overloaded else overloading_postfix, template_postfix) %}
       {%- set jni_args=["JNIEnv* env, jclass cls"] + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- macro args_snippet(args, call_args) %}
       {%- for arg in args -%}

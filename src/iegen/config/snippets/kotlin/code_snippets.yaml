@@ -553,7 +553,7 @@ constructor:
               jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
               env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
           }
-          jobjectid result;
+          jobjectid result {};
           return result;
       }
 
@@ -790,7 +790,7 @@ method:
       }
 
       {% if rconverter.jni.target_type_name != 'void' and not is_set_op -%}
-      {{rconverter.jni.target_type_name}} result;
+      {{rconverter.jni.target_type_name}} result {};
       return result;
       {%- endif %}
       {%- endmacro -%}
@@ -934,7 +934,7 @@ function:
       }
 
       {% if rconverter.jni.target_type_name != 'void' -%}
-      {{rconverter.jni.target_type_name}} result;
+      {{rconverter.jni.target_type_name}} result {};
       return result;
       {%- endif %}
       {%- endmacro %}
@@ -1226,7 +1226,7 @@ getter:
           }
           {{gen_exc_try_block(vars)}}
 
-          {{rconverter.jni.target_type_name}} result;
+          {{rconverter.jni.target_type_name}} result {};
           return result;
       }
       {%- if setter is defined %}

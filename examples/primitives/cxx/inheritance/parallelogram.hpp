@@ -8,7 +8,7 @@ namespace iegen::example {
  * action: gen_interface
  * shared_ref: False
  * package: inheritance
- * swift.descendants:
+ * descendants:
  *  - iegen::example::Rectangle
  *  - iegen::example::Rhombus
  *  - iegen::example::Square
@@ -33,6 +33,15 @@ public:
     virtual double perimeter() const = 0;
 
     virtual ~Parallelogram() = default;
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    bool equals(Parallelogram* p) const {
+        return this == p;
+    }
 };
 // [example]
 }

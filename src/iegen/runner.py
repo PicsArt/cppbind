@@ -97,9 +97,12 @@ class WrapperGenerator:
         logging.debug("Dumping builders to files.")
 
         if Error.has_error():
-            raise Error.critical('Cannot continue: iegen error has occurred')
+            Error.critical('Cannot continue: iegen error has occurred')
 
         builder.dump_outputs()
+
+        if Error.has_error():
+            Error.critical('Cannot continue: iegen error has occurred')
 
 
 def run(args, ctx_desc):

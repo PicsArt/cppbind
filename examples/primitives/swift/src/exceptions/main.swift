@@ -70,6 +70,13 @@ func runExceptionExamples() {
         NoThrowExc.noop()
         // check throwing constructor
         let _ = NoThrowExc(doThrow: true)
+        // checking throwing setter
+        do {
+            let obj = try ThrowExc()
+            obj.prop1 = "new_value"
+        } catch {
+            assert(false)
+        }
         ExceptionHandler.unsetUncaughtExceptionHandler()
     }
 

@@ -184,10 +184,10 @@ Using this variable user can override the default policies.
 
 Let's take a look at the following example:
 
-.. literalinclude:: /../examples/primitives/cxx/rv_policies/singleton.hpp
+.. literalinclude:: /../examples/primitives/cxx/rv_policies/policies_doc_examples.hpp
    :language: cpp
-   :start-after: [example]
-   :end-before: [example]
+   :start-after: [singleton-example]
+   :end-before: [singleton-example]
 
 In this example we have two members returning the same singleton instance by reference and by pointer.
 The default return value policy for member functions is **automatic** which falls back to **take_ownership** for pointers.
@@ -199,19 +199,18 @@ For both cases we have specified **reference** policy to not pass the ownership 
 
 Now let's take a look to another example:
 
-.. literalinclude:: /../examples/primitives/cxx/rv_policies/factory.hpp
+.. literalinclude:: /../examples/primitives/cxx/rv_policies/policies_doc_examples.hpp
    :language: cpp
-   :start-after: [example]
-   :end-before: [example]
+   :start-after: [factory-example]
+   :end-before: [factory-example]
 
 Here we have a factory method ``create``. In this case the default policy is the right policy as it refers to
 the returned object and gives the ownership to the target language.
 
 .. note::
-    The default policy for getters and methods are different. It's different for each language as well.
-    For getters and properties the default policy for python is **reference_internal**.
-    For kotlin and swift it's **reference** as iegen does not support **reference_internal** for them yet.
-    For methods the default policy is **automatic** for all supported languages.
+    The default policies for getters and methods are different.
+    For getters and properties the default policy is **reference_internal**.
+    For methods the default policy is **automatic**.
 
 .. note::
     Object caching for kotlin and swift are not supported yet,
@@ -226,10 +225,44 @@ Supported return values policies are:
     * **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
     * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
     * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
-    * **reference_internal** - Supported only for python. This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of it's parent object i.e. parent object won't be deallocated until the returned object is not deallocated.
+    * **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of it's parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
 
 .. note::
     If the object is returned by value or by rvalue reference then **copy** and **move** are used respectively.
 
 .. note::
     For shared pointers **take_ownership** is always used.
+
+
+Keep alive policy
+~~~~~~~~~~~~~~~~~
+
+Besides the return value policies iegen supports ``keep_alive`` policy to bind argument's lifetime to ``this`` object's lifetime.
+This is to ensure that the argument won't be deallocated at least until the object which keeps a reference on it is alive.
+
+Let's take a look at the following example:
+
+.. literalinclude:: /../examples/primitives/cxx/rv_policies/policies_doc_examples.hpp
+   :language: cpp
+   :start-after: [employer-example]
+   :end-before: [employer-example]
+
+In the above example ``Employer`` holds references of ``Employee``. The constructor and the method ``addEmployee``
+are annotated with ``keep_alive`` variable to keep added ``employees`` alive at least until the ``employer`` is alive,
+otherwise added employees might be deallocated before the destruction of employer which will cause employer to
+hold invalid data.
+
+.. note::
+    If the argument is a container(e.g. ``std::vector``) then the policy is applied on all it's elements.
+
+.. note::
+    The indexing of arguments starts with 1 and the policy can be applied on all arguments.
+
+.. note::
+    When applying ``keep_alive`` policy strong reference cycles may occur. Let's assume we have two types
+    ``Teacher`` and ``Student`` and each of these types keeps a reference of the other. In this case if we
+    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently iegen does not detect
+    reference cycles so it's up to users to be careful to not create them.
+
+.. note::
+    For shared pointers it's redundant to specify``keep_alive`` policy.

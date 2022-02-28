@@ -1,6 +1,4 @@
 import copy
-import importlib
-import logging
 import types
 
 import clang.cindex as cli
@@ -108,7 +106,7 @@ def make_func_context(ctx):
             **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
             'gen_class', 'gen_interface') else None
 
-        overloading_prefix = ctx.overloading_prefix
+        overloading_postfix = ctx.overloading_postfix
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_names = ctx.template_names
@@ -185,7 +183,6 @@ def make_class_context(ctx):
 
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
-            root_types_infos = _type_info.root_types_infos
             arg_types_infos = _type_info.arg_types_infos
 
             descendants = _type_info.descendants

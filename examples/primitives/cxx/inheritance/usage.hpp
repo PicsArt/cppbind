@@ -85,7 +85,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    MyVehicle(const std::shared_ptr<Vehicle> & v) : _vehicle(v) {};
+    MyVehicle(std::shared_ptr<Vehicle> v) : _vehicle(v) {};
 
     /**
      * __API__
@@ -93,7 +93,7 @@ public:
      * throws: no_throw
      * nullable_return: True
      */
-    const std::shared_ptr<Vehicle> & vehicle() {
+    std::shared_ptr<Vehicle> vehicle() {
         return _vehicle;
     };
 
@@ -102,7 +102,7 @@ public:
      * action: gen_setter
      * throws: no_throw
      */
-    void setVehicle(const std::shared_ptr<Vehicle> &  v) {
+    void setVehicle(std::shared_ptr<Vehicle>  v) {
         _vehicle = v;
     };
 
@@ -125,7 +125,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    MyBicycle(const std::shared_ptr<Bicycle> & b) : _bicycle(b) {};
+    MyBicycle(std::shared_ptr<Bicycle> b) : _bicycle(b) {};
 
 
     /**
@@ -133,7 +133,7 @@ public:
      * action: gen_getter
      * throws: no_throw
      */
-    const std::shared_ptr<const Bicycle>& bicycle() {
+    std::shared_ptr<const Bicycle> bicycle() {
         return _bicycle;
     };
 
@@ -142,7 +142,7 @@ public:
      * action: gen_setter
      * throws: no_throw
      */
-    void setBicycle(const std::shared_ptr<const Bicycle> &  b) {
+    void setBicycle(std::shared_ptr<const Bicycle>  b) {
         _bicycle = b;
     };
 
@@ -173,7 +173,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    void addEvent(const std::shared_ptr<Date>& e) {
+    void addEvent(std::shared_ptr<Date> e) {
         _events.push_back(e);
     };
 

@@ -206,7 +206,6 @@ class Converter:
             args = self.args
             args_converters = self.args_converters
 
-            root_types_infos = self.root_types_infos
             parent_type_info = self.parent_type_info
 
             cxx = self.cxx

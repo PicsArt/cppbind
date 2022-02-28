@@ -49,6 +49,14 @@ public:
         _title = title;
     };
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    bool equals(Task* t) const {
+        return this == t;
+    }
 
 protected:
     std::string _title;

@@ -56,6 +56,16 @@ public:
     const std::vector<Task*>& tasks() const {
         return _tasks;
     }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    bool equals(Project* p) const {
+        return this == p;
+    }
+
 private:
     std::vector<Task*> _tasks;
     std::string _title;

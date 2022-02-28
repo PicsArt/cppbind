@@ -28,15 +28,15 @@ func runTemplateExamples() {
     let stackUsage = StackUsage()
     var res = stackUsage.firstItemOfSpecializedStack(p: stackPrj)
     assert(res.title == prj.title)
-    assert(res.cself.ptr == prj.cself.ptr)
+    assert(res.equals(p: prj))
 
     res = stackUsage.firstItemOfSpecializedStackWithTypedefArg(p: stackPrj)
     assert(res.title == prj.title)
-    assert(res.cself.ptr == prj.cself.ptr)
+    assert(res.equals(p: prj))
 
     res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
     assert(res.title == prj.title)
-    assert(res.cself.ptr == prj.cself.ptr)
+    assert(res.equals(p: prj))
     // [stack-usage-examples]
 
     // [template-funcs-examples]

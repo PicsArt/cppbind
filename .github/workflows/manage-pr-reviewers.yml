@@ -23,6 +23,7 @@ jobs:
                 echo "prTitlefromAPI=$restApiPRTitle" >> $GITHUB_ENV
       
       - name: Login to JIRA
+        if: github.event.pull_request.draft == false
         uses: atlassian/gajira-login@master
         env:
           JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
@@ -30,6 +31,7 @@ jobs:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       
       - name: Find Jira Issue Id in commit messages
+        if: github.event.pull_request.draft == false
         id: find
         uses: atlassian/gajira-find-issue-key@master
         with:
@@ -43,7 +45,7 @@ jobs:
                 exit 1     
      
       - name: Check if Jira issue status is 'Under Review'
-        if: steps.find.outputs.issue != ''
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
         run: |
               restApiGETJiraIssueDetails=$(curl --request GET \
                   --url '${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/' \
@@ -62,7 +64,7 @@ jobs:
               fi                         
       
       - name: Assess the PR Reviewers Count
-        if: steps.find.outputs.issue != ''
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
         run:  |
                 
                 restApiGETGitHubReviewersDetails=$(curl \
@@ -74,9 +76,8 @@ jobs:
                 
                 echo 'Number of approved reviewers:' $approverCount
                 
-                if [[ "$approverCount" -lt 1 ]]; then
+                if [[ "$approverCount" -lt 2 ]]; then
                     echo 'More reviewers are needed in order for this Jira item to progress within its workflow.'
-                    exit 1
                 else
                     echo 'Minimum number of code reviewers passed. Change the Jira status.'
                     

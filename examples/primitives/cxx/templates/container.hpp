@@ -20,7 +20,7 @@ namespace iegen::example {
  * __API__
  * action: gen_interface
  * package: templates
- * swift.descendants:
+ * descendants:
  *  - iegen::example::Stack<iegen::example::Project>
  *  - iegen::example::Stack<iegen::example::Task>
  *  - iegen::example::Stack<iegen::example::Number<int>>

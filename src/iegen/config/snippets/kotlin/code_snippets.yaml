@@ -24,7 +24,9 @@ file:
       {%- if glob_external %}
 
       {{glob_external}}
-      {%- endif %}{{new_line}}
+      {%- endif %}
+
+      private external fun jGettypebyid(id: Long): String{{new_line}}
   cxx:
     file_path: |
       {{vars.c_file_fullname}}
@@ -37,11 +39,19 @@ file:
 
       #include "jni.h"
       #include <iostream>
+      #include <cxxabi.h>
+      #include <string.h>
+      #include <type_traits>
       {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
       {{include}}
       {{namespace}}
 
-      {{body}}{{new_line}}
+      {{body}}
+
+      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, vars.file|capitalize + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
+          validateID(id);
+          return env->NewStringUTF(reinterpret_cast<IEGenCObject*>(id)->type);
+      }{{new_line}}
 
 package:
 
@@ -111,13 +121,49 @@ var_class_cxx: &var_class_cxx
       {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
       {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- set jni_to_cxx_converter = make_type_converter('std::shared_ptr<' + root_types_infos[0].cxx.unqualified_resolved_type_name + '>').jni_to_cxx if vars.shared_ref else make_type_converter(root_types_infos[0].cxx.unqualified_resolved_type_name).jni_to_cxx %}
-          {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- if vars.shared_ref %}
-          delete &{{jni_to_cxx_converter.converted_name('id')}};
+          {#- here is used almost the same logic as for jni_to_cxx section of std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+          {%- if vars and not vars.shared_ref -%}
+          {%- do Error.critical(cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
+          {%- endif -%}
+          {%- set is_nullable = nullable|default(False) %}
+          {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
+          {%- macro gen_cast_block() -%}
+          {%- if descendants -%}
+          if (strcmp(iegen_obj_id->type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+              delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(iegen_obj_id_ptr);
+          {%- for descendant in descendants %}
+          else if (strcmp(iegen_obj_id->type, "{{descendant}}") == 0)
+              delete static_cast<std::shared_ptr<{{descendant}}>*>(iegen_obj_id_ptr);
+          {%- endfor %}
+          else {
+              std::cerr << "Unexpected object type: " << iegen_obj_id->type << std::endl;
+              exit(1);
+          }
+          {%- else -%}
+          delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(iegen_obj_id_ptr);
+          {%- endif -%}
+          {%- endmacro %}
+          auto iegen_obj_id = reinterpret_cast<IEGenCObject*>(id);
+          auto iegen_obj_id_ptr = iegen_obj_id ? iegen_obj_id->ptr : nullptr;
+          {%- if is_nullable %}
+          if (iegen_obj_id_ptr) {
+              {{gen_cast_block()}}
+          }
           {%- else %}
+          {{gen_cast_block()}}
+          {%- endif %}
+          {#- end of std::shared_ptr conversion section -#}
+          {%- else %}
+          {%- if (vars.descendants if vars.descendants is not none else descendants) %}
+          static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+          {%- endif %}
+          {%- set jni_to_cxx_converter = make_type_converter(cxx.unqualified_resolved_type_name).jni_to_cxx %}
+          {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}
+          free(iegen_obj_id->type);
+          delete iegen_obj_id;
       }
       {%- endif %}
 
@@ -157,9 +203,6 @@ class:
         {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
         {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
         {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(_id, _owner)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
-        {%- if root_types_infos|length > 1 -%}
-        {%- do Error.critical(cxx.type_name + ' has more than one root type.') -%}
-        {%- endif -%}
         {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
         {%- do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
         {%- endif %}
@@ -182,6 +225,11 @@ class:
             {% if all_bases_are_interface %}
             protected var objId = _id
             protected val owner = _owner
+            private var refs: MutableList<Any> = mutableListOf()
+
+            {{'override ' if base_types_converters}}fun keepIEGenReference(ref: Any) {
+                refs.add(ref)
+            }
             {%- endif %}
             {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
             {% if base_types_converters -%}
@@ -257,15 +305,13 @@ interface:
         {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
         {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}
-        {%- if root_types_infos|length > 1 %}
-        {%- do Error.critical(cxx.type_name + ' has more than one root type.') %}
-        {%- endif %}
         {% if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
         interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
             {%- if not base_types_converters %}
             val id: Long
+            fun keepIEGenReference(ref: Any)
             {%- endif %}
             {{properties|string|indent}}
             {{body|string|indent}}
@@ -292,6 +338,12 @@ interface:
 
             protected var objId = _id
             protected val owner = _owner
+            private var refs: MutableList<Any> = mutableListOf()
+
+            override fun keepIEGenReference(ref: Any) {
+                refs.add(ref)
+            }
+
             override val id: Long
                 get() {
                     if (objId == 0L) {
@@ -329,23 +381,31 @@ interface:
 
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
+    {%- macro gen_import(converter, gen_desc_import=false, gen_for_impl=false) -%}
     {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, gen_desc_import=gen_desc_import)}}
     {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
-    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.get_target_type_name(interface_class=(gen_for_impl and converter.vars.action == 'gen_interface'))}}
     {%- endif -%}
     {%- endif %}
     {%- for arg_converter in converter.args -%}
-    {{gen_import(arg_converter)}}
+    {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
+    {%- set desc_converter = make_type_converter(descendant).kotlin -%}
+    {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
     {%- for arg_converter in args|map(attribute='converter.kotlin') -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter.kotlin)}}
+    {#- we need imports for descendants only for return type and we need to import implementation classes for downcasting -#}
+    {{gen_import(rconverter.kotlin, gen_desc_import=true, gen_for_impl=true)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
@@ -353,19 +413,30 @@ var_method_cxx_include: &var_method_cxx_include
     {%- if vars.is_proj_type -%}
     #include "{{vars.prj_rel_file_name}}"
     {%- endif -%}
-    {%- macro gen_include(type_info) -%}
+    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
+    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
+    {#- generate includes for descendants list of an argument -#}
+    {{gen_include(get_type_info(descendant))}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
     {%- for arg in args -%}
     {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(return_type_info, gen_desc_incl=false)}}
+    {%- endif -%}
+    {#- generate includes for descendants list of `this` if the node is method -#}
+    {%- if owner_class -%}
+    {{gen_include(owner_class)}}
     {%- endif -%}
 
 constructor:
@@ -395,6 +466,19 @@ constructor:
       {%- endif %}
       {%- endif -%}
       {%- endfor -%}): this(construct_helper({{args|join(', ', attribute='name')}}), true) {
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
       }
     companion: |
       {%- if vars.comment %}
@@ -411,17 +495,17 @@ constructor:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          val id = jConstructor{{overloading_prefix}}({{call_args|join(', ')}})
+          val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({{call_args|join(', ')}})
           return id
       }
       {% set comma = joiner(', ') %}
       @JvmStatic
-      private external fun jConstructor{{overloading_prefix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
+      private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
   cxx:
     include: *var_method_cxx_include
     body: |
       {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + overloading_prefix) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix)) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}
@@ -433,43 +517,39 @@ constructor:
           void* err_ptr = nullptr;
           {%- endif %}
           try {
-              {%- if not owner_class.vars.shared_ref %}
-              {{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}* baseptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-              return reinterpret_cast<jlong>(baseptr);
+              {%- if not owner_class.root.vars.shared_ref %}
+              {{owner_class.cxx.unqualified_resolved_type_name}}* ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+              return reinterpret_cast<jlong>(new IEGenCObject {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), ptr});
               {%- else %}
               {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
               auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
-              {%- if owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name != owner_class.cxx.type_name %}
-              std::shared_ptr<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}> baseptr = std::dynamic_pointer_cast<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}>(this_object);
-              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.root_types_infos[0].cxx.unqualified_resolved_type_name}}>(baseptr));
-              {%- else %}
-              return reinterpret_cast<jlong>(new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object));
-              {%- endif %}
+              return reinterpret_cast<jlong>(new IEGenCObject {strdup("{{owner_class.cxx.unqualified_canonical_type_name}}"), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)});
               {%- endif %}
           }
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              {%- set exc_vars = get_type_info(exc_type).vars %}
-              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+              {%- set exc_info = get_type_info(exc_type) %}
+              jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                              new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
               env->Throw(jthrowable(excObj));
           }
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           catch (const std::exception& e) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+              jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
           }
           {%- endif %}
           catch (...) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+              jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
           }
           jobjectid result;
           return result;
@@ -481,12 +561,12 @@ method:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
       {%- endif -%}
+      {%- if not cxx.is_static %}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
-      {%- if not cxx.is_static %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
@@ -516,11 +596,28 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+          {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
+          {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+          {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+          {%- if conversion %}
+          {{conversion|indent(4)}}{% endif %}
+          {%- endif %}
           return {{result_converter.converted_name('result')}}
       }
 
@@ -541,9 +638,23 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
           {%- else %}
-          jSet{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+          {#- This should go to shared macro -#}
+          {%- if vars.keep_alive %}
+          {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
+          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+          {%- if invalid_args  %}
+          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+          {%- endif %}
+          {%- for arg_idx in vars.keep_alive %}
+          {%- set converter = args[arg_idx - 1].converter %}
+          {%- if converter.kotlin_keep_alive %}
+          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+          {%- endif %}
+          {%- endfor %}
+          {%- endif %}
           {%- endif %}
       }
 
@@ -551,8 +662,15 @@ method:
 
       {%- endif %}
     companion: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- if cxx.is_static %}
+      {%- if vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+      {%- endif -%}
+      {#- This should go to shared macro -#}
+      {%- if vars.keep_alive %}
+      {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
+      {%- endif %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set comma = joiner(', ') -%}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
@@ -569,16 +687,16 @@ method:
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- else %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {%- endif %}
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
       {%- set comma = joiner(', ') %}
       @JvmStatic
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- endif %}
     private_external: |
       {%- if owner_class.vars.action == 'gen_class' -%}
@@ -586,10 +704,10 @@ method:
       {%- if not cxx.is_static %}
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
-      private external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -600,10 +718,10 @@ method:
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' -%}
       @JvmStatic
-      external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       @JvmStatic
-      external fun jSet{{overloading_prefix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
+      external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{{comma()}} {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{%- endfor-%})
       {%- endif %}
       {%- endif %}
       {%- endif %}
@@ -645,25 +763,26 @@ method:
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          {%- set exc_vars = get_type_info(exc_type).vars %}
-          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+          {%- set exc_info = get_type_info(exc_type) %}
+          jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                          new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
       {%- endif %}
       {%- if not 'std::exception' in vars.throws %}
       catch (const std::exception& e) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
       }
       {%- endif %}
       catch (...) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
       }
 
       {% if rconverter.jni.target_type_name != 'void' and not is_set_op -%}
@@ -672,7 +791,7 @@ method:
       {%- endif %}
       {%- endmacro -%}
       {%- macro gen_method(is_set_op=false) -%}
-      {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set func_name="j%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix) %}
       {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, func_name) %}
 
       extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}({{jni_args|join(', ')}}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}){
@@ -697,6 +816,9 @@ function:
   kotlin:
     include: *var_method_kotlin_include
     body: |
+      {%- if vars.return_value_policy == 'reference_internal' -%}
+      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, vars.file_fullname)) -%}
+      {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
@@ -730,14 +852,14 @@ function:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
-          val result = j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({{call_args|join(', ')}})
+          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}})
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
           return {{result_converter.converted_name('result')}}
       }
     glob_external: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set comma = joiner(', ') -%}
-      private external fun j{{vars.name|capitalize}}{{overloading_prefix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
+      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): {{rconverter.jdk.target_type_name}}
     glob_init:
       unique_content: |
         {%- if vars.c_wrapper_lib_name %}
@@ -749,7 +871,7 @@ function:
     include: *var_method_cxx_include
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, overloading_prefix, template_postfix) %}
+      {%- set func_name="j%s%s%s"|format(vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none and cxx.is_overloaded else overloading_postfix, template_postfix) %}
       {%- set jni_args=["JNIEnv* env, jclass cls"] + args|format_list("{arg.converter.jni.target_type_name} {arg.name}", 'arg') -%}
       {%- macro args_snippet(args, call_args) %}
       {%- for arg in args -%}
@@ -783,25 +905,26 @@ function:
       {%- for exc_type in vars.throws -%}
       catch (const {{exc_type}}& e) {
           err_ptr = new {{exc_type}}(e);
-          {%- set exc_vars = get_type_info(exc_type).vars %}
-          jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+          {%- set exc_info = get_type_info(exc_type) %}
+          jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
           jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+          jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                          new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
           env->Throw(jthrowable(excObj));
       }
       {%- endfor %}
       {%- endif %}
       {%- if not 'std::exception' in vars.throws %}
       catch (const std::exception& e) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
       }
       {%- endif %}
       catch (...) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
       }
 
       {% if rconverter.jni.target_type_name != 'void' -%}
@@ -819,31 +942,46 @@ function:
 
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
-    {%- macro gen_import(converter) -%}
+    {%- macro gen_import(converter, gen_desc_import=false, gen_for_impl=false) -%}
     {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
+    {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, gen_desc_import=gen_desc_import)}}
     {%- else %}
     {%- if converter.vars and converter.vars.is_proj_type and converter.vars.package != vars.package -%}
-    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.target_type_name}}
+    {{marker}}import {{converter.vars.package_prefix}}.{{converter.vars.package}}.{{converter.get_target_type_name(interface_class=(gen_for_impl and converter.vars.action == 'gen_interface'))}}
     {%- endif -%}
     {%- endif %}
     {%- for arg_converter in converter.args -%}
-    {{gen_import(arg_converter)}}
+    {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
+    {%- set desc_converter = make_type_converter(descendant).kotlin -%}
+    {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_import(rconverter.kotlin)}}
+    {#- we need imports for descendants only for return type and we need to import implementation classes for downcasting -#}
+    {{gen_import(rconverter.kotlin, gen_desc_import=true, gen_for_impl=true)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_include(type_info) -%}
+    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
+    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
+    {#- generate includes for descendants list of an argument -#}
+    {{gen_include(get_type_info(descendant))}}
+    {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(return_type_info, gen_desc_incl=false)}}{{gen_include(owner_class)}}
 
 property_getter:
   kotlin:
@@ -865,6 +1003,11 @@ property_getter:
               val result = j{{vars.name|capitalize}}(id)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
+              {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+              {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+              {%- if conversion %}
+              {{conversion|indent(8)}}{% endif %}
+              {%- endif %}
               return {{result_converter.converted_name('result')}}
           }
           {%- if vars.action == 'gen_property_setter' %}
@@ -875,6 +1018,20 @@ property_getter:
               {{owner_name}}Helper.jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}})
               {%- else %}
               jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}})
+              {%- endif %}
+              {#- This should go to shared macro -#}
+              {%- if vars.keep_alive %}
+              {%- set args = [namespace(name='value', converter=rconverter)] %}
+              {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+              {%- if invalid_args  %}
+              {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+              {%- endif %}
+              {%- for arg_idx in vars.keep_alive %}
+              {%- set converter = args[arg_idx - 1].converter %}
+              {%- if converter.kotlin_keep_alive %}
+              {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(8)}}
+              {%- endif %}
+              {%- endfor %}
               {%- endif %}
           }
           {% endif %}
@@ -948,6 +1105,11 @@ getter:
               val result = j{{vars.name|capitalize}}{{template_postfix}}(id)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
+              {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+              {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+              {%- if conversion %}
+              {{conversion|indent(8)}}{%- endif %}
+              {%- endif %}
               return {{result_converter.converted_name('result')}}
           }
           {%- if setter is defined %}
@@ -967,6 +1129,19 @@ getter:
               {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
               {%- else %}
               j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}})
+              {%- endif %}
+              {%- if setter.vars.keep_alive %}
+              {%- set args = [namespace(name='value', converter=rconverter)] %}
+              {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+              {%- if invalid_args  %}
+              {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+              {%- endif %}
+              {%- for arg_idx in vars.keep_alive %}
+              {%- set converter = args[arg_idx - 1].converter %}
+              {%- if converter.kotlin_keep_alive %}
+              {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(8)}}
+              {%- endif %}
+              {%- endfor %}
               {%- endif %}
           }
           {%- endif %}
@@ -998,10 +1173,11 @@ getter:
       {%- for exc_type in vars.throws -%}
           catch (const {{exc_type}}& e) {
               err_ptr = new {{exc_type}}(e);
-              {%- set exc_vars = get_type_info(exc_type).vars %}
-              jclass excCls = env->FindClass("{{[exc_vars.package_prefix, exc_vars.package, exc_vars.name]|map('replace', '.', pat_sep)|path_join}}");
+              {%- set exc_info = get_type_info(exc_type) %}
+              jclass excCls = env->FindClass("{{[exc_info.vars.package_prefix, exc_info.vars.package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
               jmethodID constructor = env->GetMethodID(excCls, "<init>", "(JZ)V");
-              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(err_ptr), true);
+              jobject excObj = env->NewObject(excCls, constructor, reinterpret_cast<jobjectid>(
+                                              new IEGenCObject {strdup("{{exc_info.cxx.unqualified_canonical_type_name}}"), err_ptr}), true);
               env->Throw(jthrowable(excObj));
           }
       {%- endfor %}

@@ -226,6 +226,7 @@ class ThrowExc {
     /**
      * __API__
      * action: gen_getter
+     * swift.action:
      * throws:
      *   - std::invalid_argument
      */
@@ -237,11 +238,38 @@ class ThrowExc {
     /**
      * __API__
      * action: gen_setter
+     * swift.action:
      * throws:
      *   - std::invalid_argument
      *   - std::out_of_range
      */
      void setProp(std::string s) {
+        throw std::out_of_range("out_of_range");
+        _prop = s;
+     }
+
+    /**
+     * An example to check swift throwing property getter
+     * __API__
+     * action: gen_getter
+     * kotlin.action:
+     * python.action:
+     * throws: no_throw
+     */
+    std::string prop1() {
+        throw std::invalid_argument("inv_arg");
+        return _prop;
+    }
+
+    /**
+     * An example to check swift throwing property setter
+     * __API__
+     * action: gen_setter
+     * kotlin.action:
+     * python.action:
+     * throws: no_throw
+     */
+     void setProp1(std::string s) {
         throw std::out_of_range("out_of_range");
         _prop = s;
      }

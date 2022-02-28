@@ -1080,7 +1080,7 @@ getter:
       {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
       {% set result_converter = rconverter.sc_to_swift -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-      {%- macro gen_exc_switch_block() %}
+      {%- macro gen_exc_switch_block() -%}
       if err.type != nil {
         let errorType = String(cString: err.type!)
         switch errorType {
@@ -1100,7 +1100,7 @@ getter:
       {%- macro get_property() -%}
       var err = IEGenCObject()
       let result = _prop_get_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, &err)
-      {{gen_exc_switch_block()|indent(4)}}
+      {{gen_exc_switch_block()}}
       {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
       {%- if conversion %}
       {{conversion}}

@@ -223,8 +223,7 @@ class:
                 {{companion|string|indent(8)}}
             }
             {% if all_bases_are_interface %}
-            protected var objId = obj.id
-            protected val owner = obj.owner
+            protected var iegObj = obj
             private var refs: MutableList<Any> = mutableListOf()
 
             {{'override ' if base_types_converters}}fun keepIEGenReference(ref: Any) {
@@ -239,10 +238,10 @@ class:
             {%- endif -%}
             val id: Long
                 get() {
-                    if (objId == 0L) {
+                    if (iegObj.id == 0L) {
                         throw RuntimeException("Object is not allocated")
                     }
-                    return objId
+                    return iegObj.id
                 }
             {%- endif -%}
             {%- if head %}
@@ -257,9 +256,9 @@ class:
             {%- if all_bases_are_interface %}
 
             override fun close() {
-                if (owner && objId != 0L) {
-                    jFinalize(objId)
-                    objId = 0L
+                if (iegObj.owner && iegObj.id != 0L) {
+                    jFinalize(iegObj.id)
+                    iegObj.id = 0L
                 }
             }
 
@@ -336,8 +335,7 @@ interface:
                 {{companion|string|indent(8)}}
             }
 
-            protected var objId = obj.id
-            protected val owner = obj.owner
+            protected var iegObj = obj
             private var refs: MutableList<Any> = mutableListOf()
 
             override fun keepIEGenReference(ref: Any) {
@@ -346,10 +344,10 @@ interface:
 
             override val id: Long
                 get() {
-                    if (objId == 0L) {
+                    if (iegObj.id == 0L) {
                         throw RuntimeException("Object is not allocated")
                     }
-                    return objId
+                    return iegObj.id
                 }
             {%- if head %}
             {{head|string|indent}}
@@ -357,9 +355,9 @@ interface:
             {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
 
             override fun close() {
-                if (owner && objId != 0L) {
-                    jFinalize(objId)
-                    objId = 0L
+                if (iegObj.owner && iegObj.id != 0L) {
+                    jFinalize(iegObj.id)
+                    iegObj.id = 0L
                 }
             }
 

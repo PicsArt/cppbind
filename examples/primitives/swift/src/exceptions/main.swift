@@ -60,8 +60,9 @@ func runExceptionExamples() {
 
     // [exceptions-usage]
 
-    func logger(err_msg : String) -> Void {
+    func logger(err_msg : String) -> Never {
         print("Log uncaught exception with user defined logger: \(err_msg)")
+        exit(0)
     }
 
     func genUncaughtExceptions() {
@@ -78,8 +79,6 @@ func runExceptionExamples() {
         }
         ExceptionHandler.unsetUncaughtExceptionHandler()
     }
-
-    genUncaughtExceptions()
 
     // check non-throwing constructor
     let _ =  NoThrowExc()
@@ -170,6 +169,9 @@ func runExceptionExamples() {
     } catch {
         assert(false)
     }
+
+    // because of the exit, it should be called at the end of the test.
+    genUncaughtExceptions()
 }
 
 

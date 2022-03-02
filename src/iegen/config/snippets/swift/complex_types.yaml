@@ -206,12 +206,10 @@ $Enum:
     swift_to_sc: |
       let {{target_name}} = {{name}}.rawValue
     sc_to_swift: |
-      let {{target_name}}Optional = {{target_type_name}}(rawValue: {{name}})
-      if ({{target_name}}Optional == nil) {
-        {{"ExceptionHandler.handleUncaughtException(
-        \"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
+      guard let {{target_name}} = {{target_type_name}}(rawValue: {{name}}) else {
+         {{"ExceptionHandler.handleUncaughtException(
+            \"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
-      let {{target_name}} = {{target_name}}Optional!
 
 std::__cxx11::basic_string:
   custom:

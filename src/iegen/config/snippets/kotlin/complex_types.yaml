@@ -120,7 +120,7 @@ $Object:
       }
       {%- endmacro %}
       {%- if is_nullable %}
-      IEGenCObject* iegen_obj_{{target_name}}{{' = nullptr' if is_nullable}};
+      IEGenCObject* iegen_obj_{{target_name}} = nullptr;
       if ({{name}}) {
           {%- if descendants %}
           {{demangle()|indent(4)}}
@@ -504,7 +504,7 @@ std::shared_ptr:
       {%- endmacro %}
       char* type_{{name}} = {{'strdup("{}")'.format(args[0].cxx.unqualified_canonical_type_name) if not args0_descendants else 'nullptr'}};
       void* {{target_name}}_ptr = nullptr;
-      IEGenCObject* iegen_obj_{{target_name}}{{' = nullptr' if is_nullable}};
+      IEGenCObject* iegen_obj_{{target_name}} = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
           {%- if args0_descendants %}

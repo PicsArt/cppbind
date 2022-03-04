@@ -516,7 +516,7 @@ std::shared_ptr:
           type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
-      void* {{target_name}}_ptr{{' = nullptr' if is_nullable}};
+      void* {{target_name}}_ptr = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
           {%- if args0_descendants %}

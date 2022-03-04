@@ -13,3 +13,5 @@ package com.hello_user.iegen.alias
 
 typealias StringArray = Array<String>
 typealias ObjectArray = Array<Any>
+
+data class IEGenObject(var id : Long, val owner : Boolean = false)

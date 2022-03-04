@@ -13,16 +13,16 @@ public class ExceptionHandler {
 
     static var uncaughtExceptionHandler = defaultHandler
 
-    static func defaultHandler(_ err_msg: String) {
+    static func defaultHandler(_ err_msg: String) -> Never {
         print("Uncaught exception is found: \(err_msg)")
         fatalError("Unexpected Exception")
     }
 
-    static func handleUncaughtException(_ err_msg : String) {
+    static func handleUncaughtException(_ err_msg : String) -> Never {
         uncaughtExceptionHandler(err_msg)
     }
 
-    public static func setUncaughtExceptionHandler(_ handler: @escaping (String) -> Void) {
+    public static func setUncaughtExceptionHandler(_ handler: @escaping (String) -> Never) {
         uncaughtExceptionHandler = handler
     }
 

@@ -155,9 +155,9 @@ $Object:
       {%- for descendant in descendants %}
           {%- set desc_converter = make_type_converter(descendant).kotlin -%}
           {%- set desc_type_name = desc_converter.get_target_type_name(interface_class=desc_converter.vars.action == 'gen_interface') %}
-          "{{descendant}}" -> {{target_name}} = {{desc_type_name}}({{name}}{{owner}})
+          "{{descendant}}" -> {{target_name}} = {{desc_type_name}}(IEGenObject({{name}}{{owner}}))
       {%- endfor %}
-          else -> {{target_name}} = {{type_name}}({{name}}{{owner}})
+          else -> {{target_name}} = {{type_name}}(IEGenObject({{name}}{{owner}}))
       }
       {%- endmacro -%}
       {%- if descendants %}
@@ -172,7 +172,7 @@ $Object:
       {{gen_downcast_block()}}
       {%- endif -%}
       {%- else -%}
-      val {{target_name}} = {{'if ({} == 0L) null else '.format(name) if is_nullable}}{{type_name}}({{name}}{{owner}})
+      val {{target_name}} = {{'if ({} == 0L) null else '.format(name) if is_nullable}}{{type_name}}(IEGenObject({{name}}{{owner}}))
       {%- endif -%}
       {%- endmacro -%}
       {%- set type_name = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else target_type_name -%}

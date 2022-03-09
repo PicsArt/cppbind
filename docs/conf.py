@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../3pty/'))
 # -- Project information -----------------------------------------------------
 
 project = 'iegen'
-copyright = '2021, PicsArt'
+copyright = '2022, Picsart'
 author = 'Picsart'
 
 # The full version, including alpha/beta/rc tags

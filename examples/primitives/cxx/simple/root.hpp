@@ -8,6 +8,7 @@ namespace iegen::example {
 /**
  * \internal
  * internal comment should not go to wrappers
+ * TODO: remove python.package after https://picsart.atlassian.net/browse/IEGEN-231 fix
  * \endinternal
  * Class Root
  * __API__
@@ -15,6 +16,7 @@ namespace iegen::example {
  * shared_ref: False
  * swift.package: simple
  * kotlin.package: simple
+ * python.package: simple
  */
 struct Root {
 public:

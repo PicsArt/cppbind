@@ -55,6 +55,23 @@ assert(optProj?.title == prj1.title)
 // just calling function with no return value and arguments
 doNothing()
 
+// [non-complex-defaults-usage]
+assert(optionalColor() == Color.Red)
+assert(optionalColor(c: Color.Blue) == Color.Blue)
+assert(optionalInt() == 5)
+assert(optionalInt(i: 1) == 1)
+assert(optionalString() == "abc")
+assert(optionalString(optionalStr: "def") == "def")
+// [non-complex-defaults-usage]
+
+// complex default values tests
+// [complex-defaults-usage]
+assert(multipleMixedDefaultValues() == "DefaultTask1DefaultRoot")
+assert(multipleMixedDefaultValues(task: Task(title: "ABC")) == "ABC1DefaultRoot")
+assert(multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2) == "ABC2DefaultRoot")
+assert(multipleMixedDefaultValues(task: Task(title: "ABC"), r: Root(path: "Path") ) == "ABC1Path")
+assert(multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2, r: Root(path: "Path") ) == "ABC2Path")
+// [complex-defaults-usage]
 }
 
 

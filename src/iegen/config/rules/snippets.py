@@ -90,8 +90,8 @@ def make_func_context(ctx):
                 is_bool=arg.type.kind == cli.TypeKind.BOOL,
                 is_long=arg.type.kind == cli.TypeKind.LONG,
                 is_float=arg.type.kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
-                is_literal=arg.default.kind == DefaultValueKind.LITERAL,
-                is_null_ptr=arg.default.kind == DefaultValueKind.NULL_PTR,
+                default_is_literal=arg.default.kind == DefaultValueKind.LITERAL,
+                default_is_nullptr=arg.default.kind == DefaultValueKind.NULL_PTR,
             ) for arg in ctx.args
         ]
 

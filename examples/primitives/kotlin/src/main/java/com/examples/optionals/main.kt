@@ -4,6 +4,7 @@ import com.examples.optionals.Optionals
 import com.examples.enums.Color
 import com.examples.enums.ColorShade
 import com.examples.simple.Task
+import com.examples.simple.Root
 
 
 fun use() {
@@ -38,6 +39,13 @@ assert(op.optionalCharWithDefault(':') == ':')
 assert(op.optionalLongWithDefault(8L) == 8L)
 assert(op.optionalFloatWithDefault(5.0F) == 5.0F)
 assert(op.optionalCharPointerWithDefault("val") == "val")
+
+/// multiple default values with complex and non-complex values
+assert(op.multipleMixedDefaultValues() == "DefaultTask1DefaultRoot")
+assert(op.multipleMixedDefaultValues(Task("ABC")) == "ABC1DefaultRoot")
+assert(op.multipleMixedDefaultValues(Task("ABC"), 2) == "ABC2DefaultRoot")
+assert(op.multipleMixedDefaultValues(Task("ABC"), r=Root("Path") ) == "ABC1Path")
+assert(op.multipleMixedDefaultValues(Task("ABC"), 2, Root("Path") ) == "ABC2Path")
 // [optionals-usage]
 }
 

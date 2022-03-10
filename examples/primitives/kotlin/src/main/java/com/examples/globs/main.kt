@@ -1,7 +1,9 @@
 package com.examples.globs
 
-import com.examples.simple.*
 import com.examples.enums.*
+import com.examples.globs.complex.*
+import com.examples.globs.primitives.*
+import com.examples.simple.*
 
 fun use() {
 // [simple-usage-example]
@@ -38,15 +40,6 @@ assert(pairRootPrj.second.title == prj1.title)
 // [glob-func-examples]
 
 // other test cases for global functions
-var color = optionalColor()
-assert(color == Color.Red)
-color = optionalColor(Color.Blue)
-assert(color == Color.Blue)
-
-var intVal = optionalInt()
-assert(intVal == 5)
-intVal = optionalInt(8)
-assert(intVal == 8)
 
 var optProj = optionalFDPtr()
 assert(optProj == null)
@@ -56,6 +49,23 @@ assert(optProj?.title == prj1.title)
 // just calling function with no return value and arguments
 doNothing()
 
+// [non-complex-defaults-usage]
+assert(optionalColor() == Color.Red)
+assert(optionalColor(Color.Blue) == Color.Blue)
+assert(optionalInt() == 5)
+assert(optionalInt(1) == 1)
+assert(optionalString() == "abc")
+assert(optionalString("def") == "def")
+// [non-complex-defaults-usage]
+
+// complex default values tests
+// [complex-defaults-usage]
+assert(multipleMixedDefaultValues() == "DefaultTask1DefaultRoot")
+assert(multipleMixedDefaultValues(Task("ABC")) == "ABC1DefaultRoot")
+assert(multipleMixedDefaultValues(Task("ABC"), 2) == "ABC2DefaultRoot")
+assert(multipleMixedDefaultValues(Task("ABC"), r=Root("Path") ) == "ABC1Path")
+assert(multipleMixedDefaultValues(Task("ABC"), 2, Root("Path") ) == "ABC2Path")
+// [complex-defaults-usage]
 
 }
 

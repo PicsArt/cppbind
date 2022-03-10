@@ -1,6 +1,7 @@
-from examples_lib.optionals.optionals_pygen import Optionals
 from examples_lib.enums.color_pygen import Color
 from examples_lib.enums.color_pygen import ColorShade
+from examples_lib.optionals.optionals_pygen import Optionals
+from examples_lib.simple import Root
 from examples_lib.simple.task import PyTask
 
 # [optionals-usage]
@@ -28,8 +29,8 @@ try:
 except TypeError:
     pass
 
-assert op.optional_ref_with_default_complex_value().title == "MyTask"
-assert op.optional_by_val_with_default_complex_value().title == "MyTask"
+assert op.single_complex_default_value().title == "MyTask"
+assert op.single_complex_default_value().title == "MyTask"
 
 # non default value assertions
 task = PyTask('my task')
@@ -43,3 +44,10 @@ assert op.optional_char_with_default(':') == ':'
 assert op.optional_long_with_default(8) == 8
 assert op.optional_float_with_default(5.0) == 5.0
 # [optionals-usage]
+
+# multiple default values with complex and non - complex values
+assert op.multiple_mixed_default_values() == "DefaultTask1DefaultRoot"
+assert op.multiple_mixed_default_values(PyTask("ABC")) == "ABC1DefaultRoot"
+assert op.multiple_mixed_default_values(PyTask("ABC"), i=2) == "ABC2DefaultRoot"
+assert op.multiple_mixed_default_values(PyTask("ABC"), r=Root("Path")) == "ABC1Path"
+assert op.multiple_mixed_default_values(PyTask("ABC"), i=2, r=Root("Path")) == "ABC2Path"

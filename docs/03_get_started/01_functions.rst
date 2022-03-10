@@ -172,6 +172,127 @@ We are ready to use the generated bindings:
 
 |
 
+Default arguments
+~~~~~~~~~~~~~~~~~
+
+Currently, iegen generates default values for builtin types(e.g. bool, int, nullptr etc.) and for enums and strings.
+Here are some sample functions having default arguments:
+
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+   :language: cpp
+   :start-after: [non-complex-defaults-example]
+   :end-before: [non-complex-defaults-example]
+
+Here's a sample code using the above functions:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
+           :language: kotlin
+           :start-after: [non-complex-defaults-usage]
+           :end-before: [non-complex-defaults-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
+           :language: py
+           :start-after: [non-complex-defaults-usage]
+           :end-before: [non-complex-defaults-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
+           :language: swift
+           :start-after: [non-complex-defaults-usage]
+           :end-before: [non-complex-defaults-usage]
+
+.. collapse:: And the generated bindings:
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/primitives/primitiveDefaults.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/primitiveDefaults_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/globs/primitiveDefaults.swift
+               :language: swift
+
+|
+
+Complex cases like ``t=Task("MyTask")`` or ``t=24>>2`` are handled differently.
+Let's take a look at the following example:
+
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+   :language: cpp
+   :start-after: [complex-defaults-example]
+   :end-before: [complex-defaults-example]
+
+In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
+For this one iegen generates two overloaded functions one with no argument and the other with one argument without a default value for
+``kotlin`` and ``swift``.
+And the second function has tree arguments of types ``Task``, ``Color`` and ``Root``. The second argument is an enum
+thus it's default value is generated in all target languages and for other two arguments iegen will generate
+appropriate overloaded options for ``kotlin`` and ``swift``.
+For ``python`` iegen does not generate overloaded functions instead ``None`` default value is generated.
+Although the actual default values for complex types are not visible in generated code they work as expected.
+
+.. collapse:: Generated functions:
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/complex/complexDefaults.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/complexDefaults_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/globs/complexDefaults.swift
+               :language: swift
+|
+
+
+And here are some usages of them:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
+           :language: kotlin
+           :start-after: [complex-defaults-usage]
+           :end-before: [complex-defaults-usage]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
+           :language: py
+           :start-after: [complex-defaults-usage]
+           :end-before: [complex-defaults-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
+           :language: swift
+           :start-after: [complex-defaults-usage]
+           :end-before: [complex-defaults-usage]
+
+
 
 Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
@@ -265,4 +386,4 @@ hold invalid data.
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::
-    For shared pointers it's redundant to specify``keep_alive`` policy.
+    For shared pointers it's redundant to specify ``keep_alive`` policy.

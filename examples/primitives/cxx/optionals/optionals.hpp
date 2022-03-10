@@ -5,13 +5,13 @@
 #include <string_view>
 #include <memory>
 #include <complex>
+#include "cxx/getters/person.hpp"
 #include "cxx/enums/color.hpp"
 #include "cxx/simple/task.hpp"
-#include "cxx/getters/person.hpp"
+#include "cxx/simple/root.hpp"
 
 
 namespace iegen::example {
-// [example]
 // forward declaration
 class Project;
 
@@ -21,18 +21,8 @@ class Project;
  * package: optionals
  */
 class Optionals {
-
-
 public:
-    /**
-     * constructor
-     * __API__
-     * action: gen_constructor
-     * throws: no_throw
-     */
-	Optionals()  {}
-
-
+// [literals-example]
     /**
      * __API__
      * action: gen_method
@@ -55,26 +45,6 @@ public:
 	    return task;
 	}
 
-	/**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     * nullable_return: True
-     * return_value_policy: reference
-     */
-	Project* optionalFDPtrWithNullptrDefault(Project* project = nullptr) {
-	    return project;
-	}
-
-    /**
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     * nullable_return: True
-     */
-	std::shared_ptr<Person> optionalSharedPtrWithNullptrDefault(std::shared_ptr<Person> person = nullptr) {
-	    return person;
-	}
 	/**
      * __API__
      * action: gen_method
@@ -111,7 +81,6 @@ public:
 	    return value;
 	}
 
-
     /**
      * __API__
      * action: gen_method
@@ -121,7 +90,6 @@ public:
 	    return value;
 	}
 
-
 	/**
      * @param[in] optionalStr string with default value
      * __API__
@@ -129,16 +97,6 @@ public:
      * throws: no_throw
      */
 	std::string optionalStringWithDefault(std::string optionalStr = "abc") {
-	    return optionalStr;
-	}
-
-	/**
-     * @param[in] optionalStr string with default value
-     * __API__
-     * action: gen_method
-     * throws: no_throw
-     */
-	std::string_view optionalStringViewWithDefault(std::string_view optionalStr = "abc") {
 	    return optionalStr;
 	}
 
@@ -172,6 +130,38 @@ public:
 	    return c;
 	}
 
+// [literals-example]
+
+// [complex-value-examples]
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	Task singleComplexDefaultValue(Task task = Task("MyTask")) {
+	    return task;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	std::string multipleMixedDefaultValues(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")) {
+	    return task.title() + std::to_string(i) + r.path;
+	}
+
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    Optionals(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")) {}
+// [complex-value-examples]
+
+
+/// other test cases
+
 	/**
      * __API__
      * action: gen_method
@@ -189,26 +179,39 @@ public:
 	ColorShade optionalEnumWithInternalDefault(ColorShade c = ColorShade::InternalField) {
 	    return c;
 	}
+
 	/**
+     * @param[in] optionalStr string with default value
      * __API__
      * action: gen_method
      * throws: no_throw
      */
-	const Task& optionalRefWithDefaultComplexValue(const Task& task = Task("MyTask")) {
-	    return task;
+	std::string_view optionalStringViewWithDefault(std::string_view optionalStr = "abc") {
+	    return optionalStr;
+	}
+
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * nullable_return: True
+     * return_value_policy: reference
+     */
+	Project* optionalFDPtrWithNullptrDefault(Project* project = nullptr) {
+	    return project;
 	}
 
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
+     * nullable_return: True
      */
-	Task optionalByValWithDefaultComplexValue(Task task = Task("MyTask")) {
-	    return task;
+	std::shared_ptr<Person> optionalSharedPtrWithNullptrDefault(std::shared_ptr<Person> person = nullptr) {
+	    return person;
 	}
 
 };
-// [example]
 }
 
 #endif

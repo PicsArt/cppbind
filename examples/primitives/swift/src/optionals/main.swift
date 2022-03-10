@@ -21,8 +21,8 @@ func runOptionalExamples() {
     assert(op.optionalSharedPtrWithNullptrDefault() == nil)
     assert(op.optionalEnumWithDefault() == Color.Red)
     assert(op.optionalEnumWithDefaultAndFieldPrefix() == ColorShade.ShadeLight)
-    //
-    // // non default value assertions
+
+    // non default value assertions
     let task = Task(title: "my task")
     assert(op.optionalPtrWithNullptrDefault(task: task)!.equals(t: task))
     assert(op.optionalEnumWithDefault(c: Color.Blue) == Color.Blue)
@@ -35,6 +35,13 @@ func runOptionalExamples() {
     assert(op.optionalLongWithDefault(value: 8) == 8)
     assert(op.optionalFloatWithDefault(value: 5.0) == 5.0)
     assert(op.optionalCharPointerWithDefault(optionalStr: "val") == "val")
+
+    /// multiple default values with complex and non-complex values
+    assert(op.multipleMixedDefaultValues() == "DefaultTask1DefaultRoot")
+    assert(op.multipleMixedDefaultValues(task: Task(title: "ABC")) == "ABC1DefaultRoot")
+    assert(op.multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2) == "ABC2DefaultRoot")
+    assert(op.multipleMixedDefaultValues(task: Task(title: "ABC"), r: Root(path: "Path") ) == "ABC1Path")
+    assert(op.multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2, r: Root(path: "Path") ) == "ABC2Path")
     // // [optionals-usage]
 }
 

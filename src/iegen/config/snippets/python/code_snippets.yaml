@@ -415,7 +415,7 @@ constructor:
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_converter = arg.converter.python %}
                                        {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+                                       {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %}
                                        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -423,7 +423,7 @@ constructor:
                                        {%- else %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                        {%- endif -%}
                                        {%- else -%}
-                                       {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                       {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                        {%- else %} = None
                                        {%- endif %}
                                        {%- endif %}
@@ -476,7 +476,7 @@ method:
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+                                                          {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %}
                                                           {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -484,7 +484,7 @@ method:
                                                           {%- else %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                                           {%- endif -%}
                                                           {%- else -%}
-                                                          {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                                          {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                                           {%- else %} = None
                                                           {%- endif %}
                                                           {%- endif %}
@@ -581,7 +581,7 @@ function:
                                       {%- for arg in args -%}
                                       {%- set arg_converter = arg.converter.python %}
                                       {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                      {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.is_null_ptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+                                      {{comma()}}{{arg.name|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                       {%- if arg.default -%}
                                       {%- if arg.is_enum %}
                                       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -589,7 +589,7 @@ function:
                                       {%- else %} = {{arg_package}}{{arg_converter.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
                                       {%- endif -%}
                                       {%- else -%}
-                                      {%- if arg.is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                      {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
                                       {%- else %} = None
                                       {%- endif %}
                                       {%- endif %}

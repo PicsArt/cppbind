@@ -348,12 +348,14 @@ constructor:
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
+      {#- this should go to shared macro -#}
+      {%- macro gen_func(args, index=none) -%}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
       {%- set comma = joiner(', ') -%}
       public convenience init(
-      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -361,8 +363,8 @@ constructor:
       {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.is_literal %} = {{arg.default}}
-      {%- elif arg.is_null_ptr %} = nil
+      {%- if arg.default_is_literal %} = {{arg.default}}
+      {%- elif arg.default_is_nullptr %} = nil
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -370,14 +372,14 @@ constructor:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
         {%- endfor %}
         var err = IEGenCObject()
-        self.init(create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
+        self.init(create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
         {#- This should go to shared macro -#}
         {%- if vars.keep_alive %}
         {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
@@ -420,17 +422,25 @@ constructor:
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
-      }{{new_line}}
+      }
+      {%- endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+      {% endfor -%}{{gen_func(args)}}{{new_line}}
   cc:
     include: *var_method_cxx_include
     body: |
+      {#- this should go to shared macro -#}
+      {%- macro gen_func(args, index=none) -%}
       {%- set comma = joiner(', ') -%}
-      {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {%- set index = '_' + index|string if index else '' -%}
+      {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
-        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
           {{conversion|indent(4)}}
         {%- endif %}
@@ -460,13 +470,26 @@ constructor:
           }
           {{owner_class.converter.c.target_type_name}} result {};
           return result;
-      }{{new_line}}
+      }
+      {% endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+      {% endfor -%}{{gen_func(args)}}
   ch:
     body:
       content: |
+        {#- this should go to shared macro -#}
+        {%- macro gen_func(args, index=none) -%}
         {%- set comma = joiner(', ') %}
-        {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- set index = '_' + index|string if index else '' %}
+        {{owner_class.converter.c.target_type_name}} create_{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- endmacro %}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+        {% endfor -%}{{gen_func(args)}}
 
 method:
   swift:
@@ -478,6 +501,9 @@ method:
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
+      {%- if vars.is_operator and vars.name == '[]' -%}
+      {%- set comma = joiner(', ') %}
+      {# subscript operator #}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
@@ -487,7 +513,7 @@ method:
       {%- set call_args = ['cself'] -%}
       {%- for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
-      {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+      {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
       {%- if conversion -%}
       {{conversion|indent(4)}}
       {% endif %}
@@ -527,7 +553,7 @@ method:
           {%- set call_args = ['cself'] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
-          {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -574,14 +600,21 @@ method:
                        {%- endfor-%}) -> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {{get_property()|indent(2)}}
       }
+      {%- endif %}
       {%- else -%}
+      {%- macro gen_func(args, index=none) -%}
+      {%- set comma = joiner(', ') -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+      {%- if vars.comment -%}
+      {{vars.comment|make_doxygen_comment}}
+      {% endif -%}
       {%- if vars.is_operator -%}
-      public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+      public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
       {%- set call_args = ['cself.cself'] -%}
       {%- else -%}
       {%- set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
-      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -589,8 +622,8 @@ method:
       {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.is_literal %} = {{arg.default}}
-      {%- elif arg.is_null_ptr %} = nil
+      {%- if arg.default_is_literal %} = {{arg.default}}
+      {%- elif arg.default_is_nullptr %} = nil
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -599,17 +632,18 @@ method:
       {%endif%}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
         {%- endfor %}
         var err = IEGenCObject()
+        {%- set index = '_' + index|string if index else '' %}
         {%- if rconverter.c.target_type_name != 'void' %}
-        let result = {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        let result = {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- else %}
-        {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- endif %}
         {#- This should go to shared macro -#}
         {%- if vars.keep_alive %}
@@ -669,8 +703,15 @@ method:
         return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
       }
+      {%- endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+      {% endfor -%}{{gen_func(args)}}
       {%- endif %}{{new_line}}
     interface_body: |
+      {#- this should go to shared macro -#}
+      {%- macro gen_func(args, index=none) -%}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif %}
@@ -678,23 +719,29 @@ method:
       {%- if vars.is_operator and vars.name == '[]' -%}
       subscript({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{% endfor %}) -> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} { get {{'set ' if not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference}}}
       {%- else -%}
-      func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}}
+      func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}}
       {%- endif %}
+      {%- endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+      {% endfor -%}{{gen_func(args)}}
   cc:
     include: *var_method_cxx_include
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-      {%- set comma = joiner(', ') %}
-      {%- set is_subscript_operator = vars.is_operator and vars.name == '[]' %}
+      {%- set is_subscript_operator = vars.is_operator and vars.name == '[]' -%}
       {%- if not is_subscript_operator -%}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}(
+      {%- macro gen_func(args, index=none) -%}
+      {%- set comma = joiner(', ') -%}
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}{{'_' + index|string if index}}(
       {%- if not cxx.is_static -%}
       {{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.c_to_cxx %}
-        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
           {{conversion|indent(4)}}
         {%- endif %}
@@ -738,14 +785,20 @@ method:
           return result;
           {%- endif %}
       }
-      {% else -%}
+      {% endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+      {% endfor -%}{{gen_func(args)}}
+      {%- else -%}
+      {%- set comma = joiner(', ') -%}
       {# subscript operator getter #}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_'), vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{owner_class.converter.c.target_type_name}} cself,
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}) {
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -767,20 +820,20 @@ method:
       {# subscript operator setter #}
       {% set comma = joiner(', ') -%}
       void {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{owner_class.converter.c.target_type_name}} cself, {% for arg in args -%}
-          {{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}{{rconverter.c.target_type_name}}
+          {{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}{{rconverter.c.target_type_name}}
           {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
-            {{conversion|indent(4)}}
+          {{conversion|indent(4)}}
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg.name)) -%}
           {% endfor %}
           {%- set conversion = rconverter.c_to_cxx.snippet('value', nullable=vars.nullable_return) %}
           {%- if conversion %}
-            {{conversion|indent(4)}}
+          {{conversion|indent(4)}}
           {% endif %}
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {%- if not cxx.is_static %}
@@ -793,25 +846,31 @@ method:
   ch:
     body:
       content: |
-        {%- set comma = joiner(', ') -%}
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
         {%- set is_subscript_operator = vars.is_operator and vars.name == '[]' -%}
         {%- if not is_subscript_operator -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}(
-        {%- if not cxx.is_static -%}
-        {{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        {%- set index = '_' + index|string if index else '' -%}
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}(
+        {%- if not cxx.is_static -%}{{owner_class.converter.c.target_type_name}} cself, {% endif -%}
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+        {% endfor -%}{{gen_func(args)}}
         {%- else %}
         {# subscript operator #}
         {%- set comma = joiner(', ') %}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}
         {%- endif %} {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{owner_class.converter.c.target_type_name}} cself, {% for arg in args -%}
-        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
+        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%});
         {# subscript operator setter #}
         {%- if not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
         {% set comma = joiner(', ') %}
         void {{helper.get_c_func_name(owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}({{owner_class.converter.c.target_type_name}} cself, {% for arg in args -%}
-        {{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}{{rconverter.c.target_type_name}}
+        {{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}{{rconverter.c.target_type_name}}
         {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value);
         {%- endif %}
         {%- endif -%}
@@ -827,12 +886,14 @@ function:
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.displayname)) -%}
       {%- endif -%}
+      {#- this should go to shared macro -#}
+      {%- macro gen_func(args, index=none) -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set comma = joiner(', ') -%}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
-      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.is_null_ptr}}
+      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
         {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -840,8 +901,8 @@ function:
         {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.is_literal %} = {{arg.default}}
-        {%- elif arg.is_null_ptr %} = nil
+        {%- if arg.default_is_literal %} = {{arg.default}}
+        {%- elif arg.default_is_nullptr %} = nil
         {%- endif %}
         {%- endif %}
         {%- endif %}
@@ -849,7 +910,7 @@ function:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr) %}
+        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -857,7 +918,8 @@ function:
         {%- endfor %}
         var err = IEGenCObject()
         {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
-        {%- set c_func_name = helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix) %}
+        {%- set index = '_' + index|string if index else '' %}
+        {%- set c_func_name = helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index) %}
         {%- if rconverter.c.target_type_name != 'void' %}
         let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
         {%- else %}
@@ -899,20 +961,28 @@ function:
         {%- endif %}
         return {{rconverter.sc_to_swift.converted_name('result')}}
         {%- endif %}
-      }{{new_line}}
+      }
+      {%- endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+      {% endfor -%}{{gen_func(args)}}{{new_line}}
   cc:
     include: *var_method_cxx_include
     body: |
+      {#- this should got to shared macro -#}
+      {%- macro gen_func(args, index=none) -%}
       {%- set comma = joiner(', ') %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}(
+      {%- set index = '_' + index|string if index else '' -%}
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}(
       {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
-      {{' _Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
-          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.is_null_ptr)|indent(4)}}
+          {{converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr)|indent(4)}}
           {%- do call_args.append(converter.converted_name(arg.name)) %}
           {%- endfor %}
           {%- if rconverter.c.target_type_name != 'void' %}
@@ -950,18 +1020,31 @@ function:
           {{rconverter.c.target_type_name}} result {};
           return result;
           {%- endif %}
-      }{{new_line}}
+      }
+      {% endmacro -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- for arg_with_default in non_primitive_default_args -%}
+      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+      {% endfor -%}{{gen_func(args)}}
   ch:
     body:
       content: |
+        {#- this should got to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
         {%- set comma = joiner(', ') %}
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
         {%- set namespace = cxx.namespace.split('::')|map('capitalize')|join %}
-        {%- set c_func_name = helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix) %}
+        {%- set index = '_' + index|string if index else '' %}
+        {%- set c_func_name = helper.get_c_func_name(namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index) %}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
         {%- for arg in args -%}
-        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.is_null_ptr else '_Nonnull'}}{% endif %} {{arg.name}}
+        {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}
         {%- endfor -%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
+        {% endfor -%}{{gen_func(args)}}
 
 
 var_getter_cxx_include: &var_getter_cxx_include
@@ -1180,10 +1263,10 @@ getter:
     body: |
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- if cxx.is_template -%}
-      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
-      {%- else %}
-      {%- set template_args = '' %}
-      {%- endif %}
+      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' -%}
+      {%- else -%}
+      {%- set template_args = '' -%}
+      {%- endif -%}
       {%- macro gen_exc_catch_block(vars) -%}
       catch (const std::exception& e) {
           err->type = strdup("std::exception");

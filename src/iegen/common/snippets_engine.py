@@ -660,10 +660,10 @@ class SnippetsEngine:
             if lookup_type.is_function_proto:
                 # here we assume lookup_type holds clang type
                 # update later when we will be able to parse lambda type from string
-                tmpl_args = [self._build_type_converter(CXXType(arg_type, cxx_type.template_choice))
+                tmpl_args = [self.build_type_converter(CXXType(arg_type, cxx_type.template_choice))
                              for arg_type in lookup_type.type_.argument_types()]
                 tmpl_args.append(
-                    self._build_type_converter(CXXType(lookup_type.type_.get_result(), cxx_type.template_choice)))
+                    self.build_type_converter(CXXType(lookup_type.type_.get_result(), cxx_type.template_choice)))
 
                 type_info = self._create_type_info(FUNCTION_PROTO_INFO_TYPE,
                                                    cxx_type=cxx_type,
@@ -674,7 +674,7 @@ class SnippetsEngine:
             # e.g. a::Stack<T> and a::Stack<Project>
             # might be a template typedef so get the canonical type and then proceed
             if lookup_type.is_template and not lookup_type.is_typedef:
-                tmpl_args = [self._build_type_converter(arg_type)
+                tmpl_args = [self.build_type_converter(arg_type)
                              for arg_type in lookup_type.template_argument_types]
 
                 # for the case when all arguments are exposed

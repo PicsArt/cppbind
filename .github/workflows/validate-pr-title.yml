@@ -73,7 +73,7 @@ jobs:
                 if [[ ${jira_Issue_Status} == "In Progress" ]]; then
                   #change the Jira status
                   curl -D- -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
-                      -X POST --data '{"transition":{"id":"51"}}' \
+                      -X POST --data '{"transition":{"id":"21"}}' \
                       -H "Content-Type: application/json" ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}//transitions
                 else
                   echo 'The related Jira Issue is not In Progress to switch to Under Review.'

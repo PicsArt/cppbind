@@ -57,3 +57,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           message: "Jira Issue Link: ${{ secrets.JIRA_BASE_URL }}/browse/${{ steps.find.outputs.issue }}"
+          
+      - name: Change the Jira issue Status to Under Review
+        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
+        run: |
+              if [[ ${{ github.event.action }} == "opened" || ${{ github.event.action }} == "edited" || ${{ github.event.action }} == "ready_for_review" ]]; then
+              
+                restApiGETJiraIssueDetails=$(curl --request GET \
+                  --url '${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/' \
+                  --user '${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}' \
+                  --header 'Accept: application/json');
+                  
+                jira_Issue_Status=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.status.name')
+                                
+                if [[ ${jira_Issue_Status} == "In Progress" ]]; then
+                  #change the Jira status
+                  curl -D- -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
+                      -X POST --data '{"transition":{"id":"51"}}' \
+                      -H "Content-Type: application/json" ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}//transitions
+                else
+                  echo 'The related Jira Issue is not In Progress to switch to Under Review.'
+                fi
+              fi

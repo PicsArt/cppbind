@@ -85,7 +85,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    MyVehicle(std::shared_ptr<Vehicle> v) : _vehicle(v) {};
+    MyVehicle(std::shared_ptr<Vehicle> v, std::shared_ptr<const Vehicle> cv) : _vehicle(v), _const_vehicle(cv) {};
 
     /**
      * __API__
@@ -102,12 +102,32 @@ public:
      * action: gen_setter
      * throws: no_throw
      */
-    void setVehicle(std::shared_ptr<Vehicle>  v) {
+    void setVehicle(std::shared_ptr<Vehicle> v) {
         _vehicle = v;
+    };
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     * nullable_return: True
+     */
+    std::shared_ptr<const Vehicle> constVehicle() {
+        return _const_vehicle;
+    };
+
+    /**
+     * __API__
+     * action: gen_setter
+     * throws: no_throw
+     */
+    void setConstVehicle(std::shared_ptr<const Vehicle> v) {
+        _const_vehicle = v;
     };
 
 private:
    std::shared_ptr<Vehicle> _vehicle;
+   std::shared_ptr<const Vehicle> _const_vehicle;
 };
 
 

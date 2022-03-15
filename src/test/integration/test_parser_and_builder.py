@@ -2,6 +2,7 @@ import copy
 import datetime
 import os
 import pytest
+import shutil
 import types
 from unittest.mock import patch, MagicMock
 
@@ -451,7 +452,16 @@ def test_node_reuse(clang_config):
     assert incl_func_node is incl_func_node_from_main, "two function nodes from different files are equivalent"
 
 
-def test_shared_ref():
+def test_shared_ref_negative():
     with pytest.raises(IEGError, match=r"Child_A ancestors have different values for shared_ref variable"):
         ctx_desc = ContextDescriptor("*/**/shared_ref.yaml")
         WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
+
+
+def test_non_polymorphic_multiple_bases_negative():
+    with pytest.raises(IEGError, match="ChildClass is not polymorphic but has multiple branches in its base hierarchy"):
+        ctx_desc = ContextDescriptor("*/**/non_polym_bases.yaml")
+        WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
+
+    # remove generated empty directories
+    shutil.rmtree(os.path.join(SCRIPT_DIR, 'non_polym_test_wrapper_dir'), ignore_errors=True)

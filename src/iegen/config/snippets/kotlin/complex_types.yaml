@@ -108,7 +108,7 @@ $Object:
       {%- endif -%})
       {%- endmacro -%}
       {{cxx.unqualified_resolved_type_name}}* {{target_name}}_ptr = {{apply_rv_policy()}};
-      char* type_{{name}} = {{'strdup("{}")'.format(cxx.unqualified_canonical_type_name) if not descendants else 'nullptr'}};
+      char* type_{{name}} = {{'strdup("{}")'.format(cxx.unqualified_canonical_type_name) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
       {%- macro demangle() -%}
       const char* name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
       int status = 0;
@@ -122,18 +122,16 @@ $Object:
       {%- if is_nullable %}
       IEGenCObject* iegen_obj_{{target_name}} = nullptr;
       if ({{name}}) {
-          {%- if descendants %}
+          {%- if cxx.is_polymorphic and descendants %}
           {{demangle()|indent(4)}}
           {%- endif %}
-          {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
-          iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if descendants else target_name + '_ptr'}}};
+          iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if cxx.is_polymorphic else target_name + '_ptr'}}};
       }
       {%- else %}
-      {%- if descendants %}
+      {%- if cxx.is_polymorphic and descendants %}
       {{demangle()}}
       {%- endif %}
-      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
-      IEGenCObject* iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if descendants else target_name + '_ptr'}}};
+      IEGenCObject* iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{'dynamic_cast<void*>({}_ptr)'.format(target_name) if cxx.is_polymorphic else target_name + '_ptr'}}};
       {%- endif %}
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(iegen_obj_{{target_name}});
       {%- endif %}
@@ -160,7 +158,7 @@ $Object:
           else -> {{target_name}} = {{type_name}}(IEGenObject({{name}}{{owner}}))
       }
       {%- endmacro -%}
-      {%- if descendants %}
+      {%- if cxx.is_polymorphic and descendants %}
       val {{target_name}} : {{target_type_name}}{{'?' if is_nullable}}
       {%- if is_nullable %}
       if ({{name}} == 0L)
@@ -477,7 +475,7 @@ std::shared_ptr:
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if (iegen_obj_{{name}}_ptr) {
-          {{gen_cast_block()}}
+          {{gen_cast_block()|indent(4)}}
       }
       {%- else %}
       {{gen_cast_block()}}
@@ -502,24 +500,27 @@ std::shared_ptr:
           type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- endmacro %}
-      char* type_{{name}} = {{'strdup("{}")'.format(args[0].cxx.unqualified_canonical_type_name) if not args0_descendants else 'nullptr'}};
+      char* type_{{name}} = {{'strdup("{}")'.format(args[0].cxx.unqualified_canonical_type_name) if not (args[0].cxx.is_polymorphic and args0_descendants) else 'nullptr'}};
       void* {{target_name}}_ptr = nullptr;
       IEGenCObject* iegen_obj_{{target_name}} = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if args0_descendants %}
+          {%- if args[0].cxx.is_polymorphic and args0_descendants %}
           {{demangle()|indent(4)}}
-          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
-          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+          {%- endif %}
+          {%- if args[0].cxx.is_polymorphic %}
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
           {%- else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
           {%- endif %}
           iegen_obj_{{target_name}} = new IEGenCObject {type_{{name}}, {{target_name}}_ptr};
       }
       {%- else %}
-      {%- if args0_descendants %}
+      {%- if args[0].cxx.is_polymorphic and args0_descendants %}
       {{demangle()}}
-      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+      {%- endif %}
+      {%- if args[0].cxx.is_polymorphic %}
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
       {%- else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
       {%- endif %}
@@ -531,7 +532,7 @@ std::shared_ptr:
     jdk_to_kotlin: |
       {#- for shared pointers we always use take_ownership
       although for now take_ownership is not working as expected as we do not have object caching yet -#}
-      {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')|indent}}
+      {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
 
 std::pair:
   custom:

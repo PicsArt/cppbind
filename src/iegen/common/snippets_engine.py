@@ -192,10 +192,6 @@ class Converter:
         return self._template_args
 
     @property
-    def root_types_infos(self):
-        return self._type_info.root_types_infos
-
-    @property
     def parent_type_info(self):
         return self._type_info.parent_type_info
 

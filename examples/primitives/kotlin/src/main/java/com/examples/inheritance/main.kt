@@ -36,10 +36,13 @@ assert(gf.parallelogram.equals(rhombus))
 gf.nullableParallelogram = null
 assert(gf.nullableParallelogram == null)
 
-val mv = MyVehicle(bicycle)
+val mv = MyVehicle(bicycle, bicycle)
 mv.vehicle = bicycle
 assert(mv.vehicle!!.type() == "bicycle")
 assert(mv.vehicle is Bicycle)
+mv.constVehicle = bicycle
+assert(mv.constVehicle!!.type() == "bicycle")
+assert(mv.constVehicle is Bicycle)
 
 // const shared_ptr tests
 val mb = MyBicycle(bicycle)
@@ -131,6 +134,33 @@ textObj.close()
 signObj.close()
 digitObj.close()
 symbolUsageObj.close()
+
+// test non-polymorphic cases
+val doctor = Doctor("doctor")
+val surgeon = Surgeon("surgeon")
+var doctorUsage = DoctorInfo(surgeon)
+assert(doctorUsage.getDoctorName(doctor) == "doctor")
+assert(doctorUsage.getDoctorName(surgeon) == "doctor")
+assert(doctorUsage.getSurgeonName(surgeon) == "surgeon")
+assert(doctorUsage.getDoctorName(doctorUsage.getDoctor()) == "doctor")
+
+// test mixed-polymorphic cases
+val goodDoctor = GoodDoctor("good_doctor")
+assert(doctorUsage.getGoodDoctorName(goodDoctor) == "good_doctor")
+val goodYoungDoctor = GoodYoungDoctor("good_young_doctor")
+doctorUsage = DoctorInfo(goodYoungDoctor)
+assert(doctorUsage.getGoodDoctorName(doctorUsage.getGoodDoctor()) == "good_doctor")
+val goodOldDoctor = GoodOldDoctor("good_old_doctor")
+assert(doctorUsage.getGoodDoctorName(goodOldDoctor) == "good_doctor")
+assert(doctorUsage.getGoodDoctorName(doctorUsage.getGoodVirtualDoctor() as GoodDoctor) == "good_doctor")
+
+// test destructors in case of non/mixed-polymorphic cases
+doctor.close()
+surgeon.close()
+doctorUsage.close()
+goodDoctor.close()
+goodYoungDoctor.close()
+goodOldDoctor.close()
 
 }
 

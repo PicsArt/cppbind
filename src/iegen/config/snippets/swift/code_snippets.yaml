@@ -119,6 +119,9 @@ class:
         - body
         - private_external
       content: |
+        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+        {%- endif -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- if vars.header_code_fragment -%}
         {{vars.header_code_fragment}}{{new_line}}
@@ -185,17 +188,40 @@ class:
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
-            {%- if not vars.shared_ref and (vars.descendants if vars.descendants is not none else descendants) %}
+            {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
-            free(cself.type);
             if (owner) {
+                {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+                {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
+                {%- if descendants %}
+                if (strcmp(cself.type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+                {%- if vars.shared_ref %}
+                    delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                {%- else %}
+                    delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                {%- endif %}
+                {%- for descendant in descendants %}
+                else if (strcmp(cself.type, "{{descendant}}") == 0)
+                {%- if vars.shared_ref %}
+                    delete static_cast<std::shared_ptr<{{descendant}}>*>(cself.ptr);
+                {%- else %}
+                    delete static_cast<{{descendant}}*>(cself.ptr);
+                {%- endif %}
+                {%- endfor %}
+                else {
+                    std::cerr << "Unexpected object type: " << cself.type << std::endl;
+                    exit(1);
+                }
+                {%- else -%}
                 {%- if vars.shared_ref %}
                 delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
                 delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- endif %}
+                {%- endif %}
             }
+            free(cself.type);
         }
         {% endif %}
   ch:
@@ -221,6 +247,9 @@ interface:
         - properties
         - body
       content: |
+        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+        {%- endif -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         {%- if vars.header_code_fragment -%}
         {{vars.header_code_fragment}}{{new_line}}
@@ -298,17 +327,40 @@ interface:
       content: |
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
-            {%- if not vars.shared_ref and (vars.descendants if vars.descendants is not none else descendants) %}
+            {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
-            free(cself.type);
             if (owner) {
+                {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+                {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
+                {%- if descendants %}
+                if (strcmp(cself.type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+                {%- if vars.shared_ref %}
+                    delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                {%- else %}
+                    delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                {%- endif %}
+                {%- for descendant in descendants %}
+                else if (strcmp(cself.type, "{{descendant}}") == 0)
+                {%- if vars.shared_ref %}
+                    delete static_cast<std::shared_ptr<{{descendant}}>*>(cself.ptr);
+                {%- else %}
+                    delete static_cast<{{descendant}}*>(cself.ptr);
+                {%- endif %}
+                {%- endfor %}
+                else {
+                    std::cerr << "Unexpected object type: " << cself.type << std::endl;
+                    exit(1);
+                }
+                {%- else -%}
                 {%- if vars.shared_ref %}
                 delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
                 {%- else %}
                 delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
                 {%- endif %}
+                {%- endif %}
             }
+            free(cself.type);
         }{{new_line}}
   ch:
     body:

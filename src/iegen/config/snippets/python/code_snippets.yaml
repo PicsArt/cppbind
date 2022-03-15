@@ -254,6 +254,9 @@ var_class: &var_class
         - properties
         - body
       content: |
+        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+        {%- endif -%}
         {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
         {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}

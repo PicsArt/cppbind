@@ -1,0 +1,11 @@
+vars:
+  out_prj_dir: non_polym_test_wrapper_dir
+  src_glob:
+    - "*/**/negative_non_polym.hpp"
+
+rules:
+  swift.code_snippets:
+    !include swift/code_snippets.yaml
+
+  swift.type_converters:
+    !include "swift/*_types.yaml"

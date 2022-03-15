@@ -7,8 +7,8 @@ func runGlobalsExamples() {
 var mulInt = mul(first:5, second: 4)
 assert(mulInt == 20)
 
-var mulInt1 = mul(first:5, second: 4, third: 3)
-assert(mulInt1 == 60)
+mulInt = mul(first:5, second: 4, third: 3)
+assert(mulInt == 60)
 
 var res = concat(str1: "Hello ", str2: "Johnny")
 assert(res == "Hello Johnny")

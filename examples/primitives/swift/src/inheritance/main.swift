@@ -32,10 +32,13 @@ func runInheritanceExamples() {
     gf.nullableParallelogram = nil
     assert(gf.nullableParallelogram == nil)
 
-    let mv = MyVehicle(v: bicycle)
+    let mv = MyVehicle(v: bicycle, cv: bicycle)
     mv.vehicle = bicycle
     assert(mv.vehicle!.type() == "bicycle")
     assert(mv.vehicle is Bicycle)
+    mv.constVehicle = bicycle
+    assert(mv.constVehicle!.type() == "bicycle")
+    assert(mv.constVehicle is Bicycle)
 
     let mb = MyBicycle(b: bicycle)
     assert(mb.bicycle.type() == "bicycle")
@@ -110,6 +113,26 @@ func runInheritanceExamples() {
     // test return object correct casting
     assert(symbolUsageObj.getTextId(t: symbolUsageObj.getTextPtr()) == 2)
     assert(symbolUsageObj.getSignId(s: symbolUsageObj.getSignPtr()) == 1)
+
+    // test non-polymorphic cases
+    let doctor = Doctor(doctorName: "doctor")
+    let surgeon = Surgeon(surgeonName: "surgeon")
+    var doctorUsage = DoctorInfo(s: surgeon)
+    assert(doctorUsage.getDoctorName(d: doctor) == "doctor")
+    assert(doctorUsage.getDoctorName(d: surgeon) == "doctor")
+    assert(doctorUsage.getSurgeonName(s: surgeon) == "surgeon")
+    assert(doctorUsage.getDoctorName(d: doctorUsage.getDoctor()) == "doctor")
+
+    // test mixed-polymorphic cases
+    let goodDoctor = GoodDoctor(doctorName: "good_doctor")
+    assert(doctorUsage.getGoodDoctorName(d: goodDoctor) == "good_doctor")
+    let goodYoungDoctor = GoodYoungDoctor(doctorName: "good_young_doctor")
+    doctorUsage = DoctorInfo(d: goodYoungDoctor)
+    assert(doctorUsage.getGoodDoctorName(d: doctorUsage.getGoodDoctor()) == "good_doctor")
+    let goodOldDoctor = GoodOldDoctor(doctorName: "good_old_doctor")
+    assert(doctorUsage.getGoodDoctorName(d: goodOldDoctor) == "good_doctor")
+    assert(doctorUsage.getGoodDoctorName(d: doctorUsage.getGoodVirtualDoctor() as! GoodDoctor) == "good_doctor")
+
 }
 
 #if os(Linux)

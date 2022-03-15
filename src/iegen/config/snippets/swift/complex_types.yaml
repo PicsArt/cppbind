@@ -93,12 +93,8 @@ $Object:
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, nullable=is_nullable)}}
       {%- endif %}
       {%- else %}
-      {%- if not descendants %}
-      char* type_{{name}} = strdup("{{cxx.unqualified_canonical_type_name}}");
-      {%- else %}
-      char* type_{{name}} = nullptr;
-      {%- endif %}
-      {%- if descendants %}
+      char* type_{{name}} = {{'strdup("{}")'.format(cxx.unqualified_canonical_type_name) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
+      {%- if cxx.is_polymorphic and descendants %}
       {%- macro demangle() -%}
       const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
       int status = 0;
@@ -135,8 +131,7 @@ $Object:
       {%- endif -%})
       {%- endmacro %}
       auto value_ptr_{{name}} = {{apply_rv_policy()}};
-      {# FIXME: `if descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
-      {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if descendants else 'value_ptr_' + name}}};
+      {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if cxx.is_polymorphic else 'value_ptr_' + name}}};
       {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
@@ -162,7 +157,7 @@ $Object:
       {%- endmacro -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
-      {%- if descendants %}
+      {%- if cxx.is_polymorphic and descendants %}
       let {{name|to_camel_case}}Index = String(cString: {{name}}.type)
       switch({{name|to_camel_case}}Index) {
       {%- for descendant in descendants %}
@@ -464,7 +459,6 @@ std::shared_ptr:
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].target_type_name %}
-      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants %}
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
@@ -486,7 +480,7 @@ std::shared_ptr:
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
       if ({{name}}.ptr) {
-          {{gen_cast_block()}}
+          {{gen_cast_block()|indent(4)}}
       }
       {%- else %}
       {{gen_cast_block()}}
@@ -497,10 +491,9 @@ std::shared_ptr:
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
-      {%- set const_qualifier = 'const ' if args[0].cxx.is_const_qualified else '' %}
       {%- set is_nullable = nullable|default(False) %}
       {%- set args0_descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
-      {%- if not args0_descendants %}
+      {%- if args[0].cxx.is_polymorphic and not args0_descendants %}
       char* type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       {%- else %}
       char* type_{{name}} = nullptr;
@@ -519,24 +512,25 @@ std::shared_ptr:
       void* {{target_name}}_ptr = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if args0_descendants %}
+          {%- if args[0].cxx.is_polymorphic and args0_descendants %}
           {{demangle()|indent(4)}}
-          {# FIXME: `if args0_descendants` check is done temporarily in order not to spoil our examples for not polymorphic return types (fix this after IEGEN-27) -#}
-          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+          {%- endif %}
+          {%- if args[0].cxx.is_polymorphic %}
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
           {%- else %}
-          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
           {%- endif %}
       } else {
           type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
-      {%- if args0_descendants %}
+      {%- if args[0].cxx.is_polymorphic and args0_descendants %}
       {{demangle()}}
       {%- endif %}
-      {%- if args0_descendants %}
-      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name}}));
+      {%- if args[0].cxx.is_polymorphic %}
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
       {%- else %}
-      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
       {%- endif %}
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};

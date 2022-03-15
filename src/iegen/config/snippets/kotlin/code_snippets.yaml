@@ -121,46 +121,38 @@ var_class_cxx: &var_class_cxx
       {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
       {%- set finalize_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jFinalize') %}
       extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- if vars.shared_ref %}
-          {#- here is used almost the same logic as for jni_to_cxx section of std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
-          {%- if vars and not vars.shared_ref -%}
-          {%- do Error.critical(cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
-          {%- endif -%}
-          {%- set is_nullable = nullable|default(False) %}
+          {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
+          static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+          {%- endif %}
+          auto iegen_obj_id = reinterpret_cast<IEGenCObject*>(id);
+          auto iegen_obj_id_ptr = iegen_obj_id ? iegen_obj_id->ptr : nullptr;
+          {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
           {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
-          {%- macro gen_cast_block() -%}
-          {%- if descendants -%}
+          {%- if descendants %}
           if (strcmp(iegen_obj_id->type, "{{cxx.unqualified_canonical_type_name}}") == 0)
+          {%- if vars.shared_ref %}
               delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(iegen_obj_id_ptr);
+          {%- else %}
+              delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(iegen_obj_id_ptr);
+          {%- endif %}
           {%- for descendant in descendants %}
           else if (strcmp(iegen_obj_id->type, "{{descendant}}") == 0)
+          {%- if vars.shared_ref %}
               delete static_cast<std::shared_ptr<{{descendant}}>*>(iegen_obj_id_ptr);
+          {%- else %}
+              delete static_cast<{{descendant}}*>(iegen_obj_id_ptr);
+          {%- endif %}
           {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << iegen_obj_id->type << std::endl;
               exit(1);
           }
-          {%- else -%}
+          {%- else %}
+          {%- if vars.shared_ref %}
           delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(iegen_obj_id_ptr);
-          {%- endif -%}
-          {%- endmacro %}
-          auto iegen_obj_id = reinterpret_cast<IEGenCObject*>(id);
-          auto iegen_obj_id_ptr = iegen_obj_id ? iegen_obj_id->ptr : nullptr;
-          {%- if is_nullable %}
-          if (iegen_obj_id_ptr) {
-              {{gen_cast_block()}}
-          }
           {%- else %}
-          {{gen_cast_block()}}
+          delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(iegen_obj_id_ptr);
           {%- endif %}
-          {#- end of std::shared_ptr conversion section -#}
-          {%- else %}
-          {%- if (vars.descendants if vars.descendants is not none else descendants) %}
-          static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
-          {%- endif %}
-          {%- set jni_to_cxx_converter = make_type_converter(cxx.unqualified_resolved_type_name).jni_to_cxx %}
-          {{jni_to_cxx_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          delete {{jni_to_cxx_converter.converted_name('id')}};
           {%- endif %}
           free(iegen_obj_id->type);
           delete iegen_obj_id;
@@ -197,6 +189,9 @@ class:
         - companion
         - private_external
       content: |
+        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+        {%- endif -%}
         {%- if vars.header_code_fragment -%}
         {{new_line}}{{vars.header_code_fragment}}
         {% endif -%}
@@ -294,6 +289,9 @@ interface:
         - companion
         - interface_external
       content: |
+        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+        {%- endif -%}
         {%- if vars.header_code_fragment -%}
         {{new_line}}{{vars.header_code_fragment}}
         {% endif -%}

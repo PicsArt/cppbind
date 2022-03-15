@@ -42,6 +42,9 @@ class TypeInfo:
             _cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
             _cxx.kind_name = self._type_ctx.kind_name
             _cxx.displayname = self._type_ctx.cursor.displayname
+            if self._type_ctx.kind_name != 'enum':
+                _cxx.is_polymorphic = cutil.is_polymorphic(self._type_ctx.cursor)
+                _cxx.has_multiple_base_branches = cutil.has_multiple_base_branches(self._type_ctx.cursor)
 
         return _cxx
 
@@ -62,19 +65,6 @@ class TypeInfo:
     def arg_types_infos(self):
         return [create_type_info(self._runner, t) for t in
                                  self._raw_type.template_argument_types] if self._raw_type.is_template else []
-
-    @cached_property
-    def root_types_infos(self):
-        roots = []
-        if self._type_ctx and self._type_ctx.kind_name != 'enum':
-            for parent in set(self._type_ctx.ancestors):
-                if not parent.base_types:
-                    roots.append(create_type_info(self._runner, CXXType(parent.cxx_type_name,
-                                                                        self._type_ctx.template_choice)))
-            if not roots:
-                roots.append(self)
-
-        return roots
 
     @property
     def vars(self):

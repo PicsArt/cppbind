@@ -4,10 +4,12 @@ Helper functions working with clang
 import os
 import re
 import sys
+from cachetools import cached, LRUCache
 from ctypes import *
 from ctypes.util import find_library
 from itertools import chain
 
+from iegen.common.error import Error
 import clang.cindex as cli
 
 
@@ -86,6 +88,45 @@ def is_final_cursor(cursor):
             (c.kind for c in cursor.semantic_parent.get_children())
         )
     return cli.CursorKind.CXX_FINAL_ATTR in (c.kind for c in cursor.get_children())
+
+
+@cached(cache=LRUCache(maxsize=128), key=lambda cursor: get_signature(cursor))
+def is_polymorphic(cursor):
+    """
+    Returns true if the class/struct is polymorphic (contains or inherits a virtual function)
+    Note: There is `isPolymorphic()` class in libclang `clang::CXXRecordDecl` class, but it is not exported
+    """
+    if cursor.kind not in (cli.CursorKind.STRUCT_DECL,
+                           cli.CursorKind.CLASS_DECL,
+                           cli.CursorKind.CLASS_TEMPLATE):
+        Error.internal("Is polymorphic check is valid only for class/struct types")
+
+    base_cursors = []
+    for child in cursor.get_children():
+        if child.kind in (cli.CursorKind.CXX_METHOD,
+                          cli.CursorKind.DESTRUCTOR) and child.is_virtual_method():
+            return True
+
+        # collect all bases to process later (no need to dive into bases in case the type itself is virtual)
+        if child.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+            base_cursors.append(child.referenced)
+
+    return any(is_polymorphic(base_cursor) for base_cursor in base_cursors)
+
+
+@cached(cache=LRUCache(maxsize=128), key=lambda cursor: get_signature(cursor))
+def has_multiple_base_branches(cursor):
+    """Returns true if the class/struct has multiple base branches in its hierarchy"""
+    if cursor.kind not in (cli.CursorKind.STRUCT_DECL,
+                           cli.CursorKind.CLASS_DECL,
+                           cli.CursorKind.CLASS_TEMPLATE):
+        Error.internal("Has multiple bases check is valid only for class/struct types")
+
+    base_cursors = [child for child in cursor.get_children() if child.kind == cli.CursorKind.CXX_BASE_SPECIFIER]
+    if len(base_cursors) > 1:
+        return True
+
+    return has_multiple_base_branches(base_cursors[0].referenced) if base_cursors else False
 
 
 def get_base_cursor(cursor):

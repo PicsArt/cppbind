@@ -13,7 +13,13 @@ from examples_lib.inheritance import (
     SymbolUsage,
     Sign,
     Text,
-    Digit
+    Digit,
+    Doctor,
+    Surgeon,
+    DoctorInfo,
+    GoodDoctor,
+    GoodYoungDoctor,
+    GoodOldDoctor
 )
 
 # [simple-inheritance-usage]
@@ -43,8 +49,12 @@ assert gf.parallelogram == square
 gf.parallelogram = rhombus
 assert gf.parallelogram == rhombus
 
-mv = MyVehicle(bicycle)
+mv = MyVehicle(bicycle, bicycle)
 mv.vehicle = bicycle
+
+assert(mv.vehicle.type() == "bicycle")
+mv.const_vehicle = bicycle
+assert(mv.const_vehicle.type() == "bicycle")
 
 # mixed multiple inheritance with interface and class
 dt = DateTime(15, 1, 2015, 15, 15, 15)
@@ -99,3 +109,22 @@ assert symbol_usage_obj.get_sign_id(sign_obj) == 1
 # test return object correct casting
 assert symbol_usage_obj.get_text_id(symbol_usage_obj.get_text_ptr()) == 2
 assert symbol_usage_obj.get_sign_id(symbol_usage_obj.get_sign_ptr()) == 1
+
+# test non-polymorphic cases
+doctor = Doctor("doctor")
+surgeon = Surgeon("surgeon")
+doctor_usage = DoctorInfo(surgeon)
+assert doctor_usage.get_doctor_name(doctor) == "doctor"
+assert doctor_usage.get_doctor_name(surgeon) == "doctor"
+assert doctor_usage.get_surgeon_name(surgeon) == "surgeon"
+assert doctor_usage.get_doctor_name(doctor_usage.get_doctor()) == "doctor"
+
+# test mixed-polymorphic cases
+good_doctor = GoodDoctor("good_doctor")
+assert doctor_usage.get_good_doctor_name(good_doctor) == "good_doctor"
+good_young_doctor = GoodYoungDoctor("good_young_doctor")
+doctor_usage = DoctorInfo(good_young_doctor)
+assert doctor_usage.get_good_doctor_name(doctor_usage.get_good_doctor()) == "good_doctor"
+good_old_doctor = GoodOldDoctor("good_old_doctor")
+assert doctor_usage.get_good_doctor_name(good_old_doctor) == "good_doctor"
+assert doctor_usage.get_good_doctor_name(doctor_usage.get_good_virtual_doctor()) == "good_doctor"

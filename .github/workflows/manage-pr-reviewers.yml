@@ -76,16 +76,26 @@ jobs:
                 
                 echo 'Number of approved reviewers:' $approverCount
                 
-                if [[ "$approverCount" -lt 2 ]]; then
-                    echo 'More reviewers are needed in order for this Jira item to progress within its workflow.'
+                if [[ ${jira_Issue_Status} == "Approved" && "$approverCount" -ge 2 ]]; then
+                  #do not fail the workflow in case the status is Approved and 2 reviewers have already approved
+                  echo 'The Jira status is ' $jira_Issue_Status '. Since the minimum number of reviewers has been passed, do not fail the workflow.'
                 else
-                    echo 'Minimum number of code reviewers passed. Change the Jira status.'
-                    
+                
+                  if [[ ${jira_Issue_Status} != "Under Review" ]]; then
+                    echo 'The Jira status is' $jira_Issue_Status '. Cannot proceed when the status is not set to Under Review.'
+                    exit 1
+                  fi
+                  
+                  if [[ "$approverCount" -lt 2 ]]; then
+                    echo 'More reviewers are needed in order for this Jira item to progress within its workflow.'
+                    exit 1
+                  else
+                    echo 'Minimum number of code reviewers passed. Change assignee and status.'
                     echo "CodeReviewDone=true" >> $GITHUB_ENV
                     
                     #Change the Jira issue status to Approved
                     curl -D- -u ${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }} \
                       -X POST --data '{"transition":{"id":"91"}}' \
-                      -H "Content-Type: application/json" ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/transitions         
-              
+                      -H "Content-Type: application/json" ${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/transitions 
+                  fi
                 fi

@@ -11,10 +11,10 @@ func runMiscExamples() {
     obj.str = "cd"
     assert(obj.str == "cd")
 
-    let maxInt : Int = WithExternalAPIComments.max(arg0: 2, arg1: 3)
+    let maxInt : Int = WithExternalAPIComments.max(a: 2, b: 3)
     assert(maxInt == 3)
 
-    let maxStr : String = WithExternalAPIComments.max(arg0: "2", arg1: "3")
+    let maxStr : String = WithExternalAPIComments.max(a: "2", b: "3")
     assert(maxStr == "3")
     assert(AdderInt.add(a: 1, b: 2) == 3)
     assert(AdderDouble.add(a: 1.5, b: 2.5) == 4.0)

@@ -42,26 +42,26 @@ assert res.title == prj.title
 res = stack_usage.first_item_of_specialized_stack_with_typedef_arg(p=stack_prj)
 assert res.title == prj.title
 
-res = stack_usage.first_item_of_template_stack(arg0=stack_prj)
+res = stack_usage.first_item_of_template_stack(p=stack_prj)
 assert res.title == prj.title
 # [stack-usage-examples]
 
 # [template-funcs-examples]
 tm = TemplateMethods()
-max_int = tm.max(arg0=2, arg1=5)
+max_int = tm.max(a=2, b=5)
 assert max_int == 5
-max_string = tm.max(arg0="d", arg1="a")
+max_string = tm.max(a="d", b="a")
 assert max_string == "d"
 
 prj1 = Project(title="My first project")
 prj2 = Project(title="My second project")
-pair_prj_prj = tm.make_pair(arg0=prj1, arg1=prj2)
+pair_prj_prj = tm.make_pair(a=prj1, b=prj2)
 assert len(pair_prj_prj) == 2
 assert pair_prj_prj[0].title == prj1.title
 assert pair_prj_prj[1].title == prj2.title
 
 root1 = Root("/path/to/root/")
-pair_root_prj = tm.make_pair(arg0=root1, arg1=prj1)
+pair_root_prj = tm.make_pair(a=root1, b=prj1)
 assert len(pair_root_prj) == 2
 assert pair_root_prj[0].path == root1.path
 assert pair_root_prj[1].title == prj1.title

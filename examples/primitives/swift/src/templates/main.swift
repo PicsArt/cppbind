@@ -34,27 +34,27 @@ func runTemplateExamples() {
     assert(res.title == prj.title)
     assert(res.equals(p: prj))
 
-    res = stackUsage.firstItemOfTemplateStack(arg0: stackPrj)
+    res = stackUsage.firstItemOfTemplateStack(p: stackPrj)
     assert(res.title == prj.title)
     assert(res.equals(p: prj))
     // [stack-usage-examples]
 
     // [template-funcs-examples]
     let tm = TemplateMethods()
-    let maxInt = tm.max(arg0: 2, arg1: 5)
+    let maxInt = tm.max(a: 2, b: 5)
     assert(maxInt == 5)
-    let maxString = tm.max(arg0: "d", arg1: "a")
+    let maxString = tm.max(a: "d", b: "a")
     assert(maxString == "d")
 
     let prj1 = Project(title: "My first project")
     let prj2 = Project(title: "My second project")
-    let pairPrjPrj = tm.makePair(arg0: prj1, arg1: prj2)
+    let pairPrjPrj = tm.makePair(a: prj1, b: prj2)
     assert(Mirror(reflecting: pairPrjPrj).children.count == 2)
     assert(pairPrjPrj.0.title == prj1.title)
     assert(pairPrjPrj.1.title == prj2.title)
 
     let root1 = Root(path: "/path/to/root/")
-    let pairRootPrj = tm.makePair(arg0: root1, arg1: prj1)
+    let pairRootPrj = tm.makePair(a: root1, b: prj1)
     assert(Mirror(reflecting: pairRootPrj).children.count == 2)
     assert(pairRootPrj.0.path == root1.path)
     assert(pairRootPrj.1.title == prj1.title)

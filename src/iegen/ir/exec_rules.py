@@ -85,14 +85,16 @@ class Context(BaseContext):
             return kind, val
 
         # for function templates Cursor.get_arguments returns an empty array,
-        # using Type.argument_types instead
+        # using get_children instead
         if self.node.is_function_template:
-            for i, arg_type in enumerate(self.node.clang_cursor.type.argument_types()):
-                arg_params = types.SimpleNamespace(name=f'arg{i}',
-                                                   type=arg_type,
-                                                   cursor=None,
-                                                   default=types.SimpleNamespace(kind=None, value=None))
-                _args.append(arg_params)
+            for arg_c in self.node.clang_cursor.get_children():
+                if arg_c.kind == cli.CursorKind.PARM_DECL:
+                    kind, val = get_default(arg_c)
+                    arg_params = types.SimpleNamespace(name=arg_c.spelling,
+                                                       type=arg_c.type,
+                                                       cursor=arg_c,
+                                                       default=types.SimpleNamespace(kind=kind, value=val))
+                    _args.append(arg_params)
         else:
             for arg_c in self.node.clang_cursor.get_arguments():
                 kind, val = get_default(arg_c)

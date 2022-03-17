@@ -389,7 +389,7 @@ var_method_kotlin_include: &var_method_kotlin_include
     {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
-    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined -%}
     {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
     {%- set desc_converter = make_type_converter(descendant).kotlin -%}
     {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
@@ -417,7 +417,7 @@ var_method_cxx_include: &var_method_cxx_include
     {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
     {#- `is defined` check is done for enum types (enums don't have descendants) -#}
-    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined -%}
     {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
     {#- generate includes for descendants list of an argument -#}
     {{gen_include(get_type_info(descendant))}}
@@ -1037,7 +1037,7 @@ var_getter_kotlin_include: &var_getter_kotlin_include
     {%- for arg_converter in converter.args -%}
     {{gen_import(arg_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
     {%- endfor -%}
-    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined and converter.descendants is defined -%}
+    {%- if gen_desc_import and converter.vars and converter.vars.descendants is defined -%}
     {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
     {%- set desc_converter = make_type_converter(descendant).kotlin -%}
     {{gen_import(desc_converter, gen_desc_import=gen_desc_import, gen_for_impl=gen_for_impl)}}
@@ -1057,7 +1057,7 @@ var_getter_cxx_include: &var_getter_cxx_include
     {{gen_include(arg_type_info, gen_desc_incl)}}
     {%- endfor -%}
     {#- `is defined` check is done for enum types (enums don't have descendants) -#}
-    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
+    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined -%}
     {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
     {#- generate includes for descendants list of an argument -#}
     {{gen_include(get_type_info(descendant))}}

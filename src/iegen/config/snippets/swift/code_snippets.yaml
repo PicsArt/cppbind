@@ -18,6 +18,7 @@ file:
       - namespace
       - body
       - include
+      - forward_decl
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
@@ -29,6 +30,10 @@ file:
       #include <type_traits>
       #include "{{path.relpath(vars.h_file_fullname, vars.out_prj_dir)}}"
       {{include}}
+      {%- if forward_decl %}
+
+      {{forward_decl}}
+      {%- endif %}
       {{namespace}}
 
       {{body}}{{new_line}}
@@ -91,17 +96,34 @@ var_class_cxx_include: &var_class_cxx_include
       {%- if vars.is_proj_type -%}
       #include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_include(type_info) -%}
+      {%- macro collect_include_type_infos(type_info, include_type_infos) -%}
       {%- if type_info.vars and type_info.vars.is_proj_type -%}
-      {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
+      {%- do include_type_infos.append(type_info) -%}
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
-      {{gen_include(arg_type_info)}}
+          {%- do collect_include_type_infos(arg_type_info, include_type_infos) -%}
       {%- endfor -%}
       {%- endmacro -%}
-      {%- for base in base_types_infos -%}
-      {{gen_include(base)}}
+      {%- macro collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
+      {%- if type_info.vars and type_info.vars.descendants is defined -%}
+      {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
+          {%- do collect_include_type_infos(get_type_info(descendant), desc_include_type_infos) -%}
       {%- endfor -%}
+      {%- endif -%}
+      {%- for arg_type_info in type_info.arg_types_infos -%}
+          {%- do collect_desc_include_type_infos(arg_type_info, desc_include_type_infos) -%}
+      {%- endfor -%}
+      {%- endmacro -%}
+      {%- set include_type_infos = [] -%}
+      {%- do collect_include_type_infos(type_info, include_type_infos) -%}
+      {%- set desc_include_type_infos = [] -%}
+      {%- do collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
+      {%- if include_type_infos -%}
+      {{marker}}{{include_type_infos|map(attribute='vars.prj_rel_file_name')|format_list('#include "{}"')|join_unique}}
+      {%- endif -%}
+      {%- if desc_include_type_infos -%}
+      {{marker}}{{desc_include_type_infos|map(attribute='vars.prj_rel_file_name')|format_list('#include "{}"')|join_unique}}
+      {%- endif -%}
       {%- if vars.include_cxx -%}
       {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
       {{marker}}{{vars.include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
@@ -172,6 +194,14 @@ class:
           {%- if body %}
           {{body|string|indent(2)}}
           {%- endif %}
+          {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+          {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
+          {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
+          {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
+          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenDowncast(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{converter.swift_downcast.snippet(name="iegenObj")|indent(4)}}
+          }
+          {%- endif %}
         }
         {%- if vars.footer_code_fragment %}
         {{new_line}}{{vars.footer_code_fragment}}
@@ -186,7 +216,8 @@ class:
     body:
       content: |
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
-        {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list -%}
+        {%- set has_no_base_cls = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+        {%- if has_no_base_cls -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
@@ -223,7 +254,14 @@ class:
             }
             free(cself.type);
         }
-        {% endif %}
+        {% endif -%}
+        {#- downcast function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+        {%- if descendants -%}
+        {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter -%}
+        {{new_line if has_no_base_cls}}{{this_converter.cxx_downcast_func_decl.snippet(name="iegenObj")}} {
+            {{this_converter.cxx_downcast.snippet(name="iegenObj")|indent(4)}}
+        }
+        {% endif -%}
   ch:
     body:
       content: |
@@ -312,6 +350,15 @@ interface:
           {%- if head %}
           {{head|string|indent(2)}}
           {%- endif %}
+          {#- downcast function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+          {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+          {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
+          {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
+          {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
+          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenDowncast(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{converter.swift_downcast.snippet(name="iegenObj")|indent(4)}}
+          }
+          {%- endif %}
         }
         {%- if vars.footer_code_fragment %}
         {{new_line}}{{vars.footer_code_fragment}}
@@ -361,7 +408,13 @@ interface:
                 {%- endif %}
             }
             free(cself.type);
+        }
+        {% if descendants %}
+        {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
+        {{this_converter.cxx_downcast_func_decl.snippet(name="iegenObj")}} {
+            {{this_converter.cxx_downcast.snippet(name="iegenObj")|indent(4)}}
         }{{new_line}}
+        {%- endif -%}
   ch:
     body:
       content: |
@@ -373,31 +426,40 @@ var_method_cxx_include: &var_method_cxx_include
     {%- if vars.is_proj_type -%}
     #include "{{vars.prj_rel_file_name}}"
     {%- endif -%}
-    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info, gen_desc_incl)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
-    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
-    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
-    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
-    {#- generate includes for descendants list of an argument -#}
-    {{gen_include(get_type_info(descendant))}}
-    {%- endfor -%}
-    {%- endif -%}
     {%- endmacro -%}
     {%- for arg in args -%}
     {{gen_include(arg.type_info)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_include(return_type_info, gen_desc_incl=false)}}
+    {{gen_include(return_type_info)}}
     {%- endif -%}
-    {#- generate includes for descendants list of `this` if the node is method -#}
-    {%- if owner_class -%}
-    {{gen_include(owner_class)}}
+
+var_method_cxx_forward_decl: &var_method_cxx_forward_decl
+  unique_content: |
+    {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
+    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current function/method. -#}
+    {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
+    {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+        {%- do collect_fwd_decl_type_infos(arg_type_info, fwd_decl_type_infos) -%}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- set fwd_decl_type_infos = [] -%}
+    {%- for arg in args -%}
+        {%- do collect_fwd_decl_type_infos(arg.type_info, fwd_decl_type_infos) -%}
+    {%- endfor -%}
+    {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
+    {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
+    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True, name=None)}};
+    {%- endfor -%}
 
 constructor:
   swift:
@@ -489,6 +551,7 @@ constructor:
       {% endfor -%}{{gen_func(args)}}{{new_line}}
   cc:
     include: *var_method_cxx_include
+    forward_decl: *var_method_cxx_forward_decl
     body: |
       {#- this should go to shared macro -#}
       {%- macro gen_func(args, index=none) -%}
@@ -790,6 +853,7 @@ method:
       {% endfor -%}{{gen_func(args)}}
   cc:
     include: *var_method_cxx_include
+    forward_decl: *var_method_cxx_forward_decl
     body: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
@@ -811,7 +875,7 @@ method:
         {%- do call_args.append(converter.converted_name(arg.name)) %}
         {% endfor %}
         {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class.converter.c_to_cxx -%}
-        {%- if not cxx.is_static %}
+        {%- if not cxx.is_static -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
         {%- endif %}
         {%- if rconverter.c.target_type_name != 'void' %}
@@ -1033,6 +1097,7 @@ function:
       {% endfor -%}{{gen_func(args)}}{{new_line}}
   cc:
     include: *var_method_cxx_include
+    forward_decl: *var_method_cxx_forward_decl
     body: |
       {#- this should got to shared macro -#}
       {%- macro gen_func(args, index=none) -%}
@@ -1113,22 +1178,35 @@ function:
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_include(type_info, gen_desc_incl=true) -%}
+    {%- macro gen_include(type_info) -%}
     {%- if type_info.vars and type_info.vars.is_proj_type -%}
     {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info, gen_desc_incl)}}
+    {{gen_include(arg_type_info)}}
     {%- endfor -%}
-    {#- `is defined` check is done for enum types (enums don't have descendants) -#}
-    {%- if gen_desc_incl and type_info.vars and type_info.vars.descendants is defined and type_info.descendants is defined -%}
-    {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
-    {#- generate includes for descendants list of an argument -#}
-    {{gen_include(get_type_info(descendant))}}
-    {%- endfor -%}
-    {%- endif -%}
     {%- endmacro -%}
-    {{gen_include(return_type_info, gen_desc_incl=false)}}{{gen_include(owner_class)}}
+    {{gen_include(return_type_info)}}
+
+var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
+  unique_content: |
+    {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
+    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current getter/setter. -#}
+    {%- if type_info.vars and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
+    {%- do fwd_decl_type_infos.append(type_info) -%}
+    {%- endif -%}
+    {%- for arg_type_info in type_info.arg_types_infos -%}
+        {%- do collect_fwd_decl_type_infos(arg_type_info, fwd_decl_type_infos) -%}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- set fwd_decl_type_infos = [] -%}
+    {%- if setter is defined -%}
+        {%- do collect_fwd_decl_type_infos(return_type_info, fwd_decl_type_infos) -%}
+    {%- endif -%}
+    {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
+    {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
+    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True, name=None)}};
+    {%- endfor -%}
 
 property_getter:
   swift:
@@ -1200,6 +1278,7 @@ property_getter:
       var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} { get {% if vars.action == 'gen_property_setter' %}set{% endif %} }
   cc:
     include: *var_getter_cxx_include
+    forward_decl: *var_getter_cxx_forward_decl
     body: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class.converter.c.target_type_name}} cself) {
@@ -1328,6 +1407,7 @@ getter:
       var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} { get{% if setter is defined %} set{% endif %} }
   cc:
     include: *var_getter_cxx_include
+    forward_decl: *var_getter_cxx_forward_decl
     body: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}

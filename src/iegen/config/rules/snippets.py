@@ -184,6 +184,7 @@ def make_class_context(ctx):
             cxx = _type_info.cxx
             base_types_infos = _type_info.base_types_infos
             arg_types_infos = _type_info.arg_types_infos
+            type_info = _type_info
 
             descendants = _type_info.descendants
 

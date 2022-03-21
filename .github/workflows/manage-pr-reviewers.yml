@@ -44,28 +44,34 @@ jobs:
                 echo 'No matching issue in Jira'
                 exit 1     
      
-      - name: Check if Jira issue status is 'Under Review'
-        if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
-        run: |
-              restApiGETJiraIssueDetails=$(curl --request GET \
-                  --url '${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/' \
-                  --user '${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}' \
-                  --header 'Accept: application/json');
-                  
-              jira_Issue_Status=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.status.name')
-              
-              jira_Issue_Type=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.issuetype.name')
-              echo "JiraIssueType=$jira_Issue_Type" >> $GITHUB_ENV
-
-              
-              if [[ ${jira_Issue_Status} != "Under Review" ]]; then
-                echo 'The Jira status is' $jira_Issue_Status 'for Issue: if: steps.find.outputs.issue != ''. Cannot proceed when the status is not set to Under Review.'
-                exit 1
-              fi                         
+      #- name: Check if Jira issue status is 'Under Review'
+      #  if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
+      #  run: |
+      #        restApiGETJiraIssueDetails=$(curl --request GET \
+      #            --url '${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/' \
+      #            --user '${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}' \
+      #            --header 'Accept: application/json');
+      #            
+      #        jira_Issue_Status=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.status.name')
+      #        
+      #        jira_Issue_Type=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.issuetype.name')
+      #        echo "JiraIssueType=$jira_Issue_Type" >> $GITHUB_ENV
+      #        
+      #        if [[ ${jira_Issue_Status} != "Under Review" ]]; then
+      #          echo 'The Jira status is' $jira_Issue_Status 'for Issue: if: steps.find.outputs.issue != ''. Cannot proceed when the status is not set to Under Review.'
+      #          exit 1
+      #        fi                         
       
       - name: Assess the PR Reviewers Count
         if: github.event.pull_request.draft == false && steps.find.outputs.issue != ''
         run:  |
+                
+                restApiGETJiraIssueDetails=$(curl --request GET \
+                  --url '${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue/${{ steps.find.outputs.issue }}/' \
+                  --user '${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}' \
+                  --header 'Accept: application/json');
+                
+                jira_Issue_Status=$(echo $restApiGETJiraIssueDetails | jq -r '.fields.status.name')
                 
                 restApiGETGitHubReviewersDetails=$(curl \
                             -H "Accept: application/vnd.github.v3+json" \

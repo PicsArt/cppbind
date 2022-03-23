@@ -18,6 +18,11 @@ assert res == "Hello Johnny"
 res = concat1("Hello ", "Johnny ", "Jane")
 assert res == "Hello Johnny Jane"
 
+# [custom-arg-examples]
+greeting = greet("Johnny", "Florida")
+assert greeting == "Hello Johnny from Florida"
+# [custom-arg-examples]
+
 maxInt = max_int(2, 5)
 assert maxInt == 5
 maxString = max_str("d", "a")

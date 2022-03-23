@@ -476,7 +476,7 @@ constructor:
       {% endif -%}
       {%- set comma = joiner(', ') -%}
       public convenience init(
-      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      {%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -493,11 +493,12 @@ constructor:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
+        {%- do call_args.append(converter.converted_name(arg_name|to_camel_case)) %}
         {%- endfor %}
         var err = IEGenCObject()
         self.init(create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
@@ -516,7 +517,8 @@ constructor:
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
-        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
+        {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg_name|to_camel_case)) %}
         {%- if cleanup_code_fragment %}
         {{cleanup_code_fragment|indent(2)}}
         {%- endif %}
@@ -638,11 +640,12 @@ method:
       {%- set call_args = ['cself'] -%}
       {%- for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
-      {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+      {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+      {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
       {%- if conversion -%}
       {{conversion|indent(4)}}
       {% endif %}
-      {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
+      {%- do call_args.append(converter.converted_name(arg_name|to_camel_case)) %}
       {%- endfor -%}
       let result = {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_'), vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix)}}({{call_args|join(', ')}})
       {%- set conversion = rconverter.sc_to_swift.snippet('result', nullable=vars.nullable_return) %}
@@ -651,7 +654,8 @@ method:
       {%- endif %}
       {%- for arg in args %}
       {%- if arg.converter.sc_cleanup %}
-      {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
+      {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+      {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg_name|to_camel_case)) %}
       {%- if cleanup_code_fragment %}
       {{cleanup_code_fragment|indent(4)}}
       {%- endif %}
@@ -666,7 +670,7 @@ method:
       {%- endmacro %}
       {%- if vars.is_operator and vars.name == '[]' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference -%}
       {# subscript operator #}
-      public subscript({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}
+      public subscript({%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}
                        {%- endfor-%}) -> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         get {
           {{get_property()|indent(4)}}
@@ -678,11 +682,12 @@ method:
           {%- set call_args = ['cself'] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
-          {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+          {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name|to_camel_case)) %}
+          {%- do call_args.append(converter.converted_name(arg_name|to_camel_case)) %}
           {%- endfor %}
           {%- set conversion = res_converter.snippet('value', nullable=vars.nullable_return) %}
           {%- if conversion %}
@@ -706,7 +711,8 @@ method:
           {%- endif %}
           {%- for arg in args %}
           {%- if arg.converter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg_name|to_camel_case)) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
@@ -721,7 +727,7 @@ method:
         }
       }
       {%- elif vars.is_operator and vars.name == '[]' %}
-      public subscript({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}
+      public subscript({%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}
                        {%- endfor-%}) -> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {{get_property()|indent(2)}}
       }
@@ -734,12 +740,12 @@ method:
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
       {%- if vars.is_operator -%}
-      public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
+      public static func {{vars.name}}(cself: {{owner_class.vars.name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
       {%- set call_args = ['cself.cself'] -%}
       {%- else -%}
       {%- set override = cxx.is_override and not is_interface_override -%}
       public {{"static " if cxx.is_static}}{{"override " if override}}func {{vars.name}}(
-      {%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      {%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -757,11 +763,12 @@ method:
       {%endif%}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
+        {%- do call_args.append(converter.converted_name(arg_name|to_camel_case))%}
         {%- endfor %}
         var err = IEGenCObject()
         {%- set index = '_' + index|string if index else '' %}
@@ -788,7 +795,8 @@ method:
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
-        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
+        {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+        {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(arg.converter.swift_to_sc.converted_name(arg_name|to_camel_case)) %}
         {%- if cleanup_code_fragment %}
         {{cleanup_code_fragment|indent(2)}}
         {%- endif %}
@@ -1021,7 +1029,7 @@ function:
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
-      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_label[arg.name]|default('')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name[arg.name]|default(arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
         {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -1038,11 +1046,12 @@ function:
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
-        {%- set conversion = converter.snippet(arg.name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set arg_name = vars.argument_name[arg.name]|default(arg.name)|to_camel_case -%}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
-        {%- do call_args.append(converter.converted_name(arg.name|to_camel_case))%}
+        {%- do call_args.append(converter.converted_name(arg_name|to_camel_case))%}
         {%- endfor %}
         var err = IEGenCObject()
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}

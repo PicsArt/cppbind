@@ -450,7 +450,7 @@ constructor:
       {%- endif %}
       {%- set comma = joiner(', ') %}
       constructor({%- for arg in args -%}
-      {{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      {{comma()}}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -490,15 +490,16 @@ constructor:
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
-      protected fun construct_helper({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): Long {
+      protected fun construct_helper({%- for arg in args -%}{{comma()}}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): Long {
           {%- set call_args = [] %}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk %}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
           val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
           return id
@@ -592,7 +593,7 @@ method:
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun {{vars.name}}(
-      {%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      {%- for arg in args -%}{{comma()}}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -610,11 +611,12 @@ method:
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
           val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
@@ -652,16 +654,17 @@ method:
       {% set setter_var_name = 'value' %}
 
       {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun set(
-      {%- for arg in args -%}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
+      {%- for arg in args -%}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
       {%- endfor-%}){
           {%- set call_args = ['id'] -%}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
           {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
@@ -703,16 +706,17 @@ method:
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
+      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
           {%- set call_args = [] %}
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args -%}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
           {%- if owner_class.vars.action == 'gen_interface' %}
           val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
@@ -889,7 +893,7 @@ function:
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
-      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name[arg.name]|default(arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -907,11 +911,12 @@ function:
           {%- set result_converter = rconverter.jdk_to_kotlin -%}
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set conversion = converter.snippet(arg.name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set arg_name = vars.argument_name[arg.name]|default(arg.name) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg.name)) %}
+          {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
           val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
           {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}

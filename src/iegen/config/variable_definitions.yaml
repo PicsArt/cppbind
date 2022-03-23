@@ -25,6 +25,18 @@ name:
   default: '{{_helper_module.get_operator_name(_object_name) if _is_operator and "get_operator_name" in _helper_module.__dict__ else _object_name}}'
   allowed_on: [ cxx, file_system ]
 
+argument_label:
+  inheritable: false
+  type: dict
+  swift.default: {}
+  allowed_on: [ function, function_template, cxx_method, constructor ]
+
+argument_name:
+  inheritable: false
+  type: dict
+  default: {}
+  allowed_on: [ function, function_template, cxx_method, constructor ]
+
 interface_name:
   inheritable: false
   type: str

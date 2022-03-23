@@ -2,6 +2,7 @@ package com.examples.globs
 
 import com.examples.enums.*
 import com.examples.globs.complex.*
+import com.examples.globs.custom_args.*
 import com.examples.globs.primitives.*
 import com.examples.simple.*
 
@@ -21,6 +22,10 @@ assert(res == "Hello Johnny" )
 res = concat("Hello ", "Johnny ", "Jane")
 assert(res == "Hello Johnny Jane")
 
+// [custom-arg-examples]
+val greeting = greet("Johnny", "Florida")
+assert(greeting == "Hello Johnny from Florida")
+// [custom-arg-examples]
 
 val maxInt = max(2, 5)
 assert(maxInt == 5)

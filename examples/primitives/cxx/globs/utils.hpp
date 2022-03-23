@@ -202,5 +202,24 @@ namespace {
     void doNothing() {
     }
 
+     // [custom-arg-examples]
+     /** A global function with custom argument name and label.
+     * __API__
+     * action: gen_function
+     * kotlin.package: globs.custom_args
+     * package: globs
+     * file: customArgUtils
+     * throws: no_throw
+     * argument_name:
+        name: person
+     * argument_label:
+        hometown: from
+     */
+    std::string greet(const std::string& name, const std::string& hometown) {
+        return "Hello " + name + " from " + hometown;
+    }
+    // [custom-arg-examples]
+
+
 }
 #endif

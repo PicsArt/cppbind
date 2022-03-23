@@ -172,6 +172,65 @@ We are ready to use the generated bindings:
 
 |
 
+Custom argument names and labels
+~~~~~~~~~~~~~~~~~
+
+You can specify argument names and argument labels(only for Swift) by using `argument_name` and `argument_label`
+variables. Here's an example function where user explicitly gives argument name and label for each given argument.
+Those values will be used in the target language instead of the values used in C++.
+
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+   :language: cpp
+   :start-after: [custom-arg-examples]
+   :end-before:  [custom-arg-examples]
+
+And here is a small code using generated bindings:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
+           :language: kotlin
+           :start-after: [custom-arg-examples]
+           :end-before: [custom-arg-examples]
+
+    .. tab:: python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
+           :language: py
+           :start-after: [custom-arg-examples]
+           :end-before: [custom-arg-examples]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
+           :language: swift
+           :start-after: [custom-arg-examples]
+           :end-before: [custom-arg-examples]
+
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/custom_args/customArgUtils.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/customArgUtils_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/globs/customArgUtils.swift
+               :language: swift
+
+|
+
 Default arguments
 ~~~~~~~~~~~~~~~~~
 

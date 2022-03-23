@@ -18,6 +18,11 @@ assert(res == "Hello Johnny")
 res = concat(str1: "Hello ", str2: "Johnny ", str3: "Jane")
 assert(res == "Hello Johnny Jane")
 
+// [custom-arg-examples]
+let greeting = greet(person: "Johnny", from: "Florida")
+assert(greeting == "Hello Johnny from Florida")
+// [custom-arg-examples]
+
 let maxInt = max(a: 2, b: 5)
 assert(maxInt == 5)
 let maxString = max(a: "d", b: "a")

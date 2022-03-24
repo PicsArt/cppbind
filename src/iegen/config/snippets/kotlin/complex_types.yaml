@@ -196,9 +196,9 @@ $Enum:
     jdk: Int
   converters:
     jni_to_cxx: |
-      auto {{target_name}} = ({{target_type_name}}){{name}};
+      auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     cxx_to_jni: |
-      {{target_type_name}} {{target_name}} = ({{target_type_name}}){{name}};
+      {{target_type_name}} {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     kotlin_to_jdk:
       val {{target_name}} = {{name}}.value
     jdk_to_kotlin: |
@@ -240,7 +240,7 @@ std::__cxx11::basic_string:
     jdk: String
   converters:
     jni_to_cxx: |
-      jstring j{{target_name}}Str = (jstring){{name}};
+      jstring j{{target_name}}Str = static_cast<jstring>({{name}});
       auto {{target_name}}_cstr = env->GetStringUTFChars(j{{target_name}}Str, 0);
       std::string {{target_name}} = {{target_name}}_cstr;
       env->ReleaseStringUTFChars(j{{target_name}}Str, {{target_name}}_cstr);

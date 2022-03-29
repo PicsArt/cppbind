@@ -48,8 +48,8 @@ file:
 
       #ifndef _C_{{vars.file}}_WRAPPER_
       #define _C_{{vars.file}}_WRAPPER_
-
-      {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
+      {% set include_format = '#include <{}>' if vars.is_c_wrapper_external else '#include "{}"' %}
+      {{cxx_helper_includes|format_list(include_format)|join(new_line)}}
       {{include}}
       #include <stdbool.h>
 

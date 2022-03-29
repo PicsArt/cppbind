@@ -395,3 +395,8 @@ keep_alive:
   default: []
   type: list
   allowed_on: [ cxx_method, function_template, field, constructor ]
+
+is_c_wrapper_external:
+  inheritable: true
+  default: false
+  allowed_on: [ root ]

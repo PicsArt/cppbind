@@ -25,6 +25,12 @@ listWrapper.push_back(item: item1)
 assert(listWrapper.back.value.value == item1.value.value)
 
 // [nested-types-usage]
+
+let intListItemWrapper = IntListItemWrapper()
+let intItem = TemplateListInt.Item(v: 5)
+intListItemWrapper.set(item: intItem)
+let retIntItem = intListItemWrapper.get()
+assert(retIntItem.value == 5)
 }
 
 #if os(Linux)

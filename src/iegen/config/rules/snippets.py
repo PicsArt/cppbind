@@ -109,7 +109,7 @@ def make_func_context(ctx):
         overloading_postfix = ctx.overloading_postfix
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
-        template_names = ctx.template_names
+        template_args_postfixes = ctx.template_args_postfixes
         template_type_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(type_=template_arg_type)) for
                                     template_arg_type in template_choice.values()] if template_choice else []
 
@@ -218,7 +218,7 @@ def make_getter_context(ctx):
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             setter_ctx = ctx.setter
-            setter_ctx.set_template_ctx(ctx.template_ctx)
+            setter_ctx.set_template_info(ctx.template_info)
             setter = make_func_context(setter_ctx)
 
         return locals()

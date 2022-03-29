@@ -1358,7 +1358,7 @@ getter:
       {%- endmacro %}
       {%- set override = cxx.is_override and not is_interface_override -%}
       public {{'override ' if override}}var {% if cxx.is_template -%}
-                                           {%- for name in template_names or [] %}
+                                           {%- for name in template_args_postfixes or [] %}
                                            {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
                                            {%- endfor %}
                                            {%- else %}{{vars.name}}

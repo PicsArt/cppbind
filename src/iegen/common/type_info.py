@@ -51,28 +51,28 @@ class TypeInfo:
     @cached_property
     def base_types_infos(self):
         return [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
-                                  for base_type in
-                                  self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
+                for base_type in
+                self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
 
     @cached_property
     def parent_type_info(self):
         _parent_type_info = create_type_info(self._runner, CXXType(self._type_ctx.parent_context.cxx_type_name,
-                                                                        self._type_ctx.template_choice)) \
+                                                                   self._type_ctx.template_choice)) \
             if self._type_ctx and self._type_ctx.parent_context else None
         return _parent_type_info
 
     @cached_property
     def arg_types_infos(self):
         return [create_type_info(self._runner, t) for t in
-                                 self._raw_type.template_argument_types] if self._raw_type.is_template else []
+                self._raw_type.template_argument_types] if self._raw_type.is_template else []
 
     @property
     def vars(self):
         return self._type_ctx.vars if self._type_ctx else None
 
     @property
-    def template_names(self):
-        return self._type_ctx.template_names if self._type_ctx else None
+    def template_args_postfixes(self):
+        return self._type_ctx.template_args_postfixes if self._type_ctx else None
 
     @property
     def template_choice(self):

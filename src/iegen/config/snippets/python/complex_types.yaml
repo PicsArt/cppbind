@@ -51,7 +51,7 @@ $Object:
     pname: object
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
-      {%- for name in template_names or [] -%}
+      {%- for name in template_args_postfixes or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
       {%- endfor -%}
     namespace: |

@@ -26,6 +26,13 @@ listWrapper.push_back(item1)
 assert(list.back.value.value == value1.value)
 
 // [nested-types-usage]
+
+val intListItemWrapper = IntListItemWrapper()
+val intItem = TemplateListInt.Item(5)
+intListItemWrapper.set(intItem)
+val retIntItem = intListItemWrapper.get()
+assert(retIntItem.value == 5)
+
 }
 
 class NestedTypesApp {

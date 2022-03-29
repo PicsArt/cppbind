@@ -87,7 +87,7 @@ shared_ref:
   allowed_on: [ class, class_template, struct, struct_template ]
 
 template:
-  inheritable: true
+  inheritable: false
   default: null
   type: dict
   allowed_on: [ class_template, struct_template, function_template ]

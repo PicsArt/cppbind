@@ -24,7 +24,7 @@ $Object:
     is_c_pointer_type: False
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters -#}
-      {%- for name in template_names or [] -%}
+      {%- for name in template_args_postfixes or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname}}{% endif -%}
       {%- endfor -%}
     namespace: |
@@ -133,7 +133,7 @@ $Object:
       {%- set lvalue_owner_swift = cxx_is_lval_reference and value_policy in ('take_ownership', 'automatic', 'automatic_reference', 'copy', 'move') -%}
       {%- set pointer_owner_swift = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
       {%- set owner = ', true' if  cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_swift or pointer_owner_swift else '' -%}
-      {%- set type_name = (custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name) + custom.tpostfix -%}
+      {%- set type_name = get_target_type_name(interface_class=vars.action == 'gen_interface') -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
       {%- if cxx.is_polymorphic and descendants %}

@@ -16,6 +16,7 @@ class CXXType:
         return self.type_name == other.type_name
 
     def __hash__(self):
+        # TODO: note this might be required to be changed in https://picsart.atlassian.net/browse/IEGEN-239
         return hash(self.type_name)
 
     @property
@@ -47,15 +48,20 @@ class CXXType:
 
     @property
     def is_template(self):
+        """
+        Returns whether the type is a template or not. Only most nested type is considered.
+        For example for iegen::example::List<int>::Item it'll return False as Item itself is not a template.
+        This property is used for internal purposes like for building type converters.
+        """
         # we have to use type_name for clang types as well as it can be an unexposed type and it's choice can be a
         # template for example if it's spelling is T and the choice of T is std::vector<int> then T is a template
-        return self.type_name.find('<') != -1
+        return self.type_name.endswith('>')
 
     @property
     def is_function_proto(self):
         if isinstance(self.type_, cli.Type):
             return self.type_.kind == cli.TypeKind.FUNCTIONPROTO
-        # we don't have  a mechanism for string types yet
+        # we don't have a mechanism for string types yet
         return False
 
     @property
@@ -77,34 +83,32 @@ class CXXType:
         """
         Retrieves template arguments spelling from a type's spelling.
         E.g. for 'std::pair<std::string, std::vector<int>>' will return ['std::string', 'std::vector<int>']
+        Note: there are cases this does not handle for example if the expression contains offset operator
         """
         type_spelling = self.type_name
-        start_idx = type_spelling.find('<')
-        all_arguments_string = type_spelling[start_idx + 1: -1]
 
+        # only most nested type's arguments should be retrieved e.g for for a::b::<c::C>::G<d::D, e::E> -- d::D, e::E
         template_args = []
-        parts = all_arguments_string.split(',')
-        ii = 0
-        while ii < len(parts):
-            if '<' not in parts[ii]:
-                # not a template
-                template_args.append(CXXType(parts[ii].strip(), self.template_choice))
-            else:
-                # template argument
-                start_count = parts[ii].count('<')
-                arg_parts = []
-                end_count = 0
-                # find remaining part(s)
-                while True:
-                    end_count += parts[ii].count('>')
-                    arg_parts.append(parts[ii])
-                    if start_count == end_count:
-                        # argument parts found join and add to the list
-                        template_args.append(CXXType(','.join(arg_parts).strip()))
-                        break
-                    ii += 1
-            ii += 1
-        return template_args
+        parentheses_count = 0
+        length = len(type_spelling)
+        arg_end_idx = length - 1
+        for i, symbol in enumerate(reversed(type_spelling)):
+            # template should end with >
+            if symbol == '>':
+                parentheses_count += 1
+            elif symbol == '<':
+                parentheses_count -= 1
+            elif symbol == ',' and parentheses_count == 1:
+                template_args.append(CXXType(type_spelling[length - i + 1:arg_end_idx].strip(),
+                                             self.template_choice))
+                arg_end_idx = length - i - 1
+            if parentheses_count == 0:
+                # if i=0 then self is not a template
+                if i != 0:
+                    template_args.append(CXXType(type_spelling[length - i:arg_end_idx],
+                                                 self.template_choice))
+                break
+        return list(reversed(template_args))
 
     @property
     def template_type_name(self):

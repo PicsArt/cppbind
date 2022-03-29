@@ -9,7 +9,7 @@ import os
 import shutil
 
 from collections.abc import MutableMapping
-from functools import lru_cache
+from functools import lru_cache, partial
 from types import SimpleNamespace
 
 from jinja2 import Template
@@ -157,7 +157,7 @@ class Converter:
         return self._type_converter.target_type_name(self._context)
 
     def get_target_type_name(self, **kwargs):
-        return self._type_converter.target_type_name({**self._context, **kwargs})
+        return self._type_converter.target_type_name(self._context, **kwargs)
 
     @property
     def source_type_name(self):
@@ -176,8 +176,8 @@ class Converter:
         return self._type_info.vars is not None
 
     @property
-    def template_names(self):
-        return self._type_info.template_names
+    def template_args_postfixes(self):
+        return self._type_info.template_args_postfixes
 
     @property
     def descendants(self):
@@ -207,7 +207,7 @@ class Converter:
             cxx = self.cxx
             # make api variables available in converter under vars
             vars = self.vars
-            template_names = self.template_names
+            template_args_postfixes = self.template_args_postfixes
 
             descendants = self.descendants
 
@@ -296,10 +296,10 @@ class TargetTypeInfo:
         self.target_type_info = target_type_info
         self.name = name
 
-    def target_type_name(self, context):
+    def target_type_name(self, context, **kwargs):
         if self.target_type_info is None:
             return None
-        return self.target_type_info.render(context)
+        return self.target_type_info.render({**context, **kwargs})
 
 
 class TypeConvertorInfo(TargetTypeInfo):
@@ -320,6 +320,7 @@ class TypeConvertorInfo(TargetTypeInfo):
             return self.snippet_tmpl.render({'name': name,
                                              'target_name': self.converted_name(name),
                                              'target_type_name': self.target_type_name(context),
+                                             'get_target_type_name': partial(self.target_type_name, context),
                                              **context})
         return ""
 

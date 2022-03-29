@@ -1253,7 +1253,7 @@ getter:
       {%- endif %}
       {{'open ' if cxx.is_open}}{{'override ' if cxx.is_override}}{{'var ' if setter is defined else 'val '}}
                                              {%- if cxx.is_template -%}
-                                             {%- for name in template_names or [] %}
+                                             {%- for name in template_args_postfixes or [] %}
                                              {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
                                              {%- endfor %}
                                              {%- else %}{{vars.name}}

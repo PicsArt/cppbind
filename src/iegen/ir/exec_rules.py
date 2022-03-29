@@ -2,16 +2,28 @@
 """
 import itertools
 import json
-import os
 import types
+from dataclasses import dataclass
+
+from cached_property import cached_property
 
 import clang.cindex as cli
-from cached_property import cached_property
 import iegen.utils.clang as cutil
 from iegen import logging
 from iegen.ir.ast import NodeType, Node
 from iegen.utils import DefaultValueKind
 from iegen.utils.clang import extract_pure_comment
+
+
+@dataclass
+class TemplateInfo:
+    """Holds information about specialized template type's choice and template argument postfixes."""
+
+    # template parameter - actual type mapping(e.g {'T': 'std::string', 'N': 'int'})
+    choice: dict
+    # template parameter argument postfixes retrieved from the api, will be none if not specified by user
+    # these postfixes are used when constructing the name for template type in target languages, see object converter
+    template_args_postfixes: list
 
 
 class BaseContext:
@@ -26,11 +38,11 @@ class BaseContext:
 
 class Context(BaseContext):
 
-    def __init__(self, runner, node, template_ctx=None):
+    def __init__(self, runner, node, template_info=None):
         super().__init__(runner, node)
         if node.type == NodeType.CLANG_NODE:
             assert node.clang_cursor, "cursor is not provided"
-        self.template_ctx = template_ctx
+        self.template_info = template_info
 
     @property
     def kind_name(self):
@@ -191,7 +203,6 @@ class Context(BaseContext):
 
         return list(walk(self.base_types))
 
-
     @property
     def root(self):
 
@@ -246,7 +257,13 @@ class Context(BaseContext):
 
     @property
     def parent_context(self):
-        return self.runner.get_context(self.node.parent.full_displayname)
+        if self.node.parent.type == NodeType.CLANG_NODE:
+            # TODO update this when we will expose templates at node level
+            return self.runner.get_context(
+                cutil.replace_template_choice(cutil.get_full_displayname(self.node.parent.clang_cursor),
+                                              self.template_choice))
+        else:
+            return self.runner.get_context(self.node.parent.full_displayname)
 
     @property
     def namespace(self):
@@ -270,7 +287,9 @@ class Context(BaseContext):
         search_name = search_type
         if isinstance(search_type, cli.Type):
             # getting canonical for template base types
-            return self.find_by_type(cutil.template_type_name(search_type)) or \
+            return self.find_by_type(search_type.spelling) or \
+                   self.find_by_type(search_type.get_canonical().spelling) or \
+                   self.find_by_type(cutil.template_type_name(search_type)) or \
                    self.find_by_type(cutil.template_type_name(search_type.get_canonical()))
         return self.runner.get_context(search_name)
 
@@ -282,16 +301,16 @@ class Context(BaseContext):
                 if (search_api is None or node.api == search_api)
                 and node.spelling in search_names)
 
-    def set_template_ctx(self, template_ctx):
-        self.template_ctx = template_ctx
+    def set_template_info(self, template_info):
+        self.template_info = template_info
 
     @property
     def template_choice(self):
-        return self.template_ctx.choice if self.template_ctx else None
+        return self.template_info.choice if self.template_info else None
 
     @property
-    def template_names(self):
-        return self.template_ctx.names if self.template_ctx else None
+    def template_args_postfixes(self):
+        return self.template_info.template_args_postfixes if self.template_info else None
 
     def lookup_ctx_by_name(self, name):
         return self.runner.get_context(name)
@@ -299,12 +318,13 @@ class Context(BaseContext):
     @property
     def cxx_type_name(self):
         """
-        Returns cxx type name.
+        Returns cxx type name. Main usage of this property is for template types. For templates clang's type information
+        is not enough, so we retrieve some additional info from type's string representation
         Returns:
            str: Type name.
         """
         # in case of a template class - cursor type is TypeKind.INVALID,
-        # that´s why cant get type spelling from the
+        # that's why can't get type spelling from the
         # cursor using this approach instead
         # for example for the type a::Stack<T> full_displayname=a::Stack,
         # spelling=Stack, displayname=Stack<T>
@@ -315,7 +335,7 @@ class Context(BaseContext):
             raise AttributeError(f"{self.__class__.__name__}.cxx_type_name is invalid.")
         template_choice = self.template_choice or {}
         if self.node.is_template:
-            cxx_type_name = self.node.full_displayname.replace(self.node.spelling, self.node.displayname)
+            cxx_type_name = cutil.get_full_displayname(self.cursor)
             return cutil.replace_template_choice(cxx_type_name, template_choice)
         return self.cursor.type.spelling
 
@@ -337,6 +357,7 @@ class Context(BaseContext):
                             contexts.append(func_ctx)
                         contexts += _get_overridden_contexts(overridden)
             return contexts
+
         return _get_overridden_contexts(self.cursor)
 
 
@@ -377,12 +398,12 @@ class RunRule:
         for calling_api in self.api_call_order:
             logging.debug(f"Calling APIs: {calling_api}")
 
-            def _run_recursive(node, template_ctx=None):
+            def _run_recursive(node, template_info=None):
                 stack_added = False
-                node_key = RunRule.__node_key(node, template_ctx)
+                node_key = RunRule.__node_key(node, template_info)
                 if node.api and (not calling_api or node.api in calling_api) and node_key not in processed:
                     ancestor = node.ancestor_with_api
-                    ancestor_key = RunRule.__node_key(ancestor, template_ctx)
+                    ancestor_key = RunRule.__node_key(ancestor, template_info)
                     if ancestor_key in processed:
                         # for already called api resume builders scope stack
                         logging.debug(f"Restoring stack for {ancestor.displayname}.")
@@ -396,7 +417,7 @@ class RunRule:
                         builder.add_scope_stack()
 
                     # call api
-                    self.call_api(rule, node, builder, template_ctx)
+                    self.call_api(rule, node, builder, template_info)
                     logging.debug(f"Capturing stack for {node.displayname}.")
                     processed[node_key] = builder.capture_stacks()
                     logging.debug(f"Captured stack {RunRule.__str_stacks(processed[node_key])}.")
@@ -408,12 +429,18 @@ class RunRule:
                             # check if the node is template and generate code for each combination of template args
                             if child.clang_cursor.kind in [cli.CursorKind.CLASS_TEMPLATE,
                                                            cli.CursorKind.FUNCTION_TEMPLATE]:
-                                for _template_ctx in RunRule._get_template_combinations(child):
-                                    _run_recursive(child, _template_ctx)
+                                for _template_info in RunRule._get_template_combinations(child, ignore_parents=True):
+                                    if template_info:
+                                        # merge current node's context with parent
+                                        # this might be revisited in https://picsart.atlassian.net/browse/IEGEN-242
+                                        # and will be changed after template nodes will be exposed during
+                                        # ir post processing
+                                        _template_info.choice.update(template_info.choice)
+                                    _run_recursive(child, _template_info)
                             else:
-                                _run_recursive(child, template_ctx)
+                                _run_recursive(child, template_info)
                         else:
-                            _run_recursive(child, template_ctx)
+                            _run_recursive(child, template_info)
                     logging.debug(f"End processing children for {node.displayname}.")
 
                 if stack_added:
@@ -430,7 +457,7 @@ class RunRule:
 
             builder.pop_scope_stack()
 
-    def call_api(self, rule, node, builder, template_ctx=None):
+    def call_api(self, rule, node, builder, template_info=None):
         api = node.api
         if api == Node.API_NONE:
             return
@@ -438,7 +465,7 @@ class RunRule:
         func = getattr(rule, api)
         context = self.get_context(node.signature)
         # set current template context to generate code based on correct template choice
-        context.set_template_ctx(template_ctx)
+        context.set_template_info(template_info)
         func(context, builder)
 
     def get_context(self, type_name):
@@ -448,37 +475,56 @@ class RunRule:
         logging.debug("Allocating context for all nodes")
         for node in self.ir.walk():
             if node.api not in (None, Node.API_NONE):
-                self.all_contexts.setdefault(node.signature,
-                                             Context(self, node))
-                if node.type == NodeType.CLANG_NODE and node.clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
-                    # for template types also create a context with template choice
-                    for template_ctx in RunRule._get_template_combinations(node):
-                        context = Context(self, node, template_ctx)
+                ctx = Context(self, node)
+                self.all_contexts.setdefault(node.signature, ctx)
+
+                # this will be changed after template nodes will be exposed during ir post-processing
+                if node.type == NodeType.CLANG_NODE and node.is_class_or_struct and node.is_template:
+                    # for template create a context also with only template type name(NOTE: this might not be used)
+                    self.all_contexts.setdefault(cutil.template_type_name(node.signature), ctx)
+                    # and for each specialization also create a context
+                    for template_info in RunRule._get_template_combinations(node):
+                        context = Context(self, node, template_info)
                         self.all_contexts[context.cxx_type_name] = context
 
     @staticmethod
-    def _get_template_combinations(node):
-        parent_template = node.parent.args.get('template', None)
+    def _get_template_combinations(node, ignore_parents=False):
+        parent = node.parent
+        # for template choice we need to consider all template parent types
         template_arg = {}
-        # if parent also has a template argument join with child´s
-        if parent_template:
-            template_arg = template_arg.update(parent_template)
-        template_arg.update(node.args['template'])
+
+        # current node template argument
+        node_template_arg = node.args.get('template') or {}
+        template_arg.update(node_template_arg)
+
+        if not ignore_parents:
+            while parent.type == NodeType.CLANG_NODE and parent.is_class_or_struct:
+                parent_template = parent.args.get('template')
+                # if parent also has a template argument join with child's
+                if parent_template:
+                    template_arg.update(parent_template)
+                parent = parent.parent
+
+        # helper map to easily get template names for different combinations
+        node_type_name_map = {k: {i['type']: i.get('name') for i in v} for k, v in node_template_arg.items()}
+
         all_possible_args = list(itertools.product(*template_arg.values()))
-        template_keys = node.args['template'].keys()
+        template_keys = template_arg.keys()
         all_contexts = []
         for _, combination in enumerate(all_possible_args):
             choice = [item['type'] for item in combination]
-            choice_names = [item.get('name') for item in combination]
             _template_choice = dict(zip(template_keys, choice))
-            all_contexts.append(types.SimpleNamespace(choice=_template_choice, names=choice_names))
+            # only if the current node is template then it should have template postfixes
+            choice_names = [node_type_name_map[template_param][_template_choice[template_param]]
+                            for template_param in node_template_arg.keys()]
+            all_contexts.append(TemplateInfo(choice=_template_choice, template_args_postfixes=choice_names))
         return all_contexts
 
     @staticmethod
-    def __node_key(node, template_ctx):
+    def __node_key(node, template_info):
         node_key = (node,)
         if node and node.type == NodeType.CLANG_NODE and node.is_template:
-            node_key = (node, json.dumps(template_ctx.__dict__))
+            node_key = (node, json.dumps(template_info.__dict__))
         return node_key
 
     @staticmethod

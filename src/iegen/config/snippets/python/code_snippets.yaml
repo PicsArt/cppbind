@@ -726,7 +726,7 @@ getter:
       {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
       {%- macro gen_name() -%}
       {%- if cxx.is_template -%}
-      {%- for name in template_names or [] %}
+      {%- for name in template_args_postfixes or [] %}
       {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
       {%- endfor %}
       {%- else %}{{vars.name}}
@@ -757,7 +757,7 @@ getter:
     body: |
       {%- macro gen_name() -%}
       {%- if cxx.is_template -%}
-      {%- for name in template_names or [] %}
+      {%- for name in template_args_postfixes or [] %}
       {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
       {%- endfor %}
       {%- else %}{{vars.name}}

@@ -418,7 +418,7 @@ constructor:
       def __init__(self{{', ' if args}}{%- for arg in args -%}
                                        {%- set arg_converter = arg.converter.python %}
                                        {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                       {{comma()}}{{vars.argument_name[arg.name]|default(arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+                                       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %}
                                        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -479,7 +479,7 @@ method:
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                                          {{comma()}}{{vars.argument_name[arg.name]|default(arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+                                                          {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %}
                                                           {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
@@ -505,7 +505,7 @@ method:
                                                           {%- for arg in args -%}
                                                           {%- set arg_converter = arg.converter.python %}
                                                           {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                                          {{vars.argument_name[arg.name]|default(arg.name)|to_snake_case}}: {{arg_package}}{{arg_converter.target_type_name}}{{comma()}}{{setter_var_name}}: {{rtype_package}}{{rconverter.target_type_name}}
+                                                          {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{arg_package}}{{arg_converter.target_type_name}}{{comma()}}{{setter_var_name}}: {{rtype_package}}{{rconverter.target_type_name}}
                                                           {%- endfor %}):
           {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
           pass
@@ -584,7 +584,7 @@ function:
                                       {%- for arg in args -%}
                                       {%- set arg_converter = arg.converter.python %}
                                       {%- set arg_package = arg_converter.vars.file + '.' if arg_converter.is_obj_type and arg_converter.vars.target_file_fullname != vars.target_file_fullname else '' -%}
-                                      {{comma()}}{{vars.argument_name[arg.name]|default(arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+                                      {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_package}}{{arg_converter.target_type_name}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                       {%- if arg.default -%}
                                       {%- if arg.is_enum %}
                                       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}

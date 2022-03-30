@@ -444,7 +444,7 @@ constructor:
                                                                                           {%- endfor -%}>(){{', ' if args}}
                                                                                           {%- set comma = joiner(', ') -%}
                                                                                           {%- for arg in args -%}
-                                                                                          {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+                                                                                          {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
                                                                                           {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
                                                                                           {%- endif -%}
                                                                                           {%- endfor -%}
@@ -531,7 +531,7 @@ method:
       {{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
-      {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+      {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
       {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
       {%- endif -%}
       {%- endfor -%}
@@ -549,7 +549,7 @@ method:
       {%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- set setter_var_name = 'value' -%}
       {%- if vars.is_operator and vars.name == '__getitem__' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{arg.name|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; }
+      {{owner_class.converter.python.get_target_type_name(definition=True)|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in args %} {{arg.type_info.cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{return_type_info.cxx.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{args[0].name|to_snake_case}}] = {{setter_var_name}}; }
       {#- This should go to shared macro -#}
       {%- if vars.keep_alive -%}
       {%- set args = args + [rconverter] %}
@@ -624,7 +624,7 @@ function:
       {{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
-      {{comma()}}py::arg("{{arg.name|to_snake_case}}")
+      {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
       {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
       {%- endif -%}
       {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});

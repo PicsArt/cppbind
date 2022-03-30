@@ -21,6 +21,10 @@ assert res == "Hello Johnny Jane"
 # [custom-arg-examples]
 greeting = greet("Johnny", "Florida")
 assert greeting == "Hello Johnny from Florida"
+
+greeting = greet(person="Bob", hometown="California")
+assert greeting == "Hello Bob from California"
+
 # [custom-arg-examples]
 
 maxInt = max_int(2, 5)

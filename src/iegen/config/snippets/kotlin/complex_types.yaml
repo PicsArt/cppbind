@@ -619,3 +619,21 @@ std::pair:
 
 std::__ndk1::pair:
   std::pair
+
+# dummy converters to not throw error on container types converter build
+# currently, these are not used
+std::hash:
+  types: { }
+  converters: { }
+
+std::equal_to:
+  types: { }
+  converters: { }
+
+std::allocator:
+  types: { }
+  converters: { }
+
+std::less:
+  types: { }
+  converters: { }

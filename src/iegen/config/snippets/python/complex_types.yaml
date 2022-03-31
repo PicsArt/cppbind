@@ -202,3 +202,22 @@ std::pair:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+
+# dummy converters to not throw error on container types converter build
+# currently, these are not used
+std::hash:
+  types: { }
+  converters: { }
+
+std::equal_to:
+  types: { }
+  converters: { }
+
+std::allocator:
+  types: { }
+  converters: { }
+
+std::less:
+  types: { }
+  converters: { }
+

@@ -500,8 +500,8 @@ constructor:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg_name|to_camel_case)) %}
         {%- endfor %}
-        var err = IEGenCObject()
-        self.init(create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&err), true)
+        var iegenErr = IEGenCObject()
+        self.init(create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr), true)
         {#- This should go to shared macro -#}
         {%- if vars.keep_alive %}
         {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
@@ -524,24 +524,24 @@ constructor:
         {%- endif %}
         {%- endif %}
         {%- endfor %}
-        if err.type != nil {
-          let errorType = String(cString: err.type!)
+        if iegenErr.type != nil {
+          let errorType = String(cString: iegenErr.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}
           case ("{{exc_type}}"):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(err, true)
+            throw {{exc_info.vars.name}}(iegenErr, true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(err, true)
+            let excObj = {{exc_info.vars.name}}(iegenErr, true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            err.type.deallocate()
+            iegenErr.type.deallocate()
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
@@ -561,7 +561,7 @@ constructor:
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- set index = '_' + index|string if index else '' -%}
       {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err) {
         {%- set call_args = [] -%}
         {%- for arg in args -%}
         {%- set converter = arg.converter.c_to_cxx %}
@@ -581,17 +581,17 @@ constructor:
           }
           {%- if 'no_throw' not in vars.throws -%}
           {%- for exc_type in vars.throws %} catch (const {{exc_type}}& e) {
-              err->type = strdup("{{exc_type}}");
-              err->ptr = new {{exc_type}}(e);
+              iegen_err->type = strdup("{{exc_type}}");
+              iegen_err->ptr = new {{exc_type}}(e);
           }
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %} catch (const std::exception& e) {
-              err->type = strdup("std::exception");
-              err->ptr = new std::exception(e);
+              iegen_err->type = strdup("std::exception");
+              iegen_err->ptr = new std::exception(e);
           }
           {%- endif %} catch (...) {
-              err->type = strdup("Uncaught Exception");
+              iegen_err->type = strdup("Uncaught Exception");
           }
           {{owner_class.converter.c.target_type_name}} result {};
           return result;
@@ -610,7 +610,7 @@ constructor:
         {%- set index = '_' + index|string if index else '' %}
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
         {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
-        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err);
         {%- endmacro %}
         {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
@@ -770,12 +770,12 @@ method:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg_name|to_camel_case))%}
         {%- endfor %}
-        var err = IEGenCObject()
+        var iegenErr = IEGenCObject()
         {%- set index = '_' + index|string if index else '' %}
         {%- if rconverter.c.target_type_name != 'void' %}
-        let result = {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        let result = {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr)
         {%- else %}
-        {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr)
         {%- endif %}
         {#- This should go to shared macro -#}
         {%- if vars.keep_alive %}
@@ -802,24 +802,24 @@ method:
         {%- endif %}
         {%- endif %}
         {%- endfor %}
-        if err.type != nil {
-          let errorType = String(cString: err.type!)
+        if iegenErr.type != nil {
+          let errorType = String(cString: iegenErr.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}
           case ("{{exc_type}}"):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(err, true)
+            throw {{exc_info.vars.name}}(iegenErr, true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(err, true)
+            let excObj = {{exc_info.vars.name}}(iegenErr, true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            err.type.deallocate()
+            iegenErr.type.deallocate()
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
@@ -872,7 +872,7 @@ method:
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix)}}{{'_' + index|string if index}}(
       {%- if not cxx.is_static -%}
       {{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err) {
         {%- set call_args = [] %}
         {%- for arg in args %}
         {%- set converter = arg.converter.c_to_cxx %}
@@ -902,17 +902,17 @@ method:
         {%- endif %}
         {%- if 'no_throw' not in vars.throws -%}
           {%- for exc_type in vars.throws %} catch (const {{exc_type}}& e) {
-              err->type = strdup("{{exc_type}}");
-              err->ptr = new {{exc_type}}(e);
+              iegen_err->type = strdup("{{exc_type}}");
+              iegen_err->ptr = new {{exc_type}}(e);
           }
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %} catch (const std::exception& e) {
-              err->type = strdup("std::exception");
-              err->ptr = new std::exception(e);
+              iegen_err->type = strdup("std::exception");
+              iegen_err->ptr = new std::exception(e);
           }
           {%- endif %} catch (...) {
-              err->type = strdup("Uncaught Exception");
+              iegen_err->type = strdup("Uncaught Exception");
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
@@ -990,7 +990,7 @@ method:
         {%- set index = '_' + index|string if index else '' -%}
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name((cxx_namespace + "_" if cxx_namespace else "") + owner_class.converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}(
         {%- if not cxx.is_static -%}{{owner_class.converter.c.target_type_name}} cself, {% endif -%}
-        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err);
         {%- endmacro -%}
         {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
@@ -1053,14 +1053,14 @@ function:
         {%- endif %}
         {%- do call_args.append(converter.converted_name(arg_name|to_camel_case))%}
         {%- endfor %}
-        var err = IEGenCObject()
+        var iegenErr = IEGenCObject()
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- set index = '_' + index|string if index else '' %}
         {%- set c_func_name = helper.get_c_func_name(cxx_namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index) %}
         {%- if rconverter.c.target_type_name != 'void' %}
-        let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        let result = {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr)
         {%- else %}
-        {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&err)
+        {{c_func_name}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr)
         {%- endif %}
         {%- for arg in args %}
         {%- if arg.converter.sc_cleanup %}
@@ -1070,24 +1070,24 @@ function:
         {%- endif %}
         {%- endif %}
         {%- endfor %}
-        if err.type != nil {
-          let errorType = String(cString: err.type!)
+        if iegenErr.type != nil {
+          let errorType = String(cString: iegenErr.type!)
           switch errorType {
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %}
           case ("{{exc_type}}"):
             {%- set exc_info = get_type_info(exc_type) %}
-            throw {{exc_info.vars.name}}(err, true)
+            throw {{exc_info.vars.name}}(iegenErr, true)
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %}
           case ("std::exception"):
             {%- set exc_info = get_type_info("std::exception") %}
-            let excObj = {{exc_info.vars.name}}(err, true)
+            let excObj = {{exc_info.vars.name}}(iegenErr, true)
             ExceptionHandler.handleUncaughtException(excObj.what())
           {%- endif %}
           default:
-            err.type.deallocate()
+            iegenErr.type.deallocate()
             ExceptionHandler.handleUncaughtException("Uncaught Exception")
           }
         }
@@ -1116,7 +1116,7 @@ function:
       {%- set index = '_' + index|string if index else '' -%}
       {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace, vars.name, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix + template_postfix + index)}}(
       {%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}{% if arg.converter.c.custom.is_c_pointer_type -%}
-      {{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull err) {
+      {{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err) {
           {%- set call_args = [] %}
           {%- for arg in args -%}
           {%- set converter = arg.converter.c_to_cxx %}
@@ -1141,17 +1141,17 @@ function:
           {%- endif -%}
           {%- if 'no_throw' not in vars.throws %}
           {%- for exc_type in vars.throws %} catch (const {{exc_type}}& e) {
-              err->type = strdup("{{exc_type}}");
-              err->ptr = new {{exc_type}}(e);
+              iegen_err->type = strdup("{{exc_type}}");
+              iegen_err->ptr = new {{exc_type}}(e);
           }
           {%- endfor %}
           {%- endif %}
           {%- if not 'std::exception' in vars.throws %} catch (const std::exception& e) {
-              err->type = strdup("std::exception");
-              err->ptr = new std::exception(e);
+              iegen_err->type = strdup("std::exception");
+              iegen_err->ptr = new std::exception(e);
           }
           {%- endif %} catch (...) {
-              err->type = strdup("Uncaught Exception");
+              iegen_err->type = strdup("Uncaught Exception");
           }
 
           {%- if rconverter.c.target_type_name != 'void' %}
@@ -1177,7 +1177,7 @@ function:
         {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
         {%- for arg in args -%}
         {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}
-        {%- endfor -%}{{', ' if args}}IEGenCObject* _Nonnull err);
+        {%- endfor -%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err);
         {%- endmacro -%}
         {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
@@ -1325,15 +1325,15 @@ getter:
       {% set result_converter = rconverter.sc_to_swift -%}
       {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- macro gen_exc_switch_block() -%}
-      if err.type != nil {
-        let errorType = String(cString: err.type!)
+      if iegenErr.type != nil {
+        let errorType = String(cString: iegenErr.type!)
         switch errorType {
         case ("std::exception"):
           {%- set exc_info = get_type_info("std::exception") %}
-          let excObj = {{exc_info.vars.name}}(err, true)
+          let excObj = {{exc_info.vars.name}}(iegenErr, true)
           ExceptionHandler.handleUncaughtException(excObj.what())
         default:
-          err.type.deallocate()
+          iegenErr.type.deallocate()
           ExceptionHandler.handleUncaughtException("Uncaught Exception")
         }
       }
@@ -1342,8 +1342,8 @@ getter:
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
       {%- macro get_property() -%}
-      var err = IEGenCObject()
-      let result = _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, &err)
+      var iegenErr = IEGenCObject()
+      let result = _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, &iegenErr)
       {{gen_exc_switch_block()}}
       {%- set conversion = result_converter.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy) %}
       {%- if conversion %}
@@ -1381,8 +1381,8 @@ getter:
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
-          var err = IEGenCObject()
-          _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, {{converter.converted_name('value')}}, &err)
+          var iegenErr = IEGenCObject()
+          _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, {{converter.converted_name('value')}}, &iegenErr)
           {{gen_exc_switch_block()|indent(4)}}
           {%- if setter.vars.keep_alive %}
           {%- set args = [namespace(name='value', converter=rconverter)] %}
@@ -1427,13 +1427,13 @@ getter:
       {%- endif -%}
       {%- macro gen_exc_catch_block(vars) -%}
       catch (const std::exception& e) {
-          err->type = strdup("std::exception");
-          err->ptr = new std::exception(e);
+          iegen_err->type = strdup("std::exception");
+          iegen_err->ptr = new std::exception(e);
       } catch (...) {
-          err->type = strdup("Uncaught Exception");
+          iegen_err->type = strdup("Uncaught Exception");
       }
       {%- endmacro -%}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, IEGenCObject* _Nonnull err) {
+      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, IEGenCObject* _Nonnull iegen_err) {
           {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class.converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           try {
@@ -1446,7 +1446,7 @@ getter:
       }
       {%- if setter is defined %}
       {% set converter = setter.args[0].converter.c_to_cxx %}
-      void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}, IEGenCObject* _Nonnull err) {
+      void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{setter.args[0].converter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}, IEGenCObject* _Nonnull iegen_err) {
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
           try {
@@ -1459,9 +1459,9 @@ getter:
       content: |
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
         {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, IEGenCObject* _Nonnull err);
+        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, IEGenCObject* _Nonnull iegen_err);
         {%- if setter is defined %}
         {% set converter = setter.args[0].converter.c %}
         void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{owner_class.converter.c.target_type_name}} cself, {{converter.target_type_name}}
-        {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}, IEGenCObject* _Nonnull err);
+        {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.args[0].name}}, IEGenCObject* _Nonnull iegen_err);
         {% endif %}

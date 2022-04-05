@@ -494,7 +494,7 @@ constructor:
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
         {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
-        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -641,7 +641,7 @@ method:
       {%- for arg in args -%}
       {%- set converter = arg.converter.swift_to_sc %}
       {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
-      {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+      {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
       {%- if conversion -%}
       {{conversion|indent(4)}}
       {% endif %}
@@ -683,7 +683,7 @@ method:
           {%- for arg in args %}
           {%- set converter = arg.converter.swift_to_sc %}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
-          {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+          {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent(4)}}
           {%- endif %}
@@ -764,7 +764,7 @@ method:
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
         {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
-        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}
@@ -1047,7 +1047,7 @@ function:
         {%- for arg in args %}
         {%- set converter = arg.converter.swift_to_sc %}
         {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
-        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- set conversion = converter.snippet(arg_name|to_camel_case, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
         {%- if conversion %}
         {{conversion|indent(2)}}
         {%- endif %}

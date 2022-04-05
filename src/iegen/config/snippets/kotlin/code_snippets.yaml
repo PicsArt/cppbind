@@ -558,7 +558,7 @@ constructor:
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk %}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) %}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
@@ -676,7 +676,7 @@ method:
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
@@ -724,7 +724,7 @@ method:
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
@@ -776,7 +776,7 @@ method:
           {%- for arg in args -%}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}
@@ -977,7 +977,7 @@ function:
           {%- for arg in args %}
           {%- set converter = arg.converter.kotlin_to_jdk -%}
           {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg_name in vars.nullable_arg or arg.default_is_nullptr) -%}
+          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
           {%- if conversion %}
           {{conversion|indent}}
           {%- endif %}

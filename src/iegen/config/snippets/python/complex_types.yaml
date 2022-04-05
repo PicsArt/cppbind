@@ -221,3 +221,36 @@ std::less:
   types: { }
   converters: { }
 
+std::char_traits<char>:
+  types: { }
+  converters: { }
+
+std::__1::hash:
+  std::hash
+
+std::__1::equal_to:
+  std::equal_to
+
+std::__1::allocator:
+  std::allocator
+
+std::__1::less:
+  std::less
+
+std::__1::char_traits<char>:
+  std::char_traits<char>
+
+std::__ndk1::hash:
+  std::hash
+
+std::__ndk1::equal_to:
+  std::equal_to
+
+std::__ndk1::allocator:
+  std::allocator
+
+std::__ndk1::less:
+  std::less
+
+std::__ndk1::char_traits<char>:
+  std::char_traits<char>

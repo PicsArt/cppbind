@@ -76,5 +76,11 @@ typedef C9 C9Ref;
  */
 class C10 : public C9Ref {};
 
+/**
+ * __API__
+ * kotlin.action: gen_class
+ * package: test
+ */
+class C11 : public C10 {};
 
 #endif

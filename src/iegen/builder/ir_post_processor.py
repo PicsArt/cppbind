@@ -2,9 +2,7 @@
 Module is intended to support modifications/augmentations to IR
 """
 
-import clang.cindex as cli
-
-from iegen.ir.ast import CXXNode
+from iegen.ir.ast import CXXNode, Node
 
 
 class IRPostProcessor:
@@ -21,6 +19,6 @@ class IRPostProcessor:
         """Private method to register each node to its bases in IR"""
 
         for node in ir._get_all_nodes():
-            if isinstance(node, CXXNode) and node.is_class_or_struct:
+            if isinstance(node, CXXNode) and node.is_class_or_struct and node.api != Node.API_NONE:
                 for base_node in node.base_type_specifier_nodes:
                     base_node.direct_descendants.add(node)

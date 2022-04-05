@@ -34,7 +34,7 @@ public:
      */
      virtual std::string type() const = 0;
 
-    virtual ~Vehicle() = default;
+     virtual ~Vehicle() = default;
 private:
     int _numberOfSeats;
 };

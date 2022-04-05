@@ -640,7 +640,8 @@ class SnippetsEngine:
         logging.debug(f"Creating type converter for {search_name} "
                       f"and template choice {template_choice}")
         type_info = None
-        if not lookup_type.is_template:
+        if not lookup_type.is_template or self.get_type_info(search_name) is not None:
+            # `self.get_type_info(search_name) is not None` is to allow specialized template converters
             type_info = self._create_type_info(search_name,
                                                cxx_type=cxx_type)
 

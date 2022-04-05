@@ -1126,7 +1126,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
     {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current getter/setter. -#}
-    {%- if type_info.vars and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
+    {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}

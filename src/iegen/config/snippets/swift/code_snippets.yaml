@@ -176,11 +176,6 @@ class:
             self.owner = _owner
             self.refs = []
           }
-        
-          /// internal private initializer to prevent automatic initializer inheritance
-          private init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool, _ _refs: [Any]) {
-            fatalError("A private initializer should not be called.")
-          }
 
           deinit {
             release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
@@ -193,6 +188,12 @@ class:
           /// internal main initializer
           internal required init(_ _cself: IEGenCObject, _ _owner: Bool = false) {
             super.init(_cself, _owner)
+          }{{new_line}}
+          {%- endif %}
+          {%- if descendants %}
+          /// internal private initializer to prevent automatic initializer inheritance
+          private init(_cself: {{converter.sc.target_type_name}}, _self: {{converter.swift.target_type_name}}) {
+            fatalError("A private initializer should not be called.")
           }{{new_line}}
           {%- endif %}
           {%- if head %}

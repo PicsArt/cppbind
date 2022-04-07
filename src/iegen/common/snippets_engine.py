@@ -146,7 +146,7 @@ class Converter:
         self._type_converter_builder = type_converter_builder
         self._context = self._make_context()
 
-    def snippet(self, name, **kwargs):
+    def snippet(self, name=None, **kwargs):
         return self._type_converter.snippet(name, {**self._context, **kwargs})
 
     def converted_name(self, name):

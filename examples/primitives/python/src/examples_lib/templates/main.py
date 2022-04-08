@@ -10,7 +10,9 @@ from examples_lib.templates import (
     StackUsage,
     TemplateMethods,
     WrapperPairStrings,
-    PairEmployee, PairStudent
+    PairEmployee,
+    PairStudent,
+    TemplateValue
 )
 
 # [stack-examples]
@@ -99,3 +101,9 @@ assert pair1.second == student
 assert student.name == "updated name"
 assert pair2.second.name == employee.name
 # [pair-examples]
+
+# check templated constructor
+value_obj = TemplateValue(1)
+assert value_obj.add_value(2) == 3
+value_obj = TemplateValue("a")
+assert value_obj.add_value("b") == "ab"

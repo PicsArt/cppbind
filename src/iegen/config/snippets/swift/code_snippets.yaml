@@ -565,6 +565,7 @@ constructor:
     head: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- if incorrect_nullable_args -%}
       {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
@@ -600,7 +601,7 @@ constructor:
         {%- do call_args.append(converter.converted_name(arg_name|to_camel_case)) %}
         {%- endfor %}
         var iegenErr = IEGenCObject()
-        self.init(create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr), true)
+        self.init(create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}}{{', ' if call_args}}&iegenErr), true)
         {#- This should go to shared macro -#}
         {%- if vars.keep_alive %}
         {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
@@ -659,8 +660,9 @@ constructor:
       {%- macro gen_func(args, index=none) -%}
       {%- set comma = joiner(', ') -%}
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
+      {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
       {%- set index = '_' + index|string if index else '' -%}
-      {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+      {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix + index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
       {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err) {
         {%- set call_args = [] -%}
         {%- for arg in args -%}
@@ -711,7 +713,8 @@ constructor:
         {%- set comma = joiner(', ') %}
         {%- set index = '_' + index|string if index else '' %}
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
-        {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
+        {%- set template_postfix = template_type_converters|format_list("{arg.swift.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {{owner_class.converter.c.target_type_name}} create_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix + index}}({%- for arg in args -%}{{comma()}}{{arg.converter.c.target_type_name}}
         {%- if arg.converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{arg.name}}{%- endfor-%}{{', ' if args}}IEGenCObject* _Nonnull iegen_err);
         {%- endmacro %}
         {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}

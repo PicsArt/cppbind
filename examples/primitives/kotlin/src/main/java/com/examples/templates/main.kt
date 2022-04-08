@@ -94,6 +94,14 @@ assert(pair2.second.name == employee.name)
 
 component.close()
 addressableRoot.close()
+
+// check templated constructor
+var valueObj = TemplateValue(1)
+assert(valueObj.add_value(2) == 3)
+valueObj = TemplateValue("a")
+assert(valueObj.add_value("b") == "ab")
+valueObj.close()
+
 }
 
 class TemplatesApp {

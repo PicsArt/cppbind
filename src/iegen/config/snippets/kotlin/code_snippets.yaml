@@ -635,6 +635,7 @@ constructor:
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {%- set comma = joiner(', ') %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       protected fun construct_helper({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): Long {
           {%- set call_args = [] %}
           {%- for arg in args %}
@@ -646,12 +647,12 @@ constructor:
           {%- endif %}
           {%- do call_args.append(converter.converted_name(arg_name)) %}
           {%- endfor %}
-          val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+          val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
           return id
       }
       {% set comma = joiner(', ') %}
       @JvmStatic
-      private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
+      private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}): Long
       {%- endmacro -%}
       {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
       {%- for arg_with_default in non_primitive_default_args -%}
@@ -665,8 +666,9 @@ constructor:
       {#- this should go to shared macro #}
       {%- macro gen_func(args, index=none) -%}
       {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set index = '_' + index|string if index else '' %}
-      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + index) %}
+      {%- set jni_name = helper.get_jni_func_name(vars.package_prefix + '.' + vars.package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + template_postfix + index) %}
       extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{args|format_list(", {arg.converter.jni.target_type_name} {arg.name}", 'arg')|join}}){
           {%- set call_args = [] -%}
           {%- for arg in args -%}

@@ -90,6 +90,13 @@ func runTemplateExamples() {
     assert(pair1.second.name == student.name)
     assert(pair2.second.name == employee.name)
     // [pair-examples]
+
+    // check templated constructor
+    var valueObj = TemplateValue(value: 1)
+    assert(valueObj.add_value(other: 2) == 3)
+    valueObj = TemplateValue(value: "a")
+    assert(valueObj.add_value(other: "b") == "ab")
+
 }
 
 

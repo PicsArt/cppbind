@@ -10,6 +10,10 @@ class WithExternalAPIComments {
 
     WithExternalAPIComments(std::string s) : _str(s) {}
 
+    /**
+     * retInt function
+     * returns integer passed by argument
+     */
     static int retInt(int n) {
         return n;
     }

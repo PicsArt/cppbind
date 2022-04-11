@@ -41,7 +41,7 @@ class APIParser:
         """
         index = index or raw_comment.find(APIParser.API_START_KW)
         if index == -1:
-            return raw_comment, None
+            return extract_pure_comment(raw_comment), None
         return (extract_pure_comment(raw_comment, index),
                 raw_comment[index + len(APIParser.API_START_KW)::])
 

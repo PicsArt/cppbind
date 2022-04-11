@@ -11,139 +11,135 @@ Please do not change it manually.
 
 import functools
 import importlib
-import os
-import sys
+import inspect
 
-__all__ = ['OriginalMethodsMetaclass', 'EnumMetaclass']
+__all__ = ['IEGenMetaclass', 'IEGenEnumMetaclass']
 
 
-class PyBindOriginals:
+class IEGenBaseMetaclass(type):
     """
-    Singleton class that holds pybind types original methods.
-    """
-
-    __instance = None
-
-    def __init__(self):
-        if self.__instance is None:
-            self.originals_map = dict()
-            PyBindOriginals.__instance = self
-        else:
-            raise Exception("Cannot instantiate PyBindOriginals again.")
-
-    @staticmethod
-    def get_instance():
-        if PyBindOriginals.__instance is None:
-            PyBindOriginals()
-        return PyBindOriginals.__instance
-
-    def get(self, pybind_class):
-        return self.originals_map.get(pybind_class, None)
-
-    def set(self, pybind_class, originals):
-        if pybind_class not in self.originals_map:
-            self.originals_map[pybind_class] = originals
-
-
-class MetaclassBase(type):
-    """
-    Base class for OriginalMethodsMetaclass and EnumMetaclass.
+    Base class for IEGenMetaclass and IEGenEnumMetaclass.
     """
 
     def __instancecheck__(self, instance):
         """
-        This is responsible for correct instance check for wrapper class.
-        As for wrapper´s an instance of pybind class is returned then we need this to return true for wrapper instances.
+        This is responsible for correct instance check for iegen class.
+        As for wrapper's an instance of pybind class is returned then we need this to return true for wrapper instances.
         """
-        # get the wrapper´s module
-        module = importlib.import_module(self.__module__)
-        # get pybind´s corresponding module
-        pybind_module = _load_pybind_module(self, module)
+        # get pybind's corresponding type
+        pybind_class = _load_pybind_type(self.__name__, self.__module__)
         # check if wrapper instance is instance of pybind type
-        return isinstance(instance, getattr(pybind_module, self.__name__))
+        return isinstance(instance, pybind_class)
 
 
-class OriginalMethodsMetaclass(MetaclassBase):
+class IEGenMetaclass(IEGenBaseMetaclass):
     """
-    Metaclass for all wrappers. This type is responsible for adding originals(dictionary which contains pybind´s
-    original methods) to wrapper. It also replaces pybind´s methods with wrappers methods. So that instead of pybind´s
-    method wrapper´s method is getting called, which in itś turn calls the original function for the originals dictionary.
-    Also defines __new__ for the wrapper class to create an instance of pybind class.
+    Metaclass for all iegen generated classes. It's responsible for replacing pybind's methods/properties with
+    corresponding iegen's methods/properties.
+    Overrides __new__ and __init__ to create an instance of pybind class instead of iegen's and changes
+    base types for the types which are extended from iegen types.
+    """
+
+    def __new__(mcs, future_class_name, future_class_parents, future_class_attrs, *args, **kwargs):
+        """
+        For user extended types it replaces base types which are iegen generated types with original pybind types
+        and overwrites iegen's metaclass with pybind's metaclass.
+        """
+        pybind_type = _load_pybind_type(future_class_name, future_class_attrs['__module__'])
+        # set metaclass for extended types to pybind metaclass
+        meta_class = None
+        if pybind_type is None:
+            parents = []
+            for parent in future_class_parents:
+                if isinstance(parent, IEGenMetaclass):
+                    # get pybind's corresponding type
+                    pybind_class = _load_pybind_type(parent.__name__, parent.__dict__['__module__'])
+                    parents.append(pybind_class)
+                    if meta_class is None:
+                        # set pybind metaclass for non iegen generated types
+                        meta_class = type(pybind_class)
+                else:
+                    parents.append(parent)
+            future_class_parents = tuple(parents)
+        meta_class = meta_class or mcs
+        return super(IEGenMetaclass, mcs).__new__(meta_class, future_class_name, future_class_parents,
+                                                  future_class_attrs, **kwargs)
+
+    def __init__(cls, future_class_name, future_class_parents, future_class_attrs):
+        """
+        Replaces pybind's method/property with iegen's method/property and attaches pybind's method/property as an
+        attribute to iegen method. Also overwrites __new__ for iegen types to create an instance of pybind class.
+        """
+        # get pybind's corresponding type
+        pybind_class = _load_pybind_type(future_class_name, future_class_attrs['__module__'])
+        if pybind_class:
+            originals = pybind_class.__dict__.copy()
+
+            for attr in pybind_class.__dict__:
+                if attr in future_class_attrs and attr != '__new__':
+                    # add original pybind method/property to iegen method/property as an attribute
+                    if hasattr(future_class_attrs[attr], 'fn'):
+                        # method decorated with @bind
+                        setattr(future_class_attrs[attr].fn.original_function, attr, originals[attr])
+                    elif inspect.isfunction(future_class_attrs[attr]):
+                        # not decorated method
+                        setattr(future_class_attrs[attr], attr, originals[attr])
+                    elif isinstance(future_class_attrs[attr], property):
+                        # properties
+                        bound_getter = future_class_attrs[attr].fget
+                        if bound_getter:
+                            setattr(bound_getter.fn.original_function, attr, originals[attr].fget)
+                        bound_setter = future_class_attrs[attr].fset
+                        if bound_setter:
+                            setattr(bound_setter.fn.original_function, attr, originals[attr].fset)
+                    elif isinstance(future_class_attrs[attr], classmethod):
+                        # static functions
+                        bound_method = future_class_attrs[attr].__func__
+                        setattr(bound_method.fn.original_function, attr,
+                                originals[attr].__get__(future_class_attrs[attr]))
+
+                    # replace pybind method with iegen method
+                    setattr(pybind_class, attr, future_class_attrs[attr])
+            # there's no nesting in pybind using this to support nested types
+            setattr(pybind_class, '__qualname__', future_class_attrs['__qualname__'])
+            # overwrite __new__ to return create a pybind instance instead of iegen instance
+            setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
+        super(IEGenMetaclass, cls).__init__(future_class_name, future_class_parents, future_class_attrs)
+
+
+class IEGenEnumMetaclass(IEGenBaseMetaclass):
+    """
+    Metaclass for all iegen generated enums. It's responsible for adding user defined attributes to pybind enum type.
+    Also overwrites iegen enum's __new__ to create a pybind enum.
     """
 
     def __init__(cls, future_class_name, future_class_parents, future_class_attrs):
         """
-        Adds the originals to wrapper class and replaces pybind´s methods with wrappers methods.
-        Also defines __new__ for the wrapper class to create an instance of pybind class.
+        Adds iegen generated enum attributes to corresponding pybind enum.
         """
-        originals_map = PyBindOriginals.get_instance()
-        # get the wrapper´s module
-        module = importlib.import_module(future_class_attrs['__module__'])
-        # get pybind´s corresponding module
-        pybind_module = _load_pybind_module(cls, module)
-        pybind_class = getattr(pybind_module, future_class_name)
-        originals = {}
-        # exclude itself and type
-        for parent in reversed(cls.mro()[1:-1]):
-            # add also parent´s originals
-            if isinstance(parent, OriginalMethodsMetaclass):
-                originals.update(parent.originals)
-        pybind_originals = originals_map.get(pybind_class)
-
-        if not pybind_originals:
-            pybind_originals = pybind_class.__dict__.copy()
-            originals_map.set(pybind_class, pybind_class.__dict__.copy())
-        originals.update(pybind_originals)
-        for attr in pybind_class.__dict__:
-            if attr in future_class_attrs and attr != '__new__':
-                # replace pybind method with wrapper method
-                setattr(pybind_class, attr, future_class_attrs[attr])
-        # there's no nesting in pybind using this to support nested types
-        setattr(pybind_class, '__qualname__', future_class_attrs['__qualname__'])
-        setattr(cls, 'originals', originals)
-        # set __new__ to return pybind instance
-        setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
-        type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
-
-
-class EnumMetaclass(MetaclassBase):
-    """
-    Metaclass for all enum wrappers. This type is responsible setting user added methods to pybind enum type.
-    Also defines __new__ for the wrapper enum to create an instance of pybind enum.
-    """
-
-    def __init__(cls, future_class_name, future_class_parents, future_class_attrs):
-        """
-        Replaces sets user defined methods to pybind type.
-        And defines __new__ for the wrapper enum to create an instance of pybind enum.
-        """
-        # get the wrapper´s module
-        module = importlib.import_module(future_class_attrs['__module__'])
-        # get pybind´s corresponding module
-        pybind_module = _load_pybind_module(cls, module)
-        pybind_class = getattr(pybind_module, future_class_name)
-        for attr in pybind_class.__dict__:
+        # get pybind's corresponding type
+        pybind_enum = _load_pybind_type(future_class_name, future_class_attrs['__module__'])
+        for attr in pybind_enum.__dict__:
             if attr in future_class_attrs and attr not in ('__doc__', '__qualname__', '__module__', '__new__'):
                 # replace pybind method with wrapper method
-                setattr(pybind_class, attr, future_class_attrs[attr])
-        # set __new__ to return pybind instance
-        setattr(cls, '__new__', functools.partial(_new_object, pybind_class))
-        type.__init__(cls, future_class_name, future_class_parents, future_class_attrs)
+                setattr(pybind_enum, attr, future_class_attrs[attr])
+        # overwrite __new__ to create a pybind enum
+        setattr(cls, '__new__', functools.partial(_new_object, pybind_enum))
+        super(IEGenEnumMetaclass, cls).__init__(future_class_name, future_class_parents, future_class_attrs)
 
 
 def _new_object(pybind_type, cls, *args, **kwargs):
-    """Helper used with functools to override __new__."""
+    """Helper used to overwrite iegen __new__ to create a pybind type."""
     return pybind_type(*args, **kwargs)
 
 
-def _load_pybind_module(cls, module):
-    """Retrieves last part from the module´s full module name."""
-    cls_module = cls.__module__
-    if cls_module == '__main__':
-        filename = sys.modules[cls_module].__file__
-        cls_module = os.path.splitext(os.path.basename(filename))[0]
-    module_name = cls_module.split('.')[-1]
-    pybind_module = getattr(module, f'pybind_{module_name}', None)
-    if pybind_module is None:
-        raise ImportError(f'Could not load corresponding pybind module for: {module.__name__}')
-    return pybind_module
+def _load_pybind_type(type_name, iegen_module_name):
+    """Loads and returns corresponding pybind module if it's available, otherwise None."""
+    module = importlib.import_module(iegen_module_name)
+    file_name = iegen_module_name.split('.')[-1]
+    # iegen adds an import of corresponding pybind module in iegen module with convention = pybind_{iegen_module_name}
+    # then using this import loads pybind type
+    pybind_module = getattr(module, f'pybind_{file_name}', None)
+    if hasattr(pybind_module, type_name):
+        return getattr(pybind_module, type_name)
+    return None

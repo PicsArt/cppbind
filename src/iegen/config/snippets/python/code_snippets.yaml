@@ -178,7 +178,7 @@ enum:
       {{vars.header_code_fragment}}{{new_line}}
       {%- endif %}
       {% set m = 'pybind_' + vars.file + vars.file_postfix %}
-      class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=EnumMetaclass):
+      class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=IEGenEnumMetaclass):
           {{vars.comment|make_py_docstring|indent}}
           {%- for case in enum_cases -%}
           {%- if case.name not in vars.enum_excluded_fields -%}
@@ -269,7 +269,7 @@ var_class: &var_class
         {%- do bases_specifiers.append(base_type_package + base_type_converter.target_type_name) -%}
         {%- endfor -%}
         {%- do bases_specifiers.extend(vars.bases_list) -%}
-        {%- do bases_specifiers.append('metaclass=OriginalMethodsMetaclass') %}
+        {%- do bases_specifiers.append('metaclass=IEGenMetaclass') %}
 
         class {{converter.python.get_target_type_name(definition=True)}}({{bases_specifiers|join(', ')}}):
             {%- if vars.comment %}

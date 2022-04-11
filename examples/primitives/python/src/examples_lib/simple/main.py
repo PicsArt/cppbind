@@ -1,5 +1,6 @@
-from examples_lib.simple import pretty_print
 from examples_lib.simple import Root, Project, Path, Holder
+from examples_lib.simple import pretty_print
+from examples_lib.simple.extended_task import TaskRoot, ExtendedTaskRoot
 from examples_lib.simple.task import PyTask as Task
 
 # [task-usage]
@@ -46,3 +47,20 @@ assert holder.task.title == "My First Task Edited"
 
 # test for dir actions with current path
 pretty_print('{"first_name": "John", "last_name": "Doe"}')
+
+# [extended-types-examples]
+task_root = TaskRoot('My Task', '/home')
+assert task_root.title == 'My Task'
+assert task_root.path == '/home'
+task_root.update_title('Updated Task')
+task_root.path = '/tmp'
+assert task_root.title == 'Updated Task'
+assert task_root.path == '/tmp'
+
+extended_task_root = ExtendedTaskRoot('My Another Task')
+assert extended_task_root.title == 'My Another Task'
+assert extended_task_root.path == '/home'
+
+extended_task_root.add_subtask(task)
+assert extended_task_root.subtasks[0] == task
+# [extended-types-examples]

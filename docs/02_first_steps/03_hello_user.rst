@@ -86,7 +86,7 @@ That is it. Now you should be able to use it on your codes written in supported 
     .. tab:: kotlin
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/kotlin/hello_user_usage.kt
-           :language: kotlin
+           :language: java
 
     .. tab:: python
 
@@ -105,6 +105,6 @@ The example using bazel for build is available at `Hello User <https://github.co
 
 To find out how to configure IEGEN and run on your code and how to create binding library for your target language please read the following topics.
 
-* :doc:`API Attributes </02_first_steps/05_api_configuration>`
+* :doc:`API Attributes </02_first_steps/06_api_configuration>`
 * :doc:`Configuration for "Hello user" </02_first_steps/hello_user_configuration>`
 

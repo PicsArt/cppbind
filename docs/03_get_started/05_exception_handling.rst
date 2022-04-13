@@ -65,7 +65,7 @@ will be called after unhandled exception is detected. The mentioned package look
         .. tab:: kotlin
 
             .. literalinclude:: /../src/iegen/config/std_helpers/kotlin/exceptionUtils.kt
-                :language: kotlin
+                :language: java
 
         .. tab:: swift
 
@@ -112,7 +112,7 @@ After generating wrappers for target language we can call methods which can thro
             .. tab:: kotlin
 
                 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
-                    :language: kotlin
+                    :language: java
 
             .. tab:: swift
 
@@ -129,7 +129,7 @@ After generating wrappers for target language we can call methods which can thro
             .. tab:: kotlin
 
                 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
-                    :language: kotlin
+                    :language: java
 
                 .. note::
                     For kotlin we rethrow caught exception from C wrapper via JNI special functions. It means that exception handling section of code is written in C wrapper file.

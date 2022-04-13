@@ -64,10 +64,10 @@ Usage examples:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
-               :language: kotlin
+               :language: java
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -158,16 +158,16 @@ Usage examples:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
-               :language: kotlin
+               :language: java
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rectangle.kt
-               :language: kotlin
+               :language: java
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rhombus.kt
-               :language: kotlin
+               :language: java
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 

@@ -92,7 +92,7 @@ In case of python a postfix generated from argument types is appended to the fun
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/utils.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -158,7 +158,7 @@ We are ready to use the generated bindings:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -173,7 +173,7 @@ We are ready to use the generated bindings:
 |
 
 Custom argument names and labels
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can specify argument names and argument labels(only for Swift) by using `argument_name` and `argument_label`
 variables. Here's an example function where user explicitly gives argument name and label for each given argument.
@@ -217,7 +217,7 @@ And here is a small code using generated bindings:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/custom_args/customArgUtils.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -274,7 +274,7 @@ Here's a sample code using the above functions:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/primitives/primitiveDefaults.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -313,7 +313,7 @@ Although the actual default values for complex types are not visible in generate
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/complex/complexDefaults.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -324,6 +324,7 @@ Although the actual default values for complex types are not visible in generate
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/complexDefaults.swift
                :language: swift
+
 |
 
 

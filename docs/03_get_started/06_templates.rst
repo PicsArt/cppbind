@@ -33,7 +33,7 @@ contain either strings(all possible types) or objects with **name** and **type**
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -119,7 +119,7 @@ Notice that in third one we haven't specified namespace and it does not have an 
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -200,7 +200,7 @@ And the usage examples
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 

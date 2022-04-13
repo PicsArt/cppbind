@@ -52,7 +52,7 @@ Usage examples:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
-                :language: kotlin
+                :language: java
 
         .. tab:: python
 
@@ -109,7 +109,7 @@ And the usage example:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -169,11 +169,11 @@ Some usage examples:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
-            .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/list.py
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/list_pygen.py
                :language: python
 
         .. tab:: swift

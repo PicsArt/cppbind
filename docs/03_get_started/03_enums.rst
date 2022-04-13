@@ -68,12 +68,12 @@ Usage examples:
             Here is the generated kotlin code for Color:
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
-               :language: kotlin
+               :language: java
 
             And for Frame:
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/frame.kt
-               :language: kotlin
+               :language: java
 
 
         .. tab:: python

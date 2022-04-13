@@ -72,7 +72,7 @@ Now let's see some usage examples for generated wrappers.
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
-                :language: kotlin
+                :language: java
 
         .. tab:: python
 
@@ -142,7 +142,7 @@ Here's the usage:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/optionals/optionals.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 

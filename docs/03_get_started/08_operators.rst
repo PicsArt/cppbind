@@ -54,7 +54,7 @@ And the usage example:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/counter.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 
@@ -110,7 +110,7 @@ Usage example:
         .. tab:: kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/intarray.kt
-               :language: kotlin
+               :language: java
 
         .. tab:: python
 

@@ -1,3 +1,10 @@
+# after this macros `class_start_comment`, `class_end_comment`, `method_comment` and `register_method_arg` are available in this file
+var_macros: &var_macros
+  !concat
+  - !include shareable_macros/code_snippets_macros.yaml&method_macros
+  - !include shareable_macros/code_snippets_macros.yaml&class_macros.class_start
+  - !include shareable_macros/code_snippets_macros.yaml&class_macros.class_end
+
 # code snippets for file
 file:
   my_lang:
@@ -14,27 +21,40 @@ class:
     body:
       scopes:
         - body
-      content: |
-        public class {{vars.name}}  {
+      content:
+        !concat
+        - *var_macros
+        - |
+          {{class_start_comment(vars.name)}}
+          public class {{vars.name}}  {
 
-          // body of function
-          {{body|string|indent}}
-        }
+            // body of function
+            {{body|string|indent}}
+          }
+          {{class_end_comment(vars.name)}}
 
 # code snippets for function
 method:
   my_lang:
     # example of snippet call which doesn't have source and target defined
-    body: |
-      {%- set comma = joiner(', ') -%}
-      public function ({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.my_lang.target_type_name}}{%- endfor -%}) {
+    body:
+      !concat
+      - *var_macros
+      - |
+        {%- set comma = joiner(', ') -%}
+        {{method_comment(vars.name)}}
+        public function ({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.my_lang.target_type_name}}{%- endfor -%}) {
 
-        {%- for arg in args %}
-          {%- if arg.converter.my_section %}
-            {{arg.converter.my_section.snippet(arg.name)}}
-          {%- endif %}
+          {%- set args_list = [] -%}
+          {%- for arg in args %}
+            {# calling shareable macro which modifies macro arguments in order to use it later -#}
+            {{register_method_arg(args_list, arg)}}
+            {%- if arg.converter.my_section %}
+              {{arg.converter.my_section.snippet(arg.name)}}
+            {%- endif %}
 
-          {{arg.converter.my_lang_to_c.snippet(arg.name)}}
-        {%- endfor %}
+            {{arg.converter.my_lang_to_c.snippet(arg.name)}}
+          {%- endfor %}
+          // arg names -> {{args_list}}
 
-      }
+        }

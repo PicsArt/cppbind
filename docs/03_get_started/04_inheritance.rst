@@ -30,34 +30,9 @@ Assume we have two types **Bicycle** inherited from **Vehicle**:
     by iegen then in the wrapper code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.
-Iegen will generate two classes one inherited from the other:
+Iegen will generate two classes one inherited from the other.
 
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
-           :language: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/vehicle_pygen.py
-           :language: py
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/bicycle_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/vehicle.swift
-           :language: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/bicycle.swift
-           :language: swift
-
-Now we can use them:
+Usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -81,7 +56,36 @@ Now we can use them:
            :start-after: [simple-inheritance-usage]
            :end-before: [simple-inheritance-usage]
 
+.. collapse:: Generated bindings
 
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
+               :language: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/vehicle_pygen.py
+               :language: py
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/bicycle_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/vehicle.swift
+               :language: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/bicycle.swift
+               :language: swift
+
+|
 
 Multiple Inheritance
 ~~~~~~~~~~~~~~~~~~~~
@@ -119,57 +123,10 @@ In this case again we have used the same value for **shared_ref** for all 4 type
     It's important to note that in case of multiple inheritance all parent's should have the same root type,
     otherwise an error will be thrown and the code won't be parsed.
 
-Here are the generated wrappers:
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
-           :language: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rectangle.kt
-           :language: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rhombus.kt
-           :language: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/parallelogram_pygen.py
-           :language: py
-
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rectangle_pygen.py
-           :language: py
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rhombus_pygen.py
-           :language: py
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/square_pygen.py
-           :language: py
-
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/parallelogram.swift
-           :language: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/rectangle.swift
-           :language: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/rhombus.swift
-           :language: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/inheritance/square.swift
-           :language: swift
-
 .. note::
     As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.
 
-Now we are ready to use them:
+Usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -193,3 +150,53 @@ Now we are ready to use them:
            :start-after: [multi-inheritance-usage]
            :end-before: [multi-inheritance-usage]
 
+.. collapse:: Here are the generated wrappers
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
+               :language: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rectangle.kt
+               :language: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/rhombus.kt
+               :language: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/parallelogram_pygen.py
+               :language: py
+
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rectangle_pygen.py
+               :language: py
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/rhombus_pygen.py
+               :language: py
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/square_pygen.py
+               :language: py
+
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/parallelogram.swift
+               :language: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/rectangle.swift
+               :language: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/rhombus.swift
+               :language: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/inheritance/square.swift
+               :language: swift
+
+|

@@ -16,29 +16,11 @@ In a code above we are exporting all public members and constructors.
     Notice that the title method is marked as a getter, so it
     will be a read-only property for the target language.
 
-Generated code for the target language looks as follows.
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
-            :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/task/task_pygen.py
-            :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/simple/task.swift
-           :language: swift
-
 .. note::
     By default iegen generates ``System.loadLibrary("wrapper_jni")`` for each kotlin class. To disable this behaviour define **c_wrapper_lib_name** with null value:
     ``c_wrapper_lib_name: null`` or ``c_wrapper_lib_name:``.
 
-Now we are able to use them.
+Usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -62,6 +44,27 @@ Now we are able to use them.
             :start-after: [task-usage]
             :end-before: [task-usage]
 
+.. collapse:: Generated code for the target languages
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
+                :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/task/task_pygen.py
+                :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/simple/task.swift
+               :language: swift
+
+|
 
 Let's assume we have another class using the one above.
 
@@ -73,25 +76,6 @@ Let's assume we have another class using the one above.
 .. note::
     We are using **include** attribute based on which appropriate import will be generated for
     each target language. In case of kotlin we do not have this attribute, as both wrappers are generated under the same package.
-
-Here are the generated wrappers:
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/project_pygen.py
-            :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/simple/project.swift
-           :language: swift
-
 
 And the usage example:
 
@@ -116,6 +100,28 @@ And the usage example:
             :language: swift
             :start-after: [project-usage]
             :end-before: [project-usage]
+
+.. collapse:: Here are the generated wrappers
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/project_pygen.py
+                :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/simple/project.swift
+               :language: swift
+
+|
 
 Nested Types
 ~~~~~~~~~~~~

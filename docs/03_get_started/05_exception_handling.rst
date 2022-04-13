@@ -75,46 +75,13 @@ will be called after unhandled exception is detected. The mentioned package look
 Also we always catch std::exception before catching all exceptions to have more informative error message when exception
 class is derived from std::exception.
 
-Let's have a look to generated wrapper codes:
-
-Wrapper codes when **throws** exception list is not empty:
-
-.. tabs::
-        .. tab:: kotlin
-
-            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
-                :language: kotlin
-
-        .. tab:: swift
-
-            .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
-                :language: swift
-
-        .. tab:: python
-            .. note::
-                For generating python wrappers we use **pybind** tool, which already has support for exception handling.
-                Pybind translates c++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
-                Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
-                on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
-                is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement
-                keeps API annotations style convenient between all target languages.
-
-Wrapper codes when exception list is empty (throws=True):
-
-.. tabs::
-        .. tab:: kotlin
-
-            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
-                :language: kotlin
-
-            .. note::
-                For kotlin we rethrow caught exception from C wrapper via JNI special functions. It means that exception handling section of code is written in C wrapper file.
-                `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C wrapper file.
-
-        .. tab:: swift
-
-            .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
-                :language: swift
+.. note::
+    For generating python wrappers we use **pybind** tool, which already has support for exception handling.
+    Pybind translates c++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
+    Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
+    on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
+    is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement
+    keeps API annotations style convenient between all target languages.
 
 After generating wrappers for target language we can call methods which can throw an exception, and test results with catch blocks:
 
@@ -136,3 +103,41 @@ After generating wrappers for target language we can call methods which can thro
 .. note::
     In the last usage example you can notice that we called custom exception class method when an exception was caught. When custom exception class and its methods have API annotations,
     we have corresponding bindings and thus we can use class methods.
+
+.. collapse:: Wrapper codes when "throws" exception list is not empty
+
+    |
+
+    .. tabs::
+            .. tab:: kotlin
+
+                .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
+                    :language: kotlin
+
+            .. tab:: swift
+
+                .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
+                    :language: swift
+
+|
+
+.. collapse:: Wrapper codes when exception list is empty (throws=True)
+
+    |
+
+    .. tabs::
+            .. tab:: kotlin
+
+                .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
+                    :language: kotlin
+
+                .. note::
+                    For kotlin we rethrow caught exception from C wrapper via JNI special functions. It means that exception handling section of code is written in C wrapper file.
+                    `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C wrapper file.
+
+            .. tab:: swift
+
+                .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
+                    :language: swift
+
+|

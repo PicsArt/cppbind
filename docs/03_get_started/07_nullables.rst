@@ -32,31 +32,10 @@ Here is the code for them.
    :start-after: [example-helpers]
    :end-before: [example-helpers]
 
-Now let's take a look at generated wrappers.
-
-.. tabs::
-    .. tab:: kotlin
-
-        Kotlin has a support for nullable types. As you can see arguments that were marked as nullable have **?** with their data type. The same is for return values.
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        For python nullable arguments and return values are marked as Optional.
-        And as for python everything is nullable iegen does additional checks to not allow passing nullable values where non nulls are expected.
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
-            :language: py
-
-    .. tab:: swift
-
-        Swift is similar to kotlin and has a support for nullable types.
-        As you can see arguments that were marked as nullable have **?** with their type. The same is fot return values.
-
-        .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
-           :language: swift
+.. note::
+    Kotlin and swift have a support for nullable types.
+    For python nullable arguments and return values are marked as Optional.
+    And as for python everything is nullable iegen does additional checks to not allow passing nullable values where non nulls are expected.
 
 Now let's see some usage examples for generated wrappers.
 
@@ -85,6 +64,28 @@ Now let's see some usage examples for generated wrappers.
             :start-after: [nullables-usage]
             :end-before: [nullables-usage]
 
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
+                :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
+                :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
+                :language: swift
+
+|
+
 Default Values
 ~~~~~~~~~~~~~~
 
@@ -107,23 +108,7 @@ These are the cases supported for all languages.
 Callable expressions(for example **Task("MyTask")**) are supported only for python. Note that in this case the default value in generated
 python api will be **None**. But under the hood the actual default value will be used.
 
-Let's now see the generated bindings:
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/optionals/optionals.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        Notice that the default value for **optional_by_val_with_default_complex_value** and **optional_ref_with_default_complex_value** is **None**.
-        But if user does not specify a value for task argument then the default value from the original code i.e. **Task("MyTask")** will be used.
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/optionals/optionals_pygen.py
-            :language: py
-
-And here's the usage:
+Here's the usage:
 
 .. tabs::
     .. tab:: kotlin
@@ -148,3 +133,23 @@ And here's the usage:
     then user should generate __init__.py under root package with an appropriate import statement via iegen API.
     This can be done by adding **gen_package** action and an import statement with **python.code_fragment** variable to source root dir.
     For more details about gen_package please check <appropriate_section_here.>.
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/optionals/optionals.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            Notice that the default value for **optional_by_val_with_default_complex_value** and **optional_ref_with_default_complex_value** is **None**.
+            But if user does not specify a value for task argument then the default value from the original code i.e. **Task("MyTask")** will be used.
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/optionals/optionals_pygen.py
+                :language: py
+
+|

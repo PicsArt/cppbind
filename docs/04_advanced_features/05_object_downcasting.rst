@@ -18,18 +18,23 @@ Here is an example of base class with user defined list of descendant classes, w
    :start-after: [example]
    :end-before: [example]
 
-Here is the implementation part of down casting process in target language wrapper. The main part is visible in **container** getter.
+.. collapse:: Implementation part of down casting process in target language wrappers (the main logic is inside "iegenDowncast" method)
 
-.. tabs::
-    .. tab:: kotlin
-        .. note::
-            Automatic down casting process for kotlin currently is not implemented.
+    |
 
-    .. tab:: python
-        .. note::
-            Automatic down casting process for python is done by PyBind.
+    .. tabs::
+        .. tab:: kotlin
 
-    .. tab:: swift
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/container.kt
+                :language: java
 
-        .. literalinclude:: /../examples/primitives/swift/src/templates/container.swift
-           :language: swift
+        .. tab:: python
+            .. note::
+                Automatic down casting process for python is done by PyBind.
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/templates/container.swift
+               :language: swift
+
+|

@@ -22,26 +22,6 @@ to **False**. In that case we should also specify **name** for that operator so 
     For **+=** operator we are generating bindings only for python and swift because for kotlin the signature of this operator is different and
     we already have generated binding for **+** operator which covers also **+=** operator.
 
-And here are generated operators for target languages.
-
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/counter.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/counter_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
-           :language: swift
-
-
 And the usage example:
 
 .. tabs::
@@ -66,7 +46,27 @@ And the usage example:
            :start-after: [counter-usage]
            :end-before: [counter-usage]
 
+.. collapse:: Generated operators for target languages
 
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/counter.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/counter_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
+               :language: swift
+
+|
 
 Overloading subscript operator
 ~~~~~~~~~~~~~~~~~~
@@ -78,28 +78,7 @@ Here is the example of overloading **operator[]**.
    :start-after: [example]
    :end-before: [example]
 
-And here are overloaded subscript operators for target languages.
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/intarray.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/intarray_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
-           :language: swift
-
-.. note::
-    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.
-
-And the usage example:
+Usage example:
 
 .. tabs::
     .. tab:: kotlin
@@ -122,3 +101,28 @@ And the usage example:
            :language: swift
            :start-after: [subscript-operator-usage]
            :end-before: [subscript-operator-usage]
+
+.. collapse:: Overloaded subscript operators for target languages
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/intarray.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/intarray_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
+               :language: swift
+
+|
+
+.. note::
+    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.

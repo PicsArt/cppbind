@@ -435,7 +435,7 @@ std::map:
         let {{name}}Data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for i in 0..<Int({{name}}.size) {
           let {{name}}Item = {{name}}Data[i]
-          {{args[1].snippet('{}Item'.format(name))|indent(2)}}
+          {{cleanup_code_fragment|indent(2)}}
         }
         {%- endif %}
         {%- endif %}
@@ -597,10 +597,6 @@ std::pair:
     swift_to_sc: |
       let _{{target_name}}First = UnsafeMutablePointer<{{args_converters[0].sc.target_type_name}}>.allocate(capacity: 1)
       let _{{target_name}}Second = UnsafeMutablePointer<{{args_converters[1].sc.target_type_name}}>.allocate(capacity: 1)
-      defer {
-        _{{target_name}}First.deallocate()
-        _{{target_name}}Second.deallocate()
-      }
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.first = UnsafeMutableRawPointer(_{{target_name}}First)
       {{target_name}}.second = UnsafeMutableRawPointer(_{{target_name}}Second)
@@ -626,6 +622,26 @@ std::pair:
       {{args[0].snippet('{}First'.format(name), value_policy=value_policy)}}
       {{args[1].snippet('{}Second'.format(name), value_policy=value_policy)}}
       let {{target_name}}: ({{args_converters[0].swift.target_type_name}}, {{args_converters[1].swift.target_type_name}}) = ({{args[0].converted_name('{}First'.format(name))|to_camel_case}}, {{args[1].converted_name('{}Second'.format(name))|to_camel_case}})
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- if args[0] %}
+        {%- set args0_cleanup_code_fragment = args[0].snippet('{}FirstItem'.format(name)) %}
+        {%- if args0_cleanup_code_fragment %}
+        let {{name}}FirstItem = {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)[0]
+        {{args0_cleanup_code_fragment}}
+        {%- endif %}
+        {%- endif %}
+        {%- if args[1] %}
+        {%- set args1_cleanup_code_fragment = args[1].snippet('{}SecondItem'.format(name)) %}
+        {%- if args1_cleanup_code_fragment %}
+        let {{name}}SecondItem = {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)[0]
+        {{args1_cleanup_code_fragment}}
+        {%- endif %}
+        {%- endif %}
+        {{name}}.first.deallocate()
+        {{name}}.second.deallocate()
     swift_ref_internal: |
       {%- if args_converters[0].swift_ref_internal %}
       {{args_converters[0].swift_ref_internal.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}

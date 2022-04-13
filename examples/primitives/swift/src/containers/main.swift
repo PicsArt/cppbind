@@ -95,6 +95,20 @@ func runContainerExamples() {
     nestedUsage.setComplexStringMap(m: complexNestedStringMap)
     assert(nestedUsage.getComplexStringMap() == complexNestedStringMap)
     // [nested-containers-usage]
+
+    // checking pair + containers combinations
+    let nestedVectorOfPairs : [[(Int, String)]] = [[(1, "one")], [(2, "two"), (3, "three")]]
+    pairUsage.setNestedVectorOfPairs(v: nestedVectorOfPairs)
+    let resultVec = pairUsage.getNestedVectorOfPairs()
+    assert(resultVec[0][0].0 == nestedVectorOfPairs[0][0].0 && resultVec[0][0].1 == nestedVectorOfPairs[0][0].1)
+    assert(resultVec[1][0].0 == nestedVectorOfPairs[1][0].0 && resultVec[1][0].1 == nestedVectorOfPairs[1][0].1)
+    assert(resultVec[1][1].0 == nestedVectorOfPairs[1][1].0 && resultVec[1][1].1 == nestedVectorOfPairs[1][1].1)
+
+    let mapItemObj = MapItem(value: 1)
+    let complexPairObj : (MapItem, [MapItem]) = (mapItemObj, [mapItemObj])
+    pairUsage.complexPairObj = complexPairObj
+    let resultObj = pairUsage.complexPairObj
+    assert(resultObj.0.value == mapItemObj.value && resultObj.1[0].value == mapItemObj.value)
 }
 
 #if os(Linux)

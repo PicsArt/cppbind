@@ -1380,7 +1380,7 @@ property_getter:
           {%- endfor %}
           {%- endif %}
           {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = arg.converter.sc_cleanup.snippet(converter.converted_name('value')) %}
+          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
           {%- if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
           {%- endif %}
@@ -1495,6 +1495,12 @@ getter:
           {%- endif %}
           var iegenErr = IEGenCObject()
           _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{setter.vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(cself, {{converter.converted_name('value')}}, &iegenErr)
+          {%- if rconverter.sc_cleanup %}
+          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
+          {%- if cleanup_code_fragment %}
+          {{cleanup_code_fragment|indent(4)}}
+          {%- endif %}
+          {%- endif %}
           {{gen_exc_switch_block()|indent(4)}}
           {%- if setter.vars.keep_alive %}
           {%- set args = [namespace(name='value', converter=rconverter)] %}
@@ -1508,12 +1514,6 @@ getter:
           {{converter.swift_keep_alive.snippet('self', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
           {%- endif %}
           {%- endfor %}
-          {%- endif %}
-          {%- if rconverter.sc_cleanup %}
-          {%- set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
-          {%- if cleanup_code_fragment %}
-          {{cleanup_code_fragment|indent(4)}}
-          {%- endif %}
           {%- endif %}
         }
         {%- else %}

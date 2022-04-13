@@ -3,6 +3,9 @@
 
 #include <utility>
 #include <string>
+#include <vector>
+
+#include "map.hpp"
 
 namespace iegen::example {
 
@@ -69,8 +72,46 @@ struct PairExamples {
         return std::make_pair("first", "second");
     };
 
+   /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setNestedVectorOfPairs(const std::vector<std::vector<std::pair<int, std::string>>>& v) {
+        nestedVectorOfPairs = v;
+    }
+
+   /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::vector<std::vector<std::pair<int, std::string>>> getNestedVectorOfPairs() {
+        return nestedVectorOfPairs;
+    }
+
+   /**
+    * __API__
+    * action: gen_setter
+    * throws: no_throw
+    */
+    void setComplexPairObj(const std::pair<MapItem, std::vector<MapItem>>& p) {
+        _complexPairObj = p;
+    }
+
+   /**
+    * __API__
+    * action: gen_getter
+    * throws: no_throw
+    */
+    std::pair<MapItem, std::vector<MapItem>> complexPairObj() {
+        return _complexPairObj;
+    }
+
 private:
     std::pair<std::pair<std::string, std::string>, std::pair<std::string, std::string>> nestedPair;
+    std::vector<std::vector<std::pair<int, std::string>>> nestedVectorOfPairs;
+    std::pair<MapItem, std::vector<MapItem>> _complexPairObj = {MapItem(0), {}};
 };
 
 }

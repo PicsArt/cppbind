@@ -250,7 +250,7 @@ class bind:
             if not self.fn.is_overloaded:
                 # we cannot validate arguments when the method is overloaded
                 all_args, all_kwargs = self.__validate_and_convert_args_kwargs(self.fn, *all_args, **all_kwargs)
-            result = original(self.fn.name)(*all_args, **all_kwargs)
+            result = original(*all_args, **all_kwargs)
             self.fn.validate_return_value(result)
             return result
         # property getter or setter

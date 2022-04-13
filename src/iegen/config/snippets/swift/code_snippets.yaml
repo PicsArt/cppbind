@@ -230,9 +230,9 @@ class:
           }{{new_line}}
           {%- endif %}
           {%- if descendants %}
-          /// internal private initializer to prevent automatic initializer inheritance
-          private init(_cself: {{converter.sc.target_type_name}}, _self: {{converter.swift.target_type_name}}) {
-            fatalError("A private initializer should not be called.")
+          /// internal dummy initializer to prevent automatic initializer inheritance
+          internal init(_cself: {{converter.sc.target_type_name}}, _self: {{converter.swift.target_type_name}}) {
+            fatalError("A dummy internal initializer should not be called.")
           }{{new_line}}
           {%- endif %}
           {%- if head %}

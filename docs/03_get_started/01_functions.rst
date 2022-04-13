@@ -266,7 +266,7 @@ Here's a sample code using the above functions:
            :start-after: [non-complex-defaults-usage]
            :end-before: [non-complex-defaults-usage]
 
-.. collapse:: And the generated bindings:
+.. collapse:: Generated bindings
 
     |
 
@@ -305,7 +305,7 @@ appropriate overloaded options for ``kotlin`` and ``swift``.
 For ``python`` iegen does not generate overloaded functions instead ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code they work as expected.
 
-.. collapse:: Generated functions:
+.. collapse:: Generated functions
 
     |
 

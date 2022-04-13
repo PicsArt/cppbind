@@ -17,7 +17,6 @@ Let's assume we have a class with two template methods:
 For all templates we specify **template** attribute in **__API__**.
 It's value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
 contain either strings(all possible types) or objects with **name** and **type** keys. We will see an example with **name** and it's usage later.
-Now let's see how kotlin wrappers look like:
 
 .. note::
     Keys in **__API__** should be in the same order as in the template parameter list.
@@ -26,26 +25,31 @@ Now let's see how kotlin wrappers look like:
     We gave template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
     This is mandatory otherwise iegen won't be able to find Task type.
 
-.. tabs::
-    .. tab:: kotlin
+.. collapse:: Generated bindings
 
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
-           :language: kotlin
+    |
 
-    .. tab:: python
+    .. tabs::
+        .. tab:: kotlin
 
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/template_methods_pygen.py
-           :language: py
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
+               :language: kotlin
 
-    .. tab:: swift
+        .. tab:: python
 
-        .. literalinclude:: /../examples/primitives/swift/src/templates/template_methods.swift
-           :language: swift
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/template_methods_pygen.py
+               :language: py
 
+        .. tab:: swift
 
-As we can see for **makePair** two overloaded methods are generated with types **Project**, **Project** and **Task**, **Project**.
+            .. literalinclude:: /../examples/primitives/swift/src/templates/template_methods.swift
+               :language: swift
+
+|
+
+From generated bindings we can see that for **makePair** two overloaded methods are generated with types **Project**, **Project** and **Task**, **Project**.
 For **max** again two overloaded methods are generated with **String** and **Int**.
-Now we can use them, here are the examples:
+Now we can use them. Here are the examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -71,8 +75,6 @@ Now we can use them, here are the examples:
            :end-before: [template-funcs-examples]
 
 
-
-
 Template Classes/Structs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -85,24 +87,6 @@ Here is the code in c++:
    :end-before: [example]
 
 Similarly to methods we shall have a new kotlin class for each combination of types.
-Let's take a look at generated wrappers:
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/stack_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/templates/stack.swift
-           :language: swift
-
 
 Here we have two stacks one for Task and the other for Project. Iegen appends template arguments type names to the class name
 i.e Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
@@ -127,6 +111,27 @@ Notice that in third one we haven't specified namespace and it does not have an 
     We can have a type inherited for specialized Stack, e.g ``class TaskList : public Stack<Task>``.
     But currently iegen does not support types inherited from template Stack e.g. ``class TaskList<T> : public Stack<T>``.
 
+.. collapse:: Generated wrappers
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/stack_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/templates/stack.swift
+               :language: swift
+
+|
 
 Template Getters/Setters
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,24 +168,6 @@ The result will be the same.
 If no name is specified then type names are being joined. For python additionally it'll be converted to snake case.
 For this example we would have applePineapple(swift, kotlin) and apple_pineapple(python).
 
-Let's see the generated APIs for the target languages.
-
-.. tabs::
-    .. tab:: kotlin
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
-           :language: kotlin
-
-    .. tab:: python
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        .. literalinclude:: /../examples/primitives/swift/src/getters/fruits.swift
-           :language: swift
-
 And the usage examples
 
 .. tabs::
@@ -204,3 +191,25 @@ And the usage examples
            :language: swift
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]
+
+.. collapse:: Generated bindings for the target languages
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
+               :language: kotlin
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/getters/fruits.swift
+               :language: swift
+
+|

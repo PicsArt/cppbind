@@ -34,48 +34,7 @@ And the Frame struct using it:
     We are generating **property_setter** for public field **backgroundColor**.
     A writable property field will correspond to it in the target language. To generate read-only field we should use **property_getter** instead.
 
-
-.. tabs::
-    .. tab:: kotlin
-
-        Here is the generated kotlin code for Color:
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
-           :language: kotlin
-
-        And for Frame:
-
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/frame.kt
-           :language: kotlin
-
-
-    .. tab:: python
-
-        Here is the generated python code for Color:
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/color_pygen.py
-           :language: py
-
-        And for Frame:
-
-        .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/frame_pygen.py
-           :language: py
-
-    .. tab:: swift
-
-        Here is the generated swift code for Color:
-
-        .. literalinclude:: /../examples/primitives/swift/src/enums/color.swift
-           :language: swift
-
-        And for Frame:
-
-        .. literalinclude:: /../examples/primitives/swift/src/enums/frame.swift
-           :language: swift
-
-
-
-Now we are ready to use them:
+Usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -98,3 +57,46 @@ Now we are ready to use them:
            :language: swift
            :start-after: [color-usage]
            :end-before: [color-usage]
+
+.. collapse:: Generated codes for Color and Frame
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            Here is the generated kotlin code for Color:
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
+               :language: kotlin
+
+            And for Frame:
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/frame.kt
+               :language: kotlin
+
+
+        .. tab:: python
+
+            Here is the generated python code for Color:
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/color_pygen.py
+               :language: py
+
+            And for Frame:
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/frame_pygen.py
+               :language: py
+
+        .. tab:: swift
+
+            Here is the generated swift code for Color:
+
+            .. literalinclude:: /../examples/primitives/swift/src/enums/color.swift
+               :language: swift
+
+            And for Frame:
+
+            .. literalinclude:: /../examples/primitives/swift/src/enums/frame.swift
+               :language: swift
+|

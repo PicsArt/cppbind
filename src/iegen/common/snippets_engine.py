@@ -461,7 +461,7 @@ class SnippetsEngine:
         for code_name, info_map in code_info_dict.items():
             if info_map.is_of_type(str):
                 # redirection
-                info_map = code_info_dict[info_map]
+                info_map = code_info_dict[info_map.value]
 
             if info_map.value is None:
                 # allow empty rules

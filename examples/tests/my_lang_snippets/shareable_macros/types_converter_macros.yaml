@@ -1,0 +1,4 @@
+converter_comment_macro: |
+  {%- macro put_type_comment(var_name) -%}
+  // conversion for variable {{var_name}}
+  {%- endmacro -%}

@@ -127,11 +127,11 @@ def join_nodes(rdata, edata):
     """Join nodes defined after the !join constructor"""
     if rdata is None:
         rdata = copy.copy(edata)
-    elif isinstance(rdata, MutableMapping):
+    elif has_type(rdata, dict):
         rdata.update(edata)
     else:
         rdata += edata
-    return rdata
+    return to_value(rdata)
 
 
 def construct_include(loader, node):
@@ -162,24 +162,23 @@ def construct_include(loader, node):
 
         rdata = None
 
-        for filename in filenames:
-            for file_path in glob.glob(filename, recursive=True):
-                sub_yaml = None
-                try:
-                    with open(file_path, 'r') as file:
-                        if extension in ('yaml', 'yml'):
-                            sub_yaml = yaml.load(file, MyLoader)
-                            if sub_node is not None:
-                                for nselect in sub_node:
-                                    if isinstance(sub_yaml, list):
-                                        nselect = int(nselect)
-                                    sub_yaml = sub_yaml[nselect]
-                        else:
-                            Error.critical(f'Can only include yaml file: {file_path} file has not supported extension "{extension}"')
-                except OSError as err:
-                    Error.critical(f"Cannot read file {file_path}: {err}")
+        file_paths = set(file_path for file_glob in filenames for file_path in glob.glob(file_glob, recursive=True))
+        for file_path in file_paths:
+            sub_yaml = None
+            try:
+                if extension in ('yaml', 'yml'):
+                    sub_yaml = load_yaml(file_path)
+                    if sub_node is not None:
+                        for nselect in sub_node:
+                            if isinstance(sub_yaml, list):
+                                nselect = int(nselect)
+                            sub_yaml = sub_yaml[nselect]
+                else:
+                    Error.critical(f'Can only include yaml file: {file_path} file has not supported extension "{extension}"')
+            except OSError as err:
+                Error.critical(f"Cannot read file {file_path}: {err}")
 
-                rdata = join_nodes(rdata, sub_yaml)
+            rdata = join_nodes(rdata, sub_yaml)
 
         return rdata
 
@@ -214,9 +213,25 @@ def construct_join(loader, node):
         loader.construct_object = original
 
 
-yaml.add_constructor('!include', construct_include, MyLoader)
+def construct_concat(loader, node):
+    """Custom constructor to create a node by concatenating string values of input nodes"""
 
+    if not isinstance(node, yaml.SequenceNode):
+        Error.critical(f"`concat` yaml constructor can operate only on sequence node")
+
+    entries = loader.construct_sequence(node)
+    res = ''
+    for entry in entries:
+        if not isinstance(entry, str):
+            Error.critical(f"Items of `concat` yaml constructor must be strings, {entry} has type {type(entry)}")
+        res = res + entry
+
+    return res
+
+
+yaml.add_constructor('!include', construct_include, MyLoader)
 yaml.add_constructor('!join', construct_join, MyLoader)
+yaml.add_constructor('!concat', construct_concat, MyLoader)
 
 # add additional constructor to force MyLoader loader
 # to call our custom construct_yaml_map method when constructing nodes.

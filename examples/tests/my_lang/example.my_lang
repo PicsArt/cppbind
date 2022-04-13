@@ -1,37 +1,41 @@
+// class start (Example)
 public class Example  {
 
   // body of function
-  public function (i: myLangInt, m: myLangDict<myLangInt, myLangDict<myLangInt, myLangInt>>, e: myLangPointer) {
+  // method example (example)
+    public function (i: myLangInt, m: myLangDict<myLangInt, myLangDict<myLangInt, myLangInt>>, e: myLangPointer) {
+        
           // Calling a section without source and target attributes
 
-        
-    // Calling converter for int type from my_lang to c
+        // Calling converter for int type from my_lang to c
+    // conversion for variable i
     assign mylangtoci = int(i)
-
         
-    // Calling converter for std::map
+
+        // Calling converter for std::map
+    // conversion for variable m
     var mylangtocm = IEGenCDataMap()
     mylangtocm.keys = Pointer(_key_mylangtocm)
     mylangtocm.values = Pointer(_val_mylangtocm)
     mylangtocm.size = myLangInt(m.count)
     var _i_m = 0
     for (key_m, val_m) in m {
-        
         // Calling converter for int type from my_lang to c
+        // conversion for variable key_m
         assign mylangtockey_m = int(key_m)
-        
         // Calling converter for std::map
+        // conversion for variable val_m
         var mylangtocval_m = IEGenCDataMap()
         mylangtocval_m.keys = Pointer(_key_mylangtocval_m)
         mylangtocval_m.values = Pointer(_val_mylangtocval_m)
         mylangtocval_m.size = myLangInt(val_m.count)
         var _i_val_m = 0
         for (key_val_m, val_val_m) in val_m {
-            
             // Calling converter for int type from my_lang to c
+            // conversion for variable key_val_m
             assign mylangtockey_val_m = int(key_val_m)
-            
             // Calling converter for int type from my_lang to c
+            // conversion for variable val_val_m
             assign mylangtocval_val_m = int(val_val_m)
             _key_mylangtocval_m[_i_val_m] = mylangtockey_val_m
             _val_mylangtocval_m[_i_val_m] = mylangtocval_val_m
@@ -41,10 +45,13 @@ public class Example  {
         _val_mylangtocm[_i_m] = mylangtocval_m
         _i_m += 1
     }
-
         
-    // Calling converter for object type from my_lang to c
+
+        // Calling converter for object type from my_lang to c
+    // conversion for variable e
     assign mylangtoce = Pointer(e.self)
+      // arg names -> ['i', 'm', 'e']
 
     }
 }
+// class end (Example)

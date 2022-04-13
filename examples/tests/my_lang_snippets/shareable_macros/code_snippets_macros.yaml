@@ -1,0 +1,18 @@
+class_macros:
+  class_start: |
+    {%- macro class_start_comment(cls_name) -%}
+    // class start ({{cls_name}})
+    {%- endmacro -%}
+  class_end: |
+    {%- macro class_end_comment(cls_name) -%}
+    // class end ({{cls_name}})
+    {%- endmacro -%}
+
+method_macros: |
+  {%- macro method_comment(method_name) -%}
+  // method example ({{method_name}})
+  {%- endmacro -%}
+  {#- example of macro which modifies its argument -#}
+  {%- macro register_method_arg(args_list, arg) -%}
+    {%- do args_list.append(arg.name) -%}
+  {%- endmacro -%}

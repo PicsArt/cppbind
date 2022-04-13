@@ -81,3 +81,15 @@ complex_map = {"a": {"b": {"c": "d"}}}
 nested_usage_obj.set_complex_string_map(complex_map)
 assert nested_usage_obj.get_complex_string_map() == complex_map
 # [nested-containers-usage]
+
+# checking pair + containers combinations
+nested_vector_of_pairs = [[(1, "one")], [(2, "two"), (3, "three")]]
+pair_usage.set_nested_vector_of_pairs(nested_vector_of_pairs)
+result_vec = pair_usage.get_nested_vector_of_pairs()
+assert result_vec == nested_vector_of_pairs
+
+map_item_obj = MapItem(1)
+complex_pair_obj = (map_item_obj, [map_item_obj])
+pair_usage.complex_pair_obj = complex_pair_obj
+result_obj = pair_usage.complex_pair_obj
+assert result_obj[0].value == map_item_obj.value and result_obj[1][0].value == map_item_obj.value

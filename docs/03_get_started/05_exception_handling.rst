@@ -30,7 +30,7 @@ that the user hasn't forgotten about throw ability of method. The example of emp
 
 In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions
-binding for target language. We define binding rules for std::exception classes hierarchy and iegen tool generates bindings for us.
+binding for target language. We define binding rules for std::exception classes hierarchy and IEGEN tool generates bindings for us.
 We define rules in yaml config file, which looks like:
 
 .. literalinclude:: /../src/iegen/config/std_exc/std_exc_api.yaml

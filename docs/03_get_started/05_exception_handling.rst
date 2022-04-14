@@ -30,7 +30,7 @@ that the user hasn't forgotten about throw ability of method. The example of emp
 
 In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions
-binding for target language. We define binding rules for std::exception classes hierarchy and iegen tool generates wrappers for us.
+binding for target language. We define binding rules for std::exception classes hierarchy and iegen tool generates bindings for us.
 We define rules in yaml config file, which looks like:
 
 .. literalinclude:: /../src/iegen/config/std_exc/std_exc_api.yaml
@@ -38,7 +38,7 @@ We define rules in yaml config file, which looks like:
     :end-before: "std::logic_error"
 
 .. note::
-    Since we generate try/catch blocks in C wrappers for catching an exception, we use C++ std exception classes and therefore we need to include
+    Since we generate try/catch blocks in C bindings for catching an exception, we use C++ std exception classes and therefore we need to include
     the header files where std exceptions are defined. Those header files are included via **include_cxx** variable (which you can see in above-mentioned example).
     Here are the required includes:
 
@@ -76,14 +76,14 @@ Also we always catch std::exception before catching all exceptions to have more 
 class is derived from std::exception.
 
 .. note::
-    For generating python wrappers we use **pybind** tool, which already has support for exception handling.
+    For generating python bindings we use **pybind** tool, which already has support for exception handling.
     Pybind translates c++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
     Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
     on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
     is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement
     keeps API annotations style convenient between all target languages.
 
-After generating wrappers for target language we can call methods which can throw an exception, and test results with catch blocks:
+After generating bindings for target language we can call methods which can throw an exception, and test results with catch blocks:
 
 .. tabs::
         .. tab:: kotlin
@@ -104,7 +104,7 @@ After generating wrappers for target language we can call methods which can thro
     In the last usage example you can notice that we called custom exception class method when an exception was caught. When custom exception class and its methods have API annotations,
     we have corresponding bindings and thus we can use class methods.
 
-.. collapse:: Wrapper codes when "throws" exception list is not empty
+.. collapse:: Binding codes when "throws" exception list is not empty
 
     |
 
@@ -121,7 +121,7 @@ After generating wrappers for target language we can call methods which can thro
 
 |
 
-.. collapse:: Wrapper codes when exception list is empty (throws=True)
+.. collapse:: Binding codes when exception list is empty (throws=True)
 
     |
 
@@ -132,8 +132,8 @@ After generating wrappers for target language we can call methods which can thro
                     :language: java
 
                 .. note::
-                    For kotlin we rethrow caught exception from C wrapper via JNI special functions. It means that exception handling section of code is written in C wrapper file.
-                    `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C wrapper file.
+                    For kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
+                    `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
 
             .. tab:: swift
 

@@ -37,7 +37,7 @@ Here is the code for them.
     For python nullable arguments and return values are marked as Optional.
     And as for python everything is nullable iegen does additional checks to not allow passing nullable values where non nulls are expected.
 
-Now let's see some usage examples for generated wrappers.
+Now let's see some usage examples for generated bindings.
 
 .. tabs::
     .. tab:: kotlin

@@ -80,7 +80,7 @@ subsection:
 
 **custom** field is used to keep some helper information for the given type for using in snippets.
 
-Iegen also gives the user opportunity to define any custom subsection under `converters` section by any name with/without
+IEGEN also gives the user opportunity to define any custom subsection under `converters` section by any name with/without
 defining source/target attributes and call that snippet as a function to generate some custom code fragments.
 
 Action snippets

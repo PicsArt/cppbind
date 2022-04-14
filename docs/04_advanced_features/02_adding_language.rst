@@ -1,11 +1,11 @@
 Add new language bindings generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's consider a case when the users want to add a new supported language to iegen. It's not hard if the user already has
+Let's consider a case when the users want to add a new supported language to IEGEN. It's not hard if the user already has
 code snippets and type converter snippets (look :doc:`here </04_advanced_features/03_snippets>` for more detailed information
-about snippets usage). Iegen deduces the list of supported languages from `rules` section info defined inside project config files.
+about snippets usage). IEGEN deduces the list of supported languages from `rules` section info defined inside project config files.
 Thus, to be able to add a new language to that list, user needs to make his own code snippets and type converter snippets and
-define them under `rules` section. For adding a new language user don't need to do any changes to the iegen source code, it's possible
+define them under `rules` section. For adding a new language user don't need to do any changes to the IEGEN source code, it's possible
 to do only by project config files.
 
 Here are the examples for snippets and config file for virtual `my_lang` language:

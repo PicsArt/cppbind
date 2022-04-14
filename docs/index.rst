@@ -23,7 +23,7 @@ IEGEN is a C++ bindings generation tool. For supported languages please refer to
 First Steps
 -----------
 
-Are you writing C++ libraries and want to be able to use them in various platforms using various languages then iegen can be very handy tool for you.
+Are you writing C++ libraries and want to be able to use them in various platforms using various languages then IEGEN can be very handy tool for you.
 
 :doc:`Installation </02_first_steps/02_installation>` |
 :doc:`Configuration </02_first_steps/04_configuration>`

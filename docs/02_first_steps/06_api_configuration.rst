@@ -1,10 +1,10 @@
 API configuration
 ^^^^^^^^^^^^^^^^^
 
-Besides the yaml configuration iegen also uses doxygen comments for defining the API for the target code.
-If the comment contains **__API__** tag then it'll be parsed by iegen. Everything under **__API__** are instructions for iegen.
+Besides the yaml configuration IEGEN also uses doxygen comments for defining the API for the target code.
+If the comment contains **__API__** tag then it'll be parsed by IEGEN. Everything under **__API__** are instructions for IEGEN.
 For defining the API we use variables from :doc:`Variable Definitions </02_first_steps/05_variable_definitions>`
-iegen uses them to know what should be generated, where should be generated etc.
+IEGEN uses them to know what should be generated, where should be generated etc.
 **__API__** comment should be of yaml format, otherwise an error will be thrown.
 Jinja expressions, sys variables can be used here.
 
@@ -48,7 +48,7 @@ Everything above __API__ tag is considered as a pure comment.
     If you want to bind only setter the use **gen: method** instead to generate a regular method.
 
 .. note::
-    Iegen uses patterns to find corresponding setter for getter to generate them together if both are
+    IEGEN uses patterns to find corresponding setter for getter to generate them together if both are
     exposed(i.e are tagged as **gen: getter** and **gen: setter**).
     For **getProp** it searches method named **setProp** or **set_prop**. To find setter for **get_some_prop** it
     will search for **set_some_prop** or **setSomeProp**. And for **prop** it will search for **setProp** or **set_prop**.

@@ -9,7 +9,7 @@ Operating system: Linux, Mac, Windows
 Environment setup
 ^^^^^^^^^^^^^^^^^
 
-Clone iegen master branch into current directory\ :
+Clone IEGEN master branch into current directory\ :
 
 .. code-block:: bash
 
@@ -120,7 +120,7 @@ User installation
 If you are going to use it as a standalone command line application we recommend using ``pipx`` instead.
 ``pipx`` creates an isolated environment for each application and its associated packages and makes the application available from the shell.
 Using ``pipx`` will also prevent dependency conflicts between ``iegen`` and other packages within the current environment.
-To install iegen with ``pipx`` use the following commands:
+To install IEGEN with ``pipx`` use the following commands:
 
 .. code-block:: bash
 

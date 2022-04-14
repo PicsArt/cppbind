@@ -358,7 +358,7 @@ Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
 
 C++ and other languages may differently manage memory and lifetime of the objects.
-Just by return value type iegen cannot decide whether the wrapper language should take care of deallocating the returned object
+Just by return value type iegen cannot decide whether the binding language should take care of deallocating the returned object
 or C++ is responsible for that.
 For this reason iegen provides a variable named **return_value_policy**.
 Using this variable user can override the default policies.
@@ -372,11 +372,11 @@ Let's take a look at the following example:
 
 In this example we have two members returning the same singleton instance by reference and by pointer.
 The default return value policy for member functions is **automatic** which falls back to **take_ownership** for pointers.
-This means ownership is given to the wrapper language which is responsible for deallocating the returned object.
+This means ownership is given to the binding language which is responsible for deallocating the returned object.
 In case of references it falls back to **copy** policy which creates a copy of returned object and the owner of it is the target language.
 Notice that the generated code for the first one in case if the default policy is used won't compile as the copy constructor is deleted.
 In this example the default policies for both cases are not what we want.
-For both cases we have specified **reference** policy to not pass the ownership to the wrapper language or to not create a new copy.
+For both cases we have specified **reference** policy to not pass the ownership to the binding language or to not create a new copy.
 
 Now let's take a look to another example:
 
@@ -395,7 +395,7 @@ the returned object and gives the ownership to the target language.
 
 .. note::
     Object caching for kotlin and swift are not supported yet,
-    that's why each function call creates a new wrapper object with different
+    that's why each function call creates a new binding object with different
     ownership depending on the function's return value policy.
 
 Supported return values policies are:

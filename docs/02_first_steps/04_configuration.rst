@@ -151,7 +151,7 @@ To define file path user need to use **file** key:
 
 **type_vars** section is designed to give the user opportunity to describe API annotations outside of the source file.
 The main use case of this feature is when the user cannot write annotations in source file (desired type is located in a standard header or a third party lib file).
-Iegen uses this feature to define binding rules for std exceptions to generate corresponding wrappers for target language. This is described :doc:`here </03_get_started/05_exception_handling>`.
+Iegen uses this feature to define binding rules for std exceptions to generate corresponding bindings for target language. This is described :doc:`here </03_get_started/05_exception_handling>`.
 To define API annotations we need to use **type** key.
 
 .. code-block:: yaml

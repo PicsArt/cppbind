@@ -54,7 +54,7 @@ Here is the list of system variables:
 
 In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
 which will be evaluated using system variables and current context variables.
-Particularly, when compiling courses on mac os to generate android kotlin wrappers, clang must be provided with **sysroot** and **target** options.
+Particularly, when compiling courses on mac os to generate android kotlin bindings, clang must be provided with **sysroot** and **target** options.
 For this purpose we have **target_arch** parameter, which has `x86_64` default value and can be overwritten with command line arguments or within `vars` section.
 To use this feature user need to set **clang_args** variable properly. We have it done in our project default config file:
 
@@ -84,8 +84,8 @@ Now let's go through the variables one by one:
       | For example if enum is tagged with this variable then code fragment will be added before the generated enum.
     - | *footer_code_fragment* - Code snippets which will be added right after the generated part of code.
       | For example if enum is tagged with this variable then code fragment will be added after the generated enum.
-    - *include_cxx* - Additional c++ includes which will be added to generated C wrappers.
-    - *shared_ref* - This variable is to manage how the object will be hold. If set to false then the generated wrapper will create a regular pointer, otherwise a shared pointer.
+    - *include_cxx* - Additional c++ includes which will be added to generated C bindings.
+    - *shared_ref* - This variable is to manage how the object will be hold. If set to false then the generated binding will create a regular pointer, otherwise a shared pointer.
     - *template* - This variable is used for template types/functions to specify all possible types for template parameters. More details are here: :doc:`Templates </03_get_started/06_templates>`.
     - | *is_operator* - This variable is to indicate whether the c++ method is operator or not. Although its default value is True for operators and False otherwise,
       | there might be cases that c++ operator does not have matching operator in the target language or user might want to generate a regular method instead.
@@ -103,7 +103,7 @@ Now let's go through the variables one by one:
     - *banner_comment* - Banner comment which is used with IEGEN logo as a file header for all iegen generated files.
     - *out_prj_dir* - Root directory of your output project. All includes and imports will be generated relative to this directory.
     - *run_dir* - Helper parameter used in other variables. Users also can have their custom variables to use within the config file.
-    - *cxx_out_dir* - Root directory where all C wrappers will be stored.
+    - *cxx_out_dir* - Root directory where all C bindings will be stored.
     - *out_dir* - Directory where output files will be saved.
     - *cxx_base_out_dir* - The directory where iegen base classes are copied. If user does not want to use iegen base classes then there's no need to specify this variable.
     - *is_proj_type* - Boolean showing whether the given type is user's type or is the type from standard/3pty lib.
@@ -120,7 +120,7 @@ Now let's go through the variables one by one:
     - *file_postfix* - Postfix which will be appended to each generated file.
     - *extension* - Target language file extension.
     - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.
-    - *c_wrapper_lib_name* - Library name for generated wrappers.
+    - *c_wrapper_lib_name* - Library name for generated bindings.
     - *target_arch* - Variable for setting target architecture.
     - *clang_args* - Arguments passed to clang.
     - *src_glob* - File glob to define which source code files must be processed by clang.
@@ -174,5 +174,5 @@ Now let's go through the variables one by one:
     default value, user need to use platform and/or language specifier in front of the `default` keyword, e.g: `<platform>.<language>.<default>`.
 
     There is a priority order when defining platform/language specific values. When user has mixed types of specifications we pick the one with the highest priority.
-    For example, if the user specifies values for `mac.python.name`, `python.name`, `name`, we will pick the first one when generating wrappers for mac+python.
+    For example, if the user specifies values for `mac.python.name`, `python.name`, `name`, we will pick the first one when generating bindings for mac+python.
     It means we pick the maximum specified option.

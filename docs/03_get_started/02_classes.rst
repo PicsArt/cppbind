@@ -2,7 +2,7 @@
 
 Classes/Structs
 ^^^^^^^^^^^^^^^
-Let's generate a wrapper code for the following custom type.
+Let's generate a binding code for the following custom type.
 
 .. literalinclude:: /../examples/primitives/cxx/simple/task.hpp
    :language: cpp
@@ -75,7 +75,7 @@ Let's assume we have another class using the one above.
 
 .. note::
     We are using **include** attribute based on which appropriate import will be generated for
-    each target language. In case of kotlin we do not have this attribute, as both wrappers are generated under the same package.
+    each target language. In case of kotlin we do not have this attribute, as both bindings are generated under the same package.
 
 And the usage example:
 
@@ -101,7 +101,7 @@ And the usage example:
             :start-after: [project-usage]
             :end-before: [project-usage]
 
-.. collapse:: Here are the generated wrappers
+.. collapse:: Here are the generated bindings
 
     |
 

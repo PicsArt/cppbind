@@ -1,7 +1,7 @@
 Snippets
 ^^^^^^^^
 
-To generate wrapper codes for target language we use snippets which are described in YAML files. We use **jinja2** template
+To generate binding codes for target language we use snippets which are described in YAML files. We use **jinja2** template
 language to describe the logic inside snippets. Later we pass appropriate context to these snippets and render them.
 
 We have three types of snippets: `code` snippets, `type converter` snippets and `action` snippets.
@@ -121,4 +121,4 @@ We have a list of supported actions:
       - Render input template files with root context and copy to the destination
 
 **Variables** section is used to define some variables which are connected to the given action and then use it in code snippets.
-For example we define variables to generate include directives in C and target language wrappers.
+For example we define variables to generate include directives in C and target language bindings.

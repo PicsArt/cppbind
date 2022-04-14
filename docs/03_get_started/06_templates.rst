@@ -92,7 +92,7 @@ Here we have two stacks one for Task and the other for Project. Iegen appends te
 i.e Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
 
 .. note::
-    Currently iegen does not support templates with template type as an argument, for example we can't generate a Stack wrapper
+    Currently iegen does not support templates with template type as an argument, for example we can't generate a Stack binding
     to hold items of type Stack<Task>.
 
 Now let's see what usages we can have for our example Stack. Here is the source code:
@@ -111,7 +111,7 @@ Notice that in third one we haven't specified namespace and it does not have an 
     We can have a type inherited for specialized Stack, e.g ``class TaskList : public Stack<Task>``.
     But currently iegen does not support types inherited from template Stack e.g. ``class TaskList<T> : public Stack<T>``.
 
-.. collapse:: Generated wrappers
+.. collapse:: Generated bindings
 
     |
 

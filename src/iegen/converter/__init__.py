@@ -47,3 +47,15 @@ def validate_template_getter_setter(cxx, vars, owner_class, setter):
         Error.critical(
             f'Template getter/setter should have the same template argument types: '
             f'{parent}.{cxx.displayname} and {parent}.{setter["cxx"].displayname}.')
+
+
+def relative_package(namespace1, namespace2):
+    ii = 0
+    end_idx = 0
+    l = min(len(namespace2), len(namespace1))
+    while ii < l and namespace1[ii] == namespace2[ii]:
+        if namespace1[ii] == '.':
+            end_idx = ii + 1
+        ii += 1
+
+    return namespace1[end_idx:]

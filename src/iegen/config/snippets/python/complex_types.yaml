@@ -54,17 +54,22 @@ $Object:
       {%- for name in template_args_postfixes or [] -%}
       {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
       {%- endfor -%}
-    namespace: |
-      {#- this is an internal section no need to define in user defined custom converters #}
-      {%- if parent_type_info -%}
-      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
-      {{converter.python.target_type_name}}.
-      {%- endif -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
   types:
     python: |
-      {{custom.namespace if not definition|default(False)}}
+      {#- this should go to shared macro gen_namespace -#}
+      {%- if full_package is defined -%}
+      {%- if parent_type_info -%}
+      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {{converter.python.get_target_type_name(full_package=full_package)}}.
+      {%- else -%}
+      {#- this is common for include and target type name do not change one without other -#}
+      {%- if vars.full_package != full_package -%}
+      {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
+      {%- endif -%}
+      {%- endif -%}
+      {%- endif -%}
       {%- if interface_class|default(False) -%}
       {{vars.interface_class_name}}{{custom.tpostfix}}
       {%- else -%}
@@ -81,19 +86,46 @@ $Object:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    python_include: |
+      {#- this is common for include and target type name do not change one without other -#}
+      {%- if full_package is defined and vars.full_package != full_package -%}
+      import {{vars.full_package}} as {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
+      {%- endif -%}
+    cxx_include: |
+      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
 
 $Enum:
   custom:
     pname: int
     tname: "{{vars.name}}"
   types:
-    python: "{{custom.tname}}"
+    python: |
+      {#- this should go to shared macro gen_namespace -#}
+      {%- if full_package is defined -%}
+      {%- if parent_type_info -%}
+      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {{converter.python.get_target_type_name(full_package=full_package)}}.
+      {%- else -%}
+      {#- this is common for include and target type name do not change one without other -#}
+      {%- if vars.full_package != full_package -%}
+      {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
+      {%- endif -%}
+      {%- endif -%}
+      {%- endif -%}
+      {{custom.tname}}
     pybind: "{{custom.tname}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    python_include: |
+      {#- this is common for include and target type name do not change one without other -#}
+      {%- if full_package is defined and vars.full_package != full_package -%}
+      import {{vars.full_package}} as {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
+      {%- endif -%}
+    cxx_include: |
+      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
 
 $FunctionProto:
   custom:
@@ -129,7 +161,7 @@ std::vector:
   custom:
     tname: List[{{args[0].custom.tname}}]
   types:
-    python: List[{{args[0].target_type_name}}]
+    python: List[{{args[0].get_target_type_name(full_package=full_package|default(args[0].vars.full_package))}}]
     pybind: list
   converters:
     pybind_to_cxx:
@@ -153,7 +185,10 @@ std::map:
   custom:
     tname: "Map{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
   types:
-    python: dict
+    python: |
+      {%- set arg0_package = full_package|default(args[0].vars.full_package) -%}
+      {%- set arg1_package = full_package|default(args[1].vars.full_package) -%}
+      Dict[{{args[0].get_target_type_name(full_package=arg1_package)}}, {{args[1].get_target_type_name(full_package=arg1_package)}}]
     pybind: dict
   converters:
     pybind_to_cxx:
@@ -168,7 +203,7 @@ std::shared_ptr:
   custom:
     tname: "{{args_converters[0].python.custom.tname}}"
   types:
-    python: "{{args[0].target_type_name}}"
+    python: "{{args[0].get_target_type_name(full_package=full_package|default(args[0].vars.full_package))}}"
     pybind: "{{args[0].target_type_name}}"
   converters:
     pybind_to_cxx:
@@ -195,7 +230,10 @@ std::pair:
   custom:
     tname: "Pair{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
   types:
-    python: tuple
+    python: |
+      {%- set arg0_package = full_package|default(args[0].vars.full_package) -%}
+      {%- set arg1_package = full_package|default(args[1].vars.full_package) -%}
+      Tuple[{{args[0].get_target_type_name(full_package=arg1_package)}}, {{args[1].get_target_type_name(full_package=arg1_package)}}]
     pybind: tuple
   converters:
     pybind_to_cxx:

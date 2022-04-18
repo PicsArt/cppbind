@@ -5,13 +5,14 @@ import enum
 import errno
 import glob
 import importlib.util
+import logging
 import os
 import re
 import shutil
 import sys
-import logging
 from functools import cmp_to_key, lru_cache
 
+import jinja2.utils
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
 

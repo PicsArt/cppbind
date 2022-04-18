@@ -340,23 +340,32 @@ cxx_out_rel_path:
   default: "{{path.relpath(cxx_out_dir, out_prj_dir)}}"
   allowed_on: [ root ]
 
+full_package:
+  inheritable: true
+  python.default: "{{package_prefix}}.{{package}}.{{file}}{{file_postfix}}"
+  kotlin.default: "{{package_prefix}}.{{package}}"
+  swift.default: ""
+  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+
 c_file_fullname:
   inheritable: true
-  kotlin.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
-  python.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
+  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
+  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}.cpp"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 h_file_fullname:
   inheritable: true
-  kotlin.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
-  python.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
+  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
+  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}.hpp"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 target_file_fullname:
   inheritable: true
-  default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}"
+  kotlin.default: "{{out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}"
+  python.default: "{{out_dir + pat_sep + full_package|replace('.', pat_sep)}}.{{extension}}"
+  swift.default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{extension}}"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 pybind_module_filename:

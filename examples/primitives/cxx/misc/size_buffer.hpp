@@ -18,7 +18,7 @@ namespace iegen::example {
  * kotlin.include:
  *   - java.awt.geom.Point2D
  * python.include:
- *   - buffer
+ *   - from buffer import SizeF, Buffer
  */
 class SizeUsage {
     public:
@@ -61,7 +61,7 @@ class SizeUsage {
  * kotlin.action: gen_class
  * package: misc
  * python.include:
- *   - buffer
+ *   - from buffer import SizeF, Buffer
  */
 class BufferUsage {
     public:

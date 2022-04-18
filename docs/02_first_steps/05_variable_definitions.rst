@@ -130,6 +130,9 @@ Now let's go through the variables one by one:
     - *enum_field_name_prefix* - A string which is added as a prefix of enum fields names.
     - *enum_excluded_fields* - A list of enum field names which must be not exposed in target language.
     - *cxx_out_rel_path* - C output relative path to project output directory. This variable is used for constructing generated C includes.
+    - | *full_package* - Full package constructed from package_prefix and package. This variable has different default value construction formula for each language.
+      | Note that it's used for python and kotlin for target package generation and changing it will affect generated file paths as well.
+      | Consider this when changing *c_file_fullname*, *h_file_fullname* and *target_file_fullname*.
     - *c_file_fullname* - Generated cpp file full name.
     - *h_file_fullname* - Generated header file full name.
     - *target_file_fullname* - Generated target language(e.g. swift, kotlin etc.) file full name.

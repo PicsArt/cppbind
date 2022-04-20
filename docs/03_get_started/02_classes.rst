@@ -73,10 +73,6 @@ Let's assume we have another class using the one above.
    :start-after: [example]
    :end-before: [example]
 
-.. note::
-    We are using **include** attribute based on which appropriate import will be generated for
-    each target language. In case of kotlin we do not have this attribute, as both bindings are generated under the same package.
-
 And the usage example:
 
 .. tabs::

@@ -1,5 +1,5 @@
 - type: "std::exception"
-  vars: |
+  vars:
     action: gen_class
     python.action:
     name: StdException
@@ -7,9 +7,6 @@
     package: "{{exception_helpers_package}}"
     file: "{{exception_file_name}}"
     is_exception: True
-    {% if c_wrapper_build_name is defined -%}
-    swift.include: "{{c_wrapper_build_name}}"
-    {%- endif -%}
     include_cxx:
       - <stdexcept>
       - <new>

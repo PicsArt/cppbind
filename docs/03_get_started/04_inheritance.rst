@@ -27,10 +27,10 @@ Assume we have two types **Bicycle** inherited from **Vehicle**:
 
 .. note::
     If the type which is being parsed is inherited from another one which does not have an **__API__** i.e is not parsed
-    by iegen then in the binding code it won't appear as a base type for the target type.
+    by IEGEN then in the binding code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.
-Iegen will generate two classes one inherited from the other.
+IEGEN will generate two classes one inherited from the other.
 
 Usage examples:
 
@@ -116,7 +116,7 @@ In this case again we have used the same value for **shared_ref** for all 4 type
 
 .. note::
     Here we used **gen: interface** instead of **gen: class**.
-    Most of the modern languages do not support multiple inheritance so we have to tell iegen to generate
+    Most of the modern languages do not support multiple inheritance so we have to tell IEGEN to generate
     interfaces with implementations instead.
 
 .. note::

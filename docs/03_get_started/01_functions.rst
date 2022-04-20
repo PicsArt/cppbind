@@ -418,7 +418,7 @@ Supported return values policies are:
 Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
-Besides the return value policies iegen supports ``keep_alive`` policy to bind argument's lifetime to ``this`` object's lifetime.
+Besides the return value policies IEGEN supports ``keep_alive`` policy to bind argument's lifetime to ``this`` object's lifetime.
 This is to ensure that the argument won't be deallocated at least until the object which keeps a reference on it is alive.
 
 Let's take a look at the following example:
@@ -442,7 +442,7 @@ hold invalid data.
 .. note::
     When applying ``keep_alive`` policy strong reference cycles may occur. Let's assume we have two types
     ``Teacher`` and ``Student`` and each of these types keeps a reference of the other. In this case if we
-    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently iegen does not detect
+    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently IEGEN does not detect
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::

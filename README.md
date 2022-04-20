@@ -12,3 +12,8 @@ Documentation and tutorials available at
 
 Examples used in documentation available at
 [iegen examples](https://github.com/PicsArt/iegen/tree/master/examples/primitives)
+
+## 📝 License
+
+Copyright © 2022 [Picsart](https://github.com/PicsArt). <br />
+This project is [MIT](https://github.com/PicsArt/iegen/LICENSE) licensed.

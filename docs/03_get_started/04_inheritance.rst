@@ -6,7 +6,7 @@ This section covers single and multiple inheritance.
 Single Inheritance
 ~~~~~~~~~~~~~~~~~~
 
-Assume we have two types **Bicycle** inherited from **Vehicle**:
+Assume we have two types: **Bicycle** inherited from **Vehicle**:
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/vehicle.hpp
    :language: cpp
@@ -23,10 +23,7 @@ Assume we have two types **Bicycle** inherited from **Vehicle**:
     This is mandatory. This attribute should be the same in type hierarchy.
 
 .. note::
-    Currently iegen supports inheritance with polymorphic types only.
-
-.. note::
-    If the type which is being parsed is inherited from another one which does not have an **__API__** i.e is not parsed
+    If the type which is being parsed is inherited from another one which does not have an **__API__** i.e. is not parsed
     by IEGEN then in the binding code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.
@@ -89,8 +86,8 @@ Usage examples:
 
 Multiple Inheritance
 ~~~~~~~~~~~~~~~~~~~~
-Now let's assume we have a type inherited from two others **Square** inherited from **Rectangle** and **Rhombus**.
-The last two in their turn are based from **Parallelogram**:
+Now let's assume we have a type inherited from two others: **Square** inherited from **Rectangle** and **Rhombus**.
+The last two in their turn are derived from **Parallelogram**:
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/parallelogram.hpp
    :language: cpp
@@ -115,13 +112,12 @@ The last two in their turn are based from **Parallelogram**:
 In this case again we have used the same value for **shared_ref** for all 4 types.
 
 .. note::
-    Here we used **gen: interface** instead of **gen: class**.
+    Here we used **action: gen_interface** instead of **action: gen_class**.
     Most of the modern languages do not support multiple inheritance so we have to tell IEGEN to generate
     interfaces with implementations instead.
 
 .. note::
-    It's important to note that in case of multiple inheritance all parent's should have the same root type,
-    otherwise an error will be thrown and the code won't be parsed.
+    It's important to note that IEGEN supports multiple inheritance only for polymorphic types (when type has a virtual method/destructor or has a polymorphic base).
 
 .. note::
     As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.

@@ -20,17 +20,16 @@ that the user hasn't forgotten about throw ability of method. The example of emp
     :end-before: [no-throw-example]
 
 .. note::
-    The order of exception classes in exception list is important. We preserve initially defined order when catching/rethrowing
-    exceptions, so in case of hierarchical connections between some of classes from the list, user need to define child classes before
-    parent ones. Otherwise child class exception maybe caught by parent and it would lead to inconsistencies.
+    The order of listed exception classes in *throws* variable is important. We preserve user defined order when catching/rethrowing
+    exceptions.
 
 .. note::
-    The exception list defined for swift getters/setters is ignored, since the language doesn't let us to throw an exception
-    from getter/setter. So user need only to set **throws** variable to **no_throw** value.
+    Swift language doesn't support exception throwing from getter/setter, so user should set the value of **throws** variable to **no_throw**.
+    IEGEN will complain about wrong usages of **throws**.
 
-In exception list user can contain standard exception classes and also user defined exception classes which have API annotations.
+Exception list can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions
-binding for target language. We define binding rules for std::exception classes hierarchy and IEGEN tool generates bindings for us.
+binding for target language. We define binding rules for std::exception and its descendant classes, and IEGEN tool generates bindings for us.
 We define rules in yaml config file, which looks like:
 
 .. literalinclude:: /../src/iegen/config/std_exc/std_exc_api.yaml
@@ -48,8 +47,8 @@ We define rules in yaml config file, which looks like:
     #include <new>
     #include <typeinfo>
 
-User defined exception classes can be derived from std:exception hierarchy. In this case the class is automatically throwable in
-target language. In case the user wants a class not to be derived from std::exception, but to be throwable in target language,
+If user defined exception is derived from std::exception then it is automatically throwable in the target language.
+In case user wants a class not to be derived from std::exception, but to be throwable in the target language,
 **is_exception** variable must be set to **True** (default value is **False**).
 
 .. note::
@@ -58,18 +57,18 @@ target language. In case the user wants a class not to be derived from std::exce
 
 In case we catch an exception not from user defined list, we report unexpected exception and call uncaught exception handler callback.
 We define exception utility package which includes **ExceptionHandler** class to handle uncaught exception case.
-Default handler aborts program execution immediately, but we give the user API to set his own callback, which
+Default handler aborts program execution immediately, but user can set custom callback, which
 will be called after unhandled exception is detected. The mentioned package looks like:
 
     .. tabs::
         .. tab:: kotlin
 
-            .. literalinclude:: /../src/iegen/config/std_helpers/kotlin/exceptionUtils.kt
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/iegen/exceptionUtils.kt
                 :language: java
 
         .. tab:: swift
 
-            .. literalinclude:: /../src/iegen/config/std_helpers/swift/exceptionUtils.swift
+            .. literalinclude:: /../examples/primitives/swift/src/iegen/exceptionUtils.swift
                 :language: swift
 
 Also we always catch std::exception before catching all exceptions to have more informative error message when exception

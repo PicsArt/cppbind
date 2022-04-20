@@ -99,7 +99,7 @@ That is it. Now you should be able to use it on your codes written in supported 
            :language: swift
 
 Basically, what we have done here we have added *__API__* tag to let IEGEN know that structure needs to be processed
-and added the instruction for example *gen: method* which tells that method needs to be generated.
+and added the instruction for example *action: gen_method* which tells that method needs to be generated.
 
 The example using bazel for build is available at `Hello User <https://github.com/PicsArt/iegen/tree/hello-tutorial/examples/tutorials/hello_user>`_.
 

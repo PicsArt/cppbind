@@ -45,10 +45,10 @@ Everything above __API__ tag is considered as a pure comment.
 .. note::
     You tag only getter tagged, in this case only a property with getter will be generated.
     But you can't tag only setter. In this case nothing will be generated.
-    If you want to bind only setter the use **gen: method** instead to generate a regular method.
+    If you want to bind only setter the use **action: gen_method** instead to generate a regular method.
 
 .. note::
     IEGEN uses patterns to find corresponding setter for getter to generate them together if both are
-    exposed(i.e are tagged as **gen: getter** and **gen: setter**).
+    exposed(i.e are tagged as **action: gen_getter** and **action: gen_setter**).
     For **getProp** it searches method named **setProp** or **set_prop**. To find setter for **get_some_prop** it
     will search for **set_some_prop** or **setSomeProp**. And for **prop** it will search for **setProp** or **set_prop**.

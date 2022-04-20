@@ -15,15 +15,15 @@ Let's assume we have a class with two template methods:
    :end-before: [example]
 
 For all templates we specify **template** attribute in **__API__**.
-It's value must be of JSON format and should contain all template arguments as keys. Values are lists. This lists should
-contain either strings(all possible types) or objects with **name** and **type** keys. We will see an example with **name** and it's usage later.
+It's value must be of dictionary format and should contain all template arguments as keys. Values are lists which should
+contain dictionaries with optional **name** and mandatory **type** keys. We will see an example with **name** and it's usage later.
 
 .. note::
     Keys in **__API__** should be in the same order as in the template parameter list.
 
 .. note::
     We gave template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
-    This is mandatory otherwise iegen won't be able to find Task type.
+    This is mandatory otherwise IEGEN won't be able to find Task type.
 
 .. collapse:: Generated bindings
 
@@ -88,12 +88,10 @@ Here is the code in c++:
 
 Similarly to methods we shall have a new kotlin class for each combination of types.
 
-Here we have two stacks one for Task and the other for Project. Iegen appends template arguments type names to the class name
+Here we have two stacks one for Task and the other for Project. IEGEN appends template arguments type names to the class name
 i.e Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
 
-.. note::
-    Currently iegen does not support templates with template type as an argument, for example we can't generate a Stack binding
-    to hold items of type Stack<Task>.
+IEGEN also supports templates with template type as an argument, for example we can generate a Stack binding to hold items of type Stack<Task>.
 
 Now let's see what usages we can have for our example Stack. Here is the source code:
 
@@ -105,11 +103,11 @@ Now let's see what usages we can have for our example Stack. Here is the source 
 Here we have tree methods. First one takes specialized Stack as an argument. It's important to notice that again we have
 specified Stack's full name i.e **iegen::example::Stack<Project>**. Namespace is mandatory here.
 Second one takes template Stack as an argument and again we have specified it's full name.
-Notice that in third one we haven't specified namespace and it does not have an iegen **__API__**. This is an example which is not supported by iegen.
+Notice that in third one we haven't specified namespace and it does not have an IEGEN **__API__**. This is an example which is not supported by IEGEN.
 
 .. note::
-    We can have a type inherited for specialized Stack, e.g ``class TaskList : public Stack<Task>``.
-    But currently iegen does not support types inherited from template Stack e.g. ``class TaskList<T> : public Stack<T>``.
+    We can have a type inherited from specialized Stack, e.g ``class TaskList : public Stack<Task>``.
+    Currently IEGEN supports types inherited from template, only when the full name is specified: e.g. ``class TaskList<T> : public iegen::example::Stack<T>``
 
 .. collapse:: Generated bindings
 
@@ -147,13 +145,12 @@ Now let's see how **name** is used for template getters/setters.
 In the above example we have a template getter **fruits**. Here we have specified two possible types for parameter **T** Apple and Pineapple.
 Notice that **name** is specified for both. This means that it'll be used as a property name in the target language. As a result we'll have apple and pineapple
 correspondingly. If for template getter types no name is specified then **type** name will be used as a property name.
-For this example we would have Apple And Pineapple correspondingly.
-For the all tree target languages we will have apples and pineapple correspondingly.
-In the above example we have another template getter/setter **allFruits** with two parameters **T** and **U**. Notice we have used name for both **T** and **U**.
+For this example we would have Apple and Pineapple correspondingly.
+In the above example we have another template getter/setter **allFruits** with two parameters **T** and **U**. Notice that we have used name for both **T** and **U**.
 In case of multiple parameters for each combination of template parameters appropriate names are joined.
 For this example it'll be **applesWithPineapples** for kotlin and swift, **apples_with_pineapples**
 for python. Notice that the name is snake cased for python.
-The API for this getter could also be written in the following way
+The API for this getter could also be written in the following way:
 
 .. code-block:: yaml
 
@@ -165,8 +162,7 @@ The API for this getter could also be written in the following way
 
 The result will be the same.
 
-If no name is specified then type names are being joined. For python additionally it'll be converted to snake case.
-For this example we would have applePineapple(swift, kotlin) and apple_pineapple(python).
+If no name is specified then type names are being joined. For this example we would have applePineapple(swift, kotlin) and apple_pineapple(python).
 
 And the usage examples
 

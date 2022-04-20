@@ -43,7 +43,7 @@ Let's go over parameters from this section.
 API
 ^^^
 
-  - **parser_start** - Tag in the doxygen comment after which everything is considered as instructions for iegen.
+  - **parser_start** - Tag in the doxygen comment after which everything is considered as instructions for IEGEN.
 
 LOG
 ^^^
@@ -151,7 +151,7 @@ To define file path user need to use **file** key:
 
 **type_vars** section is designed to give the user opportunity to describe API annotations outside of the source file.
 The main use case of this feature is when the user cannot write annotations in source file (desired type is located in a standard header or a third party lib file).
-Iegen uses this feature to define binding rules for std exceptions to generate corresponding bindings for target language. This is described :doc:`here </03_get_started/05_exception_handling>`.
+IEGEN uses this feature to define binding rules for std exceptions to generate corresponding bindings for target language. This is described :doc:`here </03_get_started/05_exception_handling>`.
 To define API annotations we need to use **type** key.
 
 .. code-block:: yaml
@@ -179,5 +179,5 @@ of definition. :: symbols are used here as a sign of sub section.
 
 .. note::
    Since different **type_vars**/**dir_vars**/**file_vars** sections are being processed and merged with each other user must have single definition for the same member/type, otherwise
-   iegen reports merge conflict. This constraint is related to nested structures also in case of `type_vars` section. For the same annotation
+   IEGEN reports merge conflict. This constraint is related to nested structures also in case of `type_vars` section. For the same annotation
    user should have only one type of definition: either with full spelling or with nested structure.

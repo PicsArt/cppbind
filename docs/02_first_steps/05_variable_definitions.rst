@@ -44,7 +44,7 @@ Here is the list of system variables:
  * **path** - os.path module (mainly used to join paths)
  * **getenv** - os.getenv module (used for getting environment variables)
  * **_current_working_dir** - current working directory
- * **_pure_comment**: doxygen comment without iegen API part
+ * **_pure_comment**: doxygen comment without IEGEN API part
  * **_line_number**: line number of the source code which is being processed
  * **_file_fullname**: full path of the file which is being processed
  * **_is_operator** - indicates whether the method is a c++ operator or not.
@@ -100,12 +100,12 @@ Now let's go through the variables one by one:
     - | *comment_del_regex* - Regex to delete unwanted pure comment parts. By default the text between \internal and \endinternal will be ignored.
       | Or if no \endinternal is specified then the text after \internal will be ignored.
     - *comment* - Target code comment. By default it's pure comment without parts that match the pattern defined via **comment_del_regex**.
-    - *banner_comment* - Banner comment which is used with IEGEN logo as a file header for all iegen generated files.
+    - *banner_comment* - Banner comment which is used with IEGEN logo as a file header for all IEGEN generated files.
     - *out_prj_dir* - Root directory of your output project. All includes and imports will be generated relative to this directory.
     - *run_dir* - Helper parameter used in other variables. Users also can have their custom variables to use within the config file.
     - *cxx_out_dir* - Root directory where all C bindings will be stored.
     - *out_dir* - Directory where output files will be saved.
-    - *cxx_base_out_dir* - The directory where iegen base classes are copied. If user does not want to use iegen base classes then there's no need to specify this variable.
+    - *cxx_base_out_dir* - The directory where IEGEN base classes are copied. If user does not want to use IEGEN base classes then there's no need to specify this variable.
     - *is_proj_type* - Boolean showing whether the given type is user's type or is the type from standard/3pty lib.
     - *prj_rel_file_name* - Source file name related to project root directory.
     - *package_prefix* - Package prefix where generated files will be saved.
@@ -113,10 +113,10 @@ Now let's go through the variables one by one:
     - *helpers_out_dir* - Directory where helper/util files must be copied to.
     - *exception_helpers_package* - Package name of standard exception helpers.
     - *exception_file_name* - File name of standard exception helpers.
-    - *common_helpers_dir* - This directory containing iegen standard helper files per language.
-    - *cxx_helpers_dir* - Iegen c++ helpers directory. Might be different per language.
-    - *helpers_dir* - Directory containing iegen helpers. This is different for each language.
-    - *cxx_base_source_dir* - Iegen internal directory containing base classes.
+    - *common_helpers_dir* - This directory containing IEGEN standard helper files per language.
+    - *cxx_helpers_dir* - IEGEN c++ helpers directory. Might be different per language.
+    - *helpers_dir* - Directory containing IEGEN helpers. This is different for each language.
+    - *cxx_base_source_dir* - IEGEN internal directory containing base classes.
     - *file_postfix* - Postfix which will be appended to each generated file.
     - *extension* - Target language file extension.
     - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.
@@ -172,7 +172,7 @@ Now let's go through the variables one by one:
 
     These are four possible ways to define variable values.
     Note that you cannot have `<language>.<variable>` and `<platform>.<variable>` at the same time.
-    In this case the value for `<platform>.<language>.<variable>` is ambiguous and iegen will complain about it.
+    In this case the value for `<platform>.<language>.<variable>` is ambiguous and IEGEN will complain about it.
     Another important thing is that default values also can be specified per platform/language. To specify platform/language specific value for
     default value, user need to use platform and/or language specifier in front of the `default` keyword, e.g: `<platform>.<language>.<default>`.
 

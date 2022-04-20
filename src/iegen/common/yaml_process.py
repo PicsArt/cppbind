@@ -39,6 +39,9 @@ class YamlNode(MutableMapping):
     def __len__(self):
         return len(self.value)
 
+    def __str__(self):
+        return str(self.value)
+
     def __contains__(self, item):
         return item in self.value
 

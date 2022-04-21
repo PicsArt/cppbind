@@ -91,5 +91,5 @@ Indices and tables
 
 License
 ------------------
-IEGEN is provided under a MIT license that can be found in the `LICENSE <https://github.com/PicsArt/iegen/LICENSE>`_ file.
+IEGEN is provided under a MIT license that can be found in the `LICENSE <https://github.com/PicsArt/iegen/blob/master/LICENSE>`_ file.
 By using, distributing, or contributing to this project, you agree to the terms and conditions of this license.

@@ -26,7 +26,7 @@ First Steps
 Are you writing C++ libraries and want to be able to use them in various platforms using various languages then IEGEN can be very handy tool for you.
 
 :doc:`Installation </02_first_steps/02_installation>` |
-:doc:`Configuration </02_first_steps/04_configuration>`
+:doc:`Tutorial </02_first_steps/03_hello_user>`
 
 .. toctree::
    :maxdepth: 1
@@ -54,10 +54,21 @@ Advanced Topics
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Advanced Features
+   :caption: Advanced Topics
    :glob:
 
    /04_advanced_features/[0-9]*_*
+
+Detailed Information
+--------------------
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Detailed Information
+   :glob:
+
+   /05_detailed_info/[0-9]*_*
 
 FAQs
 ----
@@ -68,7 +79,7 @@ FAQs
    :caption: FAQs
    :glob:
 
-   /05_faqs/[0-9]*_*
+   /06_faqs/[0-9]*_*
 
 API Documentation
 =================

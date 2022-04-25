@@ -14,7 +14,7 @@ Here is the source code of it:
    :start-after: [simple-example]
    :end-before: [simple-example]
 
-After **__API__** tag we have four variables which are instructions for iegen.
+After **__API__** tag we have four variables which are instructions for IEGEN.
 With `action: gen_function` we define what should be generated in the target language.
 `package` variable indicates what will be the package for generated `concat` function and `file` indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
@@ -231,10 +231,89 @@ And here is a small code using generated bindings:
 
 |
 
+.. _nullables-label:
+
+Nullable arguments
+~~~~~~~~~~~~~~~~~~
+
+Let's take a look at the following example:
+
+.. literalinclude:: /../examples/primitives/cxx/nullables/nullable_utils.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+IEGEN uses **nullable_arg** variable to identify which arguments are nullable. This is a list of argument names.
+And for nullable return value IEGEN uses **nullable_return** boolean variable.
+In the above example we have an overloaded method **max**. The first one has one nullable and one non null argument and it returns nullable value.
+The second one has two nullable arguments and returns a nullable value.
+In this example you can find also a constructor taking nullable argument and nullable getters/setters.
+
+.. note::
+    For getter/setter methods marked as **gen_getter** and **gen_setter** both must be tagged similarly.
+    If the getter is marked with **nullable_return: True** then setter should be marked with **nullable_arg: <arg_name>**.
+    In the above example we have a pair of nullable getter/setter: `nullable` and `setNullable`.
+
+.. note::
+    Kotlin and swift have a support for nullable arguments.
+    For python nullable arguments and return values are marked as Optional.
+    Since all arguments are nullable in python, IEGEN does additional runtime checks to not allow passing null value where a non null value is expected.
+
+Now let's see some usage examples for generated bindings:
+
+.. tabs::
+    .. tab:: kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/main.kt
+           :language: kotlin
+           :start-after: [nullables-usage]
+           :end-before: [nullables-usage]
+
+    .. tab:: python
+
+        As you can see here `ValueError` is thrown when None is passed but expected value is not Optional.
+        The same is for return values.
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/main.py
+            :language: py
+            :start-after: [nullables-usage]
+            :end-before: [nullables-usage]
+
+    .. tab:: swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/nullables/main.swift
+            :language: swift
+            :start-after: [nullables-usage]
+            :end-before: [nullables-usage]
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tabs::
+        .. tab:: kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
+                :language: java
+
+        .. tab:: python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
+                :language: py
+
+        .. tab:: swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
+                :language: swift
+
+|
+
 Default arguments
 ~~~~~~~~~~~~~~~~~
 
-Currently, iegen generates default values for builtin types(e.g. bool, int, nullptr etc.) and for enums and strings.
+Default argument support for builtin types(e.g. bool, int, nullptr, etc.), enums and strings differs from the support for user-defined project types.
+Let's go through these two cases.
+
 Here are some sample functions having default arguments:
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
@@ -297,13 +376,12 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
-For this one iegen generates two overloaded functions one with no argument and the other with one argument without a default value for
-``kotlin`` and ``swift``.
-And the second function has tree arguments of types ``Task``, ``Color`` and ``Root``. The second argument is an enum
-thus it's default value is generated in all target languages and for other two arguments iegen will generate
+In this case IEGEN generates two overloaded functions for ``kotlin`` and ``swift``: one without arguments and
+the other with one argument without default value. The second function has tree arguments of types ``Task``, ``Color`` and ``Root``.
+The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments IEGEN will generate
 appropriate overloaded options for ``kotlin`` and ``swift``.
-For ``python`` iegen does not generate overloaded functions instead ``None`` default value is generated.
-Although the actual default values for complex types are not visible in generated code they work as expected.
+For ``python`` IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
+Although the actual default values for complex types are not visible in generated code, they work as expected.
 
 .. collapse:: Generated functions
 
@@ -328,7 +406,7 @@ Although the actual default values for complex types are not visible in generate
 |
 
 
-And here are some usages of them:
+And here are some usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -358,9 +436,9 @@ Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
 
 C++ and other languages may differently manage memory and lifetime of the objects.
-Just by return value type iegen cannot decide whether the binding language should take care of deallocating the returned object
+Just by return value type IEGEN cannot decide whether the binding language should take care of deallocating the returned object
 or C++ is responsible for that.
-For this reason iegen provides a variable named **return_value_policy**.
+For this reason IEGEN provides a variable named **return_value_policy**.
 Using this variable user can override the default policies.
 
 Let's take a look at the following example:

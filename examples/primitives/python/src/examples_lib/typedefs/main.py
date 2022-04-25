@@ -10,7 +10,7 @@ from examples_lib.typedefs import (
 q = QueueInt()
 q.push_back(1)
 q.push_back(2)
-q.push_back(3)
+q.push_back_from_str("3")
 
 assert QueueIntUsage.get_first_element(q) == 1
 assert QueueIntUsage.get_last_element(q) == 3

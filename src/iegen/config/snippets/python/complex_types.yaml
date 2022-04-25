@@ -4,6 +4,9 @@ char:
 std::string:
   std::__cxx11::basic_string
 
+std::basic_string<char>:
+  std::__cxx11::basic_string
+
 std::__ndk1::shared_ptr:
   std::shared_ptr
 

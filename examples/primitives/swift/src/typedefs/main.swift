@@ -8,7 +8,7 @@ func runTypedefExamples() {
     let q = QueueInt()
     q.push_back(element: 1)
     q.push_back(element: 2)
-    q.push_back(element: 3)
+    q.push_back_from_str(element: "3")
 
     assert(QueueIntUsage.getFirstElement(q: q) == 1)
     assert(QueueIntUsage.getLastElement(q: q) == 3)

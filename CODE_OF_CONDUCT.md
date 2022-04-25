@@ -24,6 +24,7 @@ community include:
   and learning from the experience
 * Focusing on what is best not just for us as individuals, but for the
   overall community
+*Being polite in your communication, excluding disparaging, disrespectful, violent or otherwise impermissible language and behavior.
 
 Examples of unacceptable behavior include:
 
@@ -46,7 +47,7 @@ or harmful.
 Community leaders have the right and responsibility to remove, edit, or reject
 comments, commits, code, wiki edits, issues, and other contributions that are
 not aligned to this Code of Conduct, and will communicate reasons for moderation
-decisions when appropriate.
+decisions when appropriate. Infringers, who are detected to violate this code of conduct for more than once shall be excluded from this community. 
 
 ## Scope
 
@@ -55,16 +56,6 @@ an individual is officially representing the community in public spaces.
 Examples of representing our community include using an official e-mail address,
 posting via an official social media account, or acting as an appointed
 representative at an online or offline event.
-
-## Enforcement
-
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-IEGEN_TBD.
-All complaints will be reviewed and investigated promptly and fairly.
-
-All community leaders are obligated to respect the privacy and security of the
-reporter of any incident.
 
 ## Enforcement Guidelines
 
@@ -126,3 +117,4 @@ enforcement ladder](https://github.com/mozilla/diversity).
 For answers to common questions about this code of conduct, see the FAQ at
 https://www.contributor-covenant.org/faq. Translations are available at
 https://www.contributor-covenant.org/translations.
+ 

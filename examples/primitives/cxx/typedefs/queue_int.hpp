@@ -2,6 +2,9 @@
 #define queue_int_hpp
 
 #include <vector>
+#include <string>
+
+using String = std::string;
 
 namespace iegen::example {
 
@@ -34,6 +37,15 @@ public:
      */
     void push_back(int element) {
         _elements.push_back(element);
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void push_back_from_str(String element) {
+        _elements.push_back(std::stoi(element));
     }
 
     /**

@@ -9,7 +9,7 @@ fun use() {
     val q = QueueInt()
     q.push_back(1)
     q.push_back(2)
-    q.push_back(3)
+    q.push_back_from_str("3")
 
     assert(QueueIntUsage.getFirstElement(q) == 1)
     assert(QueueIntUsage.getLastElement(q) == 3)

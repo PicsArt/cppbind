@@ -93,8 +93,8 @@ Now let's go through the variables one by one:
     - *is_exception* - To indicate that an exception class should be generated (an object of this class may be thrown in target language).
     - *throws* - This variable is mandatory for all methods. It indicates what type of exceptions method can throw.
     - *bases_list* - This variable is used to define extra types which target type will additionally implement.
-    - *nullable_return* - Indicates whether the function can return null value or not. Details are here :doc:`Nullable values </03_get_started/07_nullables>`.
-    - *nullable_arg* - The arguments which can be null, should be marked with this variable. Examples are here :doc:`Nullable values </03_get_started/07_nullables>`.
+    - *nullable_return* - Indicates whether the function can return null value or not. Details are here :ref:`nullables-label`.
+    - *nullable_arg* - The arguments which can be null, should be marked with this variable. Examples are here :ref:`nullables-label`.
     - *project_dir* - Root directory of code which is going to be parsed.
     - *project_link* - Project source code link. The default value is git repo link if it uses git for version control and an empty string otherwise.
     - | *comment_del_regex* - Regex to delete unwanted pure comment parts. By default the text between \internal and \endinternal will be ignored.

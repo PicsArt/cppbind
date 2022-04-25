@@ -172,6 +172,8 @@ We are ready to use the generated bindings:
 
 |
 
+.. _arg-names-and-labels:
+
 Custom argument names and labels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -431,6 +433,7 @@ And here are some usage examples:
            :end-before: [complex-defaults-usage]
 
 
+.. _rv-policies:
 
 Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
@@ -492,6 +495,7 @@ Supported return values policies are:
 .. note::
     For shared pointers **take_ownership** is always used.
 
+.. _keep-alive-policy:
 
 Keep alive policy
 ~~~~~~~~~~~~~~~~~

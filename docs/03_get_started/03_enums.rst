@@ -11,7 +11,7 @@ Here is Color enum definition:
 
 As we can see in the above example we can extend enums logic by using **code_fragment** variable.
 Code fragments defined with this variable are appended to the enum definition.
-Particularly in this example we added custom conversion from enum to string for all tree languages.
+Particularly in this example we added custom conversion from enum to string for all three languages.
 Notice that for swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
 We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
 prefix string to enum field names in target language.
@@ -20,7 +20,7 @@ If there are cases when some of original enum fields are for internal usage
 and user doesn't want to expose them in target language bindings, then **enum_excluded_fields** variable can be used to specify
 the list of excluded fields. In case those fields are used as a default value for a function/constructor argument, IEGEN will
 skip that default value generation in target language bindings. If user has a function which returns an excluded enum field,
-IEGEN terminates the main program during the function call and provides the user with an appropriate error message (except of python,
+IEGEN terminates the main program during the function call and provides the user with an appropriate error message (except python,
 since currently pybind sets some constraints on IEGEN).
 
 And the Frame struct using it:

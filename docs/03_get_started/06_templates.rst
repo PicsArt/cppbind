@@ -22,7 +22,7 @@ contain dictionaries with optional **name** and mandatory **type** keys. We will
     Keys in **__API__** should be in the same order as in the template parameter list.
 
 .. note::
-    We gave template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
+    We gave template argument's type full name in **__API__** i.e. iegen::example::Task not just Task.
     This is mandatory otherwise IEGEN won't be able to find Task type.
 
 .. collapse:: Generated bindings
@@ -79,7 +79,7 @@ Template Classes/Structs
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Now let's generate bindings for a template class Stack. Assume it will hold Projects or Tasks from  :ref:`classes-label` section.
-Here is the code in c++:
+Here is the code in C++:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack.hpp
    :language: cpp
@@ -89,7 +89,7 @@ Here is the code in c++:
 Similarly to methods we shall have a new kotlin class for each combination of types.
 
 Here we have two stacks one for Task and the other for Project. IEGEN appends template arguments type names to the class name
-i.e Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
+i.e. Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
 
 IEGEN also supports templates with template type as an argument, for example we can generate a Stack binding to hold items of type Stack<Task>.
 
@@ -101,7 +101,7 @@ Now let's see what usages we can have for our example Stack. Here is the source 
    :end-before: [example]
 
 Here we have tree methods. First one takes specialized Stack as an argument. It's important to notice that again we have
-specified Stack's full name i.e **iegen::example::Stack<Project>**. Namespace is mandatory here.
+specified Stack's full name i.e. **iegen::example::Stack<Project>**. Namespace is mandatory here.
 Second one takes template Stack as an argument and again we have specified its full name.
 Notice that in third one we haven't specified namespace and it does not have an IEGEN **__API__**. This is an example which is not supported by IEGEN.
 

@@ -68,9 +68,9 @@ Here is the list of system variables:
 
 In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
 which will be evaluated using system variables and current context variables.
-Particularly, when compiling courses on mac os to generate android kotlin bindings, clang must be provided with **sysroot** and **target** options.
+Particularly, when compiling courses on macOS to generate android kotlin bindings, clang must be provided with **sysroot** and **target** options.
 For this purpose we have **target_arch** parameter, which has `x86_64` default value and can be overwritten with command line arguments or within `vars` section.
-To use this feature user need to set **clang_args** variable properly. We have it done in our project default config file:
+To use this feature user needs to set **clang_args** variable properly. We have it done in our project default config file:
 
 .. code-block:: yaml
 
@@ -100,7 +100,7 @@ Now let's go through the key variables:
     - | *footer_code_fragment* - Code snippets which will be added right after the generated part of the code.
       | For example if enum is tagged with this variable then code fragment will be added after the generated enum.
     - *include_cxx* - Additional c++ includes which will be added to generated C bindings.
-    - *shared_ref* - This variable is to manage how the object will be hold. If set to false then the generated binding will create a regular pointer, otherwise a shared pointer.
+    - *shared_ref* - This variable is to manage how the object will be held. If set to false then the generated binding will create a regular pointer, otherwise a shared pointer.
     - *template* - This variable is used for template types/functions to specify all possible types for template parameters. More details are here: :doc:`Templates </03_get_started/06_templates>`.
     - | *is_operator* - This variable is to indicate whether the c++ method is operator or not. Although its default value is True for operators and False otherwise,
       | there might be cases that c++ operator does not have matching operator in the target language or user might want to generate a regular method instead.

@@ -15,8 +15,8 @@ Let's assume we have a class with two template methods:
    :end-before: [example]
 
 For all templates we specify **template** attribute in **__API__**.
-It's value must be of dictionary format and should contain all template arguments as keys. Values are lists which should
-contain dictionaries with optional **name** and mandatory **type** keys. We will see an example with **name** and it's usage later.
+Its value must be of dictionary format and should contain all template arguments as keys. Values are lists which should
+contain dictionaries with optional **name** and mandatory **type** keys. We will see an example with **name** and its usage later.
 
 .. note::
     Keys in **__API__** should be in the same order as in the template parameter list.
@@ -102,7 +102,7 @@ Now let's see what usages we can have for our example Stack. Here is the source 
 
 Here we have tree methods. First one takes specialized Stack as an argument. It's important to notice that again we have
 specified Stack's full name i.e **iegen::example::Stack<Project>**. Namespace is mandatory here.
-Second one takes template Stack as an argument and again we have specified it's full name.
+Second one takes template Stack as an argument and again we have specified its full name.
 Notice that in third one we haven't specified namespace and it does not have an IEGEN **__API__**. This is an example which is not supported by IEGEN.
 
 .. note::

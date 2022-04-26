@@ -46,7 +46,7 @@ Supported values for **action** are the following ones:
 Everything above __API__ tag is considered as a pure comment which is present in generated target language bindings.
 
 .. note::
-    Getters/setters are regular methods in c++, but they may be transferred into properties for target language.
+    Getters/setters are regular methods in C++, but they may be transferred into properties for target language.
 
 .. note::
     If you tag only a getter, then only a property with getter will be generated.

@@ -60,7 +60,7 @@ Here is the list of system variables:
  * **_line_number**: line number of the source code which is being processed
  * **_file_fullname**: full path of the file which is being processed
  * **_file_name** - the name of the file which is being processed.
- * **_is_operator** - indicates whether the method is a c++ operator or not.
+ * **_is_operator** - indicates whether the method is a C++ operator or not.
  * **_object_name** - name of the object which is being processed, e.g. class name, method name etc.
  * **_iegen_extras_dir** - the path of the directory which contains some IEGEN configuration default files.
  * **_helper_module** - python helper module for the current target language which contains some helper functions.
@@ -99,11 +99,11 @@ Now let's go through the key variables:
       | For example if enum is tagged with this variable then code fragment will be added before the generated enum.
     - | *footer_code_fragment* - Code snippets which will be added right after the generated part of the code.
       | For example if enum is tagged with this variable then code fragment will be added after the generated enum.
-    - *include_cxx* - Additional c++ includes which will be added to generated C bindings.
+    - *include_cxx* - Additional C++ includes which will be added to generated C bindings.
     - *shared_ref* - This variable is to manage how the object will be held. If set to false then the generated binding will create a regular pointer, otherwise a shared pointer.
     - *template* - This variable is used for template types/functions to specify all possible types for template parameters. More details are here: :doc:`Templates </03_get_started/06_templates>`.
-    - | *is_operator* - This variable is to indicate whether the c++ method is operator or not. Although its default value is True for operators and False otherwise,
-      | there might be cases that c++ operator does not have matching operator in the target language or user might want to generate a regular method instead.
+    - | *is_operator* - This variable is to indicate whether the C++ method is operator or not. Although its default value is True for operators and False otherwise,
+      | there might be cases that C++ operator does not have matching operator in the target language or user might want to generate a regular method instead.
       | For such cases this variable can be used to override the default value. More details and use cases can be found here :doc:`Operators </03_get_started/08_operators>`.
     - *is_exception* - To indicate that an exception class should be generated (an object of this class may be thrown in target language).
     - *throws* - This variable is mandatory for all methods. It indicates what type of exceptions method can throw.
@@ -129,7 +129,7 @@ Now let's go through the key variables:
     - *exception_helpers_package* - Package name of standard exception helpers.
     - *exception_file_name* - File name of standard exception helpers.
     - *common_helpers_dir* - Directory containing IEGEN standard helpers.
-    - *cxx_helpers_dir* - IEGEN c++ helpers directory.
+    - *cxx_helpers_dir* - IEGEN C++ helpers directory.
     - *helpers_dir* - Directory containing IEGEN helpers.
     - *cxx_base_source_dir* - IEGEN internal directory containing base classes.
     - *overloading_postfix* - Postfix to be appended at the end of the generated C binding function name if the function is overloaded.

@@ -523,8 +523,8 @@ hold invalid data.
 
 .. note::
     When applying ``keep_alive`` policy strong reference cycles may occur. Let's assume we have two types
-    ``Teacher`` and ``Student`` and each of these types keeps a reference of the other. In this case if we
-    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently IEGEN does not detect
+    ``Teacher`` and ``Student`` and each of them keep a reference to the other. In this case, if we
+    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently, IEGEN does not detect
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::

@@ -84,6 +84,8 @@ Usage examples:
 
 |
 
+.. _multiple-inheritance-label:
+
 Multiple Inheritance
 ~~~~~~~~~~~~~~~~~~~~
 Now let's assume we have a type inherited from two others: **Square** inherited from **Rectangle** and **Rhombus**.

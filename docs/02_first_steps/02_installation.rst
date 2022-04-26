@@ -4,7 +4,7 @@ Installation
 System requirements
 ^^^^^^^^^^^^^^^^^^^
 
-Operating system: Linux, Mac, Windows
+Operating system: Linux, macOS, Windows
 
 Environment setup
 ^^^^^^^^^^^^^^^^^
@@ -62,7 +62,7 @@ If the project is already cloned, pull the latest version:
             python3 -m venv venv
             source venv/bin/activate
 
-   .. tab:: Mac OS X
+   .. tab:: macOS
 
         Add libclang path to DYLD_LIBRARY_PATH.
         If you have Xcode installed then run the following command:

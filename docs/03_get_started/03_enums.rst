@@ -99,4 +99,5 @@ Usage examples:
 
             .. literalinclude:: /../examples/primitives/swift/src/enums/frame.swift
                :language: swift
+
 |

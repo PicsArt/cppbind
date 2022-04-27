@@ -17,6 +17,10 @@ iegen.parser.filter
 
    .. autosummary::
    
+      CXXComposerFilter
+      CXXFilter
+      CXXIegFilter
+      CXXOnceProcessingFilter
       CXXParserFilter
    
    

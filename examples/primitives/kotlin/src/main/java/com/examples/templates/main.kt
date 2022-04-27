@@ -102,6 +102,15 @@ valueObj = TemplateValue("a")
 assert(valueObj.add_value("b") == "ab")
 valueObj.close()
 
+// check type derived from a template
+val myStack = MyStackProject()
+assert(myStack.empty())
+myStack.push(prj)
+assert(!myStack.empty())
+assert(myStack.top().title == prj.title)
+myStack.pop()
+assert(myStack.empty())
+
 }
 
 class TemplatesApp {

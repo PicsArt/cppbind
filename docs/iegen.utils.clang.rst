@@ -15,19 +15,17 @@ iegen.utils.clang
    
       extract_pure_comment
       get_base_cursor
-      get_canonical_type
       get_full_displayname
-      get_full_name
-      get_pointee_type
+      get_libclang_full_path
       get_semantic_ancestors
+      get_signature
       get_unqualified_type_name
-      is_declaration
+      has_multiple_base_branches
       is_final_cursor
-      is_rval_referance
-      is_template
-      is_unexposed
+      is_overloaded
+      is_polymorphic
+      join_type_parts
       replace_template_choice
-      template_argument_types
       template_type_name
    
    

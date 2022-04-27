@@ -13,6 +13,9 @@ iegen.runner
 
    .. autosummary::
    
+      clean
+      init
+      run
       run_package
    
    

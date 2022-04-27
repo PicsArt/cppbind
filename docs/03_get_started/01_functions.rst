@@ -15,12 +15,12 @@ Here is the source code of it:
    :end-before: [simple-example]
 
 After **__API__** tag we have four variables which are instructions for IEGEN.
-With `action: gen_function` we define what should be generated in the target language.
-`package` variable indicates what will be the package for generated `concat` function and `file` indicates
+With ``action: gen_function`` we define what should be generated in the target language.
+**package** variable indicates what will be the package for generated **concat** function and **file** indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
-which means that it's value will be used only for generated swift bindings and for other languages the default value will be used
-i.e. source file name. And finally variable `throws` is to define what exceptions `concat` can throw.
-In this case it's value is **no_throw** which means it will not throw any exception.
+which means that its value will be used only for generated swift bindings and for other languages the default value will be used
+i.e. source file name. And finally variable **throws** defines what kind of exceptions **concat** function can throw.
+In this case its value is **no_throw** which means it will not throw any exception.
 For more details on variables, see :ref:`var-def-label`.
 
 And here is a small code using generated bindings:
@@ -379,7 +379,7 @@ Let's take a look at the following example:
 
 In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
 In this case IEGEN generates two overloaded functions for ``kotlin`` and ``swift``: one without arguments and
-the other with one argument without default value. The second function has tree arguments of types ``Task``, ``Color`` and ``Root``.
+the other with one argument without default value. The second function has three arguments of types ``Task``, ``Color`` and ``Root``.
 The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments IEGEN will generate
 appropriate overloaded options for ``kotlin`` and ``swift``.
 For ``python`` IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
@@ -487,7 +487,7 @@ Supported return values policies are:
     * **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
     * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
     * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
-    * **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of it's parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
+    * **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of its parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
 
 .. note::
     If the object is returned by value or by rvalue reference then **copy** and **move** are used respectively.
@@ -516,15 +516,15 @@ otherwise added employees might be deallocated before the destruction of employe
 hold invalid data.
 
 .. note::
-    If the argument is a container(e.g. ``std::vector``) then the policy is applied on all it's elements.
+    If the argument is a container(e.g. ``std::vector``) then the policy is applied on all its elements.
 
 .. note::
     The indexing of arguments starts with 1 and the policy can be applied on all arguments.
 
 .. note::
     When applying ``keep_alive`` policy strong reference cycles may occur. Let's assume we have two types
-    ``Teacher`` and ``Student`` and each of these types keeps a reference of the other. In this case if we
-    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently IEGEN does not detect
+    ``Teacher`` and ``Student`` and each of them keep a reference to the other. In this case, if we
+    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently, IEGEN does not detect
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::

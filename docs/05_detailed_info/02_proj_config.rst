@@ -142,7 +142,7 @@ The main use case of this feature is the generation of bindings for types/functi
 IEGEN uses this feature to generate bindings for standard exceptions. More details can be found :doc:`here </03_get_started/05_exception_handling>`.
 
 To define API annotations we need to use **type** key. IEGEN supports two ways to specify the type.
-The first way is to specify the full c++ signature of the entity (class, struct, method, property, etc.):
+The first way is to specify the full C++ signature of the entity (class, struct, method, property, etc.):
 
 .. code-block:: yaml
 

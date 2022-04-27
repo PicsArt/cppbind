@@ -76,7 +76,7 @@ class is derived from std::exception.
 
 .. note::
     For generating python bindings we use **pybind** tool, which already has support for exception handling.
-    Pybind translates c++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
+    Pybind translates C++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
     Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
     on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
     is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement

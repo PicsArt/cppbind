@@ -131,7 +131,7 @@ You can find the whole list of IEGEN variables here: :doc:`Variable Definitions 
 
 .. note::
     From the default config file you can notice the usage of `get_android_ndk_sysroot` helper function when defining `clang_args` variable
-    for kotlin target language for mac platform. `ANDROID_NDK` environment variable must be correctly set since it is used by `get_android_ndk_sysroot` function.
+    for kotlin target language for macOS platform. `ANDROID_NDK` environment variable must be correctly set since it is used by `get_android_ndk_sysroot` function.
 
 .. collapse:: The content of "Hello user" project config file
 

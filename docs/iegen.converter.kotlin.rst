@@ -15,7 +15,7 @@ iegen.converter.kotlin
    
       arg_str
       get_jni_func_name
-      make_comment
+      get_operator_name
    
    
 

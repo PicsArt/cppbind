@@ -20,8 +20,10 @@ iegen.common.snippets\_engine
       Action
       Adapter
       Converter
+      CopyFileAction
       FileAction
       FileScopeInfo
+      RenderFileAction
       ScopeInfo
       Snippet
       SnippetsEngine

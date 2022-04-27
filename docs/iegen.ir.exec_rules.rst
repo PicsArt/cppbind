@@ -17,8 +17,10 @@ iegen.ir.exec\_rules
 
    .. autosummary::
    
+      BaseContext
       Context
       RunRule
+      TemplateInfo
    
    
 

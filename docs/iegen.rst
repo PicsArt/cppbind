@@ -13,7 +13,9 @@
 
    .. autosummary::
    
+      current_datetime
       find_prj_dir
+      init_logger
    
    
 
@@ -35,6 +37,7 @@
 
    iegen.builder
    iegen.common
+   iegen.context_manager
    iegen.converter
    iegen.ir
    iegen.parser

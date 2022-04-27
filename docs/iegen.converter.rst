@@ -9,16 +9,18 @@ iegen.converter
 
    
    
-   
-
-   
-   
-   .. rubric:: Classes
+   .. rubric:: Functions
 
    .. autosummary::
    
-      Exceptions
-      Validator
+      make_doxygen_comment
+      relative_package
+      validate_getter
+      validate_template_getter_setter
+   
+   
+
+   
    
    
 

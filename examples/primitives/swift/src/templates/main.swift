@@ -97,6 +97,15 @@ func runTemplateExamples() {
     valueObj = TemplateValue(value: "a")
     assert(valueObj.add_value(other: "b") == "ab")
 
+    // check type derived from a template
+    let myStack = MyStackProject()
+    assert(myStack.empty())
+    myStack.push(item: prj)
+    assert(!myStack.empty())
+    assert(myStack.top().title == prj.title)
+    myStack.pop()
+    assert(myStack.empty())
+
 }
 
 

@@ -14,8 +14,8 @@ iegen.converter.swift
    .. autosummary::
    
       get_c_func_name
-      get_map_cxx_operator_name
-      make_comment
+      get_operator_name
+      imports_comparator
    
    
 

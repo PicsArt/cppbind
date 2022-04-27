@@ -19,7 +19,7 @@ IEGEN generates overloaded methods in target languages with each combination of 
     Keys in **__API__** should be in the same order as in the template parameter list.
 
 .. note::
-    We specified template argument's type full name in **__API__** i.e iegen::example::Task not just Task.
+    We specified template argument's type full name in **__API__** i.e. iegen::example::Task not just Task.
     This is mandatory otherwise IEGEN won't be able to find required information about specified type.
 
 .. collapse:: Generated bindings
@@ -90,7 +90,7 @@ We specified three possible values for template parameter ``T`` which means ther
 IEGEN will generate a new class for each of this specializations.
 
 Note that we have specified ``name`` property for ``iegen::example::Project`` and ``iegen::example::Number<int>``.
-This property is used as a type name postfix in target language i.e
+This property is used as a type name postfix in target language i.e.
 ``StackPrj`` will be generated for ``iegen::example::Stack<iegen::example::Project>`` and ``StackNumInt`` for ``iegen::example::Stack<iegen::example::Number<int>>``.
 
 For ``iegen::example::Task`` we have not specified property ``name`` which means its name in target language will be used as a postfix i.e.

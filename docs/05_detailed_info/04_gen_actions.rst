@@ -20,7 +20,7 @@ Supported values for **action** are the following ones:
 
     * **gen_class** - Used to generate a class/struct.
 
-    * **gen_interface** - For the languages which do not support multiple inheritance this action can be used to generate interfaces. For more details see: :doc:`Variable Definitions </03_get_started/04_inheritance>`.
+    * **gen_interface** - For the languages which do not support multiple inheritance this action can be used to generate interfaces. For more details see: :ref:`multiple-inheritance-label`.
 
     * **gen_enum** - Used to generate enums.
 
@@ -46,7 +46,7 @@ Supported values for **action** are the following ones:
 Everything above __API__ tag is considered as a pure comment which is present in generated target language bindings.
 
 .. note::
-    Getters/setters are regular methods in c++, but they may be transferred into properties for target language.
+    Getters/setters are regular methods in C++, but they may be transferred into properties for target language.
 
 .. note::
     If you tag only a getter, then only a property with getter will be generated.

@@ -1,7 +1,7 @@
-iegen.common.config
-===================
+iegen.common.type\_info
+=======================
 
-.. automodule:: iegen.common.config
+.. automodule:: iegen.common.type_info
 
    
    
@@ -13,7 +13,7 @@ iegen.common.config
 
    .. autosummary::
    
-      read_config
+      create_type_info
    
    
 
@@ -23,7 +23,7 @@ iegen.common.config
 
    .. autosummary::
    
-      IEGConfig
+      TypeInfo
    
    
 

@@ -33,7 +33,7 @@ class StackUsage  {
      * throws: no_throw
      * return_value_policy: reference
      */
-    Project* firstItemOfSpecializedStack(iegen::example::Stack<Project>* p) {
+    Project* firstItemOfSpecializedStack(Stack<Project>* p) {
         return p->top();
     };
 
@@ -51,12 +51,6 @@ class StackUsage  {
         return p->top();
     };
 
-    // not supported usage example
-    template <typename V>
-    V* usage3(Stack<V>* p) {
-        return p->top();
-    };
-
     /**
      * Example to check typedef argument types
      * __API__
@@ -68,7 +62,37 @@ class StackUsage  {
         return p->top();
     };
 
+    // not supported usage example
+    template <typename V>
+    V* firstItemOfTemplateStackNotSupported(Stack<V>* p) {
+        return p->top();
+    };
+
 };
 // [example]
+
+/**
+ * An example of a type derived from a template.
+ * __API__
+ * action: gen_class
+ * file: my_stack
+ * template:
+ *   T:
+ *     - type: iegen::example::Project
+ *     - type: iegen::example::Task
+ * package: templates
+ */
+template <class T>
+class MyStack: public iegen::example::Stack<T> {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    MyStack() {};
+
+};
+
 }
 #endif

@@ -147,7 +147,7 @@ def run_package():
                                default=int(default_config.application.error_limit),
                                required=False)
 
-    parser = argparse.ArgumentParser(description="Runs iegen for given languages.")
+    parser = argparse.ArgumentParser(description="These are common IEGEN commands:")
     sub_parser = parser.add_subparsers(required=True)
 
     # register clean sub parser

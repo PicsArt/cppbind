@@ -1,29 +1,26 @@
 Templates
 ^^^^^^^^^
-In this part we will cover template methods and classes/structs.
-For templates we must explicitly specify all possible types in **__API__**.
+In this section we will cover function and class templates.
+For templates user must specify all expected values of template parameters with ``template`` variable.
+The value of this variable is a mapping between template parameters and their expected arguments.
 
-
-Template Methods
-~~~~~~~~~~~~~~~~
-
-Let's assume we have a class with two template methods:
+Let's see an example:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/template_methods.hpp
    :language: cpp
    :start-after: [example]
    :end-before: [example]
 
-For all templates we specify **template** attribute in **__API__**.
-Its value must be of dictionary format and should contain all template arguments as keys. Values are lists which should
-contain dictionaries with optional **name** and mandatory **type** keys. We will see an example with **name** and its usage later.
+Here we have two template member functions ``max`` and ``makePair``.
+As you can see we have specified all possible types for each parameter.
+IEGEN generates overloaded methods in target languages with each combination of template arguments.
 
 .. note::
     Keys in **__API__** should be in the same order as in the template parameter list.
 
 .. note::
-    We gave template argument's type full name in **__API__** i.e. iegen::example::Task not just Task.
-    This is mandatory otherwise IEGEN won't be able to find Task type.
+    We specified template argument's type full name in **__API__** i.e. iegen::example::Task not just Task.
+    This is mandatory otherwise IEGEN won't be able to find required information about specified type.
 
 .. collapse:: Generated bindings
 
@@ -47,9 +44,8 @@ contain dictionaries with optional **name** and mandatory **type** keys. We will
 
 |
 
-From generated bindings we can see that for **makePair** two overloaded methods are generated with types **Project**, **Project** and **Task**, **Project**.
-For **max** again two overloaded methods are generated with **String** and **Int**.
-Now we can use them. Here are the examples:
+As we can see IEGEN generated two overloaded methods for both ``max`` and ``makePair``.
+And here are some usage examples:
 
 .. tabs::
     .. tab:: kotlin
@@ -75,10 +71,13 @@ Now we can use them. Here are the examples:
            :end-before: [template-funcs-examples]
 
 
-Template Classes/Structs
-~~~~~~~~~~~~~~~~~~~~~~~~
+Class templates
+~~~~~~~~~~~~~~~
 
-Now let's generate bindings for a template class Stack. Assume it will hold Projects or Tasks from  :ref:`classes-label` section.
+For a class template IEGEN generates a new type for each specialization.
+Let's generate bindings for a template class ``Stack``.
+We should specify all expected types for template parameter ``T``.
+
 Here is the code in C++:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack.hpp
@@ -86,12 +85,16 @@ Here is the code in C++:
    :start-after: [example]
    :end-before: [example]
 
-Similarly to methods we shall have a new kotlin class for each combination of types.
+We specified three possible values for template parameter ``T`` which means there can be three specializations of ``Stack``
+(``iegen::example::Stack<iegen::example::Task>``, ``iegen::example::Stack<iegen::example::Project>``, ``iegen::example::Stack<iegen::example::Number<int>>``).
+IEGEN will generate a new class for each of this specializations.
 
-Here we have two stacks one for Task and the other for Project. IEGEN appends template arguments type names to the class name
-i.e. Task is appended to Stack and we have **StackTask**. For Python as we have used different name(``python.name: PyTask`` in Task's __API__) we have **StackPyTask** instead.
+Note that we have specified ``name`` property for ``iegen::example::Project`` and ``iegen::example::Number<int>``.
+This property is used as a type name postfix in target language i.e.
+``StackPrj`` will be generated for ``iegen::example::Stack<iegen::example::Project>`` and ``StackNumInt`` for ``iegen::example::Stack<iegen::example::Number<int>>``.
 
-IEGEN also supports templates with template type as an argument, for example we can generate a Stack binding to hold items of type Stack<Task>.
+For ``iegen::example::Task`` we have not specified property ``name`` which means its name in target language will be used as a postfix i.e.
+``StackPyTask`` will be generated for python and ``StackTask`` for other languages.
 
 Now let's see what usages we can have for our example Stack. Here is the source code:
 
@@ -100,14 +103,14 @@ Now let's see what usages we can have for our example Stack. Here is the source 
    :start-after: [example]
    :end-before: [example]
 
-Here we have tree methods. First one takes specialized Stack as an argument. It's important to notice that again we have
-specified Stack's full name i.e. **iegen::example::Stack<Project>**. Namespace is mandatory here.
-Second one takes template Stack as an argument and again we have specified its full name.
-Notice that in third one we haven't specified namespace and it does not have an IEGEN **__API__**. This is an example which is not supported by IEGEN.
+Here we have four methods taking ``Stack`` as an argument and returning its first element.
+The first three methods are supported by IEGEN but you cannot generate bindings for the fourth.
+To generate bindings for a function taking template arguments you need to specify their full type names.
+The fourth one does not meet this requirement.
 
 .. note::
-    We can have a type inherited from specialized Stack, e.g ``class TaskList : public Stack<Task>``.
-    Currently IEGEN supports types inherited from template, only when the full name is specified: e.g. ``class TaskList<T> : public iegen::example::Stack<T>``
+    IEGEN supports types inherited from a specialized template e.g. ``class TaskList : public Stack<Task>``.
+    And to generate bindings for a type inherited from a template(has IEGEN API) you must specify base type's full name e.g. ``class TaskList<T> : public iegen::example::Stack<T>``.
 
 .. collapse:: Generated bindings
 
@@ -134,7 +137,7 @@ Notice that in third one we haven't specified namespace and it does not have an 
 Template Getters/Setters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let's see how **name** is used for template getters/setters.
+Now let's see how ``name`` is used for template getters/setters.
 
 .. literalinclude:: /../examples/primitives/cxx/getters/fruits.hpp
    :language: cpp
@@ -142,15 +145,16 @@ Now let's see how **name** is used for template getters/setters.
    :end-before: [example]
 
 
-In the above example we have a template getter **fruits**. Here we have specified two possible types for parameter **T** Apple and Pineapple.
-Notice that **name** is specified for both. This means that it'll be used as a property name in the target language. As a result we'll have apple and pineapple
-correspondingly. If for template getter types no name is specified then **type** name will be used as a property name.
-For this example we would have Apple and Pineapple correspondingly.
-In the above example we have another template getter/setter **allFruits** with two parameters **T** and **U**. Notice that we have used name for both **T** and **U**.
-In case of multiple parameters for each combination of template parameters appropriate names are joined.
-For this example it'll be **applesWithPineapples** for kotlin and swift, **apples_with_pineapples**
+In the above example we have a template getter ``fruits`` and we have specified two possible types for parameter ``T``: ``iegen::example::Apple`` and ``iegen::example::Pineapple``.
+Notice that ``name`` is specified for both. This means that it'll be used as a generated property name. As a result we'll have ``apple`` and ``pineapple``
+correspondingly. If ``name`` is not specified then target language type name will be used.
+For this example we would have ``Apple`` and ``Pineapple`` correspondingly.
+In the above example we have another template getter/setter ``allFruits`` with two template parameters ``T`` and ``U``.
+Again we have specified ``name`` for both parameters.
+In case of multiple template parameters target property name is constructed by joining user provided names.
+For this example it'll be ``applesWithPineapples`` for kotlin and swift, ``apples_with_pineapples``
 for python. Notice that the name is snake cased for python.
-The API for this getter could also be written in the following way:
+The API for this getter could also be written in the following way
 
 .. code-block:: yaml
 
@@ -162,9 +166,10 @@ The API for this getter could also be written in the following way:
 
 The result will be the same.
 
-If no name is specified then type names are being joined. For this example we would have applePineapple(swift, kotlin) and apple_pineapple(python).
+If ``name`` is not specified then target property name will be constructed by joining target language types names.
+For this example we would have ``applePineapple`` (swift, kotlin) and ``apple_pineapple`` (python).
 
-And the usage examples
+And here are some usage examples:
 
 .. tabs::
     .. tab:: kotlin

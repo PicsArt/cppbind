@@ -69,7 +69,7 @@ And the usage example:
 |
 
 Overloading subscript operator
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is the example of overloading **operator[]**.
 

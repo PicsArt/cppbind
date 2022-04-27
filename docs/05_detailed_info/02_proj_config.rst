@@ -33,7 +33,7 @@ Project config file can contain six top level main sections:
 * type_vars
 
 Section **var_def**
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 IEGEN project configuration is done by variables written in doxygen API comments. IEGEN provides a set of default variables that are defined under **var_def** section.
 This section is a mandatory section in project config file and should be defined only once per project.
@@ -47,7 +47,7 @@ For example, user can set the value of `src_glob` variable, thus controlling whi
 This section also should be defined only once per project. The full list of default variables provided by IEGEN is available :doc:`here </05_detailed_info/03_var_def>`.
 
 Section **rules**
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 **rules** section is a mandatory section which contains code snippets, type converter snippets and action snippets needed to generate bindings for target languages.
 **rules** sections can be spread across the project. We merge them together by platform and language specifications.
@@ -102,7 +102,7 @@ You may deal with **vars** section to define/override root level configuration v
 This section defines variables which are common for the whole project, but they can be overridden on the allowed entities (dirs, files, classes, etc.).
 
 Section **dir_vars**
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 **dir_vars** optional section is used to define variables for specific directories. Here is an example:
 

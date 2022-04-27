@@ -17,8 +17,13 @@ iegen.ir.ast
 
    .. autosummary::
    
-      IEG_Ast
+      CXXNode
+      ClangNode
+      DirectoryNode
+      FileNode
       Node
+      NodeType
+      RootNode
    
    
 

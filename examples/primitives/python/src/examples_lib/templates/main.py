@@ -12,7 +12,8 @@ from examples_lib.templates import (
     WrapperPairStrings,
     PairEmployee,
     PairStudent,
-    TemplateValue
+    TemplateValue,
+    MyStackProject,
 )
 
 # [stack-examples]
@@ -107,3 +108,12 @@ value_obj = TemplateValue(1)
 assert value_obj.add_value(2) == 3
 value_obj = TemplateValue("a")
 assert value_obj.add_value("b") == "ab"
+
+# check type derived from a template
+my_stack = MyStackProject()
+assert my_stack.empty()
+my_stack.push(prj)
+assert my_stack.empty() is False
+assert my_stack.top().title == prj.title
+my_stack.pop()
+assert my_stack.empty()

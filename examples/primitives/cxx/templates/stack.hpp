@@ -18,8 +18,7 @@
 namespace iegen::example {
 // [example]
 /**
- * comments
- *
+ * An example of a class template.
  * __API__
  * action: gen_class
  * template:

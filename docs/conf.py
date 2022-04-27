@@ -11,11 +11,20 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import platform
 import sys
 
-
 sys.path.insert(0, os.path.abspath('../src/'))
-sys.path.insert(0, os.path.abspath('../3pty/'))
+
+# set LD_LIBRARY_PATH for autodoc
+if platform.system() == 'Darwin':
+    paths = ['/Library/Developer/CommandLineTools/usr/lib/',
+             '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib']
+    for p in paths:
+        if os.path.exists(p):
+            os.environ['DYLD_LIBRARY_PATH'] = f'$DYLD_LIBRARY_PATH:{p}'
+            break
+
 
 # -- Project information -----------------------------------------------------
 

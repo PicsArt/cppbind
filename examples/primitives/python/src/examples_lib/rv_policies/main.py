@@ -166,7 +166,10 @@ holder.clean()
 holder = ValuesHolder()
 value_ref_automatic = holder.get_ref_automatic()
 value_ref_automatic.name = "update"
-print("DEBUG: ", holder.get_ref_automatic().name) # sometimes we have an assertion error here (the name is not "initial")
+# sometimes we have an assertion error here (the name is not "initial")
+print("DEBUG: ", holder.get_ref_automatic().name)
+# this assertion is to understand random failure is because cached object is returned or not
+assert value_ref_automatic != holder.get_ref_automatic()
 assert holder.get_ref_automatic().name == "initial"
 holder.clean()
 

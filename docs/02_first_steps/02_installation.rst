@@ -13,7 +13,7 @@ Clone IEGEN master branch into current directory\ :
 
 .. code-block:: bash
 
-    git clone  https://github.com/PicsArt/iegen.git
+    git clone https://github.com/PicsArt/iegen.git
     cd iegen
 
 If the project is already cloned, pull the latest version:

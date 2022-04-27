@@ -53,6 +53,8 @@ autosummary_generate = True
 autosummary_generate_overwrite = False
 napoleon_include_init_with_doc = True
 
+html_show_sourcelink = False
+
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
 

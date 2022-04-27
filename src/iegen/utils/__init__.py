@@ -184,8 +184,8 @@ def copy_yaml_config_template():
     if not os.path.exists(os.path.join(cwd, config_file_name)):
         shutil.copy(YAML_CONFIG_TEMPLATE_PATH, cwd)
     else:
-        Error.warning(f"'{config_file_name}' project config file already exists in '{cwd}' directory. "
-                      f"IEGEN will skip config file initialisation.")
+        Error.critical(f"'{config_file_name}' project config file already exists in '{cwd}' directory. "
+                       f"IEGEN will skip config file initialisation.")
 
 
 def get_var_real_type(type_name):

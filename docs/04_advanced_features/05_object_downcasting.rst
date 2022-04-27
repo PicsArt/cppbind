@@ -23,16 +23,16 @@ Here is an example of base class with user defined list of descendant classes, w
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/container.kt
                 :language: java
 
-        .. tab:: python
+        .. tab:: Python
             .. note::
-                Automatic down casting process for python is done by PyBind.
+                Automatic down casting process for Python is done by PyBind.
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/templates/container.swift
                :language: swift

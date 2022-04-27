@@ -84,22 +84,22 @@ You can notice the usage of **throws** variable in API comments. IEGEN has some 
 mandatory `throws` variable on all methods/constructors. This requirement is done to assure that user hasn't forgotten to mention about possible exceptions that entity can throw.
 More details can be found here: :doc:`Exception handling </03_get_started/05_exception_handling>`.
 
-That is it. Now you should be able to use it on your codes written in supported languages. Here are usage examples for kotlin, python and swift.
+That is it. Now you should be able to use it on your codes written in supported languages. Here are usage examples for Kotlin, Python and Swift.
 
-.. _Basic example usage with swift:
+.. _Basic example usage with Swift:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/kotlin/hello_user_usage.kt
            :language: java
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/python/hello_user_usage.py
            :language: py
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/swift/hello_user_usage.swift
            :language: swift
@@ -131,7 +131,7 @@ You can find the whole list of IEGEN variables here: :doc:`Variable Definitions 
 
 .. note::
     From the default config file you can notice the usage of `get_android_ndk_sysroot` helper function when defining `clang_args` variable
-    for kotlin target language for macOS platform. `ANDROID_NDK` environment variable must be correctly set since it is used by `get_android_ndk_sysroot` function.
+    for Kotlin target language for macOS platform. `ANDROID_NDK` environment variable must be correctly set since it is used by `get_android_ndk_sysroot` function.
 
 .. collapse:: The content of "Hello user" project config file
 

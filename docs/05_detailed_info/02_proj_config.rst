@@ -53,11 +53,11 @@ Section **rules**
 **rules** sections can be spread across the project. We merge them together by platform and language specifications.
 This mechanism allow user to have own custom converter for some types. Merging will allow user to keep custom converter files
 in the same directory where the corresponding type is defined.
-IEGEN can be run only for languages having corresponding snippets under `rules` section. Currently IEGEN includes snippets for `swift`, `kotlin` and `python` languages in default rules definition.
+IEGEN can be run only for languages having corresponding snippets under `rules` section. Currently IEGEN includes snippets for `Swift`, `Kotlin` and `Python` languages in default rules definition.
 In order to disable a language it's enough to remove its snippets from `rules` section.
 For more detail see :doc:`Snippets </04_advanced_features/03_snippets>`.
 
-Here is the minimal rules configuration for swift, kotlin and python languages:
+Here is the minimal rules configuration for Swift, Kotlin and Python languages:
 
 .. code-block:: yaml
 

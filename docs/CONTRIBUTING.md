@@ -22,7 +22,7 @@ bazel test //... --test_output=all
 - Merging is getting done by IEGEN code owners, who are in charge of the tool stability and maintainability.
  
 # Release cycle
-IEGEN releases will be created and published with bi-weekly cadence.
+There is no fixed releases cadence for IEGEN, the new fixes/enhancements will be published on-demand.
 The release train will take all the merges done after the last release, and generate a new release tag for them, with Semantic Versioning rules. 
 The new released package will be published <HERE, TBD>
 Release Notes will be located in the Github Releases file, with the latest first order.

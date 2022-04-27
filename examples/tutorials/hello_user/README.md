@@ -24,5 +24,5 @@ To run the program for three languages run the following command:
  bazel run hello_user_swift hello_user_python hello_user_kotlin
  ```
  
-IEGEN-generated Python bindings are being binded to Pytone application with help of [pybind](https://github.com/pybind/pybind11). 
+IEGEN-generated Python bindings are being binded to Python application with help of [pybind](https://github.com/pybind/pybind11). 
 Please note that the use of PyBind is governed by the corresponding [license](https://github.com/pybind/pybind11/blob/master/LICENSE).

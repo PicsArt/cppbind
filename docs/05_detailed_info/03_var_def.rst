@@ -63,12 +63,12 @@ Here is the list of system variables:
  * **_is_operator** - indicates whether the method is a C++ operator or not.
  * **_object_name** - name of the object which is being processed, e.g. class name, method name etc.
  * **_iegen_extras_dir** - the path of the directory which contains some IEGEN configuration default files.
- * **_helper_module** - python helper module for the current target language which contains some helper functions.
+ * **_helper_module** - Python helper module for the current target language which contains some helper functions.
  * **get_android_ndk_sysroot** - internal helper function to dynamically construct android ndk sysroot path using android ndk installation path
 
 In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
 which will be evaluated using system variables and current context variables.
-Particularly, when compiling courses on macOS to generate android kotlin bindings, clang must be provided with **sysroot** and **target** options.
+Particularly, when compiling courses on macOS to generate android Kotlin bindings, clang must be provided with **sysroot** and **target** options.
 For this purpose we have **target_arch** parameter, which has `x86_64` default value and can be overwritten with command line arguments or within `vars` section.
 To use this feature user needs to set **clang_args** variable properly. We have it done in our project default config file:
 
@@ -87,11 +87,11 @@ Now let's go through the key variables:
     - *file_fullname* - Full path of source file.
     - *package* - Package name which with **package_prefix** is used for generating the final package ({package_prefix}.{package}).
     - *name* - Name of the class, method etc. If not specified then the original name is used.
-    - *argument_label* - Dictionary to define the mapping from function original argument names to argument labels. Currently used only for swift. See more details here: :ref:`arg-names-and-labels`.
+    - *argument_label* - Dictionary to define the mapping from function original argument names to argument labels. Currently used only for Swift. See more details here: :ref:`arg-names-and-labels`.
     - *argument_name* - Dictionary to define the mapping from function original argument names to changed argument names. Used to change function argument names for the target language. See more details here: :ref:`arg-names-and-labels`.
     - *interface_name* - When action is gen_interface this will be used as a name for the generated interface.
     - | *interface_class_name* - This variable is the name of the implementation class for the languages which do not support multiple inheritance.
-      | It's used with **interface_name**. For example, if we have a class marked with **action: gen_interface**, then for kotlin we will have an interface named **interface_name** and the implementation class named **interface_class_name**.
+      | It's used with **interface_name**. For example, if we have a class marked with **action: gen_interface**, then for Kotlin we will have an interface named **interface_name** and the implementation class named **interface_class_name**.
     - *include* - Additional includes that will be added in the generated bindings of the target language.
     - | *code_fragment* - Code snippets which will be appended to the target code depending on what was tagged with this variable.
       | For example if enum is tagged with this variable then code fragment will be appended to the generated enum.
@@ -135,7 +135,7 @@ Now let's go through the key variables:
     - *overloading_postfix* - Postfix to be appended at the end of the generated C binding function name if the function is overloaded.
     - *file_postfix* - Postfix which will be appended to each generated file.
     - *extension* - The extension of generated target language files.
-    - *pybind_module* - Package name of the generated pybind package. This variable is only used for python.
+    - *pybind_module* - Package name of the generated pybind package. This variable is only used for Python.
     - *c_wrapper_lib_name* - Library name for generated bindings.
     - *target_arch* - Variable for setting target architecture.
     - *clang_args* - Command line arguments passed to clang.
@@ -147,7 +147,7 @@ Now let's go through the key variables:
     - *enum_excluded_fields* - A list of enum cases which must not be exposed in the target language.
     - *cxx_out_rel_path* - C output relative path to project output directory. This variable is used for constructing generated C includes.
     - | *full_package* - Full package constructed from package_prefix and package. This variable has different default value construction formula for each language.
-      | Note that it's used for python and kotlin for target package generation and changing it will affect generated file paths as well.
+      | Note that it's used for Python and Kotlin for target package generation and changing it will affect generated file paths as well.
       | Consider this when changing *c_file_fullname*, *h_file_fullname* and *target_file_fullname*.
     - *c_file_fullname* - Generated cpp file full name.
     - *h_file_fullname* - Generated header file full name.

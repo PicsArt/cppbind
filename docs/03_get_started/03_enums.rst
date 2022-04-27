@@ -12,7 +12,7 @@ Here is Color enum definition:
 As we can see in the above example we can extend enums logic by using **code_fragment** variable.
 Code fragments defined with this variable are appended to the enum definition.
 Particularly in this example we added custom conversion from enum to string for all three languages.
-Notice that for swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
+Notice that for Swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
 We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
 prefix string to enum field names in target language.
 
@@ -20,7 +20,7 @@ If there are cases when some of original enum fields are for internal usage
 and user doesn't want to expose them in target language bindings, then **enum_excluded_fields** variable can be used to specify
 the list of excluded fields. In case those fields are used as a default value for a function/constructor argument, IEGEN will
 skip that default value generation in target language bindings. If user has a function which returns an excluded enum field,
-IEGEN terminates the main program during the function call and provides the user with an appropriate error message (except python,
+IEGEN terminates the main program during the function call and provides the user with an appropriate error message (except Python,
 since currently pybind sets some constraints on IEGEN).
 
 And the Frame struct using it:
@@ -37,21 +37,21 @@ And the Frame struct using it:
 Usage examples:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/main.kt
            :language: kotlin
            :start-after: [color-usage]
            :end-before: [color-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/main.py
            :language: py
            :start-after: [color-usage]
            :end-before: [color-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/enums/main.swift
            :language: swift
@@ -63,9 +63,9 @@ Usage examples:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
-            Here is the generated kotlin code for Color:
+            Here is the generated Kotlin code for Color:
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/color.kt
                :language: java
@@ -76,9 +76,9 @@ Usage examples:
                :language: java
 
 
-        .. tab:: python
+        .. tab:: Python
 
-            Here is the generated python code for Color:
+            Here is the generated Python code for Color:
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/color_pygen.py
                :language: py
@@ -88,9 +88,9 @@ Usage examples:
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/frame_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
-            Here is the generated swift code for Color:
+            Here is the generated Swift code for Color:
 
             .. literalinclude:: /../examples/primitives/swift/src/enums/color.swift
                :language: swift

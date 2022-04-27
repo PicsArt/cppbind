@@ -38,8 +38,8 @@ Supported values for **action** are the following ones:
 
     * **gen_property_setter** - Used to generate both setter and getter for a public member.
 
-    * | **gen_package** - Used to generate a package for python bindings. This action can be attached to a directory and IEGEN will
-                          generate `__init__.py` file in that directory, thus making a python package. This can be used to add some imports
+    * | **gen_package** - Used to generate a package for Python bindings. This action can be attached to a directory and IEGEN will
+                          generate `__init__.py` file in that directory, thus making a Python package. This can be used to add some imports
                           and custom code fragments in `__init__.py` file. This action is ignored for other languages.
 
 

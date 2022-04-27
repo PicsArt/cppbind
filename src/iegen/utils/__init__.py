@@ -12,7 +12,6 @@ import shutil
 import sys
 from functools import cmp_to_key, lru_cache
 
-import jinja2.utils
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
@@ -180,7 +179,13 @@ def copy_yaml_config_template():
     """
     Copies iegen yaml config template file containing default values into current directory.
     """
-    shutil.copy(YAML_CONFIG_TEMPLATE_PATH, os.getcwd())
+    cwd = os.getcwd()
+    config_file_name = os.path.basename(YAML_CONFIG_TEMPLATE_PATH)
+    if not os.path.exists(os.path.join(cwd, config_file_name)):
+        shutil.copy(YAML_CONFIG_TEMPLATE_PATH, cwd)
+    else:
+        Error.warning(f"'{config_file_name}' project config file already exists in '{cwd}' directory. "
+                      f"IEGEN will skip config file initialisation.")
 
 
 def get_var_real_type(type_name):

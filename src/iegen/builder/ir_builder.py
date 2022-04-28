@@ -5,10 +5,9 @@ import copy
 import datetime
 import importlib
 import os
+import sys
 from collections import OrderedDict
 from types import SimpleNamespace
-
-from git import Repo, GitError
 
 from iegen import DATETIME_FORMAT, logging, PROJECT_CONFIG_DIR
 from iegen.builder import OUTPUT_MODIFICATION_KEY
@@ -23,6 +22,11 @@ from iegen.ir.ast import (
 from iegen.parser.ieg_api_parser import APIParser
 from iegen.utils import get_android_ndk_sysroot, get_language_helper_module
 import iegen.utils.clang as cutil
+
+try:
+    import git
+except ImportError as e:
+    Error.warning("Couldn't find Git. '_get_git_repo_url' system variable will not work properly.")
 
 
 class CXXPrintProcessor:
@@ -266,14 +270,14 @@ class CXXIEGIRBuilder:
         sys_vars = copy.copy(self._sys_vars)
 
         def _get_git_repo_url(project_dir=None):
-            if project_dir:
+            if project_dir and 'git' in sys.modules:
                 try:
-                    repo = Repo(project_dir)
+                    repo = git.Repo(project_dir)
                     url = next(repo.remote().urls).replace('.git', '')
                     branch = repo.active_branch.name
                     logging.info(f'Found a git repo under {project_dir}')
                     return f'{url}/tree/{branch}/'
-                except (GitError, TypeError):
+                except (git.GitError, TypeError):
                     # not a git repo leave variable empty
                     # TypeError may be thrown in case of incorrect reference to a git commit
                     Error.warning(

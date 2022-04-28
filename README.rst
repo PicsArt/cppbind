@@ -80,4 +80,4 @@ For example, you can expose the following entities to the target language:
 How to contribute
 ~~~~~~~~~~~~~~~~~
 
-To contribute to this project follow the rules described in the `Contribution guide <TODO: contribution_guide_link>`_.
+To contribute to this project follow the rules described in the `Contribution guide <https://github.com/PicsArt/iegen/blob/master/docs/CONTRIBUTING.md>`_.

@@ -1,5 +1,5 @@
 sphinx==4.3.0
 sphinx-copybutton==0.5.0
-sphinx_rtd_theme==0.5.0
+sphinx_rtd_theme==1.0.0
 sphinx-tabs==3.0.0
 sphinx-toolbox==2.16.0

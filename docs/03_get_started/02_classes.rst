@@ -17,7 +17,7 @@ In a code above we are exporting all public members and constructors.
     will be a read-only property for the target language.
 
 .. note::
-    By default IEGEN generates ``System.loadLibrary("wrapper_jni")`` for each Kotlin class. To disable this behaviour define **c_wrapper_lib_name** with null value:
+    By default, IEGEN generates ``System.loadLibrary("wrapper_jni")`` for each Kotlin class. To disable this behavior define **c_wrapper_lib_name** with null value:
     ``c_wrapper_lib_name: null`` or ``c_wrapper_lib_name:``.
 
 Usage examples:

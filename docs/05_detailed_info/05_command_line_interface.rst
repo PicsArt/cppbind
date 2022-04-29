@@ -49,7 +49,7 @@ In order to generate the bindings use the ``iegen run`` command by providing one
 
 **Optional arguments:**
 
-.. code-block:: bash
+.. code-block:: text
 
   --log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}
                     Option can be used to set desirable log level from possible 5 values.

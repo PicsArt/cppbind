@@ -6,7 +6,7 @@ IEGEN API must contain **__API__** tag. Everything after **__API__** are instruc
 For defining an API we use variables from :doc:`Variable Definitions </05_detailed_info/03_var_def>`.
 IEGEN uses them to know what should be generated, where the generated files should be saved, etc.
 **__API__** comments should be written in yaml format, otherwise IEGEN will complain about wrong format.
-Jinja expressions, predefined system variables can be used here. Available system variables are described here: :doc:`Variable Definitions </05_detailed_info/03_var_def>`.
+Jinja expressions, predefined system variables can be used here. Available system variables are described :doc:`here </05_detailed_info/03_var_def>`.
 
 .. note::
     **__API__** tag can be overridden in `iegen_config.cfg` application config file. To do that set **parser_start** property in **[API]** section.
@@ -14,7 +14,7 @@ Jinja expressions, predefined system variables can be used here. Available syste
 **action** variable is used to define what should be generated in the target code.
 If it's missing then nothing will be generated.
 It can be skipped when we don't want to generate anything but we want to define some inheritable variables to pass them to children entities.
-For example we can define **package** variable for a directory and the files under that directory can use or override it.
+For example, we can define **package** variable for a directory and the files under that directory can use or override it.
 
 Supported values for **action** are the following ones:
 

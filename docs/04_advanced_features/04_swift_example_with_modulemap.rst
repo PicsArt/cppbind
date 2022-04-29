@@ -1,4 +1,4 @@
-Building swift bindings with Xcode
+Building Swift bindings with Xcode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To generate a modulemap for defining IEGEN generated bindings as a submodule of xcode framework add another project configuration file containing the following configuration:

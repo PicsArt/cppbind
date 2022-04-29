@@ -14,32 +14,32 @@ to **False**. In that case we should also specify **name** for that operator so 
 
 
 .. note::
-    All comparisons in kotlin are translated into calls to **compareTo**, that is required to return **Int**.
+    All comparisons in Kotlin are translated into calls to **compareTo**, that is required to return **Int**.
     That's why we have **compareTo** method in C++ with kotlin.is_operator set to True(This is mandatory as compareTo is not a C++ operator and by default is_operator is False for it ).
-    Also notice we do not have kotlin action for **operator>**.
+    Also notice we do not have Kotlin action for **operator>**.
 
 .. note::
-    For **+=** operator we are generating bindings only for python and swift because for kotlin the signature of this operator is different and
+    For **+=** operator we are generating bindings only for Python and Swift because for Kotlin the signature of this operator is different and
     we already have generated binding for **+** operator which covers also **+=** operator.
 
 And the usage example:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
            :language: kotlin
            :start-after: [counter-usage]
            :end-before: [counter-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
            :language: py
            :start-after: [counter-usage]
            :end-before: [counter-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
            :language: swift
@@ -51,17 +51,17 @@ And the usage example:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/counter.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/counter_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
                :language: swift
@@ -69,7 +69,7 @@ And the usage example:
 |
 
 Overloading subscript operator
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Here is the example of overloading **operator[]**.
 
@@ -81,21 +81,21 @@ Here is the example of overloading **operator[]**.
 Usage example:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
            :language: kotlin
            :start-after: [subscript-operator-usage]
            :end-before: [subscript-operator-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
            :language: py
            :start-after: [subscript-operator-usage]
            :end-before: [subscript-operator-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
            :language: swift
@@ -107,17 +107,17 @@ Usage example:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/intarray.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/intarray_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
                :language: swift

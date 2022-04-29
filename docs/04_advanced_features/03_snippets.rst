@@ -32,7 +32,7 @@ target language file to expose interface and also add some logic.
                                     {{', ' if bases_specifiers else ' : Error'}}
                                     {%- endif %} {
 
-Above described code block is a part of our code snippets for generating swift classes. We have some subsections under `class`
+Above described code block is a part of our code snippets for generating Swift classes. We have some subsections under `class`
 parent section: `include`, `body`, and these subsections are used to group generated code fragments. We also have `scopes` which
 we use to gather snippet values from the lower levels and use them in current section: for example we use function body inside class.
 Actual snippets are described under `content` or `unique_content` sections. `unique_content` is used to generate unique lines or
@@ -90,7 +90,7 @@ Action snippets are used to commit some action. Mainly we use it to copy helper 
 to some output directory. For example we have a C file where we define some structures, we also keep some utility files for
 exception handling support, etc.
 
-Here is an example of action snippets for swift target language, where we define source and destination for copy action:
+Here is an example of action snippets for Swift target language, where we define source and destination for copy action:
 
 .. code-block:: yaml
 

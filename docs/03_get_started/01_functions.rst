@@ -18,7 +18,7 @@ After **__API__** tag we have four variables which are instructions for IEGEN.
 With ``action: gen_function`` we define what should be generated in the target language.
 **package** variable indicates what will be the package for generated **concat** function and **file** indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
-which means that its value will be used only for generated swift bindings and for other languages the default value will be used
+which means that its value will be used only for generated Swift bindings and for other languages the default value will be used
 i.e. source file name. And finally variable **throws** defines what kind of exceptions **concat** function can throw.
 In this case its value is **no_throw** which means it will not throw any exception.
 For more details on variables, see :ref:`var-def-label`.
@@ -26,21 +26,21 @@ For more details on variables, see :ref:`var-def-label`.
 And here is a small code using generated bindings:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [simple-usage-example]
            :end-before: [simple-usage-example]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [simple-usage-example]
            :end-before: [simple-usage-example]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -57,21 +57,21 @@ Let's bind more complex examples like template ``makePair`` and ``max``, overloa
 Code using generated functions:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [glob-func-examples]
            :end-before: [glob-func-examples]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [glob-func-examples]
            :end-before: [glob-func-examples]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -79,27 +79,27 @@ Code using generated functions:
            :end-before: [glob-func-examples]
 
 
-Here we have overloaded ``concat`` for kotlin and swift but for python it's slightly different
-as there's no overloading for python. We have two methods ``concat`` and ``concat1`` in python.
-Similarly for template function we have an overloaded function for each template combination for kotlin and swift.
-In case of python a postfix generated from argument types is appended to the function name.
+Here we have overloaded ``concat`` for Kotlin and Swift but for Python it's slightly different
+as there's no overloading for Python. We have two methods ``concat`` and ``concat1`` in Python.
+Similarly for template function we have an overloaded function for each template combination for Kotlin and Swift.
+In case of Python a postfix generated from argument types is appended to the function name.
 
 .. collapse:: Generated bindings
 
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/utils.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/utils_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/GlobUtils.swift
                :language: swift
@@ -128,21 +128,21 @@ As you can see overloaded or static methods are like regular methods. There's no
 We are ready to use the generated bindings:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/main.kt
            :language: kotlin
            :start-after: [overload-usage]
            :end-before: [overload-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/main.py
            :language: py
            :start-after: [overload-usage]
            :end-before: [overload-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/overloads/main.swift
            :language: swift
@@ -155,17 +155,17 @@ We are ready to use the generated bindings:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/utils_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/overloads/Utils.swift
                :language: swift
@@ -189,21 +189,21 @@ Those values will be used in the target language instead of the values used in C
 And here is a small code using generated bindings:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [custom-arg-examples]
            :end-before: [custom-arg-examples]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [custom-arg-examples]
            :end-before: [custom-arg-examples]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -216,17 +216,17 @@ And here is a small code using generated bindings:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/custom_args/customArgUtils.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/customArgUtils_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/customArgUtils.swift
                :language: swift
@@ -257,21 +257,21 @@ In this example you can find also a constructor taking nullable argument and nul
     In the above example we have a pair of nullable getter/setter: `nullable` and `setNullable`.
 
 .. note::
-    Kotlin and swift have a support for nullable arguments.
-    For python nullable arguments and return values are marked as Optional.
-    Since all arguments are nullable in python, IEGEN does additional runtime checks to not allow passing null value where a non null value is expected.
+    Kotlin and Swift have a support for nullable arguments.
+    For Python nullable arguments and return values are marked as Optional.
+    Since all arguments are nullable in Python, IEGEN does additional runtime checks to not allow passing null value where a non null value is expected.
 
 Now let's see some usage examples for generated bindings:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/main.kt
            :language: kotlin
            :start-after: [nullables-usage]
            :end-before: [nullables-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         As you can see here `ValueError` is thrown when None is passed but expected value is not Optional.
         The same is for return values.
@@ -281,7 +281,7 @@ Now let's see some usage examples for generated bindings:
             :start-after: [nullables-usage]
             :end-before: [nullables-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/nullables/main.swift
             :language: swift
@@ -293,17 +293,17 @@ Now let's see some usage examples for generated bindings:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
                 :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
                 :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
                 :language: swift
@@ -326,21 +326,21 @@ Here are some sample functions having default arguments:
 Here's a sample code using the above functions:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [non-complex-defaults-usage]
            :end-before: [non-complex-defaults-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [non-complex-defaults-usage]
            :end-before: [non-complex-defaults-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -352,17 +352,17 @@ Here's a sample code using the above functions:
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/primitives/primitiveDefaults.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/primitiveDefaults_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/primitiveDefaults.swift
                :language: swift
@@ -378,11 +378,11 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
-In this case IEGEN generates two overloaded functions for ``kotlin`` and ``swift``: one without arguments and
+In this case IEGEN generates two overloaded functions for ``Kotlin`` and ``Swift``: one without arguments and
 the other with one argument without default value. The second function has three arguments of types ``Task``, ``Color`` and ``Root``.
 The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments IEGEN will generate
-appropriate overloaded options for ``kotlin`` and ``swift``.
-For ``python`` IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
+appropriate overloaded options for ``Kotlin`` and ``Swift``.
+For ``Python`` IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code, they work as expected.
 
 .. collapse:: Generated functions
@@ -390,17 +390,17 @@ Although the actual default values for complex types are not visible in generate
     |
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/complex/complexDefaults.kt
                :language: java
 
-        .. tab:: python
+        .. tab:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/complexDefaults_pygen.py
                :language: py
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/complexDefaults.swift
                :language: swift
@@ -411,21 +411,21 @@ Although the actual default values for complex types are not visible in generate
 And here are some usage examples:
 
 .. tabs::
-    .. tab:: kotlin
+    .. tab:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [complex-defaults-usage]
            :end-before: [complex-defaults-usage]
 
-    .. tab:: python
+    .. tab:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [complex-defaults-usage]
            :end-before: [complex-defaults-usage]
 
-    .. tab:: swift
+    .. tab:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -475,7 +475,7 @@ the returned object and gives the ownership to the target language.
     For methods the default policy is **automatic**.
 
 .. note::
-    Object caching for kotlin and swift are not supported yet,
+    Object caching for Kotlin and Swift are not supported yet,
     that's why each function call creates a new binding object with different
     ownership depending on the function's return value policy.
 

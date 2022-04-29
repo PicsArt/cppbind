@@ -61,12 +61,12 @@ Default handler aborts program execution immediately, but user can set custom ca
 will be called after unhandled exception is detected. The mentioned package looks like:
 
     .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/iegen/exceptionUtils.kt
                 :language: java
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/iegen/exceptionUtils.swift
                 :language: swift
@@ -75,24 +75,24 @@ Also we always catch std::exception before catching all exceptions to have more 
 class is derived from std::exception.
 
 .. note::
-    For generating python bindings we use **pybind** tool, which already has support for exception handling.
-    Pybind translates C++ standard exceptions to their python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
-    Pybind translates all user defined exceptions to **RuntimeError** in python. This support also sets some constraints
-    on us, so currently we don't support python exceptions as it's done for other languages. It means user defined exceptions list
+    For generating Python bindings we use **pybind** tool, which already has support for exception handling.
+    Pybind translates C++ standard exceptions to their Python analogs using exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
+    Pybind translates all user defined exceptions to **RuntimeError** in Python. This support also sets some constraints
+    on us, so currently we don't support Python exceptions as it's done for other languages. It means user defined exceptions list
     is not relevant here, but user still has to define **throws** variable to **no_throw** value. This requirement
     keeps API annotations style convenient between all target languages.
 
 After generating bindings for target language we can call methods which can throw an exception, and test results with catch blocks:
 
 .. tabs::
-        .. tab:: kotlin
+        .. tab:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/main.kt
                 :language: kotlin
                 :start-after: [exceptions-usage]
                 :end-before: [exceptions-usage]
 
-        .. tab:: swift
+        .. tab:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/exceptions/main.swift
                 :language: swift
@@ -108,12 +108,12 @@ After generating bindings for target language we can call methods which can thro
     |
 
     .. tabs::
-            .. tab:: kotlin
+            .. tab:: Kotlin
 
                 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
                     :language: java
 
-            .. tab:: swift
+            .. tab:: Swift
 
                 .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
                     :language: swift
@@ -125,16 +125,16 @@ After generating bindings for target language we can call methods which can thro
     |
 
     .. tabs::
-            .. tab:: kotlin
+            .. tab:: Kotlin
 
                 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
                     :language: java
 
                 .. note::
-                    For kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
+                    For Kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
                     `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
 
-            .. tab:: swift
+            .. tab:: Swift
 
                 .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
                     :language: swift

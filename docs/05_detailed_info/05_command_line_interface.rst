@@ -33,6 +33,13 @@ This will create ``iegen.yaml`` file containing the initial config example.
 .. literalinclude:: /../src/iegen/config/iegen.yaml
    :language: yaml
 
+.. note::
+        | If you are using Windows please make sure to set standard library include path in
+        | **win.include_dirs**:
+        |   - C:/mingw64/lib/clang/14.0.1/include
+
+
+
 iegen run
 ^^^^^^^^^
 

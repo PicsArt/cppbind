@@ -33,7 +33,7 @@ Project config file can contain six top level main sections:
 * type_vars
 
 Section **var_def**
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 IEGEN project configuration is done by variables written in doxygen API comments. IEGEN provides a set of default variables that are defined under **var_def** section.
 This section is a mandatory section in project config file and should be defined only once per project.
@@ -47,17 +47,17 @@ For example, user can set the value of `src_glob` variable, thus controlling whi
 This section also should be defined only once per project. The full list of default variables provided by IEGEN is available :doc:`here </05_detailed_info/03_var_def>`.
 
 Section **rules**
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 **rules** section is a mandatory section which contains code snippets, type converter snippets and action snippets needed to generate bindings for target languages.
 **rules** sections can be spread across the project. We merge them together by platform and language specifications.
 This mechanism allow user to have own custom converter for some types. Merging will allow user to keep custom converter files
 in the same directory where the corresponding type is defined.
-IEGEN can be run only for languages having corresponding snippets under `rules` section. Currently IEGEN includes snippets for `swift`, `kotlin` and `python` languages in default rules definition.
+IEGEN can be run only for languages having corresponding snippets under `rules` section. Currently IEGEN includes snippets for `Swift`, `Kotlin` and `Python` languages in default rules definition.
 In order to disable a language it's enough to remove its snippets from `rules` section.
 For more detail see :doc:`Snippets </04_advanced_features/03_snippets>`.
 
-Here is the minimal rules configuration for swift, kotlin and python languages:
+Here is the minimal rules configuration for Swift, Kotlin and Python languages:
 
 .. code-block:: yaml
 
@@ -102,7 +102,7 @@ You may deal with **vars** section to define/override root level configuration v
 This section defines variables which are common for the whole project, but they can be overridden on the allowed entities (dirs, files, classes, etc.).
 
 Section **dir_vars**
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 **dir_vars** optional section is used to define variables for specific directories. Here is an example:
 

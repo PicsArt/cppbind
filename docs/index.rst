@@ -3,43 +3,58 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-IEGEN
-=====
-**Welcome to IEGEN's documentation!**
+.. include:: ../README.rst
 
-Introduction
-------------
+.. _supported-languages-label:
 
-IEGEN is a C++ bindings generation tool. For supported languages please refer to :ref:`supported-languages-label`. The tool can be easily extended for other languages as well. Also, it can be customized to have generated bindings better feet to your needs.
+Supported languages
+~~~~~~~~~~~~~~~~~~~
 
-.. toctree::
-   :maxdepth: 1
-   :glob:
-   :caption: Introduction
+Currently IEGEN supports bindings generation for the following languages:
 
-   /01_introduction/[0-9]*_*
+- Kotlin
+- Swift
+- Python
 
+Kotlin
+------
 
-First Steps
------------
+In order to expose C++ types and functions to Kotlin IEGEN uses JNI framework which enables Java/Kotlin code running in JVM
+to call a native program. IEGEN generates Kotlin API code which is bridged with original C++ code via generated JNI bindings.
 
-Are you writing C++ libraries and want to be able to use them in various platforms using various languages then IEGEN can be very handy tool for you.
+Swift
+-----
 
-:doc:`Installation </02_first_steps/02_installation>` |
-:doc:`Tutorial </02_first_steps/03_hello_user>`
+Swift language gives an opportunity to access and use pieces of code written in C. IEGEN uses Swift and C interoperability
+to create a bridge between Swift and C++ codes. The connection is created via generated C and Swift bindings.
+
+Python
+------
+
+To connect Python and C++ code IEGEN generates `pybind <https://github.com/pybind/pybind11>`_ code. IEGEN also generates Python API which is a wrapper for pybind codes.
+
+.. note::
+    Using pybind as an intermediate layer between C++ and Python brings some limitations to IEGEN.
+    For example pybind has a support for exceptions which let IEGEN to transfer custom exceptions from C++ to Python
+    only as RuntimeError, thus losing the reference to the original exception type. Currently this limitation exists only for Python.
+    More detailed information is available here: :doc:`Exception handling </03_get_started/05_exception_handling>`.
+
+    Besides the limitations pybind gives us opportunity to support some more features for Python. For example currently we have a support
+    for callbacks only for Python, but the similar feature is going to be developed for other languages as well.
+
+.. note::
+    Since IEGEN generates Python API upon generated pybind bindings, we are able to add some logic before calling original
+    pybind codes. For example IEGEN does some validations for nullable arguments, does implicit casts between
+    provided and expected argument types if possible, supports function overloading and nested types.
+    Generated Python functions has annotations with type hints which gives opportunity to navigate through the code inside IDE tools.
+
 
 .. toctree::
    :maxdepth: 1
    :glob:
    :caption: First Steps
-   :hidden:
 
    /02_first_steps/[0-9]*_*
-
-Binding With Examples
----------------------
-
-Let's start with :ref:`Basic example`.
 
 .. toctree::
    :maxdepth: 2
@@ -48,34 +63,22 @@ Let's start with :ref:`Basic example`.
 
    /03_get_started/[0-9]*_*
 
-Advanced Topics
----------------
-
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: Advanced Topics
    :glob:
 
    /04_advanced_features/[0-9]*_*
 
-Detailed Information
---------------------
-
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: Detailed Information
    :glob:
 
    /05_detailed_info/[0-9]*_*
 
-FAQs
-----
-
 .. toctree::
    :maxdepth: 1
-   :hidden:
    :caption: FAQs
    :glob:
 
@@ -93,14 +96,7 @@ API Documentation
 
 
 Indices and tables
-------------------
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
-
-
-License
-------------------
-IEGEN is provided under a MIT license that can be found in the `LICENSE <https://github.com/PicsArt/iegen/blob/master/LICENSE>`_ file.
-By using, distributing, or contributing to this project, you agree to the terms and conditions of this license.

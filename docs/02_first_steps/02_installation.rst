@@ -40,9 +40,9 @@ If the project is already cloned, pull the latest version:
 
             sudo apt-get install -y libclang-9-dev
 
-        If python 3.7 or higher is already installed then skip this step.
+        If Python 3.7 or higher is already installed then skip this step.
 
-        Install python\ :
+        Install Python\ :
 
         .. code-block:: bash
 
@@ -77,9 +77,9 @@ If the project is already cloned, pull the latest version:
 
             echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Library/Developer/CommandLineTools/usr/lib"' >> ~/.profile
 
-        If python 3.7 or higher is already installed then skip this step.
+        If Python 3.7 or higher is already installed then skip this step.
 
-        Install python\ :
+        Install Python\ :
 
         .. code-block:: bash
 
@@ -111,7 +111,7 @@ Dev installation
 User installation
 ^^^^^^^^^^^^^^^^^
 
-``iegen`` is built as a standard python package and can be installed using ``pip`` with the following command.
+``iegen`` is built as a standard Python package and can be installed using ``pip`` with the following command.
 
 .. code-block:: bash
 

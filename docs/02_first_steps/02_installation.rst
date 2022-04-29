@@ -99,6 +99,28 @@ If the project is already cloned, pull the latest version:
             python3 -m venv venv
             source venv/bin/activate
 
+   .. tab:: Windows
+
+        IEGEN requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path.
+
+        If Python 3.7 or higher is already installed then skip this step.
+
+        Install Python\ :
+
+        `Download <https://www.python.org/downloads/>`_ and install latest version of Python from official website.
+
+        Install virtualenv\ :
+
+        .. code-block:: bash
+
+            python -m pip install virtualenv
+
+        Create and activate a virtualenv\ :
+
+        .. code-block:: bash
+
+            python -m venv venv
+            ./venv/Scripts/activate
 
 Dev installation
 ^^^^^^^^^^^^^^^^

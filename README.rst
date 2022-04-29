@@ -82,10 +82,9 @@ template types, etc. to the target language. Here is the list of the most import
 - `Nullables <https://iegen.picsart.com/master/03_get_started/01_functions.html#nullable-arguments>`_
 - `Object type preservation <https://iegen.picsart.com/master/04_advanced_features/05_object_downcasting.html>`_
 - `Properties and data accessors <https://iegen.picsart.com/master/03_get_started/01_functions.html>`_
-- Standard library types (std::vector, std::map, etc.)
-- Shared pointers
-- Document preservation
-- Full featured code assistance
+- `Standard library types (std::vector, std::map, etc.) <https://github.com/PicsArt/iegen/tree/master/examples/primitives/cxx/containers>`_
+- `Shared pointers <https://iegen.picsart.com/master/05_detailed_info/03_var_def.html#:~:text=generated%20C%20bindings.-,shared_ref,-%2D%20This%20variable%20is>`_
+- `Full featured code assistance <https://en.wikipedia.org/wiki/Intelligent_code_completion>`_
 
 How to contribute
 ~~~~~~~~~~~~~~~~~

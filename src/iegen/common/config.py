@@ -17,8 +17,10 @@ PROJECT_CONFIG = os.path.join(PROJECT_CONFIG_DIR, "iegen_config.cfg")
 
 DEFAULT_DIRS = ['', './', PROJECT_CONFIG_DIR]
 
-clang_lib = find_library('clang')
+# find clang for windows and mac
+clang_lib = find_library('libclang')
 
+# find clang for linux
 if clang_lib is None:
     for version in range(13, 5, -1):
         clang_lib = find_library(f'clang-{version}')

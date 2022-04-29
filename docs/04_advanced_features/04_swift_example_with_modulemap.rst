@@ -1,7 +1,7 @@
 Building Swift bindings with Xcode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To generate a modulemap for defining IEGEN generated bindings as a submodule of xcode framework add another project configuration file containing the following configuration:
+In order to generate a modulemap for defining IEGEN generated bindings as a submodule of Xcode framework user needs to add another configuration file containing the following configuration:
 
 .. literalinclude:: /../examples/features/modulemap/HelloExample/HelloExample/cxx/modulemap.iegen.yaml
    :language: yaml
@@ -21,6 +21,6 @@ Additionally **c_wrapper_lib_name** and **cxx_out_rel_path** should be properly 
     cxx_out_rel_path: ''
     c_wrapper_lib_name: <FrameworkName>.<CBindingsSubmoduleName>
 
-Here **cxx_out_rel_path** is set to an empty string to not generate a relative includes for IEGEN c helpers.
+Here **cxx_out_rel_path** is set to an empty string to not generate a relative includes for IEGEN C helpers.
 
 For the full example follow the link: `Modulemap Example <https://github.com/PicsArt/iegen/tree/master/examples/features/modulemap/HelloExample>`_.

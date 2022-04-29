@@ -1,12 +1,12 @@
-Automatic object down casting
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Automatic object downcasting
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When we have an inheritance tree it's possible to keep an object of subtype as an object of base type.
 In this case we would construct base type object and in target bindings we would lose the information that the object
-is of subtype. In purpose to deal with this problem IEGEN does automatic down casting to the actual object type if needed.
+is of subtype. In purpose to deal with this problem IEGEN does automatic downcasting to the actual object type if needed.
 
-IEGEN keeps track of the descendant classes/structs for each class/struct to be able to do down casting of objects.
-We pass the object actual type information from C bindings to target language binding where the down casting process is done.
+IEGEN keeps track of the descendant classes/structs for each class/struct to be able to do downcasting of objects.
+We pass the object's actual type information from C bindings to target language binding where the downcasting process is done.
 IEGEN gives the user opportunity to define the list of descendants via **descendants** variable for each class, otherwise using the deduced one.
 In the target bindings the object construction with the actual type is done with switch-case block by comparing type information
 with the possible descendant types.
@@ -18,7 +18,7 @@ Here is an example of base class with user defined list of descendant classes, w
    :start-after: [example]
    :end-before: [example]
 
-.. collapse:: Implementation part of down casting process in target language bindings (the main logic is inside "iegenDowncast" method)
+.. collapse:: Implementation part of downcasting process in target language bindings (the main logic is inside "iegenDowncast" method)
 
     |
 
@@ -30,7 +30,7 @@ Here is an example of base class with user defined list of descendant classes, w
 
         .. tab:: Python
             .. note::
-                Automatic down casting process for Python is done by PyBind.
+                Automatic downcasting process for Python is done by PyBind.
 
         .. tab:: Swift
 

@@ -47,7 +47,7 @@ And here is a small code using generated bindings:
            :start-after: [simple-usage-example]
            :end-before: [simple-usage-example]
 
-Let's bind more complex examples like template ``makePair`` and ``max``, overloaded ``concat`` etc.
+Let's bind more complex examples like template ``makePair`` and ``max``, overloaded ``concat``, etc.
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
    :language: cpp

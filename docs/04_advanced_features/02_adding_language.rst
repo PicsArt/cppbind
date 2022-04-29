@@ -1,7 +1,7 @@
 Add new language bindings generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's consider a case when the users want to add a new supported language to IEGEN. It's not hard if the user already has
+IEGEN allows users to add a new supported language if user already has
 code snippets and type converter snippets (look :doc:`here </04_advanced_features/03_snippets>` for more detailed information
 about snippets usage). IEGEN deduces the list of supported languages from `rules` section info defined inside project config files.
 Thus, to be able to add a new language to that list, user needs to make his own code snippets and type converter snippets and
@@ -24,5 +24,5 @@ Above described snippet files have minimum content to be able to generate dummy 
 Here we include code snippets and type converter snippets, variable definitions and define some variables for root node.
 
 After these preparations the tool is ready to be run for a new `my_lang` language. If the user wants to generate meaningful
-bindings with the correct target language syntax, he needs to define correct code snippets for class, function and other cxx
-nodes, and also define type converter snippets for all the types he wants to use.
+bindings with the correct target language syntax, he/she needs to define correct code snippets for class, function and other cxx
+entities, and also must define type converter snippets for all the types user wants to use.

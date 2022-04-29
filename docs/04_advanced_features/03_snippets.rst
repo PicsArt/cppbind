@@ -10,8 +10,8 @@ Code snippets
 ~~~~~~~~~~~~~
 
 Code snippets are called for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
-User can use them to generate multiple files. For example user can generate C-C++ code to implement binding logic on C++ side and
-target language file to expose interface and also add some logic.
+User can use them to generate multiple files. For example, user can generate C/C++ code and target language code to implement some binding logic
+between those languages.
 
 .. code-block:: yaml
 
@@ -34,15 +34,15 @@ target language file to expose interface and also add some logic.
 
 Above described code block is a part of our code snippets for generating Swift classes. We have some subsections under `class`
 parent section: `include`, `body`, and these subsections are used to group generated code fragments. We also have `scopes` which
-we use to gather snippet values from the lower levels and use them in current section: for example we use function body inside class.
+we use to gather snippet values from the lower levels and use them in current section: for example, we use function body inside class.
 Actual snippets are described under `content` or `unique_content` sections. `unique_content` is used to generate unique lines or
 code fragment defined by marker. This is mainly used for includes to avoid redundant repetitions.
 
 Type converter snippets
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-Type converter snippets are responsible for defining type information for target language and also provide conversions between
-source and target for the given cxx type.
+Type converter snippets are responsible for defining type information for the target language and also provide conversions between
+source and target languages for the given cxx type.
 
 Here is an example of type converter for `char *`:
 
@@ -64,8 +64,8 @@ Here is an example of type converter for `char *`:
           let {{target_name}} = String(cString: {{name}}{{'!' if nullable|default(False)}})
 
 Here we can see **types** section which is used to define type information for the given cxx type. We use **converters** section
-to write conversion logic from source to target language for the given type. In section key names `_to_` joiner is used
-to separate source and target languages: for example `c_to_cxx` means that our source is C and target is cxx. This syntax is not
+to write conversion logic from source to target language for the given type. Section key names should be of the following format:
+<source language> + `_to_` + <target language>: for example, `c_to_cxx` means that our source is C and target is cxx. This syntax is not
 mandatory: user can have any custom name and define source, target and snippet information under `source`, `target` and `snippet`
 subsection:
 
@@ -87,7 +87,7 @@ Action snippets
 ~~~~~~~~~~~~~~~
 
 Action snippets are used to commit some action. Mainly we use it to copy helper and utility files from standard directories
-to some output directory. For example we have a C file where we define some structures, we also keep some utility files for
+to some output directories. For example, we have a C file where we define some structures, we also keep some utility files for
 exception handling support, etc.
 
 Here is an example of action snippets for Swift target language, where we define source and destination for copy action:
@@ -106,7 +106,8 @@ Here is an example of action snippets for Swift target language, where we define
               {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
               {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
-An action is described by a pair of special keys that show what we are applying the action to and the purpose of the action.
+An action is described by a pair of special keys that show the action object and the purpose of the action.
+For example, action can describe the copy(action) operation of a file(object).
 We have a list of supported actions:
 
 .. list-table:: Actions
@@ -121,4 +122,4 @@ We have a list of supported actions:
       - Render input template files with root context and copy to the destination
 
 **Variables** section is used to define some variables which are connected to the given action and then use it in code snippets.
-For example we define variables to generate include directives in C and target language bindings.
+For example, we define variables to generate ``#include`` directives in C bindings.

@@ -35,19 +35,18 @@ To connect Python and C++ code IEGEN generates `pybind <https://github.com/pybin
 
 .. note::
     Using pybind as an intermediate layer between C++ and Python brings some limitations to IEGEN.
-    For example pybind has a support for exceptions which let IEGEN to transfer custom exceptions from C++ to Python
+    For example, pybind has a support for exceptions which allows IEGEN to transfer custom exceptions from C++ to Python
     only as RuntimeError, thus losing the reference to the original exception type. Currently this limitation exists only for Python.
-    More detailed information is available here: :doc:`Exception handling </03_get_started/05_exception_handling>`.
+    More detailed information is available :doc:`here </03_get_started/05_exception_handling>`.
 
-    Besides the limitations pybind gives us opportunity to support some more features for Python. For example currently we have a support
+    Besides the limitations pybind gives us opportunity to support some more features for Python. For example, currently we have a support
     for callbacks only for Python, but the similar feature is going to be developed for other languages as well.
 
 .. note::
     Since IEGEN generates Python API upon generated pybind bindings, we are able to add some logic before calling original
-    pybind codes. For example IEGEN does some validations for nullable arguments, does implicit casts between
-    provided and expected argument types if possible, supports function overloading and nested types.
-    Generated Python functions has annotations with type hints which gives opportunity to navigate through the code inside IDE tools.
-
+    pybind codes. For example, IEGEN does some validations for nullable arguments, does implicit casts between
+    provided and expected argument types if possible, supports nested types. Generated Python functions has annotations with type hints
+    which gives opportunity to navigate through the code inside IDE tools.
 
 .. toctree::
    :maxdepth: 1

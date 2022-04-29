@@ -2,9 +2,9 @@ Project Configuration
 ^^^^^^^^^^^^^^^^^^^^^
 
 Project configuration is done in yaml format files which should be placed under project directories.
-In yaml files we define parameters which affect generated results and the tool behaviour (e.g. input sources and output directories, etc.).
+In yaml files we define parameters which affect generated results and the tool behavior (e.g. input sources and output directories, etc.).
 User can have a single or multiple configuration files in yaml format spread across the project.
-IEGEN lookups those files by pattern defined in application config file via *context_def_glob* parameter. The default value of *context_def_glob*
+IEGEN looks up at those files by pattern defined in application config file via *context_def_glob* parameter. The default value of *context_def_glob*
 parameter is `\**/*iegen.yaml` which means any file in the project having `iegen.yaml` suffix.
 This means that if you use this default value then you'll need to have a project config file with a name suffixed with `iegen.yaml`.
 This value can be changed in application config file: :doc:`App config </05_detailed_info/01_app_config>`.
@@ -51,7 +51,7 @@ Section **rules**
 
 **rules** section is a mandatory section which contains code snippets, type converter snippets and action snippets needed to generate bindings for target languages.
 **rules** sections can be spread across the project. We merge them together by platform and language specifications.
-This mechanism allow user to have own custom converter for some types. Merging will allow user to keep custom converter files
+This mechanism allows users to have their own custom converters. Merging will allow user to keep custom converter files
 in the same directory where the corresponding type is defined.
 IEGEN can be run only for languages having corresponding snippets under `rules` section. Currently IEGEN includes snippets for `Swift`, `Kotlin` and `Python` languages in default rules definition.
 In order to disable a language it's enough to remove its snippets from `rules` section.
@@ -95,7 +95,7 @@ Here is the minimal rules configuration for Swift, Kotlin and Python languages:
 **Join** and **include** are yaml helpers which allow user to define configuration in different files and then combine them in a single place.
 
 Actually you don't need to care about *rules*, *var_def* sections unless you are writing your own custom type converters.
-If you are going to use the default behaviour of IEGEN with the default converters you can just use a command line utility provided by IEGEN to initialize your project config file.
+If you are going to use the default behavior of IEGEN with the default converters you can just use a command line utility provided by IEGEN to initialize your project config file.
 To generate initial configuration user should run `iegen init` under project directory.
 The command will create `iegen.yaml` file containing the default initial config example.
 You may deal with **vars** section to define/override root level configuration variables.
@@ -122,7 +122,7 @@ Section **file_vars**
 ~~~~~~~~~~~~~~~~~~~~~
 
 Similar to `dir_vars` we also have **file_vars** optional section to define API for specific files. The usage and definition are the same as for directories.
-To define file path user need to use **file** key:
+To define file path user needs to use **file** key:
 
 .. code-block:: yaml
 
@@ -152,7 +152,7 @@ The first way is to specify the full C++ signature of the entity (class, struct,
           action: gen_method
           throws: no_throw
 
-IEGEN also supports the structure with the nested form of definition, where **::** symbols are used as the sign of a sub section:
+IEGEN also supports the structure with nested form of definition, where **::** symbols are used as the sign of a subsection:
 
 .. code-block:: yaml
 

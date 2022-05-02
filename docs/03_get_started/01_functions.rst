@@ -15,11 +15,11 @@ Here is the source code of it:
    :end-before: [simple-example]
 
 After **__API__** tag we have four variables which are instructions for IEGEN.
-With ``action: gen_function`` we define what should be generated in the target language.
-**package** variable indicates what will be the package for generated **concat** function and **file** indicates
+With **action: gen_function** we define what should be generated in the target language.
+**package** variable indicates what will be the package for generated ``concat`` function and **file** indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
 which means that its value will be used only for generated Swift bindings and for other languages the default value will be used
-i.e. source file name. And finally variable **throws** defines what kind of exceptions **concat** function can throw.
+i.e. source file name. And finally variable **throws** defines what kind of exceptions ``concat`` function can throw.
 In this case its value is **no_throw** which means it will not throw any exception.
 For more details on variables, see :ref:`var-def-label`.
 
@@ -177,7 +177,7 @@ We are ready to use the generated bindings:
 Custom argument names and labels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can specify argument names and argument labels(only for Swift) by using `argument_name` and `argument_label`
+You can specify argument names and argument labels(only for Swift) by using **argument_name** and **argument_label**
 variables. Here's an example function where user explicitly gives argument name and label for each given argument.
 Those values will be used in the target language instead of the values used in C++.
 
@@ -247,14 +247,14 @@ Let's take a look at the following example:
 
 IEGEN uses **nullable_arg** variable to identify which arguments are nullable. This is a list of argument names.
 And for nullable return value IEGEN uses **nullable_return** boolean variable.
-In the above example we have an overloaded method **max**. The first one has one nullable and one non null argument and it returns nullable value.
+In the above example we have an overloaded method ``max``. The first one has one nullable and one non null argument and it returns nullable value.
 The second one has two nullable arguments and returns a nullable value.
 In this example you can find also a constructor taking nullable argument and nullable getters/setters.
 
 .. note::
     For getter/setter methods marked as **gen_getter** and **gen_setter** both must be tagged similarly.
     If the getter is marked with **nullable_return: True** then setter should be marked with **nullable_arg: <arg_name>**.
-    In the above example we have a pair of nullable getter/setter: `nullable` and `setNullable`.
+    In the above example we have a pair of nullable getter/setter: ``nullable`` and ``setNullable``.
 
 .. note::
     Kotlin and Swift have a support for nullable arguments.
@@ -273,7 +273,7 @@ Now let's see some usage examples for generated bindings:
 
     .. tab:: Python
 
-        As you can see here `ValueError` is thrown when None is passed but expected value is not Optional.
+        As you can see here ``ValueError`` is thrown when None is passed but expected value is not Optional.
         The same is for return values.
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/main.py
@@ -378,11 +378,11 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
-In this case IEGEN generates two overloaded functions for ``Kotlin`` and ``Swift``: one without arguments and
+In this case IEGEN generates two overloaded functions for **Kotlin** and **Swift**: one without arguments and
 the other with one argument without default value. The second function has three arguments of types ``Task``, ``Color`` and ``Root``.
 The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments IEGEN will generate
-appropriate overloaded options for ``Kotlin`` and ``Swift``.
-For ``Python`` IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
+appropriate overloaded options for **Kotlin** and **Swift**.
+For **Python** IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code, they work as expected.
 
 .. collapse:: Generated functions
@@ -500,7 +500,7 @@ Supported return values policies are:
 Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
-Besides the return value policies IEGEN supports ``keep_alive`` policy to bind argument's lifetime to ``this`` object's lifetime.
+Besides the return value policies IEGEN supports **keep_alive** policy to bind argument's lifetime to ``this`` object's lifetime.
 This is to ensure that the argument won't be deallocated at least until the object which keeps a reference on it is alive.
 
 Let's take a look at the following example:
@@ -511,7 +511,7 @@ Let's take a look at the following example:
    :end-before: [employer-example]
 
 In the above example ``Employer`` holds references of ``Employee``. The constructor and the method ``addEmployee``
-are annotated with ``keep_alive`` variable to keep added ``employees`` alive at least until the ``employer`` is alive,
+are annotated with **keep_alive** variable to keep added ``employees`` alive at least until the ``employer`` is alive,
 otherwise added employees might be deallocated before the destruction of employer which will cause employer to
 hold invalid data.
 
@@ -522,10 +522,10 @@ hold invalid data.
     The indexing of arguments starts with 1 and the policy can be applied on all arguments.
 
 .. note::
-    When applying ``keep_alive`` policy strong reference cycles may occur. Let's assume we have two types
-    ``Teacher`` and ``Student`` and each of them keep a reference to the other. In this case, if we
-    apply ``keep_alive`` policy for both then a strong reference cycle will occur. Currently, IEGEN does not detect
+    When applying **keep_alive** policy strong reference cycles may occur. Let's assume we have two types
+    and each of them keep a reference to the other. In this case, if we
+    apply **keep_alive** policy for both then a strong reference cycle will occur. Currently, IEGEN does not detect
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::
-    For shared pointers it's redundant to specify ``keep_alive`` policy.
+    For shared pointers it's redundant to specify **keep_alive** policy.

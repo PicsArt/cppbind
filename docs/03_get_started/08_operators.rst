@@ -14,9 +14,9 @@ to **False**. In that case we should also specify **name** for that operator so 
 
 
 .. note::
-    All comparisons in Kotlin are translated into calls to **compareTo**, that is required to return **Int**.
-    That's why we have **compareTo** method in C++ with kotlin.is_operator set to True(This is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it ).
-    Also notice we do not have Kotlin action for **operator>**.
+    All comparisons in Kotlin are translated into calls to ``compareTo``, that is required to return **Int**.
+    That's why we have ``compareTo`` method in C++ with kotlin.is_operator set to True(this is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it).
+    Also notice we do not have Kotlin action for ``operator>``.
 
 .. note::
     For **+=** operator we are generating bindings only for Python and Swift because for Kotlin the signature of this operator is different and

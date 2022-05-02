@@ -609,7 +609,7 @@ constructor:
       {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
       {%- elif arg.default_is_nullptr %} = null
       {%- endif %}
       {%- endif %}
@@ -763,7 +763,7 @@ method:
       {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
       {%- elif arg.default_is_nullptr %} = null
       {%- endif %}
       {%- endif %}
@@ -1068,7 +1068,7 @@ function:
       {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}
+      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
       {%- elif arg.default_is_nullptr %} = null
       {%- endif %}
       {%- endif %}

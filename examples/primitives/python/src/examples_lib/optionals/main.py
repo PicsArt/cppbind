@@ -18,6 +18,7 @@ assert op.optional_bool_with_default() is True
 assert op.optional_string_with_default() == "abc"
 assert op.optional_string_view_with_default() == "abc"
 assert op.optional_char_with_default() == ","
+assert op.optional_unsigned_char_with_default() == 100
 assert op.optional_shared_ptr_with_nullptr_default() is None
 assert op.optional_enum_with_default() == Color.Red
 assert op.optional_enum_with_default_and_field_prefix() == ColorShade.ShadeLight
@@ -41,6 +42,7 @@ assert op.optional_enum_with_default_and_field_prefix(ColorShade.ShadeDark) == C
 assert op.optional_enum_with_internal_default(ColorShade.ShadeLight) == ColorShade.ShadeLight
 assert op.optional_bool_with_default(False) is False
 assert op.optional_char_with_default(':') == ':'
+assert op.optional_unsigned_char_with_default(200) == 200
 assert op.optional_long_with_default(8) == 8
 assert op.optional_float_with_default(5.0) == 5.0
 # [optionals-usage]

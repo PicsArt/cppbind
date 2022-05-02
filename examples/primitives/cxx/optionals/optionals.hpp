@@ -10,6 +10,7 @@
 #include "cxx/simple/task.hpp"
 #include "cxx/simple/root.hpp"
 
+using UCHAR = unsigned char;
 
 namespace iegen::example {
 // forward declaration
@@ -101,15 +102,21 @@ public:
 	}
 
     /**
-     * \internal
-     * TODO add swift action after char support for swift
      * __API__
-     * python.action: gen_method
-     * kotlin.action: gen_method
+     * action: gen_method
      * throws: no_throw
      */
 	char optionalCharWithDefault(char symbol = ',') {
         return symbol;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	UCHAR optionalUnsignedCharWithDefault(UCHAR num = 100) {
+        return num;
 	}
 
     /**

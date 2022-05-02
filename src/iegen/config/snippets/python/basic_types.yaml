@@ -96,3 +96,6 @@ double:
     pybind_to_python:
     python_to_pybind: |
       {{target_name}} = {{target_type_name}}({{name}})
+
+unsigned char:
+  int

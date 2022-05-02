@@ -131,3 +131,21 @@ char:
       {{target_type_name}} {{target_name}} = static_cast<jbyte>({{name}});
     kotlin_to_jdk:
     jdk_to_kotlin:
+
+unsigned char:
+  custom:
+    pname: Int
+    tname: UByte
+  types:
+    kotlin: UByte
+    jni: jint
+    jdk: Int
+  converters:
+    jni_to_cxx: |
+      unsigned char {{target_name}} = static_cast<unsigned char>({{name}});
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = {{name}};
+    kotlin_to_jdk: |
+      val {{target_name}} = {{name}}.toInt()
+    jdk_to_kotlin:
+      val {{target_name}} = {{name}}.toUByte()

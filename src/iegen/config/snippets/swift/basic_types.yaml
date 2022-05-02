@@ -141,3 +141,33 @@ double:
     cxx_to_c:
     swift_to_sc:
     sc_to_swift:
+
+char:
+  custom:
+    is_c_pointer_type: False
+    tname: Character
+  types:
+    swift: Character
+    c: char
+    sc: CChar
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc: |
+      let {{target_name}} = {{name}}.description.utf8CString[0]
+    sc_to_swift: |
+      let {{target_name}} = Character(UnicodeScalar(Int({{name}}))!)
+
+unsigned char:
+  custom:
+    is_c_pointer_type: False
+    tname: CUnsignedChar
+  types:
+    swift: CUnsignedChar
+    c: unsigned char
+    sc: CUnsignedChar
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:

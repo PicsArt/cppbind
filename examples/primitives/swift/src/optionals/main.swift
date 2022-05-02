@@ -15,8 +15,8 @@ func runOptionalExamples() {
     assert(op.optionalBoolWithDefault() == true)
     assert(op.optionalStringWithDefault() == "abc")
     assert(op.optionalStringViewWithDefault() == "abc")
-    // // TODO add char converter
-    // assert(op.optionalCharWithDefault() == ',')
+    assert(op.optionalCharWithDefault() == ",")
+    assert(op.optionalUnsignedCharWithDefault() == 100)
     assert(op.optionalCharPointerWithDefault() == "def")
     assert(op.optionalSharedPtrWithNullptrDefault() == nil)
     assert(op.optionalEnumWithDefault() == Color.Red)
@@ -30,8 +30,8 @@ func runOptionalExamples() {
     assert(op.optionalEnumWithInternalDefault(c: ColorShade.ShadeLight) == ColorShade.ShadeLight)
     assert(op.optionalBoolWithDefault(value: false) == false)
     assert(op.optionalStringViewWithDefault(optionalStr: "test") == "test")
-    // TODO add char converter
-    // assert(op.optionalCharWithDefault(symbol: ':') == ':')
+    assert(op.optionalCharWithDefault(symbol: ":") == ":")
+    assert(op.optionalUnsignedCharWithDefault(num: 200) == 200)
     assert(op.optionalLongWithDefault(value: 8) == 8)
     assert(op.optionalFloatWithDefault(value: 5.0) == 5.0)
     assert(op.optionalCharPointerWithDefault(optionalStr: "val") == "val")

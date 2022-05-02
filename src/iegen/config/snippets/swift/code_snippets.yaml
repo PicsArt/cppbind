@@ -590,7 +590,7 @@ constructor:
       {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}
+      {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
       {%- elif arg.default_is_nullptr %} = nil
       {%- endif %}
       {%- endif %}
@@ -871,7 +871,7 @@ method:
       {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}
+      {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
       {%- elif arg.default_is_nullptr %} = nil
       {%- endif %}
       {%- endif %}
@@ -1164,7 +1164,7 @@ function:
         {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.default_is_literal %} = {{arg.default}}
+        {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
         {%- elif arg.default_is_nullptr %} = nil
         {%- endif %}
         {%- endif %}

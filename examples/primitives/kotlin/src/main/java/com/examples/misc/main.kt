@@ -32,6 +32,11 @@ class MiscApp {
             print(bufferUsage.usage2().getObjId())
             // [buffer-usage]
 
+            // standard global function generated from yaml api
+            // [std-func-usage]
+            assert(atoi("1") == 1)
+            // [std-func-usage]
+
        }
     }
 

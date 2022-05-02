@@ -137,13 +137,3 @@ swift_test(
     srcs = ["src/typedefs/main.swift"],
     deps = [":sw_examples_library"],
 )
-
-filegroup(
-    name = "examples_files",
-    srcs = glob([
-        "src/**/*.swift",
-        "wrappers/**/*.c*",
-        "wrappers/**/*.h*",
-    ]),
-    visibility = ["//visibility:public"],
-)

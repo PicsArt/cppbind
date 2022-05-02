@@ -17,7 +17,7 @@ import com.examples.iegen.exception_helpers.*
 import com.examples.simple.Project
 import com.examples.simple.Root
 
-val INIT = run {
+private val INIT = run {
     System.loadLibrary("wrapper_jni");
 }
 

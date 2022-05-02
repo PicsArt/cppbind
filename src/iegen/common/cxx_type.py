@@ -141,7 +141,7 @@ class CXXType:
     def unqualified_resolved_type_name(self):
         """Returns unqualified type name if the type is not typedef on pointer, otherwise returns canonical name"""
         return self.raw_type.unqualified_type_name if \
-            (isinstance(self.type_, cli.Type) and self.is_typedef and self.canonical_type.is_pointer) \
+            (isinstance(self.type_, cli.Type) and self.is_typedef and (self.canonical_type.is_pointer or self.canonical_type.is_lval_reference) ) \
             else cutil.get_unqualified_type_name(self.pointee_name)
 
     @property

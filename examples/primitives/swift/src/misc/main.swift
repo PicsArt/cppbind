@@ -31,6 +31,11 @@ func runMiscExamples() {
     assert(resultSize.0 == 20.0)
     assert(resultSize.1 == 40.0)
     // [size-usage]
+
+    /// standard global function generated from yaml api
+    // [std-func-usage]
+    assert(atoi("1") == 1)
+    // [std-func-usage]
 }
 
 #if os(Linux)

@@ -29,3 +29,6 @@ interface:
 
 class:
   modulemap: *var_header_include
+
+function:
+  modulemap: *var_header_include

@@ -1,3 +1,4 @@
+from examples_lib.misc.std_utils_pygen import atoi
 from examples_lib.misc.yaml_example_pygen import WithExternalAPIComments, AdderFloat, AdderInt, color
 from examples_lib.misc.size_buffer_pygen import SizeUsage, BufferUsage
 from buffer import SizeF, Buffer
@@ -35,3 +36,8 @@ buffer_usage = BufferUsage()
 buffer_ = Buffer()
 assert buffer_usage.usage1(buffer_) == "buffer print"
 # [buffer-usage]
+
+# standard global function generated from yaml api
+# [std - func - usage]
+assert atoi('1') == 1
+# [std - func - usage]

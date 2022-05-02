@@ -10,14 +10,3 @@ cc_library(
         "@nlohmann_json//:json"
     ],
 )
-
-filegroup(
-    name = "cc_examples_files",
-    srcs = glob([
-        "**/*.cpp",
-        "**/*.h*",
-        "**/*.yaml",
-        "**/*.yml",
-    ]),
-    visibility = ["//visibility:public"],
-)

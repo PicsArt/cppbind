@@ -264,13 +264,3 @@ py_test(
         ":py_examples_library",
     ],
 )
-
-filegroup(
-    name = "examples_files",
-    srcs = glob([
-        "src/**/*.py",
-        "wrappers/**/*.cpp",
-        "wrappers/**/*.hpp",
-    ]),
-    visibility = ["//visibility:public"],
-)

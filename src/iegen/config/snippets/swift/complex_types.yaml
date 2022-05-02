@@ -210,8 +210,8 @@ $Enum:
     tname: "{{vars.name}}"
   types:
     swift: "{{custom.tname}}"
-    c: unsigned int
-    sc: CUnsignedInt
+    c: int
+    sc: CInt
   converters:
     c_to_cxx: |
       auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});

@@ -6,7 +6,6 @@ entry_point = (
     "iegen = iegen.runner:run_package"
 )
 
-
 with open("src/requirements.txt", "r") as f:
     requires = []
     for line in f:
@@ -17,7 +16,7 @@ with open("src/requirements.txt", "r") as f:
 setup(
     name='iegen',
     version="0.0.1",
-    description="Image Engine Wrapper Generator.",
+    description="C++ Bindings Generator.",
     packages=find_packages('src/.', exclude=['test*']),
     package_dir={'': 'src'},
     # this is hack need to find proper way

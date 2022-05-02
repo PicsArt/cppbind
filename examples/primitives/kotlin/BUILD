@@ -203,13 +203,3 @@ kt_jvm_test(
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.typedefs.TypedefsApp",
 )
-
-filegroup(
-    name = "examples_files",
-    srcs = glob([
-        "src/**/*.kt",
-        "wrappers/**/*.c*",
-        "wrappers/**/*.h*",
-    ]),
-    visibility = ["//visibility:public"],
-)

@@ -78,7 +78,7 @@ include_cxx:
   inheritable: false
   type: list
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 shared_ref:
   inheritable: true
@@ -264,7 +264,7 @@ overloading_postfix:
 
 file_postfix:
   inheritable: true
-  default: _gen
+  default: ''
   allowed_on: [ root ]
 
 extension:
@@ -342,8 +342,8 @@ cxx_out_rel_path:
 
 full_package:
   inheritable: true
-  python.default: "{{package_prefix}}.{{package}}.{{file}}{{file_postfix}}"
-  kotlin.default: "{{package_prefix}}.{{package}}"
+  python.default: "{{package_prefix + '.' if package_prefix}}{{package}}.{{file}}{{file_postfix}}"
+  kotlin.default: "{{package_prefix + '.' if package_prefix}}{{package}}"
   swift.default: ""
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 

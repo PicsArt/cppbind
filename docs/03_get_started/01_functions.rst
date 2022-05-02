@@ -211,6 +211,20 @@ And here is a small code using generated bindings:
            :end-before: [custom-arg-examples]
 
 
+.. note::
+    | If the original function has no argument names then IEGEN will generate argument names using indexing i.e. ``arg1``, ``arg2`` etc.
+      User can override this by using generated argument names in ``argument_name`` variable.
+    | Here's a small example:
+
+    .. code-block:: yaml
+
+          action: gen_function
+          argument_name:
+            arg1: input
+            arg2: output
+
+
+
 .. collapse:: Generated bindings
 
     |

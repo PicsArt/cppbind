@@ -21,7 +21,6 @@ vars:
     - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
   mac.swift.clang_args:
     - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-  file_postfix: ""
   kotlin.cxx_out_dir: "{{path.join(out_prj_dir, 'kotlin/wrappers')}}"
   kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"

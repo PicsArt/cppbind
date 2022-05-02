@@ -59,3 +59,17 @@ type_vars:
     vars:
       action: gen_enum
       package: misc
+
+  - type: "atoi(const char *)"
+    vars:
+      action: gen_function
+      package: misc
+      throws: no_throw
+      file: std_utils
+      argument_name:
+        arg1: num
+      mac.kotlin.argument_name:
+        __s: num
+      linux.argument_name:
+        __nptr: num
+

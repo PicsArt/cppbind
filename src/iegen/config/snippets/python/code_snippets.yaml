@@ -218,8 +218,15 @@ enum:
               {%- endfor -%};
       }
     include:
-      unique_content: |
-        #include "{{vars.prj_rel_file_name}}"
+      unique_content:
+        !concat
+        - !include cxx_macros.yaml&cxx_include
+        - |
+          {%- if vars.is_proj_type -%}
+          {{marker}}#include "{{vars.prj_rel_file_name}}"
+          {%- endif -%}
+          {%- set includes = gen_cxx_include(vars) -%}
+          {%- if includes -%}{{includes}}{%- endif -%}
   hpp:
     header: *var_hpp_header
   pybind_module_cxx: *var_pybind_module
@@ -309,26 +316,27 @@ var_class: &var_class
     header: *var_cxx_header
     footer: *var_cxx_footer
     include:
-      unique_content: |
-        {#- this should go to shared macro cxx_include -#}
-        {%- macro gen_include(converter) -%}
-        {%- if converter.cxx_include -%}
-        {{marker}}{{converter.cxx_include.snippet()}}
-        {%- endif -%}
-        {%- if converter.python -%}
-        {%- for arg_converter in converter.python.args_converters -%}
-        {{gen_include(arg_converter)}}
-        {%- endfor -%}
-        {%- endif -%}
-        {%- endmacro -%}
-        {{gen_include(converter)}}
-        {%- for base_converter in base_types_converters -%}
-        {{gen_include(base_converter)}}
-        {%- endfor -%}
-        {%- if vars.include_cxx -%}
-        {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
-        {{marker}}{{vars.include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
-        {%- endif -%}
+      unique_content:
+        !concat
+        - !include cxx_macros.yaml&cxx_include
+        - |
+          {#- this should go to shared macro cxx_include -#}
+          {%- macro gen_include(converter) -%}
+          {%- if converter.cxx_include -%}
+          {{marker}}{{converter.cxx_include.snippet()}}
+          {%- endif -%}
+          {%- if converter.python -%}
+          {%- for arg_converter in converter.python.args_converters -%}
+          {{gen_include(arg_converter)}}
+          {%- endfor -%}
+          {%- endif -%}
+          {%- endmacro -%}
+          {{gen_include(converter)}}
+          {%- for base_converter in base_types_converters -%}
+          {{gen_include(base_converter)}}
+          {%- endfor -%}
+          {%- set includes = gen_cxx_include(vars) -%}
+          {%- if includes -%}{{includes}}{%- endif -%}
     body:
       scopes:
         - body
@@ -395,25 +403,32 @@ var_method_python_include: &var_method_python_include
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
-  unique_content: |
-    {{marker}}#include "{{vars.prj_rel_file_name}}"
-    {#- this should go to shared macro cxx_include -#}
-    {%- macro gen_include(converter) -%}
-    {%- if converter.cxx_include -%}
-    {{marker}}{{converter.cxx_include.snippet()}}
-    {%- endif -%}
-    {%- if converter.python -%}
-    {%- for arg_converter in converter.python.args_converters -%}
-    {{gen_include(arg_converter)}}
-    {%- endfor -%}
-    {%- endif -%}
-    {%- endmacro -%}
-    {%- for arg in args -%}
-    {{gen_include(arg.converter)}}
-    {%- endfor -%}
-    {%- if rconverter is defined -%}
-    {{gen_include(rconverter)}}
-    {%- endif -%}
+  unique_content:
+    !concat
+    - !include cxx_macros.yaml&cxx_include
+    - |
+      {%- if vars.is_proj_type -%}
+      {{marker}}#include "{{vars.prj_rel_file_name}}"
+      {%- endif -%}
+      {#- this should go to shared macro cxx_include -#}
+      {%- macro gen_include(converter) -%}
+      {%- if converter.cxx_include -%}
+      {{marker}}{{converter.cxx_include.snippet()}}
+      {%- endif -%}
+      {%- if converter.python -%}
+      {%- for arg_converter in converter.python.args_converters -%}
+      {{gen_include(arg_converter)}}
+      {%- endfor -%}
+      {%- endif -%}
+      {%- endmacro -%}
+      {%- for arg in args -%}
+      {{gen_include(arg.converter)}}
+      {%- endfor -%}
+      {%- if rconverter is defined -%}
+      {{gen_include(rconverter)}}
+      {%- endif -%}
+      {%- set includes = gen_cxx_include(vars) -%}
+      {%- if includes -%}{{includes}}{%- endif -%}
 
 constructor:
   python:
@@ -619,31 +634,35 @@ function:
     header: *var_cxx_header
     footer: *var_cxx_footer
     body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
-      {%- set comma = joiner(', ') %}
-      m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
-      , py::overload_cast<
-      {%- for arg in args -%}
-      {{comma()}}{{arg.type_info.cxx.type_name}}
-      {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
-      {%- else -%}
-      , &{{cxx.namespace}}::{{cxx.name}}
-      {%- endif -%}
-      {%- if cxx.is_template -%}
-      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-      {%- endif -%}
-      {{', ' if args}}
-      {%- set comma = joiner(', ') -%}
-      {%- for arg in args -%}
-      {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-      {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
-      {%- endif -%}
-      {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {
+          {%- if cxx.namespace %}
+          using namespace {{cxx.namespace}};
+          {%- endif %}
+          {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
+          {%- set comma = joiner(', ') %}
+          m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+          , py::overload_cast<
+          {%- for arg in args -%}
+          {{comma()}}{{arg.type_info.cxx.type_name}}
+          {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+          {%- else -%}
+          , &{{cxx.namespace}}::{{cxx.name}}
+          {%- endif -%}
+          {%- if cxx.is_template -%}
+          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+          {%- endif -%}
+          {{', ' if args}}
+          {%- set comma = joiner(', ') -%}
+          {%- for arg in args -%}
+          {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
+          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+          {%- endif -%}
+          {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      }
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_module_cxx:
     body:
       unique_content: |
-        {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
         {%- set package_name = vars.package|replace('.', '_') -%}
         {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
         {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");

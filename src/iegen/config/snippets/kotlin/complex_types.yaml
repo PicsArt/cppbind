@@ -239,7 +239,7 @@ const char *:
       std::unique_ptr<{{cxx.pointee_name}}, decltype(deleter)> {{target_name}}_unique_ptr(
                                                                     env->GetStringUTFChars({{name}}, NULL),
                                                                     deleter);
-      {{target_type_name}} {{target_name}} = {{target_name}}_unique_ptr.get()
+      {{target_type_name}} {{target_name}} = {{target_name}}_unique_ptr.get();
     cxx_to_jni: |
       {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}});
     jdk_to_kotlin:

@@ -9,7 +9,7 @@
  * Please do not change it manually.
  */
 
-package com.examples.globs.custom_args
+package com.examples.misc
 
 import com.examples.iegen.alias.*
 import com.examples.iegen.exceptionUtils.*
@@ -19,15 +19,12 @@ private val INIT = run {
     System.loadLibrary("wrapper_jni");
 }
 
-/**
- * A global function with custom argument name and label.
- */
-fun greet(person: String, hometown: String): String {
-    val result = jGreet(person, hometown)
+fun atoi(num: String): Int {
+    val result = jAtoi(num)
     
     return result
 }
 
-private external fun jGreet(person: String, hometown: String): String
+private external fun jAtoi(num: String): Int
 
 private external fun jGettypebyid(id: Long): String

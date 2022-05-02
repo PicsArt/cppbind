@@ -16,27 +16,26 @@
 #include <type_traits>
 #include "kotlin/wrappers/c_helpers.h"
 #include "kotlin/wrappers/iegen_wrapper_helper.hpp"
-#include "cxx/globs/utils.hpp"
+
 
 extern const char* IEGEN_STD_STDEXCEPTION;
 
 
 
-extern "C" JNIEXPORT jstring Java_com_examples_globs_custom_1args_CustomArgUtilsKt_jGreet(JNIEnv* env, jclass cls, jstring person, jstring hometown){
+extern "C" JNIEXPORT jint Java_com_examples_misc_Std_1utilsKt_jAtoi(JNIEnv* env, jclass cls, jstring num){
     
-    jstring jjnitocxxpersonStr = static_cast<jstring>(person);
-    auto jnitocxxperson_cstr = env->GetStringUTFChars(jjnitocxxpersonStr, 0);
-    std::string jnitocxxperson = jnitocxxperson_cstr;
-    env->ReleaseStringUTFChars(jjnitocxxpersonStr, jnitocxxperson_cstr);
-    jstring jjnitocxxhometownStr = static_cast<jstring>(hometown);
-    auto jnitocxxhometown_cstr = env->GetStringUTFChars(jjnitocxxhometownStr, 0);
-    std::string jnitocxxhometown = jnitocxxhometown_cstr;
-    env->ReleaseStringUTFChars(jjnitocxxhometownStr, jnitocxxhometown_cstr);
+    auto deleter = [&env, &num](const char * ptr) {
+        env->ReleaseStringUTFChars(num, ptr);
+    };
+    std::unique_ptr<const char, decltype(deleter)> jnitocxxnum_unique_ptr(
+                                                                  env->GetStringUTFChars(num, NULL),
+                                                                  deleter);
+    const char * jnitocxxnum = jnitocxxnum_unique_ptr.get();
     
     try {
-        const auto& result = ::greet(jnitocxxperson, jnitocxxhometown);
-        jstring cxxtojniresult = env->NewStringUTF(result.data());
-        return cxxtojniresult;
+        const auto& result = ::atoi(jnitocxxnum);
+        
+        return result;
     }
     catch (const std::exception& e) {
         jclass handlerCls = env->FindClass("com/examples/iegen/exceptionUtils/ExceptionHandler");
@@ -49,11 +48,11 @@ extern "C" JNIEXPORT jstring Java_com_examples_globs_custom_1args_CustomArgUtils
         env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
     }
 
-    jstring result {};
+    jint result {};
     return result;
 }
 
-extern "C" JNIEXPORT jstring Java_com_examples_globs_custom_1args_CustomargutilsKt_jGettypebyid(JNIEnv* env, jclass cls, jobjectid id) {
+extern "C" JNIEXPORT jstring Java_com_examples_misc_Std_1utilsKt_jGettypebyid(JNIEnv* env, jclass cls, jobjectid id) {
     validateID(id);
     return env->NewStringUTF(reinterpret_cast<IEGenCObject*>(id)->type);
 }

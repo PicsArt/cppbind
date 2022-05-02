@@ -13,12 +13,12 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include "cxx/globs/utils.hpp"
+
 
 namespace py = pybind11;
 
-void bindExamplesLibGlobsCustomargutilsPygen(py::module& m) {
+void bindExamplesLibMiscStdUtilsPygen(py::module& m) {
     {
-        m.def("greet", &::greet, py::arg("person"), py::arg("hometown"), py::return_value_policy::automatic);
+        m.def("atoi", &::atoi, py::arg("num"), py::return_value_policy::automatic);
     }
-} /* bindExamplesLibGlobsCustomargutilsPygen */
+} /* bindExamplesLibMiscStdUtilsPygen */

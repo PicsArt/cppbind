@@ -56,7 +56,7 @@ In case user wants a class not to be derived from std::exception, but to be thro
     target language. We need this since original exception object is being deleted after its lifetime is ended.
 
 In case we catch an exception not from user defined list, we report unexpected exception and call uncaught exception handler callback.
-We define exception utility package which includes **ExceptionHandler** class to handle uncaught exception case.
+We define exception utility package which includes ``ExceptionHandler`` class to handle uncaught exception case.
 Default handler aborts program execution immediately, but user can set custom callback, which
 will be called after unhandled exception is detected. The mentioned package looks like:
 

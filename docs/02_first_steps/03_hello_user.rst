@@ -67,7 +67,7 @@ Okay, here is your C++ code:
 To be able to use this from other languages, you need to create a binding from your C++ library to that language.
 IEGEN is a tool that will help you to achieve that just by adding some extra marks to your C++ codes.
 
-In the code above, you need to export **UserInfo** structure with *age* and *name* properties and **Host** class with its methods.
+In the code above, you need to export ``UserInfo`` structure with ``age`` and ``name`` properties and ``Host`` class with its methods.
 To do that, you just need to change your Doxygen comments to include IEGEN instructions and parameters.
 
 .. _Basic example C++ with IEGEN:
@@ -77,11 +77,11 @@ To do that, you just need to change your Doxygen comments to include IEGEN instr
    :language: cpp 
    :emphasize-lines: 5-7, 13-15, 20-21, 26-27, 32-33, 40-42, 48-50, 55-57, 64-66
 
-Basically, we have just added *__API__* tag to let IEGEN know what entity needs to be processed
-and added the instruction *action: gen_method* which tells that a method needs to be generated. For the full list of available instructions see :doc:`Generation instructions </05_detailed_info/04_gen_actions>`.
+Basically, we have just added **__API__** tag to let IEGEN know what entity needs to be processed
+and added the instruction **action: gen_method** which tells that a method needs to be generated. For the full list of available instructions see :doc:`Generation instructions </05_detailed_info/04_gen_actions>`.
 
 You can notice the usage of **throws** variable in API comments. IEGEN has some required variables on some entities. In this case we have set
-mandatory `throws` variable on all methods/constructors. This requirement is done to assure that user hasn't forgotten to mention about possible exceptions that entity can throw.
+mandatory **throws** variable on all methods/constructors. This requirement is done to assure that user hasn't forgotten to mention about possible exceptions that entity can throw.
 More details can be found :doc:`here </03_get_started/05_exception_handling>`.
 
 That is it. Now you should be able to use it on your codes written in supported languages. Here are usage examples for Kotlin, Python and Swift.
@@ -126,12 +126,12 @@ You should run **iegen init** in the project root directory to create default pr
 
 Above provided default config file can be changed later to fit the requirements of your project. For example, the default value for **src_glob** variable
 is a list with the file glob pattern corresponding to all the header files in the project. This can be modified to control the list of the files processed by IEGEN.
-There are also some other variables (`cxx_out_dir`, `out_dir`, etc.) which need to be modified to control the place where the generated bindings will be placed.
+There are also some other variables (**cxx_out_dir**, **out_dir**, etc.) which need to be modified to control the place where the generated bindings will be placed.
 You can find the whole list of IEGEN variables :doc:`here </05_detailed_info/03_var_def>`.
 
 .. note::
-    From the default config file you can notice the usage of `get_android_ndk_sysroot` helper function when defining `clang_args` variable
-    for Kotlin target language for macOS platform. `ANDROID_NDK` environment variable must be correctly set since it is used by `get_android_ndk_sysroot` function.
+    From the default config file you can notice the usage of **get_android_ndk_sysroot** helper function when defining **clang_args** variable
+    for Kotlin target language for macOS platform. **ANDROID_NDK** environment variable must be correctly set since it is used by **get_android_ndk_sysroot** function.
 
 .. collapse:: The content of "Hello user" project config file
 

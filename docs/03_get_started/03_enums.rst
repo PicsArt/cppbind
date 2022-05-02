@@ -12,7 +12,7 @@ Here is Color enum definition:
 As we can see in the above example we can extend enums logic by using **code_fragment** variable.
 Code fragments defined with this variable are appended to the enum definition.
 Particularly in this example we added custom conversion from enum to string for all three languages.
-Notice that for Swift we have also used **bases_list** variable to make the enum implement `CustomStringConvertible` protocol.
+Notice that for Swift we have also used **bases_list** variable to make the enum implement ``CustomStringConvertible`` protocol.
 We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
 prefix string to enum field names in target language.
 
@@ -31,7 +31,7 @@ And the Frame struct using it:
    :end-before: [example]
 
 .. note::
-    We are generating **property_setter** for public field **backgroundColor**.
+    We are generating **property_setter** for public field ``backgroundColor``.
     A writable property field will correspond to it in the target language. To generate read-only field we should use **property_getter** instead.
 
 Usage examples:

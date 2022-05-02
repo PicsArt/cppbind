@@ -6,7 +6,7 @@ This section covers single and multiple inheritance.
 Single Inheritance
 ~~~~~~~~~~~~~~~~~~
 
-Assume we have two types: **Bicycle** inherited from **Vehicle**:
+Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/vehicle.hpp
    :language: cpp
@@ -88,8 +88,8 @@ Usage examples:
 
 Multiple Inheritance
 ~~~~~~~~~~~~~~~~~~~~
-Now let's assume we have a type inherited from two others: **Square** inherited from **Rectangle** and **Rhombus**.
-The last two in their turn are derived from **Parallelogram**:
+Now let's assume we have a type inherited from two others: ``Square`` inherited from ``Rectangle`` and ``Rhombus``.
+The last two in their turn are derived from ``Parallelogram``:
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/parallelogram.hpp
    :language: cpp

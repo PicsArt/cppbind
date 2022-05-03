@@ -6,16 +6,11 @@ IEGEN
 Description
 ~~~~~~~~~~~
 
-IEGEN is a tool which generates bindings between C++ and other languages.
-Sometimes it is necessary to bridge a code written in some languages with C++ code and doing this manually
-for large projects is very difficult and error-prone. Developers need to learn lots of things about C APIs
-which connects target language with C++. Also, it is difficult and error-prone to do manual changes to the big code
-every time new changes are needed. IEGEN will automate the process and will solve above-mentioned problems.
+IEGEN is a software development tool that generates bindings between C++ and other languages. This innovative solution helps developers bridge a code written in a programming language with C++ code. It is an error-prone and complex process to accomplish the bridging process manually, especially for large projects — every time new changes are required. Moreover, developers must learn many things about C APIs that connect the target language with C++.
 
-The list of currently supported languages and additional information about their specifications
-can be found here: `Supported languages <https://iegen.picsart.com/master/index.html#supported-languages-label>`_.
-The tool can be extended for other languages as well.
-Also, it can be customized to generate bindings better fitting to your needs.
+IEGEN automates the process and solves the problems mentioned above.
+
+The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`_. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
 
 Table of contents
 ~~~~~~~~~~~~~~~~~
@@ -31,33 +26,31 @@ Table of contents
 Installation
 ~~~~~~~~~~~~
 
-There are some required steps to install IEGEN and to be ready to use it.
-The installation steps are described here: `Installation steps <https://iegen.picsart.com/master/02_first_steps/02_installation.html>`_.
+There are some required steps to install and use IEGEN. The installation steps are described `here <https://iegen.picsart.com/master/02_first_steps/02_installation.html>`_.
 
 Usage
 ~~~~~
 
-After installing IEGEN it can be run via command line interface (CLI).
-IEGEN CLI options are described here: `IEGEN CLI <https://iegen.picsart.com/master/05_detailed_info/05_command_line_interface.html>`_.
+After installing IEGEN, it is run through the command-line interface (CLI).
+IEGEN CLI options are described `here <https://iegen.picsart.com/master/05_detailed_info/05_command_line_interface.html>`_.
 
 Tutorial
 ~~~~~~~~
 
-To be able to configure and run IEGEN you can read our tutorial example which is called "Hello User".
-This tutorial will help you to learn about the basic usage of IEGEN and be ready to configure it for your project.
+To configure and run IEGEN, read our tutorial example, which is called “Hello User.” This tutorial will help you learn about the basic usage of IEGEN and configure it for your project.
 
 - Tutorial documentation: `"Hello User" doc <https://iegen.picsart.com/master/02_first_steps/03_hello_user.html>`_
-- Tutorial github sources: `"Hello User" github <https://github.com/PicsArt/iegen/tree/master/examples/tutorials/hello_user>`_
+- Tutorial GitHub sources: `"Hello User" GitHub <https://github.com/PicsArt/iegen/tree/master/examples/tutorials/hello_user>`_
 
 Credits
 ~~~~~~~
 
-IEGEN tool is developed and open-sourced by PicsArt, Inc.
+The IEGEN tool is developed and open-sourced by PicsArt, Inc.
 
 License
 ~~~~~~~
 
-IEGEN is provided under a MIT license that can be found in the `LICENSE <https://github.com/PicsArt/iegen/blob/master/LICENSE>`_ file.
+IEGEN is provided under the MIT license that can be found in the `LICENSE <https://github.com/PicsArt/iegen/blob/master/LICENSE>`_ file.
 By using, distributing, or contributing to this project, you agree to the terms and conditions of this license.
 
 Features
@@ -65,7 +58,7 @@ Features
 
 IEGEN supports the generation of bindings for many types of entities from C++ source code.
 For example, you can expose classes, methods, global functions, enums, exception types, nested structures,
-template types, etc. to the target language. Here is the list of the most important features of IEGEN:
+template types, etc., to the target language. Here is the list of the most important features of IEGEN:
 
 - `Classes and structs <https://iegen.picsart.com/master/03_get_started/02_classes.html>`_
 - `Interfaces <https://iegen.picsart.com/master/03_get_started/02_classes.html>`_
@@ -89,4 +82,4 @@ template types, etc. to the target language. Here is the list of the most import
 How to contribute
 ~~~~~~~~~~~~~~~~~
 
-To contribute to this project follow the rules described in the `Contribution guide <https://github.com/PicsArt/iegen/blob/master/docs/CONTRIBUTING.md>`_.
+To contribute to this project, follow the rules described in the `Contribution guide <https://github.com/PicsArt/iegen/blob/master/docs/CONTRIBUTING.md>`_.

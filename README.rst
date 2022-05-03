@@ -6,11 +6,11 @@ IEGEN
 Description
 ~~~~~~~~~~~
 
-IEGEN is a software development tool that generates bindings between C++ and other languages. This innovative solution helps developers bridge a code written in a programming language with C++ code. It is an error-prone and complex process to accomplish the bridging process manually, especially for large projects—every time new changes are required. Moreover, developers must learn many things about C APIs that connect the target language with C++.
+IEGEN is a software development tool that generates bindings between C++ and other languages. This innovative solution helps developers bridge a code written in a programming language with C++ code. It is an error-prone and complex process to accomplish the bridging process manually, especially for large projects — every time new changes are required. Moreover, developers must learn many things about C APIs that connect the target language with C++.
 
 IEGEN automates the process and solves the problems mentioned above.
 
-TThe list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`_. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
+The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`_. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
 
 Table of contents
 ~~~~~~~~~~~~~~~~~

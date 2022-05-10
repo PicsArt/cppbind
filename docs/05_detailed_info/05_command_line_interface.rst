@@ -98,5 +98,5 @@ In order to clean all generated files from the given directory use this command.
     iegen clean <dir>
 
 .. note::
-    | *iegen clean* works by finding and removing all files that contain the IEGEN banner logo.
+    | ``iegen clean`` works by finding and removing all files that contain the IEGEN banner logo.
     | Make sure not to remove banner logos from the generated files.

@@ -1,7 +1,7 @@
 Application configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-IEGEN application configuration is done via *iegen_config.cfg* file which can be placed under the project root directory.
+IEGEN application configuration is done via **iegen_config.cfg** file which can be placed under the project root directory.
 If there is no user-provided application config file then IEGEN will use the default one:
 
 .. literalinclude:: /../src/iegen/config/iegen_config.cfg

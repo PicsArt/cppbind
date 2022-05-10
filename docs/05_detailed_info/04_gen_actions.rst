@@ -9,7 +9,7 @@ IEGEN uses them to know what should be generated, where the generated files shou
 Jinja expressions, predefined system variables can be used here. Available system variables are described :doc:`here </05_detailed_info/03_var_def>`.
 
 .. note::
-    **__API__** tag can be overridden in `iegen_config.cfg` application config file. To do that set **parser_start** property in **[API]** section.
+    **__API__** tag can be overridden in **iegen_config.cfg** application config file. To do that set **parser_start** property in **[API]** section.
 
 **action** variable is used to define what should be generated in the target code.
 If it's missing then nothing will be generated.
@@ -39,8 +39,8 @@ Supported values for **action** are the following ones:
     * **gen_property_setter** - Used to generate both setter and getter for a public member.
 
     * | **gen_package** - Used to generate a package for Python bindings. This action can be attached to a directory and IEGEN will
-                          generate `__init__.py` file in that directory, thus making a Python package. This can be used to add some imports
-                          and custom code fragments in `__init__.py` file. This action is ignored for other languages.
+                          generate **__init__.py** file in that directory, thus making a Python package. This can be used to add some imports
+                          and custom code fragments in **__init__.py** file. This action is ignored for other languages.
 
 
 Everything above __API__ tag is considered as a pure comment which is present in generated target language bindings.

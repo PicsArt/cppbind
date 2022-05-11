@@ -2,25 +2,8 @@ Command line interface
 ======================
 IEGEN provides command line interface for running and configuration. To see the list of available commands use ``iegen --help``.
 
-.. code-block:: none
-
-    iegen --help
-    usage: iegen [-h] {clean,init,run} ...
-
-    These are common IEGEN commands:
-
-    positional arguments:
-      {clean,init,run}
-        clean           Clean all iegen generated files from directory.
-        init            Creates an initial config file in current directory.
-        run             Run iegen to generate code for given languages.
-
-    optional arguments:
-      -h, --help        show this help message and exit
-
-
 iegen init
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -89,7 +72,7 @@ In order to generate the bindings use the ``iegen run`` command by providing one
 
 
 iegen clean
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^
 
 In order to clean all generated files from the given directory use this command.
 

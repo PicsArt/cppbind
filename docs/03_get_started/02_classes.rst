@@ -22,22 +22,22 @@ In a code above we are exporting all public members and constructors.
 
 Usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/main.kt
             :language: kotlin
             :start-after: [task-usage]
             :end-before: [task-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/main.py
             :language: python
             :start-after: [task-usage]
             :end-before: [task-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/simple/main.swift
             :language: swift
@@ -48,18 +48,18 @@ Usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/task.kt
                 :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/task/task_pygen.py
                 :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/simple/task.swift
                :language: swift
@@ -75,22 +75,22 @@ Let's assume we have another class using the one above.
 
 And the usage example:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/main.kt
             :language: kotlin
             :start-after: [project-usage]
             :end-before: [project-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/main.py
             :language: py
             :start-after: [project-usage]
             :end-before: [project-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/simple/main.swift
             :language: swift
@@ -101,18 +101,18 @@ And the usage example:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/simple/project.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/simple/project_pygen.py
                 :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/simple/project.swift
                :language: swift
@@ -135,21 +135,21 @@ Here's a small example:
 
 Some usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/main.kt
             :language: kotlin
             :start-after: [nested-types-usage]
             :end-before: [nested-types-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/main.py
             :start-after: [nested-types-usage]
             :end-before: [nested-types-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/nested_types/main.swift
             :language: swift
@@ -161,18 +161,18 @@ Some usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nested_types/list.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/nested_types/list_pygen.py
                :language: python
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/nested_types/list.swift
                :language: swift

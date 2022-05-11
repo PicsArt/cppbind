@@ -23,9 +23,9 @@ If the project is already cloned, pull the latest version:
     git fetch
     git pull
 
-.. tabs::
+.. tab-set::
 
-   .. tab:: Linux
+   .. tab-item:: Linux
 
         Update/upgrade the system\ :
 
@@ -62,7 +62,7 @@ If the project is already cloned, pull the latest version:
             python3 -m venv venv
             source venv/bin/activate
 
-   .. tab:: macOS
+   .. tab-item:: macOS
 
         Add libclang path to DYLD_LIBRARY_PATH.
         If you have Xcode installed then run the following command:
@@ -99,7 +99,7 @@ If the project is already cloned, pull the latest version:
             python3 -m venv venv
             source venv/bin/activate
 
-   .. tab:: Windows
+   .. tab-item:: Windows
 
         IEGEN requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path.
 

@@ -88,18 +88,18 @@ That is it. Now you should be able to use it on your codes written in supported 
 
 .. _Basic example usage with Swift:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/kotlin/hello_user_usage.kt
            :language: java
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/python/hello_user_usage.py
            :language: py
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/tutorials/hello_user/usage/swift/hello_user_usage.swift
            :language: swift

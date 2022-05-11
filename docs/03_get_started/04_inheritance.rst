@@ -31,22 +31,22 @@ IEGEN will generate two classes one inherited from the other.
 
 Usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/main.kt
            :language: kotlin
            :start-after: [simple-inheritance-usage]
            :end-before: [simple-inheritance-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/main.py
            :language: py
            :start-after: [simple-inheritance-usage]
            :end-before: [simple-inheritance-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/inheritance/main.swift
            :language: swift
@@ -57,8 +57,8 @@ Usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/vehicle.kt
                :language: java
@@ -66,7 +66,7 @@ Usage examples:
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/bicycle.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/vehicle_pygen.py
                :language: py
@@ -74,7 +74,7 @@ Usage examples:
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/bicycle_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/inheritance/vehicle.swift
                :language: swift
@@ -126,22 +126,22 @@ In this case again we have used the same value for **shared_ref** for all 4 type
 
 Usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/main.kt
            :language: kotlin
            :start-after: [multi-inheritance-usage]
            :end-before: [multi-inheritance-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/main.py
            :language: py
            :start-after: [multi-inheritance-usage]
            :end-before: [multi-inheritance-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/inheritance/main.swift
            :language: swift
@@ -152,8 +152,8 @@ Usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/parallelogram.kt
                :language: java
@@ -167,7 +167,7 @@ Usage examples:
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/inheritance/square.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/inheritance/parallelogram_pygen.py
                :language: py
@@ -183,7 +183,7 @@ Usage examples:
                :language: py
 
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/inheritance/parallelogram.swift
                :language: swift

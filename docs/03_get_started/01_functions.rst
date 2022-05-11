@@ -25,22 +25,22 @@ For more details on variables, see :ref:`var-def-label`.
 
 And here is a small code using generated bindings:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [simple-usage-example]
            :end-before: [simple-usage-example]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [simple-usage-example]
            :end-before: [simple-usage-example]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -56,22 +56,22 @@ Let's bind more complex examples like template ``makePair`` and ``max``, overloa
 
 Code using generated functions:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [glob-func-examples]
            :end-before: [glob-func-examples]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [glob-func-examples]
            :end-before: [glob-func-examples]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -88,18 +88,18 @@ In case of Python a postfix generated from argument types is appended to the fun
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/utils.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/utils_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/GlobUtils.swift
                :language: swift
@@ -127,22 +127,22 @@ As you can see overloaded or static methods are like regular methods. There's no
 
 We are ready to use the generated bindings:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/main.kt
            :language: kotlin
            :start-after: [overload-usage]
            :end-before: [overload-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/main.py
            :language: py
            :start-after: [overload-usage]
            :end-before: [overload-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/overloads/main.swift
            :language: swift
@@ -154,18 +154,18 @@ We are ready to use the generated bindings:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/utils_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/overloads/Utils.swift
                :language: swift
@@ -188,22 +188,22 @@ Those values will be used in the target language instead of the values used in C
 
 And here is a small code using generated bindings:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [custom-arg-examples]
            :end-before: [custom-arg-examples]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [custom-arg-examples]
            :end-before: [custom-arg-examples]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -229,18 +229,18 @@ And here is a small code using generated bindings:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/custom_args/customArgUtils.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/customArgUtils_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/customArgUtils.swift
                :language: swift
@@ -277,15 +277,15 @@ In this example you can find also a constructor taking nullable argument and nul
 
 Now let's see some usage examples for generated bindings:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/main.kt
            :language: kotlin
            :start-after: [nullables-usage]
            :end-before: [nullables-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         As you can see here ``ValueError`` is thrown when None is passed but expected value is not Optional.
         The same is for return values.
@@ -295,7 +295,7 @@ Now let's see some usage examples for generated bindings:
             :start-after: [nullables-usage]
             :end-before: [nullables-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/nullables/main.swift
             :language: swift
@@ -306,18 +306,18 @@ Now let's see some usage examples for generated bindings:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/nullables/nullable_utils.kt
                 :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/nullables/nullable_utils_pygen.py
                 :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/nullables/NullableUtils.swift
                 :language: swift
@@ -339,22 +339,22 @@ Here are some sample functions having default arguments:
 
 Here's a sample code using the above functions:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [non-complex-defaults-usage]
            :end-before: [non-complex-defaults-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [non-complex-defaults-usage]
            :end-before: [non-complex-defaults-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -365,18 +365,18 @@ Here's a sample code using the above functions:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/primitives/primitiveDefaults.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/primitiveDefaults_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/primitiveDefaults.swift
                :language: swift
@@ -403,18 +403,18 @@ Although the actual default values for complex types are not visible in generate
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/complex/complexDefaults.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/complexDefaults_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/globs/complexDefaults.swift
                :language: swift
@@ -424,22 +424,22 @@ Although the actual default values for complex types are not visible in generate
 
 And here are some usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/globs/main.kt
            :language: kotlin
            :start-after: [complex-defaults-usage]
            :end-before: [complex-defaults-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/globs/main.py
            :language: py
            :start-after: [complex-defaults-usage]
            :end-before: [complex-defaults-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/globs/main.swift
            :language: swift
@@ -495,13 +495,13 @@ the returned object and gives the ownership to the target language.
 
 Supported return values policies are:
 
-    * **copy** - Create a new object and give the ownership to the target language. The lifetimes of these two objects are decoupled.
-    * **move** - Move the returned object into a new one and give the ownership to the target language. The lifetimes of these two objects are decoupled.
-    * **take_ownership** - Reference an existing object but give the ownership to the target language. Target language is responsible for deallocating it.
-    * **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
-    * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
-    * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
-    * **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of its parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
+* **copy** - Create a new object and give the ownership to the target language. The lifetimes of these two objects are decoupled.
+* **move** - Move the returned object into a new one and give the ownership to the target language. The lifetimes of these two objects are decoupled.
+* **take_ownership** - Reference an existing object but give the ownership to the target language. Target language is responsible for deallocating it.
+* **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
+* **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
+* **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
+* **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of its parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
 
 .. note::
     If the object is returned by value or by rvalue reference then **copy** and **move** are used respectively.

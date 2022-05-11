@@ -34,6 +34,10 @@ assert(utils.numDouble == null)
 utils.numDouble = d2
 assert(utils.numDouble?.value == d2.value)
 
+// checking char *
+assert(reverseString("abc") == "cba")
+assert(reverseString(null) == null)
+
 // [nullables-usage]
 }
 

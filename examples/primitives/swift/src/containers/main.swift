@@ -64,6 +64,11 @@ func runContainerExamples() {
         jsonUsage.setJson(j: json)
         assert(jsonUsage.getJson() == json)
     }
+
+    let jsonObj = jsonUsage.getJson()
+    let jsonMatrix : [[String]] = [[jsonObj]]
+    jsonUsage.setJsonMatrix(jm: jsonMatrix)
+    assert(jsonUsage.getJsonMatrix()[0][0] == jsonObj)
     // [json-usage]
 
     // [nested-containers-usage]

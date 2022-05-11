@@ -265,7 +265,7 @@ std::string_view:
     sc_to_swift: |
       {{make_type_converter('std::string').sc_to_swift.snippet(name)}}
 
-char *:
+const char *:
   custom:
     is_c_pointer_type: True
     tname: String
@@ -277,9 +277,13 @@ char *:
     c_to_cxx:
     cxx_to_c:
     swift_to_sc: |
-      let {{target_name}} = {{name}}.cString(using: String.Encoding.utf8){{'!' if not nullable|default(False)}}
+      let {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cString(using: String.Encoding.utf8){{'!' if not nullable|default(False)}}
     sc_to_swift: |
-      let {{target_name}} = String(cString: {{name}}{{'!' if nullable|default(False)}})
+      {%- if nullable|default(False) -%}
+      let {{target_name}} = {{name}} != nil ? String(cString: {{name}}!) : nil
+      {%- else -%}
+      let {{target_name}} = String(cString: {{name}})
+      {%- endif -%}
 
 std::vector:
   custom:

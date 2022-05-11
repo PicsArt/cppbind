@@ -1,4 +1,4 @@
-from examples_lib.nullables import NumberInt, NumberDouble, Utils
+from examples_lib.nullables import NumberInt, NumberDouble, Utils, reverse_string
 
 # [nullables-usage]
 n1 = NumberInt(1)
@@ -59,5 +59,9 @@ try:
     utils.num_int = None
 except ValueError as e:
     assert str(e) == "Utils.num_int's value argument cannot be None."
+
+# checking char *
+assert reverse_string("abc") == "cba"
+assert reverse_string(None) is None
 
 # [nullables-usage]

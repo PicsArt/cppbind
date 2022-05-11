@@ -25,7 +25,6 @@ if platform.system() == 'Darwin':
             os.environ['DYLD_LIBRARY_PATH'] = f'$DYLD_LIBRARY_PATH:{p}'
             break
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'IEGEN'
@@ -59,7 +58,6 @@ napoleon_include_init_with_doc = True
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
 
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -74,7 +72,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'test*.rst']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_material'
-
+html_show_sourcelink = False
 
 html_theme_options = {
 
@@ -97,7 +95,6 @@ html_theme_options = {
     'repo_url': 'https://github.com/PicsArt/iegen',
     'repo_name': 'GitHub',
     'repo_type': 'github',
-
 
     # Visible levels of the global TOC; -1 means unlimited
     'globaltoc_depth': -1,

@@ -2,12 +2,11 @@
 #define json_examples_h
 
 #include <nlohmann/json.hpp>
+#include <vector>
 
 namespace iegen::example {
 
 /**
- * comments
- *
  * __API__
  * action: gen_class
  * package: containers
@@ -15,8 +14,6 @@ namespace iegen::example {
 struct JsonExamples {
 
     /**
-     * comments
-     *
      * __API__
      * action: gen_constructor
      * throws: no_throw
@@ -24,8 +21,6 @@ struct JsonExamples {
     JsonExamples() {};
 
     /**
-    * comments
-    *
     * __API__
     * action: gen_method
     * throws: no_throw
@@ -35,8 +30,6 @@ struct JsonExamples {
     }
 
     /**
-    * comments
-    *
     * __API__
     * action: gen_method
     * throws: no_throw
@@ -56,8 +49,27 @@ struct JsonExamples {
         return nlohmann::json::parse("{ \"status\": true, \"pi\": 3.14 }");
     }
 
+   /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    void setJsonMatrix(const std::vector<std::vector<nlohmann::json>>& jm) {
+        jsonMatrix = jm;
+    }
+
+   /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    std::vector<std::vector<nlohmann::json>> getJsonMatrix() {
+        return jsonMatrix;
+    }
+
 private:
     nlohmann::json jsonValue;
+    std::vector<std::vector<nlohmann::json>> jsonMatrix;
 };
 
 }

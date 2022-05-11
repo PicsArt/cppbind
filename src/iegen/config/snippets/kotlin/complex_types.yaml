@@ -223,6 +223,7 @@ $Enum:
       }
       val {{target_name}} = {{target_name}}_optional!!
 
+# TODO: we need to revisit "String?" value for jdk type. Optional "?" must be added in snippets or by "get_target_type_name" if the type is nullable
 const char *:
   custom:
     pname: Object
@@ -230,20 +231,35 @@ const char *:
   types:
     kotlin: String
     jni: jstring
-    jdk: String
+    jdk: String?
   converters:
     jni_to_cxx: |
       auto deleter = [&env, &{{name}}]({{target_type_name}} ptr) {
           env->ReleaseStringUTFChars({{name}}, ptr);
       };
       std::unique_ptr<{{cxx.pointee_name}}, decltype(deleter)> {{target_name}}_unique_ptr(
+                                                                    {%- if nullable|default(False) %}
+                                                                    {{name}} ? env->GetStringUTFChars({{name}}, NULL) : nullptr,
+                                                                    {%- else %}
                                                                     env->GetStringUTFChars({{name}}, NULL),
+                                                                    {%- endif %}
                                                                     deleter);
       {{target_type_name}} {{target_name}} = {{target_name}}_unique_ptr.get();
     cxx_to_jni: |
       {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}});
-    jdk_to_kotlin:
-    kotlin_to_jdk:
+    jdk_to_kotlin: |
+      {%- if nullable|default(False) -%}
+      val {{target_name}} = if ({{name}} != null) {{name}}!! else null
+      {%- else -%}
+      val {{target_name}} = {{name}}!!
+      {%- endif -%}
+    kotlin_to_jdk: |
+      {%- if nullable|default(False) -%}
+      val {{target_name}} = if ({{name}} != null) {{name}}!! else null
+      {%- else -%}
+      {#- TODO: remove this redundant assignment after converted_name property fix (IEGEN-378) -#}
+      val {{target_name}} = {{name}}
+      {%- endif -%}
 
 std::__cxx11::basic_string:
   custom:

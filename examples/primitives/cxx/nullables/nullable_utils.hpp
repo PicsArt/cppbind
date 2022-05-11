@@ -3,7 +3,8 @@
 
 #include <string>
 #include <memory>
-
+#include <cstring>
+#include <algorithm>
 
 namespace iegen::example::nullable {
 // [example-helpers]
@@ -189,6 +190,27 @@ struct Utils {
     std::shared_ptr<NumberInt> numInt;
 
 };
+
+/**
+ * __API__
+ * action: gen_function
+ * package: nullables
+ * swift.file: NullableUtils
+ * throws: no_throw
+ * nullable_arg: s
+ * nullable_return: True
+ */
+const char* reverseString(const char* s) {
+    if (s) {
+        auto str = std::string(s);
+        std::reverse(str.begin(), str.end());
+        char* res = new char[sizeof(char) * strlen(s)];
+        std::strcpy(res, str.c_str());
+        return res;
+    }
+    return nullptr;
+}
+
 // [example]
 }
 #endif

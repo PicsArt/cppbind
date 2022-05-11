@@ -50,6 +50,11 @@ class ContainersApp {
             assert(jsonUsage.getSimpleJsonExample() == jsonVal)
             jsonUsage.setJson(jsonVal)
             assert(jsonUsage.getJson() == jsonVal)
+
+            val jsonObj = jsonUsage.getJson()
+            val jsonMatrix = listOf(listOf(jsonObj))
+            jsonUsage.setJsonMatrix(jsonMatrix)
+            assert(jsonUsage.getJsonMatrix()[0][0] == jsonObj)
             // [json-usage]
 
             // [nested-containers-usage]

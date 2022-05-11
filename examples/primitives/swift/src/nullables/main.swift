@@ -39,6 +39,10 @@ func runNullableExamples() {
     // negative examples
     // utils.numInt = nil
 
+    // checking char *
+    assert(reverseString(s: "abc") == "cba")
+    assert(reverseString(s: nil) == nil)
+
     // [nullables-usage]
 }
 

@@ -2,11 +2,11 @@ rules:
   swift.type_converters:
     nlohmann::json:
       custom:
-        is_c_pointer_type: False
+        is_c_pointer_type: True
         tname: JSON
       types:
         swift: String
-        c: char * _Nullable
+        c: char *
         sc: UnsafeMutablePointer<CChar>
       converters:
         c_to_cxx: |
@@ -18,9 +18,9 @@ rules:
         swift_to_sc: |
           let {{target_name}} = strdup({{name}})!
         sc_to_swift: |
-          let {{target_name}} = String(cString: {{name}}!)
+          let {{target_name}} = String(cString: {{name}})
           defer {
-            {{name}}!.deallocate()
+            {{name}}.deallocate()
           }
 
   kotlin.type_converters:
@@ -34,7 +34,7 @@ rules:
         jdk: String
       converters:
         jni_to_cxx: |
-          auto {{target_name}} = nlohmann::json::parse(iegen::jni_to_string(env, {{name}}))
+          auto {{target_name}} = nlohmann::json::parse(iegen::jni_to_string(env, {{name}}));
         cxx_to_jni: |
           {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
         kotlin_to_jdk:

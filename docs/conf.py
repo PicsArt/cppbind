@@ -28,7 +28,7 @@ if platform.system() == 'Darwin':
 
 # -- Project information -----------------------------------------------------
 
-project = 'iegen'
+project = 'IEGEN'
 copyright = '2022, Picsart'
 author = 'Picsart'
 
@@ -45,18 +45,20 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
-    'sphinx_tabs.tabs',
+    'myst_parser',
     'sphinx_toolbox.collapse',
+    'sphinx_design',
 ]
+
+myst_enable_extensions = ["colon_fence"]
 
 autosummary_generate = True
 autosummary_generate_overwrite = False
 napoleon_include_init_with_doc = True
 
-html_show_sourcelink = False
-
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -71,7 +73,43 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'test*.rst']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_material'
+
+
+html_theme_options = {
+
+    # Set the name of the project to appear in the navigation.
+    'nav_title': 'IEGEN',
+
+    # Set you GA account ID to enable tracking
+    'google_analytics_account': 'UA-XXXXX',
+
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    'base_url': 'https://github.com/PicsArt/iegen',
+
+    # Set the color and the accent color
+    'theme_color': '#3849aa',
+    'color_primary': '#3849aa',
+    'color_accent': '#6e74dc',
+
+    # Set the repo location to get a badge with stats
+    'repo_url': 'https://github.com/PicsArt/iegen',
+    'repo_name': 'GitHub',
+    'repo_type': 'github',
+
+
+    # Visible levels of the global TOC; -1 means unlimited
+    'globaltoc_depth': -1,
+    # If False, expand all TOC entries
+    'globaltoc_collapse': True,
+    # If True, show hidden TOC entries
+    'globaltoc_includehidden': True,
+}
+
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

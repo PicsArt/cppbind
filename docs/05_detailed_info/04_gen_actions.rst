@@ -18,29 +18,29 @@ For example, we can define **package** variable for a directory and the files un
 
 Supported values for **action** are the following ones:
 
-    * **gen_class** - Used to generate a class/struct.
+* **gen_class** - Used to generate a class/struct.
 
-    * **gen_interface** - For the languages which do not support multiple inheritance this action can be used to generate interfaces. For more details see: :ref:`multiple-inheritance-label`.
+* **gen_interface** - For the languages which do not support multiple inheritance this action can be used to generate interfaces. For more details see: :ref:`multiple-inheritance-label`.
 
-    * **gen_enum** - Used to generate enums.
+* **gen_enum** - Used to generate enums.
 
-    * **gen_constructor** - Used to generate constructors.
+* **gen_constructor** - Used to generate constructors.
 
-    * **gen_method** - Used to generate regular methods.
+* **gen_method** - Used to generate regular methods.
 
-    * **gen_function** - Used to generate regular functions.
+* **gen_function** - Used to generate regular functions.
 
-    * **gen_getter** - Used to generate a getter method.
+* **gen_getter** - Used to generate a getter method.
 
-    * **gen_setter** - Used to generate a setter. Important thing here is that setter is parsed alongside with getter. If no getter is provided then nothing will be generated.
+* **gen_setter** - Used to generate a setter. Important thing here is that setter is parsed alongside with getter. If no getter is provided then nothing will be generated.
 
-    * **gen_property_getter** - Used to generate a getter for public member.
+* **gen_property_getter** - Used to generate a getter for public member.
 
-    * **gen_property_setter** - Used to generate both setter and getter for a public member.
+* **gen_property_setter** - Used to generate both setter and getter for a public member.
 
-    * | **gen_package** - Used to generate a package for Python bindings. This action can be attached to a directory and IEGEN will
-                          generate **__init__.py** file in that directory, thus making a Python package. This can be used to add some imports
-                          and custom code fragments in **__init__.py** file. This action is ignored for other languages.
+* | **gen_package** - Used to generate a package for Python bindings. This action can be attached to a directory and IEGEN will
+                      generate **__init__.py** file in that directory, thus making a Python package. This can be used to add some imports
+                      and custom code fragments in **__init__.py** file. This action is ignored for other languages.
 
 
 Everything above __API__ tag is considered as a pure comment which is present in generated target language bindings.

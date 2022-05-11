@@ -26,18 +26,18 @@ IEGEN generates overloaded methods in target languages with each combination of 
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/template_methods.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/template_methods_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/templates/template_methods.swift
                :language: swift
@@ -47,15 +47,15 @@ IEGEN generates overloaded methods in target languages with each combination of 
 As we can see IEGEN generated two overloaded methods for both ``max`` and ``makePair``.
 And here are some usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt
            :language: kotlin
            :start-after: [template-funcs-examples]
            :end-before: [template-funcs-examples]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/main.py
            :language: py
@@ -63,7 +63,7 @@ And here are some usage examples:
            :end-before: [template-funcs-examples]
 
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/templates/main.swift
            :language: swift
@@ -98,10 +98,10 @@ For ``iegen::example::Task`` we have not specified property ``name`` which means
 
 Now let's see what usages we can have for our example Stack. Here is the source code:
 
- .. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp
-   :language: cpp
-   :start-after: [example]
-   :end-before: [example]
+.. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp
+    :language: cpp
+    :start-after: [example]
+    :end-before: [example]
 
 Here we have four methods taking ``Stack`` as an argument and returning its first element.
 The first three methods are supported by IEGEN but you cannot generate bindings for the fourth.
@@ -116,18 +116,18 @@ The fourth one does not meet this requirement.
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/stack.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/stack_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/templates/stack.swift
                :language: swift
@@ -171,22 +171,22 @@ For this example we would have ``applePineapple`` (Swift, Kotlin) and ``apple_pi
 
 And here are some usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/main.kt
            :language: kotlin
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/main.py
            :language: py
            :start-after: [template-get-usage]
            :end-before: [template-get-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/getters/main.swift
            :language: swift
@@ -197,18 +197,18 @@ And here are some usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/getters/fruits.swift
                :language: swift

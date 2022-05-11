@@ -60,16 +60,16 @@ We define exception utility package which includes ``ExceptionHandler`` class to
 Default handler aborts program execution immediately, but user can set custom callback, which
 will be called after unhandled exception is detected. The mentioned package looks like:
 
-    .. tabs::
-        .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
-            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/iegen/exceptionUtils.kt
-                :language: java
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/iegen/exceptionUtils.kt
+            :language: java
 
-        .. tab:: Swift
+    .. tab-item:: Swift
 
-            .. literalinclude:: /../examples/primitives/swift/src/iegen/exceptionUtils.swift
-                :language: swift
+        .. literalinclude:: /../examples/primitives/swift/src/iegen/exceptionUtils.swift
+            :language: swift
 
 Also we always catch std::exception before catching all exceptions to have more informative error message when exception
 class is derived from std::exception.
@@ -84,20 +84,20 @@ class is derived from std::exception.
 
 After generating bindings for target language we can call methods which can throw an exception, and test results with catch blocks:
 
-.. tabs::
-        .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
-            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/main.kt
-                :language: kotlin
-                :start-after: [exceptions-usage]
-                :end-before: [exceptions-usage]
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/main.kt
+            :language: kotlin
+            :start-after: [exceptions-usage]
+            :end-before: [exceptions-usage]
 
-        .. tab:: Swift
+    .. tab-item:: Swift
 
-            .. literalinclude:: /../examples/primitives/swift/src/exceptions/main.swift
-                :language: swift
-                :start-after: [exceptions-usage]
-                :end-before: [exceptions-usage]
+        .. literalinclude:: /../examples/primitives/swift/src/exceptions/main.swift
+            :language: swift
+            :start-after: [exceptions-usage]
+            :end-before: [exceptions-usage]
 
 .. note::
     In the last usage example you can notice that we called custom exception class method when an exception was caught. When custom exception class and its methods have API annotations,
@@ -107,36 +107,35 @@ After generating bindings for target language we can call methods which can thro
 
     |
 
-    .. tabs::
-            .. tab:: Kotlin
+    .. tab-set::
+            .. tab-item:: Kotlin
 
                 .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/throw_exceptions.kt
                     :language: java
 
-            .. tab:: Swift
+            .. tab-item:: Swift
 
                 .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
                     :language: swift
-
 |
 
 .. collapse:: Binding codes when exception list is empty (throws=True)
 
     |
 
-    .. tabs::
-            .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
-                .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
-                    :language: java
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/exceptions/no_throw_exceptions.kt
+                :language: java
 
-                .. note::
-                    For Kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
-                    `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
+            .. note::
+                For Kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
+                `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
 
-            .. tab:: Swift
+        .. tab-item:: Swift
 
-                .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
-                    :language: swift
+            .. literalinclude:: /../examples/primitives/swift/src/exceptions/no_throw_exceptions.swift
+                :language: swift
 
 |

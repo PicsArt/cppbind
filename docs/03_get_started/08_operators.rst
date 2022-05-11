@@ -24,22 +24,22 @@ to **False**. In that case we should also specify **name** for that operator so 
 
 And the usage example:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
            :language: kotlin
            :start-after: [counter-usage]
            :end-before: [counter-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
            :language: py
            :start-after: [counter-usage]
            :end-before: [counter-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
            :language: swift
@@ -50,18 +50,18 @@ And the usage example:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/counter.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/counter_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/operators/counter.swift
                :language: swift
@@ -80,22 +80,22 @@ Here is the example of overloading **operator[]**.
 
 Usage example:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/main.kt
            :language: kotlin
            :start-after: [subscript-operator-usage]
            :end-before: [subscript-operator-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/main.py
            :language: py
            :start-after: [subscript-operator-usage]
            :end-before: [subscript-operator-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/operators/main.swift
            :language: swift
@@ -106,18 +106,18 @@ Usage example:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/operators/intarray.kt
                :language: java
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/operators/intarray_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             .. literalinclude:: /../examples/primitives/swift/src/operators/intarray.swift
                :language: swift

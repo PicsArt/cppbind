@@ -36,22 +36,22 @@ And the Frame struct using it:
 
 Usage examples:
 
-.. tabs::
-    .. tab:: Kotlin
+.. tab-set::
+    .. tab-item:: Kotlin
 
         .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/enums/main.kt
            :language: kotlin
            :start-after: [color-usage]
            :end-before: [color-usage]
 
-    .. tab:: Python
+    .. tab-item:: Python
 
         .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/main.py
            :language: py
            :start-after: [color-usage]
            :end-before: [color-usage]
 
-    .. tab:: Swift
+    .. tab-item:: Swift
 
         .. literalinclude:: /../examples/primitives/swift/src/enums/main.swift
            :language: swift
@@ -62,8 +62,8 @@ Usage examples:
 
     |
 
-    .. tabs::
-        .. tab:: Kotlin
+    .. tab-set::
+        .. tab-item:: Kotlin
 
             Here is the generated Kotlin code for Color:
 
@@ -76,7 +76,7 @@ Usage examples:
                :language: java
 
 
-        .. tab:: Python
+        .. tab-item:: Python
 
             Here is the generated Python code for Color:
 
@@ -88,7 +88,7 @@ Usage examples:
             .. literalinclude:: /../examples/primitives/python/src/examples_lib/enums/frame_pygen.py
                :language: py
 
-        .. tab:: Swift
+        .. tab-item:: Swift
 
             Here is the generated Swift code for Color:
 

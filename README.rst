@@ -64,7 +64,8 @@ template types, etc., to the target language. Here is the list of the most impor
 - `Interfaces <https://iegen.picsart.com/master/03_get_started/02_classes.html>`_
 - `Nested types <https://iegen.picsart.com/master/03_get_started/02_classes.html#nested-types>`_
 - `Methods <https://iegen.picsart.com/master/03_get_started/01_functions.html>`_
-- `Static and overloaded functions <https://iegen.picsart.com/master/03_get_started/01_functions.html#static-and-overloaded-methods>`_
+- `Static methods <https://iegen.picsart.com/master/03_get_started/01_functions.html#static-methods>`_
+- `Overloaded methods <https://iegen.picsart.com/master/03_get_started/01_functions.html#overloaded-methods>`_
 - `Operator overloading <https://iegen.picsart.com/master/03_get_started/08_operators.html>`_
 - `Single and multiple inheritance <https://iegen.picsart.com/master/03_get_started/04_inheritance.html>`_
 - `Enumerations <https://iegen.picsart.com/master/03_get_started/03_enums.html>`_

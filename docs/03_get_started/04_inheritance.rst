@@ -23,7 +23,7 @@ Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
     This is mandatory. This attribute should be the same in type hierarchy.
 
 .. note::
-    If the type which is being parsed is inherited from another one which does not have an **__API__** i.e. is not parsed
+    If the type which is being parsed is inherited from another one which does not have an **__API__**, i.e. is not parsed
     by IEGEN then in the binding code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.

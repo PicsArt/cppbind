@@ -9,9 +9,12 @@ assert(Utils.sum(first: 2.0, second: 3.0) == 5.0)
 let utils = Utils()
 assert(utils.concatenate(first: "1", second: "2") == "12")
 assert(utils.concatenate(first: "a", second: "b", third: "c") == "abc")
+// [overload-usage]
 
+// [static-usage]
 assert(Utils.minus(first: 3, second: 2) == 1)
 assert(Utils.minus(first: 7.0, second: 3.0) == 4.0)
+// [static-usage]
 
 // constructor overloading
 let john_email = "john@email.com"
@@ -24,9 +27,6 @@ assert(e1.name == jane)
 let e3 = Employee(age: 20, email: john_email)
 assert(e3.email == john_email)
 assert(e3.age == 20)
-
-// [overload-usage]
-
 
 e3.setData(name: jane, age: 21, email: jane_email)
 assert(e3.email == jane_email)

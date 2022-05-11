@@ -155,7 +155,7 @@ Now let's go through the key variables:
 - **pybind_module_filename** - Generated pybind file name containing pybind module code.
 - **c_pybind_filename** - Generated pybind cpp file name containing code which binds all submodules.
 - **h_pybind_filename** - Generated pybind header file name containing includes of all submodules.
-- **descendants** - List of all derived types of current type. For details see :doc:`Object downcasting </04_advanced_features/05_object_downcasting>`.
+- **descendants** - List of all derived types of current type. Details can be found :doc:`here </04_advanced_features/05_object_type_preservation>`.
 - **return_value_policy** - Policy to define return value lifetime and ownership. Details can be found here: :ref:`rv-policies`.
 - **keep_alive** - List containing indices of arguments which lifetimes should be bound to ``this`` object's lifetime. The indices are 1-based. See more details here: :ref:`keep-alive-policy`.
 - **is_c_wrapper_external** - Boolean to define whether the C binding helpers must be included as from external lib or not (generate include within ``<>`` diamonds or not).

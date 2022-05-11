@@ -59,7 +59,7 @@ $Object:
       {%- else %}
       {%- if descendants %}
       {%- set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
-      {{pointee}}* {{result_target_name}} = downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
+      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
       {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
       {%- endif %}
@@ -146,15 +146,15 @@ $Object:
       if ({{name}} == 0L)
           {{target_name}} = null
       else {
-          {{target_name}} = {{target_type_name}}.iegenDowncast({{name}}{{owner}})
+          {{target_name}} = {{target_type_name}}.iegenConstructObject({{name}}{{owner}})
       }
       {%- else %}
-      {{target_name}} = {{target_type_name}}.iegenDowncast({{name}}{{owner}})
+      {{target_name}} = {{target_type_name}}.iegenConstructObject({{name}}{{owner}})
       {%- endif -%}
       {%- else -%}
       val {{target_name}} = {{'if ({} == 0L) null else '.format(name) if is_nullable}}{{type_name}}(IEGenObject({{name}}{{owner}}))
       {%- endif -%}
-    cxx_downcast: |
+    cxx_obj_recover: |
       {%- set converter = make_type_converter(cxx.unqualified_canonical_type_name) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       auto iegen_obj_{{name}} = reinterpret_cast<IEGenCObject*>({{name}});
@@ -175,7 +175,7 @@ $Object:
     cxx_type_name_global: |
       {%- set cxx_namespace = cxx.namespace|replace('::', '_') -%}
       {{'IEGEN_' + ((cxx_namespace + '_' if cxx_namespace else '') + make_type_converter(cxx.unqualified_resolved_type_name).kotlin.target_type_name|replace('.', '_'))|upper}}
-    kotlin_downcast: |
+    kotlin_obj_construction: |
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set type_name = make_type_converter(cxx.type_name).kotlin.get_target_type_name(interface_class=vars.action=='gen_interface') -%}
       val {{name}}Type = jGettypebyid({{name}})
@@ -187,9 +187,9 @@ $Object:
       {%- endfor %}
           else -> return {{type_name}}(IEGenObject({{name}}, owner))
       }
-    cxx_downcast_func_decl: |
+    cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.unqualified_resolved_type_name}}* downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(cxx.unqualified_resolved_type_name).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.unqualified_resolved_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(cxx.unqualified_resolved_type_name).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
     kotlin_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepIEGenReference({{reference}})
@@ -488,7 +488,7 @@ std::shared_ptr:
       {%- set cxx_namespace = args[0].cxx.namespace.split('::')|map('capitalize')|join %}
       {%- macro gen_cast_block() -%}
       {%- if args0_descendants -%}
-      {{target_name}} = downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
+      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
       {%- else -%}
       auto iegen_obj_{{name}} = reinterpret_cast<IEGenCObject*>({{name}});
       auto iegen_obj_{{name}}_ptr = iegen_obj_{{name}} ? iegen_obj_{{name}}->ptr : nullptr;
@@ -557,7 +557,7 @@ std::shared_ptr:
       {#- for shared pointers we always use take_ownership
       although for now take_ownership is not working as expected as we do not have object caching yet -#}
       {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
-    cxx_downcast: |
+    cxx_obj_recover: |
       {%- set converter = make_type_converter(args[0].cxx.unqualified_canonical_type_name) -%}
       {%- set descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
       auto iegen_obj_{{name}} = reinterpret_cast<IEGenCObject*>({{name}});
@@ -575,9 +575,9 @@ std::shared_ptr:
           }
       }
       return nullptr;
-    cxx_downcast_func_decl: |
+    cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = args[0].cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(args[0].cxx.unqualified_resolved_type_name)}} downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(args[0].cxx.unqualified_resolved_type_name).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
+      {{'std::shared_ptr<{}>'.format(args[0].cxx.unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(args[0].cxx.unqualified_resolved_type_name).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
 
 
 std::pair:

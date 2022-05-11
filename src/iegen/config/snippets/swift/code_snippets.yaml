@@ -251,8 +251,8 @@ class:
           {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
           {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
 
-          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenDowncast(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
-            {{converter.swift_downcast.snippet(name="iegenObj")|indent(4)}}
+          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenConstructObject(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{converter.swift_obj_construction.snippet(name="iegenObj")|indent(4)}}
           }
           {%- endif %}
         }
@@ -312,11 +312,11 @@ class:
             free(cself.type);
         }
         {% endif -%}
-        {#- downcast function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+        {#- object recover function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
         {%- if descendants -%}
         {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter -%}
-        {{new_line if has_no_base_cls}}{{this_converter.cxx_downcast_func_decl.snippet(name="iegenObj")}} {
-            {{this_converter.cxx_downcast.snippet(name="iegenObj")|indent(4)}}
+        {{new_line if has_no_base_cls}}{{this_converter.cxx_obj_recover_func_decl.snippet(name="iegenObj")}} {
+            {{this_converter.cxx_obj_recover.snippet(name="iegenObj")|indent(4)}}
         }
         {% endif -%}
   ch:
@@ -408,14 +408,14 @@ interface:
           {{head|string|indent(2)}}
           {%- endif %}
           {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var iegenCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
-          {#- downcast function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+          {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
           {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
           {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
           {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
 
-          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenDowncast(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
-            {{converter.swift_downcast.snippet(name="iegenObj")|indent(4)}}
+          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func iegenConstructObject(_ iegenObj: IEGenCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{converter.swift_obj_construction.snippet(name="iegenObj")|indent(4)}}
           }
           {%- endif %}
         }
@@ -474,8 +474,8 @@ interface:
         }
         {% if descendants %}
         {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
-        {{this_converter.cxx_downcast_func_decl.snippet(name="iegenObj")}} {
-            {{this_converter.cxx_downcast.snippet(name="iegenObj")|indent(4)}}
+        {{this_converter.cxx_obj_recover_func_decl.snippet(name="iegenObj")}} {
+            {{this_converter.cxx_obj_recover.snippet(name="iegenObj")|indent(4)}}
         }{{new_line}}
         {%- endif -%}
   ch:
@@ -512,7 +512,7 @@ var_method_cxx_include: &var_method_cxx_include
 var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
-    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current function/method. -#}
+    {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current function/method. -#}
     {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
@@ -526,7 +526,7 @@ var_method_cxx_forward_decl: &var_method_cxx_forward_decl
     {%- endfor -%}
     {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
     {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
-    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True)}};
+    {{marker}}{{fwd_decl_type_converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%- endfor -%}
 
 var_method_cxx_glob_decl: &var_method_cxx_glob_decl
@@ -1333,7 +1333,7 @@ var_getter_cxx_include: &var_getter_cxx_include
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
-    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current getter/setter. -#}
+    {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current getter/setter. -#}
     {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
@@ -1347,7 +1347,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
     {%- endif -%}
     {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
     {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
-    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True)}};
+    {{marker}}{{fwd_decl_type_converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%- endfor -%}
 
 property_getter:

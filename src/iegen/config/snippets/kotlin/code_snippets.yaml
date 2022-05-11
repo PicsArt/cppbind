@@ -222,12 +222,12 @@ var_class_cxx: &var_class_cxx
           delete iegen_obj_id;
       }
       {%- endif %}
-      {#- downcast function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+      {#- object recover function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
       {%- if descendants %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
 
-      {{this_converter.cxx_downcast_func_decl.snippet(name="id")}} {
-          {{this_converter.cxx_downcast.snippet(name="id")|indent(4)}}
+      {{this_converter.cxx_obj_recover_func_decl.snippet(name="id")}} {
+          {{this_converter.cxx_obj_recover.snippet(name="id")|indent(4)}}
       }
       {%- endif -%}
 
@@ -267,7 +267,7 @@ var_class_kotlin_include: &var_class_kotlin_include
     {{marker}}import {{import_converter.vars.full_package}}.{{import_converter.target_type_name}}
     {%- endfor -%}
     {%- for desc_import_converter, gen_for_impl in desc_import_converters -%}
-    {#- we need to import implementation classes for downcasting (`gen_for_impl` is for tracking nested types) -#}
+    {#- we need to import implementation classes for object construction (`gen_for_impl` is for tracking nested types) -#}
     {{marker}}import {{desc_import_converter.vars.full_package}}.{{desc_import_converter.get_target_type_name(interface_class=desc_import_converter.vars.action=='gen_interface') if gen_for_impl else desc_import_converter.target_type_name}}
     {%- endfor -%}
 
@@ -312,8 +312,8 @@ class:
                 const val iegenCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
                 {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
-                public fun iegenDowncast(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
-                    {{converter.kotlin_downcast.snippet(name="id")|indent(12)}}
+                public fun iegenConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
+                    {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
                 }
                 {%- endif %}
             }
@@ -415,8 +415,8 @@ interface:
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
             companion object {
-                public fun iegenDowncast(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
-                    {{converter.kotlin_downcast.snippet(name="id")|indent(12)}}
+                public fun iegenConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
+                    {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
                 }
             }
             {%- endif %}
@@ -533,7 +533,7 @@ var_method_cxx_include: &var_method_cxx_include
 var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
-    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current function/method. -#}
+    {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current function/method. -#}
     {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
@@ -547,7 +547,7 @@ var_method_cxx_forward_decl: &var_method_cxx_forward_decl
     {%- endfor -%}
     {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
     {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
-    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True)}};
+    {{marker}}{{fwd_decl_type_converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%- endfor -%}
 
 var_method_cxx_glob_decl: &var_method_cxx_glob_decl
@@ -1233,7 +1233,7 @@ var_getter_cxx_include: &var_getter_cxx_include
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
-    {#- Downcast is done when the type has descendants. Forward decl is not needed when the downcast function is generated in the same file as current getter/setter. -#}
+    {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current getter/setter. -#}
     {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
@@ -1247,7 +1247,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
     {%- endif -%}
     {%- for fwd_decl_type_info in fwd_decl_type_infos -%}
     {%- set fwd_decl_type_converter = make_type_converter('std::shared_ptr<' + fwd_decl_type_info.cxx.type_name + '>' if fwd_decl_type_info.vars.shared_ref else fwd_decl_type_info.cxx.type_name) -%}
-    {{marker}}{{fwd_decl_type_converter.cxx_downcast_func_decl.snippet(is_fwd_decl=True)}};
+    {{marker}}{{fwd_decl_type_converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%- endfor -%}
 
 property_getter:

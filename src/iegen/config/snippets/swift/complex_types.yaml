@@ -60,7 +60,7 @@ $Object:
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- elif descendants %}
       {%- set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
-      {{pointee}}* {{result_target_name}} = downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
       {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
       {%- endif %}
@@ -143,10 +143,10 @@ $Object:
       {%- if cxx.is_polymorphic and descendants %}
       {%- if nullable|default(False) %}
       if ({{name}}.ptr != nil) {
-        {{target_name}} = {{type_name}}.iegenDowncast({{name}}{{owner}})
+        {{target_name}} = {{type_name}}.iegenConstructObject({{name}}{{owner}})
       }
       {%- else %}
-      {{target_name}} = {{type_name}}.iegenDowncast({{name}}{{owner}})
+      {{target_name}} = {{type_name}}.iegenConstructObject({{name}}{{owner}})
       {%- endif %}
       {%- else %}
       {%- if nullable|default(False) %}
@@ -157,7 +157,7 @@ $Object:
       {{target_name}} = {{type_name}}({{name}}{{owner}})
       {%- endif %}
       {%- endif %}
-    cxx_downcast: |
+    cxx_obj_recover: |
       {%- set converter = make_type_converter(cxx.unqualified_canonical_type_name) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       if ({{name}}.ptr) {
@@ -176,7 +176,7 @@ $Object:
     cxx_type_name_global: |
       {%- set cxx_namespace = cxx.namespace|replace('::', '_') -%}
       {{'IEGEN_' + ((cxx_namespace + '_' if cxx_namespace else '') + make_type_converter(cxx.unqualified_resolved_type_name).swift.target_type_name|replace('.', '_'))|upper}}
-    swift_downcast: |
+    swift_obj_construction: |
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       let typeName = String(cString: {{name}}.type)
       switch(typeName) {
@@ -190,9 +190,9 @@ $Object:
         {%- set type_name = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
         return {{type_name + custom.tpostfix}}({{name}}, owner)
       }
-    cxx_downcast_func_decl: |
+    cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.unqualified_resolved_type_name}}* downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(cxx.unqualified_resolved_type_name).swift.target_type_name|replace('.', '_')}}(IEGenCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.unqualified_resolved_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(cxx.unqualified_resolved_type_name).swift.target_type_name|replace('.', '_')}}(IEGenCObject{{' ' + name if not is_fwd_decl|default(False)}})
     swift_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepIEGenReference({{reference}})
@@ -487,7 +487,7 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
       {%- if args0_descendants -%}
-      {{target_name}} = downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
       {%- else -%}
       {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%- endif -%}
@@ -556,7 +556,7 @@ std::shared_ptr:
       {{args[0].snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
     # for shared pointers we always use take_ownership
     # although for now take_ownership is not working as expected as we do not have object caching yet
-    cxx_downcast: |
+    cxx_obj_recover: |
       {%- set converter = make_type_converter(args[0].cxx.unqualified_canonical_type_name) -%}
       {%- set descendants = args[0].vars.descendants if args[0].vars.descendants is not none else args[0].descendants -%}
       if ({{name}}.ptr) {
@@ -572,9 +572,9 @@ std::shared_ptr:
           }
       }
       return nullptr;
-    cxx_downcast_func_decl: |
+    cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = args[0].cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(args[0].cxx.unqualified_resolved_type_name)}} downcast_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(args[0].cxx.unqualified_resolved_type_name).swift.target_type_name|replace('.', '_')}}(IEGenCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{'std::shared_ptr<{}>'.format(args[0].cxx.unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(args[0].cxx.unqualified_resolved_type_name).swift.target_type_name|replace('.', '_')}}(IEGenCObject{{' ' + name if not is_fwd_decl|default(False)}})
 
 std::pair:
   custom:

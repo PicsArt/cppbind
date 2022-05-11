@@ -10,8 +10,12 @@ assert(Utils.sum(2.0f, 3.0f) == 5.0f)
 val utils = Utils()
 assert(utils.concatenate("1", "2") == "12")
 assert(utils.concatenate("a", "b", "c") == "abc")
+// [overload-usage]
+
+// [static-usage]
 assert(Utils.minus(3, 2) == 1)
 assert(Utils.minus(7.0f, 3.0f) == 4.0f)
+// [static-usage]
 
 // constructor overloading
 val john = "John Doe"
@@ -25,8 +29,6 @@ assert(e1.name == john)
 val e3 = Employee(20, john_email)
 assert(e3.email == john_email)
 assert(e3.age == 20)
-
-// [overload-usage]
 
 e3.setData(jane, 21, jane_email)
 assert(e3.email == jane_email)

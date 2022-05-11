@@ -8,9 +8,12 @@ assert Utils.sum(2.0, 3.0) == 5.0
 utils = Utils()
 assert utils.concatenate("1", "2") == "12"
 assert utils.concatenate("a", "b", "c") == "abc"
+# [overload-usage]
 
+# [static-usage]
 assert Utils.minus(3, 2) == 1
 assert Utils.minus(7.0, 3.0) == 4.0
+# [static-usage]
 
 # constructor overloading
 john = 'John Doe'
@@ -26,8 +29,6 @@ assert e2.name == jane
 e3 = Employee(20, john_email)
 assert e3.email == john_email
 assert e3.age == 20
-
-# [overload-usage]
 
 # [implicit-cast-example]
 n1 = NumberInt(1)

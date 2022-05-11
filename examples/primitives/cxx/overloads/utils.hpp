@@ -3,7 +3,6 @@
 #include <string>
 
 namespace iegen::example {
-// [example]
 /**
  * An example with overloaded methods.
  * __API__
@@ -20,6 +19,7 @@ struct Utils {
      */
     Utils() {};
 
+    // [overload-example]
     /**
      * Sum two ints.
      * __API__
@@ -59,7 +59,9 @@ struct Utils {
     std::string concatenate(std::string first, std::string second, std::string third) {
         return first + second + third;
     }
+    // [overload-example]
 
+    // [static-example]
      /**
      * Sub two ints.
      * __API__
@@ -81,7 +83,7 @@ struct Utils {
     static float sub(float first, float second) {
         return first - second;
     }
+    // [static-example]
 };
-// [example]
 }
 #endif

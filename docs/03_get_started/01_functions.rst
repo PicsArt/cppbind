@@ -18,7 +18,7 @@ After **__API__** tag we have four variables which are instructions for IEGEN.
 With **action: gen_function** we define what should be generated in the target language.
 **package** variable indicates what will be the package for generated ``concat`` function and **file** indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
-which means that its value will be used only for generated Swift bindings and for other languages the default value will be used
+which means that its value will be used only for generated Swift bindings and for other languages the default value will be used,
 i.e. source file name. And finally variable **throws** defines what kind of exceptions ``concat`` function can throw.
 In this case its value is **no_throw** which means it will not throw any exception.
 For more details on variables, see :ref:`var-def-label`.
@@ -106,23 +106,21 @@ In case of Python a postfix generated from argument types is appended to the fun
 
 |
 
+Overloaded methods
+~~~~~~~~~~~~~~~~~~
 
-Static and overloaded methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Let's now bind a struct with static and overloaded methods:
+Let's now bind a struct with overloaded methods:
 
 .. literalinclude:: /../examples/primitives/cxx/overloads/utils.hpp
    :language: cpp
-   :start-after: [example]
-   :end-before: [example]
+   :start-after: [overload-example]
+   :end-before: [overload-example]
 
 
-As you can see overloaded or static methods are like regular methods. There's nothing special to add in the **API** for them.
+As you can see overloaded methods are like regular methods. There's nothing special to add in the **API** for them.
 
 .. note::
-    Python does not have method overloading, but here with bind decorator we have overloaded sum and concatenate methods.
-    Sum is also a classmethod as it was static in the original code.
+    Python does not have method overloading, but here with some tricks under the hood we have overloaded ``sum`` and ``concatenate`` methods.
 
 
 We are ready to use the generated bindings:
@@ -172,6 +170,67 @@ We are ready to use the generated bindings:
 
 |
 
+Static methods
+~~~~~~~~~~~~~~
+
+The binding mechanism of static methods is similar to the binding of regular methods. Nothing special should be added in **API** comments:
+
+.. literalinclude:: /../examples/primitives/cxx/overloads/utils.hpp
+   :language: cpp
+   :start-after: [static-example]
+   :end-before: [static-example]
+
+Here are the usage examples:
+
+.. tab-set::
+    .. tab-item:: Kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/main.kt
+           :language: kotlin
+           :start-after: [static-usage]
+           :end-before: [static-usage]
+
+    .. tab-item:: Python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/main.py
+           :language: py
+           :start-after: [static-usage]
+           :end-before: [static-usage]
+
+    .. tab-item:: Swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/overloads/main.swift
+           :language: swift
+           :start-after: [static-usage]
+           :end-before: [static-usage]
+
+.. collapse:: Generated bindings
+
+    |
+
+    .. tab-set::
+        .. tab-item:: Kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/overloads/utils.kt
+               :language: java
+
+        .. tab-item:: Python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/overloads/utils_pygen.py
+               :language: py
+
+        .. tab-item:: Swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/overloads/Utils.swift
+               :language: swift
+
+|
+
+.. note::
+    In generated Python bindings ``sum`` is a classmethod as it was static in the original code.
+
+Also note that IEGEN supports static overloaded methods.
+
 .. _arg-names-and-labels:
 
 Custom argument names and labels
@@ -186,7 +245,7 @@ Those values will be used in the target language instead of the values used in C
    :start-after: [custom-arg-examples]
    :end-before:  [custom-arg-examples]
 
-And here is a small code using generated bindings:
+And here is a small code example using generated bindings:
 
 .. tab-set::
     .. tab-item:: Kotlin
@@ -212,7 +271,7 @@ And here is a small code using generated bindings:
 
 
 .. note::
-    | If the original function has no argument names then IEGEN will generate argument names using indexing i.e. ``arg1``, ``arg2`` etc.
+    | If the original function has no argument names then IEGEN will generate argument names using indexing, i.e. ``arg1``, ``arg2`` etc.
       User can override this by using generated argument names in ``argument_name`` variable.
     | Here's a small example:
 
@@ -501,7 +560,7 @@ Supported return values policies are:
 * **reference** - Reference an existing object but do not give the ownership to the target language. C++ is responsible for deallocating it.
 * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and to **move** and **copy** for rvalue and lvalue references respectively.
 * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references respectively, but falls back to **reference** when the return type is a pointer.
-* **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of its parent object i.e. parent object won't be deallocated at least until the returned object is not deallocated.
+* **reference_internal** - This policy is like **reference** but additionally binds the lifetime of returned object with the lifetime of its parent object, i.e. parent object won't be deallocated at least until the returned object is not deallocated.
 
 .. note::
     If the object is returned by value or by rvalue reference then **copy** and **move** are used respectively.

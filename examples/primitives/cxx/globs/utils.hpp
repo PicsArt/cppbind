@@ -24,8 +24,6 @@ namespace {
         return first * second;
     }
 
-
-    // [simple-example]
     /**
      * A global function example.
      * __API__

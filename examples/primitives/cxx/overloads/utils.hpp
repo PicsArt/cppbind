@@ -2,7 +2,7 @@
 #define overload_hpp
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 /**
  * An example with overloaded methods.
  * __API__

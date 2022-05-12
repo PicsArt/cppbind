@@ -6,7 +6,7 @@
 #include <cstring>
 #include <algorithm>
 
-namespace iegen::example::nullable {
+namespace cppbind::example::nullable {
 // [example-helpers]
 
 /**

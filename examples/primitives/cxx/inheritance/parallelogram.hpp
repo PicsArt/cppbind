@@ -1,7 +1,7 @@
 #ifndef parallelogram_hpp
 #define parallelogram_hpp
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -9,9 +9,9 @@ namespace iegen::example {
  * shared_ref: False
  * package: inheritance
  * descendants:
- *  - iegen::example::Rectangle
- *  - iegen::example::Rhombus
- *  - iegen::example::Square
+ *  - cppbind::example::Rectangle
+ *  - cppbind::example::Rhombus
+ *  - cppbind::example::Square
  */
 class Parallelogram {
 public:

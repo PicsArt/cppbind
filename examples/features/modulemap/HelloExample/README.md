@@ -1,14 +1,14 @@
 ## Hello user example with xcode configuration.
 
-This is a small hello user framework with a submodule for iegen generated C bindings API.
+This is a small hello user framework with a submodule for CppBind generated C bindings API.
 
 Here we have the source code(under HelloExample/cxx directory) and generated bindings under HelloExample/swift.
 
-Configuration is defined in **HelloExample/cxx/iegen.yaml** and **HelloExample/cxx/modulemap.iegen.yaml** files.
+Configuration is defined in **HelloExample/cxx/cppbind.yaml** and **HelloExample/cxx/modulemap.cppbind.yaml** files.
 
 To regenerate the wrappers use the following command from HelloExample directory:
  ```bash
- iegen run swift
+ cppbind run swift
  ```
 Generated modulemap file can be found under HelloExample directory.
 

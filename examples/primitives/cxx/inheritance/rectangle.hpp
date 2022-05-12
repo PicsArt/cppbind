@@ -2,7 +2,7 @@
 #define rectangle_hpp
 #include "cxx/inheritance/parallelogram.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

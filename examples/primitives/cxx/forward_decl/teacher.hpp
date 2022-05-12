@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 // forward declaration
 class Student;

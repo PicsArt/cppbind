@@ -14,7 +14,7 @@ Here is the source code of it:
    :start-after: [simple-example]
    :end-before: [simple-example]
 
-After **__API__** tag we have four variables which are instructions for IEGEN.
+After **__API__** tag we have four variables which are instructions for CppBind.
 With **action: gen_function** we define what should be generated in the target language.
 **package** variable indicates what will be the package for generated ``concat`` function and **file** indicates
 in which file it will be saved. Notice that we have prefixed variable **file** with **swift** prefix,
@@ -229,7 +229,7 @@ Here are the usage examples:
 .. note::
     In generated Python bindings ``sum`` is a classmethod as it was static in the original code.
 
-Also note that IEGEN supports static overloaded methods.
+Also note that CppBind supports static overloaded methods.
 
 .. _arg-names-and-labels:
 
@@ -271,7 +271,7 @@ And here is a small code example using generated bindings:
 
 
 .. note::
-    | If the original function has no argument names then IEGEN will generate argument names using indexing, i.e. ``arg1``, ``arg2`` etc.
+    | If the original function has no argument names then CppBind will generate argument names using indexing, i.e. ``arg1``, ``arg2`` etc.
       User can override this by using generated argument names in ``argument_name`` variable.
     | Here's a small example:
 
@@ -318,8 +318,8 @@ Let's take a look at the following example:
    :start-after: [example]
    :end-before: [example]
 
-IEGEN uses **nullable_arg** variable to identify which arguments are nullable. This is a list of argument names.
-And for nullable return value IEGEN uses **nullable_return** boolean variable.
+CppBind uses **nullable_arg** variable to identify which arguments are nullable. This is a list of argument names.
+And for nullable return value CppBind uses **nullable_return** boolean variable.
 In the above example we have an overloaded method ``max``. The first one has one nullable and one non null argument and it returns nullable value.
 The second one has two nullable arguments and returns a nullable value.
 In this example you can find also a constructor taking nullable argument and nullable getters/setters.
@@ -332,7 +332,7 @@ In this example you can find also a constructor taking nullable argument and nul
 .. note::
     Kotlin and Swift have a support for nullable arguments.
     For Python nullable arguments and return values are marked as Optional.
-    Since all arguments are nullable in Python, IEGEN does additional runtime checks to not allow passing null value where a non null value is expected.
+    Since all arguments are nullable in Python, CppBind does additional runtime checks to not allow passing null value where a non null value is expected.
 
 Now let's see some usage examples for generated bindings:
 
@@ -451,11 +451,11 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example we have two functions. The first one has one argument of type ``Task`` with a default value.
-In this case IEGEN generates two overloaded functions for **Kotlin** and **Swift**: one without arguments and
+In this case CppBind generates two overloaded functions for **Kotlin** and **Swift**: one without arguments and
 the other with one argument without default value. The second function has three arguments of types ``Task``, ``Color`` and ``Root``.
-The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments IEGEN will generate
+The second argument is an enum, thus its' default value is generated in all target languages and for other two arguments CppBind will generate
 appropriate overloaded options for **Kotlin** and **Swift**.
-For **Python** IEGEN does not generate overloaded functions, instead ``None`` default value is generated.
+For **Python** CppBind does not generate overloaded functions, instead ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code, they work as expected.
 
 .. collapse:: Generated functions
@@ -512,9 +512,9 @@ Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
 
 C++ and other languages may differently manage memory and lifetime of the objects.
-Just by return value type IEGEN cannot decide whether the binding language should take care of deallocating the returned object
+Just by return value type CppBind cannot decide whether the binding language should take care of deallocating the returned object
 or C++ is responsible for that.
-For this reason IEGEN provides a variable named **return_value_policy**.
+For this reason CppBind provides a variable named **return_value_policy**.
 Using this variable user can override the default policies.
 
 Let's take a look at the following example:
@@ -573,7 +573,7 @@ Supported return values policies are:
 Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
-Besides the return value policies IEGEN supports **keep_alive** policy to bind argument's lifetime to ``this`` object's lifetime.
+Besides the return value policies CppBind supports **keep_alive** policy to bind argument's lifetime to ``this`` object's lifetime.
 This is to ensure that the argument won't be deallocated at least until the object which keeps a reference on it is alive.
 
 Let's take a look at the following example:
@@ -597,7 +597,7 @@ hold invalid data.
 .. note::
     When applying **keep_alive** policy strong reference cycles may occur. Let's assume we have two types
     and each of them keep a reference to the other. In this case, if we
-    apply **keep_alive** policy for both then a strong reference cycle will occur. Currently, IEGEN does not detect
+    apply **keep_alive** policy for both then a strong reference cycle will occur. Currently, CppBind does not detect
     reference cycles so it's up to users to be careful to not create them.
 
 .. note::

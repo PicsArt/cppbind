@@ -1,8 +1,8 @@
 package com.examples.exceptions
 
 import com.examples.exceptions.*
-import com.examples.iegen.exception_helpers.*
-import com.examples.iegen.exceptionUtils.*
+import com.examples.cppbind.exception_helpers.*
+import com.examples.cppbind.exceptionUtils.*
 
 
 fun logger(errMsg: String) : Unit {

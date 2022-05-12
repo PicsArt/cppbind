@@ -5,9 +5,9 @@
 #include <cmath>
 #include "buffer.hpp"
 
-typedef iegen::example::Size<float> SizeF;
+typedef cppbind::example::Size<float> SizeF;
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * comments
@@ -79,7 +79,7 @@ class BufferUsage {
     * kotlin.action: gen_method
     * throws: no_throw
     */
-    std::string usage1(iegen::example::Buffer<int>& b) const {
+    std::string usage1(cppbind::example::Buffer<int>& b) const {
         return b.print();
     }
 
@@ -89,8 +89,8 @@ class BufferUsage {
     * kotlin.action: gen_method
     * throws: no_throw
     */
-    iegen::example::Buffer<int>* usage2() const {
-        return new iegen::example::Buffer<int>();
+    cppbind::example::Buffer<int>* usage2() const {
+        return new cppbind::example::Buffer<int>();
     }
 
 };

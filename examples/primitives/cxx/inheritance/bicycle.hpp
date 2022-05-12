@@ -5,7 +5,7 @@
 
 #include "cxx/inheritance/vehicle.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

@@ -8,7 +8,7 @@
 #include "cxx/simple/root.hpp"
 #include "cxx/simple/task.hpp"
 
-using namespace iegen::example;
+using namespace cppbind::example;
 
 namespace {
     // [simple-example]
@@ -82,7 +82,7 @@ namespace {
 
 }
 
-namespace iegen::example {
+namespace cppbind::example {
     /**
      * A global template function example in namespace.
      * __API__
@@ -92,10 +92,10 @@ namespace iegen::example {
      * throws: no_throw
      * template:
      *   T:
-     *     - type: iegen::example::Project
-     *     - type: iegen::example::Root
+     *     - type: cppbind::example::Project
+     *     - type: cppbind::example::Root
      *   V:
-     *     - type: iegen::example::Project
+     *     - type: cppbind::example::Project
      * return_value_policy: reference
      */
     template <typename T, typename V>
@@ -117,7 +117,7 @@ namespace {
  * file: primitiveDefaults
  * throws: no_throw
  */
-    Color optionalColor(iegen::example::Color c = iegen::example::Color::Red) {
+    Color optionalColor(cppbind::example::Color c = cppbind::example::Color::Red) {
         return c;
     }
 

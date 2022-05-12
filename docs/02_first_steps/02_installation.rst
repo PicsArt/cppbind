@@ -9,12 +9,12 @@ Operating system: Linux, macOS, Windows
 Environment setup
 ^^^^^^^^^^^^^^^^^
 
-Clone IEGEN master branch into current directory\ :
+Clone CppBind master branch into current directory\ :
 
 .. code-block:: bash
 
-    git clone https://github.com/PicsArt/iegen.git
-    cd iegen
+    git clone https://github.com/PicsArt/cppbind.git
+    cd cppbind
 
 If the project is already cloned, pull the latest version:
 
@@ -101,7 +101,7 @@ If the project is already cloned, pull the latest version:
 
    .. tab-item:: Windows
 
-        IEGEN requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path.
+        CppBind requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path.
 
         If Python 3.7 or higher is already installed then skip this step.
 
@@ -133,26 +133,26 @@ Dev installation
 User installation
 ^^^^^^^^^^^^^^^^^
 
-``iegen`` is built as a standard Python package and can be installed using ``pip`` with the following command.
+``cppbind`` is built as a standard Python package and can be installed using ``pip`` with the following command.
 
 .. code-block:: bash
 
-    python3 -m pip install iegen
+    python3 -m pip install cppbind
 
 If you are going to use it as a standalone command line application we recommend using ``pipx`` instead.
 ``pipx`` creates an isolated environment for each application and its associated packages and makes the application available from the shell.
-Using ``pipx`` will also prevent dependency conflicts between ``iegen`` and other packages within the current environment.
-To install IEGEN with ``pipx`` use the following commands:
+Using ``pipx`` will also prevent dependency conflicts between ``cppbind`` and other packages within the current environment.
+To install CppBind with ``pipx`` use the following commands:
 
 .. code-block:: bash
 
     python3 -m pip install pipx
     python3 -m pipx ensurepath
-    python3 -m pipx install iegen
+    python3 -m pipx install cppbind
 
 
 To test the installation run the following command\ :
 
 .. code-block:: bash
 
-  iegen -h
+  cppbind -h

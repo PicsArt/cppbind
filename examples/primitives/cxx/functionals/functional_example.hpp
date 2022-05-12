@@ -2,7 +2,7 @@
 #define functional_example_hpp
 #include <functional>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

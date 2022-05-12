@@ -5,7 +5,7 @@
 #include "cxx/nested_types/template_list.hpp"
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * A dummy test example using nested types.
@@ -47,7 +47,7 @@ private:
 /**
  * A dummy test example using nested types of templates.
  * \internal
- * TODO remove langauge specific action after fixing the issue for python(https://picsart.atlassian.net/browse/IEGEN-236)
+ * TODO remove langauge specific action after fixing the issue for python(#236)
  * __API__
  * kotlin.action: gen_class
  * swift.action: gen_class

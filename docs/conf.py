@@ -27,7 +27,7 @@ if platform.system() == 'Darwin':
 
 # -- Project information -----------------------------------------------------
 
-project = 'IEGEN'
+project = 'CppBind'
 copyright = '2022, Picsart'
 author = 'Picsart'
 
@@ -77,14 +77,14 @@ html_show_sourcelink = False
 html_theme_options = {
 
     # Set the name of the project to appear in the navigation.
-    'nav_title': 'IEGEN',
+    'nav_title': 'CppBind',
 
     # Set you GA account ID to enable tracking
     'google_analytics_account': 'UA-XXXXX',
 
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
-    'base_url': 'https://github.com/PicsArt/iegen',
+    'base_url': 'https://github.com/PicsArt/cppbind',
 
     # Set the color and the accent color
     'theme_color': '#3849aa',
@@ -92,7 +92,7 @@ html_theme_options = {
     'color_accent': '#6e74dc',
 
     # Set the repo location to get a badge with stats
-    'repo_url': 'https://github.com/PicsArt/iegen',
+    'repo_url': 'https://github.com/PicsArt/cppbind',
     'repo_name': 'GitHub',
     'repo_type': 'github',
 

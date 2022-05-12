@@ -1,9 +1,9 @@
 import hashlib
 import os
 
-from iegen import current_datetime
-from iegen.builder import OUTPUT_MODIFICATION_KEY, is_output_changed
-from iegen.builder.out_builder import Builder, Scope
+from cppbind import current_datetime
+from cppbind.builder import OUTPUT_MODIFICATION_KEY, is_output_changed
+from cppbind.builder.out_builder import Builder, Scope
 
 
 def test_builder(out_dir):

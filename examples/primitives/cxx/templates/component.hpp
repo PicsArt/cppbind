@@ -9,7 +9,7 @@
 #include "cxx/templates/addressable.hpp"
 #include "cxx/simple/root.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * comments

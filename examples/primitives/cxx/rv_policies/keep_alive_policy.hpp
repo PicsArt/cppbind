@@ -6,7 +6,7 @@
 #include <vector>
 #include <memory>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [keep-alive-raw]
 /**
  * A test example for keep_alive policy with shared_ref=False.

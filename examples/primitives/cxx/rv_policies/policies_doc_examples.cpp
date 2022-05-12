@@ -1,6 +1,6 @@
 #include "cxx/rv_policies/policies_doc_examples.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 
 // factory
 Factory* Factory::create() {

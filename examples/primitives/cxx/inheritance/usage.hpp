@@ -9,7 +9,7 @@
 #include "cxx/inheritance/bicycle.hpp"
 #include "cxx/inheritance/date.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

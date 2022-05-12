@@ -41,7 +41,7 @@ try:
 except TypeError:
     pass
 
-# test for dir actions with absolute path(abs against iegen working dir)
+# test for dir actions with absolute path(abs against cppbind working dir)
 pretty_print('{"first_name": "John", "last_name": "Doe"}')
 
 # other use cases tests

@@ -14,6 +14,6 @@ config_setting(
 
 filegroup(
     name = "config_file",
-    srcs = ["iegen_config.cfg"],
+    srcs = ["cppbind_config.cfg"],
     visibility = ["//visibility:public"],
 )

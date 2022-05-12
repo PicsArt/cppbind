@@ -12,7 +12,7 @@
 
 using UCHAR = unsigned char;
 
-namespace iegen::example {
+namespace cppbind::example {
 // forward declaration
 class Project;
 

@@ -1,8 +1,8 @@
-// This is an example of a classes that do not have iegen api but have custom wrappers and iegen converters.
+// This is an example of a classes that do not have cppbind api but have custom wrappers and cppbind converters.
 #include <iostream>
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 template <typename T>
 class Buffer {

@@ -7,7 +7,7 @@
 #include "cxx/inheritance/time.hpp"
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * datetime.hpp is parsed before time.hpp and it contains DateTime class which is inherited from Time(declared in time.hpp).

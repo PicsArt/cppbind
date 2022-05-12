@@ -5,7 +5,7 @@
 #include <string>
 #include <algorithm>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 
 /**
@@ -112,9 +112,9 @@ class Fruits  {
      * throws: no_throw
      * template:
      *   T:
-     *     - type: iegen::example::Apple
+     *     - type: cppbind::example::Apple
      *       name: apples
-     *     - type: iegen::example::Pineapple
+     *     - type: cppbind::example::Pineapple
      *       name: pineapple
      */
     template <typename T>
@@ -134,10 +134,10 @@ class Fruits  {
      * throws: no_throw
      * template:
      *   T:
-     *     - type: iegen::example::Apple
+     *     - type: cppbind::example::Apple
      *       name: applesWith
      *   U:
-     *     - type: iegen::example::Pineapple
+     *     - type: cppbind::example::Pineapple
      *       name: Pineapples
      */
     template <typename T, typename U>
@@ -151,9 +151,9 @@ class Fruits  {
      * throws: no_throw
      * template:
      *   T:
-     *     - type: iegen::example::Apple
+     *     - type: cppbind::example::Apple
      *   U:
-     *     - type: iegen::example::Pineapple
+     *     - type: cppbind::example::Pineapple
      */
     template <typename T, typename U>
     void setAllFruits(const std::vector<Fruit*> & fruits) {

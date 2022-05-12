@@ -1,0 +1,11 @@
+modulemap_file_fullname:
+  inheritable: true
+  default: "{{cxx_out_dir + pat_sep}}CppBind.modulemap"
+  allowed_on: [ root ]
+
+modulemap_export:
+  inheritable: true
+  default: |
+    export *
+    module * { export * }
+  allowed_on: [ root ]

@@ -7,7 +7,7 @@
 
 #include "map.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * comments

@@ -8,7 +8,7 @@
 
 #include "cxx/simple/task.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * __API__
@@ -158,7 +158,7 @@ class SimpleChildException : public SimpleBaseException {
 };
 }
 
-namespace iegen::exceptions {
+namespace cppbind::exceptions {
 
 /**
  * An example of a global function throwing an exception.
@@ -196,7 +196,7 @@ class ThrowExc {
      * action: gen_method
      * throws:
      *   - std::out_of_range
-     *   - iegen::example::SystemError
+     *   - cppbind::example::SystemError
      */
     static int getByKey(const std::map<int, int>& m, int key) {
         return m.at(key);
@@ -213,12 +213,12 @@ class ThrowExc {
     }
 
     /**
-     * Throws exception with return value of iegen type.
+     * Throws exception with return value of cppbind type.
      * __API__
      * action: gen_method
      * throws: std::invalid_argument
      */
-    static iegen::example::Task* throwsWithReturnValuePtr() {
+    static cppbind::example::Task* throwsWithReturnValuePtr() {
         throw std::invalid_argument("return value error");
     }
     // [throw-example]
@@ -382,23 +382,23 @@ class MiscExc {
      * action: gen_method
      * throws:
      *   - std::runtime_error
-     *   - iegen::example::FileError
-     *   - iegen::example::SystemError
-     *   - iegen::example::SimpleChildException
-     *   - iegen::example::SimpleBaseException
+     *   - cppbind::example::FileError
+     *   - cppbind::example::SystemError
+     *   - cppbind::example::SimpleChildException
+     *   - cppbind::example::SimpleBaseException
      *   - std::exception
      */
     static void raiseErrorByType(const std::string& err_type) {
         if (err_type.compare("system") == 0) {
-            throw iegen::example::SystemError("system error");
+            throw cppbind::example::SystemError("system error");
         } else if (err_type.compare("file") == 0) {
-            throw iegen::example::FileError("file error");
+            throw cppbind::example::FileError("file error");
         } else if (err_type.compare("runtime") == 0) {
             throw std::runtime_error("runtime error");
         } else if (err_type.compare("simple_child") == 0) {
-            throw iegen::example::SimpleChildException(100);
+            throw cppbind::example::SimpleChildException(100);
         } else if (err_type.compare("simple_base") == 0) {
-            throw iegen::example::SimpleBaseException(200);
+            throw cppbind::example::SimpleBaseException(200);
         } else {
             throw std::invalid_argument("inv_arg");
         }

@@ -9,9 +9,9 @@
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
 
-using StackProjectType = iegen::example::Stack<iegen::example::Project>;
+using StackProjectType = cppbind::example::Stack<cppbind::example::Project>;
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -42,12 +42,12 @@ class StackUsage  {
      * action: gen_method
      * template:
      *   V:
-     *     - type: iegen::example::Project
+     *     - type: cppbind::example::Project
      * throws: no_throw
      * return_value_policy: reference
      */
     template <typename V>
-    V* firstItemOfTemplateStack(iegen::example::Stack<V>* p) {
+    V* firstItemOfTemplateStack(cppbind::example::Stack<V>* p) {
         return p->top();
     };
 
@@ -78,12 +78,12 @@ class StackUsage  {
  * file: my_stack
  * template:
  *   T:
- *     - type: iegen::example::Project
- *     - type: iegen::example::Task
+ *     - type: cppbind::example::Project
+ *     - type: cppbind::example::Task
  * package: templates
  */
 template <class T>
-class MyStack: public iegen::example::Stack<T> {
+class MyStack: public cppbind::example::Stack<T> {
 public:
     /**
      * __API__

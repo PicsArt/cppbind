@@ -6,7 +6,7 @@
 #include <string>
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -16,9 +16,9 @@ namespace iegen::example {
  *     - type: std::string
  *       name: ''
  *   V:
- *     - type: std::shared_ptr<iegen::example::Employee>
+ *     - type: std::shared_ptr<cppbind::example::Employee>
  *       name: Employee
- *     - type: std::shared_ptr<iegen::example::Student>
+ *     - type: std::shared_ptr<cppbind::example::Student>
  *       name: Student
  * package: templates
  */

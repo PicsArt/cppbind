@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 // Side not-used class to have some classes without API in inheritance hierarchy without
 template <class T>

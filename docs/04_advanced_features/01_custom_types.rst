@@ -17,8 +17,8 @@ Following is an example of converter for nlohmann::json from cxx to Kotlin and v
       jdk:
         type_info: String
       jni_to_cxx: |
-        auto {{target_name}} = nlohmann::json::parse(iegen::jni_to_string(env, {{name}}))
+        auto {{target_name}} = nlohmann::json::parse(cppbind::jni_to_string(env, {{name}}))
       cxx_to_jni: |
-        {{target_type_name}} {{target_name}} = iegen::string_to_jni(env, {{name}}.dump(4));
+        {{target_type_name}} {{target_name}} = cppbind::string_to_jni(env, {{name}}.dump(4));
       kotlin_to_jdk:
       jdk_to_kotlin:

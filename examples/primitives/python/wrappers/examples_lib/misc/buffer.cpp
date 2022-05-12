@@ -7,13 +7,13 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(buffer, m) {
 
-    py::class_<iegen::example::Size<float>> sizef(m, "SizeF");
+    py::class_<cppbind::example::Size<float>> sizef(m, "SizeF");
     sizef.def(py::init<float, float>());
-    sizef.def_readwrite("width", &iegen::example::Size<float>::width);
-    sizef.def_readwrite("height", &iegen::example::Size<float>::height);
+    sizef.def_readwrite("width", &cppbind::example::Size<float>::width);
+    sizef.def_readwrite("height", &cppbind::example::Size<float>::height);
 
-    py::class_<iegen::example::Buffer<int>> buffer_(m, "Buffer");
+    py::class_<cppbind::example::Buffer<int>> buffer_(m, "Buffer");
     buffer_.def(py::init());
-    buffer_.def("print", &iegen::example::Buffer<int>::print);
+    buffer_.def("print", &cppbind::example::Buffer<int>::print);
 
 }

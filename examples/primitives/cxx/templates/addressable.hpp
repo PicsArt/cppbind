@@ -7,7 +7,7 @@
 #define addressable_hpp
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * Addressable is a base class for all the objects, that have abs path.
@@ -16,11 +16,11 @@ namespace iegen::example {
  * action: gen_interface
  * template:
  *   T:
- *     - type: iegen::example::Root
+ *     - type: cppbind::example::Root
  * shared_ref: true
  * package: templates
  * descendants:
- *   - iegen::example::Component
+ *   - cppbind::example::Component
  */
 template <typename T>
 struct Addressable {

@@ -3,13 +3,13 @@ Object type preservation
 
 When we have an inheritance tree it's possible to keep an object of subtype as an object of base type.
 In this case we would construct base type object and in target bindings we would lose the information that the object
-is of subtype. In purpose to deal with this problem IEGEN does object type preservation when constructing an object
+is of subtype. In purpose to deal with this problem CppBind does object type preservation when constructing an object
 of user defined type. Later saved type information is used to recover the original object in C bindings and
 construct the object in target language bindings with correct type.
 
-To implement this feature IEGEN keeps track of the descendant classes/structs for each class/struct.
+To implement this feature CppBind keeps track of the descendant classes/structs for each class/struct.
 We pass the object's actual type information from C bindings to target language binding where the object construction process is done.
-IEGEN gives the user opportunity to define the list of descendants via **descendants** variable for each class, otherwise using the deduced one.
+CppBind gives the user opportunity to define the list of descendants via **descendants** variable for each class, otherwise using the deduced one.
 In the target bindings the object construction with the actual type is done with switch-case blocks where we compare preserved type information
 with the possible descendant subtypes.
 
@@ -20,7 +20,7 @@ Here is an example of a base class with user-defined list of descendant classes:
    :start-after: [example]
    :end-before: [example]
 
-.. collapse:: Implementation part of above-described process in target language bindings (the main logic is inside "iegenConstructObject" method)
+.. collapse:: Implementation part of above-described process in target language bindings (the main logic is inside "cppbindConstructObject" method)
 
     |
 

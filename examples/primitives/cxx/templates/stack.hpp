@@ -15,7 +15,7 @@
 #include "cxx/templates/container.hpp"
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * An example of a class template.
@@ -23,10 +23,10 @@ namespace iegen::example {
  * action: gen_class
  * template:
  *   T:
- *     - type: iegen::example::Project
+ *     - type: cppbind::example::Project
  *       name: Prj
- *     - type: iegen::example::Task
- *     - type: iegen::example::Number<int>
+ *     - type: cppbind::example::Task
+ *     - type: cppbind::example::Number<int>
  *       name: NumInt
  * package: templates
  */

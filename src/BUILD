@@ -1,9 +1,9 @@
 load("@reqs//:requirements.bzl", "all_requirements")
 
 py_library(
-    name = "iegen_library",
-    srcs = glob(["iegen/**/*.py"]),
-    data = glob(["iegen/config/**/*"]),
+    name = "cppbind_library",
+    srcs = glob(["cppbind/**/*.py"]),
+    data = glob(["cppbind/config/**/*"]),
     imports = [
         ".",
     ],

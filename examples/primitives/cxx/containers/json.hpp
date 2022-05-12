@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * __API__

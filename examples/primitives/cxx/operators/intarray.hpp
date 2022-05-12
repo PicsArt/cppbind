@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 const int SIZE = 10;
 // [example]

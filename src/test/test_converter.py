@@ -1,6 +1,6 @@
 from functools import cmp_to_key
 
-from iegen.converter.swift import imports_comparator
+from cppbind.converter.swift import imports_comparator
 
 
 def test_swift_import_order():

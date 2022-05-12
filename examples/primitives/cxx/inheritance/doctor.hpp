@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * A base class for checking single branch non-polymorphic inheritance cases

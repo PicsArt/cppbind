@@ -24,10 +24,10 @@ Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
 
 .. note::
     If the type which is being parsed is inherited from another one which does not have an **__API__**, i.e. is not parsed
-    by IEGEN then in the binding code it won't appear as a base type for the target type.
+    by CppBind then in the binding code it won't appear as a base type for the target type.
 
 As this is a single inheritance we don't have to add something special.
-IEGEN will generate two classes one inherited from the other.
+CppBind will generate two classes one inherited from the other.
 
 Usage examples:
 
@@ -115,11 +115,11 @@ In this case again we have used the same value for **shared_ref** for all 4 type
 
 .. note::
     Here we used **action: gen_interface** instead of **action: gen_class**.
-    Most of the modern languages do not support multiple inheritance so we have to tell IEGEN to generate
+    Most of the modern languages do not support multiple inheritance so we have to tell CppBind to generate
     interfaces with implementations instead.
 
 .. note::
-    It's important to note that IEGEN supports multiple inheritance only for polymorphic types (when type has a virtual method/destructor or has a polymorphic base).
+    It's important to note that CppBind supports multiple inheritance only for polymorphic types (when type has a virtual method/destructor or has a polymorphic base).
 
 .. note::
     As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.

@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * __API__

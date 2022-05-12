@@ -45,7 +45,7 @@ std::__1::map:
 std::map:
   types:
     my_lang: "myLangDict<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
-    c: IEGenCDataMap
+    c: CppBindCDataMap
   converters:
     my_lang_to_c:
       !concat

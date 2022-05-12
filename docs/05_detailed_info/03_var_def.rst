@@ -3,17 +3,17 @@
 Variable Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
-During the processing of source C++ files IEGEN constructs internal tree-like structure (IR) which consists of entities corresponding to project directories, files, classes, functions, etc.
+During the processing of source C++ files CppBind constructs internal tree-like structure (IR) which consists of entities corresponding to project directories, files, classes, functions, etc.
 The entities in IR have parent-child relationship, which is defined via the following hierarchy: **root** -> **directory** -> **file** -> **class** -> **method/property**.
-To tell IEGEN that the entity is going to be exposed to the target language, user needs to define API in doxygen comments or under the **type_vars** section as described here: :ref:`external-api-label`.
+To tell CppBind that the entity is going to be exposed to the target language, user needs to define API in doxygen comments or under the **type_vars** section as described here: :ref:`external-api-label`.
 Project configuration is described through the variables used inside API annotations. Using variables we define which code should be parsed, how the target code should look like, where output should be stored, etc.
-Variables must be defined under **var_def** section of project yaml configuration file. IEGEN provides a default list of variables.
+Variables must be defined under **var_def** section of project yaml configuration file. CppBind provides a default list of variables.
 
 .. collapse:: The list of all variables
 
     |
 
-    .. literalinclude:: /../src/iegen/config/variable_definitions.yaml
+    .. literalinclude:: /../src/cppbind/config/variable_definitions.yaml
        :language: yaml
 
 |
@@ -22,9 +22,9 @@ Each variable can have the following properties:
 
 - **inheritable** indicates whether the value of the variable can be inherited from the parent entity or not.
 - **default** indicates the default value of the variable. The default value is used when the variable isn't explicitly defined by the user and is not inherited from the parent entity.
-- **allowed_on** indicates on which parts of the code (files, classes, etc.) the variable is allowed to be defined. IEGEN complains about definition of a variable on not allowed entity.
+- **allowed_on** indicates on which parts of the code (files, classes, etc.) the variable is allowed to be defined. CppBind complains about definition of a variable on not allowed entity.
 - **required_on** indicates the parts of code (files, classes, methods, etc.) where defining the variable is mandatory.
-- **type** is the type of variable value. If the type is not defined, IEGEN deduces it from the value of the variable. Supported types are str, bool, list and dict. IEGEN complains about definition of a value other than the type of the variable.
+- **type** is the type of variable value. If the type is not defined, CppBind deduces it from the value of the variable. Supported types are str, bool, list and dict. CppBind complains about definition of a value other than the type of the variable.
 - **description** is an optional property which gives additional information about the variable.
 - **options** is the list of possible values of the variable. If this property is set, user can't define any other value of the variable out of this list.
 
@@ -56,13 +56,13 @@ Here is the list of system variables:
 * **_current_working_dir** - current working directory
 * **_source_modification_time**: source code modification time
 * **_output_modification_time**: unique datetime-based key which is used for comparing previously generated code with new one
-* **_pure_comment**: doxygen comment without IEGEN API part
+* **_pure_comment**: doxygen comment without CppBind API part
 * **_line_number**: line number of the source code which is being processed
 * **_file_fullname**: full path of the file which is being processed
 * **_file_name** - the name of the file which is being processed.
 * **_is_operator** - indicates whether the method is a C++ operator or not.
 * **_object_name** - name of the object which is being processed, e.g. class name, method name, etc.
-* **_iegen_extras_dir** - the path of the directory which contains some IEGEN configuration default files.
+* **_cppbind_extras_dir** - the path of the directory which contains some CppBind configuration default files.
 * **_helper_module** - Python helper module for the current target language which contains some helper functions.
 * **get_android_ndk_sysroot** - internal helper function to dynamically construct android ndk sysroot path using android ndk installation path
 
@@ -115,12 +115,12 @@ Now let's go through the key variables:
 - | **comment_del_regex** - Regular expressions to define which parts of the comment should not go to the generated code. By default, the text between **internal** and **endinternal** doxygen commands will be ignored.
   | If comment contains only **internal** then everything after it will be ignored.
 - **comment** - Target code comment. By default, it's pure comment without parts that match the pattern defined via **comment_del_regex**.
-- **banner_comment** - Banner comment which is used with IEGEN logo as a file header for all IEGEN generated files.
+- **banner_comment** - Banner comment which is used with CppBind logo as a file header for all CppBind generated files.
 - **out_prj_dir** - Root directory of project output. All includes and imports will be generated relative to this directory.
 - **run_dir** - Helper parameter used in other variables. Users also can have their custom variables to use within the config file.
 - **cxx_out_dir** - Root directory where all C bindings will be stored.
 - **out_dir** - Directory where generated target language files will be saved.
-- **cxx_base_out_dir** - The directory where IEGEN helper types are being copied. If user does not want to use IEGEN base classes then there's no need to specify this variable.
+- **cxx_base_out_dir** - The directory where CppBind helper types are being copied. If user does not want to use CppBind base classes then there's no need to specify this variable.
 - **is_proj_type** - Boolean showing whether the given type is user's type or is the type from standard/3pty lib.
 - **prj_rel_file_name** - Source file name relative to project root directory.
 - **package_prefix** - Package prefix where generated files will be saved.
@@ -128,10 +128,10 @@ Now let's go through the key variables:
 - **helpers_out_dir** - Directory where helper/util files must be copied to.
 - **exception_helpers_package** - Package name of standard exception helpers.
 - **exception_file_name** - File name of standard exception helpers.
-- **common_helpers_dir** - Directory containing IEGEN standard helpers.
-- **cxx_helpers_dir** - IEGEN C++ helpers directory.
-- **helpers_dir** - Directory containing IEGEN helpers.
-- **cxx_base_source_dir** - IEGEN internal directory containing base classes.
+- **common_helpers_dir** - Directory containing CppBind standard helpers.
+- **cxx_helpers_dir** - CppBind C++ helpers directory.
+- **helpers_dir** - Directory containing CppBind helpers.
+- **cxx_base_source_dir** - CppBind internal directory containing base classes.
 - **overloading_postfix** - Postfix to be appended at the end of the generated C binding function name if the function is overloaded.
 - **file_postfix** - Postfix which will be appended to each generated file.
 - **extension** - The extension of generated target language files.
@@ -142,7 +142,7 @@ Now let's go through the key variables:
 - **src_glob** - File glob to define which source code files must be processed by clang.
 - **src_exclude_glob** - Patterns to exclude files from processing list.
 - **include_dirs** - Include directories required for parsing. These directories are passed to clang parser.
-- **extra_headers** - Extra headers to be processed. For example, IEGEN uses this variable to process standard exceptions headers to generate target language bindings for them.
+- **extra_headers** - Extra headers to be processed. For example, CppBind uses this variable to process standard exceptions headers to generate target language bindings for them.
 - **enum_field_name_prefix** - A string which is added as a prefix of enum fields names.
 - **enum_excluded_fields** - A list of enum cases which must not be exposed in the target language.
 - **cxx_out_rel_path** - C output relative path to project output directory. This variable is used for constructing generated C includes.
@@ -195,7 +195,7 @@ Now let's go through the key variables:
 
     These are four possible ways to define variable values.
     Note that you cannot have **<language>.<variable>** and **<platform>.<variable>** at the same time.
-    In this case the value for **<platform>.<language>.<variable>** is ambiguous and IEGEN will complain about it.
+    In this case the value for **<platform>.<language>.<variable>** is ambiguous and CppBind will complain about it.
     Another important thing is that default values also can be specified per platform/language. To specify platform/language specific default value
     user needs to use platform and/or language specifier in front of the **default** keyword, e.g: **<platform>.<language>.<default>**.
 

@@ -122,7 +122,7 @@ class CarUsage {
     CarUsage(Car* car) : _car(car) {}
 
     /**
-     * Iegen supports only by value return in case shared_ref is set
+     * CppBind supports only by value return in case shared_ref is set
      * __API__
      * action: gen_method
      * throws: no_throw

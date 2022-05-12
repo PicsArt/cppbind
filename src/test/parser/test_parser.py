@@ -7,14 +7,14 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-from iegen.builder.ir_builder import CXXPrintProcessor, CXXIEGIRBuilder
-from iegen.common.error import IEGError
-from iegen.common.yaml_process import load_yaml
-from iegen.context_manager.ctx_desc import ContextDescriptor
-from iegen.context_manager.ctx_mgr import ContextManager
-from iegen.ir.ast import Node, RootNode
-from iegen.parser.ieg_api_parser import APIParser
-from iegen.parser.ieg_parser import CXXParser
+from cppbind.builder.ir_builder import CXXPrintProcessor, CppBindIRBuilder
+from cppbind.common.error import CppBindError
+from cppbind.common.yaml_process import load_yaml
+from cppbind.context_manager.ctx_desc import ContextDescriptor
+from cppbind.context_manager.ctx_mgr import ContextManager
+from cppbind.ir.ast import Node, RootNode
+from cppbind.parser.cppbind_api_parser import APIParser
+from cppbind.parser.cppbind_parser import CXXParser
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
@@ -129,7 +129,7 @@ def test_api_parser_negative(test_data):
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section)
-    except IEGError:
+    except CppBindError:
         pass
     else:
         assert False, "should get error"
@@ -144,11 +144,11 @@ def test_parser_errors(clang_config):
 
     lang, plat = 'swift', 'linux'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
-    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+    ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
     ir_builder.start_root()
 
     for file in os.listdir(test_dir):
-        with pytest.raises(IEGError):
+        with pytest.raises(CppBindError):
             clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
             parser.parse(ir_builder, **clang_cfg)
 
@@ -187,8 +187,8 @@ def test_dir_api_positive():
 def test_var_def_validation():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples/jinja_attr/positive')
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
-            pytest.raises(IEGError, match=r"Variable 'b' is required on 'dir' node*"):
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+            pytest.raises(CppBindError, match=r"Variable 'b' is required on 'dir' node*"):
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
@@ -201,13 +201,13 @@ def test_var_def_validation():
 def test_attr_type_mismatch_negative():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/negative')
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
-            pytest.raises(IEGError, match=r"Type mismatch*"):
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+            pytest.raises(CppBindError, match=r"Type mismatch*"):
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         ir_builder.start_root()
 
@@ -269,8 +269,8 @@ def test_attr_type_mismatch_negative():
 )
 def test_attr_options_negative(var_def, api_section):
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock,\
-            pytest.raises(IEGError, match=r"Value mismatch*"):
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock,\
+            pytest.raises(CppBindError, match=r"Value mismatch*"):
 
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
@@ -335,12 +335,12 @@ def test_attr_options_negative(var_def, api_section):
 )
 def test_attr_options_positive(var_def, api_section):
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
         try:
             ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
-        except IEGError as e:
+        except CppBindError as e:
             assert False, e
 
 

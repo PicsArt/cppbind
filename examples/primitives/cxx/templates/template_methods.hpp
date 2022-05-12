@@ -4,7 +4,7 @@
 #include <utility>
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -40,10 +40,10 @@ class TemplateMethods  {
      * throws: no_throw
      * template:
      *   T:
-     *     - type: iegen::example::Project
-     *     - type: iegen::example::Root
+     *     - type: cppbind::example::Project
+     *     - type: cppbind::example::Root
      *   V:
-     *     - type: iegen::example::Project
+     *     - type: cppbind::example::Project
      * return_value_policy: reference
      */
     template <typename T, typename V>
@@ -55,14 +55,14 @@ class TemplateMethods  {
 
 ///**
 // * An example for testing template functions inside a template.
-// * TODO: uncomment and write test examples after implementing https://picsart.atlassian.net/browse/IEGEN-243
+// * TODO: uncomment and write test examples after implementing #243
 // * __API__
 // * action: gen_class
 // * package: templates.nested
 // * template:
 // *   T:
-// *     - type: iegen::example::Project
-// *     - type: iegen::example::Root
+// *     - type: cppbind::example::Project
+// *     - type: cppbind::example::Root
 // */
 //template <typename T>
 //class TemplateUtils  {
@@ -88,7 +88,7 @@ class TemplateMethods  {
 //     * throws: no_throw
 //     * template:
 //     *   V:
-//     *     - type: iegen::example::Project
+//     *     - type: cppbind::example::Project
 //     * return_value_policy: reference
 //     */
 //    template <typename V>

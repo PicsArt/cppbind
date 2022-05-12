@@ -5,7 +5,7 @@
 #include "cxx/inheritance/rhombus.hpp"
 #include "cxx/inheritance/rectangle.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

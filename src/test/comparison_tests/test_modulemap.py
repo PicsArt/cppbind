@@ -14,7 +14,7 @@ class TestModulemap(unittest.TestCase):
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR,
                                                           '../../../examples/features/modulemap/HelloExample/HelloExample'))
         self.runner = RunCompare(examples_root=self.examples_root,
-                                 source_glob='cxx/*iegen.yaml',
+                                 source_glob='cxx/*cppbind.yaml',
                                  languages=['swift'])
 
     def setUp(self) -> None:
@@ -26,7 +26,7 @@ class TestModulemap(unittest.TestCase):
         self.runner.teardown()
 
     def test_run_compare(self):
-        # run iegen
+        # run cppbind
         self.runner.run()
         # compare generated bindings with golden ones
         self.runner.compare()

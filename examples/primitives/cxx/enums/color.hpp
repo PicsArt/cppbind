@@ -1,7 +1,7 @@
 #ifndef color_hpp
 #define color_hpp
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * Color Enum.

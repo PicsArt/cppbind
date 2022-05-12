@@ -10,10 +10,10 @@ class ExtraApp {
 
             // [object-usage]
             val objUsage = ObjectUsage()
-            assert(objUsage.className() == "iegen::ObjectUsage")
+            assert(objUsage.className() == "cppbind::ObjectUsage")
             assert(objUsage.equals(objUsage) == true)
             assert(objUsage.bytesCount().toInt() == 8)
-            assert(objUsage.toString().endsWith("iegen::ObjectUsage>"))
+            assert(objUsage.toString().endsWith("cppbind::ObjectUsage>"))
             // [object-usage]
 
        }

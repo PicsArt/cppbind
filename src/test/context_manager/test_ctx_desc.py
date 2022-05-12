@@ -5,10 +5,10 @@ from collections import OrderedDict
 
 import yaml
 
-from iegen.common.error import IEGError
-from iegen.common.yaml_process import YamlNode, YamlKeyDuplicationError, yaml_info_struct_to_dict
-from iegen.context_manager.ctx_desc import ContextDescriptor
-from iegen.ir.ast import RootNode
+from cppbind.common.error import CppBindError
+from cppbind.common.yaml_process import YamlNode, YamlKeyDuplicationError, yaml_info_struct_to_dict
+from cppbind.context_manager.ctx_desc import ContextDescriptor
+from cppbind.ir.ast import RootNode
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -16,7 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 class TestContextDescriptor(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.initial_config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_vars_var_def/iegen.yaml'
+        self.initial_config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_vars_var_def/cppbind.yaml'
         self.ctx_desc = ContextDescriptor(self.initial_config_file)
         self.negative_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'negative')
         self.positive_rules_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'api_rules_dir', 'positive')
@@ -61,7 +61,7 @@ class TestContextDescriptor(unittest.TestCase):
     def test_variable_redefinition_is_not_allowed(self):
         # negative case
         # asserts that an error is thrown when the same variable is defined twice
-        file = 'test.iegen.yaml'
+        file = 'test.cppbind.yaml'
         line = 1
         var = 'action'
         with self.assertRaises(YamlKeyDuplicationError) as ctx:
@@ -74,7 +74,7 @@ class TestContextDescriptor(unittest.TestCase):
                         f" - {line}")
 
     def _assert_duplicate_error_is_raised(self, key):
-        file = 'test.iegen.yaml'
+        file = 'test.cppbind.yaml'
         line = 1
         # assert YamlKeyDuplicationError is thrown when key which should be unique is defined in two files
         with self.assertRaises(YamlKeyDuplicationError) as ctx:
@@ -144,5 +144,5 @@ class TestContextDescriptor(unittest.TestCase):
         context_def_glob = os.path.join(self.negative_rules_dir, 'with_lang_snippets_rules', '*.yaml')
         ctx_desc = ContextDescriptor(context_def_glob)
         ctx_desc.build_ctx_def_map(context_def_glob)
-        with self.assertRaises(IEGError):
+        with self.assertRaises(CppBindError):
             ctx_desc.orig_validate_and_deduce_languages()

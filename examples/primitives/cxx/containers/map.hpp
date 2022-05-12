@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * comments

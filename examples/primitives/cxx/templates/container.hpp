@@ -13,7 +13,7 @@
 #include <string>
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * An example interface which descendant types are templates. Used for an example of downcast in target language.
@@ -21,9 +21,9 @@ namespace iegen::example {
  * action: gen_interface
  * package: templates
  * descendants:
- *  - iegen::example::Stack<iegen::example::Project>
- *  - iegen::example::Stack<iegen::example::Task>
- *  - iegen::example::Stack<iegen::example::Number<int>>
+ *  - cppbind::example::Stack<cppbind::example::Project>
+ *  - cppbind::example::Stack<cppbind::example::Task>
+ *  - cppbind::example::Stack<cppbind::example::Number<int>>
  */
 class Container {
 public:

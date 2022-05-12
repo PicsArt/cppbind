@@ -25,14 +25,14 @@ that the user hasn't forgotten about throw ability of method. The example of emp
 
 .. note::
     Swift language doesn't support exception throwing from getter/setter, so user should set the value of **throws** variable to **no_throw**.
-    IEGEN will complain about wrong usages of **throws**.
+    CppBind will complain about wrong usages of **throws**.
 
 Exception list can contain standard exception classes and also user defined exception classes which have API annotations.
 In target language side we keep correspondence between those classes, and for this purpose we generate also standard exceptions
-binding for target language. We define binding rules for std::exception and its descendant classes, and IEGEN tool generates bindings for us.
+binding for target language. We define binding rules for std::exception and its descendant classes, and CppBind tool generates bindings for us.
 We define rules in yaml config file, which looks like:
 
-.. literalinclude:: /../src/iegen/config/std_exc/std_exc_api.yaml
+.. literalinclude:: /../src/cppbind/config/std_exc/std_exc_api.yaml
     :language: yaml
     :end-before: "std::logic_error"
 
@@ -63,12 +63,12 @@ will be called after unhandled exception is detected. The mentioned package look
 .. tab-set::
     .. tab-item:: Kotlin
 
-        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/iegen/exceptionUtils.kt
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/cppbind/exceptionUtils.kt
             :language: java
 
     .. tab-item:: Swift
 
-        .. literalinclude:: /../examples/primitives/swift/src/iegen/exceptionUtils.swift
+        .. literalinclude:: /../examples/primitives/swift/src/cppbind/exceptionUtils.swift
             :language: swift
 
 Also we always catch std::exception before catching all exceptions to have more informative error message when exception
@@ -117,6 +117,7 @@ After generating bindings for target language we can call methods which can thro
 
                 .. literalinclude:: /../examples/primitives/swift/src/exceptions/throw_exceptions.swift
                     :language: swift
+
 |
 
 .. collapse:: Binding codes when exception list is empty (throws=True)
@@ -131,7 +132,7 @@ After generating bindings for target language we can call methods which can thro
 
             .. note::
                 For Kotlin we rethrow caught exception from C binding via JNI special functions. It means that exception handling section of code is written in C binding file.
-                `Here <https://github.com/PicsArt/iegen/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
+                `Here <https://github.com/PicsArt/cppbind/tree/master/examples/primitives/kotlin/wrappers/com/examples/exceptions/throw_exceptions.cpp>`_ is an example of C binding file.
 
         .. tab-item:: Swift
 

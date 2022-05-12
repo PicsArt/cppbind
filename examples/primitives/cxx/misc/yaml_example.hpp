@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 
 class WithExternalAPIComments {
     public:

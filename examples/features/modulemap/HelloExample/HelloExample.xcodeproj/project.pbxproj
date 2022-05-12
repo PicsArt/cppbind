@@ -41,12 +41,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		8467933D276759EB00CDD85D /* c_std_exc_classes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_std_exc_classes.cpp; path = HelloExample/swift/wrappers/iegen/exception_helpers/c_std_exc_classes.cpp; sourceTree = "<group>"; };
-		8467933E276759EB00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/iegen/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
-		8467934127675A2D00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/iegen/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
-		8467934327675A8C00CDD85D /* std_exc_classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = std_exc_classes.swift; path = HelloExample/swift/src/iegen/exception_helpers/std_exc_classes.swift; sourceTree = "<group>"; };
+		8467933D276759EB00CDD85D /* c_std_exc_classes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_std_exc_classes.cpp; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.cpp; sourceTree = "<group>"; };
+		8467933E276759EB00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
+		8467934127675A2D00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
+		8467934327675A8C00CDD85D /* std_exc_classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = std_exc_classes.swift; path = HelloExample/swift/src/cppbind/exception_helpers/std_exc_classes.swift; sourceTree = "<group>"; };
 		8C0EA64F272C43340007F606 /* public.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = public.modulemap; sourceTree = "<group>"; };
-		8CA071A92731109F00D89836 /* exceptionUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = exceptionUtils.swift; path = HelloExample/swift/src/iegen/exceptionUtils.swift; sourceTree = "<group>"; };
+		8CA071A92731109F00D89836 /* exceptionUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = exceptionUtils.swift; path = HelloExample/swift/src/cppbind/exceptionUtils.swift; sourceTree = "<group>"; };
 		8CD264F32727F00500BA773E /* HelloExample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HelloExample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8CD264F62727F00500BA773E /* HelloExample.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HelloExample.h; sourceTree = "<group>"; };
 		8CD264FD2727F00600BA773E /* HelloExampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HelloExampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };

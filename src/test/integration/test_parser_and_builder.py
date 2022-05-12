@@ -6,17 +6,17 @@ import shutil
 import types
 from unittest.mock import patch, MagicMock
 
-from iegen.builder.ir_builder import CXXIEGIRBuilder
-from iegen.builder.ir_post_processor import IRPostProcessor
-from iegen.common.error import IEGError
-from iegen.common.yaml_process import load_yaml
-from iegen.context_manager.ctx_desc import ContextDescriptor
-from iegen.context_manager.ctx_mgr import ContextManager
-from iegen.ir.ast import NodeType, Node, RootNode
-from iegen.parser.filter import CXXParserFilter, CXXIegFilter
-from iegen.parser.ieg_parser import CXXParser
-from iegen.runner import WrapperGenerator
-from iegen.utils import absolute_path_from_glob
+from cppbind.builder.ir_builder import CppBindIRBuilder
+from cppbind.builder.ir_post_processor import IRPostProcessor
+from cppbind.common.error import CppBindError
+from cppbind.common.yaml_process import load_yaml
+from cppbind.context_manager.ctx_desc import ContextDescriptor
+from cppbind.context_manager.ctx_mgr import ContextManager
+from cppbind.ir.ast import NodeType, Node, RootNode
+from cppbind.parser.filter import CXXParserFilter, CppBindFilter
+from cppbind.parser.cppbind_parser import CXXParser
+from cppbind.runner import WrapperGenerator
+from cppbind.utils import absolute_path_from_glob
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -41,8 +41,8 @@ def test_parser_with_dir_api(clang_config):
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
-    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
-    CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
+    processor = CppBindIRBuilder(RootNode(), ctx_mgr)
+    CppBindIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
     processor.start_root()
     parser.parse(processor, **clang_cfg)
 
@@ -74,8 +74,8 @@ def test_parser_with_file_api(clang_config):
     parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
-    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
-    CXXIEGIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
+    processor = CppBindIRBuilder(RootNode(), ctx_mgr)
+    CppBindIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
 
     processor.start_root()
     parser.parse(processor, **clang_cfg)
@@ -106,7 +106,7 @@ def test_jinja_attrs(clang_config):
 
     plat, lang = 'linux', 'swift'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
-    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+    ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -122,15 +122,15 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
     test_dir = os.path.join(SCRIPT_DIR, '../parser/test_examples', 'jinja_attr/positive')
     parser = CXXParser()
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
-        context_def_glob = os.path.join(test_dir, 'example_iegen.yaml')
+        context_def_glob = os.path.join(test_dir, 'example_cppbind.yaml')
 
         ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         ir_builder.start_root()
         parser.parse(ir_builder, **clang_cfg)
@@ -203,18 +203,18 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
     parser = CXXParser()
 
     # check wrong variables order in var def file
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "var_def_with_wrong_order.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
-        except IEGError:
+        except CppBindError:
             pass
         except Exception as err:
             assert False, f"unexpected exception: {err}"
@@ -222,19 +222,19 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             assert False, "should get error: incorrect order of dependant variables in variables definition file"
 
     # check wrong dependency usage in root section (undefined variable)
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "example_var_def.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_attrs_dep.hpp')]
 
-        context_def_glob = os.path.join(test_dir, 'with_wrong_order_iegen.yaml')
+        context_def_glob = os.path.join(test_dir, 'with_wrong_order_cppbind.yaml')
         ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
-        except IEGError:
+        except CppBindError:
             pass
         except Exception as err:
             assert False, f"unexpected exception: {err}"
@@ -242,18 +242,18 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             assert False, "should get error: incorrect dependency used in root section"
 
     # check variables dependency in case when they are defined on different nodes
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "var_def_with_diff_nodes.yaml")))
         clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_diff_nodes.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root()
 
         try:
             parser.parse(ir_builder, **clang_cfg)
-        except IEGError:
+        except CppBindError:
             pass
         except Exception as err:
             assert False, f"unexpected exception: {err}"
@@ -261,16 +261,16 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
             assert False, "not inheritable variable cannot be used when evaluating context of child node"
 
     # check variables dependency in case when they are defined on different nodes
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(test_dir, "var_def_with_unavailable_var.yaml")))
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         try:
             ir_builder.start_root()
-        except IEGError:
+        except CppBindError:
             pass
         except Exception as err:
             assert False, f"unexpected exception: {err}"
@@ -291,7 +291,7 @@ def test_empty_gen_rule(clang_config):
     parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
-    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+    ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -322,7 +322,7 @@ def test_root_config(clang_config):
 
     parser = CXXParser()
     ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
-    ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+    ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -343,31 +343,31 @@ def test_sys_vars_available_in_api(clang_config):
 
     parser = CXXParser()
 
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(os.getcwd(), "example_var_def.yaml")))
 
         clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'with_sys_vars_in_api.hpp')]
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root()
         parser.parse(ir_builder, **clang_cfg)
 
         class_node = ir_builder.ir.children[0].children[0].children[0]
 
         # asserts sys variable(_pure_comment) used and evaluated in API
-        assert class_node.args['comment'] == 'An example class comment.\n Binding generated by iegen.'
+        assert class_node.args['comment'] == 'An example class comment.\n Binding generated by cppbind.'
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "../parser/test_examples/cmd_line/positive"))
 def test_cmd_line_ctx_positive():
-    with patch('iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
+    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(os.getcwd(), "var_def.yaml")))
 
-        ctx_mgr = ContextManager(ContextDescriptor(os.path.join(os.getcwd(), "iegen.yaml")), 'linux', 'swift')
-        ir_builder = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+        ctx_mgr = ContextManager(ContextDescriptor(os.path.join(os.getcwd(), "cppbind.yaml")), 'linux', 'swift')
+        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root(types.SimpleNamespace(b='CmdLineValueOfB'))
         assert ir_builder.ir.args['a'] == 'CmdLineValueOfBUsedInA', \
             "command line context must be available when evaluating root context"
@@ -383,12 +383,12 @@ def test_src_exclude_glob(clang_config):
     clang_cfg['src_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'main.hpp'))]
     clang_cfg['src_exclude_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'module.hpp'))]
     exclude_files = absolute_path_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
-    cxx_ieg_filter = CXXParserFilter(exclude_files=exclude_files)
-    parser = CXXParser(filter_=cxx_ieg_filter)
+    cppbind_filter = CXXParserFilter(exclude_files=exclude_files)
+    parser = CXXParser(filter_=cppbind_filter)
     ctx_desc = ContextDescriptor(None)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
-    processor = CXXIEGIRBuilder(RootNode(), ctx_mgr)
+    processor = CppBindIRBuilder(RootNode(), ctx_mgr)
     processor.start_root()
     parser.parse(processor, **clang_cfg)
 
@@ -402,7 +402,7 @@ def test_descendants_list(clang_config):
     clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'descendants.hpp')]
 
     parser = CXXParser()
-    ir_builder = CXXIEGIRBuilder(RootNode(), ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+    ir_builder = CppBindIRBuilder(RootNode(), ContextManager(ContextDescriptor(None), 'linux', 'swift'))
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -434,8 +434,8 @@ def test_node_reuse(clang_config):
     clang_cfg['src_glob'] = [os.path.join(os.getcwd(), '*.hpp')]
 
     ir = RootNode()
-    parser = CXXParser(filter_=CXXIegFilter(ir))
-    ir_builder = CXXIEGIRBuilder(ir, ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+    parser = CXXParser(filter_=CppBindFilter(ir))
+    ir_builder = CppBindIRBuilder(ir, ContextManager(ContextDescriptor(None), 'linux', 'swift'))
 
     ir_builder.start_root()
     parser.parse(ir_builder, **clang_cfg)
@@ -453,13 +453,13 @@ def test_node_reuse(clang_config):
 
 
 def test_shared_ref_negative():
-    with pytest.raises(IEGError, match=r"Child_A ancestors have different values for shared_ref variable"):
+    with pytest.raises(CppBindError, match=r"Child_A ancestors have different values for shared_ref variable"):
         ctx_desc = ContextDescriptor("*/**/shared_ref.yaml")
         WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
 
 
 def test_non_polymorphic_multiple_bases_negative():
-    with pytest.raises(IEGError, match="ChildClass is not polymorphic but has multiple branches in its base hierarchy"):
+    with pytest.raises(CppBindError, match="ChildClass is not polymorphic but has multiple branches in its base hierarchy"):
         ctx_desc = ContextDescriptor("*/**/non_polym_bases.yaml")
         WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
 

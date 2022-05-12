@@ -2,8 +2,8 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
-from iegen.context_manager.ctx_desc import ContextDescriptor
-from iegen.context_manager.ctx_mgr import ContextManager
+from cppbind.context_manager.ctx_desc import ContextDescriptor
+from cppbind.context_manager.ctx_mgr import ContextManager
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -11,10 +11,10 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 class TestContextManager(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_null_values/iegen.yaml'
+        self.config_file = SCRIPT_DIR + '/test_examples/api_rules_dir/positive/with_null_values/cppbind.yaml'
         self.ctx_descriptor = ContextDescriptor(self.config_file)
         # mock to return correct variables from config file
-        self.var_def_patch = patch("iegen.context_manager.ctx_desc.ContextDescriptor.get_var_def",
+        self.var_def_patch = patch("cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def",
                                    new=Mock(return_value=self.ctx_descriptor._ContextDescriptor__var_def))
         self.var_def_patch.start()
         self.ctx_manager = ContextManager(self.ctx_descriptor, 'linux', 'kotlin')

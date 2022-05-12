@@ -1,2 +1,2 @@
-Please, note that IEGEN-generated Python wrappers are being binded to Python application with help of [pybind](https://github.com/pybind/pybind11).
+Please, note that CppBind-generated Python wrappers are being binded to Python application with help of [pybind](https://github.com/pybind/pybind11).
 Please note that the use of PyBind is governed by the corresponding [license](https://github.com/pybind/pybind11/blob/master/LICENSE).

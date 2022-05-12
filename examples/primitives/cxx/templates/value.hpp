@@ -4,7 +4,7 @@
 #include <string>
 #include <variant>
 
-namespace iegen::example {
+namespace cppbind::example {
 /**
  * __API__
  * action: gen_class

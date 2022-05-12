@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__

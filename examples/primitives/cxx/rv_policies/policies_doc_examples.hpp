@@ -4,7 +4,7 @@
 #include <vector>
 #include "cxx/overloads/employee.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 
 // [factory-example]
 /**

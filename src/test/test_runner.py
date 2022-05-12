@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from unittest import mock, TestCase
 
-from iegen.common.error import IEGError
-from iegen.runner import run
+from cppbind.common.error import CppBindError
+from cppbind.runner import run
 
 
 class TestRunner(TestCase):
@@ -14,7 +14,7 @@ class TestRunner(TestCase):
         run(args, None)
 
         # negative test case
-        with mock.patch('iegen.runner.WrapperGenerator.run') as run_mock:
-            run_mock.side_effect = IEGError('iegen error')
+        with mock.patch('cppbind.runner.WrapperGenerator.run') as run_mock:
+            run_mock.side_effect = CppBindError('cppbind error')
             with self.assertRaises(SystemExit):
                 run(args, None)

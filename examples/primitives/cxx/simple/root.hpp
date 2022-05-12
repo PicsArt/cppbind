@@ -3,12 +3,12 @@
 
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * \internal
  * internal comment should not go to wrappers
- * TODO: remove python.package after https://picsart.atlassian.net/browse/IEGEN-231 fix
+ * TODO: remove python.package after #231 fix
  * \endinternal
  * Class Root
  * __API__

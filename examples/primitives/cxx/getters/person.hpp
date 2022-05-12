@@ -7,7 +7,7 @@
 #define person_hpp
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * This class contains a private string field and getter/setter methods for it.

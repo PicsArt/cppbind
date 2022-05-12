@@ -6,7 +6,7 @@
 #include <string>
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * This is a template class example.
@@ -60,13 +60,13 @@ class Wrapper {
 
 ///**
 // * This is an example of template type containing nested template type.
-// * TODO: uncomment and write test examples after implementing https://picsart.atlassian.net/browse/IEGEN-242
+// * TODO: uncomment and write test examples after implementing #242
 // * __API__
 // * action: gen_class
 // * template:
 // *   TFirst:
-// *     - type: iegen::example::Project
-// *     - type: iegen::example::Task
+// *     - type: cppbind::example::Project
+// *     - type: cppbind::example::Task
 // * package: templates.nested
 // */
 //template <class TFirst>

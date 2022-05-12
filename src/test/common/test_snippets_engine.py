@@ -1,6 +1,6 @@
 import pytest
 
-from iegen.common.cxx_type import CXXType
+from cppbind.common.cxx_type import CXXType
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,5 @@
 """
-Module contains common fixtures used in iegen related tests
+Module contains common fixtures used in CppBind related tests
 """
 import copy
 import os
@@ -8,11 +8,11 @@ import platform
 from unittest.mock import Mock
 import pytest
 
-from iegen import PROJECT_CONFIG_DIR
-from iegen.common.config import config as default_config
-from iegen.common.error import Error
-from iegen.common.yaml_process import load_yaml
-from iegen.context_manager.ctx_desc import ContextDescriptor
+from cppbind import PROJECT_CONFIG_DIR
+from cppbind.common.config import config as default_config
+from cppbind.common.error import Error
+from cppbind.common.yaml_process import load_yaml
+from cppbind.context_manager.ctx_desc import ContextDescriptor
 from . import TEST_CXX_DIR, TEST_OUT_DIR
 
 
@@ -33,7 +33,7 @@ def local_setup():
 @pytest.fixture(scope="session")
 def config():
     """
-    Fixture returns ieg config for test.
+    Fixture returns cppbind config for test.
     """
     cnfg = copy.deepcopy(default_config)
 
@@ -43,7 +43,7 @@ def config():
 @pytest.fixture(scope="session")
 def parser_config(config):
     """
-    Fixture returns ieg parser config for test.
+    Fixture returns cppbind parser config for test.
     """
     return config
 

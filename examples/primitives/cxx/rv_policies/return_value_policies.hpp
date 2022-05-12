@@ -7,7 +7,7 @@
 
 #include "cxx/simple/task.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 
 /**

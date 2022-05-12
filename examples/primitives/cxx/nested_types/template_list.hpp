@@ -4,12 +4,12 @@
 #include <list>
 #include <string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * An example with template nested types.
  * \internal
- * TODO remove langauge specific action after fixing the issue for python(https://picsart.atlassian.net/browse/IEGEN-236)
+ * TODO remove langauge specific action after fixing the issue for python(#236)
  * __API__
  * kotlin.action: gen_class
  * swift.action: gen_class

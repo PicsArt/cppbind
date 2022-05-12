@@ -1,7 +1,7 @@
 #ifndef counter_h
 #define counter_h
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * An example for with overloaded methods.

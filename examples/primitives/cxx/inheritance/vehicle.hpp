@@ -3,7 +3,7 @@
 
 #include<string>
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -11,7 +11,7 @@ namespace iegen::example {
  * shared_ref: True
  * package: inheritance
  * descendants:
- *  - iegen::example::Bicycle
+ *  - cppbind::example::Bicycle
  */
 class Vehicle {
 public:

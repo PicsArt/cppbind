@@ -3,7 +3,7 @@
 
 #include "cxx/enums/color.hpp"
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * Class Frame.

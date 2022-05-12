@@ -3,7 +3,7 @@ import os
 from setuptools import setup, find_packages
 
 entry_point = (
-    "iegen = iegen.runner:run_package"
+    "cppbind = cppbind.runner:run_package"
 )
 
 with open("src/requirements.txt", "r") as f:
@@ -14,14 +14,14 @@ with open("src/requirements.txt", "r") as f:
             requires.append(req)
 
 setup(
-    name='iegen',
+    name='cppbind',
     version="0.0.1",
     description="C++ Bindings Generator.",
     packages=find_packages('src/.', exclude=['test*']),
     package_dir={'': 'src'},
     # this is hack need to find proper way
-    package_data={'iegen': [os.path.relpath(f, 'src/iegen/')
-                            for f in glob.glob('src/iegen/config/**/*', recursive=True)]},
+    package_data={'cppbind': [os.path.relpath(f, 'src/cppbind/')
+                             for f in glob.glob('src/cppbind/config/**/*', recursive=True)]},
     entry_points={"console_scripts": [entry_point]},
     install_requires=requires,
     python_requires='>=3.6',

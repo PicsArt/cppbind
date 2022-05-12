@@ -139,7 +139,7 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-/iegen_config.cfg
+/cppbind_config.cfg
 
 # xcode
 **/xcuserdata/

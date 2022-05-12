@@ -6,7 +6,7 @@
 #include "cxx/inheritance/base.hpp"
 
 
-namespace iegen::example {
+namespace cppbind::example {
 // [example]
 /**
  * __API__
@@ -15,7 +15,7 @@ namespace iegen::example {
  * package: inheritance
  * swift.name: MyDate
  * descendants:
- *  - iegen::example::DateTime
+ *  - cppbind::example::DateTime
  */
 class Date : public virtual Base {
 public:

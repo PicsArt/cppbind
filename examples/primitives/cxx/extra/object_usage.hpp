@@ -3,7 +3,7 @@
 
 #include "object.hpp"
 
-namespace iegen {
+namespace cppbind {
 
 /**
  * comments

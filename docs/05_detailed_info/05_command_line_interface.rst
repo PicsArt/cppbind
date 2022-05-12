@@ -1,19 +1,19 @@
 Command line interface
 ======================
-IEGEN provides command line interface for running and configuration. To see the list of available commands use ``iegen --help``.
+CppBind provides command line interface for running and configuration. To see the list of available commands use ``cppbind --help``.
 
-iegen init
-^^^^^^^^^^
+cppbind init
+^^^^^^^^^^^^
 
 .. code-block:: bash
 
-    iegen init
+    cppbind init
 
-IEGEN's command line interface(CLI) allows us to create an initial config file in current directory.
-To generate initial configuration run ``iegen init`` under project directory.
-This will create ``iegen.yaml`` file containing the initial config example.
+CppBind's command line interface(CLI) allows us to create an initial config file in current directory.
+To generate initial configuration run ``cppbind init`` under project directory.
+This will create ``cppbind.yaml`` file containing the initial config example.
 
-.. literalinclude:: /../src/iegen/config/iegen.yaml
+.. literalinclude:: /../src/cppbind/config/cppbind.yaml
    :language: yaml
 
 .. note::
@@ -23,18 +23,18 @@ This will create ``iegen.yaml`` file containing the initial config example.
 
 
 
-iegen run
-^^^^^^^^^
+cppbind run
+^^^^^^^^^^^
 
 .. code-block:: bash
 
-    iegen run <language_list>
+    cppbind run <language_list>
 
-In order to generate the bindings use the ``iegen run`` command by providing one or more supported languages.
+In order to generate the bindings use the ``cppbind run`` command by providing one or more supported languages.
 
 .. code-block:: bash
 
-    iegen run kotlin swift python
+    cppbind run kotlin swift python
 
 
 **Optional arguments:**
@@ -45,8 +45,8 @@ In order to generate the bindings use the ``iegen run`` command by providing one
                     Option can be used to set desirable log level from possible 5 values.
 
   --error-limit ERROR_LIMIT
-                    Amount of errors after which IEGEN stops the execution and reports an error.
-                    Default value is -1, which means IEGEN skips all noncritical errors and only
+                    Amount of errors after which CppBind stops the execution and reports an error.
+                    Default value is -1, which means CppBind skips all noncritical errors and only
                     after the execution reports about all encountered errors.
 
   --out_prj_dir OUT_PRJ_DIR
@@ -60,26 +60,26 @@ In order to generate the bindings use the ``iegen run`` command by providing one
                     Directory where generated target language files will be saved.
 
   --cxx_base_out_dir CXX_BASE_OUT_DIR
-                    The directory where IEGEN helper types are being copied.
-                    If user does not want to use IEGEN base classes then there's no need to specify this variable.
+                    The directory where CppBind helper types are being copied.
+                    If user does not want to use CppBind base classes then there's no need to specify this variable.
 
   --target_arch TARGET_ARCH
                     Variable for setting target architecture.
 
 .. note::
-        Most of the optional arguments are command line level IEGEN variables. For more info see ``cmd_line`` in :ref:`var-def-label`
+        Most of the optional arguments are command line level CppBind variables. For more info see ``cmd_line`` in :ref:`var-def-label`
 
 
 
-iegen clean
-^^^^^^^^^^^
+cppbind clean
+^^^^^^^^^^^^^
 
 In order to clean all generated files from the given directory use this command.
 
 .. code-block:: bash
 
-    iegen clean <dir>
+    cppbind clean <dir>
 
 .. note::
-    | ``iegen clean`` works by finding and removing all files that contain the IEGEN banner logo.
+    | ``cppbind clean`` works by finding and removing all files that contain the CppBind banner logo.
     | Make sure not to remove banner logos from the generated files.

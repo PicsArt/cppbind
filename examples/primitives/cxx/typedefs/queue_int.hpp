@@ -6,7 +6,7 @@
 
 using String = std::string;
 
-namespace iegen::example {
+namespace cppbind::example {
 
 /**
  * __API__

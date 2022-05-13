@@ -160,8 +160,8 @@ def clear_cppbind_generated_files(directory):
             try:
                 with open(file_path, 'r') as file:
                     content = file.read()
-                    # remove all *, / and spaces from banner
-                    content = re.sub(r'[/*\s+]', '', content)
+                    # remove all * and spaces from banner
+                    content = re.sub(r'[*\s+]', '', content)
                     if banner in content:
                         remove = True
                 if remove:

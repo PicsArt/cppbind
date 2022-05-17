@@ -10,7 +10,7 @@ CppBind is a software development tool that generates bindings between C++ and o
 
 CppBind automates the process and solves the problems mentioned above.
 
-The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`_. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
+The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`__. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
 
 Table of contents
 ~~~~~~~~~~~~~~~~~
@@ -26,13 +26,13 @@ Table of contents
 Installation
 ~~~~~~~~~~~~
 
-There are some required steps to install and use CppBind. The installation steps are described `here <https://iegen.picsart.com/master/02_first_steps/02_installation.html>`_.
+There are some required steps to install and use CppBind. The installation steps are described `here <https://iegen.picsart.com/master/02_first_steps/02_installation.html>`__.
 
 Usage
 ~~~~~
 
 After installing CppBind, it is run through the command-line interface (CLI).
-CppBind CLI options are described `here <https://iegen.picsart.com/master/05_detailed_info/05_command_line_interface.html>`_.
+CppBind CLI options are described `here <https://iegen.picsart.com/master/05_detailed_info/05_command_line_interface.html>`__.
 
 Tutorial
 ~~~~~~~~

@@ -46,6 +46,8 @@ Section **vars**
 For example, user can set the value of **src_glob** variable, thus controlling which C++ source files must be processed by CppBind.
 This section also should be defined only once per project. The full list of default variables provided by CppBind is available :doc:`here </05_detailed_info/03_var_def>`.
 
+.. _rules-section-label:
+
 Section **rules**
 ~~~~~~~~~~~~~~~~~
 
@@ -55,7 +57,7 @@ This mechanism allows users to have their own custom converters. Merging will al
 in the same directory where the corresponding type is defined.
 CppBind can be run only for languages having corresponding snippets under **rules** section. Currently CppBind includes snippets for **Swift**, **Kotlin** and **Python** languages in default rules definition.
 In order to disable a language it's enough to remove its snippets from **rules** section.
-For more detail see :doc:`Snippets </04_advanced_features/03_snippets>`.
+For more detail see :doc:`Snippets </04_advanced_features/01_snippets>`.
 
 Here is the minimal rules configuration for Swift, Kotlin and Python languages:
 

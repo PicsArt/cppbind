@@ -27,7 +27,7 @@ APPLICATION
 The APPLICATION section defines parameters related to the whole application.
 Let's go over parameters from this section:
 
-- **custom_config_dir** - Directory containing user-defined type converter yaml files. For more details go to :doc:`Custom type converters </04_advanced_features/01_custom_types>`.
+- **custom_config_dir** - Directory containing user-defined type converter yaml files. For more details go to :doc:`Custom type converters </04_advanced_features/02_custom_types>`.
 - **context_def_glob** - Glob pattern of project configuration yaml files.
 - **rule** - Python module which defines jinja template contexts. If user does not want to generate custom code then there's no need to override this parameter.
 - **all_languages** - List of supported languages.

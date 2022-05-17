@@ -70,7 +70,7 @@ To connect Python and C++ code CppBind generates `pybind <https://github.com/pyb
    /04_advanced_features/[0-9]*_*
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Detailed Information
    :glob:
 

@@ -2,7 +2,7 @@ Add new language bindings generation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CppBind allows users to add a new supported language if user already has
-code snippets and type converter snippets (look :doc:`here </04_advanced_features/03_snippets>` for more detailed information
+code snippets and type converter snippets (look :doc:`here </04_advanced_features/01_snippets>` for more detailed information
 about snippets usage). CppBind deduces the list of supported languages from **rules** section info defined inside project config files.
 Thus, to be able to add a new language to that list, user needs to make his own code snippets and type converter snippets and
 define them under **rules** section. For adding a new language user doesn't need to do any changes to the CppBind source code, it's possible

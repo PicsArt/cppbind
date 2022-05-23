@@ -153,7 +153,9 @@ def clear_cppbind_generated_files(directory):
     """
     # remove all spaces from banner logo
     banner = re.sub(r'\s+', '', BANNER_LOGO)
-    for root, _, filenames in os.walk(directory):
+    # We are using topdown=False to make sure that walk visits deepest
+    # directories at first so no empty directory will be left.
+    for root, _, filenames in os.walk(directory, topdown=False):
         for file in filenames:
             remove = False
             file_path = os.path.join(root, file)

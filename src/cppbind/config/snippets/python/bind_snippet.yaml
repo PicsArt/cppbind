@@ -1,3 +1,7 @@
+# Copyright (c) 2022 PicsArt, Inc.
+# All rights reserved. Use of this source code is governed by a
+# MIT-style license that can be found in the LICENSE file.
+
 file_path: |
   {{vars.out_dir + pat_sep + [vars.helpers_package_prefix, 'bind_utils' + vars.file_postfix]|map('replace', '.', pat_sep)|path_join}}.{{vars.extension}}
 scopes:

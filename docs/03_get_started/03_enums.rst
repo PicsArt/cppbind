@@ -1,27 +1,24 @@
 Enums
 ^^^^^
 
-Now let's generate a binding for an enum.
-Here is Color enum definition:
+Now let's generate a binding for an enum. Here is the ``Color`` enum definition:
 
 .. literalinclude:: /../examples/primitives/cxx/enums/color.hpp
    :language: cpp
    :start-after: [example]
    :end-before: [example]
 
-As we can see in the above example we can extend enums logic by using **code_fragment** variable.
+As shown in the above example, we can extend enums logic by using the **code_fragment** variable.
 Code fragments defined with this variable are appended to the enum definition.
-Particularly in this example we added custom conversion from enum to string for all three languages.
-Notice that for Swift we have also used **bases_list** variable to make the enum implement ``CustomStringConvertible`` protocol.
-We also can customize enum case field names using **enum_field_name_prefix** variable, which can be used to add a user defined
-prefix string to enum field names in target language.
+In this example, we added the custom conversion from enum to string for all three languages.
+Notice that for Swift, we have also used the **bases_list** variable to make the enum implement the ``CustomStringConvertible`` protocol.
+We also can customize enum case field names using the **enum_field_name_prefix** variable, which can be used to add a user-defined prefix string to enum field names in the target language.
 
-If there are cases when some of original enum fields are for internal usage
-and user doesn't want to expose them in target language bindings, then **enum_excluded_fields** variable can be used to specify
-the list of excluded fields. In case those fields are used as a default value for a function/constructor argument, CppBind will
-skip that default value generation in target language bindings. If user has a function which returns an excluded enum field,
-CppBind terminates the main program during the function call and provides the user with an appropriate error message (except Python,
-since currently pybind sets some constraints on CppBind).
+If there are cases when some of the original enum fields are for internal usage, 
+and the user doesn't want to expose them in target language bindings, then the **enum_excluded_fields** variable can be used to specify 
+the list of excluded fields. If those fields are used as a default value for a function/constructor argument, CppBind skips 
+that default value generation in target language bindings. If the user has a function that returns an excluded enum field, 
+CppBind terminates the main program during the function call and provides the user with an appropriate error message (except Python, since currently pybind sets some constraints on CppBind).
 
 And the Frame struct using it:
 
@@ -32,7 +29,7 @@ And the Frame struct using it:
 
 .. note::
     We are generating **property_setter** for public field ``backgroundColor``.
-    A writable property field will correspond to it in the target language. To generate read-only field we should use **property_getter** instead.
+    A writable property field corresponds to it in the target language. To generate a read-only field, we should use **property_getter** instead.
 
 Usage examples:
 

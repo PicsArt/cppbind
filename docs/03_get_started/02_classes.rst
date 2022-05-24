@@ -10,15 +10,13 @@ Let's generate a binding code for the following custom type.
    :end-before: [example]
 
 
-In a code above we are exporting all public members and constructors.
+In the code above, we are exporting all public members and constructors.
 
 .. note::
-    Notice that the title method is marked as a getter, so it
-    will be a read-only property for the target language.
+    The title method is marked as a getter, a read-only property for the target language.
 
 .. note::
-    By default, CppBind generates ``System.loadLibrary("wrapper_jni")`` for each Kotlin class. To disable this behavior define **c_wrapper_lib_name** with null value:
-    **c_wrapper_lib_name: null** or **c_wrapper_lib_name:**.
+    By default, CppBind generates ``System.loadLibrary("wrapper_jni")`` for each Kotlin class. To disable this behavior define **c_wrapper_lib_name** with null value:  **c_wrapper_lib_name: null** or **c_wrapper_lib_name:**.
 
 Usage examples:
 
@@ -122,8 +120,7 @@ And the usage example:
 Nested Types
 ~~~~~~~~~~~~
 
-Let's now generate bindings for nested types.
-Here's a small example:
+Let's now generate bindings for nested types. Here's a small example:
 
 .. literalinclude:: /../examples/primitives/cxx/nested_types/list.hpp
    :language: cpp
@@ -131,7 +128,7 @@ Here's a small example:
    :end-before: [example]
 
 .. note::
-    Here we used **header_code_fragment** and **footer_code_fragment** variables to create type aliases for nested types.
+   Here we used **header_code_fragment** and **footer_code_fragment** variables to create nested types.
 
 Some usage examples:
 

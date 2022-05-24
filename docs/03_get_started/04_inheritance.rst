@@ -1,12 +1,13 @@
 Inheritance
 ^^^^^^^^^^^
 
-This section covers single and multiple inheritance.
+This section covers single and multiple inheritances.
 
 Single Inheritance
 ~~~~~~~~~~~~~~~~~~
 
 Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
+
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/vehicle.hpp
    :language: cpp
@@ -19,15 +20,15 @@ Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
    :end-before: [example]
 
 .. note::
-    For both classes we have used the same value for **shared_ref** attribute.
-    This is mandatory. This attribute should be the same in type hierarchy.
+    We have used the same value for the **shared_ref** attribute for both classes.
+    It is mandatory. This attribute should be the same in the type hierarchy.
 
 .. note::
-    If the type which is being parsed is inherited from another one which does not have an **__API__**, i.e. is not parsed
-    by CppBind then in the binding code it won't appear as a base type for the target type.
+    If the type parsed is inherited from another one that does not have an **__API__**, i.e., is not parsed
+    by CppBind, then in the binding code, it won't appear as a base type for the target type.
 
-As this is a single inheritance we don't have to add something special.
-CppBind will generate two classes one inherited from the other.
+As this is single inheritance, we don't have to add something special.
+CppBind generates two classes, one inherited from the other.
 
 Usage examples:
 
@@ -88,8 +89,8 @@ Usage examples:
 
 Multiple Inheritance
 ~~~~~~~~~~~~~~~~~~~~
-Now let's assume we have a type inherited from two others: ``Square`` inherited from ``Rectangle`` and ``Rhombus``.
-The last two in their turn are derived from ``Parallelogram``:
+Now let's assume we have a type inherited from two others: ``Square` inherited from ``Rectangle`` and ``Rhombus``.
+The last two, in their turn, are derived from ``Parallelogram``:
 
 .. literalinclude:: /../examples/primitives/cxx/inheritance/parallelogram.hpp
    :language: cpp
@@ -111,18 +112,20 @@ The last two in their turn are derived from ``Parallelogram``:
    :start-after: [example]
    :end-before: [example]
 
-In this case again we have used the same value for **shared_ref** for all 4 types.
+Again, we have used the same value for **shared_ref** for all four types.
+
 
 .. note::
     Here we used **action: gen_interface** instead of **action: gen_class**.
-    Most of the modern languages do not support multiple inheritance so we have to tell CppBind to generate
+    Most modern languages do not support multiple inheritance, so we have to tell CppBind to generate
     interfaces with implementations instead.
 
 .. note::
-    It's important to note that CppBind supports multiple inheritance only for polymorphic types (when type has a virtual method/destructor or has a polymorphic base).
+    It's important to note that CppBind supports multiple inheritance for polymorphic types (when the type has a virtual method/destructor or a polymorphic base).
+
 
 .. note::
-    As Rectangle and Rhombus are interfaces then Parallelogram also should be an interface.
+    As Rectangle and Rhombus are interfaces, Parallelogram should also be an interface.
 
 Usage examples:
 

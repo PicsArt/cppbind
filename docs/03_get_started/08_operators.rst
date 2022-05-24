@@ -1,10 +1,10 @@
 Operator Overloading
 ^^^^^^^^^^^^^^^^^^^^
 
-An example of overloading arithmetic and comparison operators.
+This section covers an example of overloading arithmetic and comparison operators.
 If the target language does not allow some of the operators to be overloaded or
-we just don't want to overload them in the target language we can set **is_operator** variable
-to **False**. In that case we should also specify **name** for that operator so in target language will be used that name.
+we don't want to overload them in the target language, we can set the **is_operator** variable
+to **False**. We should also specify **name** for that operator so that the target language uses that name.
 
 
 .. literalinclude:: /../examples/primitives/cxx/operators/counter.hpp
@@ -19,8 +19,8 @@ to **False**. In that case we should also specify **name** for that operator so 
     Also notice we do not have Kotlin action for ``operator>``.
 
 .. note::
-    For **+=** operator we are generating bindings only for Python and Swift because for Kotlin the signature of this operator is different and
-    we already have generated binding for **+** operator which covers also **+=** operator.
+    For the **+=** operator, we are generating bindings only for Python and Swift because for Kotlin, the signature of this operator is different, and we
+    already have generated binding for the **+** operator, which also covers the **+=** operator.
 
 And the usage example:
 
@@ -125,4 +125,4 @@ Usage example:
 |
 
 .. note::
-    As we can see we have only generated one set operator. This is the case when the return value of overloaded subscript operator is a non const qualified reference.
+    As we can see, we have only generated one set operator. It is the case when the return value of the overloaded subscript operator is a non-const-qualified reference.

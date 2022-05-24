@@ -3,11 +3,11 @@
 Variable Definitions
 ^^^^^^^^^^^^^^^^^^^^
 
-During the processing of source C++ files CppBind constructs internal tree-like structure (IR) which consists of entities corresponding to project directories, files, classes, functions, etc.
-The entities in IR have parent-child relationship, which is defined via the following hierarchy: **root** -> **directory** -> **file** -> **class** -> **method/property**.
-To tell CppBind that the entity is going to be exposed to the target language, user needs to define API in doxygen comments or under the **type_vars** section as described here: :ref:`external-api-label`.
-Project configuration is described through the variables used inside API annotations. Using variables we define which code should be parsed, how the target code should look like, where output should be stored, etc.
-Variables must be defined under **var_def** section of project yaml configuration file. CppBind provides a default list of variables.
+While processing source C++ files, CppBind constructs an internal tree-like structure (IR) which consists of entities corresponding to project directories, files, classes, functions, etc.
+The entities in IR have parent-child relationship defined via the following hierarchy: **root** -> **directory** -> **file** -> **class** -> **method/property**.
+To tell CppBind that the entity will be exposed to the target language, the user defines API in doxygen comments or under the **type_vars** section as described here: :ref:`external-api-label`.
+Project configuration is described through the variables used inside API annotations. Using variables allows defining the following: which code should be parsed, how the target code should look, where output should be stored, etc.
+Variables must be defined under the **var_def** section of the project yaml configuration file. CppBind provides a default list of variables.
 
 .. collapse:: The list of all variables
 
@@ -18,15 +18,15 @@ Variables must be defined under **var_def** section of project yaml configuratio
 
 |
 
-Each variable can have the following properties:
+Each variable has the following properties:
 
-- **inheritable** indicates whether the value of the variable can be inherited from the parent entity or not.
+- **inheritable** indicates whether the variable's value can be inherited from the parent entity or not.
 - **default** indicates the default value of the variable. The default value is used when the variable isn't explicitly defined by the user and is not inherited from the parent entity.
-- **allowed_on** indicates on which parts of the code (files, classes, etc.) the variable is allowed to be defined. CppBind complains about definition of a variable on not allowed entity.
+- **allowed_on** indicates parts of the code (files, classes, etc.) where the variable is allowed to be defined. CppBind complains about the definition of a variable on a disallowed entity.
 - **required_on** indicates the parts of code (files, classes, methods, etc.) where defining the variable is mandatory.
-- **type** is the type of variable value. If the type is not defined, CppBind deduces it from the value of the variable. Supported types are str, bool, list and dict. CppBind complains about definition of a value other than the type of the variable.
-- **description** is an optional property which gives additional information about the variable.
-- **options** is the list of possible values of the variable. If this property is set, user can't define any other value of the variable out of this list.
+- **type** is the type of variable value. If the type is not defined, CppBind deduces it from the variable's value. Supported types are str, bool, list, and dict. CppBind complains about the definition of a value other than the variable type.
+- **description** is an optional property that gives additional information on the variable.
+- **options** is the list of possible values of the variable. If this property is set, the user can't define any other value of the variable out of this list.
 
 Values for the property **allowed_on** are divided into groups:
 
@@ -35,42 +35,42 @@ Values for the property **allowed_on** are divided into groups:
   | **file** - variable can be defined on a file.
 * **cxx** - includes **class**, **class_template**, **struct**, **struct_template**, **constructor**, **function**, **function_template**, **cxx_method**, **enum** and **field**.
 * | **cmd_line** - includes **cmd_line** and **root**.
-  | The above mentioned values are special keywords that show the kind of corresponding entity.
-  | Variables which are allowed on **root** are the ones which are common for the whole project.
+  | The values mentioned above are special keywords that show the kind of corresponding entity.
+  | Variables allowed on **root** are the ones common for the whole project.
   | For example, **out_prj_dir** should be defined once and is allowed only on root.
-  | There can be also variables that are allowed on root but can be overridden. An example of such variable is **comment_del_regex** which is allowed also on **cxx** and **file_system**.
-  | For example, this means it can be defined for the whole project but overridden for a single file.
-  | **cmd_line** indicates that the variable is allowed on root but also can be provided/modified through command line arguments.
-  | For setting/modifying root variable from command line user needs to provide a value for command line option: ``--target_arch=arm64``.
-  | User can also specify platform/language specific value: ``--mac.python.target_arch=arm64``. The value provided by command line will overwrite the one defined in **vars** section.
-  | Note that if you use only **root** as a value for **allowed_on** property then the variable cannot be overridden from command line.
+  | There can also be variables allowed on the root but can be overridden. An example of such variable is **comment_del_regex** which is allowed also on **cxx** and **file_system**.
+  | For example, it can be defined for the whole project but overridden for a single file.
+  | **cmd_line** indicates that the variable is allowed on the root and can be provided/modified through command-line arguments.
+  | For setting/modifying root variable from the command-line, the user needs to provide a value for the command-line option: ``--target_arch=arm64``.
+  | User can also specify platform/language-specific value: ``--mac.python.target_arch=arm64``. The value provided by the command-line overwrites the one defined in the **vars** section.
+  | Note that if you use only **root** as a value for the **allowed_on** property, the variable cannot be overridden from the command-line.
 
-If the variable is allowed on all the members of the group then the group can be used as the value of **allowed_on** property.
+If the variable is allowed on all the group members, then the group can be used as the value of the **allowed_on** property.
 
-If user does not specify a value for variable then the default value is being used.
-There are predefined system variables which can be used for defining the default value for the variable or assigning a new value.
+If the user does not specify a value for a variable, then the default value is used.
+There are predefined system variables that can be used to define the default value for the variable or assign a new value.
 Here is the list of system variables:
 
-* **path** - os.path module (mainly used to join paths)
-* **getenv** - os.getenv module (used for getting environment variables)
-* **_current_working_dir** - current working directory
-* **_source_modification_time**: source code modification time
-* **_output_modification_time**: unique datetime-based key which is used for comparing previously generated code with new one
-* **_pure_comment**: doxygen comment without CppBind API part
-* **_line_number**: line number of the source code which is being processed
-* **_file_fullname**: full path of the file which is being processed
-* **_file_name** - the name of the file which is being processed.
+* **path** - os.path module (mainly used to join paths).
+* **getenv** - os.getenv module (used for getting environment variables).
+* **_current_working_dir** - current working directory.
+* **_source_modification_time**: source code modification time.
+* **_output_modification_time**: unique datetime-based key which is used for comparing previously generated code with the new one.
+* **_pure_comment**: doxygen comment without CppBind API part.
+* **_line_number**: the line number of the processed source code.
+* **_file_fullname**: full path of the processed file.
+* **_file_name** - the name of the processed file.
 * **_is_operator** - indicates whether the method is a C++ operator or not.
-* **_object_name** - name of the object which is being processed, e.g. class name, method name, etc.
-* **_cppbind_extras_dir** - the path of the directory which contains some CppBind configuration default files.
-* **_helper_module** - Python helper module for the current target language which contains some helper functions.
-* **get_android_ndk_sysroot** - internal helper function to dynamically construct android ndk sysroot path using android ndk installation path
+* **_object_name** - the name of the processed object, e.g., class name, method name, etc.
+* **_cppbind_extras_dir** - the path of the directory containing CppBind configuration default files.
+* **_helper_module** - Python helper module for the current target language containing helper functions.
+* **get_android_ndk_sysroot** - internal helper function to dynamically construct android ndk sysroot path using android ndk installation path.
 
-In **vars** section, as well as in API annotations and variable default values definitions, user can write jinja expressions,
-which will be evaluated using system variables and current context variables.
-Particularly, when compiling courses on macOS to generate android Kotlin bindings, clang must be provided with **sysroot** and **target** options.
-For this purpose we have **target_arch** parameter, which has **x86_64** default value and can be overwritten with command line arguments or within **vars** section.
-To use this feature user needs to set **clang_args** variable properly. We have it done in our project default config file:
+Users can write jinja expressions in the **vars** section, API annotations, and variable default values definitions.
+Those expressions are being evaluated with the help of the system and current context variables.
+Mainly, when compiling courses on macOS to generate android Kotlin bindings, clang must be provided with **sysroot** and **target** options.
+For this purpose, there is a **target_arch** parameter with **x86_64** default value, and it can be overwritten with command-line arguments or within the **vars** section.
+To use this feature user needs to set the **clang_args** variable properly. We have it done in our project default config file:
 
 .. code-block:: yaml
 
@@ -82,83 +82,83 @@ To use this feature user needs to set **clang_args** variable properly. We have 
 
 Now let's go through the key variables:
 
-- **action** - Indicates what should be generated: class, method, etc. Details are :doc:`here </05_detailed_info/04_gen_actions>`.
-- **file** - Output file name.
-- **file_fullname** - Full path of source file.
-- **package** - Package name which with **package_prefix** is used for generating the final package ({package_prefix}.{package}).
-- **name** - Name of the class, method, etc. If not specified then the original name is used.
-- **argument_label** - Dictionary to define the mapping from function original argument names to argument labels. Currently used only for Swift. See more details here: :ref:`arg-names-and-labels`.
-- **argument_name** - Dictionary to define the mapping from function original argument names to changed argument names. Used to change function argument names for the target language. See more details here: :ref:`arg-names-and-labels`.
-- **interface_name** - When action is gen_interface this will be used as a name for the generated interface.
-- | **interface_class_name** - This variable is the name of the implementation class for the languages which do not support multiple inheritance.
-  | It's used with **interface_name**. For example, if we have a class marked with **action: gen_interface**, then for Kotlin we will have an interface named **interface_name** and the implementation class named **interface_class_name**.
-- **include** - Additional includes that will be added in the generated bindings of the target language.
-- | **code_fragment** - Code snippets which will be appended to the target code depending on what was tagged with this variable.
-  | For example, if enum is tagged with this variable then code fragment will be appended to the generated enum.
-- | **header_code_fragment** - Code snippets which will be added right before the generated part of the code.
-  | For example, if enum is tagged with this variable then code fragment will be added before the generated enum.
-- | **footer_code_fragment** - Code snippets which will be added right after the generated part of the code.
-  | For example, if enum is tagged with this variable then code fragment will be added after the generated enum.
-- **include_cxx** - Additional C++ includes which will be added to generated C bindings.
-- **shared_ref** - This variable is to manage how the object will be held. If set to false then the generated binding will create a regular pointer, otherwise a shared pointer.
-- **template** - This variable is used for template types/functions to specify all possible types for template parameters. More details are :doc:`here </03_get_started/06_templates>`.
-- | **is_operator** - This variable is to indicate whether the C++ method is operator or not. Although its default value is True for operators and False otherwise,
-  | there might be cases that C++ operator does not have matching operator in the target language or user might want to generate a regular method instead.
-  | For such cases this variable can be used to override the default value. More details and use cases can be found :doc:`here </03_get_started/08_operators>`.
-- **is_exception** - To indicate that an exception class should be generated (an object of this class may be thrown in target language).
-- **throws** - This variable is mandatory for all methods. It indicates what type of exceptions method can throw.
-- **bases_list** - This variable is used to define extra types which target type will additionally implement.
-- **nullable_return** - Indicates whether the function can return null value or not. Details are here: :ref:`nullables-label`.
-- **nullable_arg** - The list of arguments which can have null value. Examples are here: :ref:`nullables-label`.
-- **project_dir** - Root directory of C++ source code which is going to be parsed.
-- **project_link** - Link to project source code. The default value is git repo link if it uses git for version control and an empty string otherwise.
-- | **comment_del_regex** - Regular expressions to define which parts of the comment should not go to the generated code. By default, the text between **internal** and **endinternal** doxygen commands will be ignored.
-  | If comment contains only **internal** then everything after it will be ignored.
-- **comment** - Target code comment. By default, it's pure comment without parts that match the pattern defined via **comment_del_regex**.
-- **banner_comment** - Banner comment which is used with CppBind logo as a file header for all CppBind generated files.
-- **out_prj_dir** - Root directory of project output. All includes and imports will be generated relative to this directory.
-- **run_dir** - Helper parameter used in other variables. Users also can have their custom variables to use within the config file.
-- **cxx_out_dir** - Root directory where all C bindings will be stored.
-- **out_dir** - Directory where generated target language files will be saved.
-- **cxx_base_out_dir** - The directory where CppBind helper types are being copied. If user does not want to use CppBind base classes then there's no need to specify this variable.
-- **is_proj_type** - Boolean showing whether the given type is user's type or is the type from standard/3pty lib.
-- **prj_rel_file_name** - Source file name relative to project root directory.
-- **package_prefix** - Package prefix where generated files will be saved.
-- **helpers_package_prefix** - This is a path relative to **out_dir** where helpers from **helpers_dir** are copied.
-- **helpers_out_dir** - Directory where helper/util files must be copied to.
-- **exception_helpers_package** - Package name of standard exception helpers.
-- **exception_file_name** - File name of standard exception helpers.
-- **common_helpers_dir** - Directory containing CppBind standard helpers.
+- **action** - indicates what should be generated: class, method, etc. Details are :doc:`here </05_detailed_info/04_gen_actions>`.
+- **file** - output file name.
+- **file_fullname** - full path of source file.
+- **package** - package name whichis used with **package_prefix** to generate the final package ({package_prefix}.{package}).
+- **name** - name of the class, method, etc. If not specified, then the original name is used.
+- **argument_label** - dictionary to define the mapping from function original argument names to argument labels. Currently used only for Swift. See more details here: :ref:`arg-names-and-labels`.
+- **argument_name** - dictionary to define the mapping from function original argument names to changed argument names. Used to change function argument names for the target language. See more details here: :ref:`arg-names-and-labels`.
+- **interface_name** - name for the generated interface when action is **gen_interface**.
+- | **interface_class_name** - implementation class's name for the languages that do not support multiple inheritance.
+  | It's used with **interface_name**. For example, if we have a class marked with **action: gen_interface**, then for Kotlin there is an interface named **interface_name** and the implementation class named **interface_class_name**.
+- **include** - additional includes added in the generated bindings of the target language.
+- | **code_fragment** - code snippets appended to the target code depending on what was tagged with this variable.
+  | For example, if an enum is tagged with this variable, the code fragment is appended to the generated enum.
+- | **header_code_fragment** - Code snippets added right before the generated part of the code.
+  | For example, if an enum is tagged with this variable, a code fragment is added before the generated enum.
+- | **footer_code_fragment** - code snippets added right after the generated part of the code.
+  | For example, if an enum is tagged with this variable, a code fragment is added after the generated enum.
+- **include_cxx** - additional C++ includes added to generated C bindings.
+- **shared_ref** - variable to manage how the object is held. If set to false, the generated binding creates a regular pointer, otherwise a shared pointer.
+- **template** - variable for template types/functions to specify all possible types for template parameters. More details are :doc:`here </03_get_started/06_templates>`.
+- | **is_operator** - variable to indicate whether the C++ method is an operator or not. Although its default value is True for operators and False otherwise,
+  | there might be cases the C++ operator does not have a matching operator in the target language, or the user wants to generate a regular method instead.
+  | For such cases, this variable can be used to override the default value. More details and use cases can be found :doc:`here </03_get_started/08_operators>`.
+- **is_exception** - indicates an exception class that should be generated (an object of this class may be thrown in the target language).
+- **throws** - mandatory variable for all methods. It indicates what type of exceptions method can throw.
+- **bases_list** - variable to define extra types that are additionally implemented by the target type.
+- **nullable_return** - indicates whether the function can return null value or not. Details are here: :ref:`nullables-label`.
+- **nullable_arg** - list of arguments that can have null value. Examples are here: :ref:`nullables-label`.
+- **project_dir** - root directory of C++ source code, which will be parsed.
+- **project_link** - link to project source code. The default value is the git repo link if it uses git for version control and an empty string.
+- | **comment_del_regex** - regular expressions to define parts of the comment that should not go to the generated code. The text between **internal** and **endinternal** doxygen commands will be ignored by default.
+  | If the comment contains only **internal**, then everything after it is ignored.
+- **comment** - target code comment. By default, it's a pure comment without parts that match the pattern defined via **comment_del_regex**.
+- **banner_comment** - banner comment used with the CppBind logo as a file header for all CppBind generated files.
+- **out_prj_dir** - root directory of project output. All includes and imports are generated relative to this directory.
+- **run_dir** - helper parameter used in other variables. Users also can have their custom variables to use within the config file.
+- **cxx_out_dir** - root directory where all C bindings is stored.
+- **out_dir** - directory where generated target language files is saved.
+- **cxx_base_out_dir** - directory where CppBind helper types are copied. If the user does not want to use CppBind base classes, there's no need to specify this variable.
+- **is_proj_type** - boolean showing whether the given type is the user's type or from standard/3pty lib.
+- **prj_rel_file_name** - source file name relative to project root directory.
+- **package_prefix** - package prefix where generated files is saved.
+- **helpers_package_prefix** - path relative to **out_dir** where helpers from **helpers_dir** are copied.
+- **helpers_out_dir** - directory where helper/util files must be copied.
+- **exception_helpers_package** - package name of standard exception helpers.
+- **exception_file_name** - file name of standard exception helpers.
+- **common_helpers_dir** - directory containing CppBind standard helpers.
 - **cxx_helpers_dir** - CppBind C++ helpers directory.
-- **helpers_dir** - Directory containing CppBind helpers.
+- **helpers_dir** - directory containing CppBind helpers.
 - **cxx_base_source_dir** - CppBind internal directory containing base classes.
-- **overloading_postfix** - Postfix to be appended at the end of the generated C binding function name if the function is overloaded.
-- **file_postfix** - Postfix which will be appended to each generated file.
-- **extension** - The extension of generated target language files.
-- **pybind_module** - Package name of the generated pybind package. This variable is only used for Python.
-- **c_wrapper_lib_name** - Library name for generated bindings.
-- **target_arch** - Variable for setting target architecture.
-- **clang_args** - Command line arguments passed to clang.
-- **src_glob** - File glob to define which source code files must be processed by clang.
-- **src_exclude_glob** - Patterns to exclude files from processing list.
-- **include_dirs** - Include directories required for parsing. These directories are passed to clang parser.
-- **extra_headers** - Extra headers to be processed. For example, CppBind uses this variable to process standard exceptions headers to generate target language bindings for them.
-- **enum_field_name_prefix** - A string which is added as a prefix of enum fields names.
-- **enum_excluded_fields** - A list of enum cases which must not be exposed in the target language.
+- **overloading_postfix** - postfix appended at the end of the generated C binding function name if the function is overloaded.
+- **file_postfix** - postfix appended to each generated file.
+- **extension** - extension of generated target language files.
+- **pybind_module** - package name of the generated pybind package. This variable is only used for Python.
+- **c_wrapper_lib_name** - library name for generated bindings.
+- **target_arch** - variable for setting target architecture.
+- **clang_args** - command-line arguments passed to clang.
+- **src_glob** - file glob to define source code files that must be processed by clang.
+- **src_exclude_glob** - patterns to exclude files from processing list.
+- **include_dirs** - include directories required for parsing. These directories are passed to the clang parser.
+- **extra_headers** - extra headers to be processed. For example, CppBind uses this variable to process standard exception headers to generate target language bindings.
+- **enum_field_name_prefix** - string which is added as a prefix of enum fields names.
+- **enum_excluded_fields** - list of enum cases that must not be exposed in the target language.
 - **cxx_out_rel_path** - C output relative path to project output directory. This variable is used for constructing generated C includes.
-- | **full_package** - Full package constructed from package_prefix and package. This variable has different default value construction formula for each language.
-  | Note that it's used for Python and Kotlin for target package generation and changing it will affect generated file paths as well.
+- | **full_package** - full package constructed from package_prefix and package. This variable has different default value construction formula for each language.
+  | Note that it's used for Python and Kotlin for target package generation and changing it affects generated file paths as well.
   | Consider this when changing **c_file_fullname**, **h_file_fullname** and **target_file_fullname**.
-- **c_file_fullname** - Generated cpp file full name.
-- **h_file_fullname** - Generated header file full name.
-- **target_file_fullname** - Generated target language file full name.
-- **pybind_module_filename** - Generated pybind file name containing pybind module code.
-- **c_pybind_filename** - Generated pybind cpp file name containing code which binds all submodules.
-- **h_pybind_filename** - Generated pybind header file name containing includes of all submodules.
-- **descendants** - List of all derived types of current type. Details can be found :doc:`here </04_advanced_features/05_object_type_preservation>`.
-- **return_value_policy** - Policy to define return value lifetime and ownership. Details can be found here: :ref:`rv-policies`.
-- **keep_alive** - List containing indices of arguments which lifetimes should be bound to ``this`` object's lifetime. The indices are 1-based. See more details here: :ref:`keep-alive-policy`.
-- **is_c_wrapper_external** - Boolean to define whether the C binding helpers must be included as from external lib or not (generate include within ``<>`` diamonds or not).
+- **c_file_fullname** - generated cpp file full name.
+- **h_file_fullname** - generated header file full name.
+- **target_file_fullname** - generated target language file full name.
+- **pybind_module_filename** - generated pybind file name containing pybind module code.
+- **c_pybind_filename** - generated pybind cpp file name containing code which binds all submodules.
+- **h_pybind_filename** - generated pybind header file name containing includes of all submodules.
+- **descendants** - list of all derived types of current type. Details can be found :doc:`here </04_advanced_features/05_object_type_preservation>`.
+- **return_value_policy** - policy to define return value lifetime and ownership. Details can be found here: :ref:`rv-policies`.
+- **keep_alive** - list containing indices of arguments whose lifetimes should be bound to ``this`` object's lifetime. The indices are 1-based. See more details here: :ref:`keep-alive-policy`.
+- **is_c_wrapper_external** - boolean to define whether the C binding helpers must be included as from external lib or not (generate include within ``<>`` diamonds or not).
 
 .. note::
 
@@ -179,13 +179,12 @@ Now let's go through the key variables:
 
 .. note::
 
-    It's forbidden to use any other variable that is not listed under **var_def** section.
-
+ It's forbidden to use any other variable that is not listed under the **var_def** section.
 
 .. note::
 
-    Each variable can have platform, language specific values. For this purpose variable should be prefixed with platform and/or language, like:
-
+ Each variable can have a platform and language-specific values. For this purpose, the variable should be prefixed with platform and/or language, like:
+ 
     .. code-block:: yaml
 
         name: Task
@@ -195,10 +194,10 @@ Now let's go through the key variables:
 
     These are four possible ways to define variable values.
     Note that you cannot have **<language>.<variable>** and **<platform>.<variable>** at the same time.
-    In this case the value for **<platform>.<language>.<variable>** is ambiguous and CppBind will complain about it.
-    Another important thing is that default values also can be specified per platform/language. To specify platform/language specific default value
+    In this case the value for **<platform>.<language>.<variable>** is ambiguous and CppBind complains about it.
+    Another important thing is that default values also can be specified per platform/language. To specify platform/language-specific default value
     user needs to use platform and/or language specifier in front of the **default** keyword, e.g: **<platform>.<language>.<default>**.
 
-    There is a priority order when defining platform/language specific values. When user has mixed types of specifications, we pick the one with the highest priority.
-    For example, if user specifies values for **mac.python.name**, **python.name**, **name**, we will pick the first one when generating bindings for mac+python.
+    There is a priority order when defining platform/language-specific values. When the user has mixed types of specifications, we pick the one with the highest priority.
+    For example, if the user specifies values for **mac.python.name**, **python.name**, **name**, we pick the first one when generating bindings for mac+python.
     It means we pick the maximum specified option.

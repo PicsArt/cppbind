@@ -1,7 +1,7 @@
 Templates
 ^^^^^^^^^
-In this section we will cover function and class templates.
-For templates user must specify all expected values of template parameters with ``template`` variable.
+In this section, we cover function and class templates.
+For templates, the user must specify all expected values of template parameters with the ``template`` variable.
 The value of this variable is a mapping between template parameters and their expected arguments.
 
 Let's see an example:
@@ -11,16 +11,16 @@ Let's see an example:
    :start-after: [example]
    :end-before: [example]
 
-Here we have two template member functions ``max`` and ``makePair``.
-As you can see we have specified all possible types for each parameter.
+Here we have two template member functions: ``max`` and ``makePair``.
+As you can see, we have specified all possible types for each parameter.
 CppBind generates overloaded methods in target languages with each combination of template arguments.
 
 .. note::
-    Keys in **__API__** should be in the same order as in the template parameter list.
+    Keys in **__API__** should be in the same order as the template parameter list.
 
 .. note::
-    We specified template argument's type full name in **__API__**, i.e. cppbind::example::Task not just Task.
-    This is mandatory otherwise CppBind won't be able to find required information about specified type.
+    We specified the template argument's type full name in **__API__**, i.e., cppbind::example::Task, not just Task.
+    It is mandatory; otherwise, CppBind cannot find the required information about the specified type.
 
 .. collapse:: Generated bindings
 
@@ -44,7 +44,7 @@ CppBind generates overloaded methods in target languages with each combination o
 
 |
 
-As we can see CppBind generated two overloaded methods for both ``max`` and ``makePair``.
+As we can see, CppBind generated two overloaded methods for both ``max`` and ``makePair``.
 And here are some usage examples:
 
 .. tab-set::
@@ -73,9 +73,8 @@ And here are some usage examples:
 
 Class templates
 ~~~~~~~~~~~~~~~
-
-For a class template CppBind generates a new type for each specialization.
-Let's generate bindings for a template class ``Stack``.
+For a class template, CppBind generates a new type for each specialization. 
+Let's generate bindings for a template class ``Stack``. 
 We should specify all expected types for template parameter ``T``.
 
 Here is the code in C++:
@@ -85,32 +84,30 @@ Here is the code in C++:
    :start-after: [example]
    :end-before: [example]
 
-We specified three possible values for template parameter ``T`` which means there can be three specializations of ``Stack``
-(``cppbind::example::Stack<cppbind::example::Task>``, ``cppbind::example::Stack<cppbind::example::Project>``, ``cppbind::example::Stack<cppbind::example::Number<int>>``).
+We specified three possible values for template parameter ``T`` which means there can be three specializations of ``Stack`` (``cppbind::example::Stack<cppbind::example::Task>``, ``cppbind::example::Stack<cppbind::example::Project>``, ``cppbind::example::Stack<cppbind::example::Number<int>>``). 
 CppBind will generate a new class for each of this specializations.
 
 Note that we have specified ``name`` property for ``cppbind::example::Project`` and ``cppbind::example::Number<int>``.
 This property is used as a type name postfix in target language, i.e.
 ``StackPrj`` will be generated for ``cppbind::example::Stack<cppbind::example::Project>`` and ``StackNumInt`` for ``cppbind::example::Stack<cppbind::example::Number<int>>``.
 
-For ``cppbind::example::Task`` we have not specified property ``name`` which means its name in target language will be used as a postfix, i.e.
-``StackPyTask`` will be generated for Python and ``StackTask`` for other languages.
+For ``cppbind::example::Task``, we have not specified the property ``name``, which means its name in the target language is used as a postfix, i.e., ``StackPyTask`` is generated for Python and ``StackTask`` for other languages.
 
-Now let's see what usages we can have for our example Stack. Here is the source code:
+Now let's see the usages of our example, Stack. Here is the source code:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp
     :language: cpp
     :start-after: [example]
     :end-before: [example]
 
-Here we have four methods taking ``Stack`` as an argument and returning its first element.
-The first three methods are supported by CppBind but you cannot generate bindings for the fourth.
-To generate bindings for a function taking template arguments you need to specify their full type names.
+Here we have four methods to take ``Stack`` as an argument and return its first element.
+CppBind supports the first three methods, but you cannot generate bindings for the fourth.
+To generate bindings for a function taking template arguments, you must specify their full type names.
 The fourth one does not meet this requirement.
 
 .. note::
-    CppBind supports types inherited from a specialized template e.g. ``class TaskList : public Stack<Task>``.
-    And to generate bindings for a type inherited from a template(has CppBind API) you must specify base type's full name e.g. ``class TaskList<T> : public cppbind::example::Stack<T>``.
+    CppBind supports types inherited from a specialized template, e.g., ``class TaskList: public Stack<Task>``. 
+    And to generate bindings for a type inherited from a template(has CppBind API), you must specify the base type's full name, e.g.,`` class TaskList<T>: public cppbind::example::Stack<T>``.
 
 .. collapse:: Generated bindings
 
@@ -137,24 +134,23 @@ The fourth one does not meet this requirement.
 Template Getters/Setters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Now let's see how ``name`` is used for template getters/setters.
+Now let's see how the ``name`` is used for template getters/setters.
+
 
 .. literalinclude:: /../examples/primitives/cxx/getters/fruits.hpp
    :language: cpp
    :start-after: [example]
    :end-before: [example]
 
-
-In the above example we have a template getter ``fruits`` and we have specified two possible types for parameter ``T``: ``cppbind::example::Apple`` and ``cppbind::example::Pineapple``.
-Notice that ``name`` is specified for both. This means that it'll be used as a generated property name. As a result we'll have ``apple`` and ``pineapple``
-correspondingly. If ``name`` is not specified then target language type name will be used.
-For this example we would have ``Apple`` and ``Pineapple`` correspondingly.
-In the above example we have another template getter/setter ``allFruits`` with two template parameters ``T`` and ``U``.
-Again we have specified ``name`` for both parameters.
-In case of multiple template parameters target property name is constructed by joining user provided names.
-For this example it'll be ``applesWithPineapples`` for Kotlin and Swift, ``apples_with_pineapples``
-for Python. Notice that the name is snake cased for Python.
-The API for this getter could also be written in the following way
+In the above example, we have a template getter ``fruits``, and we have specified two possible types for parameter ``T``: ``cppbind::example::Apple`` and ``cppbind::example::Pineapple``. 
+Notice that the ``name`` is specified for both, which is used as a generated property name. As a result, we'll have ``apple`` and ``pineapple`` correspondingly. If ``name`` is not specified, then the target language type name is used. 
+For this example, we would have ``Apple`` and ``Pineapple`` correspondingly. 
+In the above example, we have another template getter/setter, ``allFruits`` with two template parameters, ``T`` and ``U``. 
+Again, we have specified ``name`` for both parameters. 
+In the case of multiple template parameters, target property name is constructed by joining user-provided names. 
+For this example, it is ``applesWithPineapples`` for Kotlin and Swift, ``apples_with_pineapples`` for Python. 
+Notice that the name is snake-cased for Python. 
+The API for this getter could also be written in the following way:
 
 .. code-block:: yaml
 
@@ -166,8 +162,8 @@ The API for this getter could also be written in the following way
 
 The result will be the same.
 
-If ``name`` is not specified then target property name will be constructed by joining target language types names.
-For this example we would have ``applePineapple`` (Swift, Kotlin) and ``apple_pineapple`` (Python).
+If the ``name`` is not specified, the target property name is constructed by joining the names of target language types. 
+For this example, we would have ``applePineapple`` (Swift, Kotlin) and ``apple_pineapple`` (Python).
 
 And here are some usage examples:
 

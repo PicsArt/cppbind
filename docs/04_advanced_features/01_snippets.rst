@@ -1,17 +1,16 @@
 Snippets
 ^^^^^^^^
 
-To generate bindings for target languages we use snippets which are described in yaml files. We use **jinja2** template
-language to describe the logic inside snippets. During rendering process we pass appropriate context to these snippets and render them.
+To generate binding codes for the target language, we use snippets described in yaml files. We use the **jinja2** template
+language to describe the logic inside snippets. During rendering process we pass the appropriate context to these snippets and render them.
 
-We have three types of snippets: **code** snippets, **type converter** snippets and **action** snippets.
+We have three types of snippets: **code**, **type converter**, and **action** snippets.
 
 Code snippets
 ~~~~~~~~~~~~~
 
 Code snippets are called for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
-User can use them to generate multiple files. For example, user can generate C/C++ code and target language code to implement some binding logic
-between those languages.
+Users can use them to generate multiple files. For example, the user can generate C/C++ and target language code to implement some binding logic between those languages.
 
 .. code-block:: yaml
 
@@ -36,7 +35,7 @@ between those languages.
                 {{body|string|indent}}
             }
 
-In above described code you can see **file** block which defines what files are going to be generated.
+In the above-described code you can see **file** block which defines what files are going to be generated.
 The first level of this section is **file** and under this level you can see **my_lang** section which is used to describe file generation
 properties (path and content) for **my_lang** dummy language. **class** code block is an example of code snippets for generating a class for
 **my_lang** language. When encountered with ``action: gen_class`` instruction, CppBind removes ``gen`` prefix and searches for **class**
@@ -44,13 +43,13 @@ section in code snippets. After finding **class** section CppBind generates appr
 The same mechanism is used for other instructions (**gen_interface**, **gen_method**, etc.).
 
 We have several subsections under **class** parent section: **include**, **body**, and these subsections are used to group generated code fragments.
-We also have **scopes** subsections which we use to gather snippet values from the lower levels and use them in current section: for example,
-we use function body inside class. This mechanism is implemented through the stack-like structure of scopes: the scopes are like C++ entities (files consist of
+We also have **scopes** subsections to gather snippet values from the lower levels and use them in the current section. For example,
+we use the function body inside the class. This mechanism is implemented through the stack-like structure of scopes: the scopes are like C++ entities (files consist of
 classes, classes contain methods, etc.). The following structure allows CppBind to support nested types: for example, we have **enum** section
 at the top level of code snippets but the same snippets are used regardless our enum is nested or not.
 
-Actual snippets are described under **content** or **unique_content** sections. **unique_content** section is used to generate unique lines or code fragments.
-This is mainly used for includes to avoid repetitions. This section can be controlled with special **marker** variable: CppBind splits the content of
+Actual snippets are described under **content** or **unique_content** sections. **unique_content** section is used to generate unique lines or code fragment.
+This is mainly used for ``#include`` directives to avoid repetitions. This section can be controlled with special **marker** variable: CppBind splits the content of
 rendered **unique_content** section by **marker**, picks unique tokens and joins them to get the final result.
 
 Type converter snippets
@@ -93,10 +92,10 @@ Here is an example of ``nlohmann::json`` type converter for Swift:
         sc_cleanup: |
             // do some deallocation/cleanup stuff if needed
 
-Here we can see **types** section which is used to define type information for the given cxx type. We use **converters** section
-to describe conversion logic from source to target languages for the given type. Section key names can be of the following format:
-<source language> + **_to_** + <target language>: for example, **c_to_cxx** means that our source is C and target is cxx. This syntax is not
-mandatory: user can have any custom name and define source, target and snippet information under **source**, **target** and **snippet**
+Here we can see **types** section defining the given cxx type information. We use the **converters** section
+to write conversion logic from source to target languages for the given type. Section key names should be of the following format:
+<source language> + **_to_** + <target language>: where **c_to_cxx** means that our source is C and target is cxx. This syntax is not
+mandatory. The user can have any custom name and define the source, target, and snippet information under **source**, **target** and **snippet**
 subsections:
 
 .. code-block:: yaml
@@ -113,7 +112,7 @@ More information about writing your own type converters can be found :doc:`here 
 Type converter optional subsections
 -----------------------------------
 
-**custom** optional subsection is used to keep some helper information for the given type for using in snippets.
+**custom** optional subsection keeps help information on the given type for using in snippets.
 This section is exposed to the other sections of type converter, so it can be serve as a space for shareable information.
 
 Conversion logic may require usages of some functions or types which must be included from standard or third party libraries.
@@ -123,7 +122,7 @@ There are cases when you might allocate some data in the conversion phase which 
 only after its usage (especially in case of nested structures). In the example above you can see optional **sc_cleanup** section
 which can be used to do some deallocations in order not to have memory leakages.
 
-CppBind also gives the user opportunity to define any custom subsection under **converters** section by any name with/without
+CppBind allows the user to define any custom subsection under the **converters** section by any name with/without
 defining source/target attributes and call that snippet as a function to generate some custom code fragments.
 
 Exposed variables
@@ -193,11 +192,10 @@ no converter is found, CppBind will complain about the usage of a type with non-
 Action snippets
 ~~~~~~~~~~~~~~~
 
-Action snippets are used to commit some action. Mainly we use it to copy helper and utility files from standard directories
-to some output directories. For example, we have a C file where we define some structures, we also keep some utility files for
-exception handling support, etc.
+Action snippets are used to commit an action. Mainly we use it to copy helper and utility files from standard directories
+to output directories. For example, we have a C file where we define structures, keep utility files for exception handling support, etc.
 
-Here is an example of action snippets for Swift target language, where we define source and destination for copy action:
+Here is an example of action snippets for Swift target language, where we define the source and destination for copy action:
 
 .. code-block:: yaml
 
@@ -213,9 +211,8 @@ Here is an example of action snippets for Swift target language, where we define
               {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
               {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
 
-An action is described by a pair of special keys that show the action object and the purpose of the action.
-For example, action can describe the copy(action) operation of a file(object).
-We have a list of supported actions:
+Action is described by a pair of special keys showing the action object and purpose.
+For example, action can describe the copy(action) operation of a file(object). We have a list of supported actions:
 
 .. list-table:: Actions
     :widths: 25 75
@@ -228,5 +225,5 @@ We have a list of supported actions:
     * - file/render_to
       - Render input template files with root context and copy to the destination
 
-**Variables** section is used to define some variables which are connected to the given action and then use it in code snippets.
+**Variables** section defines variables connected to the given action and then uses it in code snippets.
 For example, we define variables to generate ``#include`` directives in C bindings.

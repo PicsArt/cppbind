@@ -2,10 +2,10 @@ Adding a custom type converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Type conversions are described in yaml config files. CppBind supports several primitive and complex types and has default
-implementation of type converters for those types: **int**, **char**, **bool**, **enum**, **std::string**, **std::vector**,
+implementation of the type converters for those types: **int**, **char**, **bool**, **enum**, **std::string**, **std::vector**,
 user-defined classes/structs, etc. The implementation details about these converters for supported languages can be found `here <https://github.com/PicsArt/cppbind/tree/master/src/cppbind/config/snippets>`_.
 
-Besides of supported types, CppBind also gives an opportunity to write custom type converters for your types.
+Besides of supported types, CppBind also allows writing custom type converters for your types.
 The config files must be placed under the directory defined by **custom_config_dir** variable.
 CppBind includes all files with **\*_types.yaml** name pattern in project default config file.
 So either your files must have **_types.yaml** suffix or you need to include your custom type converter config files

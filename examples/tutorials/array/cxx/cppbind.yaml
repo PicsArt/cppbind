@@ -1,0 +1,70 @@
+type_vars:
+  !join
+  - !include std_exc_api.yaml
+
+dir_vars:
+  - dir: "."
+    vars:
+      project_dir: '{{_current_working_dir}}'
+      project_link: 'https://github.com/PicsArt/cppbind/tree/master/examples/tutorials/array'
+
+vars: |
+  {%- set out_prj_dir = "." -%}
+  out_prj_dir: {{out_prj_dir}}
+  src_glob:
+    - cxx/array.hpp
+  include_dirs:
+    - .
+  extra_headers:
+    - stdexcept
+    - new
+    - typeinfo
+  mac.clang_args:
+    - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  file_postfix: ""
+  package_prefix: ""
+  kotlin.cxx_out_dir: {{path.join(out_prj_dir, "kotlin/wrappers")}}
+  kotlin.out_dir: {{path.join(out_prj_dir, "kotlin/src/main/java")}}
+  kotlin.include_dirs:
+    - ./
+    - /usr/lib/jvm/java-11-openjdk-amd64/include
+  python.cxx_out_dir: {{path.join(out_prj_dir, "python/wrappers")}}
+  python.out_dir: {{path.join(out_prj_dir, "python/src")}}
+  python.pybind_module: array
+  swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
+  swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+rules:
+  kotlin.code_snippets:
+    !join
+    - !include kotlin/code_snippets.yaml
+  python.code_snippets:
+    !join
+    - !include python/code_snippets.yaml
+  swift.code_snippets:
+    !join
+    - !include swift/code_snippets.yaml
+
+  kotlin.type_converters:
+    !join
+    - !include "kotlin/*_types.yaml"
+  python.type_converters:
+    !join
+    - !include "python/*_types.yaml"
+  swift.type_converters:
+    !join
+    - !include "swift/*_types.yaml"
+
+  kotlin.actions:
+    !join
+    - !include kotlin/actions.yaml
+  python.actions:
+    !join
+    - !include python/actions.yaml
+  swift.actions:
+    !join
+    - !include swift/actions.yaml

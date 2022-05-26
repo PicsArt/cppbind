@@ -10,7 +10,7 @@ CppBind is a software development tool that generates bindings between C++ and o
 
 CppBind automates the process and solves the problems mentioned above.
 
-The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/index.html#supported-languages-label>`__. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
+The list of currently supported languages and additional information on their specifications can be found `here <https://iegen.picsart.com/master/02_first_steps/02_supported_languages.html>`__. The tool can be extended to other languages as well. Also, it can be customized to generate bindings better fitting your needs.
 
 Table of contents
 ~~~~~~~~~~~~~~~~~
@@ -26,7 +26,7 @@ Table of contents
 Installation
 ~~~~~~~~~~~~
 
-There are some required steps to install and use CppBind. The installation steps are described `here <https://iegen.picsart.com/master/02_first_steps/02_installation.html>`__.
+There are some required steps to install and use CppBind. The installation steps are described `here <https://iegen.picsart.com/master/02_first_steps/03_installation.html>`__.
 
 Usage
 ~~~~~
@@ -39,7 +39,7 @@ Tutorial
 
 To configure and run CppBind, read our tutorial example, which is called “Hello User.” This tutorial will help you learn about the basic usage of CppBind and configure it for your project.
 
-- Tutorial documentation: `"Hello User" doc <https://iegen.picsart.com/master/02_first_steps/03_hello_user.html>`_
+- Tutorial documentation: `"Hello User" doc <https://iegen.picsart.com/master/02_first_steps/04_hello_user.html>`_
 - Tutorial GitHub sources: `"Hello User" GitHub <https://github.com/PicsArt/cppbind/tree/master/examples/tutorials/hello_user>`_
 
 Credits

@@ -1,0 +1,46 @@
+type_vars:
+  - type: "cppbind::Array"
+    vars:
+      action: gen_class
+      package: array
+
+  - type: "cppbind::Array::Array()"
+    vars:
+      action: gen_constructor
+      throws: no_throw
+
+  - type: "cppbind::Array::front()"
+    vars:
+      action: gen_method
+      throws: no_throw
+
+  - type: "cppbind::Array::back()"
+    vars:
+      action: gen_method
+      throws: no_throw
+
+  - type: "cppbind::Array::push_back(int)"
+    vars:
+      action: gen_method
+      throws: no_throw
+
+  - type: "cppbind::Array::size()"
+    vars:
+      action: gen_getter
+      throws: no_throw
+
+  - type: "cppbind::Array::empty()"
+    vars:
+      action: gen_getter
+      throws: no_throw
+
+  - type: "cppbind::Array::operator[](int)"
+    vars:
+      action: gen_method
+      throws: no_throw
+
+  - type: "cppbind::Array::at(int)"
+    vars:
+      action: gen_method
+      throws:
+        - std::out_of_range

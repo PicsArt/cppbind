@@ -5,7 +5,7 @@
 file:
   swift:
     file_path: |
-      {{vars.target_file_fullname}}
+      {{vars.file_fullname}}
     scopes:
       - include
       - body
@@ -58,10 +58,11 @@ file:
       - body
       - include
     content: |
+      {%- set file_rel_path_id = path.relpath(vars.h_file_fullname, vars.out_prj_dir)|replace(pat_sep, '_')|replace('.', '_')|upper -%}
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      #ifndef _C_{{vars.file}}_WRAPPER_
-      #define _C_{{vars.file}}_WRAPPER_
+      #ifndef _{{file_rel_path_id}}_
+      #define _{{file_rel_path_id}}_
       {% set include_format = '#include <{}>' if vars.is_c_wrapper_external else '#include "{}"' %}
       {{cxx_helper_includes|format_list(include_format)|join(new_line)}}
       {{include}}
@@ -74,7 +75,7 @@ file:
       #if __cplusplus
       }
       #endif
-      #endif /* ifndef _C_{{vars.file}}_WRAPPER_ */{{new_line}}
+      #endif /* ifndef _{{file_rel_path_id}}_ */{{new_line}}
 
 package:
 
@@ -89,11 +90,11 @@ enum:
       {% endif -%}
       public enum {{vars.name}}: CInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
         {%- for case in enum_cases -%}
-        {%- if case.name not in vars.enum_excluded_fields -%}
+        {%- if case.name not in vars.enum_excluded_cases -%}
         {%- if case.comment %}
         {{case.comment|make_doxygen_comment|indent(2)}}
         {%- endif %}
-        case {{vars.enum_field_name_prefix + case.name}} = {{case.value}}
+        case {{vars.enum_case_name_prefix + case.name}} = {{case.value}}
         {%- endif %}
         {%- endfor %}
         {%- if vars.code_fragment %}
@@ -589,9 +590,9 @@ constructor:
       {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
@@ -870,9 +871,9 @@ method:
       {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
@@ -1147,7 +1148,7 @@ function:
   swift:
     body: |
       {%- if vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, vars.file_fullname)) -%}
+      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, cxx.source_file_name)) -%}
       {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
@@ -1163,9 +1164,9 @@ function:
       public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
-        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], cxx.displayname)) -%}
-        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
         {%- endif -%}
         {%- else -%}
         {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}

@@ -6,16 +6,19 @@ action:
 comment:
   inheritable: false
   default: "{{_pure_comment}}"
+  allowed_on: [cxx]
 
 a:
   inheritable: true
   default: DefaultValueOfA
   type: str
+  allowed_on: [cxx]
 
 b:
   inheritable: true
   default: "{{a}}UsedInB"
   type: str
+  allowed_on: [cxx]
 
 c:
   inheritable: true
@@ -45,6 +48,7 @@ g:
   inheritable: false
   default: SingleValue
   type: list
+  allowed_on: [cxx]
 
 h:
   inheritable: true
@@ -55,6 +59,7 @@ h:
     {%- endfor -%}
     {{result}}
   type: list
+  allowed_on: [cxx]
 
 i:
   inheritable: false
@@ -64,12 +69,14 @@ i:
       - "{{h[0]}}"
       - "{{h[1]}}"
   type: dict
+  allowed_on: [cxx]
 
 j:
   inheritable: true
   linux.swift.default:
       T: "{{h[0]}}"
   type: dict
+  allowed_on: [cxx]
 
 k:
   type: list
@@ -78,3 +85,4 @@ k:
       row1
 
       row2
+  allowed_on: [cxx]

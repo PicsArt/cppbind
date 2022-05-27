@@ -12,12 +12,12 @@ As shown in the above example, we can extend enums logic by using the **code_fra
 Code fragments defined with this variable are appended to the enum definition.
 In this example, we added the custom conversion from enum to string for all three languages.
 Notice that for Swift, we have also used the **bases_list** variable to make the enum implement the ``CustomStringConvertible`` protocol.
-We also can customize enum case field names using the **enum_field_name_prefix** variable, which can be used to add a user-defined prefix string to enum field names in the target language.
+We also can customize enum case field names using the **enum_case_name_prefix** variable, which can be used to add a user-defined prefix string to enum field names in the target language.
 
-If there are cases when some of the original enum fields are for internal usage, 
-and the user doesn't want to expose them in target language bindings, then the **enum_excluded_fields** variable can be used to specify 
-the list of excluded fields. If those fields are used as a default value for a function/constructor argument, CppBind skips 
-that default value generation in target language bindings. If the user has a function that returns an excluded enum field, 
+If there are cases when some of the original enum fields are for internal usage,
+and the user doesn't want to expose them in target language bindings, then the **enum_excluded_cases** variable can be used to specify
+the list of excluded fields. If those fields are used as a default value for a function/constructor argument, CppBind skips
+that default value generation in target language bindings. If the user has a function that returns an excluded enum field,
 CppBind terminates the main program during the function call and provides the user with an appropriate error message (except Python, since currently pybind sets some constraints on CppBind).
 
 And the Frame struct using it:

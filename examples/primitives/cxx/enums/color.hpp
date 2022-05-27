@@ -40,8 +40,8 @@ enum class Color {
  * __API__
  * action: gen_enum
  * package: enums
- * enum_field_name_prefix: Shade
- * enum_excluded_fields:
+ * enum_case_name_prefix: Shade
+ * enum_excluded_cases:
  *   - InternalField
  */
 enum class ColorShade {

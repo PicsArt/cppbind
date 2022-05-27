@@ -272,7 +272,7 @@ def test_attr_options_negative(var_def, api_section):
     with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock,\
             pytest.raises(CppBindError, match=r"Value mismatch*"):
 
-        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def, Loader=yaml.SafeLoader))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
         ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
 
@@ -336,7 +336,7 @@ def test_attr_options_negative(var_def, api_section):
 def test_attr_options_positive(var_def, api_section):
 
     with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
-        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def))
+        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def, Loader=yaml.SafeLoader))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
         try:
             ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)

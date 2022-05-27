@@ -2,12 +2,10 @@ vars:
   out_prj_dir: "."
   src_glob:
     - ./**/*.h*
-  src_exclude_glob: []
   extra_headers:
     - stdexcept
     - new
     - typeinfo
-  package_prefix: ""
   include_dirs:
     - .
   kotlin.clang_args:
@@ -25,7 +23,6 @@ vars:
   kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
-  python.pybind_module: ""
   swift.cxx_out_dir:  "{{path.join(out_prj_dir, 'swift/wrappers')}}"
   swift.out_dir:  "{{path.join(out_prj_dir, 'swift/src')}}"
 

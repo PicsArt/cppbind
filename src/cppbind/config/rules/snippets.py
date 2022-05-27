@@ -120,6 +120,7 @@ def make_func_context(ctx):
         cxx = types.SimpleNamespace(
             name=ctx.cursor.spelling,
             displayname=ctx.cursor.displayname,
+            source_file_name=ctx.node.file_name,
             is_abstract=ctx.cursor.is_abstract_record(),
             is_open=not cutil.is_final_cursor(ctx.cursor),
             is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
@@ -157,6 +158,7 @@ def make_enum_context(ctx):
         enum_cases = ctx.enum_values
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     type_name=ctx.cxx_type_name,
+                                    source_file_name=ctx.node.file_name,
                                     namespace=ctx.namespace,
                                     kind_name=ctx.kind_name)
         return locals()
@@ -246,6 +248,7 @@ def make_member_context(ctx):
 
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     displayname=ctx.cursor.displayname,
+                                    source_file_name=ctx.node.file_name,
                                     kind_name=ctx.kind_name,
                                     is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
                                     is_template=ctx.node.is_template)

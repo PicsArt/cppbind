@@ -6,9 +6,14 @@ CppBind
 Introduction
 ~~~~~~~~~~~~
 
-CppBind is a software development tool that automates language bindings generation between C++ and other languages. It works by annotating C++ code to indicate parts desired to expose to all supported target languages. The current version of the tool supports bindings with **Swift**, **Kotlin**, and **Python** languages, while support for new languages can be added relatively easily.
+CppBind is a software development tool that automates language bindings generation between C++ and other languages. 
+It works by annotating C++ code to indicate parts desired to expose to all supported target languages.
+The current version of the tool supports bindings with **Swift**, **Kotlin**, and **Python** languages, while support for new languages can be added relatively easily.
 
-Manually developing bindings is complex, time-consuming, and error-prone, especially for large-scale projects requiring frequent changes. To develop manual bindings, one should be knowledgeable in both C++ and the target language to implement types serialization from one language to another, function and method mapping, and more. To overcome these challenges, we introduce CppBind.
+Manually developing bindings is complex, time-consuming, and error-prone, especially for large-scale projects requiring frequent changes. 
+To develop manual bindings, one should be knowledgeable in both C++ and the target language to implement types serialization from one language to another, function and method mapping, and more. 
+To overcome these challenges, we introduce CppBind.
+
 
 CppBind main highlights:
 ~~~~~~~~~~~~~~~~~~~~~~~~

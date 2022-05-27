@@ -60,7 +60,7 @@ namespace {
      * throws: no_throw
      */
     std::string concat(const std::string& str1, const std::string& str2, const std::string& str3) {
-        return str1 + str2 +str3;
+        return str1 + str2 + str3;
     }
 
     /**

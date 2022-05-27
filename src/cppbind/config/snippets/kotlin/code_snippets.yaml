@@ -5,7 +5,7 @@
 file:
   kotlin:
     file_path: |
-      {{vars.target_file_fullname}}
+      {{vars.file_fullname}}
     scopes:
       - body
       - include
@@ -86,12 +86,12 @@ enum:
       enum class {{vars.name}}(val value: Int){{': ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
           {%- for case in enum_cases -%}
-          {%- if case.name not in vars.enum_excluded_fields -%}
+          {%- if case.name not in vars.enum_excluded_cases -%}
           {{comma()}}
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
-          {{vars.enum_field_name_prefix + case.name}}({{case.value}})
+          {{vars.enum_case_name_prefix + case.name}}({{case.value}})
           {%- endif %}
           {%- endfor %};
 
@@ -243,7 +243,7 @@ var_class_kotlin_include: &var_class_kotlin_include
     {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
     {%- do collect_import_converters(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, import_converters) -%}
     {%- else %}
-    {%- if converter.vars and converter.vars.package != vars.package -%}
+    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
     {%- do import_converters.append((converter, gen_for_impl)) -%}
     {%- endif -%}
     {%- endif -%}
@@ -494,7 +494,7 @@ var_method_kotlin_include: &var_method_kotlin_include
     {%- if converter.parent_type_info -%}
     {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
     {%- else %}
-    {%- if converter.vars and converter.vars.package != vars.package -%}
+    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
     {{marker}}import {{converter.vars.full_package}}.{{converter.target_type_name}}
     {%- endif -%}
     {%- endif %}
@@ -608,9 +608,9 @@ constructor:
       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -762,9 +762,9 @@ method:
       {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -1050,7 +1050,7 @@ function:
     include: *var_method_kotlin_include
     body: |
       {%- if vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, vars.file_fullname)) -%}
+      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, cxx.source_file_name)) -%}
       {%- endif -%}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
@@ -1066,9 +1066,9 @@ function:
       fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -1211,7 +1211,7 @@ var_getter_kotlin_include: &var_getter_kotlin_include
     {%- if converter.parent_type_info -%}
     {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
     {%- else %}
-    {%- if converter.vars and converter.vars.package != vars.package -%}
+    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
     {{marker}}import {{converter.vars.full_package}}.{{converter.target_type_name}}
     {%- endif -%}
     {%- endif %}

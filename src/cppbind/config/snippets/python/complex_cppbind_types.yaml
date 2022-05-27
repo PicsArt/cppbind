@@ -78,13 +78,13 @@ $Object:
       {%- endif -%}
       {%- endif -%}
       {%- if interface_class|default(False) -%}
-      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {{vars.interface_impl_class_name}}{{custom.tpostfix}}
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
     pybind: |
       {%- if interface_class|default(False) -%}
-      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {{vars.interface_impl_class_name}}{{custom.tpostfix}}
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}

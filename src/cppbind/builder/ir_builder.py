@@ -7,7 +7,6 @@ Processor module provides various processor for cppbind parser
 """
 import copy
 import datetime
-import importlib
 import os
 import sys
 from collections import OrderedDict
@@ -225,6 +224,8 @@ class CppBindIRBuilder:
         """
         if node.type == NodeType.ROOT_NODE:
             sys_vars = {
+                '_output_modification_time': OUTPUT_MODIFICATION_KEY,
+                '_current_working_dir': os.getcwd(),
                 'path': os.path,
                 '_cppbind_extras_dir': PROJECT_CONFIG_DIR,
                 'getenv': os.getenv,
@@ -238,7 +239,7 @@ class CppBindIRBuilder:
                 '_current_working_dir': os.getcwd(),
                 '_pure_comment': '',
                 '_line_number': node.line_number,
-                '_file_fullname': node.file_name,
+                'source_file_fullname': node.file_name,
             }
 
         if node.type == NodeType.DIRECTORY_NODE:

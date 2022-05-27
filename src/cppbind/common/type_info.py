@@ -46,6 +46,7 @@ class TypeInfo:
             _cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
             _cxx.kind_name = self._type_ctx.kind_name
             _cxx.displayname = self._type_ctx.cursor.displayname
+            _cxx.source_file_name = self._type_ctx.node.file_name
             if self._type_ctx.kind_name != 'enum':
                 _cxx.is_polymorphic = cutil.is_polymorphic(self._type_ctx.cursor)
                 _cxx.has_multiple_base_branches = cutil.has_multiple_base_branches(self._type_ctx.cursor)

@@ -5,7 +5,7 @@
 file:
   python_init:
     file_path: |
-      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, '__init__']|map('replace', '.', pat_sep)|path_join}}.{{vars.extension}}
+      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, '__init__']|map('replace', '.', pat_sep)|path_join}}.py
     scopes:
       - include
       - code_fragment
@@ -18,7 +18,7 @@ file:
       {%- endif %}{{new_line}}
   python:
     file_path: |
-      {{vars.target_file_fullname}}
+      {{vars.file_fullname}}
     scopes:
       - body
       - include
@@ -100,9 +100,9 @@ file:
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
-      {% set package = vars.pybind_module.split('.')[-1] -%}
-      #ifndef {{package + vars.file_postfix}}_hpp
-      #define {{package + vars.file_postfix}}_hpp
+      {% set package = vars.pybind_module.replace('.', '_') -%}
+      #ifndef {{package}}_hpp
+      #define {{package}}_hpp
 
       {{include}}
       #include <pybind11/pybind11.h>
@@ -185,11 +185,11 @@ enum:
       class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=CppBindEnumMetaclass):
           {{vars.comment|make_py_docstring|indent}}
           {%- for case in enum_cases -%}
-          {%- if case.name not in vars.enum_excluded_fields -%}
+          {%- if case.name not in vars.enum_excluded_cases -%}
           {%- if case.comment %}
           {{case.comment|make_py_comment|indent}}
           {%- endif %}
-          {{vars.enum_field_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
+          {{vars.enum_case_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
           {%- endif %}
           {%- endfor %}
 
@@ -216,7 +216,7 @@ enum:
           {%- endif %}
           py::enum_<{{cxx.type_name}}>(m, "{{vars.name}}")
               {%- for case in enum_cases %}
-              {%- if case.name not in vars.enum_excluded_fields %}
+              {%- if case.name not in vars.enum_excluded_cases %}
               .value("{{case.name}}", {{cxx.type_name}}::{{case.name}})
               {%- endif %}
               {%- endfor -%};
@@ -450,9 +450,9 @@ constructor:
                                        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %}
-                                       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+                                       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
                                        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                       {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+                                       {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
                                        {%- endif -%}
                                        {%- else -%}
                                        {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
@@ -474,7 +474,7 @@ constructor:
                                                                                           {%- set comma = joiner(', ') -%}
                                                                                           {%- for arg in args -%}
                                                                                           {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-                                                                                          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+                                                                                          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
                                                                                           {%- endif -%}
                                                                                           {%- endfor -%}
                                                                                           {#- This should go to shared macro -#}
@@ -511,9 +511,9 @@ method:
                                                           {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %}
-                                                          {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+                                                          {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
                                                           {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                                          {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+                                                          {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
                                                           {%- endif -%}
                                                           {%- else -%}
                                                           {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
@@ -561,7 +561,7 @@ method:
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-      {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+      {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
       {%- endif -%}
       {%- endfor -%}
       {#- This should go to shared macro -#}
@@ -617,9 +617,9 @@ function:
                                       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                       {%- if arg.default -%}
                                       {%- if arg.is_enum %}
-                                      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields -%}
+                                      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
                                       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                      {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_field_name_prefix + arg.default.split('::')|last}}
+                                      {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
                                       {%- endif -%}
                                       {%- else -%}
                                       {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
@@ -659,7 +659,7 @@ function:
           {%- set comma = joiner(', ') -%}
           {%- for arg in args -%}
           {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_fields)}}
+          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
           {%- endif -%}
           {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       }

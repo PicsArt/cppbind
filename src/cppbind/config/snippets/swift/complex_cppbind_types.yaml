@@ -46,7 +46,7 @@ $Object:
     swift: |
       {{custom.namespace if not definition|default(False)}}
       {%- if interface_class|default(False) -%}
-      {{vars.interface_class_name}}{{custom.tpostfix}}
+      {{vars.interface_impl_class_name}}{{custom.tpostfix}}
       {%- else -%}
       {{custom.tname}}
       {%- endif -%}
@@ -191,7 +191,7 @@ $Object:
         return {{type_name}}({{name}}, owner)
       {%- endfor %}
       default:
-        {%- set type_name = custom.namespace + vars.interface_class_name if vars.action == 'gen_interface' else vars.name %}
+        {%- set type_name = custom.namespace + vars.interface_impl_class_name if vars.action == 'gen_interface' else vars.name %}
         return {{type_name + custom.tpostfix}}({{name}}, owner)
       }
     cxx_obj_recover_func_decl: |

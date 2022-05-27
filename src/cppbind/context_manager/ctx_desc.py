@@ -10,6 +10,7 @@ import copy
 import glob
 import os
 from collections import defaultdict
+from itertools import chain
 
 import yaml
 
@@ -66,7 +67,7 @@ class ContextDescriptor:
         for field in ['allowed_on', 'required_on']:
             for key, val in attrs.items():
                 if field not in val:
-                    attrs[key][field] = set(NODE_GROUP_ALIASES['cxx'] if field == 'allowed_on' else [])
+                    attrs[key][field] = set(chain(*NODE_GROUP_ALIASES.values()) if field == 'allowed_on' else [])
                 else:
                     res = set()
                     for node in val[field]:

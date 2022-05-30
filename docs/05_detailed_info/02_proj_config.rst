@@ -34,7 +34,7 @@ The project config file can contain six main top-level sections:
 Section **var_def**
 ~~~~~~~~~~~~~~~~~~~
 
-CppBind project configuration is done by variables written in doxygen API comments. CppBind provides a set of default variables defined under the **var_def** section.
+CppBind project configuration is done by variables written in doxygen style API comments. CppBind provides a set of default variables defined under the **var_def** section.
 This section is mandatory in the project config file and should be defined only once per project.
 CppBind complains about redefinition in multiple config files. More details on variables definitions you can find :doc:`here </05_detailed_info/03_var_def>`.
 

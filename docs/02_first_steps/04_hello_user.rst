@@ -1,7 +1,7 @@
 .. _Basic example:
 
-"Hello user" example
-====================
+"Hello user" tutorial
+=====================
 
 It is time to introduce the most basic usage of CppBind. Let's assume you wrote a fantastic library that greets its user. And, of course, you don't want to restrict it only to C++ users. You want to make it available for other language programs as well.
 
@@ -65,7 +65,7 @@ Okay, here is your C++ code:
 To use this from other languages, you need to create a binding from your C++ library to that language. CppBind is a tool that helps you achieve that by adding some extra marks to your C++ codes.
 
 In the code above, you need to export the ``UserInfo`` structure with ``age`` and ``name`` properties and the ``Host`` class with its methods.
-To do that, you need to change your Doxygen comments to include CppBind instructions and parameters.
+To do that, you need to change your doxygen style comments to include CppBind instructions and parameters.
 .. _Basic example C++ with CppBind:
 
 
@@ -100,8 +100,8 @@ That is it. You should be able to use it on your codes written in supported lang
 
 The above-described steps are applicable for all the new classes and functions you want to expose to other languages. Besides that, you need to configure the CppBind project file once to use the tool. To know more about the CppBind configuration, continue reading.
 
-CppBind setup
-^^^^^^^^^^^^^
+"Hello user" CppBind configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To run CppBind, you need to have a config file for your project. The config file should include rules and definitions of minimal required parameters. CppBind provides a command-line utility to generate a default config file for your project. Run **cppbind init** in the project root directory to create the default project config file.
 
@@ -118,9 +118,10 @@ The above-provided default config file can be changed later to fit the requireme
 You can find the whole list of CppBind variables :doc:`here </05_detailed_info/03_var_def>`.
 
 .. note::
-    From the default config file, you can notice the usage of the **get_android_ndk_sysroot** helper function when defining the **clang_args** variable
-    for Kotlin target language on the macOS platform. **ANDROID_NDK** environment variable must be correctly set since it is used by **get_android_ndk_sysroot** function.
-    
+    When generating bindings on macOS platform for Kotlin, you need **ANDROID_NDK** environment variable to be set.
+    It should point to the directory where android NDK is installed. CppBind requires **ANDROID_NDK** environment variable
+    to populate the correct clang arguments.
+
 .. collapse:: The content of "Hello user" project config file
 
     |
@@ -130,6 +131,6 @@ You can find the whole list of CppBind variables :doc:`here </05_detailed_info/0
 
 |
 
-After generating bindings, you should include them with C++ source codes in your project build. In our tutorial example, we use Bazel to build the project.
+After generating bindings, you should include them with C++ source codes in your project build. In our tutorial, we use Bazel to build the project.
 
-Bazel setups and rules for the "Hello user" example can be found `here <https://github.com/PicsArt/cppbind/tree/master/examples/tutorials/hello_user>`_.
+Bazel setups and rules for the "Hello user" tutorial can be found `here <https://github.com/PicsArt/cppbind/tree/master/examples/tutorials/hello_user>`_.

@@ -38,7 +38,7 @@ Let's go over the parameters from this section:
 API
 ---
 
-- **parser_start** - Tag in the doxygen comment, after which everything is considered as instructions for CppBind.
+- **parser_start** - Tag in the doxygen style comment, after which everything is considered as instructions for CppBind.
 
 LOG
 ---

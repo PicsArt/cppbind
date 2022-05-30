@@ -5,7 +5,7 @@ Variable Definitions
 
 While processing source C++ files, CppBind constructs an internal tree-like structure (IR) which consists of entities corresponding to project directories, files, classes, functions, etc.
 The entities in IR have parent-child relationship defined via the following hierarchy: **root** -> **directory** -> **file** -> **class** -> **method/property**.
-To tell CppBind that the entity will be exposed to the target language, the user defines API in doxygen comments or under the **type_vars** section as described here: :ref:`external-api-label`.
+To tell CppBind that the entity will be exposed to the target language, the user defines API in doxygen style comments or under the **type_vars** section as described here: :ref:`external-api-label`.
 Project configuration is described through the variables used inside API annotations. Using variables allows defining the following: which code should be parsed, how the target code should look, where output should be stored, etc.
 Variables must be defined under the **var_def** section of the project yaml configuration file. CppBind provides a default list of variables.
 
@@ -57,7 +57,7 @@ Here is the list of system variables:
 * **_current_working_dir** - current working directory.
 * **_source_modification_time**: source code modification time.
 * **_output_modification_time**: unique datetime-based key which is used for comparing previously generated code with the new one.
-* **_pure_comment**: doxygen comment without CppBind API part.
+* **_pure_comment**: doxygen style comment without CppBind API part.
 * **_line_number**: the line number of the processed source code.
 * **source_file_fullname**: full path of the processed file.
 * **_file_name** - the name of the processed file.

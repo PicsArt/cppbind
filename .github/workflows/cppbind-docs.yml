@@ -60,7 +60,12 @@ jobs:
       - name: Generate files
         run: make html
         working-directory: ./docs
-
+        
+        #temporary workarround for .buildinfo 
+      - name: remove buildinfo
+        working-directory: ./docs
+        run: rm -rf _build/html/.buildinfo || exit 0
+        
       - name: Push environment
         run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
         if: github.event_name == 'push'
@@ -68,7 +73,14 @@ jobs:
       - name: PR environment
         run: echo "BRANCH_NAME=${GITHUB_HEAD_REF}" >> $GITHUB_ENV
         if: github.event_name == 'pull_request'
-
+        
+      - name: Publish Cloudflare pages using wrangler
+        run: npx wrangler pages publish html/ --project-name cppbind
+        working-directory: ./docs/_build
+        if: github.ref_name == 'master'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: CppBind deployment (rsync)
         run: aws s3 cp --recursive _build/html/ s3://iegen.picsart.com/${BRANCH_NAME}

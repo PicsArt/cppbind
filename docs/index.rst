@@ -8,12 +8,14 @@
 .. toctree::
    :maxdepth: 1
    :glob:
+   :hidden:
    :caption: First Steps
 
    /02_first_steps/[0-9]*_*
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Binding With Examples
    :glob:
 
@@ -21,6 +23,7 @@
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Advanced Topics
    :glob:
 
@@ -28,6 +31,7 @@
 
 .. toctree::
    :maxdepth: 3
+   :hidden:
    :caption: Detailed Information
    :glob:
 
@@ -35,24 +39,8 @@
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
    :caption: FAQs
    :glob:
 
    /06_faqs/[0-9]*_*
-
-API Documentation
-=================
-
-.. autosummary::
-   :toctree:
-   :caption: API Documentation
-   :recursive:
-
-   cppbind
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`

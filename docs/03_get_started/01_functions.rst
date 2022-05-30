@@ -499,8 +499,8 @@ The default policies for getters and methods are different. For getters (propert
 
 Supported return values policies are:
 
-* **copy** - Create a new object and give ownership to the target language. The lifetimes of these two objects are decoupled.
-* **move** - Move the returned object into a new one and give ownership to the target language. The lifetimes of these two objects are decoupled.
+* **copy** - Create a copy the object and give ownership to the target language. The lifetimes of these two objects are decoupled.
+* **move** - Move the returned object into a new one and give ownership of the new object to the target language. The lifetimes of these two objects are decoupled.
 * **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
 * **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.
 * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
@@ -548,7 +548,7 @@ Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
 Besides the return value policies, CppBind supports the **keep_alive** policy to bind the argument's lifetime to ``this`` object's lifetime.
-This ensures that the object won't be deallocated by target language GC until the object that keeps a reference on it is alive.
+This ensures that the object won't be deallocated by target language Garbage Collector until the object that keeps a reference on it is alive.
 
 Let's take a look at the following example:
 

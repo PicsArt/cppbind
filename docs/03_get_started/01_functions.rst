@@ -492,10 +492,22 @@ Return value policies
 
 C++ and target languages may differently manage the memory and lifetime of objects.
 Having only the return value type, CppBind cannot identify whether the binding language will take care of deallocating the returned object 
-or C++ part should handle that. For this reason, CppBind provides a variable named **return_value_policy**. 
-Using this variable user can override the default policies.
+or C++ part should handle that. CppBind provides a variable named **return_value_policy** to control this. 
+Using **return_value_policy** variable user can override default policies.
 
+The default policies for getters and methods are different. For getters and properties, the default policy is **reference_internal**. For methods, the default policy is **automatic**.
+
+Supported return values policies are:
+
+* **copy** - Create a new object and give ownership to the target language. The lifetimes of these two objects are decoupled.
+* **move** - Move the returned object into a new one and give ownership to the target language. The lifetimes of these two objects are decoupled.
+* **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
+* **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.
+* **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
+* **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references, respectively, but falls back to **reference** when the return type is a pointer.
+* **reference_internal** - This policy is like **reference** but also binds the returned object's lifetime with the lifetime of its parent object, i.e., the parent object won't be deallocated until the returned object is not deallocated.
 Let's take a look at the following example:
+
 
 .. literalinclude:: /../examples/primitives/cxx/rv_policies/policies_doc_examples.hpp
    :language: cpp
@@ -520,24 +532,9 @@ Now let's take a look at another example:
 Here we have a factory method ``create``. As was discussed previously the default policy is take_ownership, which is the right policy for this case as we want to give ownership over the returned object to the target language.
 
 .. note::
-    The default policies for getters and methods are different.
-    For getters and properties, the default policy is **reference_internal**.
-    For methods, the default policy is **automatic**.
-
-.. note::
     Object caching for Kotlin and Swift is not supported yet.
     Each function call creates a new binding object with different
     ownership depending on the function's return value policy.
-
-Supported return values policies are:
-
-* **copy** - Create a new object and give ownership to the target language. The lifetimes of these two objects are decoupled.
-* **move** - Move the returned object into a new one and give ownership to the target language. The lifetimes of these two objects are decoupled.
-* **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
-* **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.
-* **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
-* **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references, respectively, but falls back to **reference** when the return type is a pointer.
-* **reference_internal** - This policy is like **reference** but also binds the returned object's lifetime with the lifetime of its parent object, i.e., the parent object won't be deallocated until the returned object is not deallocated.
 
 .. note::
     **copy** and **move** are used, respectively, if the object is returned by value or by rvalue reference.
@@ -551,7 +548,7 @@ Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
 Besides the return value policies, CppBind supports the **keep_alive** policy to bind the argument's lifetime to ``this`` object's lifetime.
-This ensures that the argument won't be deallocated until the object that keeps a reference on it is alive.
+This ensures that the object won't be deallocated by target language GC until the object that keeps a reference on it is alive.
 
 Let's take a look at the following example:
 

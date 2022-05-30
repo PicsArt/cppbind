@@ -1,7 +1,7 @@
 Generation instructions
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-CppBind uses doxygen comments for defining API for the given entity.
+CppBind uses doxygen style comments for defining API for the given entity.
 CppBind API must contain **__API__** tag. Everything after **__API__** are instructions for CppBind.
 For defining an API we use variables from :doc:`Variable Definitions </05_detailed_info/03_var_def>`.
 CppBind uses them to know what should be generated, where the generated files should be saved, etc.

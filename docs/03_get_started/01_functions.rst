@@ -369,7 +369,7 @@ Default arguments
 
 Default argument support for literals and enums are handled differently from default arguments with expressions. Let's go through these two cases.
 
-Here are some sample case functions having default arguments:
+Here are some sample functions with default arguments:
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
    :language: cpp
@@ -431,7 +431,7 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example, we have two functions. The first one has one argument of type ``Task`` with a default value.
-In this case, CppBind generates two overloaded functions for **Kotlin** and **Swift**: one no argument and 
+In this case, CppBind generates two overloaded functions for **Kotlin** and **Swift**: one with no arguments and 
 another one with one argument with no default value specified. The second function has three arguments of``Task``, ``Color`` and ``Root``.
 The second argument is an enum, and its' default value is generated in all target languages. CppBind will generate appropriate overloaded options for **Kotlin** and **Swift** for the other two arguments.
 For **Python**, CppBind does not generate overloaded functions; instead, the ``None`` default value is generated.

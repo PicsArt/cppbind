@@ -495,7 +495,7 @@ Having only the return value type, CppBind cannot identify whether the binding l
 or C++ part should handle that. CppBind provides a variable named **return_value_policy** to control this. 
 Using **return_value_policy** variable user can override default policies.
 
-The default policies for getters and methods are different. For getters and properties, the default policy is **reference_internal**. For methods, the default policy is **automatic**.
+The default policies for getters and methods are different. For getters (properties) the default policy is **reference_internal**. For methods, the default policy is **automatic**.
 
 Supported return values policies are:
 

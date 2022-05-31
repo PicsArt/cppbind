@@ -42,7 +42,7 @@ properties (path and content) for **my_lang** dummy language. **class** code blo
 section in code snippets. After finding **class** section CppBind generates appropriate code in the file defined by **file** section.
 The same mechanism is used for other instructions (**gen_interface**, **gen_method**, etc.).
 
-There are several subsections under **class** parent section: **include**, **body**, and these subsections are used to group generated code fragments.
+Here we have subsections under **class** parent section: **include**, **body**, and these subsections are used to group generated code fragments.
 There are also **scopes** subsections to gather snippet values from the lower levels and use them in the current section. For example,
 we use the function body inside the class. This mechanism is implemented through the stack-like structure of scopes: the scopes are like C++ entities (files consist of
 classes, classes contain methods, etc.). The following structure allows CppBind to support nested types: for example, we have **enum** section

@@ -27,7 +27,7 @@ def validate_getter(cxx, vars, args, owner_class, setter):
             Error.critical(
                 f'Setter should have one argument: {owner_class.cxx.displayname}.{cxx.displayname}.')
 
-        have_diff_nullability = len(setter['vars'].nullable_arg) == 0 ^ vars.nullable_return is False
+        have_diff_nullability = (len(setter['vars'].nullable_arg) == 0) ^ (vars.nullable_return is False)
         if have_diff_nullability:
             Error.critical(
                 f'Setter argument and getter return value should have the same nullability:'

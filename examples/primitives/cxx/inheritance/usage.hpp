@@ -101,6 +101,7 @@ public:
      * __API__
      * action: gen_setter
      * throws: no_throw
+     * nullable_arg: v
      */
     void setVehicle(std::shared_ptr<Vehicle> v) {
         _vehicle = v;
@@ -120,6 +121,7 @@ public:
      * __API__
      * action: gen_setter
      * throws: no_throw
+     * nullable_arg: v
      */
     void setConstVehicle(std::shared_ptr<const Vehicle> v) {
         _const_vehicle = v;

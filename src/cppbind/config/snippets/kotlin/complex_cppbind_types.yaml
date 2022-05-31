@@ -215,7 +215,7 @@ $Enum:
     jdk: Int
   converters:
     jni_to_cxx: |
-      auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});
+      auto {{target_name}} = static_cast<{{cxx.unqualified_resolved_type_name}}>({{name}});
     cxx_to_jni: |
       {{target_type_name}} {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     kotlin_to_jdk:

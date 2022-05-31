@@ -21,6 +21,8 @@ assert(ColorShade.ShadeDark.value == 2)
 frame.backgroundColorShade = ColorShade.ShadeDark
 assert(frame.backgroundColorShade == ColorShade.ShadeDark)
 
+// checking const ref enum case
+assert(frame.getNextColor(Color.Red) == Color.Green)
 }
 
 class EnumsApp {

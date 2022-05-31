@@ -1,11 +1,6 @@
 Installation
 ============
 
-System requirements
-^^^^^^^^^^^^^^^^^^^
-
-Operating system: Linux, macOS, Windows
-
 Required environment setup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -66,7 +61,7 @@ Required environment setup
 
    .. tab-item:: Windows
 
-        CppBind requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path.
+        CppBind requires Clang for parsing source files. Make sure you have Clang compiler installed on your Windows machine and it's added to the system path. Download <https://releases.llvm.org/download.html>`_ and install latest version of LLVM from official website.
 
         If Python 3.7 or higher is already installed then skip this step.
 
@@ -102,10 +97,8 @@ To test the installation run the following command\ :
 
   cppbind -h
 
-Developer installation
+Contributor installation
 ^^^^^^^^^^^^^^^^^^^^^^
-
-You can build a package manually if you want.
 
 Clone the CppBind master branch into current directory\ :
 

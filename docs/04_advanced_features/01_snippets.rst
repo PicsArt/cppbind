@@ -2,7 +2,7 @@ Snippets
 ^^^^^^^^
 
 In order to generate binding codes for a target language, CppBind uses snippets described in yaml files. CppBind uses the **jinja2** template
-language to describe the logic inside snippets. During rendering process appropriate context is passed to the snippets, they to be rendered.
+language to describe the logic inside snippets. During rendering process appropriate context is passed to the snippets to be rendered.
 
 There are three types of snippets: **code**, **type converter**, and **action** snippets.
 
@@ -10,7 +10,7 @@ Code snippets
 ~~~~~~~~~~~~~
 
 Code snippets are used for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
-Sginle snippet file can be used to generate multiple files, such as source codes, build files atc. files. For example, using a single snippet file CppBind can generate both C/C++ and target language code to implement binding logic between those languages. 
+Single snippet file can be used to generate multiple files, such as source codes, build files atc. files. For example, using a single snippet file CppBind can generate both C/C++ and target language code to implement binding logic between those languages. 
 
 .. code-block:: yaml
 

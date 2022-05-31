@@ -10,7 +10,7 @@ Code snippets
 ~~~~~~~~~~~~~
 
 Code snippets are used for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
-Single snippet file can be used to generate multiple files, such as source codes, build files atc. files. For example, using a single snippet file CppBind can generate both C/C++ and target language code to implement binding logic between those languages. 
+A snippet can be used to generate code into multiple files, such as C/C++ and target language code to implement binding logic between those languages. 
 
 .. code-block:: yaml
 

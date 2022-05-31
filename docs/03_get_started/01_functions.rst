@@ -432,8 +432,8 @@ Let's take a look at the following example:
 
 In the above example, we have two functions. The first one has one argument of type ``Task`` with a default value.
 In this case, CppBind generates two overloaded functions for **Kotlin** and **Swift**: one with no arguments and 
-another one with one argument with no default value specified. The second function has three arguments of``Task``, ``Color`` and ``Root``.
-The second argument is an enum, and its' default value is generated in all target languages. CppBind will generate appropriate overloaded options for **Kotlin** and **Swift** for the other two arguments.
+another one with one argument with no default value specified. The second function has three arguments of ``Task``, ``i`` and ``Root``.
+The second argument is an ``int``, and its' default value is generated in all target languages. CppBind will generate appropriate overloaded options for **Kotlin** and **Swift** for the other two arguments.
 For **Python**, CppBind does not generate overloaded functions; instead, the ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code, they work as expected.
 
@@ -497,9 +497,9 @@ Using **return_value_policy** variable user can override default policies.
 
 The default policies for getters and methods are different. For getters (properties) the default policy is **reference_internal**. For methods, the default policy is **automatic**.
 
-Supported return values policies are:
+Supported return value policies are:
 
-* **copy** - Create a copy the object and give ownership to the target language. The lifetimes of these two objects are decoupled.
+* **copy** - Create an object copy and give ownership of the new object to the target language. The lifetimes of these two objects are decoupled.
 * **move** - Move the returned object into a new one and give ownership of the new object to the target language. The lifetimes of these two objects are decoupled.
 * **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
 * **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.

@@ -18,6 +18,9 @@ assert(ColorShade.ShadeLight.rawValue == 1)
 assert(ColorShade.ShadeDark.rawValue == 2)
 frame.backgroundColorShade = ColorShade.ShadeDark
 assert(frame.backgroundColorShade == ColorShade.ShadeDark)
+
+// checking const ref enum case
+assert(frame.getNextColor(color: Color.Red) == Color.Green)
 }
 
 #if os(Linux)

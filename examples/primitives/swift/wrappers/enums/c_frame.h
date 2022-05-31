@@ -29,6 +29,7 @@ extern "C" {
     int _prop_get_CppbindExample_Frame_backgroundColorShade(CppBindCObject cself);
     void _prop_set_CppbindExample_Frame_backgroundColorShade(CppBindCObject cself, int backgroundColorShade);
 
+    int _func_CppbindExample_Frame_getNextColor(CppBindCObject cself, int  color, CppBindCObject* _Nonnull cppbind_err);
 #if __cplusplus
 }
 #endif

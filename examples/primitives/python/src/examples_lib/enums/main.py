@@ -24,3 +24,6 @@ assert ColorShade.ShadeLight.value == 1
 assert ColorShade.ShadeDark.value == 2
 frame.background_color_shade = ColorShade.ShadeDark
 assert frame.background_color_shade == ColorShade.ShadeDark
+
+# checking const ref enum case
+assert frame.get_next_color(Color.Red) == Color.Green

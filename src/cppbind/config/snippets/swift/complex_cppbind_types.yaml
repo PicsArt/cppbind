@@ -218,7 +218,7 @@ $Enum:
     sc: CInt
   converters:
     c_to_cxx: |
-      auto {{target_name}} = static_cast<{{target_type_name}}>({{name}});
+      auto {{target_name}} = static_cast<{{cxx.unqualified_resolved_type_name}}>({{name}});
     cxx_to_c: |
       {{target_type_name}} {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     swift_to_sc: |

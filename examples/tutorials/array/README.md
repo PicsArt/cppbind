@@ -5,7 +5,7 @@ This is a small Array library.
 Here we have a c++ source code(under cxx directory) and generated bindings for swift, kotlin and python.
 
 You can find generated bindings under kotlin, swift and python directories.
-This is configured in **cxx/cppbind.yaml** file.
+This is configured in **cppbind.yaml** file.
 
 In this example we use bazel for build.
 
@@ -14,7 +14,7 @@ To generate the wrappers yourself use the following command:
  cppbind run kotlin swift python
  ```
 
-For CppBind installation and configuration check the documentation [CppBind docs](https://iegen.picsart.com).
+For CppBind installation and configuration check the documentation [CppBind docs](https://cppbind.io/).
 
 In this example we have a small usage program for each language which creates an array and uses it.
 

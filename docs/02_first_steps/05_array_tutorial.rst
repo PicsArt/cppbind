@@ -1,7 +1,7 @@
 "Array" tutorial
 ================
 
-:doc:`"Hello user" </02_first_steps/03_hello_user>` tutorial shows how to annotate source files to tell CppBind what to expose in target languages.
+:doc:`"Hello user" </02_first_steps/04_hello_user>` tutorial shows how to annotate source files to tell CppBind what to expose in target languages.
 Let's examine the case of using a third-party library. In this case it's impossible to modify source files, so you can't just write
 CppBind API annotations inside class/function doxygen style comments. CppBind offers another mechanism for writing annotations in this scenario:
 it's possible to write annotations in separate config yaml files.
@@ -64,17 +64,17 @@ After project configuration is done and annotation config file is written, you s
         .. tab-set::
             .. tab-item:: Kotlin
 
-                .. literalinclude:: /../examples/tutorials/array/kotlin/src/main/java/array/array.kt
+                .. literalinclude:: /../examples/tutorials/array/kotlin/src/main/java/example_lib/array/array.kt
                    :language: java
 
             .. tab-item:: Python
 
-                .. literalinclude:: /../examples/tutorials/array/python/src/array/array.py
+                .. literalinclude:: /../examples/tutorials/array/python/src/example_lib/array/array.py
                    :language: py
 
             .. tab-item:: Swift
 
-                .. literalinclude:: /../examples/tutorials/array/swift/src/array/array.swift
+                .. literalinclude:: /../examples/tutorials/array/swift/src/example_lib/array/array.swift
                    :language: swift
 
 |

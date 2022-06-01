@@ -1,16 +1,16 @@
 Snippets
 ^^^^^^^^
 
-To generate binding codes for the target language, we use snippets described in yaml files. We use the **jinja2** template
-language to describe the logic inside snippets. During rendering process we pass the appropriate context to these snippets and render them.
+In order to generate binding codes for a target language, CppBind uses snippets described in yaml files. CppBind uses the **jinja2** template
+language to describe the logic inside snippets. During rendering process appropriate context is passed to the snippets to be rendered.
 
-We have three types of snippets: **code**, **type converter**, and **action** snippets.
+There are three types of snippets: **code**, **type converter**, and **action** snippets.
 
 Code snippets
 ~~~~~~~~~~~~~
 
-Code snippets are called for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
-Users can use them to generate multiple files. For example, the user can generate C/C++ and target language code to implement some binding logic between those languages.
+Code snippets are used for classes, interfaces, functions, enums, constructors, property getters/setters, files, directories, etc.
+A snippet can be used to generate code into multiple files, such as C/C++ and target language code to implement binding logic between those languages. 
 
 .. code-block:: yaml
 
@@ -42,14 +42,14 @@ properties (path and content) for **my_lang** dummy language. **class** code blo
 section in code snippets. After finding **class** section CppBind generates appropriate code in the file defined by **file** section.
 The same mechanism is used for other instructions (**gen_interface**, **gen_method**, etc.).
 
-We have several subsections under **class** parent section: **include**, **body**, and these subsections are used to group generated code fragments.
-We also have **scopes** subsections to gather snippet values from the lower levels and use them in the current section. For example,
+Here we have subsections under **class** parent section: **include**, **body**, and these subsections are used to group generated code fragments.
+There are also **scopes** defining subsections to gather snippet values from the lower levels and use them in the current section. For example,
 we use the function body inside the class. This mechanism is implemented through the stack-like structure of scopes: the scopes are like C++ entities (files consist of
 classes, classes contain methods, etc.). The following structure allows CppBind to support nested types: for example, we have **enum** section
 at the top level of code snippets but the same snippets are used regardless our enum is nested or not.
 
 Actual snippets are described under **content** or **unique_content** sections. **unique_content** section is used to generate unique lines or code fragment.
-This is mainly used for ``#include`` directives to avoid repetitions. This section can be controlled with special **marker** variable: CppBind splits the content of
+It is mainly used for ``#include`` directives to avoid repetitions. This section can be controlled with special **marker** variable: CppBind splits the content of
 rendered **unique_content** section by **marker**, picks unique tokens and joins them to get the final result.
 
 Type converter snippets
@@ -95,7 +95,7 @@ Here is an example of ``nlohmann::json`` type converter for Swift:
 Here we can see **types** section defining the given cxx type information. We use the **converters** section
 to write conversion logic from source to target languages for the given type. Section key names should be of the following format:
 <source language> + **_to_** + <target language>: where **c_to_cxx** means that our source is C and target is cxx. This syntax is not
-mandatory. The user can have any custom name and define the source, target, and snippet information under **source**, **target** and **snippet**
+mandatory. The user can use any custom name and define the source, target, and snippet information under **source**, **target** and **snippet**
 subsections:
 
 .. code-block:: yaml
@@ -113,9 +113,9 @@ Type converter optional subsections
 -----------------------------------
 
 **custom** optional subsection keeps help information on the given type for using in snippets.
-This section is exposed to the other sections of type converter, so it can be serve as a space for shareable information.
+This section is exposed to other sections of type converter, so it can serve as a space for shareable information.
 
-Conversion logic may require usages of some functions or types which must be included from standard or third party libraries.
+Conversion logic may require usage of some functions or types which must be included from standard or third party libraries.
 For this purpose we use **cxx_include** optional section to define all required include directives.
 
 There are cases when you might allocate some data in the conversion phase which need to be released in a different scope/section

@@ -66,8 +66,8 @@ file:
       {{namespace}}
 
       {{body}}
-
-      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, vars.file|capitalize + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
+      {% set file = path.splitext(path.basename(vars.file_fullname))[0] %}
+      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
           validateID(id);
           return env->NewStringUTF(reinterpret_cast<CppBindCObject*>(id)->type);
       }{{new_line}}
@@ -1188,7 +1188,8 @@ function:
       return result;
       {%- endif %}
       {%- endmacro %}
-      {%- set jni_name = helper.get_jni_func_name(vars.full_package, vars.file[0]|upper + vars.file[1:]  + 'Kt', func_name) %}
+      {%- set file = path.splitext(path.basename(vars.file_fullname))[0] %}
+      {%- set jni_name = helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', func_name) %}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass cls{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}

@@ -274,7 +274,7 @@ def test_attr_options_negative(var_def, api_section):
 
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def, Loader=yaml.SafeLoader))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
-        ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
+        ctx_mgr.eval_clang_attrs(None, "root", api_section, {}, None)
 
 
 @pytest.mark.parametrize(
@@ -339,7 +339,7 @@ def test_attr_options_positive(var_def, api_section):
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(yaml.load(var_def, Loader=yaml.SafeLoader))
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'python')
         try:
-            ctx_mgr.eval_clang_attrs(None, "root", api_section, None, None)
+            ctx_mgr.eval_clang_attrs(None, "root", api_section, {}, None)
         except CppBindError as e:
             assert False, e
 

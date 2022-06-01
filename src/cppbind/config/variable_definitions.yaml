@@ -11,7 +11,7 @@ action:
 file:
   inheritable: true
   default: '{{_file_name}}'
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ file, class, class_template, struct, struct_template, enum, function, function_template ]
 
 package:
   inheritable: true
@@ -323,11 +323,11 @@ cxx_out_rel_path:
   allowed_on: [ root ]
 
 full_package:
-  inheritable: true
-  python.default: "{{package_prefix + '.' if package_prefix}}{{package}}.{{file}}{{file_postfix}}"
+  inheritable: false
+  python.default: "{{package_prefix + '.' if package_prefix}}{{package}}{{'.' + file + file_postfix if _object_kind != 'dir'}}"
   kotlin.default: "{{package_prefix + '.' if package_prefix}}{{package}}"
   swift.default: ""
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ dir, cxx ]
 
 c_file_fullname:
   inheritable: true
@@ -346,7 +346,7 @@ h_file_fullname:
 file_fullname:
   inheritable: true
   kotlin.default: "{{out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt"
-  python.default: "{{out_dir + pat_sep + full_package|replace('.', pat_sep)}}.py"
+  python.default: ""
   swift.default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.swift"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 

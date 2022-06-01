@@ -5,7 +5,8 @@
 file:
   python_init:
     file_path: |
-      {{vars.out_dir + pat_sep + [vars.package_prefix, vars.package, '__init__']|map('replace', '.', pat_sep)|path_join}}.py
+      {%- set outpath = vars.out_dir + pat_sep + vars.full_package|replace('.', pat_sep) -%}
+      {{outpath if vars.action == 'gen_package' else path.dirname(outpath)}}{{pat_sep}}__init__.py
     scopes:
       - include
       - code_fragment
@@ -18,7 +19,7 @@ file:
       {%- endif %}{{new_line}}
   python:
     file_path: |
-      {{vars.file_fullname}}
+      {{vars.out_dir + pat_sep + vars.full_package|replace('.', pat_sep)}}.py
     scopes:
       - body
       - include
@@ -26,7 +27,7 @@ file:
       {{[banner_logo, vars.banner_comment]|make_py_docstring}}
       {%- set future_import = 'from __future__ import annotations' %}
       {%- set typing_import = 'from typing import *' %}
-      {%- set pybind_import = 'import ' + [vars.pybind_module, vars.package, vars.file]|join('.') + ' as pybind_' + vars.file + vars.file_postfix %}
+      {%- set pybind_import = 'import ' + [vars.pybind_module, vars.package, vars.file]|join('.') + ' as pybind_' + vars.full_package.split('.')[-1] %}
       {%- if vars.helpers_package_prefix %}
       {%- set bind_import = 'from ' + vars.helpers_package_prefix + '.bind_utils{} import *'.format(vars.file_postfix) %}
       {%- else %}
@@ -120,12 +121,11 @@ file:
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
       {% set packages = vars.pybind_module.split('.') %}
-      {%- set package = packages[0] %}
       #include <pybind11/pybind11.h>
       #include "{{path.relpath(vars.h_pybind_filename, vars.out_prj_dir)}}"
 
       namespace py = pybind11;
-      PYBIND11_MODULE({{package}}, m) {
+      PYBIND11_MODULE({{packages[0]}}, m) {
           py::module_ parent = m;
           {%- for p in packages[1:] %}
           {%- set parent_module = packages[loop.index - 1] %}
@@ -181,7 +181,7 @@ enum:
       {%- if vars.header_code_fragment %}
       {{vars.header_code_fragment}}{{new_line}}
       {%- endif %}
-      {% set m = 'pybind_' + vars.file + vars.file_postfix %}
+      {% set m = 'pybind_' + vars.full_package.split('.')[-1] %}
       class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=CppBindEnumMetaclass):
           {{vars.comment|make_py_docstring|indent}}
           {%- for case in enum_cases -%}
@@ -205,7 +205,7 @@ enum:
   python_init:
     include:
       unique_content: |
-        from .{{vars.file + vars.file_postfix}} import {{vars.name}}
+        from .{{vars.full_package.split('.')[-1]}} import {{vars.name}}
   cxx:
     header: *var_cxx_header
     footer: *var_cxx_footer
@@ -314,7 +314,7 @@ var_class: &var_class
     include:
       unique_content: |
         {%- if not converter.python.parent_type_info -%}{#- do not generate an import for nested type in __init__.py -#}
-        from .{{vars.file + vars.file_postfix}} import {{converter.python.target_type_name}}
+        from .{{vars.full_package.split('.')[-1]}} import {{converter.python.target_type_name}}
         {%- endif -%}
   cxx:
     header: *var_cxx_header
@@ -597,7 +597,7 @@ function:
     include:
       unique_content: |
         {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
-        from .{{vars.file + vars.file_postfix}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
+        from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
   python:
     include: *var_method_python_include
     body: |
@@ -664,13 +664,7 @@ function:
           {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       }
   pybind_module_hpp: *var_pybind_module_hpp
-  pybind_module_cxx:
-    body:
-      unique_content: |
-        {%- set package_name = vars.package|replace('.', '_') -%}
-        {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
-        {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
-        {{marker}}bind{{vars.full_package|replace('.', '_')|to_camel_case(capitalize=True)}}({{package_name}}_{{vars.file}});
+  pybind_module_cxx: *var_pybind_module
   pybind_package:
     body:
 

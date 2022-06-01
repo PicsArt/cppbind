@@ -8,7 +8,7 @@ Introduction
 
 CppBind is a software development tool that automates language bindings generation between C++ and other languages. 
 It works by annotating C++ code to indicate parts desired to expose to all supported target languages.
-The current version of the tool supports bindings with **Swift**, **Kotlin**, and **Python** languages, while support for new languages can be added relatively easily.
+The current version of the tool supports bindings with **Swift**, **Kotlin**, and **Python**, while support for new languages can be added relatively easily.
 
 Manually developing bindings is complex, time-consuming, and error-prone, especially for large-scale projects requiring frequent changes. 
 To develop manual bindings, one should be knowledgeable in both C++ and the target language to implement types serialization from one language to another, function and method mapping, and more. 
@@ -65,9 +65,9 @@ Usage
 CppBind instructions are controlled using annotations. There are two prominent use cases for annotating C++ source files: either you are the source code owner, or it’s from a third-party/standard library. CppBind annotations are specified directly in the source files in the first case. In the second case, separate config files can be used. The second use case works well for binding third-party C++ libraries.
 
 - To configure a project with self-owned files, you can read our “Hello User” `tutorial <https://iegen.picsart.com/master/02_first_steps/03_hello_user.html>`_.
-- To configure a project with 3pty/standard library files, you can read our “Array”  `tutorial <https://iegen.picsart.com/master/02_first_steps/05_array_tutorial.html>`_.
+- To configure a project with third-party/standard library files, you can read our “Array”  `tutorial <https://iegen.picsart.com/master/02_first_steps/05_array_tutorial.html>`_.
 
-Above-described usages can also be mixed: annotations for self-owned files are written inside those files, while 3pty/standard library files are annotated via separate config files.
+Above-described usages can also be mixed: annotations for self-owned files are written inside those files, while third-party/standard library files are annotated via separate config files.
 
 Installation
 ~~~~~~~~~~~~

@@ -1,4 +1,4 @@
-from hello_user.hello.hello_user import UserInfo, Host
+from example_lib.hello.hello_user import UserInfo, Host
 
 user = UserInfo(user_name="John", user_age=22)
 young_user = UserInfo(user_name="Kate", user_age=18)

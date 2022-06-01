@@ -1,6 +1,6 @@
 package hello_user_usage
 
-import com.hello_user.hello.*
+import example_lib.hello.*
 
 
 class HelloUserApp {

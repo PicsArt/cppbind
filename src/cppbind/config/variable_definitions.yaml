@@ -181,18 +181,21 @@ is_proj_type:
   type: bool
   description: "Boolean showing whether the given type is user's type or is the type from standard/3pty lib"
 
+enable_source_link_in_comment:
+  inheritable: true
+  default: false
+  type: bool
+  allowed_on: [ root, dir ]
+
 comment:
   inheritable: false
-  python.default: |
-    {%- set regex = comment_del_regex|join('|') -%}
-    {{_pure_comment|replace_regex(regex, '')}}
-    {%- if source_file_fullname and path.isfile(source_file_fullname) and project_dir is defined and is_proj_type %}
-    Documentation generated from: `{{path.relpath(source_file_fullname, project_dir)}}#L{{_line_number}}
-    <{{project_link}}/{{path.relpath(source_file_fullname, project_dir)}}#L{{_line_number}}>`_
-    {%- endif %}
   default: |
     {%- set regex = comment_del_regex|join('|') -%}
     {{_pure_comment|replace_regex(regex, '')}}
+    {%- if enable_source_link_in_comment and source_file_fullname and path.isfile(source_file_fullname) and is_proj_type %}
+    Documentation generated from: `{{path.relpath(source_file_fullname, project_dir)}}#L{{_line_number}}
+    <{{project_link}}/{{path.relpath(source_file_fullname, project_dir)}}#L{{_line_number}}>`_
+    {%- endif %}
   allowed_on: [ cxx ]
 
 prj_rel_file_name:

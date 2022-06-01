@@ -57,7 +57,7 @@ swift_binary(
 )
 
 pybind_extension(
-    name = "hello_user",
+    name = "pybind_example_lib",
     srcs = glob([
         "python/**/*.cpp",
         "python/**/*.hpp",
@@ -72,7 +72,7 @@ py_library(
     name = "hello_user_py_library",
     srcs = glob(["python/src/**/*.py"]),
     data = [
-        "hello_user.so",
+        "pybind_example_lib.so",
     ],
     imports = [
         ".",

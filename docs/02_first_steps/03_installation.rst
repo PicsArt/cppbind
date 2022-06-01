@@ -98,7 +98,7 @@ To test the installation run the following command\ :
   cppbind -h
 
 Contributor installation
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Clone the CppBind master branch into current directory\ :
 

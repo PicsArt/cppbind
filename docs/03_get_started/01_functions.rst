@@ -506,6 +506,7 @@ Supported return value policies are:
 * **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
 * **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references, respectively, but falls back to **reference** when the return type is a pointer.
 * **reference_internal** - This policy is like **reference** but also binds the returned object's lifetime with the lifetime of its parent object, i.e., the parent object won't be deallocated until the returned object is not deallocated.
+
 Let's take a look at the following example:
 
 

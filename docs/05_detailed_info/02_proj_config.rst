@@ -12,7 +12,7 @@ This value can be changed in application config file: :doc:`App config </05_deta
 
     |
 
-    .. literalinclude:: /../examples/tutorials/hello_user/cxx/cppbind.yaml
+    .. literalinclude:: /../examples/tutorials/hello_user/cppbind.yaml
         :language: yaml
 
 |

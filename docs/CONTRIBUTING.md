@@ -1,7 +1,7 @@
 Thank you for your interest in CppBind project contribution! Please refer to the following sections on how to contribute code and bug reports.
 
 # Reporting bugs
-Before submitting a question or reporting a bug, please take a moment of your time and ensure that your issue isn't already discussed in the project documentation provided at [CppBind documentation][https://iegen.picsart.com/master/] or in the [Github issue tracker](https://github.com/PicsArt/cppbind/issues) . 
+Before submitting a question or reporting a bug, please take a moment of your time and ensure that your issue isn't already discussed in the project documentation provided at [CppBind documentation][https://cppbind.io/] or in the [Github issue tracker](https://github.com/PicsArt/cppbind/issues) . 
 If you have identified a previously unknown problem, it's essential that you submit a self-contained and minimal piece of code that reproduces the problem. The bugs need to be reported in Gihub issue tracker, with “bug” label on them. In the Comment section, clearly explain what was your expectation, and what is the actual result of the execution. Try to isolate the function(s) that malfunction, attach the code snippets that can be easily compiled and run in isolation.
 From the same issue tracker, You can also ask questions to CppBind code owners, by using “question” label while creating the Issue.
 

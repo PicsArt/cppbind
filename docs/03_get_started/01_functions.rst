@@ -6,8 +6,7 @@ For binding global and member functions, **gen_function** and **gen_method** act
 Global functions
 ~~~~~~~~~~~~~~~~
 
-Let's bind a simple global function.
-Here is the source code of it:
+Let's take a look at a global function binding example. Here is a sample source codes of it:
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
    :language: cpp
@@ -16,10 +15,10 @@ Here is the source code of it:
 
 Except for the **__API__** tag, we have four variables which are instructions for CppBind. 
 With **action: gen_function**, we define what should be generated in the target language.
-**package** variable indicates the package for generated ``concat`` function and **file** shows the place of the saved file. Notice that we have a prefixed variable **file** with **swift** prefix, which means that its value will be used only for generated Swift bindings, and for other languages, the default value will be used, i.e., source file name. And finally, variable **throws** defines what kind of exceptions the ``concat`` function can throw.
+**package** variable indicates the package for generated ``concat`` function and **file** shows the place of the saved file. Notice that we have a prefixed variable **file** with **swift** prefix, which means that its value will be used only for generated Swift bindings, and for other languages, default value will be used, i.e., source file name. And finally, variable **throws** defines what kind of exceptions the ``concat`` function can throw.
 Its value is **no_throw** which means it does not throw any exception. For more details on variables, see :ref:`var-def-label`.
 
-And here is a small code using generated bindings:
+And here is a small code demonstrating usage of the generated bindings:
 
 .. tab-set::
     .. tab-item:: Kotlin
@@ -75,7 +74,7 @@ Code using generated functions:
            :end-before: [glob-func-examples]
 
 
-Here we have overloaded ``concat`` for Kotlin and Swift, but it's slightly different for Python as there's no overloading. We have two ``concat``, and ``concat1`` in Python.
+Here we have overloaded ``concat`` for Kotlin and Swift, but it's slightly different for Python as there's no overloading in Python. We have two ``concat``, and ``concat1`` in Python for C++ ``concat`` functions with 2 and 3 arguments respectively.
 Similarly, we have an overloaded function for each template combination in Kotlin and Swift. In the case of Python, a postfix generated from argument types is appended to the function name.
 
 .. collapse:: Generated bindings
@@ -110,10 +109,10 @@ Let's now bind a struct with overloaded methods:
    :start-after: [overload-example]
    :end-before: [overload-example]
 
-As you can see, overloaded methods are like traditional methods. There's nothing special to add to the **API** for them.
+As you can see, overloaded methods are like regular methods. There's nothing special to add to the **API** for them.
 
 .. note::
-    Python does not have method overloading, but we have overloaded ``sum`` and ``concatenate`` methods here with some tricks under the hood.
+    Python does not have method overloading, but we have overloaded ``sum`` and ``concatenate`` methods in this case, with some tricks under the hood.
 
 
 We are ready to use the generated bindings:
@@ -219,8 +218,6 @@ Here are the usage examples:
 
 |
 
-.. note::
-    In generated Python bindings, the ``sum`` is a classmethod as it was static in the original code.
 
 Also, note that CppBind supports static overloaded methods.
 
@@ -229,7 +226,7 @@ Also, note that CppBind supports static overloaded methods.
 Custom argument names and labels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can specify argument names and argument labels (only for Swift) using **argument_name** and **argument_label** variables. Here's an example function where the user explicitly gives the argument name and label for each argument. Those values will be used in the target language instead of the values used in C++.
+It is possible to specify argument names and argument labels (for Swift only) using **argument_name** and **argument_label** variables. Here's an example function where the user explicitly gives the argument name and label for each argument. Those new values will be used in the target language instead of the names they have in C++.
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
    :language: cpp
@@ -312,7 +309,7 @@ CppBind uses the **nullable_arg** variable to identify which arguments are nulla
 In the above example, we have an overloaded method ``max``. The first one has one nullable and one non-null argument, which returns a nullable value. The second one has two nullable arguments and returns a nullable value. In this example, you can also find a constructor taking a nullable argument and nullable getters/setters.
 
 .. note::
-    Both must be tagged similarly for getter/setter methods marked as **gen_getter** and **gen_setter**. If the getter is **nullable_return: True**, then setter should be marked as **nullable_arg: <arg_name>**. In the above example, we have a pair of nullable getter/setter: ``nullable`` and ``setNullable``.
+    In case of nullable pair of getter/setter methods both must be annotated similarly as **gen_getter** and **gen_setter**. If the getter is **nullable_return: True**, then setter should be marked as **nullable_arg: <arg_name>**. In the above example, we have a pair of nullable getter/setter: ``nullable`` and ``setNullable``.
 
 .. note::
     Kotlin and Swift support nullable arguments. 
@@ -370,9 +367,9 @@ Now let's see some usage examples for generated bindings:
 Default arguments
 ~~~~~~~~~~~~~~~~~
 
-Default argument support for built-in types(e.g., bool, int, nullptr, etc.), enums, and strings differ from the support for user-defined project types. Let's go through these two cases.
+Default argument support for literals and enums are handled differently from default arguments with expressions. Let's go through these two cases.
 
-Here are some sample functions having default arguments:
+Here are some sample functions with default arguments:
 
 .. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
    :language: cpp
@@ -434,9 +431,9 @@ Let's take a look at the following example:
    :end-before: [complex-defaults-example]
 
 In the above example, we have two functions. The first one has one argument of type ``Task`` with a default value.
-In this case, CppBind generates two overloaded functions for **Kotlin** and **Swift**: one without arguments and 
-the other with one argument without a default value. The second function has three arguments of``Task``, ``Color`` and ``Root``.
-The second argument is an enum, and its' default value is generated in all target languages. CppBind will generate appropriate overloaded options for **Kotlin** and **Swift** for the other two arguments.
+In this case, CppBind generates two overloaded functions for **Kotlin** and **Swift**: one with no arguments and 
+another one with one argument with no default value specified. The second function has three arguments of ``Task``, ``i`` and ``Root``.
+The second argument is an ``int``, and its' default value is generated in all target languages. CppBind will generate appropriate overloaded options for **Kotlin** and **Swift** for the other two arguments.
 For **Python**, CppBind does not generate overloaded functions; instead, the ``None`` default value is generated.
 Although the actual default values for complex types are not visible in generated code, they work as expected.
 
@@ -493,12 +490,24 @@ And here are some usage examples:
 Return value policies
 ~~~~~~~~~~~~~~~~~~~~~
 
-C++ and other languages may differently manage the memory and lifetime of the objects. 
-Just by return value type, CppBind cannot decide whether the binding language should take care of deallocating the returned object 
-or C++ is responsible for that. For this reason, CppBind provides a variable named **return_value_policy**. 
-Using this variable user can override the default policies.
+C++ and target languages may differently manage the memory and lifetime of objects.
+Having only the return value type, CppBind cannot identify whether the binding language will take care of deallocating the returned object 
+or C++ part should handle that. CppBind provides a variable named **return_value_policy** to control this. 
+Using **return_value_policy** variable user can override default policies.
 
+The default policies for getters and methods are different. For getters (properties) the default policy is **reference_internal**. For methods, the default policy is **automatic**.
+
+Supported return value policies are:
+
+* **copy** - Create an object copy and give ownership of the new object to the target language. The lifetimes of these two objects are decoupled.
+* **move** - Move the returned object into a new one and give ownership of the new object to the target language. The lifetimes of these two objects are decoupled.
+* **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
+* **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.
+* **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
+* **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references, respectively, but falls back to **reference** when the return type is a pointer.
+* **reference_internal** - This policy is like **reference** but also binds the returned object's lifetime with the lifetime of its parent object, i.e., the parent object won't be deallocated until the returned object is not deallocated.
 Let's take a look at the following example:
+
 
 .. literalinclude:: /../examples/primitives/cxx/rv_policies/policies_doc_examples.hpp
    :language: cpp
@@ -511,7 +520,7 @@ This means ownership is given to the binding language responsible for deallocati
 In the case of references, it falls back to the **copy** policy, which creates a copy of the returned object, and its owner is the target language.
 Notice that if the default policy is used, the generated code for the first one won't compile as the copy constructor is deleted.
 In this example, the default policies for both cases are not what we want.
-We have specified **reference** policy for both cases not to pass the ownership to the binding language or not create a new copy.
+We have specified **reference** policy for both cases not to pass the ownership to the binding language and not create a new copy.
 
 Now let's take a look at another example:
 
@@ -520,28 +529,12 @@ Now let's take a look at another example:
    :start-after: [factory-example]
    :end-before: [factory-example]
 
-Here we have a factory method ``create``. In this case, the default policy is the right policy as it refers to
-the returned object and gives ownership to the target language.
-
-.. note::
-    The default policies for getters and methods are different.
-    For getters and properties, the default policy is **reference_internal**.
-    For methods, the default policy is **automatic**.
+Here we have a factory method ``create``. As was discussed previously the default policy is take_ownership, which is the right policy for this case as we want to give ownership over the returned object to the target language.
 
 .. note::
     Object caching for Kotlin and Swift is not supported yet.
     Each function call creates a new binding object with different
     ownership depending on the function's return value policy.
-
-Supported return values policies are:
-
-* **copy** - Create a new object and give ownership to the target language. The lifetimes of these two objects are decoupled.
-* **move** - Move the returned object into a new one and give ownership to the target language. The lifetimes of these two objects are decoupled.
-* **take_ownership** - Reference an existing object but give ownership to the target language. The target language is responsible for deallocating it.
-* **reference** - Reference an existing object but do not give ownership to the target language. C++ is responsible for deallocating it.
-* **automatic** - This policy falls back to **take_ownership** when the return value is a pointer and **move** and **copy** for rvalue and lvalue references.
-* **automatic_reference** - Falls back to **move** and **copy** for lvalue and rvalue references, respectively, but falls back to **reference** when the return type is a pointer.
-* **reference_internal** - This policy is like **reference** but also binds the returned object's lifetime with the lifetime of its parent object, i.e., the parent object won't be deallocated until the returned object is not deallocated.
 
 .. note::
     **copy** and **move** are used, respectively, if the object is returned by value or by rvalue reference.
@@ -555,7 +548,7 @@ Keep alive policy
 ~~~~~~~~~~~~~~~~~
 
 Besides the return value policies, CppBind supports the **keep_alive** policy to bind the argument's lifetime to ``this`` object's lifetime.
-This ensures that the argument won't be deallocated until the object that keeps a reference on it is alive.
+This ensures that the object won't be deallocated by target language Garbage Collector until the object that keeps a reference on it is alive.
 
 Let's take a look at the following example:
 

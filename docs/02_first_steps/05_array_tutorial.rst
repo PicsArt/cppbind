@@ -24,14 +24,14 @@ provided by CppBind with running ``cppbind init`` command in your project root d
 |
 
 Above provided default config file can be changed later to fit the requirements of your project. For example,
-we can consider the change of **src_glob** variable. It defines the list of the files processed by CppBind.
+we can consider the change of the **src_glob** variable. It defines the list of the files processed by CppBind.
 **src_glob** default value corresponds to all the header files in the project. For this tutorial's case,
 we have changed the value of **src_glob** variable in the project config file, since our C++ source file is located under
 **cxx** directory: ``src_glob: ["cxx/array.cpp"]``.
 More information about CppBind variables can be found :doc:`here </05_detailed_info/03_var_def>`.
 
 .. note::
-    When generating bindings on macOS platform for Kotlin, you need **ANDROID_NDK** environment variable to be set.
+    When generating bindings on the macOS platform for Kotlin, you need the **ANDROID_NDK** environment variable to be set.
     It should point to the directory where android NDK is installed. CppBind requires **ANDROID_NDK** environment variable
     to populate the correct clang arguments.
 

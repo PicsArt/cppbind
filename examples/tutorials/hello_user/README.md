@@ -2,14 +2,13 @@
 
 This is a small Hello user library.
 
-Here we have a c++ source code(under cxx directory) and generated bindings for swift, kotlin and python.
+C++ source code is under cxx directory and the generated bindings under kotlin, swift and python directories.
 
-You can find generated bindings under kotlin, swift and python directories.
-This is configured in **cxx/cppbind.yaml** file.
+Configuration can be found in **cxx/cppbind.yaml** file.
 
 In this example we use bazel for build.
 
-To generate the wrappers yourself use the following command:
+To generate the bindings yourself use the following command:
  ```bash
  cppbind run kotlin swift python
  ```
@@ -24,5 +23,5 @@ To run the program for three languages run the following command:
  bazel run hello_user_swift hello_user_python hello_user_kotlin
  ```
  
-CppBind-generated Python bindings are being binded to Python application with help of [pybind](https://github.com/pybind/pybind11). 
-Please note that the use of PyBind is governed by the corresponding [license](https://github.com/pybind/pybind11/blob/master/LICENSE).
+Generated Python bindings depend on [pybind11](https://github.com/pybind/pybind11). 
+Please note that the use of pybind11 is governed by the corresponding [license](https://github.com/pybind/pybind11/blob/master/LICENSE).

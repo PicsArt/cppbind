@@ -1,4 +1,4 @@
-from array.array.array import Array
+from example_lib.array.array import Array
 
 array = Array()
 

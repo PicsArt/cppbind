@@ -47,6 +47,7 @@ vars:
     - cxx/containers/pair.hpp
     - cxx/**/policies_doc_examples.hpp
     - cxx/typedefs/queue_template.hpp
+  python.enable_source_link_in_comment: true
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.file_postfix: _pygen
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"

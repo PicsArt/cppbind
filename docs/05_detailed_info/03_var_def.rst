@@ -121,6 +121,7 @@ Now let's go through the key variables:
 - **out_dir** - directory where generated target language files is saved.
 - **cxx_base_out_dir** - directory where CppBind helper types are copied. If the user does not want to use CppBind base classes, there's no need to specify this variable.
 - **is_proj_type** - boolean showing whether the given type is the user's type or from standard/3pty lib.
+- **enable_source_link_in_comment** - boolean variable to define whether source link information should be present in the comments of generated code or not.
 - **comment** - target code comment. By default, it's a pure comment without parts that match the pattern defined via **comment_del_regex**.
 - **prj_rel_file_name** - source file name relative to project root directory.
 - **package_prefix** - package prefix where generated files is saved.

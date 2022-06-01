@@ -23,8 +23,8 @@ vars:
   kotlin.out_dir: "{{path.join(out_prj_dir, 'kotlin/src/main/java')}}"
   python.cxx_out_dir: "{{path.join(out_prj_dir, 'python/wrappers')}}"
   python.out_dir: "{{path.join(out_prj_dir, 'python/src')}}"
-  swift.cxx_out_dir:  "{{path.join(out_prj_dir, 'swift/wrappers')}}"
-  swift.out_dir:  "{{path.join(out_prj_dir, 'swift/src')}}"
+  swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"
+  swift.out_dir: "{{path.join(out_prj_dir, 'swift/src')}}"
 
 type_vars:
   !join

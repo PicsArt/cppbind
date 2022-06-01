@@ -14,13 +14,13 @@ class TestArrayExampleFilesIdentical(unittest.TestCase):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR, '../../../examples/tutorials/array/'))
         self.runner = RunCompare(examples_root=self.examples_root,
-                                 source_glob='cxx/*cppbind.yaml')
+                                 source_glob='cppbind.yaml')
 
     def setUp(self) -> None:
         self.runner.setup()
         # copy example sources and config to current tmp directory
         shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
-        shutil.copyfile(os.path.join(self.examples_root, 'cppbind_config.cfg'), './cppbind_config.cfg')
+        shutil.copyfile(os.path.join(self.examples_root, 'cppbind.yaml'), './cppbind.yaml')
 
     def tearDown(self) -> None:
         self.runner.teardown()

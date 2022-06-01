@@ -229,7 +229,8 @@ class CppBindIRBuilder:
                 'path': os.path,
                 '_cppbind_extras_dir': PROJECT_CONFIG_DIR,
                 'getenv': os.getenv,
-                'get_android_ndk_sysroot': get_android_ndk_sysroot
+                'get_android_ndk_sysroot': get_android_ndk_sysroot,
+                '_object_kind': node.kind_name
             }
         else:
             sys_vars = {
@@ -240,6 +241,7 @@ class CppBindIRBuilder:
                 '_pure_comment': '',
                 '_line_number': node.line_number,
                 'source_file_fullname': node.file_name,
+                '_object_kind': node.kind_name
             }
 
         if node.type == NodeType.DIRECTORY_NODE:

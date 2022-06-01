@@ -54,12 +54,13 @@ Here is the list of system variables:
 
 * **path** - os.path module (mainly used to join paths).
 * **getenv** - os.getenv module (used for getting environment variables).
+* **_object_kind** - kind of the processed object, e.g root, dir, class etc.
 * **_current_working_dir** - current working directory.
-* **_source_modification_time**: source code modification time.
-* **_output_modification_time**: unique datetime-based key which is used for comparing previously generated code with the new one.
-* **_pure_comment**: doxygen style comment without CppBind API part.
-* **_line_number**: the line number of the processed source code.
-* **source_file_fullname**: full path of the processed file.
+* **_source_modification_time** - source code modification time.
+* **_output_modification_time** - unique datetime-based key which is used for comparing previously generated code with the new one.
+* **_pure_comment** - doxygen style comment without CppBind API part.
+* **_line_number** - the line number of the processed source code.
+* **source_file_fullname** - full path of the processed file.
 * **_file_name** - the name of the processed file.
 * **_is_operator** - indicates whether the method is a C++ operator or not.
 * **_object_name** - the name of the processed object, e.g., class name, method name, etc.
@@ -123,8 +124,9 @@ Now let's go through the key variables:
 - **comment** - target code comment. By default, it's a pure comment without parts that match the pattern defined via **comment_del_regex**.
 - **prj_rel_file_name** - source file name relative to project root directory.
 - **package_prefix** - package prefix where generated files is saved.
-- **helpers_package_prefix** - path relative to **out_dir** where helpers from **helpers_dir** are copied.
-- **helpers_out_dir** - directory where helper/util files must be copied.
+- **helpers_package_prefix** - path relative to **out_dir** where target language helpers are copied from **helpers_dir**.
+- | **helpers_out_dir** - directory where helper/util files must be copied. The default value is based on helpers_package_prefix,
+  | when setting the value for this variable consider updating the value of **helpers_package_prefix** as well, otherwise Python imports would be broken.
 - **exception_helpers_package** - package name of standard exception helpers.
 - **exception_file_name** - file name of standard exception helpers.
 - **cxx_helpers_dir** - CppBind C++ helpers directory.
@@ -143,12 +145,13 @@ Now let's go through the key variables:
 - **enum_case_name_prefix** - string which is added as a prefix of enum fields names.
 - **enum_excluded_cases** - list of enum cases that must not be exposed in the target language.
 - **cxx_out_rel_path** - C output relative path to project output directory. This variable is used for constructing generated C includes.
-- | **full_package** - full package constructed from package_prefix and package. This variable has different default value construction formula for each language.
+- | **full_package** - full package constructed from package_prefix and package. For each target language the construction formula for default value is different.
   | Note that it's used for Python and Kotlin for target package generation and changing it affects generated file paths as well.
-  | Consider this when changing **c_file_fullname**, **h_file_fullname** and **target_file_fullname**.
+  | This variable needs to be synchronized with **c_file_fullname**, **h_file_fullname** and **file_fullname**.
 - **c_file_fullname** - generated cpp file full name.
 - **h_file_fullname** - generated header file full name.
-- **file_fullname** - generated target language file full name.
+- | **file_fullname** - generated target language file full name. The value of this variable must be synchronized with **full_package** to correctly generate Python and Kotlin packages.
+  | **Note:** Currently, it is not used for Python which means updating it won't affect on the generated code, instead **full_package** is used for file full name generation.
 - **pybind_module_filename** - generated pybind file name containing pybind module code.
 - **c_pybind_filename** - generated pybind cpp file name containing code which binds all submodules.
 - **h_pybind_filename** - generated pybind header file name containing includes of all submodules.

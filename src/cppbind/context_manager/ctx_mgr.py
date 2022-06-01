@@ -66,7 +66,8 @@ class ContextManager:
         parsed_api = self.cppbind_api_parser.parse_yaml_api(name, ctx)
         if parsed_api:
             api, args = parsed_api
-            return api, self.__process_attrs(FILE_KIND_NAME, args, location, ctx)
+            if api:
+                return api, self.__process_attrs(FILE_KIND_NAME, args, location, ctx)
         return None
 
     def eval_clang_attrs(self, name, kind, api_section, ctx, location):
@@ -74,7 +75,8 @@ class ContextManager:
         parsed_api = self.cppbind_api_parser.parse_api(name, api_section, location, ctx)
         if parsed_api:
             api, args = parsed_api
-            return api, self.__process_attrs(kind, args, location, ctx)
+            if api:
+                return api, self.__process_attrs(kind, args, location, ctx)
         return None
 
     def __process_attrs(self, kind, args, location, ctx=None):

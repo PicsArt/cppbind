@@ -6,7 +6,7 @@ Let's examine the case of using a third-party library. In this case it's impossi
 CppBind API annotations inside class/function doxygen style comments. CppBind offers another mechanism for writing annotations in this scenario:
 it's possible to write annotations in separate config yaml files.
 
-Let's consider we have an ``Array`` class which is declared in a third party library:
+Let's consider we have an ``Array`` class which is declared in a third-party library:
 
 .. literalinclude:: /../examples/tutorials/array/cxx/array.hpp
     :language: cpp
@@ -48,10 +48,8 @@ More detailed information about this mechanism can be found here: :ref:`external
 
 To make written API annotations available for CppBind we use project config files merging feature:
 **type_vars** sections of project config files can be spread all over the project directories and merged together by CppBind.
-By default, CppBind will search for the files with **cppbind.yaml** suffix under project directories, and will merge **type_vars**
-sections defined in those files. In our tutorial we have written API annotations for "Array" class in the file named **array.cppbind.yaml**.
+By default, CppBind searches files with **cppbind.yaml** suffix under project directories and merges **type_vars** sections defined in those files. In our tutorial, we have written API annotations for the “Array” class in the file named **array.cppbind.yaml**.
 To change the name pattern of the project config files, you should modify **context_def_glob** application variable (more details can be found :doc:`here </05_detailed_info/01_app_config>`).
-
 Another way to include API annotations written in a separate file is including the file in the project config
 file, under **type_vars** section (the same way as it's done for std_exc_api.yaml file in default config file).
 

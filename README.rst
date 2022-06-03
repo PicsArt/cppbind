@@ -1,7 +1,7 @@
-TODO: [LOGO]
-
-CppBind
-^^^^^^^
+.. figure:: https://github.com/PicsArt/cppbind/tree/master/docs/_static/img/cppbind-logo.svg
+   :width: 450px
+   :height: 150px
+   :target: #
 
 Introduction
 ~~~~~~~~~~~~

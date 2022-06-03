@@ -253,17 +253,12 @@ const char *:
       {{target_type_name}} {{target_name}} = env->NewStringUTF({{name}});
     jdk_to_kotlin: |
       {%- if nullable|default(False) -%}
-      val {{target_name}} = if ({{name}} != null) {{name}}!! else null
+      {#- TODO: remove this redundant assignment after converted_name property fix (#378) -#}
+      val {{target_name}} = {{name}}
       {%- else -%}
       val {{target_name}} = {{name}}!!
       {%- endif -%}
-    kotlin_to_jdk: |
-      {%- if nullable|default(False) -%}
-      val {{target_name}} = if ({{name}} != null) {{name}}!! else null
-      {%- else -%}
-      {#- TODO: remove this redundant assignment after converted_name property fix (#378) -#}
-      val {{target_name}} = {{name}}
-      {%- endif -%}
+    kotlin_to_jdk:
 
 std::__cxx11::basic_string:
   custom:

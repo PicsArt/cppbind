@@ -93,6 +93,30 @@ This property is used as a type name postfix in target language, i.e.
 
 For ``cppbind::example::Task``, we have not specified the property ``name``, which means its name in the target language is used as a postfix, i.e., ``StackPyTask`` is generated for Python and ``StackTask`` for other languages.
 
+
+.. tab-set::
+    .. tab-item:: Kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt
+           :language: kotlin
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
+    .. tab-item:: Python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/main.py
+           :language: py
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
+
+    .. tab-item:: Swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/templates/main.swift
+           :language: swift
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
 Now let's see the usages of our example, Stack. Here is the source code:
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp

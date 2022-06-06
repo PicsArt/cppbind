@@ -19,6 +19,9 @@ Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
    :start-after: [example]
    :end-before: [example]
 
+As this is a single inheritance, we don't have to add something special.
+CppBind generates two classes, one inherited from the other.
+
 .. note::
     We have used the same value for the **shared_ref** attribute for both classes.
     It is mandatory. This attribute should be the same in the type hierarchy.
@@ -26,9 +29,6 @@ Assume we have two types: ``Bicycle`` inherited from ``Vehicle``:
 .. note::
     If the type parsed is inherited from another one that does not have an **__API__**, i.e., is not parsed
     by CppBind, then in the binding code, it won't appear as a base type for the target type.
-
-As this is single inheritance, we don't have to add something special.
-CppBind generates two classes, one inherited from the other.
 
 Usage examples:
 
@@ -115,13 +115,10 @@ The last two, in their turn, are derived from ``Parallelogram``:
 Again, we have used the same value for **shared_ref** for all four types.
 
 
-.. note::
-    Here we used **action: gen_interface** instead of **action: gen_class**.
-    Most modern languages do not support multiple inheritance, so we have to tell CppBind to generate
-    interfaces with implementations instead.
+We used **action: gen_interface** instead of **action: gen_class** for the parent types. Most modern languages do not support multiple inheritance, so we have to tell CppBind to generate interfaces instead.
 
 .. note::
-    It's important to note that CppBind supports multiple inheritance for polymorphic types (when the type has a virtual method/destructor or a polymorphic base).
+    It's important to note that CppBind supports multiple inheritance for only polymorphic types (when the type has a virtual method/destructor or a polymorphic base).
 
 
 .. note::

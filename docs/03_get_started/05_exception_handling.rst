@@ -1,17 +1,21 @@
 Exception handling
 ^^^^^^^^^^^^^^^^^^
-We support exception handling by catching thrown exception objects in the source language and rethrowing them in the target language.
-The user must mention the possible thrown exception classes for each method. For this purpose, we have a **throws** variable,
-which must contain throwable exceptions. The definition of that list variable looks like this:
+CppBind supports exception handling by catching thrown exception objects in C++ and rethrowing them in a target language.
+The user must specify the list of possible thrown exception classes in **throws** variable. Let's take a look at the following example demonstrating exception handling:
+
+.. note::
+    CppBind uses **pybind** library to generate Python bindings, which already has own mechanism for exception handling.
+    Pybind translates C++ standard exceptions to their Python analogs using an exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
+    Pybind translates all user-defined exceptions to Python **RuntimeError**. This also sets some constraints
+    on CppBind, so currently, CppBind doesn't support Python exceptions as it's done for other target languages. The user-defined exceptions list
+    is not relevant for Python, and is ignored. The user still must define the **throws** variable with a placeholder value. **no_throw** value works fine in this case. This requirement keeps API annotations style convenient between all target languages.
 
 .. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
     :language: cpp
     :start-after: [throw-example]
     :end-before: [throw-example]
 
-**throws** variable is mandatory for methods, constructors, and functions (also for getters and setters). If a method doesn't throw
-an exception, the user must set the parameter value to a special **no_throw** value. It is made as a requirement to ensure
-the user hasn't forgotten about the throw ability of the method. An example of an empty exception list looks like this:
+**throws** variable is mandatory for methods, constructors, and functions (also for getters and setters). If a method doesn't throw an exception, the user must set the variable to a special **no_throw** value. This is done as a requirement so that the user does not forget about the ability of a method to throw an exception. An example of an empty exception list looks like this:
 
 .. literalinclude:: /../examples/primitives/cxx/exceptions/exceptions.hpp
     :language: cpp
@@ -19,24 +23,22 @@ the user hasn't forgotten about the throw ability of the method. An example of a
     :end-before: [no-throw-example]
 
 .. note::
-    The order of listed exception classes in the **throws** variable is important. We preserve user-defined orders when catching/rethrowing exceptions.
+    The order of listed exception classes in the **throws** variable is important. CppBind preserves user-defined order when catching/rethrowing exceptions.
 
 .. note::
-    Swift language doesn't support exception throwing from getter/setter, so the user should set the value of the **throws** variable to **no_throw**.
-    CppBind complains about the wrong usage of **throws**.
+    Swift language doesn't support exception throwing from getter/setter, so the user should set the value of the **throws** variable to **no_throw** for getter/setter functions. CppBind will give an error otherwise.
 
-The exception list can contain standard exception classes and user-defined exception classes with API annotations.
-On the target language side, we keep correspondence between those classes, and for this purpose, we also generate standard exceptions
-binding to the target language. We define binding rules for std::exception and its descendant classes, and the CppBind tool generates bindings for us. We define rules in the yaml config file, which looks like this:
+The **throws** list accepts API annotated standard and user-defined exception classes.
+On a target language side, CppBind keeps correspondence between those classes. CppBind generates bindings for standard exceptions by providing binding predefined rules for std::exception and its descendant classes. The binding rules for standard exceptions are defined in "std_exc_api.yaml" config file, which looks like this:
 
 .. literalinclude:: /../src/cppbind/config/std_exc/std_exc_api.yaml
     :language: yaml
     :end-before: "std::logic_error"
 
 .. note::
-    Since we generate try/catch blocks in C bindings for catching an exception, we use C++ std exception classes, and therefore we need to include the
-    header files where std exceptions are defined. Those header files are included via the **include_cxx** variable (which you can see in the example above).
-    Here are the required includes:
+    Since CppBind generate try/catch blocks in C bindings for catching an exception, it uses C++ std exception classes, and therefore we need to include the
+    header files where std exceptions are defined. Those header files are included via the **include_cxx** variable (see the example above).
+    Here is the list of required includes:
 
 .. code-block:: cpp
 
@@ -44,18 +46,18 @@ binding to the target language. We define binding rules for std::exception and i
     #include <new>
     #include <typeinfo>
 
-If a user-defined exception is derived from std::exception, it is automatically throwable in the target language.
-If the user wants a class not to be derived from std::exception but to be throwable in the target language,
-the **is_exception** variable must be set to True (default value is **False**).
+If a user-defined exception is derived from std::exception, it is automatically throwable in a target language.
+If the user wants a class to be throwable in a target language and not to be derived from std::exception,
+the **is_exception** variable for that class must be set to True (default value is **False**).
 
 .. note::
-    User-defined exception classes must have a copy constructor since we copy the exception object before rethrowing it 
-    in the target language. We need this since the original exception object is deleted after its lifetime is ended.
+    User-defined exception classes must have a copy constructor since CppBind copies the exception object before rethrowing it 
+    in a target language. CppBind needs a copy object since the original exception object is deleted when its lifetime is ended.
 
-If we catch an exception, not from the user-defined list, we report an unexpected exception and call an uncaught exception handler callback.
-We define an exception utility package that includes ``ExceptionHandler`` class to handle uncaught exception cases.
+If CppBind catches an exception not from the user-defined list, it throws an unexpected exception and calls an uncaught exception handler callback. 
+CppBind defines ``ExceptionHandler`` class in a utility package (one for each target language) to handle uncaught exceptions.
 The default handler aborts program execution immediately, but the user can set a custom callback, which
-will be called after an unhandled exception is detected. The mentioned package looks like this:
+will be called when an unhandled exception is detected, to change this behaviour. The mentioned package looks like following:
 
 .. tab-set::
     .. tab-item:: Kotlin
@@ -68,18 +70,10 @@ will be called after an unhandled exception is detected. The mentioned package l
         .. literalinclude:: /../examples/primitives/swift/src/cppbind/exceptionUtils.swift
             :language: swift
 
-Also, we always catch std::exception before catching all exceptions to have a more informative error message when the exception
+CppBind always catches std::exception before catching all (catch(...)) exceptions to have a more informative error message when the exception
 class is derived from std::exception.
 
-.. note::
-    We use the **pybind** tool to generate Python bindings, which already has support for exception handling.
-    Pybind translates C++ standard exceptions to their Python analogs using an exception correspondence `map <https://pybind11.readthedocs.io/en/stable/advanced/exceptions.html#built-in-c-to-python-exception-translation>`_.
-    Pybind translates all user-defined exceptions to **RuntimeError** in Python. This support also sets some constraints
-    on us, so currently, we don't support Python exceptions as it's done for other languages. The user-defined exceptions list
-    is not relevant here, but the user still must define the **throws** variable to the **no_throw** value. This requirement
-    keeps API annotations style convenient between all target languages.
-
-After generating bindings for the target language, we can call methods that can throw an exception and test results with catch blocks:
+After generating bindings for a target language, we can call methods that can throw an exception and test results with catch blocks:
 
 .. tab-set::
     .. tab-item:: Kotlin
@@ -97,7 +91,7 @@ After generating bindings for the target language, we can call methods that can 
             :end-before: [exceptions-usage]
 
 .. note::
-    In the last usage example, you can notice that we called the custom exception class method when an exception was caught. When a custom exception class and its methods have API annotations, we have corresponding bindings, and thus we can use class methods.
+    In the last usage example, you can notice that we called the custom exception class ``SimpleChildException`` method ``errNum`` when an exception was caught. As the custom exception class and its methods have API annotations, we have corresponding bindings generated, and thus we can use class methods.
 
 .. collapse:: Binding codes when "throws" exception list is not empty
 

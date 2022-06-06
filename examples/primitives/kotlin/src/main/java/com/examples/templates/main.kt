@@ -32,15 +32,15 @@ stackPrj.push(prj)
 var stackUsage = StackUsage()
 var res = stackUsage.firstItemOfSpecializedStack(stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(prj))
+assert(res == prj)
 
 res = stackUsage.firstItemOfSpecializedStackWithTypedefArg(stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(prj))
+assert(res == prj)
 
 res = stackUsage.firstItemOfTemplateStack(stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(prj))
+assert(res == prj)
 // [stack-usage-examples]
 
 // [template-funcs-examples]

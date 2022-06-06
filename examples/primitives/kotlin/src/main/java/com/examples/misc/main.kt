@@ -26,11 +26,13 @@ class MiscApp {
             // [size-usage]
 
             // [buffer-usage]
-            val bufferUsage = BufferUsage()
+            // update the usage when the example will be fixed
+            /*val bufferUsage = BufferUsage()
             val buffer = BufferInt(100)
             assert(bufferUsage.usage1(buffer) == "buffer print")
             print(bufferUsage.usage2().getObjId())
             // [buffer-usage]
+            */
 
             // standard global function generated from yaml api
             // [std-func-usage]

@@ -264,3 +264,15 @@ py_test(
         ":py_examples_library",
     ],
 )
+
+py_test(
+    name = "hashing",
+    srcs = ["src/examples_lib/hashing/main.py"],
+    main = "src/examples_lib/hashing/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)

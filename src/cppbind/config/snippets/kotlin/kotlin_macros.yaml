@@ -1,0 +1,115 @@
+validations: |
+  {%- macro run_method_validations() -%}
+  {%- set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) -%}
+  {%- if is_special_function and owner_class.vars.action == 'gen_interface' -%}
+  {%- do Error.critical("It is not allowed to define hash function in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%- endif -%}
+  {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+  {%- if incorrect_nullable_args -%}
+  {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+  {%- endif -%}
+  {%- endmacro -%}
+
+_special_function_decls: &_special_function_decls |
+  {%- set hash_decl = 'override fun hashCode(): Int' -%}
+  {%- set tostring_decl = 'override fun toString(): String' -%}
+  {%- set equals_decl = 'override fun equals(other: Any?): Boolean' -%}
+
+special_functions:
+  declarations: *_special_function_decls
+  method:
+    !concat
+    - *_special_function_decls
+    - |
+      {%- macro gen_hash_function() -%}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
+      {%- endif %}
+      {{hash_decl}} {
+          return j{{vars.name|capitalize}}(id).hashCode()
+      }
+      {%- endmacro -%}
+      {%- macro gen_equals_function() -%}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
+      {%- endif %}
+      {{equals_decl}} {
+          other as {{owner_class.converter.kotlin.get_target_type_name(definition=True)}}
+          return j{{vars.name|capitalize}}(id, other.id)
+      }
+      {%- endmacro -%}
+      {%- macro gen_tostring_function() -%}
+      {%- if vars.comment %}
+      {{vars.comment|make_doxygen_comment}}
+      {%- endif %}
+      {{tostring_decl}} {
+          return j{{vars.name|capitalize}}(id)
+      }
+      {%- endmacro -%}
+  class:
+    !concat
+    - *_special_function_decls
+    - |
+      {#- -----------default implementations ------------------ -#}
+      {%- macro gen_default_hash_function() -%}
+      /**
+       * CPPBind generated hashCode method returning the hash of underlying C++ object id. .
+       */
+      {{hash_decl}} {
+          return cxxId.hashCode()
+      }
+      {%- endmacro -%}
+      {%- macro gen_default_equals_function(interface_class=False) -%}
+      /**
+       * CPPBind generated equals method comparing the underlying C++ object ids.
+       */
+      {{equals_decl}} {
+          other as {{converter.kotlin.get_target_type_name(interface_class=interface_class, definition=True)}}
+          return cxxId == other.cxxId
+      }
+      {%- endmacro -%}
+      {%- macro gen_default_tostring_function() -%}
+      /**
+       * CPPBind generated toString method returning underlying C++ object type and id.
+       */
+      {{tostring_decl}} {
+          return "<0x%x: %s>".format(cxxId, cxxTypeName)
+      }
+      {%- endmacro -%}
+
+
+jni_functions: |
+  {%- macro gen_jni_cxxid_function() -%}
+  {%- set cxxid_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
+  extern "C" JNIEXPORT jlong {{cxxid_name}}(JNIEnv* env, jobject obj, jobjectid id) {
+      auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
+      auto cppbind_obj_id_ptr = cppbind_obj_id->ptr;
+      {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+      {%- if descendants %}
+      if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
+      {%- if vars.shared_ref %}
+          return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr)->get());
+      {%- else %}
+          return reinterpret_cast<jlong>(static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr));
+      {%- endif %}
+      {%- for descendant in descendants %}
+      else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
+      {%- if vars.shared_ref %}
+          return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_id_ptr)->get());
+      {%- else %}
+          return reinterpret_cast<jlong>(static_cast<{{descendant}}*>(cppbind_obj_id_ptr));
+      {%- endif %}
+      {%- endfor %}
+      else {
+          std::cerr << "Unexpected object type: " << cppbind_obj_id->type << std::endl;
+          exit(1);
+      }
+      {%- else %}
+      {%- if vars.shared_ref %}
+      return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr)->get());
+      {%- else %}
+      return reinterpret_cast<jlong>(static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr));
+      {%- endif %}
+      {%- endif %}
+  }
+  {%- endmacro -%}

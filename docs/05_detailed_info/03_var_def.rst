@@ -119,7 +119,6 @@ Now let's go through the key variables:
 - **out_prj_dir** - root directory of project output. All includes and imports are generated relative to this directory.
 - **cxx_out_dir** - root directory where all C bindings is stored.
 - **out_dir** - directory where generated target language files is saved.
-- **cxx_base_out_dir** - directory where CppBind helper types are copied. If the user does not want to use CppBind base classes, there's no need to specify this variable.
 - **is_proj_type** - boolean showing whether the given type is the user's type or from standard/3pty lib.
 - **enable_source_link_in_comment** - boolean variable to define whether source link information should be present in the comments of generated code or not.
 - **comment** - target code comment. By default, it's a pure comment without parts that match the pattern defined via **comment_del_regex**.
@@ -132,7 +131,6 @@ Now let's go through the key variables:
 - **exception_file_name** - file name of standard exception helpers.
 - **cxx_helpers_dir** - CppBind C++ helpers directory.
 - **helpers_dir** - directory containing CppBind helpers.
-- **cxx_base_source_dir** - CppBind internal directory containing base classes.
 - **overloading_postfix** - postfix appended at the end of the generated C binding function name if the function is overloaded.
 - **file_postfix** - postfix appended to each generated file.
 - **pybind_module** - package name of the generated pybind package. This variable is only used for Python.
@@ -160,7 +158,9 @@ Now let's go through the key variables:
 - **return_value_policy** - policy to define return value lifetime and ownership. Details can be found here: :ref:`rv-policies`.
 - **keep_alive** - list containing indices of arguments whose lifetimes should be bound to ``this`` object's lifetime. The indices are 1-based. See more details here: :ref:`keep-alive-policy`.
 - **is_c_wrapper_external** - boolean to define whether the C binding helpers must be included as from external lib or not (generate include within ``<>`` diamonds or not).
-
+- **hash_method** - the name of hash method in C++. If users have annotated a method with this name then in each target language an appropriate hash method will be generated. The variable is allowed on **root** and should be defined once per project.
+- **equals_method** - the name of equals method in C++. If users have annotated a method with this name then in each target language an appropriate equals method/operator will be generated. The variable is allowed on **root** and should be defined once per project.
+- **tostring_method** - the name of toSting method in C++. If users have annotated a method with this name then in each target language an appropriate string converting method will be generated. The variable is allowed on **root** and should be defined once per project.
 .. note::
 
    The default value and other properties can be easily overridden.

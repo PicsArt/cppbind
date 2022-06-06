@@ -32,7 +32,6 @@ public:
      * __API__
      * action: gen_getter
      * throws: no_throw
-     *
      */
     std::string& title() {
         return _title;
@@ -43,7 +42,6 @@ public:
       * __API__
       * action: gen_method
       * throws: no_throw
-      *
       */
      void setTitle(const std::string& title) {
         _title = title;

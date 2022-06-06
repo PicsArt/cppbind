@@ -117,6 +117,100 @@ And the usage example:
 
 |
 
+Special methods
+~~~~~~~~~~~~~~~
+
+Many languages have a base class from which other classes are derived. This class contains methods like ``hash``, ``equals``, ``toString``, etc.
+For the languages which have this base class, CppBind generates implementations for ``hash``, ``equals``, ``toString``.
+This is done to make sure the objects which are wrapping the same C++ instance are equal and have the same value for ``hash`` and ``toString``.
+
+The generated methods are implemented in the following way:
+
+* **hash** - returns the hash value of underlying C++ object address.
+* **equals** - returns whether the underlying C++ objects are identical or not.
+* **toString** - returns a string containing type and address of the underlying C++ object.
+
+Users can define their own implementations by adding ``hash``, ``equals`` and ``toString`` to C++ classes.
+The names of these methods can be configured with **hash_method**, **equals_method** and **tostring_method** variables.
+More on variables can be found :doc:`here </05_detailed_info/03_var_def>`.
+
+Let's see an example:
+
+.. literalinclude:: /../examples/primitives/cxx/hashing/objects.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
+
+In the above example the first class: ``Object1``, contains custom definitions for ``hash``, ``equals`` and ``toString`` which means
+CppBind generates appropriate methods for all target languages, and if it's required also implements appropriate interfaces. Particularly for Swift the generated class conforms ``Hashable``, ``Equatable`` and ``CustomStringConvertible``.
+
+In case of the second example, i.e. ``Object2``, CppBind generates the default implementations for Kotlin.
+
+For Python CppBind does not generate the default ones, as pybind already does that.
+Instead CppBind generates a ``__repr__`` method which returns a string containing C++ object address and type information. This can be used for debugging purposes.
+Users can have their own ``__repr__`` by just annotating the appropriate method with ``python.name: __repr__``.
+
+For Swift the default implementations won't be generated, as by default, classes in Swift are neither hashable nor equatable.
+
+.. note::
+   It is not allowed to define ``hash``, ``equals`` and ``toString`` for interfaces.
+   If they are defined then CppBind raises an error.
+
+
+.. note::
+   If ``hash`` is defined but ``equals`` is not defined then CppBind raises an error for Swift.
+   All ``Hashable`` types are also ``Equatable`` in Swift.
+
+Now let's see some usage examples:
+
+.. tab-set::
+    .. tab-item:: Kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/hashing/main.kt
+            :language: kotlin
+            :start-after: [hashing-usage-example]
+            :end-before: [hashing-usage-example]
+
+    .. tab-item:: Python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/hashing/main.py
+            :language: py
+            :start-after: [hashing-usage-example]
+            :end-before: [hashing-usage-example]
+
+    .. tab-item:: Swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/hashing/main.swift
+            :language: swift
+            :start-after: [hashing-usage-example]
+            :end-before: [hashing-usage-example]
+
+
+
+.. collapse:: The generated bindings
+
+    |
+
+    .. tab-set::
+        .. tab-item:: Kotlin
+
+            .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/hashing/objects.kt
+               :language: java
+
+        .. tab-item:: Python
+
+            .. literalinclude:: /../examples/primitives/python/src/examples_lib/hashing/objects_pygen.py
+                :language: py
+
+        .. tab-item:: Swift
+
+            .. literalinclude:: /../examples/primitives/swift/src/hashing/objects.swift
+               :language: swift
+
+|
+
+
+
 Nested Types
 ~~~~~~~~~~~~
 

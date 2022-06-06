@@ -184,56 +184,67 @@ var_class_cxx: &var_class_cxx
     unique_content: |
       const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.unqualified_canonical_type_name}}";
   body:
-    content: |
-      {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-      {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
-      {%- set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
-      extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
-          {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
-          static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
-          {%- endif %}
-          auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
-          auto cppbind_obj_id_ptr = cppbind_obj_id ? cppbind_obj_id->ptr : nullptr;
-          {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
-          {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
-          {%- if descendants %}
-          if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
-          {%- if vars.shared_ref %}
-              delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
-          {%- else %}
-              delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
-          {%- endif %}
-          {%- for descendant in descendants %}
-          else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-          {%- if vars.shared_ref %}
-              delete static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_id_ptr);
-          {%- else %}
-              delete static_cast<{{descendant}}*>(cppbind_obj_id_ptr);
-          {%- endif %}
-          {%- endfor %}
-          else {
-              std::cerr << "Unexpected object type: " << cppbind_obj_id->type << std::endl;
-              exit(1);
-          }
-          {%- else %}
-          {%- if vars.shared_ref %}
-          delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
-          {%- else %}
-          delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
-          {%- endif %}
-          {%- endif %}
-          free(cppbind_obj_id->type);
-          delete cppbind_obj_id;
-      }
-      {%- endif %}
-      {#- object recover function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
-      {%- if descendants %}
-      {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
-
-      {{this_converter.cxx_obj_recover_func_decl.snippet(name="id")}} {
-          {{this_converter.cxx_obj_recover.snippet(name="id")|indent(4)}}
-      }
-      {%- endif -%}
+    scopes:
+      - body
+    content:
+      !concat
+      - !include kotlin_macros.yaml&jni_functions
+      - |
+        {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
+        {%- set is_root_class = base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
+        {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
+        {%- if is_root_class %}
+        {%- set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
+        extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
+            {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
+            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+            {%- endif %}
+            auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
+            auto cppbind_obj_id_ptr = cppbind_obj_id ? cppbind_obj_id->ptr : nullptr;
+            {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+            {%- if descendants %}
+            if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
+            {%- if vars.shared_ref %}
+                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
+            {%- else %}
+                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
+            {%- endif %}
+            {%- for descendant in descendants %}
+            else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
+            {%- if vars.shared_ref %}
+                delete static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_id_ptr);
+            {%- else %}
+                delete static_cast<{{descendant}}*>(cppbind_obj_id_ptr);
+            {%- endif %}
+            {%- endfor %}
+            else {
+                std::cerr << "Unexpected object type: " << cppbind_obj_id->type << std::endl;
+                exit(1);
+            }
+            {%- else %}
+            {%- if vars.shared_ref %}
+            delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
+            {%- else %}
+            delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
+            {%- endif %}
+            {%- endif %}
+            free(cppbind_obj_id->type);
+            delete cppbind_obj_id;
+        }
+        {%- endif %}
+        {#- object recover function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
+        {%- if descendants %}
+        {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
+  
+        {{this_converter.cxx_obj_recover_func_decl.snippet(name="id")}} {
+            {{this_converter.cxx_obj_recover.snippet(name="id")|indent(4)}}
+        }
+        {%- endif -%}
+        {%- if is_root_class %}
+    
+        {{gen_jni_cxxid_function()}}
+        {%- endif %}
+        {{body}}
 
 var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
@@ -285,101 +296,137 @@ class:
         - body
         - companion
         - private_external
-      content: |
-        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
-        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
-        {%- endif -%}
-        {%- if vars.header_code_fragment -%}
-        {{new_line}}{{vars.header_code_fragment}}
-        {% endif -%}
-        {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
-        {%- set all_bases_are_interface = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-        {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or all_bases_are_interface else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
-        {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
-        {%- do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
-        {%- endif %}
-        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
-        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
-        {%- endif %}
-        {%- if vars.comment %}
-        {{vars.comment|make_doxygen_comment}}
-        {%- endif %}
-        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(definition=True)}}
-        internal constructor(obj: CppBindObject){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
-            companion object {
-                {%- if vars.c_wrapper_lib_name and all_bases_are_interface %}
-                init {
-                    System.loadLibrary("{{vars.c_wrapper_lib_name}}")
-                }
-                {%- endif %}
-                {{companion|string|indent(8)}}
-                const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
-                {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+      content:
+        !concat
+        - !include kotlin_macros.yaml&special_functions.class
+        - |
+          {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+          {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+          {%- endif -%}
+          {%- if vars.header_code_fragment -%}
+          {{new_line}}{{vars.header_code_fragment}}
+          {% endif -%}
+          {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
+          {%- set is_root_class = not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+          {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or is_root_class else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
+          {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
+          {%- do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
+          {%- endif %}
+          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
+          {%- endif %}
+          {%- if vars.comment %}
+          {{vars.comment|make_doxygen_comment}}
+          {%- endif %}
+          {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(definition=True)}}
+          internal constructor(obj: CppBindObject){{' : ' + bases_specifiers|join(', ') if bases_specifiers}} {
+              companion object {
+                  {%- if vars.c_wrapper_lib_name and is_root_class %}
+                  init {
+                      System.loadLibrary("{{vars.c_wrapper_lib_name}}")
+                  }
+                  {%- endif %}
+                  {{companion|string|indent(8)}}
+                  const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
+                  {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+  
+                  public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
+                      {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
+                  }
+                  {%- endif %}
+              }
+              {% if is_root_class %}
+              protected var cppbindObj = obj
+              private var refs: MutableList<Any> = mutableListOf()
+  
+              {{'override ' if base_types_converters}}fun keepCppBindReference(ref: Any) {
+                  refs.add(ref)
+              }
+              {%- endif %}
+              {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
+              {% if base_types_converters -%}
+              {{'override '}}
+              {%- else %}
+              {{'open '}}
+              {%- endif -%}
+              val id: Long
+                  get() {
+                      if (cppbindObj.id == 0L) {
+                          throw RuntimeException("Object is not allocated")
+                      }
+                      return cppbindObj.id
+                  }
+              {%- endif -%}
+              {%- if is_root_class %}
 
-                public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
-                    {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
-                }
-                {%- endif %}
-            }
-            {% if all_bases_are_interface %}
-            protected var cppbindObj = obj
-            private var refs: MutableList<Any> = mutableListOf()
+              /**
+               * An internal property returning underlying C++ object id.
+               * It is intended to be used by the generated code.
+               */
+              internal val cxxId: Long by lazy {
+                  jGetcxxid(cppbindObj.id)
+              }
 
-            {{'override ' if base_types_converters}}fun keepCppBindReference(ref: Any) {
-                refs.add(ref)
-            }
-            {%- endif %}
-            {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
-            {% if base_types_converters -%}
-            {{'override '}}
-            {%- else %}
-            {{'open '}}
-            {%- endif -%}
-            val id: Long
-                get() {
-                    if (cppbindObj.id == 0L) {
-                        throw RuntimeException("Object is not allocated")
-                    }
-                    return cppbindObj.id
-                }
-            {%- endif -%}
-            {%- if head %}
-            {{head|string|indent}}
-            {%- endif %}
-            {%- if properties %}
-            {{properties|string|indent}}
-            {%- endif %}
-            {%- if body %}
-            {{body|string|indent}}
-            {%- endif %}
-            {%- if all_bases_are_interface %}
+              /**
+               * An internal property returning underlying C++ type name.
+               * It is intended to be used by the generated code.
+               */
+              internal val cxxTypeName: String by lazy {
+                  jGettypebyid(cppbindObj.id)
+              }
+              {%- endif %}
+              {%- if head %}
+              {{head|string|indent}}
+              {%- endif %}
+              {%- if properties %}
+              {{properties|string|indent}}
+              {%- endif %}
+              {%- if body %}
+              {{body|string|indent}}
+              {%- endif %}
+              {%- if is_root_class %}
+              {%- if hash_decl not in body|string %}
 
-            override fun close() {
-                if (cppbindObj.owner && cppbindObj.id != 0L) {
-                    jFinalize(cppbindObj.id)
-                    cppbindObj.id = 0L
-                }
-            }
+              {{gen_default_hash_function()|indent(4)}}
+              {%- endif %}
+              {%- if equals_decl not in body|string %}
 
-            /**
-             * Finalize and deletes the object
-             */
-            protected fun finalize() {
-                close()
-            }
-            {%- endif %}
-            {%- if private_external %}
+              {{gen_default_equals_function()|indent(4)}}
+              {%- endif %}
+              {%- if tostring_decl not in body|string %}
 
-            ///// External wrapper functions ////////////
-            {{private_external|string|indent}}
-            {%- endif %}
-            {%- if all_bases_are_interface %}
-            private external fun jFinalize(id: Long): Unit
-            {%- endif %}
-        }
-        {%- if vars.footer_code_fragment %}
-        {{new_line}}{{vars.footer_code_fragment}}
-        {% endif -%}
+              {{gen_default_tostring_function()|indent(4)}}
+              {%- endif %}
+  
+              override fun close() {
+                  if (cppbindObj.owner && cppbindObj.id != 0L) {
+                      jFinalize(cppbindObj.id)
+                      cppbindObj.id = 0L
+                  }
+              }
+  
+              /**
+               * Finalize and deletes the object
+               */
+              protected fun finalize() {
+                  close()
+              }
+              {%- endif %}
+              {%- if private_external or is_root_class %}
+  
+              ///// External wrapper functions ////////////
+              {%- endif %}
+              {%- if private_external %}
+              {{private_external|string|indent}}
+              {%- endif %}
+              {%- if is_root_class %}
+              private external fun jFinalize(id: Long): Unit
+              private external fun jGetcxxid(id: Long): Long
+              {%- endif %}
+          }
+          {%- if vars.footer_code_fragment %}
+          {{new_line}}{{vars.footer_code_fragment}}
+          {% endif -%}
   cxx: *var_class_cxx
 
 interface:
@@ -392,99 +439,125 @@ interface:
         - body
         - companion
         - interface_external
-      content: |
-        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
-        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
-        {%- endif -%}
-        {%- if vars.header_code_fragment -%}
-        {{new_line}}{{vars.header_code_fragment}}
-        {% endif -%}
-        {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
-        {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-        {%- do Error.critical(cxx.type_name + ' interface cannot inherit from a class.') %}
-        {%- endif %}
-        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
-        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
-        {%- endif %}
-        {% if vars.comment %}
-        {{vars.comment|make_doxygen_comment}}
-        {%- endif %}
-        interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
-            {%- if not base_types_converters %}
-            val id: Long
-            fun keepCppBindReference(ref: Any)
-            {%- endif %}
-            {{properties|string|indent}}
-            {{body|string|indent}}
-            {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+      content:
+        !concat
+        - !include kotlin_macros.yaml&special_functions.class
+        - |
+          {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+          {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+          {%- endif -%}
+          {%- if vars.header_code_fragment -%}
+          {{new_line}}{{vars.header_code_fragment}}
+          {% endif -%}
+          {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
+          {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+          {%- do Error.critical(cxx.type_name + ' interface cannot inherit from a class.') %}
+          {%- endif %}
+          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
+          {%- endif %}
+          {% if vars.comment %}
+          {{vars.comment|make_doxygen_comment}}
+          {%- endif %}
+          interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
+              {%- if not base_types_converters %}
+              val id: Long
+              fun keepCppBindReference(ref: Any)
+              {%- endif %}
+              {{properties|string|indent}}
+              {{body|string|indent}}
+              {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
+  
+              companion object {
+                  public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
+                      {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
+                  }
+              }
+              {%- endif %}
+          }
+  
+          {% if interface_external %}
+          class {{converter.kotlin.get_target_type_name(definition=True)}}Helper {
+              companion object {
+                  {{interface_external|string|indent(8)}}
+              }
+          }
+          {% endif %}
+  
+          {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True, definition=True)}}
+          internal constructor(obj : CppBindObject) : {{converter.kotlin.target_type_name}} {
+              companion object {
+                  {%- if vars.c_wrapper_lib_name %}
+                  init {
+                      System.loadLibrary("{{vars.c_wrapper_lib_name}}")
+                  }
+                  {%- endif %}
+                  {{companion|string|indent(8)}}
+                  const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
+              }
+  
+              protected var cppbindObj = obj
+              private var refs: MutableList<Any> = mutableListOf()
+  
+              override fun keepCppBindReference(ref: Any) {
+                  refs.add(ref)
+              }
+  
+              override val id: Long
+                  get() {
+                      if (cppbindObj.id == 0L) {
+                          throw RuntimeException("Object is not allocated")
+                      }
+                      return cppbindObj.id
+                  }
+          
+              /**
+               * An internal property returning underlying C++ object id.
+               * It is intended to be used by the generated code.
+               */
+              internal val cxxId: Long by lazy {
+                  jGetcxxid(cppbindObj.id)
+              }
 
-            companion object {
-                public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
-                    {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
-                }
-            }
-            {%- endif %}
-        }
+              /**
+               * An internal property returning underlying C++ type name.
+               * It is intended to be used by the generated code.
+               */
+              internal val cxxTypeName: String by lazy {
+                  jGettypebyid(cppbindObj.id)
+              }
+              {%- if head %}
+              {{head|string|indent}}
+              {%- endif %}
+              {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+  
+              override fun close() {
+                  if (cppbindObj.owner && cppbindObj.id != 0L) {
+                      jFinalize(cppbindObj.id)
+                      cppbindObj.id = 0L
+                  }
+              }
+  
+              /**
+              * Finalize and deletes the object
+              */
+              protected fun finalize() {
+                  close()
+              }
+              {% endif %}
+              {{gen_default_hash_function()|indent(4)}}
 
-        {% if interface_external %}
-        class {{converter.kotlin.get_target_type_name(definition=True)}}Helper {
-            companion object {
-                {{interface_external|string|indent(8)}}
-            }
-        }
-        {% endif %}
+              {{gen_default_equals_function(True)|indent(4)}}
 
-        {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True, definition=True)}}
-        internal constructor(obj : CppBindObject) : {{converter.kotlin.target_type_name}} {
-            companion object {
-                {%- if vars.c_wrapper_lib_name %}
-                init {
-                    System.loadLibrary("{{vars.c_wrapper_lib_name}}")
-                }
-                {%- endif %}
-                {{companion|string|indent(8)}}
-                const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
-            }
-
-            protected var cppbindObj = obj
-            private var refs: MutableList<Any> = mutableListOf()
-
-            override fun keepCppBindReference(ref: Any) {
-                refs.add(ref)
-            }
-
-            override val id: Long
-                get() {
-                    if (cppbindObj.id == 0L) {
-                        throw RuntimeException("Object is not allocated")
-                    }
-                    return cppbindObj.id
-                }
-            {%- if head %}
-            {{head|string|indent}}
-            {%- endif %}
-            {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-
-            override fun close() {
-                if (cppbindObj.owner && cppbindObj.id != 0L) {
-                    jFinalize(cppbindObj.id)
-                    cppbindObj.id = 0L
-                }
-            }
-
-            /**
-            * Finalize and deletes the object
-            */
-            protected fun finalize() {
-                close()
-            }
-            {% endif %}
-            ///// External wrapper functions ////////////
-            private external fun jFinalize(id: Long): Unit
-        }
-        {%- if vars.footer_code_fragment %}
-        {{new_line}}{{vars.footer_code_fragment}}
-        {% endif -%}
+              {{gen_default_tostring_function()|indent(4)}}
+  
+              ///// External wrapper functions ////////////
+              private external fun jFinalize(id: Long): Unit
+              private external fun jGetcxxid(id: Long): Long
+          }
+          {%- if vars.footer_code_fragment %}
+          {{new_line}}{{vars.footer_code_fragment}}
+          {% endif -%}
   cxx: *var_class_cxx
 
 
@@ -750,128 +823,137 @@ constructor:
 method:
   kotlin:
     include: *var_method_kotlin_include
-    body: |
-      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
-      {%- if incorrect_nullable_args -%}
-      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
-      {%- endif -%}
-      {%- if not cxx.is_static %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set comma = joiner(', ') -%}
-      {%- if vars.comment %}
-      {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
-      {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun {{vars.name}}(
-      {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
-      {%- if arg.default -%}
-      {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
-      {%- endif -%}
-      {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
-      {%- elif arg.default_is_nullptr %} = null
-      {%- endif %}
-      {%- endif %}
-      {%- endif -%}
-      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
-          {%- set call_args = ['id'] -%}
-          {%- set result_converter = rconverter.jdk_to_kotlin -%}
-          {%- for arg in args %}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
-          {%- if conversion %}
-          {{conversion|indent}}
-          {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg_name)) %}
-          {%- endfor %}
-          {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
-          {%- for arg in args %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
-          {%- do call_args.append(arg_name) if not arg_name in call_args %}
-          {%- endfor %}
-          {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          {%- else %}
-          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          {%- endif %}
-          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
-          {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
-          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
-          {%- if invalid_args  %}
-          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
-          {%- endif %}
-          {%- for arg_idx in vars.keep_alive %}
-          {%- set converter = args[arg_idx - 1].converter %}
-          {%- if converter.kotlin_keep_alive %}
-          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
-          {%- endif %}
-          {%- endfor %}
-          {%- endif %}
-          {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
-          {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
-          {%- if conversion %}
-          {{conversion|indent(4)}}{% endif %}
-          {%- endif %}
-          return {{result_converter.converted_name('result')}}
-      }
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
-
-
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {% set setter_var_name = 'value' %}
-
-      {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override or vars.name == 'toString'}}fun set(
-      {%- for arg in args -%}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
-      {%- endfor-%}){
-          {%- set call_args = ['id'] -%}
-          {%- for arg in args %}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
-          {%- if conversion %}
-          {{conversion|indent}}
-          {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg_name)) %}
-          {%- endfor %}
-          {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
-          {%- set extra_call_args = [] -%}
-          {%- for arg in args %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
-          {%- do extra_call_args.append(arg_name) if not arg_name in call_args %}
-          {%- endfor %}
-          {%- if owner_class.vars.action == 'gen_interface' %}
-          {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}}{{', ' + extra_call_args|join(', ') if extra_call_args}})
-          {%- else %}
-          jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}}{{', ' + extra_call_args|join(', ') if extra_call_args}})
-          {#- This should go to shared macro -#}
-          {%- if vars.keep_alive %}
-          {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
-          {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
-          {%- if invalid_args  %}
-          {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
-          {%- endif %}
-          {%- for arg_idx in vars.keep_alive %}
-          {%- set converter = args[arg_idx - 1].converter %}
-          {%- if converter.kotlin_keep_alive %}
-          {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
-          {%- endif %}
-          {%- endfor %}
-          {%- endif %}
-          {%- endif %}
-      }
-
-      {%- endif %}
-
-      {%- endif %}
+    body:
+      !concat
+      - !include kotlin_macros.yaml&validations
+      - !include kotlin_macros.yaml&special_functions.method
+      - |
+        {%- do run_method_validations() -%}
+        {%- if cxx.name == vars.hash_method -%}
+        {{gen_hash_function()}}
+        {%- elif cxx.name == vars.equals_method -%}
+        {{gen_equals_function()}}
+        {%- elif cxx.name == vars.tostring_method -%}
+        {{gen_tostring_function()}}
+        {%- else -%}
+        {%- if not cxx.is_static %}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        {%- if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun {{vars.name}}(
+        {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+        {%- if arg.default -%}
+        {%- if arg.is_enum %}
+        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+        {%- endif -%}
+        {%- else -%}
+        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
+        {%- elif arg.default_is_nullptr %} = null
+        {%- endif %}
+        {%- endif %}
+        {%- endif -%}
+        {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
+            {%- set call_args = ['id'] -%}
+            {%- set result_converter = rconverter.jdk_to_kotlin -%}
+            {%- for arg in args %}
+            {%- set converter = arg.converter.kotlin_to_jdk -%}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
+            {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+            {%- if conversion %}
+            {{conversion|indent}}
+            {%- endif %}
+            {%- do call_args.append(converter.converted_name(arg_name)) %}
+            {%- endfor %}
+            {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
+            {%- for arg in args %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
+            {%- do call_args.append(arg_name) if not arg_name in call_args %}
+            {%- endfor %}
+            {%- if owner_class.vars.action == 'gen_interface' %}
+            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            {%- else %}
+            val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            {%- endif %}
+            {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+            {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
+            {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+            {%- if invalid_args  %}
+            {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+            {%- endif %}
+            {%- for arg_idx in vars.keep_alive %}
+            {%- set converter = args[arg_idx - 1].converter %}
+            {%- if converter.kotlin_keep_alive %}
+            {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+            {%- endif %}
+            {%- endfor %}
+            {%- endif %}
+            {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
+            {%- set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
+            {%- if conversion %}
+            {{conversion|indent(4)}}{% endif %}
+            {%- endif %}
+            return {{result_converter.converted_name('result')}}
+        }
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
+  
+  
+        {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
+        {% set setter_var_name = 'value' %}
+  
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun set(
+        {%- for arg in args -%}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
+        {%- endfor-%}){
+            {%- set call_args = ['id'] -%}
+            {%- for arg in args %}
+            {%- set converter = arg.converter.kotlin_to_jdk -%}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
+            {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+            {%- if conversion %}
+            {{conversion|indent}}
+            {%- endif %}
+            {%- do call_args.append(converter.converted_name(arg_name)) %}
+            {%- endfor %}
+            {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
+            {%- set extra_call_args = [] -%}
+            {%- for arg in args %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
+            {%- do extra_call_args.append(arg_name) if not arg_name in call_args %}
+            {%- endfor %}
+            {%- if owner_class.vars.action == 'gen_interface' %}
+            {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+            {%- else %}
+            jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}({{call_args|join(', ')}}, {{setter_var_name}})
+            {#- This should go to shared macro -#}
+            {%- if vars.keep_alive %}
+            {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
+            {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+            {%- if invalid_args  %}
+            {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+            {%- endif %}
+            {%- for arg_idx in vars.keep_alive %}
+            {%- set converter = args[arg_idx - 1].converter %}
+            {%- if converter.kotlin_keep_alive %}
+            {{converter.kotlin_keep_alive.snippet('this', reference=args[arg_idx - 1].name|to_camel_case)|indent(4)}}
+            {%- endif %}
+            {%- endfor %}
+            {%- endif %}
+            {%- endif %}
+        }
+  
+        {%- endif %}
+  
+        {%- endif %}
+        {%- endif %}
     companion: |
       {%- if cxx.is_static %}
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}

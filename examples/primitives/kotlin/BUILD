@@ -1,4 +1,4 @@
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test", "kt_jvm_library")
 
 cc_library(
     name = "jni_header_lib",
@@ -42,10 +42,20 @@ cc_binary(
     deps = [":kt_examples_wrapper"],
 )
 
+kt_jvm_library(
+    name = "kt_examples_library",
+    srcs = glob(
+        ["src/**/*.kt"],
+        exclude = ["**/main.kt"],
+    ),
+    data = [":libwrapper_jni"],
+    visibility = ["//visibility:public"],
+)
+
 kt_jvm_test(
     name = "simple",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/simple/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.simple.SimpleApp",
 )
@@ -61,145 +71,152 @@ filegroup(
 
 kt_jvm_test(
     name = "operators",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/operators/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.operators.OperatorsApp",
 )
 
 kt_jvm_test(
     name = "containers",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/containers/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.containers.ContainersApp",
 )
 
 kt_jvm_test(
     name = "templates",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/templates/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.templates.TemplatesApp",
 )
 
 kt_jvm_test(
     name = "inheritance",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/inheritance/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.inheritance.InheritanceApp",
 )
 
 kt_jvm_test(
     name = "forward_decl",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/forward_decl/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.forward_decl.ForwardDeclsApp",
 )
 
 kt_jvm_test(
     name = "enums",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/enums/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.enums.EnumsApp",
 )
 
 kt_jvm_test(
     name = "getters",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/getters/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.getters.GettersApp",
 )
 
 kt_jvm_test(
     name = "overloads",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/overloads/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.overloads.OverloadsApp",
 )
 
 kt_jvm_test(
     name = "nullables",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/nullables/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.nullables.NullablesApp",
 )
 
 kt_jvm_test(
     name = "shared_ptr",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/shared_ptr/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.shared_ptr.SharedPtrApp",
 )
 
 kt_jvm_test(
     name = "misc",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/misc/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.misc.MiscApp",
 )
 
 kt_jvm_test(
     name = "extra",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/extra/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.extra.ExtraApp",
 )
 
 kt_jvm_test(
     name = "exceptions",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/exceptions/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.exceptions.ExceptionsApp",
 )
 
 kt_jvm_test(
     name = "optionals",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/optionals/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.optionals.OptionalsApp",
 )
 
 kt_jvm_test(
     name = "globs",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/globs/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.globs.GlobsApp",
 )
 
 kt_jvm_test(
     name = "rv_policies",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/rv_policies/main.kt"],
     jvm_flags = ["-Djava.library.path=kotlin"],
-    deps=["@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7"],
+    deps=["kt_examples_library", "@com_github_jetbrains_kotlin//:kotlin-stdlib-jdk7"],
     main_class = "com.examples.rv_policies.RVPApp",
 )
 
 kt_jvm_test(
     name = "nested_types",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/nested_types/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.nested_types.NestedTypesApp",
 )
 
 kt_jvm_test(
     name = "typedefs",
-    srcs = glob(["src/**/*.kt"]),
-    data = [":libwrapper_jni"],
+    srcs = ["src/main/java/com/examples/typedefs/main.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.typedefs.TypedefsApp",
+)
+
+kt_jvm_test(
+    name = "hashing",
+    srcs = ["src/main/java/com/examples/hashing/main.kt"],
+    deps = ["kt_examples_library", "@com_github_jetbrains_kotlin//:kotlin-reflect"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.hashing.HashingApp",
 )

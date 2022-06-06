@@ -28,15 +28,15 @@ stackPrj.push(item: prj)
 let stackUsage = StackUsage()
 var res = stackUsage.firstItemOfSpecializedStack(p: stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(p: prj))
+assert(res == prj)
 
 res = stackUsage.firstItemOfSpecializedStackWithTypedefArg(p: stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(p: prj))
+assert(res == prj)
 
 res = stackUsage.firstItemOfTemplateStack(p: stackPrj)
 assert(res.title == prj.title)
-assert(res.equals(p: prj))
+assert(res == prj)
 // [stack-usage-examples]
 
 // [template-funcs-examples]

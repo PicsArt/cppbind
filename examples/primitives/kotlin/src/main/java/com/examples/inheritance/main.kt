@@ -29,10 +29,10 @@ assert(square.perimeter() == 20.0)
 // other test cases
 val gf = GeometricFigure(square)
 assert(gf.parallelogram is Square)
-assert(gf.parallelogram.equals(square))
+assert(gf.parallelogram == square)
 gf.parallelogram = rhombus
 assert(gf.parallelogram is IRhombusFigure)
-assert(gf.parallelogram.equals(rhombus))
+assert(gf.parallelogram == rhombus)
 gf.nullableParallelogram = null
 assert(gf.nullableParallelogram == null)
 

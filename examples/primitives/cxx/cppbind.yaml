@@ -15,7 +15,6 @@ dir_vars:
 
 vars:
   out_prj_dir: "."
-  cxx_base_out_dir: "{{path.join(out_prj_dir, 'cxx/extra')}}"
   src_glob:
     - cxx/**/*.h*
   include_dirs:

@@ -2,7 +2,7 @@ Templates
 ^^^^^^^^^
 This section covers function and class templates.
 To generate bindings for function and class templates, we specify all expected values of template parameters with the ``template`` variable.
-The value of ``template`` variable is a mapping between template parameters and their expected arguments.
+The value of a ``template`` variable is a mapping between template parameters and their expected arguments.
 
 Let's see an example:
 
@@ -131,7 +131,7 @@ The fourth one does not meet this requirement.
 
 .. note::
     CppBind supports types inherited from a specialized template, e.g., ``class TaskList: public Stack<Task>``. 
-    And to generate bindings for a type inherited from a template(has CppBind API), you must specify the base type's full name, e.g., ``class TaskList<T>: public cppbind::example::Stack<T>``.
+    And to generate bindings for a type inherited from a template type (has CppBind API), you must specify full name of the base type, e.g., ``class TaskList<T>: public cppbind::example::Stack<T>``.
 
 .. collapse:: Generated bindings
 

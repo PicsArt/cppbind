@@ -230,22 +230,35 @@ class:
           {%- endif -%}
           public class {{class_name}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
             {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-  
+
+            /**
+             * An internal property to keep a reference to the original C++ object.
+             * It is intended to be used by the generated code.
+             */
             public let cself: {{converter.sc.target_type_name}}
+
+            /**
+             * An internal property to keep track whether Swift is responsible for deallocating the underlying C++ object or not.
+             * It is intended to be used by the generated code.
+             */
             public let owner: Bool
             private var refs: [Any]
-  
+
             /// internal main initializer
             internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
               self.cself = _cself
               self.owner = _owner
               self.refs = []
             }
-  
+
             deinit {
               release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
             }
-  
+
+            /**
+             * An internal method to bind the lifetimes of the current and another object.
+             * It is intended to be used by the generated code.
+             */
             public func keepCppBindReference(_ object: Any) {
               self.refs.append(object)
             }{{new_line}}
@@ -270,12 +283,20 @@ class:
             {%- if body %}
             {{body|string|indent(2)}}
             {%- endif %}
+            /**
+             * An internal property to keep an information about the underlying C++ object type.
+             * It is intended to be used by the generated code.
+             */
             {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
             {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
             {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
             {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
-  
+
+            /**
+             * An internal method to create a Swift object from a C++ object.
+             * It is intended to be used by the generated code.
+             */
             {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
               {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
             }
@@ -387,7 +408,15 @@ interface:
         public protocol {{converter.swift.get_target_type_name(definition=True)}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
           {%- if not base_types_converters %}
+          /**
+           * An internal property to keep a reference to the original C++ object.
+           * It is intended to be used by the generated code.
+           */
           var cself: {{converter.sc.target_type_name}} { get }{{new_line}}
+          /**
+           * An internal method to bind the lifetimes of the current and another object.
+           * It is intended to be used by the generated code.
+           */
           func keepCppBindReference(_ object: Any)
           {%- endif %}
           {%- if interface_head %}
@@ -432,6 +461,10 @@ interface:
           {%- if head %}
           {{head|string|indent(2)}}
           {%- endif %}
+          /**
+           * An internal property to keep an information about the underlying C++ object type.
+           * It is intended to be used by the generated code.
+           */
           {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
           {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
@@ -439,6 +472,10 @@ interface:
           {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
           {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
 
+          /**
+           * An internal method to create a Swift object from a C++ object.
+           * It is intended to be used by the generated code.
+           */
           {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
             {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
           }
@@ -825,9 +862,9 @@ method:
           get {
             {{get_property()|indent(4)}}
           }
-  
+
           {%- set res_converter = rconverter.swift_to_sc %}
-  
+
           set(value) {
             {%- set call_args = ['cself'] %}
             {%- for arg in args %}

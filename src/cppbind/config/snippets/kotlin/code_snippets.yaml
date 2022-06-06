@@ -235,13 +235,13 @@ var_class_cxx: &var_class_cxx
         {#- object recover function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
         {%- if descendants %}
         {%- set this_converter = make_type_converter('std::shared_ptr<' + cxx.type_name + '>') if vars.shared_ref else converter %}
-  
+
         {{this_converter.cxx_obj_recover_func_decl.snippet(name="id")}} {
             {{this_converter.cxx_obj_recover.snippet(name="id")|indent(4)}}
         }
         {%- endif -%}
         {%- if is_root_class %}
-    
+
         {{gen_jni_cxxid_function()}}
         {%- endif %}
         {{body}}
@@ -327,9 +327,17 @@ class:
                   }
                   {%- endif %}
                   {{companion|string|indent(8)}}
+                  /**
+                   * An internal property to keep an information about the underlying C++ object type.
+                   * It is intended to be used by the generated code.
+                   */
                   const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
                   {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-  
+
+                  /**
+                   * An internal method to create a Kotlin object from a C++ object.
+                   * It is intended to be used by the generated code.
+                   */
                   public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
                       {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
                   }
@@ -338,12 +346,20 @@ class:
               {% if is_root_class %}
               protected var cppbindObj = obj
               private var refs: MutableList<Any> = mutableListOf()
-  
+
+              /**
+               * An internal method to bind the lifetimes of the current and another object.
+               * It is intended to be used by the generated code.
+               */
               {{'override ' if base_types_converters}}fun keepCppBindReference(ref: Any) {
                   refs.add(ref)
               }
               {%- endif %}
               {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
+              /**
+               * An internal getter to get the id of an object.
+               * It is intended to be used by the generated code.
+               */
               {% if base_types_converters -%}
               {{'override '}}
               {%- else %}
@@ -397,14 +413,14 @@ class:
 
               {{gen_default_tostring_function()|indent(4)}}
               {%- endif %}
-  
+
               override fun close() {
                   if (cppbindObj.owner && cppbindObj.id != 0L) {
                       jFinalize(cppbindObj.id)
                       cppbindObj.id = 0L
                   }
               }
-  
+
               /**
                * Finalize and deletes the object
                */
@@ -413,7 +429,7 @@ class:
               }
               {%- endif %}
               {%- if private_external or is_root_class %}
-  
+
               ///// External wrapper functions ////////////
               {%- endif %}
               {%- if private_external %}
@@ -461,21 +477,33 @@ interface:
           {%- endif %}
           interface {{converter.kotlin.get_target_type_name(definition=True)}}{{' : ' + bases_specifiers|join(', ') if bases_specifiers else ' : AutoCloseable'}} {
               {%- if not base_types_converters %}
+              /**
+               * An internal getter to get the id of an object.
+               * It is intended to be used by the generated code.
+               */
               val id: Long
+              /**
+               * An internal method to bind the lifetimes of the current and another object.
+               * It is intended to be used by the generated code.
+               */
               fun keepCppBindReference(ref: Any)
               {%- endif %}
               {{properties|string|indent}}
               {{body|string|indent}}
               {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-  
+
               companion object {
+                  /**
+                   * An internal method to create a Kotlin object from a C++ object.
+                   * It is intended to be used by the generated code.
+                   */
                   public fun cppbindConstructObject(id: Long, owner: Boolean = false): {{converter.kotlin.target_type_name}} {
                       {{converter.kotlin_obj_construction.snippet(name="id")|indent(12)}}
                   }
               }
               {%- endif %}
           }
-  
+
           {% if interface_external %}
           class {{converter.kotlin.get_target_type_name(definition=True)}}Helper {
               companion object {
@@ -483,7 +511,7 @@ interface:
               }
           }
           {% endif %}
-  
+
           {{'open ' if cxx.is_open}}class {{converter.kotlin.get_target_type_name(interface_class=True, definition=True)}}
           internal constructor(obj : CppBindObject) : {{converter.kotlin.target_type_name}} {
               companion object {
@@ -493,16 +521,20 @@ interface:
                   }
                   {%- endif %}
                   {{companion|string|indent(8)}}
+                  /**
+                   * An internal property to keep an information about the underlying C++ object type.
+                   * It is intended to be used by the generated code.
+                   */
                   const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
               }
-  
+
               protected var cppbindObj = obj
               private var refs: MutableList<Any> = mutableListOf()
-  
+
               override fun keepCppBindReference(ref: Any) {
                   refs.add(ref)
               }
-  
+
               override val id: Long
                   get() {
                       if (cppbindObj.id == 0L) {
@@ -510,7 +542,7 @@ interface:
                       }
                       return cppbindObj.id
                   }
-          
+
               /**
                * An internal property returning underlying C++ object id.
                * It is intended to be used by the generated code.
@@ -530,14 +562,14 @@ interface:
               {{head|string|indent}}
               {%- endif %}
               {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
-  
+
               override fun close() {
                   if (cppbindObj.owner && cppbindObj.id != 0L) {
                       jFinalize(cppbindObj.id)
                       cppbindObj.id = 0L
                   }
               }
-  
+
               /**
               * Finalize and deletes the object
               */
@@ -550,7 +582,7 @@ interface:
               {{gen_default_equals_function(True)|indent(4)}}
 
               {{gen_default_tostring_function()|indent(4)}}
-  
+
               ///// External wrapper functions ////////////
               private external fun jFinalize(id: Long): Unit
               private external fun jGetcxxid(id: Long): Long
@@ -905,11 +937,11 @@ method:
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
-  
-  
+
+
         {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
         {% set setter_var_name = 'value' %}
-  
+
         {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun set(
         {%- for arg in args -%}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
         {%- endfor-%}){
@@ -949,9 +981,9 @@ method:
             {%- endif %}
             {%- endif %}
         }
-  
+
         {%- endif %}
-  
+
         {%- endif %}
         {%- endif %}
     companion: |

@@ -2,9 +2,10 @@ Operator Overloading
 ^^^^^^^^^^^^^^^^^^^^
 
 This section covers an example of overloading arithmetic and comparison operators.
+CPP bind will generate apropriate operators or functions for target languages by default. 
 If the target language does not allow some of the operators to be overloaded or
-we don't want to overload them in the target language, we can set the **is_operator** variable
-to **False**. We should also specify **name** for that operator so that the target language uses that name.
+we don't want them to be overloaded, we can set the **is_operator** variable to **False**. 
+In this case, we must specify the **name** variable so that CppBind will use it to generate a function with that name.
 
 
 .. literalinclude:: /../examples/primitives/cxx/operators/counter.hpp
@@ -15,12 +16,11 @@ to **False**. We should also specify **name** for that operator so that the targ
 
 .. note::
     All comparisons in Kotlin are translated into calls to ``compareTo``, that is required to return **Int**.
-    That's why we have ``compareTo`` method in C++ with kotlin.is_operator set to True(this is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it).
-    Also notice we do not have Kotlin action for ``operator>``.
+    That's why we have ``compareTo`` method in C++ with kotlin.is_operator set to True (this is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it).
+    Also notice we didn't specify Kotlin instruction for ``operator>``.
 
 .. note::
-    For the **+=** operator, we are generating bindings only for Python and Swift because for Kotlin, the signature of this operator is different, and we
-    already have generated binding for the **+** operator, which also covers the **+=** operator.
+    We are generating bindings only for **operator+=** for Python and Swift. In Kotlin, the signature of operator **operator+=** is different, it is covered by **operator+**. In this case we specify instructions to generate only **operator+**  for Kotlin.
 
 And the usage example:
 
@@ -71,7 +71,7 @@ And the usage example:
 Overloading subscript operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is the example of overloading **operator[]**.
+Here is an example of overloading **operator[]**.
 
 .. literalinclude:: /../examples/primitives/cxx/operators/intarray.hpp
    :language: cpp
@@ -125,4 +125,4 @@ Usage example:
 |
 
 .. note::
-    As we can see, we have only generated one set operator. It is the case when the return value of the overloaded subscript operator is a non-const-qualified reference.
+    As you can see, we have only generated one set operator. It is the case when the return value of the overloaded subscript operator is a non-const-qualified reference.

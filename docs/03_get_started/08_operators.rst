@@ -2,9 +2,9 @@ Operator Overloading
 ^^^^^^^^^^^^^^^^^^^^
 
 This section covers an example of overloading arithmetic and comparison operators.
-CPP bind will generate apropriate operators or functions for target languages by default. 
+CppBind will generate appropriate operators for target languages by default.
 If the target language does not allow some of the operators to be overloaded or
-we don't want them to be overloaded, we can set the **is_operator** variable to **False**. 
+we don't want them to be overloaded in target languages, we can set the **is_operator** variable to **False**. 
 In this case, we must specify the **name** variable so that CppBind will use it to generate a function with that name.
 
 
@@ -16,11 +16,11 @@ In this case, we must specify the **name** variable so that CppBind will use it 
 
 .. note::
     All comparisons in Kotlin are translated into calls to ``compareTo``, that is required to return **Int**.
-    That's why we have ``compareTo`` method in C++ with kotlin.is_operator set to True (this is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it).
+    That's why we have ``compareTo`` method in C++ with kotlin.is_operator variable set to True (this is mandatory as compareTo is not a C++ operator and by default, is_operator is False for it).
     Also notice we didn't specify Kotlin instruction for ``operator>``.
 
 .. note::
-    We are generating bindings only for **operator+=** for Python and Swift. In Kotlin, the signature of operator **operator+=** is different, it is covered by **operator+**. In this case we specify instructions to generate only **operator+**  for Kotlin.
+    We are generating bindings only for **operator+=** for Python and Swift. In Kotlin, the signature of operator **operator+=** is different, it is covered by **operator+**. Therefore, we specify instructions for generating only **operator+** for Kotlin.
 
 And the usage example:
 

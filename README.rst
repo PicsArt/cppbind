@@ -1,4 +1,4 @@
-.. figure:: https://github.com/PicsArt/cppbind/tree/master/docs/_static/img/cppbind-logo.svg
+.. figure:: https://drive.google.com/uc?export=view&id=1ex-4r2ZNZK3f4eYr09me_7TREj8H-wln
    :width: 450px
    :height: 150px
    :target: #

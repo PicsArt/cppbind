@@ -1,8 +1,8 @@
 Templates
 ^^^^^^^^^
-In this section, we cover function and class templates.
-For templates, the user must specify all expected values of template parameters with the ``template`` variable.
-The value of this variable is a mapping between template parameters and their expected arguments.
+This section covers function and class templates.
+To generate bindings for function and class templates, we specify all expected values of template parameters with the ``template`` variable.
+The value of a ``template`` variable is a mapping between template parameters and their expected arguments.
 
 Let's see an example:
 
@@ -91,9 +91,31 @@ Note that we have specified ``name`` property for ``cppbind::example::Project`` 
 This property is used as a type name postfix in target language, i.e.
 ``StackPrj`` will be generated for ``cppbind::example::Stack<cppbind::example::Project>`` and ``StackNumInt`` for ``cppbind::example::Stack<cppbind::example::Number<int>>``.
 
-For ``cppbind::example::Task``, we have not specified the property ``name``, which means its name in the target language is used as a postfix, i.e., ``StackPyTask`` is generated for Python and ``StackTask`` for other languages.
 
-Now let's see the usages of our example, Stack. Here is the source code:
+.. tab-set::
+    .. tab-item:: Kotlin
+
+        .. literalinclude:: /../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt
+           :language: kotlin
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
+    .. tab-item:: Python
+
+        .. literalinclude:: /../examples/primitives/python/src/examples_lib/templates/main.py
+           :language: py
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
+
+    .. tab-item:: Swift
+
+        .. literalinclude:: /../examples/primitives/swift/src/templates/main.swift
+           :language: swift
+           :start-after: [stack-examples]
+           :end-before: [stack-examples]
+
+Now let's see how CppBind handles cases when the Stack template class is used as an function argument. 
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp
     :language: cpp
@@ -107,7 +129,7 @@ The fourth one does not meet this requirement.
 
 .. note::
     CppBind supports types inherited from a specialized template, e.g., ``class TaskList: public Stack<Task>``. 
-    And to generate bindings for a type inherited from a template(has CppBind API), you must specify the base type's full name, e.g.,`` class TaskList<T>: public cppbind::example::Stack<T>``.
+    And to generate bindings for a type inherited from a template type (has CppBind API), you must specify full name of the base type, e.g., ``class TaskList<T>: public cppbind::example::Stack<T>``.
 
 .. collapse:: Generated bindings
 

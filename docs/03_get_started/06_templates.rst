@@ -91,8 +91,6 @@ Note that we have specified ``name`` property for ``cppbind::example::Project`` 
 This property is used as a type name postfix in target language, i.e.
 ``StackPrj`` will be generated for ``cppbind::example::Stack<cppbind::example::Project>`` and ``StackNumInt`` for ``cppbind::example::Stack<cppbind::example::Number<int>>``.
 
-For ``cppbind::example::Task``, we have not specified the property ``name``, which means its name in the target language is used as a postfix, i.e., ``StackPyTask`` is generated for Python and ``StackTask`` for other languages.
-
 
 .. tab-set::
     .. tab-item:: Kotlin

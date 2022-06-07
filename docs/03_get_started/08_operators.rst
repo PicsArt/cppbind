@@ -20,7 +20,7 @@ In this case, we must specify the **name** variable so that CppBind will use it 
     Also notice we didn't specify Kotlin instruction for ``operator>``.
 
 .. note::
-    We are generating bindings only for **operator+=** for Python and Swift. In Kotlin, the signature of operator **operator+=** is different, it is covered by **operator+**. Therefore, we specify instructions for generating only **operator+** for Kotlin.
+    We have specifed binding instructions ``.action: gen_method`` for **operator+=** only for Python and Swift. In Kotlin, the signature of operator **operator+=** is different, it is covered by **operator+**. Therefore, we specify instructions for generating only **operator+** for Kotlin.
 
 And the usage example:
 

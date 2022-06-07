@@ -115,7 +115,7 @@ This property is used as a type name postfix in target language, i.e.
            :start-after: [stack-examples]
            :end-before: [stack-examples]
 
-Now let's see the usages of our example, Stack. Here is the source code:
+Now let's see how CppBind handles cases when the Stack template class is used as an function argument. 
 
 .. literalinclude:: /../examples/primitives/cxx/templates/stack_usage.hpp
     :language: cpp

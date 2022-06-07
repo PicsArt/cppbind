@@ -365,7 +365,7 @@ class:
               {%- else %}
               {{'open '}}
               {%- endif -%}
-              val id: Long
+              val cppbindObjId: Long
                   get() {
                       if (cppbindObj.id == 0L) {
                           throw RuntimeException("Object is not allocated")
@@ -481,7 +481,7 @@ interface:
                * An internal getter to get the id of an object.
                * It is intended to be used by the generated code.
                */
-              val id: Long
+              val cppbindObjId: Long
               /**
                * An internal method to bind the lifetimes of the current and another object.
                * It is intended to be used by the generated code.
@@ -535,7 +535,7 @@ interface:
                   refs.add(ref)
               }
 
-              override val id: Long
+              override val cppbindObjId: Long
                   get() {
                       if (cppbindObj.id == 0L) {
                           throw RuntimeException("Object is not allocated")
@@ -863,7 +863,7 @@ method:
         {%- do run_method_validations() -%}
         {%- if cxx.name == vars.hash_method -%}
         {{gen_hash_function()}}
-        {%- elif cxx.name == vars.equals_method -%}
+        {%- elif cxx.name == vars.equals_method or (vars.name == "equals" and vars.is_operator) -%}
         {{gen_equals_function()}}
         {%- elif cxx.name == vars.tostring_method -%}
         {{gen_tostring_function()}}
@@ -891,7 +891,7 @@ method:
         {%- endif %}
         {%- endif -%}
         {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
-            {%- set call_args = ['id'] -%}
+            {%- set call_args = ['cppbindObjId'] -%}
             {%- set result_converter = rconverter.jdk_to_kotlin -%}
             {%- for arg in args %}
             {%- set converter = arg.converter.kotlin_to_jdk -%}
@@ -945,7 +945,7 @@ method:
         {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun set(
         {%- for arg in args -%}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
         {%- endfor-%}){
-            {%- set call_args = ['id'] -%}
+            {%- set call_args = ['cppbindObjId'] -%}
             {%- for arg in args %}
             {%- set converter = arg.converter.kotlin_to_jdk -%}
             {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
@@ -1409,9 +1409,9 @@ property_getter:
       {{'var' if vars.action == 'gen_property_setter' else 'val'}} {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
               {%- if owner_class.vars.action == 'gen_interface' %}
-              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(id)
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(cppbindObjId)
               {%- else %}
-              val result = j{{vars.name|capitalize}}(id)
+              val result = j{{vars.name|capitalize}}(cppbindObjId)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
               {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
@@ -1426,9 +1426,9 @@ property_getter:
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
               {%- if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}}, value)
+              {{owner_name}}Helper.jSet{{vars.name|lower}}(cppbindObjId, {{converter.converted_name('value')}}, value)
               {%- else %}
-              jSet{{vars.name|lower}}(id, {{converter.converted_name('value')}}, value)
+              jSet{{vars.name|lower}}(cppbindObjId, {{converter.converted_name('value')}}, value)
               {%- endif %}
               {#- This should go to shared macro -#}
               {%- if vars.keep_alive %}
@@ -1513,9 +1513,9 @@ getter:
                                              {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
               {%- if owner_class.vars.action == 'gen_interface' %}
-              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{template_postfix}}(id)
+              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{template_postfix}}(cppbindObjId)
               {%- else %}
-              val result = j{{vars.name|capitalize}}{{template_postfix}}(id)
+              val result = j{{vars.name|capitalize}}{{template_postfix}}(cppbindObjId)
               {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
               {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (return_type_info.cxx.is_lval_reference or return_type_info.cxx.is_pointer) %}
@@ -1539,9 +1539,9 @@ getter:
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
               {%- if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}}, value)
+              {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{template_postfix}}(cppbindObjId, {{converter.converted_name('value')}}, value)
               {%- else %}
-              j{{setter.vars.name|capitalize}}{{template_postfix}}(id, {{converter.converted_name('value')}}, value)
+              j{{setter.vars.name|capitalize}}{{template_postfix}}(cppbindObjId, {{converter.converted_name('value')}}, value)
               {%- endif %}
               {%- if setter.vars.keep_alive %}
               {%- set args = [namespace(name='value', converter=rconverter)] %}
@@ -1647,7 +1647,7 @@ getter:
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- set converter = setter.args[0].converter.jni_to_cxx %}
           {{converter.snippet(setter.args[0].name, nullable=vars.nullable_return)|indent(4)}}
-          {%- if 'no_throw' not in vars.throws %}
+          {%- if 'no_throw' not in setter.vars.throws %}
           void* err_ptr = nullptr;
           {%- endif %}
           try {

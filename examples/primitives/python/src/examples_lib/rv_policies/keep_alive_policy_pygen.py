@@ -45,7 +45,7 @@ class Child1(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -77,7 +77,7 @@ class Child3(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -109,7 +109,7 @@ class Child2(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -186,7 +186,7 @@ class Parent1(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -268,6 +268,6 @@ class Parent2(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass

@@ -133,7 +133,7 @@ $Object:
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(cppbind_obj_{{target_name}});
       {%- endif %}
     kotlin_to_jdk: |
-      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
+      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cppbindObjId{{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
       {%- if value_policy is not defined -%}
       {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}

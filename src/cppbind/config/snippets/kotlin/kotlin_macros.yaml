@@ -2,7 +2,7 @@ validations: |
   {%- macro run_method_validations() -%}
   {%- set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) -%}
   {%- if is_special_function and owner_class.vars.action == 'gen_interface' -%}
-  {%- do Error.critical("It is not allowed to define hash function in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%- do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
   {%- endif -%}
   {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
   {%- if incorrect_nullable_args -%}
@@ -26,7 +26,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {{hash_decl}} {
-          return j{{vars.name|capitalize}}(id).hashCode()
+          return j{{vars.name|capitalize}}(cppbindObjId).hashCode()
       }
       {%- endmacro -%}
       {%- macro gen_equals_function() -%}
@@ -35,7 +35,7 @@ special_functions:
       {%- endif %}
       {{equals_decl}} {
           other as {{owner_class.converter.kotlin.get_target_type_name(definition=True)}}
-          return j{{vars.name|capitalize}}(id, other.id)
+          return j{{vars.name|capitalize}}(cppbindObjId, other.cppbindObjId, other)
       }
       {%- endmacro -%}
       {%- macro gen_tostring_function() -%}
@@ -43,7 +43,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {{tostring_decl}} {
-          return j{{vars.name|capitalize}}(id)
+          return j{{vars.name|capitalize}}(cppbindObjId)
       }
       {%- endmacro -%}
   class:
@@ -53,7 +53,7 @@ special_functions:
       {#- -----------default implementations ------------------ -#}
       {%- macro gen_default_hash_function() -%}
       /**
-       * CPPBind generated hashCode method returning the hash of underlying C++ object id. .
+       * CppBind generated hashCode method returning the hash of underlying C++ object id.
        */
       {{hash_decl}} {
           return cxxId.hashCode()
@@ -61,7 +61,7 @@ special_functions:
       {%- endmacro -%}
       {%- macro gen_default_equals_function(interface_class=False) -%}
       /**
-       * CPPBind generated equals method comparing the underlying C++ object ids.
+       * CppBind generated equals method comparing the underlying C++ object ids.
        */
       {{equals_decl}} {
           other as {{converter.kotlin.get_target_type_name(interface_class=interface_class, definition=True)}}
@@ -70,7 +70,7 @@ special_functions:
       {%- endmacro -%}
       {%- macro gen_default_tostring_function() -%}
       /**
-       * CPPBind generated toString method returning underlying C++ object type and id.
+       * CppBind generated toString method returning underlying C++ object type and id.
        */
       {{tostring_decl}} {
           return "<0x%x: %s>".format(cxxId, cxxTypeName)

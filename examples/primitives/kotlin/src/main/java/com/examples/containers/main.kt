@@ -22,6 +22,10 @@ class ContainersApp {
             assert(mixedMap["a"]?.value == item1.value)
             // [map-usage]
 
+            // checking the pair of doubles
+            mapusages.addDoublePair(Pair(1.0, -2.5))
+            assert(mapusages.getStringMap()["1.000000"] == "-2.500000")
+
             // [vector-usage]
             val vectorusages = VectorExamples()
 
@@ -29,7 +33,6 @@ class ContainersApp {
             val intVec = vectorusages.getIntVector()
             assert(intVec.size == 3)
             assert(intVec[1] == 2)
-
 
             vectorusages.addStringVector(listOf("a", "b"))
             val strVec = vectorusages.getStringVector()
@@ -43,6 +46,9 @@ class ContainersApp {
             assert(objVec.size == 2)
             assert(objVec[1].value == 1)
             // [vector-usage]
+
+            // checking the vector of doubles
+            assert(getSquaredVector(listOf(1.0, 2.0, -3.5)) == listOf(1.0, 4.0, 12.25))
 
             // [json-usage]
             val jsonUsage = JsonExamples()

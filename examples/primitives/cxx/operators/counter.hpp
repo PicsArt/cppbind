@@ -78,9 +78,53 @@ public:
         this->_count += counter.count();
         return *this;
     }
+
+   /**
+    * Equality operator
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    bool operator == (const Counter& counter) {
+       return this->_count == counter.count();
+    }
+
 private:
 	int _count;
 };
 // [example]
+
+/**
+ * A class example to the case when non-operator method is mapped to == operator
+ * __API__
+ * action: gen_class
+ * package: operators
+ */
+class PositiveCounter {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    PositiveCounter(int count) : _count(count) {}
+
+    /**
+     * __API__
+     * action: gen_method
+     * kotlin.name: equals
+     * python.name: __eq__
+     * swift.name: ==
+     * is_operator: True
+     * throws: no_throw
+     */
+    bool isEqual(const PositiveCounter& other) {
+        return this->_count == other._count;
+    }
+
+private:
+    int _count;
+};
+
 }
 #endif

@@ -27,7 +27,7 @@ validations: |
   {%- macro run_method_validations() -%}
   {%- set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) %}
   {%- if is_special_function and owner_class.vars.action == 'gen_interface' -%}
-  {%- do Error.critical("It is not allowed to define hash function in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%- do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
   {%- endif -%}
   {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
   {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}

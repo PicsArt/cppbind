@@ -274,6 +274,34 @@ class ThrowExc {
         _prop = s;
      }
 
+    /**
+     * An example of a getter/setter pair with the different 'throws' lists (for checking Kotlin getter/setter exception handling).
+     * __API__
+     * action: gen_getter
+     * swift.action:
+     * python.action:
+     * throws: no_throw
+     */
+    std::string prop2() {
+        throw std::invalid_argument("inv_arg");
+        return _prop;
+    }
+
+    /**
+     * An example of a getter/setter pair with the different 'throws' lists (for checking Kotlin getter/setter exception handling).
+     * __API__
+     * action: gen_setter
+     * swift.action:
+     * python.action:
+     * throws:
+     *   - std::invalid_argument
+     *   - std::out_of_range
+     */
+     void setProp2(std::string s) {
+        throw std::out_of_range("out_of_range");
+        _prop = s;
+     }
+
      private:
      std::string _prop = "prop";
 };

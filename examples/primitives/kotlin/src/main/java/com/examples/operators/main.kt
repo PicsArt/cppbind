@@ -17,6 +17,20 @@ assert(counter2 > counter1)
 assert(counter2 >= counter1)
 // [counter-usage]
 
+// checking == operator
+val c1 = Counter(1)
+val c2 = Counter(1)
+assert(c1 == c2)
+val c3 = Counter(2)
+assert(!(c1 == c3))
+
+// checking a method mapped to the "equals" operator
+val pc1 = PositiveCounter(5)
+val pc2 = PositiveCounter(5)
+assert(pc1 == pc2)
+val pc3 = PositiveCounter(6)
+assert(!(pc1 == pc3))
+
 // [subscript-operator-usage]
 var intArr = IntArrayImpl()
 assert(intArr[0] == 0)

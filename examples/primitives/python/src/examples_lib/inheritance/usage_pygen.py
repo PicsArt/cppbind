@@ -75,7 +75,7 @@ class GeometricFigure(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -133,7 +133,7 @@ class MyVehicle(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -173,7 +173,7 @@ class MyBicycle(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -212,6 +212,6 @@ class MyCalendar(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass

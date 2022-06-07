@@ -131,6 +131,21 @@ private:
     std::vector<VectorItem*> vectorObjData;
 };
 
+/**
+ * __API__
+ * action: gen_function
+ * swift.action:
+ * python.action:
+ * package: containers
+ * throws: no_throw
+ */
+std::vector<double> getSquaredVector(const std::vector<double>& v) {
+    std::vector<double> res;
+    for (double element : v)
+        res.push_back(element * element);
+    return res;
+}
+
 }
 
 #endif

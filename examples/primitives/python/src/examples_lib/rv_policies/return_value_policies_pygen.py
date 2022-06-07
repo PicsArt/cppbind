@@ -54,7 +54,7 @@ class Value(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -94,7 +94,7 @@ class ValueSharedRef(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -356,7 +356,7 @@ class ValuesHolder(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -415,6 +415,6 @@ class AnotherValueHolder(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass

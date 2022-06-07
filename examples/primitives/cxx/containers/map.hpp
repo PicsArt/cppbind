@@ -67,6 +67,17 @@ struct MapExamples {
      * comments
      *
      * __API__
+     * kotlin.action: gen_method
+     * throws: no_throw
+     */
+    void addDoublePair(const std::pair<double, double>& info) {
+        mapStringData[std::to_string(info.first)] = std::to_string(info.second);
+    };
+
+    /**
+     * comments
+     *
+     * __API__
      * action: gen_method
      * throws: no_throw
      */

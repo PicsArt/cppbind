@@ -36,7 +36,7 @@ class Doctor(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -67,7 +67,7 @@ class GoodVirtualDoctor(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -89,7 +89,7 @@ class GoodDoctor(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -199,6 +199,6 @@ class DoctorInfo(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass

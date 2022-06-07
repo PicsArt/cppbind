@@ -72,7 +72,7 @@ class Object1(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -98,7 +98,7 @@ class Object2(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -157,7 +157,7 @@ class Object3(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 
@@ -183,7 +183,7 @@ class Object4(metaclass=CppBindMetaclass):
     @bind
     def __repr__(self) -> str:
         """
-        CPPBind generated __repr__ method returning underlying C++ object type and id.
+        CppBind generated __repr__ method returning underlying C++ object type and id.
         """
         pass
 

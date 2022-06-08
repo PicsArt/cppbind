@@ -111,36 +111,29 @@ var_class_cxx_include: &var_class_cxx_include
       !concat
       - !include cxx_macros.yaml&cxx_include
       - |
-        {%- if vars.is_proj_type -%}
-        #include "{{vars.prj_rel_file_name}}"
+       {%- macro collect_includes(converter, includes) -%}
+        {%- if converter.cxx_include -%}
+        {%- do includes.append(converter.cxx_include.snippet()) -%}
         {%- endif -%}
-        {%- macro collect_include_type_infos(type_info, include_type_infos) -%}
-        {%- if type_info.vars and type_info.vars.is_proj_type -%}
-        {%- do include_type_infos.append(type_info) -%}
-        {%- endif -%}
-        {%- for arg_type_info in type_info.arg_types_infos -%}
-            {%- do collect_include_type_infos(arg_type_info, include_type_infos) -%}
+        {%- for arg_converter in converter.swift.args_converters -%}
+        {%- do collect_includes(arg_converter, includes) -%}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- macro collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
-        {%- if type_info.vars and type_info.vars.descendants is defined -%}
-        {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
-            {%- do collect_include_type_infos(get_type_info(descendant), desc_include_type_infos) -%}
+        {%- macro collect_desc_includes(converter, desc_includes) -%}
+        {%- if converter.swift.vars and converter.swift.vars.descendants is defined -%}
+        {%- for descendant in (converter.swift.vars.descendants if converter.swift.vars.descendants is not none else converter.swift.descendants) -%}
+        {%- do collect_includes(make_type_converter(descendant), desc_includes) -%}
         {%- endfor -%}
         {%- endif -%}
-        {%- for arg_type_info in type_info.arg_types_infos -%}
-            {%- do collect_desc_include_type_infos(arg_type_info, desc_include_type_infos) -%}
+        {%- for arg_converter in converter.swift.args_converters -%}
+        {%- do collect_desc_includes(arg_converter, desc_includes) -%}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- set include_type_infos = [] -%}
-        {%- do collect_include_type_infos(type_info, include_type_infos) -%}
-        {%- set desc_include_type_infos = [] -%}
-        {%- do collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
-        {%- if include_type_infos -%}
-        {{marker}}{{include_type_infos|map(attribute='vars.prj_rel_file_name')|format_list('#include "{}"')|join_unique}}
-        {%- endif -%}
-        {%- if desc_include_type_infos -%}
-        {{marker}}{{desc_include_type_infos|map(attribute='vars.prj_rel_file_name')|format_list('#include "{}"')|join_unique}}
+        {%- set includes = [] -%}
+        {%- do collect_includes(converter, includes) -%}
+        {%- do collect_desc_includes(converter, includes) -%}
+        {%- if includes -%}
+        {{includes|join(marker)}}
         {%- endif -%}
         {%- set includes = gen_cxx_include(vars) -%}
         {%- if includes -%}{{includes}}{%- endif -%}
@@ -174,11 +167,51 @@ var_class_cxx_glob_decl: &var_class_cxx_glob_decl
       {%- endif -%}
       {%- endfor -%}
 
+var_class_swift_include: &var_class_swift_include
+  unique_content: |
+    {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
+    {%- macro collect_import_converters(converter, import_converters, gen_for_impl=false) -%}
+    {%- if converter.swift.parent_type_info -%}
+    {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {%- do collect_import_converters(make_type_converter(converter.swift.parent_type_info.cxx.type_name), import_converters) -%}
+    {%- else %}
+    {%- do import_converters.append((converter, gen_for_impl)) -%}
+    {%- endif -%}
+    {%- for arg_converter in converter.swift.args_converters -%}
+    {%- do collect_import_converters(arg_converter, import_converters, gen_for_impl) -%}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
+    {%- if converter.swift.vars and converter.swift.vars.descendants is defined -%}
+    {%- for descendant in (converter.swift.vars.descendants if converter.swift.vars.descendants is not none else converter.swift.descendants) -%}
+    {%- do collect_import_converters(make_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
+    {%- endfor -%}
+    {%- endif -%}
+    {%- for arg_converter in converter.swift.args_converters -%}
+    {%- do collect_desc_import_converters(arg_converter, desc_import_converters) -%}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- set import_converters = [] -%}
+    {%- for base in base_types_converters -%}
+    {%- do collect_import_converters(base, import_converters) -%}
+    {%- endfor -%}
+    {%- set desc_import_converters = [] -%}
+    {%- do collect_desc_import_converters(converter, desc_import_converters) -%}
+    {%- for import_converter, _ in import_converters -%}
+    {%- if import_converter.swift_include -%}
+    {{marker}}{{import_converter.swift_include.snippet(full_package=vars.full_package)}}
+    {%- endif -%}
+    {%- endfor -%}
+    {%- for desc_import_converter, gen_for_impl in desc_import_converters -%}
+    {#- we need to import implementation classes for object construction (`gen_for_impl` is for tracking nested types) -#}
+    {%- if desc_import_converter.swift_include -%}
+    {{marker}}{{desc_import_converter.swift_include.snippet(interface_class=(gen_for_impl and desc_import_converter.swift.vars.action=='gen_interface'))}}
+    {%- endif -%}
+    {%- endfor -%}
+
 class:
   swift:
-    include:
-      unique_content: |
-        {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
+    include: *var_class_swift_include
     body:
       scopes:
         - head
@@ -376,9 +409,7 @@ class:
 
 interface:
   swift:
-    include:
-      unique_content: |
-        {{vars.include|format_list("import {}")|join_unique}}
+    include: *var_class_swift_include
     body:
       scopes:
         - interface_head
@@ -546,30 +577,66 @@ interface:
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner);
 
+var_method_swift_include: &var_method_swift_include
+  unique_content: |
+    {%- macro gen_import(converter) -%}
+    {%- if converter.swift.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.swift.parent_type_info.cxx.type_name))}}
+    {%- elif converter.swift_include -%}
+    {{marker}}{{converter.swift_include.snippet(full_package=vars.full_package)}}
+    {%- endif -%}
+    {%- for arg_converter in converter.swift.args_converters -%}
+    {{gen_import(arg_converter)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {%- for arg_converter in args|map(attribute='converter') -%}
+    {{gen_import(arg_converter)}}
+    {%- endfor -%}
+    {%- if rconverter is defined -%}
+    {{gen_import(rconverter)}}
+    {%- endif -%}
+
 var_method_cxx_include: &var_method_cxx_include
   unique_content:
     !concat
     - !include cxx_macros.yaml&cxx_include
     - |
       {%- if vars.is_proj_type -%}
-      #include "{{vars.prj_rel_file_name}}"
+      {{marker}}#include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_include(type_info) -%}
-      {%- if type_info.vars and type_info.vars.is_proj_type -%}
-      {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
+      {#- this should go to shared macro cxx_include -#}
+      {%- macro gen_include(converter) -%}
+      {%- if converter.cxx_include -%}
+      {{marker}}{{converter.cxx_include.snippet()}}
       {%- endif -%}
-      {%- for arg_type_info in type_info.arg_types_infos -%}
-      {{gen_include(arg_type_info)}}
+      {%- if converter.swift -%}
+      {%- for arg_converter in converter.swift.args_converters -%}
+      {{gen_include(arg_converter)}}
       {%- endfor -%}
+      {%- endif -%}
       {%- endmacro -%}
       {%- for arg in args -%}
-      {{gen_include(arg.type_info)}}
+      {{gen_include(arg.converter)}}
       {%- endfor -%}
       {%- if rconverter is defined -%}
-      {{gen_include(return_type_info)}}
+      {{gen_include(rconverter)}}
       {%- endif -%}
       {%- set includes = gen_cxx_include(vars) -%}
       {%- if includes -%}{{includes}}{%- endif -%}
+
+var_method_c_include: &var_method_c_include
+  unique_content: |
+    {%- macro gen_include(converter) -%}
+    {%- if converter.c_include -%}
+    {{marker}}{{converter.c_include.snippet()}}
+    {%- endif -%}
+    {%- endmacro -%}
+    {%- for arg in args|default([]) -%}
+    {{gen_include(arg.converter)}}
+    {%- endfor -%}
+    {%- if rconverter is defined -%}
+    {{gen_include(rconverter)}}
+    {%- endif -%}
 
 var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content: |
@@ -630,6 +697,7 @@ var_method_cxx_glob_decl: &var_method_cxx_glob_decl
 
 constructor:
   swift:
+    include: *var_method_swift_include
     head: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
@@ -777,6 +845,7 @@ constructor:
       {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
       {% endfor -%}{{gen_func(args)}}
   ch:
+    include: *var_method_c_include
     body:
       content: |
         {#- this should go to shared macro -#}
@@ -799,6 +868,7 @@ constructor:
 
 method:
   swift:
+    include: *var_method_swift_include
     body:
       !concat
       - !include swift_macros.yaml&validations
@@ -1153,6 +1223,7 @@ method:
       {%- endif %}
       {%- endif %}
   ch:
+    include: *var_method_c_include
     body:
       content: |
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_' if owner_class.cxx.namespace else '' %}
@@ -1190,6 +1261,7 @@ method:
 
 function:
   swift:
+    include: *var_method_swift_include
     body: |
       {%- if vars.return_value_policy == 'reference_internal' -%}
       {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, cxx.source_file_name)) -%}
@@ -1347,6 +1419,7 @@ function:
       {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
       {% endfor -%}{{gen_func(args)}}
   ch:
+    include: *var_method_c_include
     body:
       content: |
         {#- this should got to shared macro #}
@@ -1366,18 +1439,34 @@ function:
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
         {% endfor -%}{{gen_func(args)}}
 
+var_getter_swift_include: &var_getter_swift_include
+  unique_content: |
+    {%- macro gen_import(converter) -%}
+    {%- if converter.swift.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.swift.parent_type_info.cxx.type_name))}}
+    {%- elif converter.swift_include -%}
+    {{marker}}{{converter.swift_include.snippet(full_package=vars.full_package)}}
+    {%- endif -%}
+    {%- for arg_converter in converter.swift.args_converters -%}
+    {{gen_import(arg_converter)}}
+    {%- endfor -%}
+    {%- endmacro -%}
+    {{gen_import(rconverter)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_include(type_info) -%}
-    {%- if type_info.vars and type_info.vars.is_proj_type -%}
-    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
+    {#- this should go to shared macro cxx_include -#}
+    {%- macro gen_include(converter) -%}
+    {%- if converter.cxx_include -%}
+    {{marker}}{{converter.cxx_include.snippet()}}
     {%- endif -%}
-    {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {%- if converter.swift -%}
+    {%- for arg_converter in converter.swift.args_converters -%}
+    {{gen_include(arg_converter)}}
     {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(rconverter)}}
 
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |
@@ -1401,6 +1490,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
 
 property_getter:
   swift:
+    include: *var_getter_swift_include
     properties: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- if not cxx.is_public -%}
@@ -1488,6 +1578,7 @@ property_getter:
       }
       {% endif %}
   ch:
+    include: *var_method_c_include
     body:
       content: |
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
@@ -1498,6 +1589,7 @@ property_getter:
 
 getter:
   swift:
+    include: *var_getter_swift_include
     properties: |
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- if 'no_throw' not in vars.throws -%}
@@ -1640,6 +1732,7 @@ getter:
       }
       {%- endif %}{{new_line}}
   ch:
+    include: *var_method_c_include
     body:
       content: |
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}

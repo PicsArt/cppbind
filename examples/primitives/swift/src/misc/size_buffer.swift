@@ -57,17 +57,9 @@ public class SizeUsage {
    */
   public static func multiplyBy(size: (Float, Float), n: Int) -> (Float, Float) {
 
-    let swifttoscsizeFirst = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-    let swifttoscsizeSecond = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-    defer {
-      swifttoscsizeFirst.deallocate()
-      swifttoscsizeSecond.deallocate()
-    }
-    var swifttoscsize = CppBindCDataPair()
-    swifttoscsize.first = UnsafeMutableRawPointer(swifttoscsizeFirst)
-    swifttoscsize.second = UnsafeMutableRawPointer(swifttoscsizeSecond)
-    swifttoscsizeFirst[0] = size.0
-    swifttoscsizeSecond[0] = size.1
+    var swifttoscsize = CppBindSizeF()
+    swifttoscsize.first = size.0
+    swifttoscsize.second = size.1
     let swifttoscn = CInt(n)
     var cppbindErr = CppBindCObject()
     let result = _func_CppbindExample_SizeUsage_multiplyBy(swifttoscsize, swifttoscn, &cppbindErr)
@@ -82,14 +74,8 @@ public class SizeUsage {
         ExceptionHandler.handleUncaughtException("Uncaught Exception")
       }
     }
-    let resultFirstData = UnsafeBufferPointer<Float>(start: result.first.assumingMemoryBound(to: Float.self), count: 1)
-    let resultSecondData = UnsafeBufferPointer<Float>(start: result.second.assumingMemoryBound(to: Float.self), count: 1)
-    defer {
-      resultFirstData.deallocate()
-      resultSecondData.deallocate()
-    }
-    let sctoswiftresultFirst = resultFirstData[0]
-    let sctoswiftresultSecond = resultSecondData[0]
+    let sctoswiftresultFirst = result.first
+    let sctoswiftresultSecond = result.second
     let sctoswiftresult: (Float, Float) = (sctoswiftresultFirst, sctoswiftresultSecond)
     return sctoswiftresult
   }
@@ -113,14 +99,8 @@ public class SizeUsage {
         ExceptionHandler.handleUncaughtException("Uncaught Exception")
       }
     }
-    let resultFirstData = UnsafeBufferPointer<Float>(start: result.first.assumingMemoryBound(to: Float.self), count: 1)
-    let resultSecondData = UnsafeBufferPointer<Float>(start: result.second.assumingMemoryBound(to: Float.self), count: 1)
-    defer {
-      resultFirstData.deallocate()
-      resultSecondData.deallocate()
-    }
-    let sctoswiftresultFirst = resultFirstData[0]
-    let sctoswiftresultSecond = resultSecondData[0]
+    let sctoswiftresultFirst = result.first
+    let sctoswiftresultSecond = result.second
     let sctoswiftresult: (Float, Float) = (sctoswiftresultFirst, sctoswiftresultSecond)
     return sctoswiftresult
   }
@@ -131,17 +111,9 @@ public class SizeUsage {
    */
   public static func doubleSizeF(resolution: (Float, Float)) -> (Float, Float) {
 
-    let swifttoscresolutionFirst = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-    let swifttoscresolutionSecond = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-    defer {
-      swifttoscresolutionFirst.deallocate()
-      swifttoscresolutionSecond.deallocate()
-    }
-    var swifttoscresolution = CppBindCDataPair()
-    swifttoscresolution.first = UnsafeMutableRawPointer(swifttoscresolutionFirst)
-    swifttoscresolution.second = UnsafeMutableRawPointer(swifttoscresolutionSecond)
-    swifttoscresolutionFirst[0] = resolution.0
-    swifttoscresolutionSecond[0] = resolution.1
+    var swifttoscresolution = CppBindSizeF()
+    swifttoscresolution.first = resolution.0
+    swifttoscresolution.second = resolution.1
     var cppbindErr = CppBindCObject()
     let result = _func_CppbindExample_SizeUsage_doubleSizeF(swifttoscresolution, &cppbindErr)
     if cppbindErr.type != nil {
@@ -155,14 +127,8 @@ public class SizeUsage {
         ExceptionHandler.handleUncaughtException("Uncaught Exception")
       }
     }
-    let resultFirstData = UnsafeBufferPointer<Float>(start: result.first.assumingMemoryBound(to: Float.self), count: 1)
-    let resultSecondData = UnsafeBufferPointer<Float>(start: result.second.assumingMemoryBound(to: Float.self), count: 1)
-    defer {
-      resultFirstData.deallocate()
-      resultSecondData.deallocate()
-    }
-    let sctoswiftresultFirst = resultFirstData[0]
-    let sctoswiftresultSecond = resultSecondData[0]
+    let sctoswiftresultFirst = result.first
+    let sctoswiftresultSecond = result.second
     let sctoswiftresult: (Float, Float) = (sctoswiftresultFirst, sctoswiftresultSecond)
     return sctoswiftresult
   }

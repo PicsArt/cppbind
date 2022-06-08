@@ -18,8 +18,8 @@
 #include "kotlin/wrappers/c_helpers.h"
 #include "kotlin/wrappers/cppbind_wrapper_helper.hpp"
 #include "cxx/templates/addressable.hpp"
-#include "cxx/templates/component.hpp"
 #include "cxx/simple/root.hpp"
+#include "cxx/templates/component.hpp"
 
 extern const char* CPPBIND_CPPBIND_EXAMPLE_COMPONENT;
 extern const char* CPPBIND_STD_STDEXCEPTION;

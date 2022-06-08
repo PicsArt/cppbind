@@ -53,38 +53,24 @@ rules:
         is_c_pointer_type: False
       types:
         swift: "(Float, Float)"
-        c: "CppBindCDataPair"
-        sc: "CppBindCDataPair"
+        c: "CppBindSizeF"
+        sc: "CppBindSizeF"
       converters:
         c_to_cxx: |
-          auto& first_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.first);
-          auto& second_tmp_{{name}} = *reinterpret_cast<float*>({{name}}.second);
+          auto& first_tmp_{{name}} = {{name}}.first;
+          auto& second_tmp_{{name}} = {{name}}.second;
           {{target_type_name}} {{target_name}} { first_tmp_{{name}}, second_tmp_{{name}} };
         cxx_to_c: |
-          auto _first_data_{{target_name}} = new float;
-          auto _second_data_{{target_name}} = new float;
-          *_first_data_{{target_name}} = {{name}}.width;
-          *_second_data_{{target_name}} = {{name}}.height;
+          auto _first_data_{{target_name}} = {{name}}.width;
+          auto _second_data_{{target_name}} = {{name}}.height;
           {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
         swift_to_sc: |
-          let {{target_name}}First = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-          let {{target_name}}Second = UnsafeMutablePointer<Float>.allocate(capacity: 1)
-          defer {
-            {{target_name}}First.deallocate()
-            {{target_name}}Second.deallocate()
-          }
           var {{target_name}} = {{target_type_name}}()
-          {{target_name}}.first = UnsafeMutableRawPointer({{target_name}}First)
-          {{target_name}}.second = UnsafeMutableRawPointer({{target_name}}Second)
-          {{target_name}}First[0] = {{name}}.0
-          {{target_name}}Second[0] = {{name}}.1
+          {{target_name}}.first = {{name}}.0
+          {{target_name}}.second = {{name}}.1
         sc_to_swift: |
-          let {{name}}FirstData = UnsafeBufferPointer<Float>(start: {{name}}.first.assumingMemoryBound(to: Float.self), count: 1)
-          let {{name}}SecondData = UnsafeBufferPointer<Float>(start: {{name}}.second.assumingMemoryBound(to: Float.self), count: 1)
-          defer {
-            {{name}}FirstData.deallocate()
-            {{name}}SecondData.deallocate()
-          }
-          let {{target_name}}First = {{name}}FirstData[0]
-          let {{target_name}}Second = {{name}}SecondData[0]
+          let {{target_name}}First = {{name}}.first
+          let {{target_name}}Second = {{name}}.second
           let {{target_name}}: (Float, Float) = ({{target_name}}First, {{target_name}}Second)
+        c_include: |
+          #include "swift/wrappers/c_size.h"

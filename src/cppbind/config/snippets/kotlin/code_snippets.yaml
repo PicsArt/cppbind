@@ -143,34 +143,32 @@ var_class_cxx: &var_class_cxx
       !concat
       - !include cxx_macros.yaml&cxx_include
       - |
-        {%- if vars.is_proj_type -%}
-        #include "{{vars.prj_rel_file_name}}"
+        {%- macro collect_includes(converter, includes) -%}
+        {%- if converter.cxx_include -%}
+        {%- do includes.append(converter.cxx_include.snippet()) -%}
         {%- endif -%}
-        {%- macro collect_include_type_infos(type_info, include_type_infos) -%}
-        {%- if type_info.vars and type_info.vars.is_proj_type -%}
-        {%- do include_type_infos.append(type_info) -%}
-        {%- endif -%}
-        {%- for arg_type_info in type_info.arg_types_infos -%}
-            {%- do collect_include_type_infos(arg_type_info, include_type_infos) -%}
+        {%- for arg_converter in converter.kotlin.args_converters -%}
+        {%- do collect_includes(arg_converter, includes) -%}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- macro collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
-        {%- if type_info.vars and type_info.vars.descendants is defined -%}
-        {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
-            {%- do collect_include_type_infos(get_type_info(descendant), desc_include_type_infos) -%}
+        {%- macro collect_desc_includes(converter, desc_includes) -%}
+        {%- if converter.kotlin.vars and converter.kotlin.vars.descendants is defined -%}
+        {%- for descendant in (converter.kotlin.vars.descendants if converter.kotlin.vars.descendants is not none else converter.kotlin.descendants) -%}
+        {%- do collect_includes(make_type_converter(descendant), desc_includes) -%}
         {%- endfor -%}
         {%- endif -%}
-        {%- for arg_type_info in type_info.arg_types_infos -%}
-            {%- do collect_desc_include_type_infos(arg_type_info, desc_include_type_infos) -%}
+        {%- for arg_converter in converter.kotlin.args_converters -%}
+        {%- do collect_desc_includes(arg_converter, desc_includes) -%}
         {%- endfor -%}
         {%- endmacro -%}
-        {%- set include_type_infos = [] -%}
-        {%- for base in base_types_infos -%}
-            {%- do collect_include_type_infos(base, include_type_infos) -%}
+        {%- set includes = [] -%}
+        {%- do collect_includes(converter, includes) -%}
+        {%- for base in base_types_converters -%}
+        {%- do collect_includes(base, includes) -%}
         {%- endfor -%}
-        {%- do collect_desc_include_type_infos(type_info, include_type_infos) -%}
-        {%- if include_type_infos -%}
-        {{marker}}{{include_type_infos|map(attribute='vars.prj_rel_file_name')|format_list('#include "{}"')|join_unique}}
+        {%- do collect_desc_includes(converter, includes) -%}
+        {%- if includes -%}
+        {{includes|join(marker)}}
         {%- endif -%}
         {%- set includes = gen_cxx_include(vars) -%}
         {%- if includes -%}{{includes}}{%- endif -%}
@@ -250,40 +248,42 @@ var_class_kotlin_include: &var_class_kotlin_include
   unique_content: |
     {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
     {%- macro collect_import_converters(converter, import_converters, gen_for_impl=false) -%}
-    {%- if converter.parent_type_info -%}
+    {%- if converter.kotlin.parent_type_info -%}
     {#- in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
-    {%- do collect_import_converters(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin, import_converters) -%}
+    {%- do collect_import_converters(make_type_converter(converter.kotlin.parent_type_info.cxx.type_name), import_converters) -%}
     {%- else %}
-    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
     {%- do import_converters.append((converter, gen_for_impl)) -%}
     {%- endif -%}
-    {%- endif -%}
-    {%- for arg_converter in converter.args -%}
+    {%- for arg_converter in converter.kotlin.args_converters -%}
     {%- do collect_import_converters(arg_converter, import_converters, gen_for_impl) -%}
     {%- endfor -%}
     {%- endmacro -%}
     {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
-    {%- if converter.vars and converter.vars.descendants is defined -%}
-    {%- for descendant in (converter.vars.descendants if converter.vars.descendants is not none else converter.descendants) -%}
-    {%- do collect_import_converters(make_type_converter(descendant).kotlin, desc_import_converters, gen_for_impl=true) -%}
+    {%- if converter.kotlin.vars and converter.kotlin.vars.descendants is defined -%}
+    {%- for descendant in (converter.kotlin.vars.descendants if converter.kotlin.vars.descendants is not none else converter.kotlin.descendants) -%}
+    {%- do collect_import_converters(make_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
     {%- endfor -%}
     {%- endif -%}
-    {%- for arg_converter in converter.args -%}
+    {%- for arg_converter in converter.kotlin.args_converters -%}
     {%- do collect_desc_import_converters(arg_converter, desc_import_converters) -%}
     {%- endfor -%}
     {%- endmacro -%}
     {%- set import_converters = [] -%}
-    {%- for base in base_types_converters|map(attribute='kotlin') -%}
+    {%- for base in base_types_converters -%}
     {%- do collect_import_converters(base, import_converters) -%}
     {%- endfor -%}
     {%- set desc_import_converters = [] -%}
-    {%- do collect_desc_import_converters(converter.kotlin, desc_import_converters) -%}
+    {%- do collect_desc_import_converters(converter, desc_import_converters) -%}
     {%- for import_converter, _ in import_converters -%}
-    {{marker}}import {{import_converter.vars.full_package}}.{{import_converter.target_type_name}}
+    {%- if import_converter.kotlin_include -%}
+    {{marker}}{{import_converter.kotlin_include.snippet(full_package=vars.full_package)}}
+    {%- endif -%}
     {%- endfor -%}
     {%- for desc_import_converter, gen_for_impl in desc_import_converters -%}
     {#- we need to import implementation classes for object construction (`gen_for_impl` is for tracking nested types) -#}
-    {{marker}}import {{desc_import_converter.vars.full_package}}.{{desc_import_converter.get_target_type_name(interface_class=desc_import_converter.vars.action=='gen_interface') if gen_for_impl else desc_import_converter.target_type_name}}
+    {%- if desc_import_converter.kotlin_include -%}
+    {{marker}}{{desc_import_converter.kotlin_include.snippet(interface_class=(gen_for_impl and desc_import_converter.kotlin.vars.action=='gen_interface'), full_package=vars.full_package)}}
+    {%- endif -%}
     {%- endfor -%}
 
 class:
@@ -596,22 +596,20 @@ interface:
 var_method_kotlin_include: &var_method_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
-    {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
-    {%- else %}
-    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
-    {{marker}}import {{converter.vars.full_package}}.{{converter.target_type_name}}
+    {%- if converter.kotlin.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.kotlin.parent_type_info.cxx.type_name))}}
+    {%- elif converter.kotlin_include -%}
+    {{marker}}{{converter.kotlin_include.snippet(full_package=vars.full_package)}}
     {%- endif -%}
-    {%- endif %}
-    {%- for arg_converter in converter.args -%}
+    {%- for arg_converter in converter.kotlin.args_converters -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {%- for arg_converter in args|map(attribute='converter.kotlin') -%}
+    {%- for arg_converter in args|map(attribute='converter') -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- if rconverter is defined -%}
-    {{gen_import(rconverter.kotlin)}}
+    {{gen_import(rconverter)}}
     {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
@@ -620,21 +618,24 @@ var_method_cxx_include: &var_method_cxx_include
     - !include cxx_macros.yaml&cxx_include
     - |
       {%- if vars.is_proj_type -%}
-      #include "{{vars.prj_rel_file_name}}"
+      {{marker}}#include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
-      {%- macro gen_include(type_info) -%}
-      {%- if type_info.vars and type_info.vars.is_proj_type -%}
-      {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
+      {#- this should go to shared macro cxx_include -#}
+      {%- macro gen_include(converter) -%}
+      {%- if converter.cxx_include -%}
+      {{marker}}{{converter.cxx_include.snippet()}}
       {%- endif -%}
-      {%- for arg_type_info in type_info.arg_types_infos -%}
-      {{gen_include(arg_type_info)}}
+      {%- if converter.kotlin -%}
+      {%- for arg_converter in converter.kotlin.args_converters -%}
+      {{gen_include(arg_converter)}}
       {%- endfor -%}
+      {%- endif -%}
       {%- endmacro -%}
       {%- for arg in args -%}
-      {{gen_include(arg.type_info)}}
+      {{gen_include(arg.converter)}}
       {%- endfor -%}
       {%- if rconverter is defined -%}
-      {{gen_include(return_type_info)}}
+      {{gen_include(rconverter)}}
       {%- endif -%}
       {%- set includes = gen_cxx_include(vars) -%}
       {%- if includes -%}{{includes}}{%- endif -%}
@@ -1349,30 +1350,31 @@ function:
 var_getter_kotlin_include: &var_getter_kotlin_include
   unique_content: |
     {%- macro gen_import(converter) -%}
-    {%- if converter.parent_type_info -%}
-    {{gen_import(make_type_converter(converter.parent_type_info.cxx.type_name).kotlin)}}
-    {%- else %}
-    {%- if converter.vars and converter.vars.full_package != vars.full_package -%}
-    {{marker}}import {{converter.vars.full_package}}.{{converter.target_type_name}}
+    {%- if converter.kotlin.parent_type_info -%}
+    {{gen_import(make_type_converter(converter.kotlin.parent_type_info.cxx.type_name))}}
+    {%- elif converter.kotlin_include -%}
+    {{marker}}{{converter.kotlin_include.snippet(full_package=vars.full_package)}}
     {%- endif -%}
-    {%- endif %}
-    {%- for arg_converter in converter.args -%}
+    {%- for arg_converter in converter.kotlin.args_converters -%}
     {{gen_import(arg_converter)}}
     {%- endfor -%}
     {%- endmacro -%}
-    {{gen_import(rconverter.kotlin)}}
+    {{gen_import(rconverter)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content: |
-    {%- macro gen_include(type_info) -%}
-    {%- if type_info.vars and type_info.vars.is_proj_type -%}
-    {{marker}}#include "{{type_info.vars.prj_rel_file_name}}"
+    {#- this should go to shared macro cxx_include -#}
+    {%- macro gen_include(converter) -%}
+    {%- if converter.cxx_include -%}
+    {{marker}}{{converter.cxx_include.snippet()}}
     {%- endif -%}
-    {%- for arg_type_info in type_info.arg_types_infos -%}
-    {{gen_include(arg_type_info)}}
+    {%- if converter.kotlin -%}
+    {%- for arg_converter in converter.kotlin.args_converters -%}
+    {{gen_include(arg_converter)}}
     {%- endfor -%}
+    {%- endif -%}
     {%- endmacro -%}
-    {{gen_include(return_type_info)}}
+    {{gen_include(rconverter)}}
 
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |

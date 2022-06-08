@@ -72,7 +72,7 @@ Above-described usages can also be mixed: annotations for self-owned files are w
 Installation
 ~~~~~~~~~~~~
 
-There are some required steps to install and use CppBind. The installation steps are described `here <https://cppbind.io/02_first_steps/02_installation.html>`_.
+There are some required steps to install and use CppBind. The installation steps are described `here <https://cppbind.io/02_first_steps/03_installation.html>`_.
 
 License
 ~~~~~~~

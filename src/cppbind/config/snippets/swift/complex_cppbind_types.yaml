@@ -670,24 +670,74 @@ std::pair:
 # dummy converters to not throw error on container types converter build
 # currently, these are not used
 std::hash:
-  types: { }
-  converters: { }
+  custom:
+    is_c_pointer_type:
+    tname:
+  types:
+    swift: Dummy
+    c: Dummy
+    sc: Dummy
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 std::equal_to:
-  types: { }
-  converters: { }
+  custom:
+    is_c_pointer_type:
+    tname:
+  types:
+    swift: Dummy
+    c: Dummy
+    sc: Dummy
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 std::allocator:
-  types: { }
-  converters: { }
+  custom:
+    is_c_pointer_type:
+    tname:
+  types:
+    swift: Dummy
+    c: Dummy
+    sc: Dummy
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 std::less:
-  types: { }
-  converters: { }
+  custom:
+    is_c_pointer_type:
+    tname:
+  types:
+    swift: Dummy
+    c: Dummy
+    sc: Dummy
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 std::char_traits<char>:
-  types: { }
-  converters: { }
+  custom:
+    is_c_pointer_type:
+    tname:
+  types:
+    swift: Dummy
+    c: Dummy
+    sc: Dummy
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
 
 std::__1::hash:
   std::hash

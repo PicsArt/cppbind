@@ -53,7 +53,7 @@ To change the name pattern of the project config files, you should modify **cont
 Another way to include API annotations written in a separate file is including the file in the project config
 file, under **type_vars** section (the same way as it's done for std_exc_api.yaml file in default config file).
 
-After project configuration is done and annotation config file is written, you should run CppBind command line to generate bindings: ``cppbind koltin swift python``.
+After project configuration is done and annotation config file is written, you should run CppBind command line to generate bindings: ``cppbind kotlin swift python``.
 
 .. collapse:: Generated bindings
 

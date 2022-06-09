@@ -68,7 +68,7 @@ public:
     std::string welcome(const UserInfo& user) {
         if (!user.want_a_drink)
             return "Welcome " + user.name + "! Let me know if you want something.";
-        return "Welcome " +  user.name + "! Do you want cap of " + (user.age > 21 ? "beer?": "juice?");
+        return "Welcome " +  user.name + "! Do you want cup of " + (user.age > 21 ? "beer?": "juice?");
     }
 };
 

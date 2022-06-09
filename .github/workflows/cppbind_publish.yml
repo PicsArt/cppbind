@@ -5,7 +5,7 @@ on:
 
 jobs:
   cppbind-publish:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - name: Setup Python 3.9
         run: |
@@ -38,14 +38,16 @@ jobs:
           sed -i -r "s/version=\"[0-9]*\.[0-9]*\.[0-9]*\"/version=\"$VERSION_NAME\"/g" setup.py
 
       - name: Build
-        run: python3 setup.py bdist_wheel
+        run: python3 setup.py sdist bdist_wheel
         env:
           CC: clang
 
-      - name: Publish
-        run: twine upload dist/*.whl -u ${{ secrets.NEXUS3_USERNAME }} -p ${{ secrets.NEXUS3_PASSWORD }} --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
-        env:
-          CC: clang
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PUBLISH_TOKEN }}
+          verbose: true
 
       - name: Set env of the run url
         if: always()

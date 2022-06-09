@@ -59,10 +59,6 @@ To generate the bindings, use the ``cppbind run`` command by providing one or mo
   --out_dir OUT_DIR
                     Directory where generated target language files are saved.
 
-  --cxx_base_out_dir CXX_BASE_OUT_DIR
-                    The directory where CppBind helper types are being copied.
-                    If the user does not want to use CppBind base classes, there's no need to specify this variable.
-
   --target_arch TARGET_ARCH
                     Variable for setting target architecture.
 

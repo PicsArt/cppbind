@@ -14,13 +14,3 @@
       helper_includes: |
         {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
         {{vars.helpers_package_prefix}}{{'.' if vars.helpers_package_prefix}}{{path.splitext(file_rel_name)[0].replace(pat_sep, '.') + vars.file_postfix}}
-
-- file:
-    files_glob:
-      - "{{[vars.cxx_base_source_dir, '**/*.h*'] | path_join}}"
-      - "{{[vars.cxx_base_source_dir, '**/*.c*'] | path_join}}"
-    copy_to: |
-      {%- if vars.cxx_base_out_dir -%}
-      {%- set file_rel_name = path.relpath(file_name, vars.cxx_base_source_dir) -%}
-      {{path.join(vars.cxx_base_out_dir, file_rel_name)}}
-      {%- endif -%}

@@ -236,6 +236,9 @@ def init_jinja_env():
     def match_regexp(input_, *patterns):
         return any(re.match(pattern, input_) for pattern in patterns)
 
+    def contains(input_, pattern):
+        return pattern in input_
+
     def replace_regex(input_, pattern, repl, count=0):
         return re.sub(pattern, repl, input_, count)
 
@@ -323,6 +326,7 @@ def init_jinja_env():
     env.filters['increment'] = increment
 
     env.tests['match_regexp'] = match_regexp
+    env.tests['contains'] = contains
 
     env.globals['Error'] = Error
     env.globals['path'] = os.path

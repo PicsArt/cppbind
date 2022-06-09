@@ -19,7 +19,8 @@ def test_config_is_copied():
 
 
 def test_clean():
-    src_gen_files = os.path.join(os.path.abspath(__file__ + "/../../../"), "examples/primitives/swift/wrappers")
+    src_gen_files = os.path.join(os.path.abspath(__file__ + "/../../../"),
+                                 "examples/primitives/swift/wrappers/nested_types")
     dst_gen_files = os.path.join(os.path.dirname(Path(__file__)), "wrappers")
     destination = shutil.copytree(src_gen_files, dst_gen_files)
     clear_cppbind_generated_files(destination)

@@ -73,6 +73,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'test*.rst']
 #
 html_theme = 'sphinx_material'
 html_show_sourcelink = False
+html_logo = "_static/img/cppbind-icon.svg"
 
 html_theme_options = {
 

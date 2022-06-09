@@ -1,0 +1,97 @@
+exception_handling: |   
+  {%- macro gen_exception_handling_code() -%}
+  if cppbindErr.type != nil {
+    let errorType = String(cString: cppbindErr.type!)
+    switch errorType {
+    {%- if 'no_throw' not in vars.throws %}
+    {%- for exc_type in vars.throws %}
+    case ("{{exc_type}}"):
+      {%- set exc_info = get_type_info(exc_type) %}
+      throw {{exc_info.vars.name}}(cppbindErr, true)
+    {%- endfor %}
+    {%- endif %}
+    {%- if not 'std::exception' in vars.throws %}
+    case ("std::exception"):
+      {%- set exc_info = get_type_info("std::exception") %}
+      let excObj = {{exc_info.vars.name}}(cppbindErr, true)
+      ExceptionHandler.handleUncaughtException(excObj.what())
+    {%- endif %}
+    default:
+      cppbindErr.type.deallocate()
+      ExceptionHandler.handleUncaughtException("Uncaught Exception")
+    }
+  }
+  {%- endmacro -%}
+
+validations: |
+  {%- macro run_method_validations() -%}
+  {%- set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) %}
+  {%- if is_special_function and owner_class.vars.action == 'gen_interface' -%}
+  {%- do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%- endif -%}
+  {%- if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
+  {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+  {%- endif -%}
+  {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+  {%- if incorrect_nullable_args -%}
+  {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
+  {%- endif -%}
+  {%- endmacro -%}
+
+_special_function_decls: &_special_function_decls |
+  {%- set hash_decl = 'func hash(into hasher: inout Hasher)' -%}
+  {%- set tostring_decl = 'var description: String' -%}
+  {%- set equals_decl = 'static func == (lhs: Self, rhs: Self) -> Bool' -%}
+
+special_functions:
+  declarations: *_special_function_decls
+  method:
+    !concat
+    - *_special_function_decls
+    - |
+      {%- set hash_decl = 'func hash(into hasher: inout Hasher)' -%}
+      {%- set tostring_decl = 'var description: String' -%}
+      {%- set equals_decl = 'static func == (lhs: Self, rhs: Self) -> Bool' -%}
+      {%- macro gen_hash_function() -%}
+      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
+      {%- if vars.comment -%}
+      {{vars.comment|make_doxygen_comment}}
+      {% endif -%}
+      public {{'override ' if is_override}}{{hash_decl}} {
+        var cppbindErr = CppBindCObject()
+        let result = {{helper.get_c_func_name(cxx_namespace + owner_class.converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
+        {{gen_exception_handling_code()|indent(2)}}
+        hasher.combine(result)
+      }
+      {%- endmacro -%}
+      {%- macro gen_equals_function() -%}
+      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
+      {%- set class_name = owner_class.converter.swift.get_target_type_name(definition=True) -%}
+      {%- if vars.comment -%}
+      {{vars.comment|make_doxygen_comment}}
+      {% endif -%}
+      public {{equals_decl|replace('Self', class_name)}} {
+        {%- set c_func = helper.get_c_func_name(cxx_namespace + owner_class.converter.swift.target_type_name, vars.name, '') %}
+        var cppbindErr = CppBindCObject()
+        let result = {{c_func}}(lhs.cself, rhs.cself, &cppbindErr)
+        {{gen_exception_handling_code()|indent(2)}}
+        return result
+      }
+      {%- endmacro -%}
+      {%- macro gen_str_function() -%}
+      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
+      {%- if vars.comment -%}
+      {{vars.comment|make_doxygen_comment}}
+      {% endif -%}
+      public {{'override ' if is_override}}{{tostring_decl}} {
+        {%- set c_func = helper.get_c_func_name(cxx_namespace + owner_class.converter.swift.target_type_name, vars.name, '') %}
+        var cppbindErr = CppBindCObject()
+        let result = {{c_func}}(cself, &cppbindErr)
+        {{gen_exception_handling_code()|indent(2)}}
+        {{rconverter.sc_to_swift.snippet('result')|indent(2)}}
+        return {{rconverter.sc_to_swift.converted_name('result')}}
+      }
+      {%- endmacro -%}

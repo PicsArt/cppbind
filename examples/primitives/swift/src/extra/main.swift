@@ -6,9 +6,9 @@ func runExtraExamples() {
     // [object-usage]
     let objUsage = ObjectUsage()
     assert(objUsage.className() == "cppbind::ObjectUsage")
-    assert(objUsage.equals(other: objUsage) == true)
+    assert(objUsage == objUsage)
     assert(objUsage.bytesCount() == 8)
-    assert(objUsage.toString().hasSuffix("cppbind::ObjectUsage>"))
+    assert(String(describing: objUsage).hasSuffix("cppbind::ObjectUsage>"))
     // [object-usage]
 }
 

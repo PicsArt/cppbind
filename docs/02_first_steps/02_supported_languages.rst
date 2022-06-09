@@ -36,5 +36,5 @@ To connect Python and C++ code CppBind generates `pybind <https://github.com/pyb
 .. note::
     Since CppBind generates Python API upon generated pybind bindings, we are able to add some logic before calling original
     pybind codes. For example, CppBind does some validations for nullable arguments, does implicit casts between
-    provided and expected argument types if possible, supports nested types. Generated Python functions has annotations with type hints
+    provided and expected argument types if possible. CppBind generates type hints
     which gives opportunity to navigate through the code inside IDE tools.

@@ -35,11 +35,13 @@ public:
     virtual ~Parallelogram() = default;
 
     /**
+     * This method is used in swift tests. As currently we do not allow hash and equals on interfaces
+     * and the default hash/equals/toString which are based on C++ object id are not generated for swift.
      * __API__
-     * action: gen_method
+     * swift.action: gen_method
      * throws: no_throw
      */
-    bool equals(Parallelogram* p) const {
+    bool isEqualTo(Parallelogram* p) const {
         return this == p;
     }
 };

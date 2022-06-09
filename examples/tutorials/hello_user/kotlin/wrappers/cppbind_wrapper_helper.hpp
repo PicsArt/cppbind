@@ -123,6 +123,17 @@ inline std::vector<jint> getIntArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
+inline std::vector<jdouble> getDoubleArray(JNIEnv* env, jobject obj) {
+    jdoubleArray jdoubleArray1 = (jdoubleArray)obj;
+    int len = env->GetArrayLength(jdoubleArray1);
+    std::vector<jdouble> ret;
+    ret.reserve(len);
+    jdouble* arr = env->GetDoubleArrayElements(jdoubleArray1, nullptr);
+    std::copy(arr, arr + len, std::back_inserter(ret));
+    env->ReleaseDoubleArrayElements(jdoubleArray1, arr, 0);
+    return ret;
+}
+
 inline std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     jfloatArray jfloatArray1 = (jfloatArray)obj;
     int len = env->GetArrayLength(jfloatArray1);
@@ -153,6 +164,10 @@ inline jint extractInt(JNIEnv* env, jobject obj)  {
         env->GetMethodID(env->FindClass("java/lang/Integer"), "intValue", "()I"));
 }
 
+inline jdouble extractDouble(JNIEnv* env, jobject obj)  {
+    return env->CallDoubleMethod(obj,
+        env->GetMethodID(env->FindClass("java/lang/Double"), "doubleValue", "()D"));
+}
 
 inline jlong extractLong(JNIEnv* env, jobject obj)  {
     return env->CallLongMethod(obj,

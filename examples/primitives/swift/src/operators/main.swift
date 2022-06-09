@@ -13,6 +13,20 @@ assert(counter1.count == 3)
 assert(counter1 > counter2)
 // [counter-usage]
 
+// checking == operator
+let c1 = Counter(count: 1)
+let c2 = Counter(count: 1)
+assert(c1 == c2)
+let c3 = Counter(count: 2)
+assert(!(c1 == c3))
+
+// checking a method mapped to the == operator
+let pc1 = PositiveCounter(count: 5)
+let pc2 = PositiveCounter(count: 5)
+assert(pc1 == pc2)
+let pc3 = PositiveCounter(count: 6)
+assert(!(pc1 == pc3))
+
 // [subscript-operator-usage]
 var intArr = IntArrayImpl()
 assert(intArr[0] == 0)

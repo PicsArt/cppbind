@@ -169,11 +169,6 @@ out_dir:
   swift.default: '{{path.join(out_prj_dir, "swift")}}'
   allowed_on: [ cmd_line ]
 
-cxx_base_out_dir:
-  inheritable: true
-  default: null
-  allowed_on: [ cmd_line ]
-
 is_proj_type:
   inheritable: false
   default: '{{path.abspath(source_file_fullname).startswith(path.abspath(out_prj_dir) + path.sep)}}'
@@ -240,11 +235,6 @@ helpers_dir:
   kotlin.default: '{{path.abspath(path.join(_cppbind_extras_dir, "std_helpers/kotlin"))}}'
   python.default: '{{path.abspath(path.join(_cppbind_extras_dir, "std_helpers/python"))}}'
   swift.default: '{{path.abspath(path.join(_cppbind_extras_dir, "std_helpers/swift"))}}'
-  allowed_on: [ root ]
-
-cxx_base_source_dir:
-  inheritable: true
-  default: '{{path.abspath(path.join(_cppbind_extras_dir, "base"))}}'
   allowed_on: [ root ]
 
 overloading_postfix:
@@ -393,4 +383,19 @@ keep_alive:
 is_c_wrapper_external:
   inheritable: true
   default: false
+  allowed_on: [ root ]
+
+hash_method:
+  inheritable: true
+  default: hash
+  allowed_on: [ root ]
+
+equals_method:
+  inheritable: true
+  default: equals
+  allowed_on: [ root ]
+
+tostring_method:
+  inheritable: true
+  default: toString
   allowed_on: [ root ]

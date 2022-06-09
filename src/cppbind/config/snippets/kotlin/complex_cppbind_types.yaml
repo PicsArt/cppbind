@@ -133,7 +133,7 @@ $Object:
       {{target_type_name}} {{target_name}} = reinterpret_cast<jlong>(cppbind_obj_{{target_name}});
       {%- endif %}
     kotlin_to_jdk: |
-      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.id{{' ?: 0L' if nullable|default(False)}}
+      val {{target_name}} = {{name}}{{'?' if nullable|default(False)}}.cppbindObjId{{' ?: 0L' if nullable|default(False)}}
     jdk_to_kotlin: |
       {%- if value_policy is not defined -%}
       {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
@@ -204,6 +204,18 @@ $Object:
       {%- endif -%}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    kotlin_include: |
+      {%- if full_package is defined and vars.full_package != full_package and not parent_type_info -%}
+      import {{vars.full_package}}.
+      {#- TODO: this is duplicated from types.kotlin, reuse logic when kotlin target_type_name will be available here -#}
+      {%- if interface_class|default(False) -%}
+      {{vars.interface_impl_class_name}}{{custom.tpostfix}}
+      {%- else -%}
+      {{custom.tname}}
+      {%- endif -%}
+      {%- endif -%}
+    cxx_include: |
+      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
 
 $Enum:
   custom:
@@ -226,6 +238,13 @@ $Enum:
           {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
       val {{target_name}} = {{target_name}}_optional!!
+    kotlin_include: |
+      {%- if full_package is defined and vars.full_package != full_package and not parent_type_info -%}
+      import {{vars.full_package}}.{{custom.tname}}
+      {%- endif -%}
+    cxx_include: |
+      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
+
 
 # TODO: we need to revisit "String?" value for jdk type. Optional "?" must be added in snippets or by "get_target_type_name" if the type is nullable
 const char *:
@@ -648,24 +667,74 @@ std::__ndk1::pair:
 # dummy converters to not throw error on container types converter build
 # currently, these are not used
 std::hash:
-  types: { }
-  converters: { }
+  custom:
+    pname:
+    tname:
+  types:
+    kotlin: Dummy
+    jni: Dummy
+    jdk: Dummy
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 std::equal_to:
-  types: { }
-  converters: { }
+  custom:
+    pname:
+    tname:
+  types:
+    kotlin: Dummy
+    jni: Dummy
+    jdk: Dummy
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 std::allocator:
-  types: { }
-  converters: { }
+  custom:
+    pname:
+    tname:
+  types:
+    kotlin: Dummy
+    jni: Dummy
+    jdk: Dummy
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 std::less:
-  types: { }
-  converters: { }
+  custom:
+    pname:
+    tname:
+  types:
+    kotlin: Dummy
+    jni: Dummy
+    jdk: Dummy
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 std::char_traits<char>:
-  types: { }
-  converters: { }
+  custom:
+    pname:
+    tname:
+  types:
+    kotlin: Dummy
+    jni: Dummy
+    jdk: Dummy
+  converters:
+    jni_to_cxx:
+    cxx_to_jni:
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 std::__ndk1::hash:
   std::hash

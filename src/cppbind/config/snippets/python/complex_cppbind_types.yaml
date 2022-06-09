@@ -251,24 +251,64 @@ std::pair:
 # dummy converters to not throw error on container types converter build
 # currently, these are not used
 std::hash:
-  types: { }
-  converters: { }
+  custom:
+    tname:
+  types:
+    python: Dummy
+    pybind: Dummy
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::equal_to:
-  types: { }
-  converters: { }
+  custom:
+    tname:
+  types:
+    python: Dummy
+    pybind: Dummy
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::allocator:
-  types: { }
-  converters: { }
+  custom:
+    tname:
+  types:
+    python: Dummy
+    pybind: Dummy
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::less:
-  types: { }
-  converters: { }
+  custom:
+    tname:
+  types:
+    python: Dummy
+    pybind: Dummy
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::char_traits<char>:
-  types: { }
-  converters: { }
+  custom:
+    tname:
+  types:
+    python: Dummy
+    pybind: Dummy
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
 
 std::__1::hash:
   std::hash

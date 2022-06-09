@@ -14,16 +14,16 @@
 #define _SWIFT_WRAPPERS_MISC_C_SIZE_BUFFER_H_
 
 #include "swift/wrappers/c_helpers.h"
-
+#include "swift/wrappers/c_size.h"
 #include <stdbool.h>
 
 #if __cplusplus
 extern "C" {
 #endif
     void release_CppbindExample_SizeUsage(CppBindCObject cself, bool owner);
-    CppBindCDataPair _func_CppbindExample_SizeUsage_multiplyBy(CppBindCDataPair  size, int  n, CppBindCObject* _Nonnull cppbind_err);
-    CppBindCDataPair _func_CppbindExample_SizeUsage_doubleSizeF_1(CppBindCObject* _Nonnull cppbind_err);
-    CppBindCDataPair _func_CppbindExample_SizeUsage_doubleSizeF(CppBindCDataPair  resolution, CppBindCObject* _Nonnull cppbind_err);
+    CppBindSizeF _func_CppbindExample_SizeUsage_multiplyBy(CppBindSizeF  size, int  n, CppBindCObject* _Nonnull cppbind_err);
+    CppBindSizeF _func_CppbindExample_SizeUsage_doubleSizeF_1(CppBindCObject* _Nonnull cppbind_err);
+    CppBindSizeF _func_CppbindExample_SizeUsage_doubleSizeF(CppBindSizeF  resolution, CppBindCObject* _Nonnull cppbind_err);
 #if __cplusplus
 }
 #endif

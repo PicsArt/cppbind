@@ -47,6 +47,8 @@ file:
     content: |
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
+      #include <cxxabi.h>
+      #include <memory>
       #include <pybind11/pybind11.h>
       #include <pybind11/stl.h>
       #include <pybind11/functional.h>
@@ -268,48 +270,56 @@ var_class: &var_class
         - constructor_body
         - properties
         - body
-      content: |
-        {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
-        {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
-        {%- endif -%}
-        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
-        {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
-        {%- endif %}
-        {%- if vars.header_code_fragment %}
-        {{vars.header_code_fragment}}{{new_line}}
-        {%- endif %}
-        {%- set bases_specifiers = [] -%}
-        {%- for base_type_converter in base_types_converters -%}
-        {%- do bases_specifiers.append(base_type_converter.python.get_target_type_name(full_package=vars.full_package)) -%}
-        {%- endfor -%}
-        {%- do bases_specifiers.extend(vars.bases_list) -%}
-        {%- do bases_specifiers.append('metaclass=CppBindMetaclass') %}
+      content:
+        !concat
+        - !include python_macros.yaml&special_functions.class.python
+        - |
+          {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
+          {%- do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
+          {%- endif -%}
+          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
+          {%- endif %}
+          {%- if vars.header_code_fragment %}
+          {{vars.header_code_fragment}}{{new_line}}
+          {%- endif %}
+          {%- set bases_specifiers = [] -%}
+          {%- for base_type_converter in base_types_converters -%}
+          {%- do bases_specifiers.append(base_type_converter.python.get_target_type_name(full_package=vars.full_package)) -%}
+          {%- endfor -%}
+          {%- do bases_specifiers.extend(vars.bases_list) -%}
+          {%- do bases_specifiers.append('metaclass=CppBindMetaclass') %}
+  
+          class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
+              {%- if vars.comment %}
+              {{vars.comment|make_py_docstring|indent}}
+              {%- endif %}
+              {%- if not cxx.is_abstract %}
+              {%- if constructor_body %}
+              {{constructor_body|string|indent}}
+              {%- endif %}
+              {%- else %}
+              @abstractmethod
+              def __init__(self, *args, **kwargs):
+                  pass
+              {%- endif %}
+              {%- if properties %}
+              {{properties|string|indent}}
+              {%- endif %}
+              {%- if body %}
+              {{body|string|indent}}
+              {%- endif %}
+              {%- if (not cxx.is_abstract, not constructor_body, not properties, not body)|all %}
+              pass
+              {%- endif %}
+              {%- if not base_types_converters and repr_decl not in body|string %}
+              {#- add __repr__ based on C++ type and id to be used for debugging purposes #}
 
-        class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
-            {%- if vars.comment %}
-            {{vars.comment|make_py_docstring|indent}}
-            {%- endif %}
-            {%- if not cxx.is_abstract %}
-            {%- if constructor_body %}
-            {{constructor_body|string|indent}}
-            {%- endif %}
-            {%- else %}
-            @abstractmethod
-            def __init__(self, *args, **kwargs):
-                pass
-            {%- endif %}
-            {%- if properties %}
-            {{properties|string|indent}}
-            {%- endif %}
-            {%- if body %}
-            {{body|string|indent}}
-            {%- endif %}
-            {%- if (not cxx.is_abstract, not constructor_body, not properties, not body)|all %}
-            pass
-            {%- endif %}
-            {%- if vars.footer_code_fragment %}
-            {{new_line}}{{vars.footer_code_fragment}}
-            {%- endif %}
+              {{gen_repr_function()|indent(4)}}
+              {%- endif %}
+          {%- if vars.footer_code_fragment %}
+          {{new_line}}{{vars.footer_code_fragment}}
+          {%- endif %}
   python_init:
     include:
       unique_content: |
@@ -344,23 +354,30 @@ var_class: &var_class
     body:
       scopes:
         - body
-      content: |
-        {
-            {%- if cxx.namespace %}
-            using namespace {{cxx.namespace}};
-            {%- endif %}
-            {% set comma = joiner(', ') -%}
-            {% set shared_ptr = 'std::shared_ptr<' + cxx.type_name + '>' -%}
-            py::class_<{{cxx.type_name}} {%- if vars.shared_ref -%}
-                                          , std::shared_ptr<{{cxx.type_name}}>
-                                         {%- endif %}
-                                         {%- if base_types_converters -%}
-                                         , {% for base_info in base_types_infos -%}
-                                         {{comma()}}{{base_info.cxx.type_name}}
-                                         {%- endfor -%}
-                                         {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
-            {{body|string|indent(4)}}
-        }
+      content:
+        !concat
+        - !include python_macros.yaml&special_functions.class.pybind
+        - |
+          {
+              {%- if cxx.namespace %}
+              using namespace {{cxx.namespace}};
+              {%- endif %}
+              {% set comma = joiner(', ') -%}
+              {% set shared_ptr = 'std::shared_ptr<' + cxx.type_name + '>' -%}
+              py::class_<{{cxx.type_name}} {%- if vars.shared_ref -%}
+                                            , std::shared_ptr<{{cxx.type_name}}>
+                                           {%- endif %}
+                                           {%- if base_types_converters -%}
+                                           , {% for base_info in base_types_infos -%}
+                                           {{comma()}}{{base_info.cxx.type_name}}
+                                           {%- endfor -%}
+                                           {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
+              {{body|string|indent(4)}}
+              {#- add __repr__ based on C++ type and id to be used for debugging purposes -#}
+              {%- if not base_types_converters and 'def("__repr__"' not in body|string %}
+              {{gen_repr_function()|indent(4)}}
+              {%- endif %}  
+          }
   hpp:
     header: *var_hpp_header
   pybind_module_cxx: *var_pybind_module
@@ -494,14 +511,22 @@ method:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
       {%- endif -%}
+      {%- set _name = vars.name|to_snake_case %}
+      {%- if cxx.name == vars.hash_method %}
+      {%- set _name = '__hash__' %}
+      {%- elif cxx.name == vars.equals_method %}
+      {%- set _name = '__eq__' %}
+      {%- elif cxx.name == vars.tostring_method %}
+      {%- set _name = '__str__' %}
+      {%- endif %}
       {%- set comma = joiner(', ') -%}
       {%- if cxx.is_static %}
       @classmethod
       {%- endif %}
-      {%- set _name = vars.name|to_snake_case %}
       {%- set rconverter = rconverter.python %}
+      {%- set comment = vars.comment|to_snake_case(args|map(attribute='name')) %}
       @bind
       def {{_name}}({{'self' if not cxx.is_static else 'cls'}}{{', ' if args}}
                                                           {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
@@ -522,7 +547,7 @@ method:
                                                           {%- endif %}
                                                           {%- endif -%}
                                                           {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_hint}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
+          {{comment|make_py_docstring|indent}}
           pass
 
       {%- set setter_var_name = 'value' -%}
@@ -536,7 +561,7 @@ method:
                                                           {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                                           {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{arg_type_hint}}{{comma()}}{{setter_var_name}}: {{rtype_hint}}
                                                           {%- endfor %}):
-          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
+          {{comment|make_py_docstring|indent}}
           pass
       {%- endif %}
 
@@ -544,7 +569,14 @@ method:
   cxx:
     include: *var_method_cxx_include
     body: |
-      {%- set _name = vars.name|to_snake_case -%}
+      {%- set _name = vars.name|to_snake_case %}
+      {%- if cxx.name == vars.hash_method %}
+      {%- set _name = '__hash__' %}
+      {%- elif cxx.name == vars.equals_method %}
+      {%- set _name = '__eq__' %}
+      {%- elif cxx.name == vars.tostring_method %}
+      {%- set _name = '__str__' %}
+      {%- endif %}
       {%- set comma = joiner(', ') -%}
       {{owner_class.converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<

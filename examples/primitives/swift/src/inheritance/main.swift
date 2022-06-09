@@ -25,10 +25,10 @@ assert(square.perimeter() == 20.0)
 // other test cases
 let gf = GeometricFigure(p: square)
 assert(gf.parallelogram is Square)
-assert(gf.parallelogram.equals(p: square))
+assert(gf.parallelogram.isEqualTo(p: square))
 gf.parallelogram = rhombus
 assert(gf.parallelogram is RhombusFigure)
-assert(gf.parallelogram.equals(p: rhombus))
+assert(gf.parallelogram.isEqualTo(p: rhombus))
 gf.nullableParallelogram = nil
 assert(gf.nullableParallelogram == nil)
 
@@ -70,7 +70,7 @@ let aquaticAnimalObj = animalUsageObj.getAquaticAnimal()
 let animalObj = animalUsageObj.getAnimal()
 assert(aquaticAnimalObj is Frog)
 assert(animalObj is Frog)
-assert(frogObj.equals(a: aquaticAnimalObj) && frogObj.equals(a: animalObj))
+assert(frogObj.isEqualTo(a: aquaticAnimalObj) && frogObj.isEqualTo(a: animalObj))
 
 // test no downcasting when descendants=[] for Frog
 let littleFrogObj = LittleFrog()

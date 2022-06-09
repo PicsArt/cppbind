@@ -15,4 +15,8 @@ package com.examples.cppbind.alias
 typealias StringArray = Array<String>
 typealias ObjectArray = Array<Any>
 
+/**
+ * An internal dataclass to keep an information about an object.
+ * It is intended to be used by the generated code.
+ */
 data class CppBindObject(var id : Long, val owner : Boolean = false)

@@ -1,0 +1,37 @@
+_special_function_decls: &_special_function_decls |
+  {%- set repr_decl = 'def __repr__(self) -> str' -%}
+
+
+special_functions:
+  declarations: *_special_function_decls
+  class:
+    python:
+      !concat
+      - *_special_function_decls
+      - |
+        {%- macro gen_repr_function() -%}
+        @bind
+        {{repr_decl}}:
+            """
+            CppBind generated __repr__ method returning underlying C++ object type and id.
+            """
+            pass
+        {%- endmacro -%}
+    pybind: |
+      {%- macro gen_repr_function() -%}
+      {{converter.python.target_type_name|decapitalize}}.def("__repr__", [](const {{cxx.type_name}}& self) -> std::string {
+          int status;
+          const char* name = typeid(self).name();
+          std::unique_ptr<char[], std::function<void(char*)>> demangledSymbol(
+              __cxxabiv1::__cxa_demangle(name, nullptr, nullptr, &status), free);
+          const char * classname = "{{cxx.type_name}}";
+          if (status == 0) {
+              classname = demangledSymbol.get();
+          }
+          char res[96];
+          snprintf(res, sizeof(res), "<0x%08zx: %s>", reinterpret_cast<std::size_t>(&self), classname);
+          return res;
+      }); 
+      {%- endmacro -%}
+      
+

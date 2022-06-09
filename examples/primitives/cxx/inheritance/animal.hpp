@@ -46,7 +46,7 @@ public:
      * action: gen_method
      * throws: no_throw
      */
-    bool equals(Animal* a) const {
+    bool isEqualTo(Animal* a) const {
         return this == a;
     }
 };

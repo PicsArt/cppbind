@@ -19,12 +19,10 @@ jobs:
       - name: Add PYTHON_BIN_PATH to ENV
         run : echo "PYTHON_BIN_PATH=`which python3`" >> $GITHUB_ENV
         
-      - name: Checkout branch
-        uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v2.3.4
+        name: Checkout branch
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GH_TOKEN }}
-          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN  }}
 
       - name: Install requirements
         run : pip3 install -r src/requirements.txt

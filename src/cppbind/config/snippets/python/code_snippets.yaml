@@ -29,9 +29,9 @@ file:
       {%- set typing_import = 'from typing import *' %}
       {%- set pybind_import = 'import ' + [vars.pybind_module, vars.package, vars.file]|join('.') + ' as pybind_' + vars.full_package.split('.')[-1] %}
       {%- if vars.helpers_package_prefix %}
-      {%- set bind_import = 'from ' + vars.helpers_package_prefix + '.bind_utils{} import *'.format(vars.file_postfix) %}
+      {%- set bind_import = 'from ' + vars.helpers_package_prefix + '.cppbind_utils{} import *'.format(vars.file_postfix) %}
       {%- else %}
-      {%- set bind_import = 'from bind_utils{} import *'.format(vars.file_postfix) %}
+      {%- set bind_import = 'from cppbind_utils{} import *'.format(vars.file_postfix) %}
       {%- endif %}
       {%- set helpers = helper_includes|format_list('from {} import *')|join_unique %}
       {{[future_import, typing_import, pybind_import, include, helpers, bind_import]|join(new_line)|sort_python_code}}

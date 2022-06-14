@@ -5,6 +5,7 @@ pybind_extension(
     srcs = glob([
         "**/*.cpp",
         "**/*.hpp",
+        "**/*.h"
     ]),
     visibility = ["//visibility:public"],
     deps = [

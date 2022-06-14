@@ -3,7 +3,7 @@
 # MIT-style license that can be found in the LICENSE file.
 
 file_path: |
-  {{path.join(vars.helpers_out_dir, 'bind_utils' + vars.file_postfix)}}.py
+  {{path.join(vars.helpers_out_dir, 'cppbind_utils' + vars.file_postfix)}}.py
 scopes:
   - converter
 content: |

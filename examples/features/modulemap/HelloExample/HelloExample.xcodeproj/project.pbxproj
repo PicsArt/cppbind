@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8467933F276759EB00CDD85D /* c_std_exc_classes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8467933D276759EB00CDD85D /* c_std_exc_classes.cpp */; };
-		8467934227675A2D00CDD85D /* c_std_exc_classes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8467934127675A2D00CDD85D /* c_std_exc_classes.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8467933F276759EB00CDD85D /* c_swift_std_exc_classes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8467933D276759EB00CDD85D /* c_swift_std_exc_classes.cpp */; };
+		8467934227675A2D00CDD85D /* c_swift_std_exc_classes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8467934127675A2D00CDD85D /* c_swift_std_exc_classes.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8467934427675A8C00CDD85D /* std_exc_classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8467934327675A8C00CDD85D /* std_exc_classes.swift */; };
 		8CA071AA2731109F00D89836 /* exceptionUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA071A92731109F00D89836 /* exceptionUtils.swift */; };
 		8CD264FE2727F00600BA773E /* HelloExample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CD264F32727F00500BA773E /* HelloExample.framework */; };
@@ -18,12 +18,12 @@
 		8CD265102727F70A00BA773E /* swift in Resources */ = {isa = PBXBuildFile; fileRef = 8CD2650F2727F70A00BA773E /* swift */; };
 		8CD265192727FF3900BA773E /* PublicObjCClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD265182727FF3900BA773E /* PublicObjCClass.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8CD2651B2727FF7400BA773E /* PublicObjCClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2651A2727FF7400BA773E /* PublicObjCClass.m */; };
-		8CD265292728185200BA773E /* c_host.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD265282728185200BA773E /* c_host.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8CD265292728185200BA773E /* c_swift_host.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD265282728185200BA773E /* c_swift_host.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8CD2652B272818E900BA773E /* c_helpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD2652A272818E900BA773E /* c_helpers.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8CD2652D27281A3100BA773E /* c_user.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD2652C27281A3100BA773E /* c_user.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8CD2652D27281A3100BA773E /* c_swift_user.h in Headers */ = {isa = PBXBuildFile; fileRef = 8CD2652C27281A3100BA773E /* c_swift_user.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8CD2653127281BF400BA773E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2653027281BF400BA773E /* main.swift */; };
-		8CD265362728237B00BA773E /* c_host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265342728237B00BA773E /* c_host.cpp */; };
-		8CD265372728237B00BA773E /* c_user.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265352728237B00BA773E /* c_user.cpp */; };
+		8CD265362728237B00BA773E /* c_swift_host.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265342728237B00BA773E /* c_swift_host.cpp */; };
+		8CD265372728237B00BA773E /* c_swift_user.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 8CD265352728237B00BA773E /* c_swift_user.cpp */; };
 		8CD2653A272823B800BA773E /* user.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 8CD26538272823B800BA773E /* user.hpp */; settings = {ATTRIBUTES = (Private, ); }; };
 		8CD2653B272823B800BA773E /* host.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 8CD26539272823B800BA773E /* host.hpp */; settings = {ATTRIBUTES = (Private, ); }; };
 		8CD265402728244100BA773E /* host.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CD2653E2728244000BA773E /* host.swift */; };
@@ -41,9 +41,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		8467933D276759EB00CDD85D /* c_std_exc_classes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_std_exc_classes.cpp; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.cpp; sourceTree = "<group>"; };
-		8467933E276759EB00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
-		8467934127675A2D00CDD85D /* c_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_std_exc_classes.h; sourceTree = "<group>"; };
+		8467933D276759EB00CDD85D /* c_swift_std_exc_classes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_swift_std_exc_classes.cpp; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_swift_std_exc_classes.cpp; sourceTree = "<group>"; };
+		8467933E276759EB00CDD85D /* c_swift_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_swift_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_swift_std_exc_classes.h; sourceTree = "<group>"; };
+		8467934127675A2D00CDD85D /* c_swift_std_exc_classes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_swift_std_exc_classes.h; path = HelloExample/swift/wrappers/cppbind/exception_helpers/c_swift_std_exc_classes.h; sourceTree = "<group>"; };
 		8467934327675A8C00CDD85D /* std_exc_classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = std_exc_classes.swift; path = HelloExample/swift/src/cppbind/exception_helpers/std_exc_classes.swift; sourceTree = "<group>"; };
 		8C0EA64F272C43340007F606 /* public.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = public.modulemap; sourceTree = "<group>"; };
 		8CA071A92731109F00D89836 /* exceptionUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = exceptionUtils.swift; path = HelloExample/swift/src/cppbind/exceptionUtils.swift; sourceTree = "<group>"; };
@@ -55,12 +55,12 @@
 		8CD2650F2727F70A00BA773E /* swift */ = {isa = PBXFileReference; lastKnownFileType = folder; path = swift; sourceTree = "<group>"; };
 		8CD265182727FF3900BA773E /* PublicObjCClass.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PublicObjCClass.h; sourceTree = "<group>"; };
 		8CD2651A2727FF7400BA773E /* PublicObjCClass.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PublicObjCClass.m; sourceTree = "<group>"; };
-		8CD265282728185200BA773E /* c_host.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_host.h; path = HelloExample/swift/wrappers/hello/c_host.h; sourceTree = "<group>"; };
+		8CD265282728185200BA773E /* c_swift_host.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_swift_host.h; path = HelloExample/swift/wrappers/hello/c_swift_host.h; sourceTree = "<group>"; };
 		8CD2652A272818E900BA773E /* c_helpers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_helpers.h; path = HelloExample/swift/wrappers/c_helpers.h; sourceTree = "<group>"; };
-		8CD2652C27281A3100BA773E /* c_user.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_user.h; path = HelloExample/swift/wrappers/hello/c_user.h; sourceTree = "<group>"; };
+		8CD2652C27281A3100BA773E /* c_swift_user.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = c_swift_user.h; path = HelloExample/swift/wrappers/hello/c_swift_user.h; sourceTree = "<group>"; };
 		8CD2653027281BF400BA773E /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
-		8CD265342728237B00BA773E /* c_host.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_host.cpp; path = HelloExample/swift/wrappers/hello/c_host.cpp; sourceTree = "<group>"; };
-		8CD265352728237B00BA773E /* c_user.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_user.cpp; path = HelloExample/swift/wrappers/hello/c_user.cpp; sourceTree = "<group>"; };
+		8CD265342728237B00BA773E /* c_swift_host.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_swift_host.cpp; path = HelloExample/swift/wrappers/hello/c_swift_host.cpp; sourceTree = "<group>"; };
+		8CD265352728237B00BA773E /* c_swift_user.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = c_swift_user.cpp; path = HelloExample/swift/wrappers/hello/c_swift_user.cpp; sourceTree = "<group>"; };
 		8CD26538272823B800BA773E /* user.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = user.hpp; path = HelloExample/cxx/user.hpp; sourceTree = "<group>"; };
 		8CD26539272823B800BA773E /* host.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; name = host.hpp; path = HelloExample/cxx/host.hpp; sourceTree = "<group>"; };
 		8CD2653E2728244000BA773E /* host.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = host.swift; path = HelloExample/swift/src/hello/host.swift; sourceTree = "<group>"; };
@@ -90,19 +90,19 @@
 			isa = PBXGroup;
 			children = (
 				8467934327675A8C00CDD85D /* std_exc_classes.swift */,
-				8467934127675A2D00CDD85D /* c_std_exc_classes.h */,
-				8467933D276759EB00CDD85D /* c_std_exc_classes.cpp */,
-				8467933E276759EB00CDD85D /* c_std_exc_classes.h */,
+				8467934127675A2D00CDD85D /* c_swift_std_exc_classes.h */,
+				8467933D276759EB00CDD85D /* c_swift_std_exc_classes.cpp */,
+				8467933E276759EB00CDD85D /* c_swift_std_exc_classes.h */,
 				8CA071A92731109F00D89836 /* exceptionUtils.swift */,
 				8CD2653E2728244000BA773E /* host.swift */,
 				8CD2653F2728244100BA773E /* user.swift */,
 				8CD26539272823B800BA773E /* host.hpp */,
 				8CD26538272823B800BA773E /* user.hpp */,
-				8CD265342728237B00BA773E /* c_host.cpp */,
-				8CD265352728237B00BA773E /* c_user.cpp */,
-				8CD2652C27281A3100BA773E /* c_user.h */,
+				8CD265342728237B00BA773E /* c_swift_host.cpp */,
+				8CD265352728237B00BA773E /* c_swift_user.cpp */,
+				8CD2652C27281A3100BA773E /* c_swift_user.h */,
 				8CD2652A272818E900BA773E /* c_helpers.h */,
-				8CD265282728185200BA773E /* c_host.h */,
+				8CD265282728185200BA773E /* c_swift_host.h */,
 				8CD264F52727F00500BA773E /* HelloExample */,
 				8CD265012727F00600BA773E /* HelloExampleTests */,
 				8CD264F42727F00500BA773E /* Products */,
@@ -149,12 +149,12 @@
 			files = (
 				8CD265192727FF3900BA773E /* PublicObjCClass.h in Headers */,
 				8CD265042727F00600BA773E /* HelloExample.h in Headers */,
-				8467934227675A2D00CDD85D /* c_std_exc_classes.h in Headers */,
+				8467934227675A2D00CDD85D /* c_swift_std_exc_classes.h in Headers */,
 				8CD2653A272823B800BA773E /* user.hpp in Headers */,
 				8CD2653B272823B800BA773E /* host.hpp in Headers */,
-				8CD265292728185200BA773E /* c_host.h in Headers */,
+				8CD265292728185200BA773E /* c_swift_host.h in Headers */,
 				8CD2652B272818E900BA773E /* c_helpers.h in Headers */,
-				8CD2652D27281A3100BA773E /* c_user.h in Headers */,
+				8CD2652D27281A3100BA773E /* c_swift_user.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,12 +260,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				8467934427675A8C00CDD85D /* std_exc_classes.swift in Sources */,
-				8467933F276759EB00CDD85D /* c_std_exc_classes.cpp in Sources */,
+				8467933F276759EB00CDD85D /* c_swift_std_exc_classes.cpp in Sources */,
 				8CA071AA2731109F00D89836 /* exceptionUtils.swift in Sources */,
 				8CD265402728244100BA773E /* host.swift in Sources */,
 				8CD265412728244100BA773E /* user.swift in Sources */,
-				8CD265362728237B00BA773E /* c_host.cpp in Sources */,
-				8CD265372728237B00BA773E /* c_user.cpp in Sources */,
+				8CD265362728237B00BA773E /* c_swift_host.cpp in Sources */,
+				8CD265372728237B00BA773E /* c_swift_user.cpp in Sources */,
 				8CD2653127281BF400BA773E /* main.swift in Sources */,
 				8CD2651B2727FF7400BA773E /* PublicObjCClass.m in Sources */,
 			);

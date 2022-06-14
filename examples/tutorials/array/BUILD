@@ -60,7 +60,7 @@ pybind_extension(
     name = "pybind_example_lib",
     srcs = glob([
         "python/**/*.cpp",
-        "python/**/*.hpp",
+        "python/**/*.h",
     ]),
     visibility = ["//visibility:public"],
     deps = [

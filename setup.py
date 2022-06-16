@@ -35,6 +35,10 @@ setup(
     
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: C++",
+        "Programming Language :: Kotlin",
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
         "License :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Code Generators",

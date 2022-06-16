@@ -35,6 +35,7 @@ void bindExamplesLibContainersPairPygen(py::module& m) {
         pairExamples.def("get_nested_vector_of_pairs", &cppbind::example::PairExamples::getNestedVectorOfPairs, py::return_value_policy::automatic);
 
         pairExamples.def_property("complex_pair_obj", py::cpp_function(&cppbind::example::PairExamples::complexPairObj, py::return_value_policy::reference_internal), &cppbind::example::PairExamples::setComplexPairObj);
+        pairExamples.def("sum_pair_items", &cppbind::example::PairExamples::sumPairItems, py::arg("p"), py::return_value_policy::automatic);
         pairExamples.def("__repr__", [](const cppbind::example::PairExamples& self) -> std::string {
             int status;
             const char* name = typeid(self).name();

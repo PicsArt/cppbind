@@ -50,6 +50,22 @@ class ContainersApp {
             // checking the vector of doubles
             assert(getSquaredVector(listOf(1.0, 2.0, -3.5)) == listOf(1.0, 4.0, 12.25))
 
+            // [pair-usage]
+            val pairUsage = PairExamples()
+            assert(pairUsage.getStringPair() == Pair("first", "second"))
+
+            val p1 = Pair(1, 5)
+            val p2 = Pair(2, -3)
+            assert(pairUsage.sumIntPairs(p1, p2) == Pair(p1.first + p2.first, p1.second + p2.second))
+
+            val nestedPair = Pair(Pair("a", "b"), Pair("c", "d"))
+            pairUsage.setNestedPair(nestedPair)
+            val resultPair = pairUsage.getNestedPair()
+            assert(nestedPair.first == resultPair.first && nestedPair.second == resultPair.second)
+
+            assert(pairUsage.sumPairItems(Pair(1L, 2L)) == 3L)
+            // [pair-usage]
+
             // [json-usage]
             val jsonUsage = JsonExamples()
             val jsonVal = "{\n    \"pi\": 3.14,\n    \"status\": true\n}"
@@ -91,6 +107,21 @@ class ContainersApp {
             nestedUsage.setComplexStringMap(complexMap)
             assert(nestedUsage.getComplexStringMap() == complexMap)
             // [nested-containers-usage]
+
+            // checking pair + containers combinations
+            val nestedVectorOfPairs = listOf(listOf(Pair(1, "one")), listOf(Pair(2, "two"), Pair(3, "three")))
+            pairUsage.setNestedVectorOfPairs(nestedVectorOfPairs)
+            val resultVec = pairUsage.getNestedVectorOfPairs()
+            assert(resultVec[0][0].first == nestedVectorOfPairs[0][0].first && resultVec[0][0].second == nestedVectorOfPairs[0][0].second)
+            assert(resultVec[1][0].first == nestedVectorOfPairs[1][0].first && resultVec[1][0].second == nestedVectorOfPairs[1][0].second)
+            assert(resultVec[1][1].first == nestedVectorOfPairs[1][1].first && resultVec[1][1].second == nestedVectorOfPairs[1][1].second)
+
+            val mapItemObj = MapItem(1)
+            val complexPairObj = Pair(mapItemObj, listOf(mapItemObj))
+            pairUsage.complexPairObj = complexPairObj
+            val resultObj = pairUsage.complexPairObj
+            assert(resultObj.first.value == mapItemObj.value && resultObj.second[0].value == mapItemObj.value)
+
        }
     }
 

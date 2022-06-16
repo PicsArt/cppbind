@@ -108,6 +108,15 @@ struct PairExamples {
         return _complexPairObj;
     }
 
+   /**
+    * __API__
+    * action: gen_method
+    * throws: no_throw
+    */
+    long sumPairItems(const std::pair<long, long>& p) {
+        return p.first + p.second;
+    }
+
 private:
     std::pair<std::pair<std::string, std::string>, std::pair<std::string, std::string>> nestedPair;
     std::vector<std::vector<std::pair<int, std::string>>> nestedVectorOfPairs;

@@ -28,6 +28,14 @@ assert pc1 == pc2
 pc3 = PositiveCounter(6)
 assert not pc1 == pc3
 
+# checking subscript operator with get and set
+counts = [1, 3, 5, 10]
+multi_counter = PositiveCounter(counts)
+for i, elem in enumerate(counts):
+    assert multi_counter[i] == elem
+multi_counter[0] = 10
+assert multi_counter[0] == 10
+
 # [subscript-operator-usage]
 intArr = IntArray()
 assert (intArr[0] == 0)

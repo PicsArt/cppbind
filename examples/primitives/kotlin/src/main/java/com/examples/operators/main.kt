@@ -31,6 +31,15 @@ assert(pc1 == pc2)
 val pc3 = PositiveCounter(6)
 assert(!(pc1 == pc3))
 
+// checking subscript operator with get and set
+val counts = listOf(1, 3, 5, 10)
+val multiCounter = PositiveCounter(counts)
+for (i in 0..3) {
+    assert(multiCounter[i] == counts[i])
+}
+multiCounter[0] = 10
+assert(multiCounter[0] == 10)
+
 // [subscript-operator-usage]
 var intArr = IntArrayImpl()
 assert(intArr[0] == 0)

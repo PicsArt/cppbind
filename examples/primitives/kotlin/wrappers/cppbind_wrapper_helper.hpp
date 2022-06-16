@@ -171,7 +171,7 @@ inline jdouble extractDouble(JNIEnv* env, jobject obj)  {
 
 inline jlong extractLong(JNIEnv* env, jobject obj)  {
     return env->CallLongMethod(obj,
-        env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()L"));
+        env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()J"));
 }
 
 inline jobject longToObject(JNIEnv* env, jlong val) {

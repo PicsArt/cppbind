@@ -600,7 +600,7 @@ std::shared_ptr:
 
 std::pair:
   custom:
-    pname: Pair
+    pname: Object
     tname: "Pair{{args_converters[0].kotlin.custom.tname}}{{args_converters[1].kotlin.custom.tname}}"
   types:
     kotlin: "Pair<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"

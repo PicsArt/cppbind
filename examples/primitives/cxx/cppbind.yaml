@@ -43,7 +43,6 @@ vars:
   kotlin.package_prefix: com.examples
   kotlin.src_exclude_glob:
     - cxx/functionals/*.hpp
-    - cxx/containers/pair.hpp
     - cxx/**/policies_doc_examples.hpp
     - cxx/typedefs/queue_template.hpp
   python.enable_source_link_in_comment: true

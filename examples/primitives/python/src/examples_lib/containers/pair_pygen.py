@@ -112,6 +112,14 @@ class PairExamples(metaclass=CppBindMetaclass):
         pass
 
     @bind
+    def sum_pair_items(self, p: Tuple[int, int]) -> int:
+        """
+        Documentation generated from: `cxx/containers/pair.hpp#L116
+        <https://github.com/PicsArt/cppbind/tree/master/examples/primitives/cxx/containers/pair.hpp#L116>`_
+        """
+        pass
+
+    @bind
     def __repr__(self) -> str:
         """
         CppBind generated __repr__ method returning underlying C++ object type and id.

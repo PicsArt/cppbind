@@ -33,6 +33,7 @@ extern "C" {
 
     void _prop_set_CppbindExample_PairExamples_complexPairObj(CppBindCObject cself, CppBindCDataPair p, CppBindCObject* _Nonnull cppbind_err);
 
+    long _func_CppbindExample_PairExamples_sumPairItems(CppBindCObject cself, CppBindCDataPair  p, CppBindCObject* _Nonnull cppbind_err);
 #if __cplusplus
 }
 #endif

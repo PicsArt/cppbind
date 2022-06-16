@@ -50,6 +50,8 @@ nested_pair = (("a", "b"), ("c", "d"))
 pair_usage.set_nested_pair(nested_pair)
 result_pair = pair_usage.get_nested_pair()
 assert result_pair == nested_pair
+
+assert pair_usage.sum_pair_items((1, 2)) == 3
 # [pair-usage]
 
 # [nested-containers-usage]

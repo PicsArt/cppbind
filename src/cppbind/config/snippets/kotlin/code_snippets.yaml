@@ -91,7 +91,7 @@ enum:
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
-          {{vars.enum_case_name_prefix + case.name}}({{case.value}})
+          {{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}}({{case.value}})
           {%- endif %}
           {%- endfor %};
 
@@ -714,9 +714,10 @@ constructor:
       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+      {%- set enum_case_name = arg.default.split('::')|last %}
+      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -881,9 +882,10 @@ method:
         {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
-        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+        {%- set enum_case_name = arg.default.split('::')|last %}
+        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
         {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -1202,9 +1204,10 @@ function:
       fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+      {%- set enum_case_name = arg.default.split('::')|last %}
+      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}

@@ -3,6 +3,7 @@ package com.examples.optionals
 import com.examples.optionals.Optionals
 import com.examples.enums.Color
 import com.examples.enums.ColorShade
+import com.examples.enums.LogLevel
 import com.examples.simple.Task
 import com.examples.simple.Root
 
@@ -26,6 +27,7 @@ assert(op.optionalUnsignedCharWithDefault().compareTo(100u) == 0)
 assert(op.optionalCharPointerWithDefault() == "def")
 assert(op.optionalSharedPtrWithNullptrDefault() == null)
 assert(op.optionalEnumWithDefault() == Color.Red)
+assert(op.optionalEnumWithDefaultAndChangedNames() == LogLevel.WARNING)
 assert(op.optionalEnumWithDefaultAndFieldPrefix() == ColorShade.ShadeLight)
 
 // non default value assertions
@@ -33,6 +35,7 @@ val task = Task("my task")
 assert(op.optionalStringViewWithDefault("test") == "test")
 assert(op.optionalPtrWithNullptrDefault(task)!!.equals(task))
 assert(op.optionalEnumWithDefault(Color.Blue) == Color.Blue)
+assert(op.optionalEnumWithDefaultAndChangedNames(LogLevel.LOG_CRITICAL) == LogLevel.LOG_CRITICAL)
 assert(op.optionalEnumWithDefaultAndFieldPrefix(ColorShade.ShadeDark) == ColorShade.ShadeDark)
 assert(op.optionalEnumWithInternalDefault(ColorShade.ShadeLight) == ColorShade.ShadeLight)
 assert(op.optionalBoolWithDefault(false) == false)

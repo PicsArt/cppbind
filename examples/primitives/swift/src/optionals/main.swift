@@ -20,12 +20,14 @@ func runOptionalExamples() {
     assert(op.optionalCharPointerWithDefault() == "def")
     assert(op.optionalSharedPtrWithNullptrDefault() == nil)
     assert(op.optionalEnumWithDefault() == Color.Red)
+    assert(op.optionalEnumWithDefaultAndChangedNames() == LogLevel.WARNING)
     assert(op.optionalEnumWithDefaultAndFieldPrefix() == ColorShade.ShadeLight)
 
     // non default value assertions
     let task = Task(title: "my task")
     assert(op.optionalPtrWithNullptrDefault(task: task)! == task)
     assert(op.optionalEnumWithDefault(c: Color.Blue) == Color.Blue)
+    assert(op.optionalEnumWithDefaultAndChangedNames(level: LogLevel.LOG_CRITICAL) == LogLevel.LOG_CRITICAL)
     assert(op.optionalEnumWithDefaultAndFieldPrefix(c: ColorShade.ShadeDark) == ColorShade.ShadeDark)
     assert(op.optionalEnumWithInternalDefault(c: ColorShade.ShadeLight) == ColorShade.ShadeLight)
     assert(op.optionalBoolWithDefault(value: false) == false)

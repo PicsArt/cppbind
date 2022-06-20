@@ -7,6 +7,7 @@
 #include <complex>
 #include "cxx/getters/person.hpp"
 #include "cxx/enums/color.hpp"
+#include "cxx/enums/logging.hpp"
 #include "cxx/simple/task.hpp"
 #include "cxx/simple/root.hpp"
 
@@ -135,6 +136,15 @@ public:
      */
 	Color optionalEnumWithDefault(Color c = Color::Red) {
 	    return c;
+	}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	LogLevel optionalEnumWithDefaultAndChangedNames(LogLevel level = LogLevel::warning_level) {
+	    return level;
 	}
 
 // [literals-example]

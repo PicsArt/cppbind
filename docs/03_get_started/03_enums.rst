@@ -12,7 +12,15 @@ As shown in the above example, we can extend enums logic by using the **code_fra
 Code fragments defined with this variable are appended to the enum definition.
 In this example, we added the custom conversion from enum to string for all three languages.
 Notice that for Swift, we have also used the **bases_list** variable to make the enum implement the ``CustomStringConvertible`` protocol.
+
 We can also customize enum case field names using the **enum_case_name_prefix** variable, which can be used to add a user-defined prefix string to enum field names in the target language.
+In order to change the original case names completely, we can use **enum_case_names** variable which is a dictionary of mappings between
+the original and target case names. Here is an example of the **enum_case_names** variable usage:
+
+.. literalinclude:: /../examples/primitives/cxx/enums/logging.hpp
+   :language: cpp
+   :start-after: [example]
+   :end-before: [example]
 
 In cases some of the original enum fields are for internal usage,
 and the user doesn't want to expose them in target language bindings, the **enum_excluded_cases** variable can be used to specify
@@ -20,7 +28,7 @@ the list of excluded fields. If those fields are used as a default value for a f
 that default value generation in target language bindings. If the user has a function that returns an excluded enum field,
 CppBind terminates the main program during the function call and provides the user with an appropriate error message.
 
-And the Frame struct using it:
+And the Frame struct using **Color** enum:
 
 .. literalinclude:: /../examples/primitives/cxx/enums/frame.hpp
    :language: cpp

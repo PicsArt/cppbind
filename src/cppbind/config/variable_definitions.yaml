@@ -310,6 +310,12 @@ enum_excluded_cases:
   allowed_on: [ enum ]
   type: list
 
+enum_case_names:
+  inheritable: false
+  default: { }
+  allowed_on: [ enum ]
+  type: dict
+
 cxx_out_rel_path:
   inheritable: true
   default: "{{path.relpath(cxx_out_dir, out_prj_dir)}}"

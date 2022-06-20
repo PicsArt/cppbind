@@ -21,6 +21,9 @@ assert(frame.backgroundColorShade == ColorShade.ShadeDark)
 
 // checking const ref enum case
 assert(frame.getNextColor(color: Color.Red) == Color.Green)
+
+// checking `enum_case_names` variable
+assert(getNextLogLevel(logLevel: LogLevel.DEBUG) == LogLevel.log_info_level)
 }
 
 #if os(Linux)

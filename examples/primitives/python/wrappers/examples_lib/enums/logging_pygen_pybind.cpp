@@ -16,24 +16,22 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include "cxx/enums/color.hpp"
+#include "cxx/enums/logging.hpp"
 
 namespace py = pybind11;
 
-void bindExamplesLibEnumsColorPygen(py::module& m) {
+void bindExamplesLibEnumsLoggingPygen(py::module& m) {
     {
         using namespace cppbind::example;
-        py::enum_<cppbind::example::Color>(m, "Color")
-            .value("Red", cppbind::example::Color::Red)
-            .value("Green", cppbind::example::Color::Green)
-            .value("Blue", cppbind::example::Color::Blue);
+        py::enum_<cppbind::example::LogLevel>(m, "LogLevel")
+            .value("DEBUG", cppbind::example::LogLevel::debug_level)
+            .value("log_info_level", cppbind::example::LogLevel::info_level)
+            .value("WARNING", cppbind::example::LogLevel::warning_level)
+            .value("ERROR", cppbind::example::LogLevel::error_level)
+            .value("LOG_CRITICAL", cppbind::example::LogLevel::critical_level);
     }
     {
         using namespace cppbind::example;
-        py::enum_<cppbind::example::ColorShade>(m, "ColorShade")
-            .value("ShadeLight", cppbind::example::ColorShade::Light)
-            .value("ShadeDark", cppbind::example::ColorShade::Dark)
-            .value("ShadeSemiLight", cppbind::example::ColorShade::SemiLight)
-            .value("ShadeSemiDark", cppbind::example::ColorShade::SemiDark);
+        m.def("get_next_log_level", &cppbind::example::getNextLogLevel, py::arg("log_level"), py::return_value_policy::automatic);
     }
-} /* bindExamplesLibEnumsColorPygen */
+} /* bindExamplesLibEnumsLoggingPygen */

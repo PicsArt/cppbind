@@ -191,7 +191,8 @@ enum:
           {%- if case.comment %}
           {{case.comment|make_py_comment|indent}}
           {%- endif %}
-          {{vars.enum_case_name_prefix + case.name}} = {{m}}.{{vars.name}}.{{case.name}}
+          {%- set case_name = vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name) %}
+          {{case_name}} = {{m}}.{{vars.name}}.{{case_name}}
           {%- endif %}
           {%- endfor %}
 
@@ -219,7 +220,7 @@ enum:
           py::enum_<{{cxx.type_name}}>(m, "{{vars.name}}")
               {%- for case in enum_cases %}
               {%- if case.name not in vars.enum_excluded_cases %}
-              .value("{{case.name}}", {{cxx.type_name}}::{{case.name}})
+              .value("{{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}}", {{cxx.type_name}}::{{case.name}})
               {%- endif %}
               {%- endfor -%};
       }
@@ -467,9 +468,10 @@ constructor:
                                        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                        {%- if arg.default -%}
                                        {%- if arg.is_enum %}
-                                       {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-                                       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                       {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+                                       {%- set enum_case_name = arg.default.split('::')|last %}
+                                       {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+                                       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+                                       {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                        {%- endif -%}
                                        {%- else -%}
                                        {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
@@ -536,9 +538,10 @@ method:
                                                           {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                                           {%- if arg.default -%}
                                                           {%- if arg.is_enum %}
-                                                          {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-                                                          {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                                          {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+                                                          {%- set enum_case_name = arg.default.split('::')|last %}
+                                                          {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+                                                          {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+                                                          {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                                           {%- endif -%}
                                                           {%- else -%}
                                                           {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
@@ -649,9 +652,10 @@ function:
                                       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                       {%- if arg.default -%}
                                       {%- if arg.is_enum %}
-                                      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-                                      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                      {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+                                      {%- set enum_case_name = arg.default.split('::')|last %}
+                                      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+                                      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+                                      {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                       {%- endif -%}
                                       {%- else -%}
                                       {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}

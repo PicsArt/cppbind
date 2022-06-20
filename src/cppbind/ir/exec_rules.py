@@ -274,7 +274,8 @@ class Context(BaseContext):
         namespaces = []
         parent = self.node.parent
         while cli.CursorKind.NAMESPACE == parent.clang_cursor.kind:
-            namespaces.append(parent.spelling)
+            if parent.spelling:
+                namespaces.append(parent.spelling)
             parent = parent.parent
         return '::'.join(reversed(namespaces))
 

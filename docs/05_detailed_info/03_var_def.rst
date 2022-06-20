@@ -143,6 +143,7 @@ Now let's go through the key variables:
 - **extra_headers** - extra headers to be processed. For example, CppBind uses this variable to process standard exception headers to generate target language bindings.
 - **enum_case_name_prefix** - string which is added as a prefix of enum fields names.
 - **enum_excluded_cases** - list of enum cases that must not be exposed in the target language.
+- **enum_case_names** - dictionary to define the mapping between the original and target enum case names.
 - **cxx_out_rel_path** - C output relative path to project output directory. This variable is used for constructing generated C includes.
 - | **full_package** - full package constructed from package_prefix and package. For each target language the construction formula for default value is different.
   | Note that it's used for Python and Kotlin for target package generation and changing it affects generated file paths as well.
@@ -161,6 +162,7 @@ Now let's go through the key variables:
 - **hash_method** - the name of hash method in C++. If users have annotated a method with this name then in each target language an appropriate hash method will be generated. The variable is allowed on **root** and should be defined once per project.
 - **equals_method** - the name of equals method in C++. If users have annotated a method with this name then in each target language an appropriate equals method/operator will be generated. The variable is allowed on **root** and should be defined once per project.
 - **tostring_method** - the name of toSting method in C++. If users have annotated a method with this name then in each target language an appropriate string converting method will be generated. The variable is allowed on **root** and should be defined once per project.
+
 .. note::
 
    The default value and other properties can be easily overridden.

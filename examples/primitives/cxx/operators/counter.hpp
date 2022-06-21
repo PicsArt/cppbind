@@ -1,6 +1,8 @@
 #ifndef counter_h
 #define counter_h
 
+#include <vector>
+
 namespace cppbind::example {
 // [example]
 /**
@@ -111,6 +113,13 @@ public:
 
     /**
      * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    PositiveCounter(std::vector<int> counts) : _multi_counts(counts) {}
+
+    /**
+     * __API__
      * action: gen_method
      * kotlin.name: equals
      * python.name: __eq__
@@ -122,8 +131,18 @@ public:
         return this->_count == other._count;
     }
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    int& operator [] (int i) {
+        return _multi_counts[i];
+    }
+
 private:
     int _count;
+    std::vector<int> _multi_counts;
 };
 
 }

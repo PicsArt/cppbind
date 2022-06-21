@@ -1,6 +1,6 @@
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_binary", "swift_library", "swift_test")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library", "swift_test")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_binary")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library", "kt_jvm_test")
 
 config_setting(
     name = "on_linux",
@@ -26,6 +26,8 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+# swift
+
 cc_library(
     name = "array_swift_wrapper",
     srcs = glob(["swift/**/*.c*"]),
@@ -49,12 +51,13 @@ swift_library(
     ],
 )
 
-swift_binary(
+swift_test(
     name = "array_swift",
     srcs = ["usage/swift/array_usage.swift"],
-    copts = ["-parse-as-library"],
     deps = [":array_swift_library"],
 )
+
+# python
 
 pybind_extension(
     name = "pybind_example_lib",
@@ -82,7 +85,7 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
+py_test(
     name = "array_python",
     srcs = ["usage/python/array_usage.py"],
     main = "usage/python/array_usage.py",
@@ -93,6 +96,8 @@ py_binary(
         ":array_py_library",
     ],
 )
+
+# kotlin
 
 cc_library(
     name = "jni_header_lib",
@@ -110,7 +115,6 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
-# kotlin
 cc_library(
     name = "array_kt_wrapper",
     srcs = glob(["kotlin/wrappers/**/*.cpp"]),
@@ -137,16 +141,23 @@ cc_binary(
     deps = [":array_kt_wrapper"],
 )
 
-kt_jvm_binary(
-    name = "array_kotlin",
-    srcs = glob([
-        "kotlin/src/**/*.kt",
-        "usage/kotlin/**/*.kt",
-    ]),
+kt_jvm_library(
+    name = "kt_examples_library",
+    srcs = glob(
+        ["kotlin/src/**/*.kt"],
+        exclude = ["**/array_usage.kt"],
+    ),
     data = select({
         ":on_linux": ["libwrapper_jni.so"],
         ":on_macos": ["libwrapper_jni.dylib"],
     }),
+    visibility = ["//visibility:public"],
+)
+
+kt_jvm_test(
+    name = "array_kotlin",
+    srcs = ["usage/kotlin/array_usage.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=."],
     main_class = "array_usage.ArrayUsageApp",
 )

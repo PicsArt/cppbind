@@ -322,15 +322,13 @@ class:
              */
             {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-            {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
-            {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
-            {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
+            {%- set polymorphic_base = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
 
             /**
              * An internal method to create a Swift object from a C++ object.
              * It is intended to be used by the generated code.
              */
-            {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{'override ' if polymorphic_base and (polymorphic_base.vars.descendants if polymorphic_base.vars.descendants is not none else polymorphic_base.descendants)}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
               {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
             }
             {%- endif %}
@@ -499,15 +497,12 @@ interface:
           {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
           {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-          {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
-          {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
-          {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
 
           /**
            * An internal method to create a Swift object from a C++ object.
            * It is intended to be used by the generated code.
            */
-          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+          class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
             {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
           }
           {%- endif %}

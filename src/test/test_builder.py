@@ -50,3 +50,6 @@ def test_is_output_changed():
     old3 = old1 + "next4"
 
     assert is_output_changed(old3, new) is True
+
+    old4 = "prefix" + old1
+    assert is_output_changed(old4, new) is True

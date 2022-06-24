@@ -25,7 +25,7 @@ def is_output_changed(old, new):
     idx = new.find(OUTPUT_MODIFICATION_KEY)
     while idx != -1:
         new_to = new[:idx]
-        old_to = new[:idx]
+        old_to = old[:idx]
         if new_to != old_to:
             # compare until keyword occurrence
             return True

@@ -18,6 +18,7 @@ namespace cppbind::example {
  */
 class Task {
 public:
+    Task(){};
     /**
      * Task Constructor.
      * __API__

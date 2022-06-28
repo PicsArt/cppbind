@@ -8,7 +8,7 @@ Global functions
 
 Let's take a look at a global function binding example. Here is a sample source codes of it:
 
-.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.h
    :language: cpp
    :start-after: [simple-example]
    :end-before: [simple-example]
@@ -44,7 +44,7 @@ And here is a small code demonstrating usage of the generated bindings:
 
 Let's bind more complex examples like template ``makePair`` and ``max``, overloaded ``concat``, etc.
 
-.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.h
    :language: cpp
    :start-after: [example]
    :end-before: [example]
@@ -228,7 +228,7 @@ Custom argument names and labels
 
 It is possible to specify argument names and argument labels (for Swift only) using **argument_name** and **argument_label** variables. Here's an example function where the user explicitly gives the argument name and label for each argument. Those new values will be used in the target language instead of the names they have in C++.
 
-.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.h
    :language: cpp
    :start-after: [custom-arg-examples]
    :end-before:  [custom-arg-examples]
@@ -371,7 +371,7 @@ Default argument support for literals and enums are handled differently from def
 
 Here are some sample functions with default arguments:
 
-.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.h
    :language: cpp
    :start-after: [non-complex-defaults-example]
    :end-before: [non-complex-defaults-example]
@@ -425,7 +425,7 @@ Here's a sample code using the above functions:
 Complex cases like ``t=Task("MyTask")`` or ``t=24>>2`` are handled differently.
 Let's take a look at the following example:
 
-.. literalinclude:: /../examples/primitives/cxx/globs/utils.hpp
+.. literalinclude:: /../examples/primitives/cxx/globs/utils.h
    :language: cpp
    :start-after: [complex-defaults-example]
    :end-before: [complex-defaults-example]

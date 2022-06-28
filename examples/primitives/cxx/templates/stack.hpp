@@ -46,7 +46,9 @@ class Stack: public Container {
      * action: gen_constructor
      * throws: no_throw
      */
-    Stack(T& st) {};
+    Stack(T* st) {
+        push(st);
+    };
 
     /**
      * __API__

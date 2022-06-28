@@ -1,4 +1,4 @@
-build --cxxopt=-std=c++17
+build --cxxopt=-std=c++17 --cxxopt=-Werror --cxxopt=-Wunused-parameter
 build --client_env=CC=clang
 build --symlink_prefix=/
 

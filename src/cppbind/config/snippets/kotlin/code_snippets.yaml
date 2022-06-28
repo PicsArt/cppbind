@@ -67,7 +67,7 @@ file:
 
       {{body}}
       {% set file = path.splitext(path.basename(vars.file_fullname))[0] %}
-      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
+      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass, jobjectid id) {
           validateID(id);
           return env->NewStringUTF(reinterpret_cast<CppBindCObject*>(id)->type);
       }{{new_line}}
@@ -193,7 +193,7 @@ var_class_cxx: &var_class_cxx
         {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
         {%- if is_root_class %}
         {%- set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
-        extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
+        extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv*, jobject, jobjectid id){
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
@@ -792,7 +792,7 @@ constructor:
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set index = '_' + index|string if index else '' %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + template_postfix + index) %}
-      extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{', ' if args}}
+      extern "C" JNIEXPORT jobjectid {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {% for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -1156,7 +1156,7 @@ method:
       {%- set func_name="j%s%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix, index) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
 
-      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}(JNIEnv* env, jobject obj{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
+      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -1334,7 +1334,7 @@ function:
       {%- endmacro %}
       {%- set file = path.splitext(path.basename(vars.file_fullname))[0] %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', func_name) %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass cls{{', ' if args}}
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -1478,7 +1478,7 @@ property_getter:
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}};
@@ -1488,7 +1488,7 @@ property_getter:
       {%- if vars.action == 'gen_property_setter' %}
       {% set func_name="jSet%s"|format(vars.name|lower) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-      extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
+      extern "C" JNIEXPORT void {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {% set converter = rconverter.jni_to_cxx %}
@@ -1628,7 +1628,7 @@ getter:
       {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- if 'no_throw' not in vars.throws %}
@@ -1647,7 +1647,7 @@ getter:
       {%- if setter is defined %}
       {% set func_name="j%s%s"|format(setter.vars.name|capitalize, template_postfix) %}
       {%- set jni_setter_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}, ...){
+      extern "C" JNIEXPORT void {{jni_setter_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}, ...){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- set converter = setter.args[0].converter.jni_to_cxx %}

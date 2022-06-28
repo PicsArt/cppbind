@@ -24,7 +24,6 @@ enum class LogLevel {
 };
 // [example]
 
-namespace {
 
 /**
  * __API__
@@ -32,11 +31,7 @@ namespace {
  * package: enums
  * throws: no_throw
  */
-LogLevel getNextLogLevel(const LogLevel& log_level) {
-    return static_cast<LogLevel>((static_cast<int>(log_level) + 1) % 5);
-}
-
-}
+LogLevel getNextLogLevel(const LogLevel& log_level);
 
 }
 

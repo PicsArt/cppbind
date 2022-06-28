@@ -1,6 +1,7 @@
 #ifndef optionals_h
 #define optionals_h
 
+
 #include <string>
 #include <string_view>
 #include <memory>
@@ -173,7 +174,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Optionals(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")) {}
+    Optionals(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")): _task(task), _i(i), _r(r) {}
 // [complex-value-examples]
 
 
@@ -228,6 +229,22 @@ public:
 	    return person;
 	}
 
+    int getI() {
+        return _i;
+    }
+
+    Task& getTask() {
+        return _task;
+    }
+
+    Root& getRoot() {
+        return _r;
+    }
+
+private:
+    Task _task;
+    int _i;
+    Root _r;
 };
 }
 

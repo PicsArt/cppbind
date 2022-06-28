@@ -121,7 +121,9 @@ struct Utils {
      * throws: no_throw
      */
     static void checkNonnullArg(NumberDouble* number) {
-
+        if (!number){
+            throw std::invalid_argument("number cannot be nullptr.");
+        }
     }
 
     /**

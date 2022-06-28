@@ -145,7 +145,7 @@ inline std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
-inline jobject extractObject(JNIEnv* env, jobject obj)  {
+inline jobject extractObject(JNIEnv*, jobject obj)  {
     // to not have redundant checks
     return obj;
 }

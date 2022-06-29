@@ -14,13 +14,13 @@ There are two variables defined in modulemap_variable_definitions.yaml:
 
 The first is the full path of the modulemap file, and the second is the export declaration to define imported modules that will be exported.
 
-Additionally **c_wrapper_lib_name** and **cxx_out_rel_path** should be properly defined.
+Additionally **c_wrapper_lib_name** and **cxx_helpers_out_rel_path** should be properly defined.
 
 .. code-block:: yaml
 
-    cxx_out_rel_path: ''
+    cxx_helpers_out_rel_path: ''
     c_wrapper_lib_name: <FrameworkName>.<CBindingsSubmoduleName>
 
-Here **cxx_out_rel_path** is set to an empty string in order to not generate relative includes for CppBind C helpers.
+Here **cxx_helpers_out_rel_path** is set to an empty string in order to not generate relative includes for CppBind C helpers.
 
 For the complete example, follow the link: `Modulemap Example <https://github.com/PicsArt/cppbind/tree/master/examples/features/modulemap/HelloExample>`_.

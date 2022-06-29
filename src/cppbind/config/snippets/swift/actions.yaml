@@ -8,13 +8,13 @@
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}
       {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
-      {{path.join(vars.cxx_out_dir, file_rel_name)}}
+      {{path.join(vars.cxx_helpers_out_dir, file_rel_name)}}
 
     variables:
       cxx_helper_includes: |
         {% set filename, file_extension = path.splitext(file_name) %}
         {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
-        {{[vars.cxx_out_rel_path, file_rel_name]|path_join}}
+        {{[vars.cxx_helpers_out_rel_path, file_rel_name]|path_join}}
 
 - file:
     files_glob: 
@@ -22,7 +22,7 @@
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}
       {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
-      {{path.join(vars.cxx_out_dir, file_rel_name)}}
+      {{path.join(vars.cxx_helpers_out_dir, file_rel_name)}}
 
 - file:
     files_glob: 

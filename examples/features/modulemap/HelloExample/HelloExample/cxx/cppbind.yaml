@@ -16,7 +16,7 @@ vars: |
     - typeinfo
   mac.clang_args:
     - --sysroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-  cxx_out_rel_path: ''
+  cxx_helpers_out_rel_path: ''
   swift.package_prefix: ''
   swift.cxx_out_dir: {{path.join(out_prj_dir, "swift/wrappers")}}
   swift.out_dir: {{path.join(out_prj_dir, "swift/src")}}

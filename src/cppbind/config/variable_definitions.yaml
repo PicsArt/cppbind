@@ -213,6 +213,11 @@ helpers_out_dir:
   default: '{{path.abspath(path.join(out_dir, helpers_package_prefix|replace(".", path.sep)))}}'
   allowed_on: [ root ]
 
+cxx_helpers_out_dir:
+  inheritable: true
+  default: '{{cxx_out_dir}}'
+  allowed_on: [ root ]
+
 exception_helpers_package:
   inheritable: true
   default: exception_helpers
@@ -316,9 +321,9 @@ enum_case_names:
   allowed_on: [ enum ]
   type: dict
 
-cxx_out_rel_path:
+cxx_helpers_out_rel_path:
   inheritable: true
-  default: "{{path.relpath(cxx_out_dir, out_prj_dir)}}"
+  default: "{{path.relpath(cxx_helpers_out_dir, out_prj_dir)}}"
   allowed_on: [ root ]
 
 full_package:

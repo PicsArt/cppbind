@@ -125,8 +125,9 @@ Now let's go through the key variables:
 - **prj_rel_file_name** - source file name relative to project root directory.
 - **package_prefix** - package prefix where generated files is saved.
 - **helpers_package_prefix** - path relative to **out_dir** where target language helpers are copied from **helpers_dir**.
-- | **helpers_out_dir** - directory where helper/util files must be copied. The default value is based on helpers_package_prefix,
+- | **helpers_out_dir** - directory where helper/util files are copied. The default value is based on **helpers_package_prefix**,
   | when setting the value for this variable consider updating the value of **helpers_package_prefix** as well, otherwise Python imports would be broken.
+- **cxx_helpers_out_dir** - directory where C helper/util files are copied. The default value is **cxx_out_dir**.
 - **exception_helpers_package** - package name of standard exception helpers.
 - **exception_file_name** - file name of standard exception helpers.
 - **cxx_helpers_dir** - CppBind C++ helpers directory.
@@ -144,7 +145,7 @@ Now let's go through the key variables:
 - **enum_case_name_prefix** - string which is added as a prefix of enum fields names.
 - **enum_excluded_cases** - list of enum cases that must not be exposed in the target language.
 - **enum_case_names** - dictionary to define the mapping between the original and target enum case names.
-- **cxx_out_rel_path** - C output relative path to project output directory. This variable is used for constructing generated C includes.
+- **cxx_helpers_out_rel_path** - C helpers output relative path to project output directory. This variable is used for constructing generated C includes.
 - | **full_package** - full package constructed from package_prefix and package. For each target language the construction formula for default value is different.
   | Note that it's used for Python and Kotlin for target package generation and changing it affects generated file paths as well.
   | This variable needs to be synchronized with **c_file_fullname**, **h_file_fullname** and **file_fullname**.

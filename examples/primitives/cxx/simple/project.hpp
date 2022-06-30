@@ -7,7 +7,7 @@
 #include "cxx/simple/task.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Class holding project information.
  * __API__
@@ -70,6 +70,6 @@ private:
     std::vector<Task*> _tasks;
     std::string _title;
 };
-// [example]
+// [example-end]
 }
 #endif

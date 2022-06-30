@@ -4,7 +4,7 @@ import com.examples.enums.*
 
 fun use() {
 
-// [color-usage]
+// [color-usage-start]
 assert(Color.Red.value == 1)
 assert(Color.Blue.value == 20)
 
@@ -13,7 +13,7 @@ assert(Color.Blue.toString() == "20")
 val frame = Frame()
 frame.backgroundColor = Color.Red
 assert(frame.backgroundColor == Color.Red)
-// [color-usage]
+// [color-usage-end]
 
 assert(ColorShade.ShadeLight.value == 1)
 assert(ColorShade.ShadeDark.value == 2)

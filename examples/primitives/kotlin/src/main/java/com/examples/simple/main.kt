@@ -5,12 +5,12 @@ import com.examples.simple.Task
 import com.examples.simple.Root
 
 fun use() {
-// [task-usage]
+// [task-usage-start]
 val task = Task("My Task")
 assert(task.title == "My Task")
-// [task-usage]
+// [task-usage-end]
 
-// [project-usage]
+// [project-usage-start]
 val title = "My Project"
 val prj = Project(title)
 assert(prj.title == title)
@@ -18,7 +18,7 @@ val task1 = Task("My Task")
 prj.addTask(task1)
 assert(prj.tasks().size == 1)
 assert(prj.tasks()[0].title == task1.title)
-// [project-usage]
+// [project-usage-end]
 
 // test for checking how const& return type is handled by pybind
 val holder = Holder()

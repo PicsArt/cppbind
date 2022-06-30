@@ -19,7 +19,7 @@ struct Utils {
      */
     Utils() {};
 
-    // [overload-example]
+    // [overload-example-start]
     /**
      * Sum two ints.
      * __API__
@@ -59,9 +59,9 @@ struct Utils {
     std::string concatenate(std::string first, std::string second, std::string third) {
         return first + second + third;
     }
-    // [overload-example]
+    // [overload-example-end]
 
-    // [static-example]
+    // [static-example-start]
      /**
      * Sub two ints.
      * __API__
@@ -83,7 +83,7 @@ struct Utils {
     static float sub(float first, float second) {
         return first - second;
     }
-    // [static-example]
+    // [static-example-end]
 };
 }
 #endif

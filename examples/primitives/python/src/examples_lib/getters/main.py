@@ -23,7 +23,7 @@ assert (person.name == "Jane Doe")
 # [person-usage]
 
 
-# [template-get-usage]
+# [template-get-usage-start]
 apple1 = Apple()
 apple2 = Apple()
 papple1 = Pineapple()
@@ -38,4 +38,4 @@ fruits.apples_with_pineapples = [papple1, papple2, apple1, apple2]
 apples_pineapples = fruits.apples_with_pineapples
 assert apples_pineapples[0].type == FruitType.Pineapple
 assert apples_pineapples[3].type == FruitType.Apple
-# [template-get-usage]
+# [template-get-usage-end]

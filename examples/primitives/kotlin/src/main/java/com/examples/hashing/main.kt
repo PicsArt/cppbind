@@ -1,7 +1,7 @@
 package com.examples.hashing
 
 fun use() {
-// [hashing-usage-example]
+// [hashing-usage-example-start]
 // custom hashCode, equals and toString
 val obj11 = Object1(1)
 val obj12 = Object1(1)
@@ -37,7 +37,7 @@ val map2: HashMap<Object2, String> = hashMapOf(
 assert(map2[obj21] != map2[obj22])
 // underlying C++ object type name used in toString
 assert(obj21.toString().endsWith("cppbind::example::Object2>"))
-// [hashing-usage-example]
+// [hashing-usage-example-end]
 
 // test cases
 // custom hash, equals and toString for shared_ref: False

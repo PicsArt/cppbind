@@ -56,7 +56,7 @@ struct NumberDouble {
 };
 // [example-helpers]
 
-// [example]
+// [example-start]
 /**
  * An example with nullable arguments.
  * __API__
@@ -213,6 +213,6 @@ const char* reverseString(const char* s) {
     return nullptr;
 }
 
-// [example]
+// [example-end]
 }
 #endif

@@ -22,7 +22,7 @@ person.name = "Jane Doe"
 assert(person.name == "Jane Doe")
 // [person-usage]
 
-// [template-get-usage]
+// [template-get-usage-start]
 let apple1 = Apple()
 let apple2 = Apple()
 let papple1 = Pineapple()
@@ -38,7 +38,7 @@ applesPineapples = fruits.applesWithPineapples
 assert(applesPineapples[0].type == FruitType.Pineapple)
 assert(applesPineapples[3].type == FruitType.Apple)
 
-// [template-get-usage]
+// [template-get-usage-end]
 }
 
 

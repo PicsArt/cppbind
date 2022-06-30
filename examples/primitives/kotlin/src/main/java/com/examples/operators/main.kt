@@ -4,7 +4,7 @@ import com.examples.operators.Counter
 import com.examples.operators.IntArrayImpl
 
 fun use() {
-// [counter-usage]
+// [counter-usage-start]
 var counter1 = Counter(1)
 var counter2 = Counter(2)
 var counter = counter1 + counter2
@@ -15,7 +15,7 @@ assert(counter1 < counter2)
 assert(counter1 <= counter2)
 assert(counter2 > counter1)
 assert(counter2 >= counter1)
-// [counter-usage]
+// [counter-usage-end]
 
 // checking == operator
 val c1 = Counter(1)
@@ -31,6 +31,7 @@ assert(pc1 == pc2)
 val pc3 = PositiveCounter(6)
 assert(!(pc1 == pc3))
 
+// [subscript-operator-usage-start]
 // checking subscript operator with get and set
 val counts = listOf(1, 3, 5, 10)
 val multiCounter = PositiveCounter(counts)
@@ -40,7 +41,6 @@ for (i in 0..3) {
 multiCounter[0] = 10
 assert(multiCounter[0] == 10)
 
-// [subscript-operator-usage]
 var intArr = IntArrayImpl()
 assert(intArr[0] == 0)
 assert(intArr[9] == 9)
@@ -50,7 +50,7 @@ intArr[9] = 10
 assert(intArr[9] == 10)
 assert(intArr["9"] == 10)
 assert(intArr[9.0] == 10)
-// [subscript-operator-usage]
+// [subscript-operator-usage-end]
 }
 
 class OperatorsApp {

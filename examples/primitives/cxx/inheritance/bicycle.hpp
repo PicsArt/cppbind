@@ -6,7 +6,7 @@
 #include "cxx/inheritance/vehicle.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_class
@@ -35,6 +35,6 @@ public:
 
     std::string name;
 };
-// [example]
+// [example-end]
 }
 #endif

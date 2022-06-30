@@ -103,7 +103,7 @@ class SimpleBaseException {
     SimpleBaseException(const int err_num) :
         err_num(err_num) {};
 
-    // [no-throw-example]
+    // [no-throw-example-start]
     /**
     * __API__
     * action: gen_method
@@ -112,7 +112,7 @@ class SimpleBaseException {
     virtual int errNum() {
         return err_num;
     }
-    // [no-throw-example]
+    // [no-throw-example-end]
 
     private:
         int err_num;
@@ -180,7 +180,7 @@ void throwExc(bool do_throw=false);
  */
 class ThrowExc {
     public:
-    // [throw-example]
+    // [throw-example-start]
     /**
      * __API__
      * action: gen_constructor
@@ -221,7 +221,7 @@ class ThrowExc {
     static cppbind::example::Task* throwsWithReturnValuePtr() {
         throw std::invalid_argument("return value error");
     }
-    // [throw-example]
+    // [throw-example-end]
 
     /**
      * __API__

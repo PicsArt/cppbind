@@ -5,7 +5,7 @@
 #include <string>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * An example with multi level nested type using header_code_fragment to create an alias in target languages.
  * __API__
@@ -99,7 +99,7 @@ struct List {
 private:
     std::list<Item*> items;
 };
-// [example]
+// [example-end]
 }
 
 #endif /* nested_examples_h */

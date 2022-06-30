@@ -3,7 +3,7 @@ from examples_lib.operators.counter_pygen import Counter, PositiveCounter
 from examples_lib.operators.intarray_pygen import IntArray
 
 
-# [counter-usage]
+# [counter-usage-start]
 counter1 = Counter(1)
 counter2 = Counter(2)
 counter = counter1 + counter2
@@ -12,7 +12,7 @@ assert counter1 < counter2
 assert counter2 > counter1
 counter1 += counter2
 assert counter1.count == 3
-# [counter-usage]
+# [counter-usage-end]
 
 # checking == operator
 c1 = Counter(1)
@@ -28,6 +28,7 @@ assert pc1 == pc2
 pc3 = PositiveCounter(6)
 assert not pc1 == pc3
 
+# [subscript-operator-usage-start]
 # checking subscript operator with get and set
 counts = [1, 3, 5, 10]
 multi_counter = PositiveCounter(counts)
@@ -36,7 +37,6 @@ for i, elem in enumerate(counts):
 multi_counter[0] = 10
 assert multi_counter[0] == 10
 
-# [subscript-operator-usage]
 intArr = IntArray()
 assert (intArr[0] == 0)
 assert (intArr[9] == 9)
@@ -46,7 +46,7 @@ intArr[9] = 10
 assert (intArr[9] == 10)
 assert (intArr["9"] == 10)
 assert (intArr[9.0] == 10)
-# [subscript-operator-usage]
+# [subscript-operator-usage-end]
 
 
 # test for dir actions with relative path

@@ -3,12 +3,12 @@ from examples_lib.simple import pretty_print
 from examples_lib.simple.extended_task import TaskRoot, ExtendedTaskRoot
 from examples_lib.simple.task import PyTask as Task
 
-# [task-usage]
+# [task-usage-start]
 task = Task("My Task")
 assert task.title == "My Task"
-# [task-usage]
+# [task-usage-end]
 
-# [project-usage]
+# [project-usage-start]
 title = 'My Project'
 prj = Project(title=title)
 assert prj.title == title
@@ -19,7 +19,7 @@ task2 = Task('Second Task')
 prj.add_task(task2)
 
 assert prj.tasks() == [task1, task2]
-# [project-usage]
+# [project-usage-end]
 
 # [root-usage]
 path = '/path/to/root/'

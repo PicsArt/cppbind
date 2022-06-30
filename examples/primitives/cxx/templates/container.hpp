@@ -14,7 +14,7 @@
 
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * An example interface which descendant types are templates. Used for an example of downcast in target language.
  * __API__
@@ -29,7 +29,7 @@ class Container {
 public:
     virtual ~Container() = default;
 };
-// [example]
+// [example-end]
 /**
  * An example of usage for a type which descendants are template types.
  * Used for an example of downcast in target language.

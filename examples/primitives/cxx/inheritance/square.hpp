@@ -6,7 +6,7 @@
 #include "cxx/inheritance/rectangle.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_class
@@ -42,6 +42,6 @@ public:
     };
 
 };
-// [example]
+// [example-end]
 }
 #endif

@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * An example for with overloaded methods.
  * __API__
@@ -94,7 +94,7 @@ public:
 private:
 	int _count;
 };
-// [example]
+// [example-end]
 
 /**
  * A class example to the case when non-operator method is mapped to == operator
@@ -144,6 +144,7 @@ private:
     int _count;
     std::vector<int> _multi_counts;
 };
+
 
 }
 #endif

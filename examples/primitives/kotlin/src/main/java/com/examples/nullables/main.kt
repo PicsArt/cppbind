@@ -5,7 +5,7 @@ import com.examples.nullables.NumberInt
 import com.examples.nullables.NumberDouble
 
 fun use() {
-// [nullables-usage]
+// [nullables-usage-start]
 val n1 = NumberInt(1)
 val n2 = NumberInt(2)
 
@@ -38,7 +38,7 @@ assert(utils.numDouble?.value == d2.value)
 assert(reverseString("abc") == "cba")
 assert(reverseString(null) == null)
 
-// [nullables-usage]
+// [nullables-usage-end]
 }
 
 class NullablesApp {

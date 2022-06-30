@@ -12,7 +12,7 @@
 using StackProjectType = cppbind::example::Stack<cppbind::example::Project>;
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_class
@@ -69,7 +69,7 @@ class StackUsage  {
     };
 
 };
-// [example]
+// [example-end]
 
 /**
  * An example of a type derived from a template.

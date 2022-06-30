@@ -2,12 +2,12 @@ import XCTest
 import Wrapper
 
 func runInheritanceExamples() {
-// [simple-inheritance-usage]
+// [simple-inheritance-usage-start]
 let bicycle = Bicycle(numberOfSeats: 1)
 assert(bicycle.numberOfSeats == 1)
-// [simple-inheritance-usage]
+// [simple-inheritance-usage-end]
 
-// [multi-inheritance-usage]
+// [multi-inheritance-usage-start]
 let rectangle = RectangleImpl(length: 4.0, width: 2.0)
 assert(rectangle.area == 8.0)
 assert(rectangle.length == 4.0)
@@ -20,7 +20,7 @@ let square = Square(side: 5.0)
 assert(square.area == 25.0)
 assert(square.length == 5.0)
 assert(square.perimeter() == 20.0)
-// [multi-inheritance-usage]
+// [multi-inheritance-usage-end]
 
 // other test cases
 let gf = GeometricFigure(p: square)

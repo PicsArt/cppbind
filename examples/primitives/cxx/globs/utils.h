@@ -8,7 +8,7 @@
 #include "cxx/simple/task.hpp"
 
 
-// [simple-example]
+// [simple-example-start]
 /**
  * A global function example.
  * __API__
@@ -39,9 +39,9 @@ int mul(int first, int second, int third);
  * throws: no_throw
  */
 std::string concat(const std::string& str1, const std::string& str2);
-// [simple-example]
+// [simple-example-end]
 
-// [example]
+// [example-start]
 /**
  * A global overloaded function example.
  * __API__
@@ -91,9 +91,9 @@ namespace cppbind::example {
     }
 }
 
-// [example]
+// [example-end]
 
-// [non-complex-defaults-example]
+// [non-complex-defaults-example-start]
 /**
  * A global function with enum default argument.
  * __API__
@@ -125,9 +125,9 @@ std::string optionalString(std::string optionalStr = "abc");
  * throws: no_throw
  */
 int optionalInt(int i = 5);
-// [non-complex-defaults-example]
+// [non-complex-defaults-example-end]
 
-// [complex-defaults-example]
+// [complex-defaults-example-start]
 /**
  * __API__
  * action: gen_function
@@ -150,7 +150,7 @@ cppbind::example::Task singleComplexDefaultValue(cppbind::example::Task task = c
 std::string multipleMixedDefaultValues(cppbind::example::Task task = cppbind::example::Task("DefaultTask"),
                                        int i = 1,
                                        cppbind::example::Root r = cppbind::example::Root("DefaultRoot"));
-// [complex-defaults-example]
+// [complex-defaults-example-end]
 
 /// other test cases
 
@@ -174,7 +174,7 @@ cppbind::example::Project* optionalFDPtr(cppbind::example::Project* project = nu
  */
 void doNothing();
 
- // [custom-arg-examples]
+ // [custom-arg-examples-start]
  /** A global function with custom argument name and label.
  * __API__
  * action: gen_function
@@ -188,7 +188,7 @@ void doNothing();
     hometown: from
  */
 std::string greet(const std::string& name, const std::string& hometown);
-// [custom-arg-examples]
+// [custom-arg-examples-end]
 
 
 #endif

@@ -6,7 +6,7 @@
 
 namespace cppbind::example {
 
-// [factory-example]
+// [factory-example-start]
 /**
  * __API__
  * action: gen_class
@@ -25,9 +25,9 @@ public:
 private:
     Factory();
 };
-// [factory-example]
+// [factory-example-end]
 
-// [singleton-example]
+// [singleton-example-start]
 /**
  * __API__
  * action: gen_class
@@ -59,10 +59,10 @@ private:
     static Singleton* _instance;
 };
 
-// [singleton-example]
+// [singleton-example-end]
 
 
-// [employer-example]
+// [employer-example-start]
 
 /**
  * __API__
@@ -93,7 +93,7 @@ private:
     std::vector<Employee*> _employees;
 };
 
-// [employer-example]
+// [employer-example-end]
 
 }
 

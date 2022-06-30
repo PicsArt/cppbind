@@ -5,7 +5,7 @@
 
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_class
@@ -51,7 +51,7 @@ class TemplateMethods  {
        return std::make_pair(a, b);
     }
 };
-// [example]
+// [example-end]
 
 ///**
 // * An example for testing template functions inside a template.

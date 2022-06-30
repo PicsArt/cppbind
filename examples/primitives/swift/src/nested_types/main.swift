@@ -2,7 +2,7 @@ import XCTest
 import Wrapper
 
 func runNestedTypeExamples() {
-// [nested-types-usage]
+// [nested-types-usage-start]
 let value1 = List.Item.Value(value: 1)
 let value2 = Value(value: 3)
 
@@ -24,7 +24,7 @@ let listWrapper = ListWrapper()
 listWrapper.push_back(item: item1)
 assert(listWrapper.back.value.value == item1.value.value)
 
-// [nested-types-usage]
+// [nested-types-usage-end]
 
 let intListItemWrapper = IntListItemWrapper()
 let intItem = TemplateListInt.Item(v: 5)

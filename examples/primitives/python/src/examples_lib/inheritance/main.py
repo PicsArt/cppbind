@@ -22,13 +22,13 @@ from examples_lib.inheritance import (
     GoodOldDoctor
 )
 
-# [simple-inheritance-usage]
+# [simple-inheritance-usage-start]
 bicycle = Bicycle(1)
 assert bicycle.number_of_seats == 1
-# [simple-inheritance-usage]
+# [simple-inheritance-usage-end]
 
 
-# [multi-inheritance-usage]
+# [multi-inheritance-usage-start]
 rectangle = Rectangle(length=4.0, width=2.0)
 assert rectangle.area == 8.0
 assert rectangle.length == 4.0
@@ -41,7 +41,7 @@ square = Square(side=5.0)
 assert square.area == 25.0
 assert square.length == 5.0
 assert square.perimeter() == 20
-# [multi-inheritance-usage]
+# [multi-inheritance-usage-end]
 
 # other test cases
 gf = GeometricFigure(square)

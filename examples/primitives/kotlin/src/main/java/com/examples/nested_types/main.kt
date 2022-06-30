@@ -3,7 +3,7 @@ package com.examples.nested_types
 import com.examples.nested_types.usage.*
 
 fun use() {
-// [nested-types-usage]
+// [nested-types-usage-start]
 val value1 = Value(1)
 val value2 = List.Item.Value(3)
 
@@ -25,7 +25,7 @@ val listWrapper = ListWrapper()
 listWrapper.push_back(item1)
 assert(list.back.value.value == value1.value)
 
-// [nested-types-usage]
+// [nested-types-usage-end]
 
 val intListItemWrapper = IntListItemWrapper()
 val intItem = TemplateListInt.Item(5)

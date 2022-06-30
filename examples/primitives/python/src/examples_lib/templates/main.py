@@ -16,7 +16,7 @@ from examples_lib.templates import (
     MyStackProject,
 )
 
-# [stack-examples]
+# [stack-examples-start]
 stack_prj = StackPrj()
 assert stack_prj.empty()
 prj = Project(title="My Project")
@@ -34,7 +34,7 @@ stackNumber.push(num2)
 assert stackNumber.top().num == num2.num
 stackNumber.pop()
 assert stackNumber.top().num == num1.num
-# [stack-examples]
+# [stack-examples-end]
 
 # [stack-usage-examples]
 stack_prj.push(item=prj)
@@ -49,7 +49,7 @@ res = stack_usage.first_item_of_template_stack(p=stack_prj)
 assert res.title == prj.title
 # [stack-usage-examples]
 
-# [template-funcs-examples]
+# [template-funcs-examples-start]
 tm = TemplateMethods()
 max_int = tm.max(a=2, b=5)
 assert max_int == 5
@@ -68,7 +68,7 @@ pair_root_prj = tm.make_pair(a=root1, b=prj1)
 assert len(pair_root_prj) == 2
 assert pair_root_prj[0].path == root1.path
 assert pair_root_prj[1].title == prj1.title
-# [template-funcs-examples]
+# [template-funcs-examples-end]
 
 # [addressable-examples]
 path = "/path/to/root/"

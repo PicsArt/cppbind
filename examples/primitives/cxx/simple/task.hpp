@@ -4,7 +4,7 @@
 #include <string>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Class holding task information.
  * \internal
@@ -60,7 +60,7 @@ public:
 protected:
     std::string _title;
 };
-// [example]
+// [example-end]
 }
 
 #endif

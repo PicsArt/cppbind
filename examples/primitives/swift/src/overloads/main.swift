@@ -2,19 +2,19 @@ import XCTest
 import Wrapper
 
 func runOverloadExamples() {
-// [overload-usage]
+// [overload-usage-start]
 assert(Utils.sum(first: 1, second: 2) == 3)
 assert(Utils.sum(first: 2.0, second: 3.0) == 5.0)
 
 let utils = Utils()
 assert(utils.concatenate(first: "1", second: "2") == "12")
 assert(utils.concatenate(first: "a", second: "b", third: "c") == "abc")
-// [overload-usage]
+// [overload-usage-end]
 
-// [static-usage]
+// [static-usage-start]
 assert(Utils.minus(first: 3, second: 2) == 1)
 assert(Utils.minus(first: 7.0, second: 3.0) == 4.0)
-// [static-usage]
+// [static-usage-end]
 
 // constructor overloading
 let john_email = "john@email.com"

@@ -16,7 +16,7 @@
 
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * An example of a class template.
  * __API__
@@ -88,7 +88,7 @@ class Stack: public Container {
    std::vector<T*> _elements;
 
 };
-// [example]
+// [example-end]
 }
 #endif
 

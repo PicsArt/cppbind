@@ -3,7 +3,7 @@ import Wrapper
 
 
 func runExceptionExamples() {
-// [exceptions-usage]
+// [exceptions-usage-start]
 let result = try? ThrowExc.getByKey(m: [1 : 1], key: 0)
 assert(result == nil)
 
@@ -57,7 +57,7 @@ do {
     assert(false)
 }
 
-// [exceptions-usage]
+// [exceptions-usage-end]
 
 func logger(err_msg : String) -> Never {
     print("Log uncaught exception with user defined logger: \(err_msg)")

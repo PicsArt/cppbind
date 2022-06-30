@@ -4,7 +4,7 @@
 #include "cxx/enums/color.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Class Frame.
  * __API__
@@ -45,6 +45,6 @@ struct Frame {
         return Color::Red;
      }
 };
-// [example]
+// [example-end]
 }
 #endif

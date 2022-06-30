@@ -2,7 +2,7 @@ import XCTest
 import Wrapper
 
 func runNullableExamples() {
-// [nullables-usage]
+// [nullables-usage-start]
 let n1 = NumInt(val: 1)
 let n2 = NumInt(val: 2)
 
@@ -42,7 +42,7 @@ assert(utils.numDouble!.value == d2.value)
 // checking char *
 assert(reverseString(s: "abc") == "cba")
 assert(reverseString(s: nil) == nil)
-// [nullables-usage]
+// [nullables-usage-end]
 
 }
 

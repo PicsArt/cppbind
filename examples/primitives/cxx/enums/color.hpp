@@ -2,7 +2,7 @@
 #define color_hpp
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Color Enum.
  * __API__
@@ -61,6 +61,6 @@ enum class ColorShade {
     /// Unused field
     InternalField = 5
 };
-// [example]
+// [example-end]
 }
 #endif

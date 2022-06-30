@@ -6,7 +6,7 @@
 #include <memory>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Class with custom hash, equals and toString methods.
  * __API__
@@ -88,7 +88,7 @@ struct Object2 {
     virtual ~Object2() = default;
 };
 
-// [example]
+// [example-end]
 
 /**
  * Class with custom hash, equals and toString methods.

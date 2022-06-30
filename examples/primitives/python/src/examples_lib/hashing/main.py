@@ -9,7 +9,7 @@ from examples_lib.hashing import (
     ExtendedObject4
 )
 
-# [hashing-usage-example]
+# [hashing-usage-example-start]
 # custom __hash__, __eq__ and __str__
 obj11 = Object1(1)
 obj12 = Object1(1)
@@ -45,7 +45,7 @@ d2 = {
 assert d2[obj21] != d2[obj22]
 # CppBind generated __repr__ returning underlying C++ object type name and id
 assert repr(obj21).endswith('cppbind::example::Object2>')
-# [hashing-usage-example]
+# [hashing-usage-example-end]
 
 
 # test cases

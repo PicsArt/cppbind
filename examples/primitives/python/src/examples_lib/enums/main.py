@@ -4,7 +4,7 @@ from examples_lib.enums.frame_pygen import Frame
 from examples_lib.enums.logging_pygen import LogLevel, get_next_log_level
 
 
-# [color-usage]
+# [color-usage-start]
 assert Color.Red.value == 1
 assert Color.Blue.value == 20
 assert Color.Green.value == 2
@@ -19,7 +19,7 @@ assert isinstance(Color.Red, Color)
 frame = Frame()
 frame.background_color = Color.Red
 assert frame.background_color == Color.Red
-# [color-usage]
+# [color-usage-end]
 
 assert ColorShade.ShadeLight.value == 1
 assert ColorShade.ShadeDark.value == 2

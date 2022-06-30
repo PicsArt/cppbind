@@ -6,7 +6,7 @@
 #include <algorithm>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 
 /**
  * __API__
@@ -164,7 +164,7 @@ class Fruits  {
 private:
     std::vector<Fruit*> _fruits;
 };
-// [example]
+// [example-end]
 }
 
 #endif

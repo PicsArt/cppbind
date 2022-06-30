@@ -3,7 +3,7 @@ import Wrapper
 
 func runTemplateExamples() {
 
-// [stack-examples]
+// [stack-examples-start]
 let stackPrj = StackPrj()
 assert(stackPrj.empty())
 let prj = Project(title: "My Project")
@@ -21,7 +21,7 @@ stackNumber.push(item: num2)
 assert(stackNumber.top().num == num2.num)
 stackNumber.pop()
 assert(stackNumber.top().num == num1.num)
-// [stack-examples]
+// [stack-examples-end]
 
 // [stack-usage-examples]
 stackPrj.push(item: prj)
@@ -39,7 +39,7 @@ assert(res.title == prj.title)
 assert(res == prj)
 // [stack-usage-examples]
 
-// [template-funcs-examples]
+// [template-funcs-examples-start]
 let tm = TemplateMethods()
 let maxInt = tm.max(a: 2, b: 5)
 assert(maxInt == 5)
@@ -59,7 +59,7 @@ assert(Mirror(reflecting: pairRootPrj).children.count == 2)
 assert(pairRootPrj.0.path == root1.path)
 assert(pairRootPrj.1.title == prj1.title)
 
-// [template-funcs-examples]
+// [template-funcs-examples-end]
 
 // [addressable-examples]
 let path = "/path/to/root/"

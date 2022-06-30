@@ -4,18 +4,18 @@ import com.examples.overloads.Utils
 import com.examples.overloads.Employee
 
 fun use() {
-// [overload-usage]
+// [overload-usage-start]
 assert(Utils.sum(1, 2) == 3)
 assert(Utils.sum(2.0f, 3.0f) == 5.0f)
 val utils = Utils()
 assert(utils.concatenate("1", "2") == "12")
 assert(utils.concatenate("a", "b", "c") == "abc")
-// [overload-usage]
+// [overload-usage-end]
 
-// [static-usage]
+// [static-usage-start]
 assert(Utils.minus(3, 2) == 1)
 assert(Utils.minus(7.0f, 3.0f) == 4.0f)
-// [static-usage]
+// [static-usage-end]
 
 // constructor overloading
 val john = "John Doe"

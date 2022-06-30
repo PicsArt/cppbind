@@ -1,0 +1,70 @@
+site_name: CppBind
+site_url: https://cppbind.io/
+use_directory_urls: false
+nav:
+  - Introduction: index.md
+  - First Steps:
+    - Installation prerequisites: 02_first_steps/01_prerequisites.md
+    - Supported languages: 02_first_steps/02_supported_languages.md
+    - Installation: 02_first_steps/03_installation.md
+    - “Hello user” tutorial: 02_first_steps/04_hello_user.md
+    - “Array” tutorial: 02_first_steps/05_array_tutorial.md
+  - Main Features:
+    - Functions: 03_get_started/01_functions.md
+    - Classes/Structs: 03_get_started/02_classes.md
+    - Enums: 03_get_started/03_enums.md
+    - Inheritance: 03_get_started/04_inheritance.md
+    - Exception handling: 03_get_started/05_exception_handling.md
+    - Templates: 03_get_started/06_templates.md
+    - Operator Overloading: 03_get_started/07_operators.md
+    - Generation instructions: 03_get_started/08_gen_actions.md
+    - Variable definitions: 03_get_started/09_var_def.md
+    - Command line interface: 03_get_started/10_command_line_interface.md
+  - Advanced Topics:
+    - Snippets: 04_advanced_features/01_snippets.md
+    - Writing type converter: 04_advanced_features/02_custom_types.md
+    - New language bindings generation: 04_advanced_features/03_adding_language.md
+    - Building Swift bindings with Xcode: 04_advanced_features/04_swift_example_with_modulemap.md
+    - Object type preservation: 04_advanced_features/05_object_type_preservation.md
+  - Configuration:
+    - Application configuration: 05_detailed_info/01_app_config.md
+    - Project configuration: 05_detailed_info/02_proj_config.md
+  - Other:
+    - Frequently asked questions: 06_faqs/01_faq.md
+
+theme:
+  name: material
+  palette:
+    primary: deep purple
+    accent: deep purple
+  features:
+    # - navigation.sections
+    - navigation.expand
+  logo: _static/img/cppbind-icon.svg  
+  favicon: _static/img/cppbind-icon.svg
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  
+  - def_list
+  - codehilite:
+      linenums: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+        alternate_style: true 
+
+repo_url: https://github.com/PicsArt/cppbind
+edit_uri: ""
+
+copyright: Copyright &copy; <script>document.write( new Date().getFullYear() );</script> .
+
+plugins:
+  - git-revision-date-localized
+  - search
+  - include-markdown

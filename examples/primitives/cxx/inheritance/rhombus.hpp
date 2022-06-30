@@ -5,7 +5,7 @@
 #include "cxx/inheritance/parallelogram.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_interface
@@ -39,6 +39,6 @@ private:
     double _diagonal1;
     double _diagonal2;
 };
-// [example]
+// [example-end]
 }
 #endif

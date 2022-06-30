@@ -2,7 +2,7 @@
 #define parallelogram_hpp
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_interface
@@ -45,6 +45,6 @@ public:
         return this == p;
     }
 };
-// [example]
+// [example-end]
 }
 #endif

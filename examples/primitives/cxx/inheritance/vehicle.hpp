@@ -4,7 +4,7 @@
 #include<string>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_class
@@ -38,6 +38,6 @@ public:
 private:
     int _numberOfSeats;
 };
-// [example]
+// [example-end]
 }
 #endif

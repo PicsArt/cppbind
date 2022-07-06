@@ -131,7 +131,7 @@ Let's now bind a struct with overloaded methods:
 
 ~~~C++
 {% 
-include "../../examples/primitives/cxx/overloads/utils.h"
+include "../../examples/primitives/cxx/overloads/utils.hpp"
 start="[overload-example-start]"
 end="// [overload-example-end]"
 %} 

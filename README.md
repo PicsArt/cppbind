@@ -1,5 +1,5 @@
 
-![](https://drive.google.com/uc?export=view&id=1ex-4r2ZNZK3f4eYr09me_7TREj8H-wln){ width="450" }
+![](https://drive.google.com/uc?export=view&id=1ex-4r2ZNZK3f4eYr09me_7TREj8H-wln)
 
 # Introduction
 
@@ -33,70 +33,35 @@ CppBind generates bindings for C++ types and entities like classes,
 methods, global functions, enums, nested structures, templates, etc. The
 list of the main features of CppBind is following:
 
--   
-
-    [Functions](https://cppbind.io/03_get_started/01_functions.html)
-
-    :   -   [Global
-            functions](https://cppbind.io/03_get_started/01_functions.html#global-functions)
-        -   [Overloaded
-            functions](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
-        -   [Optional
-            arguments](https://cppbind.io/03_get_started/01_functions.html#nullable-arguments)
-        -   [Default
-            arguments](https://cppbind.io/03_get_started/01_functions.html#default-arguments)
-        -   [Return value's lifetime and ownership
-            management](https://cppbind.io/03_get_started/01_functions.html#return-value-policies)
-        -   [Controlling function arguments'
-            lifetime](https://cppbind.io/03_get_started/01_functions.html#keep-alive-policy)
-
--   
-
-    [OOP](https://cppbind.io/03_get_started/02_classes.html)
-
-    :   -   [Classes and
-            structs](https://cppbind.io/03_get_started/02_classes.html)
-        -   [Nested
-            types](https://cppbind.io/03_get_started/02_classes.html#nested-types)
-        -   [C++ classes/structs as target language
-            interfaces](https://cppbind.io/03_get_started/02_classes.html)
-        -   [Enumerations](https://cppbind.io/03_get_started/03_enums.html)
-        -   
-            [Inheritance](https://cppbind.io/03_get_started/04_inheritance.html)
-            :   -   [Single
-                    inheritance](https://cppbind.io/03_get_started/04_inheritance.html#single-inheritance)
-                -   [Multiple inheritance through the target language
-                    interfaces](https://cppbind.io/03_get_started/04_inheritance.html#multiple-inheritance)
-        -   [Object type
-            preservation](https://cppbind.io/04_advanced_features/05_object_type_preservation.html)
-        -   [Static
-            methods](https://cppbind.io/03_get_started/01_functions.html#static-methods)
-        -   [Method
-            overloading](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
-        -   [Converting getters/setters to target language
-            properties](https://cppbind.io/03_get_started/01_functions.html)
-        -   
-            [Operator overloading](https://cppbind.io/03_get_started/07_operators.html)
-            :   -   [Overloading subscript
-                    operator](https://cppbind.io/03_get_started/07_operators.html#overloading-subscript-operator)
-        -   
-            [Templates](https://cppbind.io/03_get_started/06_templates.html)
-            :   -   [Template
-                    classes](https://cppbind.io/03_get_started/06_templates.html#class-templates)
-                -   [Template methods and
-                    functions](https://cppbind.io/03_get_started/06_templates.html)
-                -   [Converting getters/setters with template parameters
-                    to target language
-                    properties](https://cppbind.io/03_get_started/06_templates.html#template-getters-setters)
-        -   [Exception
-            handling](https://cppbind.io/03_get_started/05_exception_handling.html)
-        -   [Standard library types (std::shared_ptr, std::vector,
-            std::map,
-            etc.)](https://github.com/PicsArt/cppbind/tree/master/examples/primitives/cxx/containers)
-        -   [Custom type
-            conversions](https://cppbind.io/04_advanced_features/02_custom_types.html)
-        -   [Intelligent code
-            completion](https://en.wikipedia.org/wiki/Intelligent_code_completion)
+- [Functions](https://cppbind.io/03_get_started/01_functions.html)
+  - [Global functions](https://cppbind.io/03_get_started/01_functions.html#global-functions)
+  - [Overloaded functions](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
+  - [Optional arguments](https://cppbind.io/03_get_started/01_functions.html#nullable-arguments)
+  - [Default arguments](https://cppbind.io/03_get_started/01_functions.html#default-arguments)
+  - [Return value's lifetime and ownership management](https://cppbind.io/03_get_started/01_functions.html#return-value-policies)
+  - [Controlling function arguments' lifetime](https://cppbind.io/03_get_started/01_functions.html#keep-alive-policy)
+- [OOP](https://cppbind.io/03_get_started/02_classes.html)
+  - [Classes and structs](https://cppbind.io/03_get_started/02_classes.html)
+  - [Nested types](https://cppbind.io/03_get_started/02_classes.html#nested-types)
+  - [C++ classes/structs as target language interfaces](https://cppbind.io/03_get_started/02_classes.html)
+  - [Enumerations](https://cppbind.io/03_get_started/03_enums.html)
+  - [Inheritance](https://cppbind.io/03_get_started/04_inheritance.html)
+    - [Single inheritance](https://cppbind.io/03_get_started/04_inheritance.html#single-inheritance)
+    - [Multiple inheritance through the target language interfaces](https://cppbind.io/03_get_started/04_inheritance.html#multiple-inheritance)
+  - [Object type preservation](https://cppbind.io/04_advanced_features/05_object_type_preservation.html)
+  - [Static methods](https://cppbind.io/03_get_started/01_functions.html#static-methods)
+  - [Method overloading](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
+  - [Converting getters/setters to target language properties](https://cppbind.io/03_get_started/01_functions.html)
+  - [Operator overloading](https://cppbind.io/03_get_started/07_operators.html)
+    - [Overloading subscript operator](https://cppbind.io/03_get_started/07_operators.html#overloading-subscript-operator)
+  - [Templates](https://cppbind.io/03_get_started/06_templates.html)
+    - [Template classes](https://cppbind.io/03_get_started/06_templates.html#class-templates)
+    - [Template methods and functions](https://cppbind.io/03_get_started/06_templates.html)
+    - [Converting getters/setters with template parameters to target language properties](https://cppbind.io/03_get_started/06_templates.html#template-getters-setters)
+  - [Exception handling](https://cppbind.io/03_get_started/05_exception_handling.html)
+  - [Standard library types (std::shared_ptr, std::vector, std::map, etc.)](https://github.com/PicsArt/cppbind/tree/master/examples/primitives/cxx/containers)
+  - [Custom type conversions](https://cppbind.io/04_advanced_features/02_custom_types.html)
+  - [Intelligent code completion](https://en.wikipedia.org/wiki/Intelligent_code_completion)
 
 # Usage
 

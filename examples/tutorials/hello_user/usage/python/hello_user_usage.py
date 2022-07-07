@@ -14,5 +14,5 @@ assert host.welcome(user=young_user) == "Welcome Kate! Let me know if you want s
 user.want_a_drink = True
 young_user.want_a_drink = True
 
-assert host.welcome(user=user) == "Welcome John! Do you want cap of beer?"
-assert host.welcome(user=young_user) == "Welcome Kate! Do you want cap of juice?"
+assert host.welcome(user=user) == "Welcome John! Do you want cup of beer?"
+assert host.welcome(user=young_user) == "Welcome Kate! Do you want cup of juice?"

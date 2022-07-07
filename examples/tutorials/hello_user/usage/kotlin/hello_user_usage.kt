@@ -28,8 +28,8 @@ class HelloUserApp {
             user.want_a_drink = true
             young_user.want_a_drink = true
 
-            assert(host.welcome(user) == "Welcome John! Do you want cap of beer?")
-            assert(host.welcome(young_user) == "Welcome Kate! Do you want cap of juice?")
+            assert(host.welcome(user) == "Welcome John! Do you want cup of beer?")
+            assert(host.welcome(young_user) == "Welcome Kate! Do you want cup of juice?")
 
        }
 

@@ -81,7 +81,7 @@ special_functions:
 jni_functions: |
   {%- macro gen_jni_cxxid_function() -%}
   {%- set cxxid_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
-  extern "C" JNIEXPORT jlong {{cxxid_name}}(JNIEnv* env, jobject obj, jobjectid id) {
+  extern "C" JNIEXPORT jlong {{cxxid_name}}(JNIEnv*, jobject, jobjectid id) {
       auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
       auto cppbind_obj_id_ptr = cppbind_obj_id->ptr;
       {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}

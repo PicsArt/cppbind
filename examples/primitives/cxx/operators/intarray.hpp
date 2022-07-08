@@ -6,7 +6,7 @@
 namespace cppbind::example {
 
 const int SIZE = 10;
-// [example]
+// [example-start]
 /**
  * An example for with overloaded operators.
  * __API__
@@ -67,6 +67,6 @@ public:
 private:
 	int arr[10];
 };
-// [example]
+// [example-end]
 }
 #endif

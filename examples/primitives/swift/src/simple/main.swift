@@ -2,12 +2,12 @@ import XCTest
 import Wrapper
 
 func runSimpleExamples() {
-// [task-usage]
+// [task-usage-start]
 let task = Task(title: "My Task")
 assert(task.title == "My Task")
-// [task-usage]
+// [task-usage-end]
 
-// [project-usage]
+// [project-usage-start]
 let title = "My Project"
 let prj = Project(title: title)
 assert(prj.title == title)
@@ -16,7 +16,7 @@ let task1 = Task(title: "My Task")
 prj.addTask(task: task1)
 assert(prj.tasks().count == 1)
 assert(prj.tasks()[0].title == task1.title)
-// [project-usage]
+// [project-usage-end]
 
 // [root-usage]
 let path = "/path/to/root"

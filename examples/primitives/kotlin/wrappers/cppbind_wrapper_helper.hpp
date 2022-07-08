@@ -145,7 +145,7 @@ inline std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
-inline jobject extractObject(JNIEnv* env, jobject obj)  {
+inline jobject extractObject(JNIEnv*, jobject obj)  {
     // to not have redundant checks
     return obj;
 }
@@ -171,7 +171,7 @@ inline jdouble extractDouble(JNIEnv* env, jobject obj)  {
 
 inline jlong extractLong(JNIEnv* env, jobject obj)  {
     return env->CallLongMethod(obj,
-        env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()L"));
+        env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()J"));
 }
 
 inline jobject longToObject(JNIEnv* env, jlong val) {

@@ -94,7 +94,7 @@ enum:
         {%- if case.comment %}
         {{case.comment|make_doxygen_comment|indent(2)}}
         {%- endif %}
-        case {{vars.enum_case_name_prefix + case.name}} = {{case.value}}
+        case {{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}} = {{case.value}}
         {%- endif %}
         {%- endfor %}
         {%- if vars.code_fragment %}
@@ -322,15 +322,13 @@ class:
              */
             {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-            {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
-            {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
-            {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
+            {%- set polymorphic_base = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
 
             /**
              * An internal method to create a Swift object from a C++ object.
              * It is intended to be used by the generated code.
              */
-            {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{'override ' if polymorphic_base and (polymorphic_base.vars.descendants if polymorphic_base.vars.descendants is not none else polymorphic_base.descendants)}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
               {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
             }
             {%- endif %}
@@ -499,15 +497,12 @@ interface:
           {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
           {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-          {%- set polymorphic_bases = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|list -%}
-          {%- set polymorphic_bases_with_user_def_desc_list = polymorphic_bases|rejectattr('vars.descendants', 'equalto', none)|list -%}
-          {%- set polymorphic_bases_with_deduced_desc_list = polymorphic_bases|rejectattr('descendants', 'equalto', [])|list %}
 
           /**
            * An internal method to create a Swift object from a C++ object.
            * It is intended to be used by the generated code.
            */
-          {{'override ' if polymorphic_bases_with_user_def_desc_list or polymorphic_bases_with_deduced_desc_list}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+          class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
             {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
           }
           {%- endif %}
@@ -715,9 +710,10 @@ constructor:
       {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+      {%- set enum_case_name = arg.default.split('::')|last %}
+      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
@@ -1004,9 +1000,10 @@ method:
         {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
-        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+        {%- set enum_case_name = arg.default.split('::')|last %}
+        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
         {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
@@ -1280,9 +1277,10 @@ function:
       public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
-        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], cxx.displayname)) -%}
-        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+        {%- set enum_case_name = arg.default.split('::')|last %}
+        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
         {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}

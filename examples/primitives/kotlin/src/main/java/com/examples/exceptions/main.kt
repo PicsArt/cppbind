@@ -18,7 +18,7 @@ fun genUncaughtExceptions() {
 }
 
 fun use() {
- // [exceptions-usage]
+ // [exceptions-usage-start]
 try {
     ThrowExc.getByKey(mapOf(1 to 1), 0)
 } catch (e: StdOutOfRange) {
@@ -72,7 +72,7 @@ try {
     assert(false)
 }
 
-// [exceptions-usage]
+// [exceptions-usage-end]
 
 genUncaughtExceptions()
 

@@ -20,7 +20,9 @@ You can find them under usage directory.
 
 To run the program for three languages run the following command:
  ```bash
- bazel run hello_user_swift hello_user_python hello_user_kotlin
+ bazel run hello_user_swift
+ bazel run hello_user_python
+ bazel run hello_user_kotlin
  ```
  
 Generated Python bindings depend on [pybind11](https://github.com/pybind/pybind11). 

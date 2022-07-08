@@ -20,7 +20,9 @@ In this example we have a small usage program for each language which creates an
 
 To run the program for three languages run the following command:
  ```bash
- bazel run array_swift array_python array_kotlin
+ bazel run array_swift
+ bazel run array_python
+ bazel run array_kotlin
  ```
  
 CppBind-generated Python bindings are being binded to Python application with help of [pybind](https://github.com/pybind/pybind11). 

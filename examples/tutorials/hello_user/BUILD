@@ -1,6 +1,6 @@
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_binary", "swift_library", "swift_test")
+load("@build_bazel_rules_swift//swift:swift.bzl",  "swift_library", "swift_test")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
-load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_binary")
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_library", "kt_jvm_test")
 
 config_setting(
     name = "on_linux",
@@ -26,6 +26,8 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+# swift
+
 cc_library(
     name = "hello_user_swift_wrapper",
     srcs = glob(["swift/**/*.c*"]),
@@ -49,18 +51,19 @@ swift_library(
     ],
 )
 
-swift_binary(
+swift_test(
     name = "hello_user_swift",
     srcs = ["usage/swift/hello_user_usage.swift"],
-    copts = ["-parse-as-library"],
     deps = [":hello_user_swift_library"],
 )
+
+# python
 
 pybind_extension(
     name = "pybind_example_lib",
     srcs = glob([
         "python/**/*.cpp",
-        "python/**/*.hpp",
+        "python/**/*.h",
     ]),
     visibility = ["//visibility:public"],
     deps = [
@@ -82,7 +85,7 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
+py_test(
     name = "hello_user_python",
     srcs = ["usage/python/hello_user_usage.py"],
     main = "usage/python/hello_user_usage.py",
@@ -93,6 +96,8 @@ py_binary(
         ":hello_user_py_library",
     ],
 )
+
+# kotlin
 
 cc_library(
     name = "jni_header_lib",
@@ -137,16 +142,23 @@ cc_binary(
     deps = [":hello_user_kt_wrapper"],
 )
 
-kt_jvm_binary(
-    name = "hello_user_kotlin",
-    srcs = glob([
-        "kotlin/src/**/*.kt",
-        "usage/kotlin/**/*.kt",
-    ]),
+kt_jvm_library(
+    name = "kt_examples_library",
+    srcs = glob(
+        ["kotlin/src/**/*.kt"],
+        exclude = ["**/hello_user_usage.kt"],
+    ),
     data = select({
         ":on_linux": ["libwrapper_jni.so"],
         ":on_macos": ["libwrapper_jni.dylib"],
     }),
+    visibility = ["//visibility:public"],
+)
+
+kt_jvm_test(
+    name = "hello_user_kotlin",
+    srcs = ["usage/kotlin/hello_user_usage.kt"],
+    deps = ["kt_examples_library"],
     jvm_flags = ["-Djava.library.path=."],
     main_class = "hello_user_usage.HelloUserApp",
 )

@@ -1,12 +1,14 @@
 #ifndef optionals_h
 #define optionals_h
 
+
 #include <string>
 #include <string_view>
 #include <memory>
 #include <complex>
 #include "cxx/getters/person.hpp"
 #include "cxx/enums/color.hpp"
+#include "cxx/enums/logging.hpp"
 #include "cxx/simple/task.hpp"
 #include "cxx/simple/root.hpp"
 
@@ -137,6 +139,15 @@ public:
 	    return c;
 	}
 
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	LogLevel optionalEnumWithDefaultAndChangedNames(LogLevel level = LogLevel::warning_level) {
+	    return level;
+	}
+
 // [literals-example]
 
 // [complex-value-examples]
@@ -163,7 +174,7 @@ public:
      * action: gen_constructor
      * throws: no_throw
      */
-    Optionals(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")) {}
+    Optionals(Task task = Task("DefaultTask"), int i = 1, Root r = Root("DefaultRoot")): _task(task), _i(i), _r(r) {}
 // [complex-value-examples]
 
 
@@ -218,6 +229,22 @@ public:
 	    return person;
 	}
 
+    int getI() {
+        return _i;
+    }
+
+    Task& getTask() {
+        return _task;
+    }
+
+    Root& getRoot() {
+        return _r;
+    }
+
+private:
+    Task _task;
+    int _i;
+    Root _r;
 };
 }
 

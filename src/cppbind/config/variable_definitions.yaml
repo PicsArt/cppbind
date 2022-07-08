@@ -213,6 +213,11 @@ helpers_out_dir:
   default: '{{path.abspath(path.join(out_dir, helpers_package_prefix|replace(".", path.sep)))}}'
   allowed_on: [ root ]
 
+cxx_helpers_out_dir:
+  inheritable: true
+  default: '{{cxx_out_dir}}'
+  allowed_on: [ root ]
+
 exception_helpers_package:
   inheritable: true
   default: exception_helpers
@@ -310,9 +315,15 @@ enum_excluded_cases:
   allowed_on: [ enum ]
   type: list
 
-cxx_out_rel_path:
+enum_case_names:
+  inheritable: false
+  default: { }
+  allowed_on: [ enum ]
+  type: dict
+
+cxx_helpers_out_rel_path:
   inheritable: true
-  default: "{{path.relpath(cxx_out_dir, out_prj_dir)}}"
+  default: "{{path.relpath(cxx_helpers_out_dir, out_prj_dir)}}"
   allowed_on: [ root ]
 
 full_package:
@@ -324,16 +335,16 @@ full_package:
 
 c_file_fullname:
   inheritable: true
-  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
-  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}.cpp"
-  swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
+  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
+  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.cpp"
+  swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 h_file_fullname:
   inheritable: true
-  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
-  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}.hpp"
-  swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
+  kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
+  python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.h"
+  swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
   allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
 
 file_fullname:
@@ -355,7 +366,7 @@ c_pybind_filename:
 
 h_pybind_filename:
   inheritable: true
-  python.default: "{{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join}}.hpp"
+  python.default: "{{cxx_out_dir + pat_sep + [package_prefix, pybind_module.split('.')[-1] + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
   allowed_on: [ root ]
 
 descendants:

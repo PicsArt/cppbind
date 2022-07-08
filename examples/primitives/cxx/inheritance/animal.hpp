@@ -246,6 +246,58 @@ private:
     LittleFrog _little_frog;
 };
 
+/**
+ * Base class to check object construction method for swift (check 'override' specifier in case of empty descendant list).
+ * __API__
+ * swift.action: gen_class
+ * descendants: []
+ * package: inheritance
+ */
+class Dog {
+public:
+    /**
+     * __API__
+     * swift.action: gen_constructor
+     * throws: no_throw
+     */
+    Dog() {}
+
+    virtual ~Dog() = default;
+};
+
+/**
+ * Derived class to check object construction method for swift (check 'override' specifier in case of empty descendant list).
+ * __API__
+ * swift.action: gen_class
+ * package: inheritance
+ */
+class BigDog : public Dog {
+public:
+    /**
+     * __API__
+     * swift.action: gen_constructor
+     * throws: no_throw
+     */
+    BigDog() {}
+};
+
+/**
+ * Derived class to check object construction method for swift (check 'override' specifier in case of empty descendant list).
+ * This is necessary since the object construction method for BigDog won't be generated without this.
+ * __API__
+ * swift.action: gen_class
+ * package: inheritance
+ */
+class BlackBigDog : public BigDog {
+public:
+    /**
+     * __API__
+     * swift.action: gen_constructor
+     * throws: no_throw
+     */
+    BlackBigDog() {}
+};
+
 }
 
 #endif

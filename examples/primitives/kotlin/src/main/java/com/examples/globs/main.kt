@@ -7,7 +7,7 @@ import com.examples.globs.primitives.*
 import com.examples.simple.*
 
 fun use() {
-// [simple-usage-example]
+// [simple-usage-example-start]
 var mulInt = mul(5, 4)
 assert(mulInt == 20)
 
@@ -16,16 +16,16 @@ assert(mulInt1 == 60)
 
 var res = concat("Hello ", "Johnny")
 assert(res == "Hello Johnny" )
-// [simple-usage-example]
+// [simple-usage-example-end]
 
-// [glob-func-examples]
+// [glob-func-examples-start]
 res = concat("Hello ", "Johnny ", "Jane")
 assert(res == "Hello Johnny Jane")
 
-// [custom-arg-examples]
+// [custom-arg-examples-start]
 val greeting = greet("Johnny", "Florida")
 assert(greeting == "Hello Johnny from Florida")
-// [custom-arg-examples]
+// [custom-arg-examples-end]
 
 val maxInt = max(2, 5)
 assert(maxInt == 5)
@@ -42,7 +42,7 @@ val root1 = Root("/path/to/root/")
 val pairRootPrj = makePair(root1, prj1)
 assert(pairRootPrj.first.path == root1.path)
 assert(pairRootPrj.second.title == prj1.title)
-// [glob-func-examples]
+// [glob-func-examples-end]
 
 // other test cases for global functions
 
@@ -54,23 +54,23 @@ assert(optProj?.title == prj1.title)
 // just calling function with no return value and arguments
 doNothing()
 
-// [non-complex-defaults-usage]
+// [non-complex-defaults-usage-start]
 assert(optionalColor() == Color.Red)
 assert(optionalColor(Color.Blue) == Color.Blue)
 assert(optionalInt() == 5)
 assert(optionalInt(1) == 1)
 assert(optionalString() == "abc")
 assert(optionalString("def") == "def")
-// [non-complex-defaults-usage]
+// [non-complex-defaults-usage-end]
 
 // complex default values tests
-// [complex-defaults-usage]
+// [complex-defaults-usage-start]
 assert(multipleMixedDefaultValues() == "DefaultTask1DefaultRoot")
 assert(multipleMixedDefaultValues(Task("ABC")) == "ABC1DefaultRoot")
 assert(multipleMixedDefaultValues(Task("ABC"), 2) == "ABC2DefaultRoot")
 assert(multipleMixedDefaultValues(Task("ABC"), r=Root("Path") ) == "ABC1Path")
 assert(multipleMixedDefaultValues(Task("ABC"), 2, Root("Path") ) == "ABC2Path")
-// [complex-defaults-usage]
+// [complex-defaults-usage-end]
 
 }
 

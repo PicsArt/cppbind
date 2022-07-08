@@ -2,7 +2,7 @@ import XCTest
 import Wrapper
 
 func runOperatorExamples() {
-// [counter-usage]
+// [counter-usage-start]
 let counter1 = Counter(count: 1)
 let counter2 = Counter(count: 2)
 let counter = counter1 + counter2
@@ -11,7 +11,7 @@ assert(counter2 > counter1)
 counter1 += counter2
 assert(counter1.count == 3)
 assert(counter1 > counter2)
-// [counter-usage]
+// [counter-usage-end]
 
 // checking == operator
 let c1 = Counter(count: 1)
@@ -27,7 +27,16 @@ assert(pc1 == pc2)
 let pc3 = PositiveCounter(count: 6)
 assert(!(pc1 == pc3))
 
-// [subscript-operator-usage]
+// [subscript-operator-usage-start]
+// checking subscript operator with get and set
+let counts = [1, 3, 5, 10]
+let multiCounter = PositiveCounter(counts: counts)
+for i in 0...3 {
+    assert(multiCounter[i] == counts[i])
+}
+multiCounter[0] = 10
+assert(multiCounter[0] == 10)
+
 var intArr = IntArrayImpl()
 assert(intArr[0] == 0)
 assert(intArr[9] == 9)
@@ -37,7 +46,7 @@ intArr[9] = 10
 assert(intArr[9] == 10)
 assert(intArr["9"] == 10)
 assert(intArr[9.0] == 10)
-// [subscript-operator-usage]
+// [subscript-operator-usage-end]
 }
 
 #if os(Linux)

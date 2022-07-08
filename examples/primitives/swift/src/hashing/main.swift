@@ -3,7 +3,7 @@ import Wrapper
 
 func runObjectsExamples() {
 
-// [hashing-usage-example]
+// [hashing-usage-example-start]
 let obj11 = Object1(value: 1)
 let obj12 = Object1(value: 1)
 let obj13 = Object1(value: 2)
@@ -32,7 +32,7 @@ assert(d1.count == 2)
 assert(d1[obj11] == "Object 11")
 assert(d1[obj13] == "Object 13")
 
-// [hashing-usage-example]
+// [hashing-usage-example-end]
 
 
 // test cases

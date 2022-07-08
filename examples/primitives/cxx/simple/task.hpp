@@ -4,7 +4,7 @@
 #include <string>
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * Class holding task information.
  * \internal
@@ -18,6 +18,7 @@ namespace cppbind::example {
  */
 class Task {
 public:
+    Task(){};
     /**
      * Task Constructor.
      * __API__
@@ -59,7 +60,7 @@ public:
 protected:
     std::string _title;
 };
-// [example]
+// [example-end]
 }
 
 #endif

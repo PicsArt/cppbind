@@ -3,7 +3,7 @@
 #include "cxx/inheritance/parallelogram.hpp"
 
 namespace cppbind::example {
-// [example]
+// [example-start]
 /**
  * __API__
  * action: gen_interface
@@ -58,6 +58,6 @@ protected:
     double _width;
 
 };
-// [example]
+// [example-end]
 }
 #endif

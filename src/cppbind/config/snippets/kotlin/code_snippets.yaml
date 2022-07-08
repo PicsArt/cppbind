@@ -67,7 +67,7 @@ file:
 
       {{body}}
       {% set file = path.splitext(path.basename(vars.file_fullname))[0] %}
-      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass cls, jobjectid id) {
+      extern "C" JNIEXPORT jstring {{helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', 'jGettypebyid')}}(JNIEnv* env, jclass, jobjectid id) {
           validateID(id);
           return env->NewStringUTF(reinterpret_cast<CppBindCObject*>(id)->type);
       }{{new_line}}
@@ -91,7 +91,7 @@ enum:
           {%- if case.comment %}
           {{case.comment|make_doxygen_comment|indent(4)}}
           {%- endif %}
-          {{vars.enum_case_name_prefix + case.name}}({{case.value}})
+          {{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}}({{case.value}})
           {%- endif %}
           {%- endfor %};
 
@@ -193,7 +193,7 @@ var_class_cxx: &var_class_cxx
         {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
         {%- if is_root_class %}
         {%- set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
-        extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv* env, jobject obj, jobjectid id){
+        extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv*, jobject, jobjectid id){
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
             {%- endif %}
@@ -714,9 +714,10 @@ constructor:
       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+      {%- set enum_case_name = arg.default.split('::')|last %}
+      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -791,7 +792,7 @@ constructor:
       {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
       {%- set index = '_' + index|string if index else '' %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + template_postfix + index) %}
-      extern "C" JNIEXPORT jobjectid {{jni_name}}(JNIEnv* env, jobject obj{{', ' if args}}
+      extern "C" JNIEXPORT jobjectid {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {% for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -881,9 +882,10 @@ method:
         {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
         {%- if arg.is_enum %}
-        {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+        {%- set enum_case_name = arg.default.split('::')|last %}
+        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
         {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -1053,7 +1055,7 @@ method:
       {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
       {%- set comma = joiner(', ') -%}
       {%- set setter_var_name = 'value' %}
-      private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
+      private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
       {%- endif %}
       {%- endif %}
       {%- endif -%}
@@ -1154,7 +1156,7 @@ method:
       {%- set func_name="j%s%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix, index) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
 
-      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}(JNIEnv* env, jobject obj{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
+      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -1202,9 +1204,10 @@ function:
       fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
       {%- if arg.is_enum %}
-      {%- if arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(arg.default.split('::')|last, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_name_prefix + arg.default.split('::')|last}}
+      {%- set enum_case_name = arg.default.split('::')|last %}
+      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
       {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
@@ -1331,7 +1334,7 @@ function:
       {%- endmacro %}
       {%- set file = path.splitext(path.basename(vars.file_fullname))[0] %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', func_name) %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass cls{{', ' if args}}
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass{{', ' if args}}
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
@@ -1475,7 +1478,7 @@ property_getter:
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}};
@@ -1485,7 +1488,7 @@ property_getter:
       {%- if vars.action == 'gen_property_setter' %}
       {% set func_name="jSet%s"|format(vars.name|lower) %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-      extern "C" JNIEXPORT void {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
+      extern "C" JNIEXPORT void {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {% set converter = rconverter.jni_to_cxx %}
@@ -1625,7 +1628,7 @@ getter:
       {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
       {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jobject obj, jobjectid id){
+      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- if 'no_throw' not in vars.throws %}
@@ -1644,7 +1647,7 @@ getter:
       {%- if setter is defined %}
       {% set func_name="j%s%s"|format(setter.vars.name|capitalize, template_postfix) %}
       {%- set jni_setter_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-      extern "C" JNIEXPORT void {{jni_setter_name}}(JNIEnv* env, jobject obj, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}, ...){
+      extern "C" JNIEXPORT void {{jni_setter_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{setter.args[0].converter.jni.target_type_name}} {{setter.args[0].name}}, ...){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           {%- set converter = setter.args[0].converter.jni_to_cxx %}

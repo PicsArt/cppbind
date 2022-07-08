@@ -7,7 +7,7 @@ import com.examples.overloads.Employee
 import com.examples.getters.NumberInt
 
 fun use() {
-// [stack-examples]
+// [stack-examples-start]
 var stackPrj = StackPrj()
 assert(stackPrj.empty())
 val prj = Project("My Project")
@@ -25,7 +25,7 @@ stackNumber.push(num2)
 assert(stackNumber.top().num == num2.num)
 stackNumber.pop()
 assert(stackNumber.top().num == num1.num)
-// [stack-examples]
+// [stack-examples-end]
 
 // [stack-usage-examples]
 stackPrj.push(prj)
@@ -43,7 +43,7 @@ assert(res.title == prj.title)
 assert(res == prj)
 // [stack-usage-examples]
 
-// [template-funcs-examples]
+// [template-funcs-examples-start]
 val tm = TemplateMethods()
 val maxInt = tm.max(2, 5)
 assert(maxInt == 5)
@@ -61,7 +61,7 @@ var pairRootPrj = tm.makePair(root1, prj1)
 assert(pairRootPrj.first.path == root1.path)
 assert(pairRootPrj.second.title == prj1.title)
 
-// [template-funcs-examples]
+// [template-funcs-examples-end]
 
 // [addressable-examples]
 val path = "/path/to/root/"

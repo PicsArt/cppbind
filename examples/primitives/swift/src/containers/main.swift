@@ -51,6 +51,8 @@ func runContainerExamples() {
 
     let resultPair = pairUsage.getNestedPair()
     assert(nestedPair.0 == resultPair.0 && nestedPair.1 == resultPair.1)
+
+    assert(pairUsage.sumPairItems(p: (1, 2)) == 3)
     // [pair-usage]
 
     // [json-usage]

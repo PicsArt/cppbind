@@ -56,7 +56,7 @@ struct NumberDouble {
 };
 // [example-helpers]
 
-// [example]
+// [example-start]
 /**
  * An example with nullable arguments.
  * __API__
@@ -121,7 +121,9 @@ struct Utils {
      * throws: no_throw
      */
     static void checkNonnullArg(NumberDouble* number) {
-
+        if (!number){
+            throw std::invalid_argument("number cannot be nullptr.");
+        }
     }
 
     /**
@@ -211,6 +213,6 @@ const char* reverseString(const char* s) {
     return nullptr;
 }
 
-// [example]
+// [example-end]
 }
 #endif

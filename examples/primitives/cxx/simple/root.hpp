@@ -20,6 +20,7 @@ namespace cppbind::example {
  */
 struct Root {
 public:
+    Root(){};
     /**
      * comments
      *

@@ -63,8 +63,8 @@ class NestedExamples {
     * action: gen_method
     * throws: no_throw
     */
-    void mixedExampleWithManyArgs(const std::vector<std::vector<int>>& v1, const std::vector<std::vector<int>>& v2,
-                                  const std::map<int, std::map<int, int>>& m1, const std::map<int, std::map<int, int>>& m2) {
+    void mixedExampleWithManyArgs([[maybe_unused]] const std::vector<std::vector<int>>& v1, [[maybe_unused]] const std::vector<std::vector<int>>& v2,
+                                  [[maybe_unused]] const std::map<int, std::map<int, int>>& m1, [[maybe_unused]] const std::map<int, std::map<int, int>>& m2) {
     }
 
     /**

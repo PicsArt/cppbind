@@ -1,6 +1,6 @@
 from examples_lib.nullables import NumberInt, NumberDouble, Utils, reverse_string
 
-# [nullables-usage]
+# [nullables-usage-start]
 n1 = NumberInt(1)
 n2 = NumberInt(2)
 
@@ -64,4 +64,4 @@ except ValueError as e:
 assert reverse_string("abc") == "cba"
 assert reverse_string(None) is None
 
-# [nullables-usage]
+# [nullables-usage-end]

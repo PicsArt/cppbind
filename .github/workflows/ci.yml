@@ -46,8 +46,16 @@ jobs:
           pytest ./src/test/
 
       - name: Run examples tests for all languages
-        run:  bazel test //... --macos_minimum_os=11.6.1 --test_output=all
+        run: bazel test //... --macos_minimum_os=11.6.1 --test_output=all
         working-directory: examples/primitives/
+
+      - name: Run hello_user tests for all languages
+        run: bazel test //... --macos_minimum_os=11.6.1 --test_output=all
+        working-directory: examples/tutorials/hello_user/
+
+      - name: Run array tests for all languages
+        run: bazel test //... --macos_minimum_os=11.6.1 --test_output=all
+        working-directory: examples/tutorials/array/
 
 
   build_ubuntu:
@@ -87,3 +95,11 @@ jobs:
       - name: Run examples tests for all languages
         run: bazel test //... --test_output=all
         working-directory: examples/primitives/
+
+      - name: Run hello_user tests for all languages
+        run: bazel test //... --test_output=all
+        working-directory: examples/tutorials/hello_user/
+
+      - name: Run array tests for all languages
+        run: bazel test //... --test_output=all
+        working-directory: examples/tutorials/array/

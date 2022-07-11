@@ -217,6 +217,11 @@ def get_var_real_type(type_name):
     return res
 
 
+def get_public_attributes(attrs):
+    """Filter and return only "public" attributes"""
+    return {k: v for k, v in attrs.items() if not k.startswith('_')}
+
+
 def init_jinja_env():
     """
     Function with initializes jinja environment with custom filters/tests

@@ -41,13 +41,13 @@ class TypeInfo:
             unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,
             is_const_qualified=self._cxx_type.is_const_qualified)
         if self._type_ctx:
-            _cxx.namespace = self._type_ctx.namespace
+            _cxx.namespace = self._type_ctx.node.namespace
             _cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
             _cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
-            _cxx.kind_name = self._type_ctx.kind_name
+            _cxx.kind_name = self._type_ctx.node.kind_name
             _cxx.displayname = self._type_ctx.cursor.displayname
             _cxx.source_file_name = self._type_ctx.node.file_name
-            if self._type_ctx.kind_name != 'enum':
+            if self._type_ctx.node.kind_name != 'enum':
                 _cxx.is_polymorphic = cutil.is_polymorphic(self._type_ctx.cursor)
                 _cxx.has_multiple_base_branches = cutil.has_multiple_base_branches(self._type_ctx.cursor)
 
@@ -57,7 +57,7 @@ class TypeInfo:
     def base_types_infos(self):
         return [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
                 for base_type in
-                self._type_ctx.base_types] if self._type_ctx and self._type_ctx.kind_name != 'enum' else []
+                self._type_ctx.base_types] if self._type_ctx and self._type_ctx.node.kind_name != 'enum' else []
 
     @cached_property
     def parent_type_info(self):

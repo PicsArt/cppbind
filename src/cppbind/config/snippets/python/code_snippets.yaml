@@ -626,46 +626,51 @@ method:
       {%- endif %}
 
 
-
 function:
   python_init:
     include:
-      unique_content: |
-        {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
-        from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
+      unique_content:
+        !concat
+        - !include common_macros.yaml&overloading_postfix
+        - |
+          {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
+          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
   python:
     include: *var_method_python_include
-    body: |
-      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
-      {%- if incorrect_nullable_args %}
-      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
-      {%- endif %}
-      {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' %}
-      {%- set comma = joiner(', ') %}
-      {% set rconverter = rconverter.python %}
-      @bind
-      def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}(
-                                      {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
-                                      {%- for arg in args -%}
-                                      {%- set arg_converter = arg.converter.python %}
-                                      {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
-                                      {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
-                                      {%- if arg.default -%}
-                                      {%- if arg.is_enum %}
-                                      {%- set enum_case_name = arg.default.split('::')|last %}
-                                      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
-                                      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-                                      {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
-                                      {%- endif -%}
-                                      {%- else -%}
-                                      {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
-                                      {%- else %} = None
-                                      {%- endif %}
-                                      {%- endif %}
-                                      {%- endif -%}
-                                      {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_hint}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
-          pass
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
+        {%- if incorrect_nullable_args %}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
+        {%- endif %}
+        {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' %}
+        {%- set comma = joiner(', ') %}
+        {% set rconverter = rconverter.python %}
+        @bind
+        def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}(
+                                        {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
+                                        {%- for arg in args -%}
+                                        {%- set arg_converter = arg.converter.python %}
+                                        {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
+                                        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+                                        {%- if arg.default -%}
+                                        {%- if arg.is_enum %}
+                                        {%- set enum_case_name = arg.default.split('::')|last %}
+                                        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+                                        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+                                        {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
+                                        {%- endif -%}
+                                        {%- else -%}
+                                        {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                        {%- else %} = None
+                                        {%- endif %}
+                                        {%- endif %}
+                                        {%- endif -%}
+                                        {%- endfor %}) -> {{'Optional[' if vars.nullable_return}}{{rtype_hint}}{{']' if vars.nullable_return}}:
+            {{vars.comment|make_py_docstring|to_snake_case(args|map(attribute='name'))|indent}}
+            pass
   bind: *var_bind_method
   hpp:
     header: *var_hpp_header
@@ -673,32 +678,35 @@ function:
     include: *var_method_cxx_include
     header: *var_cxx_header
     footer: *var_cxx_footer
-    body: |
-      {
-          {%- if cxx.namespace %}
-          using namespace {{cxx.namespace}};
-          {%- endif %}
-          {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
-          {%- set comma = joiner(', ') %}
-          m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
-          , py::overload_cast<
-          {%- for arg in args -%}
-          {{comma()}}{{arg.type_info.cxx.type_name}}
-          {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
-          {%- else -%}
-          , &{{cxx.namespace}}::{{cxx.name}}
-          {%- endif -%}
-          {%- if cxx.is_template -%}
-          <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-          {%- endif -%}
-          {{', ' if args}}
-          {%- set comma = joiner(', ') -%}
-          {%- for arg in args -%}
-          {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
-          {%- endif -%}
-          {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      }
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {
+            {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+            {%- endif %}
+            {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
+            {%- set comma = joiner(', ') %}
+            m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+            , py::overload_cast<
+            {%- for arg in args -%}
+            {{comma()}}{{arg.type_info.cxx.type_name}}
+            {%- endfor -%}>(&{{cxx.namespace}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+            {%- else -%}
+            , &{{cxx.namespace}}::{{cxx.name}}
+            {%- endif -%}
+            {%- if cxx.is_template -%}
+            <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+            {%- endif -%}
+            {{', ' if args}}
+            {%- set comma = joiner(', ') -%}
+            {%- for arg in args -%}
+            {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
+            {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
+            {%- endif -%}
+            {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+        }
   pybind_module_hpp: *var_pybind_module_hpp
   pybind_module_cxx: *var_pybind_module
   pybind_package:

@@ -166,6 +166,19 @@ def extract_pure_comment(raw_comment, end_index=None):
 
     return comment_lines
 
+
+def is_template(type_):
+    """Check whether cursor/type is a template, or string corresponds to a template cursor signature"""
+
+    if isinstance(type_, cli.Type) or isinstance(type_, cli.Cursor):
+        cursor = type_.get_declaration() if isinstance(type_, cli.Type) else type_
+        is_parent_template = cursor.lexical_parent and is_template(cursor.lexical_parent)
+        return cursor.kind in (cli.CursorKind.CLASS_TEMPLATE,
+                               cli.CursorKind.FUNCTION_TEMPLATE) or is_parent_template is not None
+
+    return '<' in type_ and '>' in type_
+
+
 def replace_template_choice(type_name, template_choice):
     """
     Return type name with replaced template arguments,

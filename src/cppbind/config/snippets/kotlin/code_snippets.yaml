@@ -745,120 +745,127 @@ constructor:
       {%- for arg_with_default in non_primitive_default_args -%}
       {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
       {% endfor -%}{{gen_func(args)}}
-    companion: |
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- if vars.comment %}
-      {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- set comma = joiner(', ') %}
-      protected fun construct_helper({%- for arg in args -%}
-      {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): Long {
-          {%- set call_args = [] %}
-          {%- for arg in args %}
-          {%- set converter = arg.converter.kotlin_to_jdk %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
-          {%- if conversion %}
-          {{conversion|indent}}
-          {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg_name)) %}
-          {%- endfor %}
-          {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
-          {%- for arg in args %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
-          {%- do call_args.append(arg_name) if not arg_name in call_args %}
-          {%- endfor %}
-          val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          return id
-      }
-      {% set comma = joiner(', ') %}
-      @JvmStatic
-      private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): Long
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
+    companion:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- set comma = joiner(', ') %}
+        protected fun construct_helper({%- for arg in args -%}
+        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): Long {
+            {%- set call_args = [] %}
+            {%- for arg in args %}
+            {%- set converter = arg.converter.kotlin_to_jdk %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
+            {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+            {%- if conversion %}
+            {{conversion|indent}}
+            {%- endif %}
+            {%- do call_args.append(converter.converted_name(arg_name)) %}
+            {%- endfor %}
+            {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
+            {%- for arg in args %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
+            {%- do call_args.append(arg_name) if not arg_name in call_args %}
+            {%- endfor %}
+            val id = jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            return id
+        }
+        {% set comma = joiner(', ') %}
+        @JvmStatic
+        private external fun jConstructor{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): Long
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
   cxx:
     include: *var_method_cxx_include
     forward_decl: *var_method_cxx_forward_decl
     glob_decl: *var_method_cxx_glob_decl
-    body: |
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- set index = '_' + index|string if index else '' %}
-      {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + template_postfix + index) %}
-      extern "C" JNIEXPORT jobjectid {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{', ' if args}}
-      {%- set comma = joiner(', ') -%}
-      {% for arg in args -%}
-      {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
-      {%- endfor %}{{', ...' if args}}){
-          {%- set call_args = [] -%}
-          {%- for arg in args -%}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
-          {% set converter = arg.converter.jni_to_cxx %}
-          {{converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr)|indent(4)}}
-          {%- do call_args.append(converter.converted_name(arg_name)) -%}
-          {%- endfor %}
-          {%- if 'no_throw' not in vars.throws %}
-          void* err_ptr = nullptr;
-          {%- endif %}
-          try {
-              {%- if not owner_class.root.vars.shared_ref %}
-              {{owner_class.cxx.unqualified_resolved_type_name}}* ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-              return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class.converter.cxx_type_name_global.snippet()}}), ptr});
-              {%- else %}
-              {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
-              auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
-              return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class.converter.cxx_type_name_global.snippet()}}), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)});
-              {%- endif %}
-          }
-          {%- if 'no_throw' not in vars.throws %}
-          {%- for exc_type in vars.throws -%}
-          catch (const {{exc_type}}& e) {
-              err_ptr = new {{exc_type}}(e);
-              {%- set exc_info = get_type_info(exc_type) %}
-              {%- set exc_conv = make_type_converter(exc_type) %}
-              jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-              jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
-              jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
-              jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-              jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
-              jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
-              env->Throw(jthrowable(excObj));
-          }
-          {%- endfor %}
-          {%- endif %}
-          {%- if not 'std::exception' in vars.throws %}
-          catch (const std::exception& e) {
-              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-              jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
-          }
-          {%- endif %}
-          catch (...) {
-              jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-              jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-              env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
-          }
-          jobjectid result {};
-          return result;
-      }
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set parent_type_name = owner_class.converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- set index = '_' + index|string if index else '' %}
+        {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jConstructor' + (vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix) + template_postfix + index) %}
+        extern "C" JNIEXPORT jobjectid {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{', ' if args}}
+        {%- set comma = joiner(', ') -%}
+        {% for arg in args -%}
+        {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+        {%- endfor %}{{', ...' if args}}){
+            {%- set call_args = [] -%}
+            {%- for arg in args -%}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
+            {% set converter = arg.converter.jni_to_cxx %}
+            {{converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr)|indent(4)}}
+            {%- do call_args.append(converter.converted_name(arg_name)) -%}
+            {%- endfor %}
+            {%- if 'no_throw' not in vars.throws %}
+            void* err_ptr = nullptr;
+            {%- endif %}
+            try {
+                {%- if not owner_class.vars.shared_ref %}
+                {{owner_class.cxx.unqualified_resolved_type_name}}* ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class.converter.cxx_type_name_global.snippet()}}), ptr});
+                {%- else %}
+                {{owner_class.cxx.type_name}}* obj_ptr = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+                auto this_object = std::shared_ptr<{{owner_class.cxx.type_name}}>(obj_ptr);
+                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class.converter.cxx_type_name_global.snippet()}}), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)});
+                {%- endif %}
+            }
+            {%- if 'no_throw' not in vars.throws %}
+            {%- for exc_type in vars.throws -%}
+            catch (const {{exc_type}}& e) {
+                err_ptr = new {{exc_type}}(e);
+                {%- set exc_info = get_type_info(exc_type) %}
+                {%- set exc_conv = make_type_converter(exc_type) %}
+                jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
+                jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+                jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
+                jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
+                jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+                jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
+                env->Throw(jthrowable(excObj));
+            }
+            {%- endfor %}
+            {%- endif %}
+            {%- if not 'std::exception' in vars.throws %}
+            catch (const std::exception& e) {
+                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+            }
+            {%- endif %}
+            catch (...) {
+                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+                env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+            }
+            jobjectid result {};
+            return result;
+        }
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
 
 method:
   kotlin:
     include: *var_method_kotlin_include
     body:
       !concat
+      - !include common_macros.yaml&overloading_postfix
       - !include kotlin_macros.yaml&validations
       - !include kotlin_macros.yaml&special_functions.method
       - |
@@ -989,269 +996,287 @@ method:
 
         {%- endif %}
         {%- endif %}
-    companion: |
-      {%- if cxx.is_static %}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- if vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
-      {%- endif -%}
-      {#- This should go to shared macro -#}
-      {%- if vars.keep_alive %}
-      {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
-      {%- endif %}
-      {%- set comma = joiner(', ') -%}
-      {%- if vars.comment %}
-      {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
-      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
-          {%- set call_args = [] %}
-          {%- set result_converter = rconverter.jdk_to_kotlin -%}
-          {%- for arg in args -%}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
-          {%- if conversion %}
-          {{conversion|indent}}
-          {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg_name)) %}
-          {%- endfor %}
-          {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
-          {%- for arg in args %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
-          {%- do call_args.append(arg_name) if not arg_name in call_args %}
-          {%- endfor %}
-          {%- if owner_class.vars.action == 'gen_interface' %}
-          val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          {%- else %}
-          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          {%- endif %}
-          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
-          return {{result_converter.converted_name('result')}}
-      }
-      {%- set comma = joiner(', ') %}
-      @JvmStatic
-      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
-      {%- endif %}
-    private_external: |
-      {%- if owner_class.vars.action == 'gen_class' -%}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- if not cxx.is_static %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set comma = joiner(', ') -%}
-      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {%- set comma = joiner(', ') -%}
-      {%- set setter_var_name = 'value' %}
-      private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
-      {%- endif %}
-      {%- endif %}
-      {%- endif -%}
-    interface_external: |
-      {%- if owner_class.vars.action == 'gen_interface' -%}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {%- if not cxx.is_static %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set comma = joiner(', ') -%}
-      @JvmStatic
-      external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {%- set comma = joiner(', ') %}
-      {%- set setter_var_name = 'value' %}
-      @JvmStatic
-      external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
-      {%- endif %}
-      {%- endif %}
-      {%- endif %}
+    companion:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- if cxx.is_static %}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- if vars.return_value_policy == 'reference_internal' -%}
+        {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+        {%- endif -%}
+        {#- This should go to shared macro -#}
+        {%- if vars.keep_alive %}
+        {%- do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
+        {%- endif %}
+        {%- set comma = joiner(', ') -%}
+        {%- if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
+            {%- set call_args = [] %}
+            {%- set result_converter = rconverter.jdk_to_kotlin -%}
+            {%- for arg in args -%}
+            {%- set converter = arg.converter.kotlin_to_jdk -%}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
+            {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+            {%- if conversion %}
+            {{conversion|indent}}
+            {%- endif %}
+            {%- do call_args.append(converter.converted_name(arg_name)) %}
+            {%- endfor %}
+            {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
+            {%- for arg in args %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
+            {%- do call_args.append(arg_name) if not arg_name in call_args %}
+            {%- endfor %}
+            {%- if owner_class.vars.action == 'gen_interface' %}
+            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            {%- else %}
+            val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            {%- endif %}
+            {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
+            return {{result_converter.converted_name('result')}}
+        }
+        {%- set comma = joiner(', ') %}
+        @JvmStatic
+        private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
+        {%- endif %}
+    private_external:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- if owner_class.vars.action == 'gen_class' -%}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- if not cxx.is_static %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
+        {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
+        {%- set comma = joiner(', ') -%}
+        {%- set setter_var_name = 'value' %}
+        private external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
+        {%- endif %}
+        {%- endif %}
+        {%- endif -%}
+    interface_external:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- if owner_class.vars.action == 'gen_interface' -%}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {%- if not cxx.is_static %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        @JvmStatic
+        external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
+        {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
+        {%- set comma = joiner(', ') %}
+        {%- set setter_var_name = 'value' %}
+        @JvmStatic
+        external fun jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}{{', vararg extraObjs: Any?' if args}})
+        {%- endif %}
+        {%- endif %}
+        {%- endif %}
   cxx:
     include: *var_method_cxx_include
     forward_decl: *var_method_cxx_forward_decl
     glob_decl: *var_method_cxx_glob_decl
-    body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
-      {%- set setter_var_name = 'value' -%}
-      {%- macro args_snippet(args, call_args) -%}
-      {%- for arg in args -%}
-      {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
-      {%- set converter = arg.converter.jni_to_cxx %}
-      {{converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr)}}
-      {%- do call_args.append(converter.converted_name(arg_name))%}
-      {% endfor %}
-      {%- endmacro -%}
-      {%- macro call_code(prefix, call_args, is_set_op=false) -%}
-      {%- if 'no_throw' not in vars.throws %}
-      void* err_ptr = nullptr;
-      {%- endif -%}
-      {% if rconverter.jni.target_type_name != 'void' and not is_set_op %}
-      try {
-          const auto& result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
-                                              <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                              {%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
-          return {{rconverter.cxx_to_jni.converted_name('result')}};
-      }
-      {%- else %}
-      try {
-          {{prefix}}{{cxx.name}}({{call_args|join(', ')}}){{' = ' + setter_var_name if is_set_op}};
-          return;
-      }
-      {%- endif %}
-      {%- if 'no_throw' not in vars.throws %}
-      {%- for exc_type in vars.throws -%}
-      catch (const {{exc_type}}& e) {
-          err_ptr = new {{exc_type}}(e);
-          {%- set exc_info = get_type_info(exc_type) %}
-          {%- set exc_conv = make_type_converter(exc_type) %}
-          jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-          jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
-          jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
-          jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-          jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
-          jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
-          env->Throw(jthrowable(excObj));
-      }
-      {%- endfor %}
-      {%- endif %}
-      {%- if not 'std::exception' in vars.throws %}
-      catch (const std::exception& e) {
-          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
-      }
-      {%- endif %}
-      catch (...) {
-          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
-      }
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set parent_type_name = owner_class.converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class.converter.kotlin.target_type_name %}
+        {%- set setter_var_name = 'value' -%}
+        {%- macro args_snippet(args, call_args) -%}
+        {%- for arg in args -%}
+        {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
+        {%- set converter = arg.converter.jni_to_cxx %}
+        {{converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr)}}
+        {%- do call_args.append(converter.converted_name(arg_name))%}
+        {% endfor %}
+        {%- endmacro -%}
+        {%- macro call_code(prefix, call_args, is_set_op=false) -%}
+        {%- if 'no_throw' not in vars.throws %}
+        void* err_ptr = nullptr;
+        {%- endif -%}
+        {% if rconverter.jni.target_type_name != 'void' and not is_set_op %}
+        try {
+            const auto& result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
+                                                <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                {%- endif -%}({{call_args|join(', ')}});
+            {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+            return {{rconverter.cxx_to_jni.converted_name('result')}};
+        }
+        {%- else %}
+        try {
+            {{prefix}}{{cxx.name}}({{call_args|join(', ')}}){{' = ' + setter_var_name if is_set_op}};
+            return;
+        }
+        {%- endif %}
+        {%- if 'no_throw' not in vars.throws %}
+        {%- for exc_type in vars.throws -%}
+        catch (const {{exc_type}}& e) {
+            err_ptr = new {{exc_type}}(e);
+            {%- set exc_info = get_type_info(exc_type) %}
+            {%- set exc_conv = make_type_converter(exc_type) %}
+            jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
+            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+            jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
+            jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
+            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+            jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
+            env->Throw(jthrowable(excObj));
+        }
+        {%- endfor %}
+        {%- endif %}
+        {%- if not 'std::exception' in vars.throws %}
+        catch (const std::exception& e) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+        }
+        {%- endif %}
+        catch (...) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+        }
 
-      {% if rconverter.jni.target_type_name != 'void' and not is_set_op -%}
-      {{rconverter.jni.target_type_name}} result {};
-      return result;
-      {%- endif %}
-      {%- endmacro -%}
-      {%- macro gen_method(is_set_op=false) -%}
-      {%- set index = '_' + index|string if index else '' %}
-      {%- set func_name="j%s%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix, index) %}
-      {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
+        {% if rconverter.jni.target_type_name != 'void' and not is_set_op -%}
+        {{rconverter.jni.target_type_name}} result {};
+        return result;
+        {%- endif %}
+        {%- endmacro -%}
+        {%- macro gen_method(is_set_op=false) -%}
+        {%- set index = '_' + index|string if index else '' %}
+        {%- set func_name="j%s%s%s%s"|format('Set' if is_set_op else vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix, template_postfix, index) %}
+        {%- set jni_name = helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
 
-      extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
-      {%- set comma = joiner(', ') -%}
-      {%- for arg in args -%}
-      {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
-      {%- endfor %}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}{{', ...' if args}}){
-          {%- set call_args = [] %}
-          {{args_snippet(args, call_args)|indent(4)}}
-          {%- if not cxx.is_static %}
-          validateID(id);
-          {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
-          {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op)|indent(4)}}
-          {%- else %}
-          {{call_code(owner_class.cxx.type_name + "::", call_args, is_set_op)|indent(4)}}
-          {%- endif %}
-      }
-      {%- endmacro -%}
-      {{gen_method()}}
-      {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
-      {{gen_method(is_set_op=true)}}
-      {%- endif %}
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
+        extern "C" JNIEXPORT {{ 'void' if is_set_op else rconverter.jni.target_type_name }} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject{{", jobjectid id" if not cxx.is_static}}{{', ' if args}}
+        {%- set comma = joiner(', ') -%}
+        {%- for arg in args -%}
+        {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+        {%- endfor %}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}{{', ...' if args}}){
+            {%- set call_args = [] %}
+            {{args_snippet(args, call_args)|indent(4)}}
+            {%- if not cxx.is_static %}
+            validateID(id);
+            {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class.converter.jni_to_cxx -%}
+            {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
+            {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op)|indent(4)}}
+            {%- else %}
+            {{call_code(owner_class.cxx.type_name + "::", call_args, is_set_op)|indent(4)}}
+            {%- endif %}
+        }
+        {%- endmacro -%}
+        {{gen_method()}}
+        {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
+        {{gen_method(is_set_op=true)}}
+        {%- endif %}
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
 
 function:
   kotlin:
     include: *var_method_kotlin_include
-    body: |
-      {%- if vars.return_value_policy == 'reference_internal' -%}
-      {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, cxx.source_file_name)) -%}
-      {%- endif -%}
-      {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
-      {%- if incorrect_nullable_args -%}
-      {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
-      {%- endif -%}
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set comma = joiner(', ') -%}
-      {%- if vars.comment %}
-      {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
-      fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
-      {%- if arg.default -%}
-      {%- if arg.is_enum %}
-      {%- set enum_case_name = arg.default.split('::')|last %}
-      {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
-      {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
-      {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
-      {%- endif -%}
-      {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
-      {%- elif arg.default_is_nullptr %} = null
-      {%- endif %}
-      {%- endif %}
-      {%- endif -%}
-      {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
-          {%- set call_args = [] -%}
-          {%- set result_converter = rconverter.jdk_to_kotlin -%}
-          {%- for arg in args %}
-          {%- set converter = arg.converter.kotlin_to_jdk -%}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
-          {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
-          {%- if conversion %}
-          {{conversion|indent}}
-          {%- endif %}
-          {%- do call_args.append(converter.converted_name(arg_name)) %}
-          {%- endfor %}
-          {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
-          {%- for arg in args %}
-          {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
-          {%- do call_args.append(arg_name) if not arg_name in call_args %}
-          {%- endfor %}
-          val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
-          {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
-          return {{result_converter.converted_name('result')}}
-      }
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
-    glob_external: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set comma = joiner(', ') -%}
-      private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- if vars.return_value_policy == 'reference_internal' -%}
+        {% do Error.critical("Cannot apply reference internal policy on a non member function's return value: {} in {}".format(cxx.name, cxx.source_file_name)) -%}
+        {%- endif -%}
+        {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+        {%- if incorrect_nullable_args -%}
+        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+        {%- endif -%}
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' -%}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        {%- if vars.comment %}
+        {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
+        {%- if arg.default -%}
+        {%- if arg.is_enum %}
+        {%- set enum_case_name = arg.default.split('::')|last %}
+        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
+        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
+        {%- endif -%}
+        {%- else -%}
+        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
+        {%- elif arg.default_is_nullptr %} = null
+        {%- endif %}
+        {%- endif %}
+        {%- endif -%}
+        {%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
+            {%- set call_args = [] -%}
+            {%- set result_converter = rconverter.jdk_to_kotlin -%}
+            {%- for arg in args %}
+            {%- set converter = arg.converter.kotlin_to_jdk -%}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) -%}
+            {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) -%}
+            {%- if conversion %}
+            {{conversion|indent}}
+            {%- endif %}
+            {%- do call_args.append(converter.converted_name(arg_name)) %}
+            {%- endfor %}
+            {#- extra arguments are passed since after conversion the relation between the original and newly created objects can be lost, and GC can delete original object before its usage -#}
+            {%- for arg in args %}
+            {%- set arg_name = vars.argument_name.get(arg.name, arg.name) %}
+            {%- do call_args.append(arg_name) if not arg_name in call_args %}
+            {%- endfor %}
+            val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
+            return {{result_converter.converted_name('result')}}
+        }
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
+    glob_external:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set comma = joiner(', ') -%}
+        private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{template_postfix}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
     glob_init:
       unique_content: |
         {%- if vars.c_wrapper_lib_name %}
@@ -1263,91 +1288,94 @@ function:
     include: *var_method_cxx_include
     forward_decl: *var_method_cxx_forward_decl
     glob_decl: *var_method_cxx_glob_decl
-    body: |
-      {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
-      {#- this should go to shared macro #}
-      {%- macro gen_func(args, index=none) -%}
-      {%- set index = '_' + index|string if index else '' %}
-      {%- set func_name="j%s%s%s%s"|format(vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none and cxx.is_overloaded else overloading_postfix, template_postfix, index) %}
-      {%- macro args_snippet(args, call_args) %}
-      {%- for arg in args -%}
-      {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
-      {%- set converter = arg.converter.jni_to_cxx %}
-      {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
-      {%- if conversion %}
-      {{conversion}}
-      {%- endif %}
-      {%- do call_args.append(converter.converted_name(arg_name))%}
-      {%- endfor %}
-      {%- endmacro %}
-      {%- macro call_code(call_args) %}
-      {%- if 'no_throw' not in vars.throws %}
-      void* err_ptr = nullptr;
-      {%- endif -%}
-      {%- if rconverter.jni.target_type_name != 'void' %}
-      try {
-          const auto& result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
-                                              <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                              {%- endif -%}({{call_args|join(', ')}});
-          {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
-          return {{rconverter.cxx_to_jni.converted_name('result')}};
-      }
-      {%- else %}
-      try {
-          {{cxx.namespace}}::{{cxx.name}}({{call_args|join(', ')}});
-          return;
-      }
-      {%- endif %}
-      {%- if 'no_throw' not in vars.throws %}
-      {%- for exc_type in vars.throws -%}
-      catch (const {{exc_type}}& e) {
-          err_ptr = new {{exc_type}}(e);
-          {%- set exc_info = get_type_info(exc_type) %}
-          {%- set exc_conv = make_type_converter(exc_type) %}
-          jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-          jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
-          jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
-          jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-          jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
-          jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
-          env->Throw(jthrowable(excObj));
-      }
-      {%- endfor %}
-      {%- endif %}
-      {%- if not 'std::exception' in vars.throws %}
-      catch (const std::exception& e) {
-          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
-      }
-      {%- endif %}
-      catch (...) {
-          jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
-          jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
-          env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
-      }
+    body:
+      !concat
+      - !include common_macros.yaml&overloading_postfix
+      - |
+        {%- set template_postfix = template_type_converters|format_list("{arg.kotlin.custom.tname}", 'arg')|join if cxx.is_template else '' %}
+        {#- this should go to shared macro #}
+        {%- macro gen_func(args, index=none) -%}
+        {%- set index = '_' + index|string if index else '' %}
+        {%- set func_name="j%s%s%s%s"|format(vars.name|capitalize, vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none and cxx.is_overloaded else overloading_postfix, template_postfix, index) %}
+        {%- macro args_snippet(args, call_args) %}
+        {%- for arg in args -%}
+        {%- set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
+        {%- set converter = arg.converter.jni_to_cxx %}
+        {%- set conversion = converter.snippet(arg_name, nullable=arg.name in vars.nullable_arg or arg.default_is_nullptr) %}
+        {%- if conversion %}
+        {{conversion}}
+        {%- endif %}
+        {%- do call_args.append(converter.converted_name(arg_name))%}
+        {%- endfor %}
+        {%- endmacro %}
+        {%- macro call_code(call_args) %}
+        {%- if 'no_throw' not in vars.throws %}
+        void* err_ptr = nullptr;
+        {%- endif -%}
+        {%- if rconverter.jni.target_type_name != 'void' %}
+        try {
+            const auto& result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
+                                                <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+                                                {%- endif -%}({{call_args|join(', ')}});
+            {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
+            return {{rconverter.cxx_to_jni.converted_name('result')}};
+        }
+        {%- else %}
+        try {
+            {{cxx.namespace}}::{{cxx.name}}({{call_args|join(', ')}});
+            return;
+        }
+        {%- endif %}
+        {%- if 'no_throw' not in vars.throws %}
+        {%- for exc_type in vars.throws -%}
+        catch (const {{exc_type}}& e) {
+            err_ptr = new {{exc_type}}(e);
+            {%- set exc_info = get_type_info(exc_type) %}
+            {%- set exc_conv = make_type_converter(exc_type) %}
+            jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
+            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+            jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
+            jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
+            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+            jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
+            env->Throw(jthrowable(excObj));
+        }
+        {%- endfor %}
+        {%- endif %}
+        {%- if not 'std::exception' in vars.throws %}
+        catch (const std::exception& e) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
+        }
+        {%- endif %}
+        catch (...) {
+            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
+        }
 
-      {% if rconverter.jni.target_type_name != 'void' -%}
-      {{rconverter.jni.target_type_name}} result {};
-      return result;
-      {%- endif %}
-      {%- endmacro %}
-      {%- set file = path.splitext(path.basename(vars.file_fullname))[0] %}
-      {%- set jni_name = helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', func_name) %}
-      extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass{{', ' if args}}
-      {%- set comma = joiner(', ') -%}
-      {%- for arg in args -%}
-      {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
-      {%- endfor %}{{', ...' if args}}){
-          {%- set call_args = [] %}
-          {{args_snippet(args, call_args)|indent(4)}}
-          {{call_code(call_args)|indent(4)}}
-      }
-      {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
-      {%- for arg_with_default in non_primitive_default_args -%}
-      {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
-      {% endfor -%}{{gen_func(args)}}
+        {% if rconverter.jni.target_type_name != 'void' -%}
+        {{rconverter.jni.target_type_name}} result {};
+        return result;
+        {%- endif %}
+        {%- endmacro %}
+        {%- set file = path.splitext(path.basename(vars.file_fullname))[0] %}
+        {%- set jni_name = helper.get_jni_func_name(vars.full_package, file[0]|upper + file[1:] + 'Kt', func_name) %}
+        extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}(JNIEnv* env, jclass{{', ' if args}}
+        {%- set comma = joiner(', ') -%}
+        {%- for arg in args -%}
+        {{comma()}}{{arg.converter.jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+        {%- endfor %}{{', ...' if args}}){
+            {%- set call_args = [] %}
+            {{args_snippet(args, call_args)|indent(4)}}
+            {{call_code(call_args)|indent(4)}}
+        }
+        {%- endmacro -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- for arg_with_default in non_primitive_default_args -%}
+        {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
+        {% endfor -%}{{gen_func(args)}}
 
 
 var_getter_kotlin_include: &var_getter_kotlin_include

@@ -16,7 +16,7 @@ from cppbind.common.snippets_engine import (
     SnippetsEngine,
 )
 from cppbind.common.type_info import create_type_info
-from cppbind.utils import DefaultValueKind, get_language_helper_module
+from cppbind.utils import DefaultValueKind, get_language_helper_module, get_public_attributes
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -96,11 +96,11 @@ def make_func_context(ctx):
                 is_uchar=arg.type.get_canonical().kind == cli.TypeKind.UCHAR,
                 default_is_literal=arg.default.kind == DefaultValueKind.LITERAL,
                 default_is_nullptr=arg.default.kind == DefaultValueKind.NULL_PTR,
-            ) for arg in ctx.args
+            ) for arg in ctx.node.args_info
         ]
 
-        if hasattr(ctx, 'result_type'):
-            _cxx_type = CXXType(type_=ctx.result_type,
+        if hasattr(ctx.node, 'result_type'):
+            _cxx_type = CXXType(type_=ctx.node.result_type,
                                 template_choice=ctx.template_choice)
             rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
             return_type_info = create_type_info(ctx.runner, _cxx_type)
@@ -110,7 +110,7 @@ def make_func_context(ctx):
             **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
             'gen_class', 'gen_interface') else None
 
-        overloading_postfix = ctx.overloading_postfix
+        overloading_index = ctx.node.overloading_index
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_args_postfixes = ctx.template_args_postfixes
@@ -127,12 +127,12 @@ def make_func_context(ctx):
             is_protected=ctx.cursor.access_specifier == cli.AccessSpecifier.PROTECTED,
             is_private=ctx.cursor.access_specifier == cli.AccessSpecifier.PRIVATE,
             is_const=ctx.cursor.is_const_method(),
-            kind_name=ctx.kind_name,
+            kind_name=ctx.node.kind_name,
             access_specifier=ctx.cursor.access_specifier.name.lower(),
             is_template=ctx.node.is_function_template,
             is_overloaded=cutil.is_overloaded(ctx.cursor),
             is_static=bool(ctx.cursor.is_static_method()),
-            namespace=ctx.namespace,
+            namespace=ctx.node.namespace,
             # for template methods
             is_override=False
         )
@@ -145,7 +145,7 @@ def make_func_context(ctx):
                 [c.parent_context.vars.action == 'gen_interface' for c in ctx.overridden_contexts])
             cxx.is_virtual = bool(ctx.cursor.is_virtual_method())
 
-        return locals()
+        return get_public_attributes(locals())
 
     context = make_def_context(ctx)
     context.update(make())
@@ -155,12 +155,12 @@ def make_func_context(ctx):
 def make_enum_context(ctx):
     def make():
         # helper variables
-        enum_cases = ctx.enum_values
+        enum_cases = ctx.node.enum_cases
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     type_name=ctx.cxx_type_name,
                                     source_file_name=ctx.node.file_name,
-                                    namespace=ctx.namespace,
-                                    kind_name=ctx.kind_name)
+                                    namespace=ctx.node.namespace,
+                                    kind_name=ctx.node.kind_name)
         return locals()
 
     context = make_def_context(ctx)
@@ -194,16 +194,15 @@ def make_class_context(ctx):
 
             descendants = _type_info.descendants
 
-            return locals()
+            return get_public_attributes(locals())
 
         context = make_def_context(ctx)
         context.update(make())
         return context
 
     context = _make(ctx)
-    ancestors = [types.SimpleNamespace(**_make(ancestor)) for ancestor in ctx.ancestors]
-    root = types.SimpleNamespace(**_make(ctx.root))
-    context.update(dict(ancestors=ancestors, root=root))
+    ancestors = [types.SimpleNamespace(**_make(ancestor_context)) for ancestor_context in ctx.ancestor_contexts]
+    context.update(dict(ancestors=ancestors))
     return context
 
 
@@ -249,11 +248,11 @@ def make_member_context(ctx):
         cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
                                     displayname=ctx.cursor.displayname,
                                     source_file_name=ctx.node.file_name,
-                                    kind_name=ctx.kind_name,
+                                    kind_name=ctx.node.kind_name,
                                     is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
                                     is_template=ctx.node.is_template)
 
-        return locals()
+        return get_public_attributes(locals())
 
     context = make_def_context(ctx)
     context.update(make())

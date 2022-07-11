@@ -1,7 +1,14 @@
 import os
+import types
 import shutil
 from pathlib import Path
+import pytest
+
+import clang.cindex as cli
+from cppbind.common.error import CppBindError
+from cppbind.ir import available_on, allowed_after_build
 from cppbind.utils import copy_yaml_config_template, load_module_from_path, clear_cppbind_generated_files
+
 from . import TEST_RULES_DIR
 
 
@@ -25,3 +32,45 @@ def test_clean():
     destination = shutil.copytree(src_gen_files, dst_gen_files)
     clear_cppbind_generated_files(destination)
     assert os.path.exists(destination) is False
+
+
+def test_available_on_decorator():
+    class _Node:
+        def __init__(self, kind):
+            self.kind = kind
+
+        @property
+        @available_on(cli.CursorKind.CXX_METHOD, cli.CursorKind.FUNCTION_TEMPLATE)
+        def method_name(self):
+            return "method_name"
+
+    # positive test
+    method_node = _Node(cli.CursorKind.CXX_METHOD)
+    assert method_node.method_name == "method_name"
+
+    # negative test
+    ctor_node = _Node(cli.CursorKind.CONSTRUCTOR)
+    with pytest.raises(AttributeError, match="_Node.method_name is invalid for CursorKind.CONSTRUCTOR node kind."):
+        _ = ctor_node.method_name
+
+
+def test_allowed_after_build_decorator():
+    class _Node:
+        def __init__(self, is_ir_built):
+            # `allowed_after_build` decorator calls `node.root._is_built` method, so here we mock the `root` property
+            self.root = types.SimpleNamespace(_is_built=lambda: is_ir_built)
+
+        @property
+        @allowed_after_build
+        def kind(self):
+            return "node_kind"
+
+    # positive test
+    complete_node = _Node(is_ir_built=True)
+    assert complete_node.kind == "node_kind"
+
+    # negative test
+    partial_node = _Node(is_ir_built=False)
+    with pytest.raises(CppBindError, match="INTERNAL: msg -> IR is not completely built. Access to "
+                                           "'kind' property is forbidden"):
+        _ = partial_node.kind

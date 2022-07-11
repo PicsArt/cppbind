@@ -4,8 +4,10 @@
 
 import types
 from functools import lru_cache
+
 from cached_property import cached_property
 
+import clang.cindex as cli
 import cppbind.utils.clang as cutil
 from cppbind.common.cxx_type import CXXType
 from cppbind.ir.exec_rules import RunRule
@@ -24,7 +26,7 @@ class TypeInfo:
         # get raw type to be able to find it's context(cxx type might be a typedef, pointer etc.)
         self._raw_type = cxx_type.raw_type
         # get type context for cxx type
-        self._type_ctx = runner.get_context(cxx_type.raw_type.unqualified_type_name)
+        self._type_ctx = runner.get_context(self._raw_type.unqualified_type_name)
 
     @cached_property
     def cxx(self):
@@ -68,8 +70,15 @@ class TypeInfo:
 
     @cached_property
     def arg_types_infos(self):
-        return [create_type_info(self._runner, t) for t in
-                self._raw_type.template_argument_types] if self._raw_type.is_template else []
+        """
+        Returns a list containing template argument type infos.
+        If the argument is a non-type argument then returns None for it.
+        For example for std::array<int, 3> returns [TypeInfo('int'), None]
+        Returns:
+            List[Union[TypeInfo, None]]: List of type infos/Nones.
+        """
+        return [create_type_info(self._runner, t[0]) if t and t[1] == cli.CursorKind.TEMPLATE_TYPE_PARAMETER else None
+                for t in self._raw_type.template_arguments] if self._raw_type.is_template else []
 
     @property
     def vars(self):

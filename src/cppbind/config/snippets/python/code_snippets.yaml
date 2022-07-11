@@ -227,12 +227,12 @@ enum:
     include:
       unique_content:
         !concat
-        - !include cxx_macros.yaml&cxx_include
+        - !include cxx_macros.yaml&includes
         - |
           {%- if vars.is_proj_type -%}
           {{marker}}#include "{{vars.prj_rel_file_name}}"
           {%- endif -%}
-          {%- set includes = gen_cxx_include(vars) -%}
+          {%- set includes = gen_user_defined_cxx_includes(vars) -%}
           {%- if includes -%}{{includes}}{%- endif -%}
   hpp:
     header: *var_hpp_header
@@ -244,28 +244,20 @@ enum:
 var_class: &var_class
   python:
     include:
-      unique_content: |
-        {%- if cxx.is_abstract -%}
-        {{marker}}from abc import abstractmethod
-        {%- endif -%}
-        {%- if vars.include -%}
-        {{marker}}{{vars.include|select('match_regexp', '^import\s.*$', '^from\s.*$')|join_unique}}
-        {{marker}}{{vars.include|reject('match_regexp', '^import\s.*$', '^from\s.*$')|format_list('from {} import *')|join_unique}}
-        {%- endif -%}
-        {#- this should go to shared macro python_include -#}
-        {%- macro gen_import(converter) -%}
-        {%- if converter.python_include -%}
-        {{marker}}{{converter.python_include.snippet(full_package=vars.full_package)}}
-        {%- endif -%}
-        {%- if converter.python -%}
-        {%- for arg_converter in converter.python.args_converters -%}
-        {{gen_import(arg_converter)}}
-        {%- endfor -%}
-        {%- endif -%}
-        {%- endmacro -%}
-        {%- for base in base_types_converters -%}
-        {{gen_import(base)}}
-        {%- endfor -%}
+      unique_content:
+        !concat
+        - !include python_macros.yaml&includes.python
+        - |
+          {%- if cxx.is_abstract -%}
+          {{marker}}from abc import abstractmethod
+          {%- endif -%}
+          {%- if vars.include -%}
+          {{marker}}{{vars.include|select('match_regexp', '^import\s.*$', '^from\s.*$')|join_unique}}
+          {{marker}}{{vars.include|reject('match_regexp', '^import\s.*$', '^from\s.*$')|format_list('from {} import *')|join_unique}}
+          {%- endif -%}
+          {%- for base in base_types_converters -%}
+          {{gen_import(base)}}
+          {%- endfor -%}
     body:
       scopes:
         - constructor_body
@@ -290,7 +282,7 @@ var_class: &var_class
           {%- endfor -%}
           {%- do bases_specifiers.extend(vars.bases_list) -%}
           {%- do bases_specifiers.append('metaclass=CppBindMetaclass') %}
-  
+          
           class {{converter.python.target_type_name}}({{bases_specifiers|join(', ')}}):
               {%- if vars.comment %}
               {{vars.comment|make_py_docstring|indent}}
@@ -333,24 +325,14 @@ var_class: &var_class
     include:
       unique_content:
         !concat
-        - !include cxx_macros.yaml&cxx_include
+        - !include cxx_macros.yaml&includes
+        - !include python_macros.yaml&includes.cxx
         - |
-          {#- this should go to shared macro cxx_include -#}
-          {%- macro gen_include(converter) -%}
-          {%- if converter.cxx_include -%}
-          {{marker}}{{converter.cxx_include.snippet()}}
-          {%- endif -%}
-          {%- if converter.python -%}
-          {%- for arg_converter in converter.python.args_converters -%}
-          {{gen_include(arg_converter)}}
-          {%- endfor -%}
-          {%- endif -%}
-          {%- endmacro -%}
           {{gen_include(converter)}}
           {%- for base_converter in base_types_converters -%}
           {{gen_include(base_converter)}}
           {%- endfor -%}
-          {%- set includes = gen_cxx_include(vars) -%}
+          {%- set includes = gen_user_defined_cxx_includes(vars) -%}
           {%- if includes -%}{{includes}}{%- endif -%}
     body:
       scopes:
@@ -405,51 +387,33 @@ var_bind_method: &var_bind_method
       {%- endfor -%}
 
 var_method_python_include: &var_method_python_include
-  unique_content: |
-    {#- this should go to shared macro python_include -#}
-    {%- macro gen_import(converter) -%}
-    {%- if converter.python_include -%}
-    {{marker}}{{converter.python_include.snippet(full_package=vars.full_package)}}
-    {%- endif -%}
-    {%- if converter.python -%}
-    {%- for arg_converter in converter.python.args_converters -%}
-    {{gen_import(arg_converter)}}
-    {%- endfor -%}
-    {%- endif -%}
-    {%- endmacro -%}
-    {%- for arg in args -%}
-    {{gen_import(arg.converter)}}
-    {%- endfor -%}
-    {%- if rconverter is defined -%}
-    {{gen_import(rconverter)}}
-    {%- endif -%}
+  unique_content:
+    !concat
+    - !include python_macros.yaml&includes.python
+    - |
+      {%- for arg in args -%}
+      {{gen_import(arg.converter)}}
+      {%- endfor -%}
+      {%- if rconverter is defined -%}
+      {{gen_import(rconverter)}}
+      {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content:
     !concat
-    - !include cxx_macros.yaml&cxx_include
+    - !include cxx_macros.yaml&includes
+    - !include python_macros.yaml&includes.cxx
     - |
       {%- if vars.is_proj_type -%}
       {{marker}}#include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
-      {#- this should go to shared macro cxx_include -#}
-      {%- macro gen_include(converter) -%}
-      {%- if converter.cxx_include -%}
-      {{marker}}{{converter.cxx_include.snippet()}}
-      {%- endif -%}
-      {%- if converter.python -%}
-      {%- for arg_converter in converter.python.args_converters -%}
-      {{gen_include(arg_converter)}}
-      {%- endfor -%}
-      {%- endif -%}
-      {%- endmacro -%}
       {%- for arg in args -%}
       {{gen_include(arg.converter)}}
       {%- endfor -%}
       {%- if rconverter is defined -%}
       {{gen_include(rconverter)}}
       {%- endif -%}
-      {%- set includes = gen_cxx_include(vars) -%}
+      {%- set includes = gen_user_defined_cxx_includes(vars) -%}
       {%- if includes -%}{{includes}}{%- endif -%}
 
 constructor:
@@ -631,25 +595,25 @@ function:
     include:
       unique_content:
         !concat
+        - !include python_macros.yaml&templates
         - !include common_macros.yaml&overloading_postfix
         - |
-          {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' -%}
-          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}
+          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}
   python:
     include: *var_method_python_include
     body:
       !concat
+      - !include python_macros.yaml&templates
       - !include common_macros.yaml&overloading_postfix
       - |
         {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
         {%- if incorrect_nullable_args %}
         {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
         {%- endif %}
-        {%- set template_postfix = '_' + template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join|to_snake_case|lower if cxx.is_template else '' %}
         {%- set comma = joiner(', ') %}
         {% set rconverter = rconverter.python %}
         @bind
-        def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{template_postfix}}(
+        def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}(
                                         {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
                                         {%- for arg in args -%}
                                         {%- set arg_converter = arg.converter.python %}
@@ -680,15 +644,15 @@ function:
     footer: *var_cxx_footer
     body:
       !concat
+      - !include python_macros.yaml&templates
       - !include common_macros.yaml&overloading_postfix
       - |
         {
             {%- if cxx.namespace %}
             using namespace {{cxx.namespace}};
             {%- endif %}
-            {%- set template_postfix = template_type_converters|format_list("{arg.python.target_type_name}", 'arg')|join if cxx.is_template else '' -%}
             {%- set comma = joiner(', ') %}
-            m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{'_' + template_postfix|to_snake_case|lower if template_postfix}}"{%- if cxx.is_overloaded -%}
+            m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}"{%- if cxx.is_overloaded -%}
             , py::overload_cast<
             {%- for arg in args -%}
             {{comma()}}{{arg.type_info.cxx.type_name}}
@@ -724,34 +688,18 @@ var_bind_getter: &var_bind_getter
       {%- endif -%}
 
 var_getter_python_include: &var_getter_python_include
-  unique_content: |
-    {#- this should go to shared macro python_include-#}
-    {%- macro gen_import(converter) -%}
-    {%- if converter.python_include -%}
-    {{marker}}{{converter.python_include.snippet(full_package=vars.full_package)}}
-    {%- endif -%}
-    {%- if converter.python -%}
-    {%- for arg_converter in converter.python.args_converters -%}
-    {{gen_import(arg_converter)}}
-    {%- endfor -%}
-    {%- endif -%}
-    {%- endmacro -%}
-    {{gen_import(rconverter)}}
+  unique_content:
+    !concat
+    - !include python_macros.yaml&includes.python
+    - |
+      {{gen_import(rconverter)}}
 
 var_getter_cxx_include: &var_getter_cxx_include
-  unique_content: |
-    {#- this should go to shared macro cxx_include -#}
-    {%- macro gen_include(converter) -%}
-    {%- if converter.cxx_include -%}
-    {{marker}}{{converter.cxx_include.snippet()}}
-    {%- endif -%}
-    {%- if converter.python -%}
-    {%- for arg_converter in converter.python.args_converters -%}
-    {{gen_include(arg_converter)}}
-    {%- endfor -%}
-    {%- endif -%}
-    {%- endmacro -%}
-    {{gen_include(rconverter)}}
+  unique_content:
+    !concat
+    - !include python_macros.yaml&includes.cxx
+    - |
+      {{gen_include(rconverter)}}
 
 property_getter:
   python:
@@ -799,66 +747,68 @@ property_getter:
 getter:
   python:
     include: *var_getter_python_include
-    properties: |
-      {%- do helper.validate_getter(cxx, vars, args, owner_class, setter|default(none)) -%}
-      {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
-      {%- macro gen_name() -%}
-      {%- if cxx.is_template -%}
-      {%- for name in template_args_postfixes or [] %}
-      {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
-      {%- endfor %}
-      {%- else %}{{vars.name}}
-      {%- endif -%}
-      {%- endmacro -%}
-      {%- set rconverter = rconverter.python %}
-      {%- set arg_type_hint = rconverter.get_target_type_name(full_package=vars.full_package) %}
-      @property
-      @bind
-      def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_type_hint}}{{']' if vars.nullable_return}}:
-          {{vars.comment|make_py_docstring|indent}}
-          pass
-      {%- if setter is defined %}
-      {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
-      {%- if incorrect_nullable_args -%}
-        {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
-      {%- endif %}
-
-      @{{gen_name()|to_snake_case}}.setter
-      @bind
-      def {{gen_name()|to_snake_case}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_type_hint}}{{']' if vars.nullable_return}}):
-          {{vars.comment|make_py_docstring|indent}}
-          pass
-      {%- endif -%}
+    properties:
+      !concat
+      - !include python_macros.yaml&templates
+      - |
+        {%- do helper.validate_getter(cxx, vars, args, owner_class, setter|default(none)) -%}
+        {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
+        {%- macro gen_name() -%}
+        {%- if cxx.is_template -%}
+        {{get_template_getter_name()}}
+        {%- else %}{{vars.name}}
+        {%- endif -%}
+        {%- endmacro -%}
+        {%- set rconverter = rconverter.python %}
+        {%- set arg_type_hint = rconverter.get_target_type_name(full_package=vars.full_package) %}
+        @property
+        @bind
+        def {{gen_name()|to_snake_case}}(self) -> {{'Optional[' if vars.nullable_return}}{{arg_type_hint}}{{']' if vars.nullable_return}}:
+            {{vars.comment|make_py_docstring|indent}}
+            pass
+        {%- if setter is defined %}
+        {%- set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.args|map(attribute='name'))|list -%}
+        {%- if incorrect_nullable_args -%}
+          {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
+        {%- endif %}
+        
+        @{{gen_name()|to_snake_case}}.setter
+        @bind
+        def {{gen_name()|to_snake_case}}(self, value: {{'Optional[' if vars.nullable_return}}{{arg_type_hint}}{{']' if vars.nullable_return}}):
+            {{vars.comment|make_py_docstring|indent}}
+            pass
+        {%- endif -%}
   bind: *var_bind_getter
   cxx:
     include: *var_getter_cxx_include
-    body: |
-      {%- macro gen_name() -%}
-      {%- if cxx.is_template -%}
-      {%- for name in template_args_postfixes or [] %}
-      {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
-      {%- endfor %}
-      {%- else %}{{vars.name}}
-      {%- endif -%}
-      {%- endmacro -%}
-      {%- if cxx.is_template -%}
-      {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
-      {%- else %}
-      {%- set template_args = '' %}
-      {%- endif %}
-      {%- if setter is defined %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
-      {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}}
-      {#- This should go to shared macro -#}
-      {%- if vars.keep_alive -%}
-      {%- set args = [rconverter] %}
-      {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
-      {%- if invalid_args -%}
-      {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
-      {%- endif -%}
-      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
-      {%- endif -%});
-      {%- else %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
-      {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      {%- endif %}
+    body:
+      !concat
+      - !include python_macros.yaml&templates
+      - |
+        {%- macro gen_name() -%}
+        {%- if cxx.is_template -%}
+        {{get_template_getter_name()}}
+        {%- else %}{{vars.name}}
+        {%- endif -%}
+        {%- endmacro -%}
+        {%- if cxx.is_template -%}
+        {%- set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
+        {%- else %}
+        {%- set template_args = '' %}
+        {%- endif %}
+        {%- if setter is defined %}
+        {{owner_class.converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
+        {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}}
+        {#- This should go to shared macro -#}
+        {%- if vars.keep_alive -%}
+        {%- set args = [rconverter] %}
+        {%- set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+        {%- if invalid_args -%}
+        {%- do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%- endif -%}
+        , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+        {%- endif -%});
+        {%- else %}
+        {{owner_class.converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
+        {%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+        {%- endif %}

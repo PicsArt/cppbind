@@ -32,6 +32,9 @@ std::__ndk1::basic_string:
 std::__ndk1::pair:
   std::pair
 
+std::__ndk1::array:
+  std::array
+
 std::__1::shared_ptr:
   std::shared_ptr
 
@@ -53,13 +56,16 @@ std::__1::basic_string:
 std::__1::pair:
   std::pair
 
+std::__1::array:
+  std::array
+
 $Object:
   custom:
     pname: object
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_args_postfixes or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname}}{% endif -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
@@ -242,6 +248,18 @@ std::pair:
       {%- set arg1_package = full_package|default(args[1].vars.full_package) -%}
       Tuple[{{args[0].get_target_type_name(full_package=arg1_package)}}, {{args[1].get_target_type_name(full_package=arg1_package)}}]
     pybind: tuple
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
+
+std::array:
+  custom:
+    tname: List[{{args_converters[0].python.custom.tname}}]
+  types:
+    python: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].python.cxx.type_name)).python.target_type_name}}"
+    pybind: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].pybind.cxx.type_name)).pybind.target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:

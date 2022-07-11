@@ -11,7 +11,6 @@ import filecmp
 import glob
 import os
 import shutil
-
 from collections.abc import MutableMapping
 from functools import lru_cache, partial
 from types import SimpleNamespace
@@ -132,7 +131,7 @@ class RenderFileAction(CopyFileAction):
                 f.write(src_file_content)
 
 
-class Converter:
+class TypeConverter:
 
     def __init__(self,
                  type_info,
@@ -189,11 +188,24 @@ class Converter:
 
     @property
     def args(self):
-        return [getattr(arg, self._snippet_name) for arg in self._template_args]
+        """
+        Returns a list of adapters(for template type arguments) and values(for non-type template arguments) of
+        current type.
+        Returns:
+            List[Union[Adapter, int]]: List of adapters/values.
+        """
+        return [getattr(arg, self._snippet_name) if isinstance(arg, Adapter) else arg for arg in
+                self._template_args]
 
     @property
     def args_converters(self):
-        return self._template_args
+        """
+        Returns a list of converters(for template type arguments) and Nones(for non-type template arguments) of
+        current type.
+        Returns:
+            List[Union[TypeConverter, int]]: List of converters/nones.
+        """
+        return [arg if isinstance(arg, Adapter) else None for arg in self._template_args]
 
     @property
     def parent_type_info(self):
@@ -271,12 +283,12 @@ class Adapter:
         else:
             return None
 
-        return Converter(type_info=self.type_info,
-                         template_args=self.template_args,
-                         snippet_name=name,
-                         custom=self.type_info_collector.custom,
-                         type_converter=type_info_collector,
-                         **self.kwargs)
+        return TypeConverter(type_info=self.type_info,
+                             template_args=self.template_args,
+                             snippet_name=name,
+                             custom=self.type_info_collector.custom,
+                             type_converter=type_info_collector,
+                             **self.kwargs)
 
 
 class TypeInfoCollector:
@@ -676,19 +688,25 @@ class SnippetsEngine:
             # e.g. a::Stack<T> and a::Stack<Project>
             # might be a template typedef so get the canonical type and then proceed
             if lookup_type.is_template and not lookup_type.is_typedef:
-                tmpl_args = [self.build_type_converter(arg_type)
-                             for arg_type in lookup_type.template_argument_types]
+                tmpl_args = []
+                for arg in lookup_type.template_arguments:
+                    if arg:
+                        if arg[1] == cli.CursorKind.TEMPLATE_TYPE_PARAMETER:
+                            tmpl_args.append(self.build_type_converter(arg[0]))
+                        elif arg[1] == cli.CursorKind.TEMPLATE_NON_TYPE_PARAMETER:
+                            tmpl_args.append(arg[0])
+                    else:
+                        # currently, only integral parameter is supported from non-type parameters
+                        tmpl_args.append(None)
 
                 # for the case when all arguments are exposed
                 # for example a::Stack<Project> then the canonical will
                 # return type with spelling equal to a::Stack<b::Project>
-                # this won´t work if theres an unexposed argument e.g.T,
+                # this won´t work if there's an unexposed argument e.g.T,
                 # for example for the case a::Stack<T>, the canonical
                 # will remove namespaces and return
                 # type with spelling equal to 'Stack<type-parameter-0-0>'
-                canonical_clang_type = not lookup_type.is_unexposed and all(
-                    (not arg_type.is_unexposed for arg_type in lookup_type.template_argument_types))
-                if canonical_clang_type:
+                if not lookup_type.is_unexposed:
                     lookup_type = lookup_type.canonical_type
 
                 # at first search with full exposed name

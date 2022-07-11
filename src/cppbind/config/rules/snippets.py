@@ -114,8 +114,6 @@ def make_func_context(ctx):
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
         template_args_postfixes = ctx.template_args_postfixes
-        template_type_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(type_=template_arg_type)) for
-                                    template_arg_type in template_choice.values()] if template_choice else []
 
         cxx = types.SimpleNamespace(
             name=ctx.cursor.spelling,
@@ -174,11 +172,11 @@ def make_class_context(ctx):
             # for cases when type kind is invalid clang type does not give enough information
             # for such cases we use string type name
             _cxx_type = CXXType(type_=ctx.cxx_type_name,
-                                template_choice=ctx.template_choice)
+                                template_choice=ctx.template_choice,
+                                cursor=ctx.cursor)
             _type_info = create_type_info(ctx.runner, _cxx_type)
 
-            converter = SNIPPETS_ENGINE.build_type_converter(CXXType(type_=ctx.cxx_type_name,
-                                                                     template_choice=ctx.template_choice))
+            converter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
 
             base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(base_type, ctx.template_choice))
                                      for base_type in ctx.base_types]

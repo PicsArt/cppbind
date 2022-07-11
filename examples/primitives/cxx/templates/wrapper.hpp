@@ -25,7 +25,7 @@ namespace cppbind::example {
 template <class T>
 class Wrapper {
 
-    public:
+public:
     /**
      * __API__
      * action: gen_constructor

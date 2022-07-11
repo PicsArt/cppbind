@@ -1447,6 +1447,13 @@ class Cursor(Structure):
         """
         return conf.lib.clang_CXXMethod_isConst(self)
 
+    def get_specialized_cursor_template(self):
+        """
+        Given a cursor that may represent a specialization or instantiation of a template,
+        retrieve the cursor that represents the template that it specializes or from which it was instantiated.
+        """
+        return conf.lib.clang_getSpecializedCursorTemplate(self)
+
     def is_converting_constructor(self):
         """Returns True if the cursor refers to a C++ converting constructor.
         """

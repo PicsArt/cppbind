@@ -21,7 +21,15 @@ stackNumber.push(item: num2)
 assert(stackNumber.top().num == num2.num)
 stackNumber.pop()
 assert(stackNumber.top().num == num1.num)
+
+stackPrj.push(item: prj)
+let stackPrjCopy = StackPrj(stack: stackPrj)
+assert(stackPrj.top() == stackPrjCopy.top())
 // [stack-examples-end]
+
+//other test cases
+assert(stackPrj.top().title == prj.title)
+assert(stackPrjCopy.top().title == prj.title)
 
 // [stack-usage-examples]
 stackPrj.push(item: prj)
@@ -90,6 +98,27 @@ let pair2 = PairEmployee(first: "employee", second: employee)
 assert(pair1.second.name == student.name)
 assert(pair2.second.name == employee.name)
 // [pair-examples]
+
+// [array-examples-start]
+let arrayFloat = ArrayFloat2(array: [1.0, 2.0])
+let arrayFloatCopy = ArrayFloat2(array: arrayFloat)
+assert(arrayFloat == arrayFloatCopy)
+assert(arrayFloat[0] == 1.0)
+let arrayFloatSum = arrayFloat + arrayFloatCopy
+assert(arrayFloatSum.data() == [2.0, 4.0])
+
+let arrayInt = ArrayInt2(array: [1, 2])
+let arrayIntCopy = ArrayInt2(array: arrayInt)
+assert(arrayInt == arrayIntCopy)
+assert(arrayInt[0] == 1)
+let arrayIntSum = arrayInt + arrayIntCopy
+assert(arrayIntSum.data() == [2, 4])
+// [array-examples-end]
+
+// check array as an arg and return value
+assert(getFirstElement(a: arrayInt) == 1)
+let arrayMultiplied = multiplyElements(a: arrayInt, num: 2)
+assert(arrayMultiplied.data() == [2, 4])
 
 // check templated constructor
 var valueObj = TemplateValue(value: 1)

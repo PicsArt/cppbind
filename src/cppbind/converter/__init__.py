@@ -3,6 +3,7 @@
 # MIT-style license that can be found in the LICENSE file.
 
 from cppbind.common.error import Error
+from cppbind.parser import TEMPLATE_TYPE_PARAMETER_KEY, TEMPLATE_NON_TYPE_PARAMETER_KEY
 
 NEW_LINE = '\n'
 
@@ -41,8 +42,10 @@ def validate_template_getter_setter(cxx, vars, owner_class, setter):
     is_valid = len(vars.template) == len(setter['vars'].template)
     if is_valid:
         for template_arg, possible_types in vars.template.items():
-            getter_types = {template['type'] for template in possible_types}
-            setter_types = {template['type'] for template in setter['vars'].template[template_arg]}
+            getter_types = {template.get(TEMPLATE_TYPE_PARAMETER_KEY) or template.get(TEMPLATE_NON_TYPE_PARAMETER_KEY)
+                            for template in possible_types}
+            setter_types = {template.get(TEMPLATE_TYPE_PARAMETER_KEY) or template.get(TEMPLATE_NON_TYPE_PARAMETER_KEY)
+                            for template in setter['vars'].template[template_arg]}
             if getter_types != setter_types:
                 is_valid = False
                 break

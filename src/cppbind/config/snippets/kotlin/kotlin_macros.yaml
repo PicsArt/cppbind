@@ -113,3 +113,45 @@ jni_functions: |
       {%- endif %}
   }
   {%- endmacro -%}
+
+templates:
+    !concat
+    - !include common_macros.yaml&templates
+    - |
+      {#- specializes common macros for kotlin -#}
+      {%- macro get_template_postfix() -%}
+            {{get_template_postfix_by_lang('kotlin')}}
+      {%- endmacro -%}
+      {%- macro get_template_getter_name() -%}
+            {{get_template_getter_name_by_lang('kotlin')}}
+      {%- endmacro -%}
+
+includes:
+  kotlin:
+    !concat
+    - !include common_macros.yaml&includes.target_language
+    - |
+      {#- specializes common macros for kotlin -#}
+      {%- macro collect_import_converters(converter, import_converters, language, gen_for_impl=false) -%}
+            {{collect_import_converters_by_lang(converter, import_converters, 'kotlin', gen_for_impl)}}
+      {%- endmacro -%}
+      {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
+            {{collect_desc_import_converters_by_lang(converter, desc_import_converters, 'kotlin')}}
+      {%- endmacro -%}
+      {%- macro gen_import(converter) -%}
+            {{gen_import_by_lang(converter, 'kotlin')}}
+      {%- endmacro -%}
+  cxx:
+    !concat
+    - !include common_macros.yaml&includes.cxx
+    - |
+      {#- specializes common macros for kotlin -#}
+      {%- macro gen_include(converter) -%}
+            {{gen_include_by_lang(converter, 'kotlin')}}
+      {%- endmacro -%}
+      {%- macro collect_includes(converter, includes) -%}
+            {{collect_includes_by_lang(converter, includes, 'kotlin')}}
+      {%- endmacro -%}
+      {%- macro collect_desc_includes(converter, desc_includes) -%}
+            {{collect_desc_includes_by_lang(converter, desc_includes, 'kotlin')}}
+      {%- endmacro -%}

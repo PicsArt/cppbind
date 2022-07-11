@@ -29,7 +29,7 @@ assert greeting == "Hello Bob from California"
 
 maxInt = max_int(2, 5)
 assert maxInt == 5
-maxString = max_str("d", "a")
+maxString = max_string("d", "a")
 assert maxString == "d"
 
 prj1 = Project("My first project")

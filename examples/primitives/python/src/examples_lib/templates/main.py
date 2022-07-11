@@ -14,6 +14,10 @@ from examples_lib.templates import (
     PairStudent,
     TemplateValue,
     MyStackProject,
+    ArrayInt2,
+    ArrayFloat2,
+    get_first_element_int,
+    multiply_elements
 )
 
 # [stack-examples-start]
@@ -34,7 +38,15 @@ stackNumber.push(num2)
 assert stackNumber.top().num == num2.num
 stackNumber.pop()
 assert stackNumber.top().num == num1.num
+
+stack_prj.push(prj)
+stack_prj_copy = StackPrj(stack_prj)
+assert stack_prj.top() == stack_prj_copy.top()
 # [stack-examples-end]
+
+# other test cases
+assert(stack_prj.top().title == prj.title)
+assert(stack_prj_copy.top().title == prj.title)
 
 # [stack-usage-examples]
 stack_prj.push(item=prj)
@@ -102,6 +114,27 @@ assert pair1.second == student
 assert student.name == "updated name"
 assert pair2.second.name == employee.name
 # [pair-examples]
+
+# [array-examples-start]
+arrayFloat = ArrayFloat2([1.0, 2.0])
+arrayFloatCopy = ArrayFloat2(arrayFloat)
+assert(arrayFloat == arrayFloatCopy)
+assert(arrayFloat[0] == 1.0)
+arrayFloatSum = arrayFloat + arrayFloatCopy
+assert(arrayFloatSum.data() == [2.0, 4.0])
+
+arrayInt = ArrayInt2([1, 2])
+arrayIntCopy = ArrayInt2(arrayInt)
+assert(arrayInt == arrayIntCopy)
+assert(arrayInt[0] == 1)
+arrayIntSum = arrayInt + arrayIntCopy
+assert(arrayIntSum.data() == [2, 4])
+# [array-examples-end]
+
+# check array as an arg and return value
+assert(get_first_element_int(arrayInt) == 1)
+arrayMultiplied = multiply_elements(arrayInt, 2)
+assert(arrayMultiplied.data() == [2, 4])
 
 # check templated constructor
 value_obj = TemplateValue(1)

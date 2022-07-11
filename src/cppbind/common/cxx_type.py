@@ -1,6 +1,7 @@
 # Copyright (c) 2022 PicsArt, Inc.
 # All rights reserved. Use of this source code is governed by a
 # MIT-style license that can be found in the LICENSE file.
+from cached_property import cached_property
 
 import clang.cindex as cli
 import cppbind.utils.clang as cutil
@@ -8,13 +9,16 @@ import cppbind.utils.clang as cutil
 
 class CXXType:
     """
-    Type which holds a clang type or a string type with it's template choice if it's a template type,
+    Type which holds a clang type or a string type with its cursor and template choice if it's a template type,
     and gives some utility functionality based on it.
     """
 
-    def __init__(self, type_, template_choice=None):
+    def __init__(self, type_, template_choice=None, cursor=None):
+        # clang Type object or the string representation of the type
         self.type_ = type_
         self.template_choice = template_choice
+        # if the type is invalid for templates but the cursor is available use it to retrieve information
+        self.cursor = cursor
 
     def __eq__(self, other):
         return self.type_name == other.type_name
@@ -36,9 +40,9 @@ class CXXType:
         # type_ is a string
         _type = self.type_.strip()
         if _type.endswith('&&'):
-            return CXXType(_type[:-2], self.template_choice)
+            return CXXType(_type[:-2].strip(), self.template_choice)
         if _type.endswith('*') or _type.endswith('&'):
-            return CXXType(_type[:-1], self.template_choice)
+            return CXXType(_type[:-1].strip(), self.template_choice)
         return self
 
     @property
@@ -59,7 +63,10 @@ class CXXType:
         """
         # we have to use type_name for clang types as well as it can be an unexposed type and it's choice can be a
         # template for example if it's spelling is T and the choice of T is std::vector<int> then T is a template
-        return self.type_name.endswith('>')
+        if isinstance(self.type_, cli.Type) and self.type_.kind != cli.TypeKind.UNEXPOSED:
+            return self.type_.get_num_template_arguments() != -1
+        else:
+            return self.type_name.endswith('>')
 
     @property
     def is_function_proto(self):
@@ -71,48 +78,76 @@ class CXXType:
     @property
     def is_typedef(self):
         if isinstance(self.type_, cli.Type):
-            return self.type_.kind == cli.TypeKind.TYPEDEF
+            return self.type_.kind == cli.TypeKind.TYPEDEF or \
+                   self.type_.get_declaration().kind in (cli.CursorKind.TYPE_ALIAS_DECL, cli.CursorKind.TYPEDEF_DECL)
         # we don't have  a mechanism for string types yet
         return False
 
-    @property
-    def template_argument_types(self):
-        # if type is unexposed it's choice can be a template thus we need to use string parsing in that case
+    @cached_property
+    def template_arguments(self):
+        """
+        Returns a list of tuples containing the argument and its kind, e.g. for std::array<double, 3> returns
+        [(CXXType('double'), CursorKind.TEMPLATE_TYPE_PARAMETER), (3, CursorKind.TEMPLATE_NON_TYPE_PARAMETER)].
+        Currently, type and integral parameters are supported.
+        """
+        if self.cursor is None and (isinstance(self.type_, str) or self.type_.kind == cli.TypeKind.UNEXPOSED):
+            # neither cursor nor type is available, thus using string parsing to retrieve template arguments
+            return self.__arguments_from_type_name()
+
+        # either cursor or type is available, thus we can use them to retrieve information about template parameters
+        cursor = self.cursor or cutil.get_template_declaration(self.type_)
+        cursors = cutil.get_template_parameter_cursors(cursor)
+
         if isinstance(self.type_, cli.Type) and self.type_.kind != cli.TypeKind.UNEXPOSED:
-            return [CXXType(self.type_.get_template_argument_type(num), self.template_choice)
-                    for num in range(self.type_.get_num_template_arguments())]
-        return self._get_template_arguments()
+            # clang Type is available, and it's not unexposed, we can take template arguments from it
+            arguments = [self.type_.get_template_argument_type(num) for num in
+                         range(self.type_.get_num_template_arguments())]
+        else:
+            # clang Type is not available, but we have a cursor
+            # which can be used to retrieve information about template parameters
+            arguments = [cursor.spelling for cursor in cursors]
 
-    def _get_template_arguments(self):
-        """
-        Retrieves template arguments spelling from a type's spelling.
-        E.g. for 'std::pair<std::string, std::vector<int>>' will return ['std::string', 'std::vector<int>']
-        Note: there are cases this does not handle for example if the expression contains offset operator
-        """
-        type_spelling = self.type_name
+        # argument spellings are used for non type template parameters, as for them clang gives an invalid Type
+        # using canonical as the argument might be an expression that should be evaluated
+        argument_spellings = cutil.get_template_arguments_from_str(
+            self.type_name if self.is_unexposed else self.canonical_type.type_name)
+        args = []
+        for ii, argument in enumerate(arguments):
+            cursor = cursors[ii]
+            # for now using clangs CursorKind for identifying type and non-type parameters
+            # later we might have our own template parameter kind and expose it to snippets
+            if cursor.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER:
+                args.append((CXXType(argument, self.template_choice), cli.CursorKind.TEMPLATE_TYPE_PARAMETER))
+            elif cursor.kind == cli.CursorKind.TEMPLATE_NON_TYPE_PARAMETER:
+                if isinstance(argument, cli.Type) and argument.kind == cli.TypeKind.INVALID:
+                    # if the non-type argument is a clang Type then it's invalid so use its spelling
+                    # retrieved from string parsing
+                    argument = argument_spellings[ii]
+                if cutil.is_integral_type(cursor.type.get_canonical()):
+                    args.append((int(cutil.replace_template_choice(argument, self.template_choice)),
+                                 cli.CursorKind.TEMPLATE_NON_TYPE_PARAMETER))
+                else:
+                    # non-integral non type parameter, currently not supported
+                    args.append(None)
+            else:
+                # template template parameter, currently not supported
+                args.append(None)
 
-        # only most nested type's arguments should be retrieved e.g for for a::b::<c::C>::G<d::D, e::E> -- d::D, e::E
-        template_args = []
-        parentheses_count = 0
-        length = len(type_spelling)
-        arg_end_idx = length - 1
-        for i, symbol in enumerate(reversed(type_spelling)):
-            # template should end with >
-            if symbol == '>':
-                parentheses_count += 1
-            elif symbol == '<':
-                parentheses_count -= 1
-            elif symbol == ',' and parentheses_count == 1:
-                template_args.append(CXXType(type_spelling[length - i + 1:arg_end_idx].strip(),
-                                             self.template_choice))
-                arg_end_idx = length - i - 1
-            if parentheses_count == 0:
-                # if i=0 then self is not a template
-                if i != 0:
-                    template_args.append(CXXType(type_spelling[length - i:arg_end_idx],
-                                                 self.template_choice))
-                break
-        return list(reversed(template_args))
+        return args
+
+    def __arguments_from_type_name(self):
+        args = []
+        for arg_spelling in cutil.get_template_arguments_from_str(self.type_name):
+            parameter = cutil.replace_template_choice(arg_spelling, self.template_choice)
+            if parameter.lstrip('+-').isnumeric():
+                args.append((int(parameter),
+                             cli.CursorKind.TEMPLATE_NON_TYPE_PARAMETER))
+            else:
+                # NOTE: currently only from the string we cannot identify whether the argument is a type or not
+                # maybe we can check by trying to build its converter?
+                args.append((CXXType(arg_spelling, self.template_choice),
+                             cli.CursorKind.TEMPLATE_TYPE_PARAMETER))
+        return args
 
     @property
     def template_type_name(self):
@@ -145,7 +180,8 @@ class CXXType:
     def unqualified_resolved_type_name(self):
         """Returns unqualified type name if the type is not typedef on pointer, otherwise returns canonical name"""
         return self.raw_type.unqualified_type_name if \
-            (isinstance(self.type_, cli.Type) and self.is_typedef and (self.canonical_type.is_pointer or self.canonical_type.is_lval_reference) ) \
+            (isinstance(self.type_, cli.Type) and self.is_typedef and (
+                    self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) \
             else cutil.get_unqualified_type_name(self.pointee_name)
 
     @property
@@ -186,7 +222,8 @@ class CXXType:
         if clang_type.kind in (cli.TypeKind.POINTER, cli.TypeKind.LVALUEREFERENCE):
             return self.pointee_type.is_unexposed
         if self.is_template:
-            for arg_type in self.template_argument_types:
-                if arg_type.is_unexposed:
+            for num in range(self.type_.get_num_template_arguments()):
+                tp = self.type_.get_template_argument_type(num)
+                if tp.kind == cli.TypeKind.UNEXPOSED:
                     return True
         return False

@@ -4,3 +4,115 @@
 
 overloading_postfix: |
   {%- set overloading_postfix = '' if overloading_index is none or overloading_index == 0 else ('_' + overloading_index|string) -%}
+
+templates: |
+  {%- macro get_template_postfix_by_lang(language) -%}
+  {%-   if cxx.is_template and template_choice -%}
+  {%-     for value in template_choice.values() -%}
+  {%-       if value is string -%}
+              {{make_type_converter(value)|attr(language)|attr('custom')|attr('tname')}}
+  {%-       else -%}
+              {{value}}
+  {%-       endif -%}
+  {%-     endfor -%}
+  {%-   endif -%}
+  {%- endmacro -%}
+  {%- macro get_template_getter_name_by_lang(language) -%}
+  {%-   if cxx.is_template and template_choice -%}
+  {%-     set values = template_choice.values()|list -%}
+  {%-     for template_arg_name in template_args_postfixes -%}
+  {%-       if template_arg_name is not none -%}
+            {{template_arg_name}}
+  {%-       else -%}
+  {%-         if template_arg_name is string -%}
+                {{make_type_converter(value)|attr(language)|attr('custom')|attr('tname')}}
+  {%-         else -%}
+                {{values[loop.index]}}
+  {%-         endif -%}
+  {%-       endif -%}
+  {%-     endfor -%}
+  {%-   endif -%}
+  {%- endmacro -%}
+
+
+includes:
+  cxx: |
+    {%- macro gen_include_by_lang(converter, language) -%}
+    {%-   if converter -%}
+    {%-     if converter.cxx_include -%}
+              {{marker}}{{converter.cxx_include.snippet()}}
+    {%-     endif -%}
+    {%-     if converter|attr(language) -%}
+    {%-       for arg_converter in converter|attr(language)|attr('args_converters') -%}
+                {{gen_include_by_lang(arg_converter, language)}}
+    {%-       endfor -%}
+    {%-     endif -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    {%- macro collect_includes_by_lang(converter, includes, language) -%}
+    {%-   if converter %}
+    {%-     if converter.cxx_include -%}
+    {%-       do includes.append(converter.cxx_include.snippet()) -%}
+    {%-     endif -%}
+    {%-     for arg_converter in converter|attr(language)|attr('args_converters') -%}
+    {%-       do collect_includes_by_lang(arg_converter, includes, language) -%}
+    {%-     endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    {%- macro collect_desc_includes_by_lang(converter, desc_includes, language) -%}
+    {%-   if converter %}
+    {%-     set vars = converter|attr(language)|attr('vars') -%}
+    {%-     set vars_descendants = vars|attr('descendants') -%}
+    {%-     if vars and vars_descendants is defined -%} {#- todo ask for defined #}
+    {%-       for descendant in (vars_descendants if vars_descendants is not none else converter|attr(language)|attr('descendants')) -%}
+    {%-         do collect_includes_by_lang(make_type_converter(descendant), desc_includes, language) -%}
+    {%-       endfor -%}
+    {%-     endif -%}
+    {%-     for arg_converter in converter|attr(language)|attr('args_converters') -%}
+    {%-       do collect_desc_includes_by_lang(arg_converter, desc_includes, language) -%}
+    {%-      endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+  target_language: |
+    {%- macro collect_import_converters_by_lang(converter, import_converters, language, gen_for_impl=false) -%}
+    {%-   if converter -%} {# converter is None for non type template parameters #}
+    {%-     set lang_converter = converter|attr(language) -%}
+    {%-     if lang_converter.parent_type_info -%}
+    {#-       in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {%-       do collect_import_converters(make_type_converter(lang_converter.parent_type_info.cxx.type_name), import_converters) -%}
+    {%-     else %}
+    {%-       do import_converters.append((converter, gen_for_impl)) -%}
+    {%-     endif -%}
+    {%-   for arg_converter in lang_converter.args_converters -%}
+    {%-     do collect_import_converters(arg_converter, import_converters, gen_for_impl) -%}
+    {%-   endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    {%- macro collect_desc_import_converters_by_lang(converter, desc_import_converters, language) -%}
+    {%-   if converter -%} {# converter is None for non type template parameters #}
+    {%-     set lang_converter = converter|attr(language) -%}
+    {%-     if lang_converter.vars and lang_converter.vars.descendants is defined -%}
+    {%-       for descendant in (lang_converter.vars.descendants if lang_converter.vars.descendants is not none else lang_converter.descendants) -%}
+    {%-         do collect_import_converters(make_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
+    {%-       endfor -%}
+    {%-     endif -%}
+    {%-     for arg_converter in lang_converter.args_converters -%}
+    {%-       do collect_desc_import_converters(arg_converter, desc_import_converters) -%}
+    {%-     endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    {%- macro gen_import_by_lang(converter, language) -%}
+    {%-   if converter -%} {# converter is None for non type template parameters #}
+    {%-     set lang_converter = converter|attr(language) -%}
+    {%-     set lang_include = converter|attr(language + '_include') -%}
+    {%-     if lang_converter.parent_type_info -%}
+              {{gen_import(make_type_converter(lang_converter.parent_type_info.cxx.type_name))}}
+    {%-     elif lang_include -%}
+              {{marker}}{{lang_include.snippet(full_package=vars.full_package)}}
+    {%-     endif -%}
+    {%-     for arg_converter in lang_converter.args_converters -%}
+              {{gen_import(arg_converter)}}
+    {%-     endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    

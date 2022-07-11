@@ -7,13 +7,12 @@ Implements cppbind api parser on cxx comment
 """
 import distutils.util
 import re
-
-from collections import defaultdict
 from collections import OrderedDict
+from collections import defaultdict
 from types import SimpleNamespace
 
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 import yaml
+from jinja2.exceptions import UndefinedError as JinjaUndefinedError
 
 from cppbind import default_config
 from cppbind.common.error import Error
@@ -21,6 +20,9 @@ from cppbind.common.yaml_process import has_type, to_value, UniqueKeyLoader
 from cppbind.context_manager.var_eval import VariableEvaluator
 from cppbind.ir.ast import Node
 from cppbind.utils.clang import extract_pure_comment
+
+TEMPLATE_NON_TYPE_PARAMETER_KEY = 'value'
+TEMPLATE_TYPE_PARAMETER_KEY = 'type'
 
 
 class APIParser:
@@ -185,10 +187,12 @@ class APIParser:
             if attr_name == 'template':
                 for attrs in attr_value.values():
                     for attr in attrs:
-                        if not isinstance(attr, dict) or 'type' not in attr:
+                        if not isinstance(attr, dict) or TEMPLATE_TYPE_PARAMETER_KEY not in attr \
+                                and TEMPLATE_NON_TYPE_PARAMETER_KEY not in attr:
                             Error.critical(
                                 f"Wrong template variable style: {attr_value}, "
-                                f"template must have mandatory 'type' variable",
+                                f"template must have mandatory '{TEMPLATE_NON_TYPE_PARAMETER_KEY}'"
+                                f" or '{TEMPLATE_TYPE_PARAMETER_KEY}' variable",
                                 location.file_name if location else None,
                                 location.line_number if location else None
                             )

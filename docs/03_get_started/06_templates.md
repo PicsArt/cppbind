@@ -152,11 +152,10 @@ is used as an function argument.
   %} 
 ~~~
 
-Here we have four methods to take `Stack` as an argument and return its
-first element. CppBind supports the first three methods, but you cannot
-generate bindings for the fourth. To generate bindings for a function
-taking template arguments, you must specify their full type names. The
-fourth one does not meet this requirement.
+Here we have five methods to take `Stack` as an argument and return its first element.
+CppBind supports the first four methods, but you cannot generate bindings for the fifth.
+To generate bindings for a function taking template arguments, you must specify their full type names. The
+fifth one does not meet this requirement.
 
 !!! Note
       CppBind supports types inherited from a specialized template, e.g.,
@@ -164,6 +163,14 @@ fourth one does not meet this requirement.
       type inherited from a template type (has CppBind API), you must specify
       full name of the base type, e.g.,
       `class TaskList<T>: public cppbind::example::Stack<T>`.
+
+
+libclang does not provide enough information on template types and these requirements are added to
+take the missing information from user provided APIs.
+
+!!! Note
+      Due to this missing information, currently CppBind does not support typedefs on template types, even if the type name is fully specified,
+      e.g., `using Stack = cppbind::example::Stack<T>` is not supported.
 
 ??? "Generated bindings"
     === "Kotlin"
@@ -276,5 +283,71 @@ And here are some usage examples:
         ~~~Swift
         {% 
           include "../../examples/primitives/swift/src/getters/fruits.swift" 
+        %} 
+        ~~~
+
+## Non-type Template Parameters
+
+Currently, cppbind supports only integral non-type template parameters.
+Like a type template parameter all values of non-type parameters should be specified via **\_\_API\_\_**.
+
+Let's see an example:
+~~~C++
+{% 
+include "../../examples/primitives/cxx/templates/array.hpp"
+start="// [example-start]"
+end="// [example-end]"
+%} 
+~~~
+
+As you can see, we have specified all possible values for both `T` and `SIZE`.
+CppBind generates four types corresponding to each combination of template arguments, i.e.,  `ArrayFloat1`, `ArrayFloat2`, `ArrayInt1` and `ArrayInt2`.
+
+Now let's see some usage examples:
+
+=== "Kotlin"
+    ~~~Java
+    {% 
+    include "../../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt" 
+    start="// [array-examples-start]"
+    end="// [array-examples-end]"
+    %} 
+    ~~~
+
+=== "Python"
+    ~~~Python
+    {% 
+    include "../../examples/primitives/python/src/examples_lib/templates/main.py" 
+    start="# [array-examples-start]"
+    end="# [array-examples-end]"
+    %} 
+    ~~~
+
+=== "Swift"
+    ~~~Swift
+    {% 
+    include "../../examples/primitives/swift/src/templates/main.swift" 
+    start="// [array-examples-start]"
+    end="// [array-examples-end]"
+    %} 
+    ~~~
+
+??? "Generated bindings"
+    === "Kotlin"
+        ~~~Java
+        {% 
+        include "../../examples/primitives/kotlin/src/main/java/com/examples/templates/array.kt" 
+        %} 
+        ~~~
+    === "Python"
+        ~~~Python
+        {% 
+        include "../../examples/primitives/python/src/examples_lib/templates/array_pygen.py" 
+        %} 
+        ~~~
+    === "Swift"
+        ~~~Swift
+        {% 
+        include "../../examples/primitives/swift/src/templates/array.swift" 
         %} 
         ~~~

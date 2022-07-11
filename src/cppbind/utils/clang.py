@@ -8,13 +8,14 @@ Helper functions working with clang
 import os
 import re
 import sys
-from cachetools import cached, LRUCache
 from ctypes import *
 from ctypes.util import find_library
 from itertools import chain
 
-from cppbind.common.error import Error
+from cachetools import cached, LRUCache
+
 import clang.cindex as cli
+from cppbind.common.error import Error
 
 
 def template_type_name(type_):
@@ -27,7 +28,7 @@ def template_type_name(type_):
 
 def is_overloaded(cursor):
     return bool([child for child in list(cursor.semantic_parent.get_children()) if
-            child.spelling == cursor.spelling and child != cursor])
+                 child.spelling == cursor.spelling and child != cursor])
 
 
 def _get_unqualified_type_name(type_name):
@@ -197,6 +198,91 @@ def replace_template_choice(type_name, template_choice):
         for typename, value in template_choice.items():
             replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
     return replaced
+
+
+def is_integral_type(clang_type):
+    """
+    Returns whether clang Type is of integral type or not.
+    """
+    return clang_type.kind in (cli.TypeKind.SHORT,
+                               cli.TypeKind.USHORT,
+                               cli.TypeKind.INT,
+                               cli.TypeKind.UINT,
+                               cli.TypeKind.LONG,
+                               cli.TypeKind.ULONG,
+                               cli.TypeKind.LONGLONG,
+                               cli.TypeKind.ULONGLONG,
+                               cli.TypeKind.INT128,
+                               cli.TypeKind.UINT128)
+
+
+# TODO consistent-cxx-info: this logic is related to the clang, should go to IR after refactoring
+def get_template_declaration(clang_type):
+    """
+    Returns the declaration cursor for the clang Type.
+    Args:
+        clang_type (clang.cindex.Type):
+    Returns:
+        clang.cindex.Cursor: Declaration cursor.
+    """
+    decl_cursor = clang_type.get_declaration()
+    if decl_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+        return decl_cursor
+    # the declaration was not template class, the type was a typedef or a specialized template type
+    decl_cursor = clang_type.get_canonical().get_declaration()
+    if decl_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+        return decl_cursor
+    # the declaration is a specialized type cursor
+    return decl_cursor.get_specialized_cursor_template()
+
+
+# TODO consistent-cxx-info: this logic is related to the clang, should go to IR after refactoring
+def get_template_parameter_cursors(clang_cursor):
+    """
+    Returns the list of template parameter cursors for the clang cursor.
+    Args:
+        clang_cursor (clang.cindex.Cursor):
+    Returns:
+        list[clang.cindex.Cursor]: List of argument cursors.
+    """
+    return [child for child in clang_cursor.get_children() if child.kind in [
+        cli.CursorKind.TEMPLATE_TYPE_PARAMETER,
+        cli.CursorKind.TEMPLATE_NON_TYPE_PARAMETER,
+        cli.CursorKind.TEMPLATE_TEMPLATE_PARAMETER,
+    ]]
+
+
+# TODO consistent-cxx-info: this logic is related to the clang, should go to IR after refactoring
+def get_template_arguments_from_str(type_spelling):
+    """
+    Retrieves template argument spellings from a type spelling.
+    E.g. for 'std::pair<std::string, std::vector<int>>' returns ['std::string', 'std::vector<int>']
+    Note: there are cases this function does not handle for example if the expression contains offset operator
+    Args:
+        type_spelling (str):
+    Returns:
+        list[str]: List of arguments.
+    """
+    # only most nested type's arguments should be retrieved e.g for for a::b::<c::C>::G<d::D, e::E> -- d::D, e::E
+    template_args = []
+    parentheses_count = 0
+    length = len(type_spelling)
+    arg_end_idx = length - 1
+    for i, symbol in enumerate(reversed(type_spelling)):
+        # template should end with >
+        if symbol == '>':
+            parentheses_count += 1
+        elif symbol == '<':
+            parentheses_count -= 1
+        elif symbol == ',' and parentheses_count == 1:
+            template_args.append(type_spelling[length - i + 1:arg_end_idx].strip())
+            arg_end_idx = length - i - 1
+        if parentheses_count == 0:
+            # if i=0 then self is not a template
+            if i != 0:
+                template_args.append(type_spelling[length - i:arg_end_idx].strip())
+            break
+    return list(reversed(template_args))
 
 
 def get_libclang_full_path():

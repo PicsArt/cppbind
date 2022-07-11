@@ -33,13 +33,23 @@ namespace cppbind::example {
 template <class T>
 class Stack: public Container {
 
-    public:
+public:
     /**
      * __API__
      * action: gen_constructor
      * throws: no_throw
      */
     Stack() {};
+
+    /**
+     * Full type name(i.e., cppbind::example::Stack<T> not just Stack<T>) should be explicitly specified otherwise
+     * cppbind won't be able to generate a converter for the argument, as for templates libclang does not provide
+     * enough information.
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    Stack(cppbind::example::Stack<T>& stack) : _elements(stack._elements) {};
 
     /**
      * __API__
@@ -58,6 +68,7 @@ class Stack: public Container {
     void push(T* item) {
         _elements.push_back(item);
     };
+
     /**
      * __API__
      * action: gen_method
@@ -66,26 +77,28 @@ class Stack: public Container {
     void pop() {
         _elements.pop_back();
     };
+
     /**
      * __API__
      * action: gen_method
      * throws: no_throw
      * return_value_policy: reference
      */
-     T* top() const {
+    T* top() const {
         return _elements.back();
-     };
+    };
+
      /**
       * __API__
       * action: gen_method
       * throws: no_throw
       */
-     bool empty() const {
-        return _elements.empty();
-     }
+    bool empty() const {
+         return _elements.empty();
+    }
 
-   private:
-   std::vector<T*> _elements;
+private:
+    std::vector<T*> _elements;
 
 };
 // [example-end]

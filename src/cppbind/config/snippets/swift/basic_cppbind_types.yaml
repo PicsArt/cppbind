@@ -118,6 +118,20 @@ unsigned long:
     swift_to_sc:
     sc_to_swift:
 
+unsigned long long:
+  custom:
+    is_c_pointer_type: False
+    tname: CUnsignedLongLong
+  types:
+    swift: CUnsignedLongLong
+    c: long long
+    sc: CUnsignedLongLong
+  converters:
+    c_to_cxx:
+    cxx_to_c:
+    swift_to_sc:
+    sc_to_swift:
+
 float:
   custom:
     is_c_pointer_type: False

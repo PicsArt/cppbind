@@ -16,6 +16,9 @@ import clang.cindex as cli
 import cppbind.utils.clang as cutil
 from cppbind import logging
 from cppbind.ir.ast import NodeType, Node
+from cppbind.parser import TEMPLATE_TYPE_PARAMETER_KEY, TEMPLATE_NON_TYPE_PARAMETER_KEY
+from cppbind.utils import DefaultValueKind
+from cppbind.utils.clang import extract_pure_comment
 
 
 @dataclass
@@ -350,13 +353,16 @@ class RunRule:
                 parent = parent.parent
 
         # helper map to easily get template names for different combinations
-        node_type_name_map = {k: {i['type']: i.get('name') for i in v} for k, v in node_template_arg.items()}
+        node_type_name_map = {
+            k: {i.get(TEMPLATE_TYPE_PARAMETER_KEY) or i.get(TEMPLATE_NON_TYPE_PARAMETER_KEY): i.get('name') for i in v}
+            for k, v in node_template_arg.items()}
 
         all_possible_args = list(itertools.product(*template_arg.values()))
         template_keys = template_arg.keys()
         all_contexts = []
         for _, combination in enumerate(all_possible_args):
-            choice = [item['type'] for item in combination]
+            choice = [item.get(TEMPLATE_TYPE_PARAMETER_KEY) or item.get(TEMPLATE_NON_TYPE_PARAMETER_KEY) for item in
+                      combination]
             _template_choice = dict(zip(template_keys, choice))
             # only if the current node is template then it should have template postfixes
             choice_names = [node_type_name_map[template_param][_template_choice[template_param]]

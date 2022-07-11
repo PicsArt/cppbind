@@ -42,5 +42,5 @@ from cppbind.common.cxx_type import CXXType
 )
 def test_get_template_arguments(spelling, arguments):
     cxx_type = CXXType(spelling)
-    result = [t.type_ for t in cxx_type.template_argument_types]
+    result = [t[0].type_ for t in cxx_type.template_arguments]
     assert result == arguments

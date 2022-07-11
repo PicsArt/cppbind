@@ -345,42 +345,43 @@ class CXXNode(ClangNode):
             assert param_var.kind == cli.CursorKind.PARM_DECL
             val = None
             kind = None
-            for def_curs in param_var.walk_preorder():
-                if def_curs.kind in (
-                    cli.CursorKind.INTEGER_LITERAL,
-                    cli.CursorKind.FLOATING_LITERAL,
-                    cli.CursorKind.IMAGINARY_LITERAL,
-                    cli.CursorKind.STRING_LITERAL,
-                    cli.CursorKind.CHARACTER_LITERAL,
-                    cli.CursorKind.CXX_BOOL_LITERAL_EXPR
-                ):
-                    kind = DefaultValueKind.LITERAL
-                    val = next(def_curs.get_tokens(), None)
-                    if val:
-                        val = val.spelling
-                elif def_curs.kind in (
-                    cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
-                    cli.CursorKind.GNU_NULL_EXPR,
-                    cli.CursorKind.NULL_STMT):
-                    val = 'nullptr'
-                    kind = DefaultValueKind.NULL_PTR
-                elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
-                    val = ''.join([token.spelling for token in def_curs.get_tokens()])
-                    kind = DefaultValueKind.ENUM
-                elif def_curs.kind == cli.CursorKind.CALL_EXPR:
-                    kind = DefaultValueKind.CALL_EXPR
-                    tokens = list(def_curs.get_tokens())
-                    val = ''.join([token.spelling for token in tokens if token.spelling != '='])
+            if '=' in [p.spelling for p in param_var.get_tokens()]:
+                for def_curs in param_var.walk_preorder():
+                    if def_curs.kind in (
+                        cli.CursorKind.INTEGER_LITERAL,
+                        cli.CursorKind.FLOATING_LITERAL,
+                        cli.CursorKind.IMAGINARY_LITERAL,
+                        cli.CursorKind.STRING_LITERAL,
+                        cli.CursorKind.CHARACTER_LITERAL,
+                        cli.CursorKind.CXX_BOOL_LITERAL_EXPR
+                    ):
+                        kind = DefaultValueKind.LITERAL
+                        val = next(def_curs.get_tokens(), None)
+                        if val:
+                            val = val.spelling
+                    elif def_curs.kind in (
+                        cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
+                        cli.CursorKind.GNU_NULL_EXPR,
+                        cli.CursorKind.NULL_STMT):
+                        val = 'nullptr'
+                        kind = DefaultValueKind.NULL_PTR
+                    elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
+                        val = ''.join([token.spelling for token in def_curs.get_tokens()])
+                        kind = DefaultValueKind.ENUM
+                    elif def_curs.kind == cli.CursorKind.CALL_EXPR:
+                        kind = DefaultValueKind.CALL_EXPR
+                        tokens = list(def_curs.get_tokens())
+                        val = ''.join([token.spelling for token in tokens if token.spelling != '='])
 
-                    if len(tokens) == 1:
-                        if tokens[0].kind == cli.TokenKind.LITERAL:
-                            # std::string case
-                            kind = DefaultValueKind.LITERAL
-                        elif val == 'nullptr':
-                            # std::shared_ptr case
-                            kind = DefaultValueKind.NULL_PTR
-                    # value is retrieved break to not override it
-                    break
+                        if len(tokens) == 1:
+                            if tokens[0].kind == cli.TokenKind.LITERAL:
+                                # std::string case
+                                kind = DefaultValueKind.LITERAL
+                            elif val == 'nullptr':
+                                # std::shared_ptr case
+                                kind = DefaultValueKind.NULL_PTR
+                        # value is retrieved break to not override it
+                        break
             return kind, val
 
         # for function templates Cursor.get_arguments returns an empty array,

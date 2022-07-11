@@ -92,6 +92,9 @@ long long:
 unsigned long:
   long
 
+unsigned long long:
+  long
+
 float:
   custom:
     pname: Float

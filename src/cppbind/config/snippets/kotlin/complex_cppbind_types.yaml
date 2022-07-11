@@ -23,13 +23,16 @@ std::__ndk1::unordered_map:
 std::__ndk1::basic_string:
   std::__cxx11::basic_string
 
+std::__ndk1::array:
+  std::array
+
 $Object:
   custom:
     pname: Long
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_args_postfixes or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].kotlin.custom.tname}}{% endif -%}
+      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].kotlin.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     namespace: |
       {#- this is an internal section no need to define in user defined custom converters #}
@@ -663,6 +666,39 @@ std::pair:
 
 std::__ndk1::pair:
   std::pair
+
+# TODO this converter uses std::vector and will be revisited/optimized in https://picsart.atlassian.net/browse/IEGEN-484
+std::array:
+  custom:
+    pname: Object
+    tname: "List{{args_converters[0].kotlin.custom.tname}}"
+  types:
+    kotlin: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].kotlin.cxx.type_name)).kotlin.target_type_name}}"
+    jni: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].jni.cxx.type_name)).jni.target_type_name}}"
+    jdk: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].jdk.cxx.type_name)).jdk.target_type_name}}"
+  converters:
+    jni_to_cxx: |
+      {%- set tmp_name = '_' + target_name %}
+      {%- set converter = make_type_converter('std::vector<{}>'.format(args[0].cxx.type_name)).jni_to_cxx -%}
+      {{converter.snippet(name, target_name=tmp_name, value_policy=value_policy)}}
+      {{cxx.unqualified_resolved_type_name}} {{target_name}} {};
+      std::copy_n(std::make_move_iterator({{tmp_name}}.begin()), {{args[1]}}, {{target_name}}.begin());
+    cxx_to_jni: |
+      {%- set converter = make_type_converter('std::vector<{}>'.format(args[0].cxx.type_name)).cxx_to_jni -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    kotlin_to_jdk: |
+      {%- set converter = make_type_converter('std::vector<{}>'.format(args[0].cxx.type_name)).kotlin_to_jdk -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    jdk_to_kotlin: |
+      {%- set converter = make_type_converter('std::vector<{}>'.format(args[0].cxx.type_name)).jdk_to_kotlin -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    kotlin_ref_internal: |
+        {%- set converter = make_type_converter('std::vector<{}>'.format(args_converters[0].kotlin.cxx.type_name)).kotlin_ref_internal -%}
+        {{converter.snippet(name)}}
+    kotlin_keep_alive: |
+      {{name}}.keepCppBindReference({{reference}})
+    cxx_include: |
+      #include <algorithm>
 
 # dummy converters to not throw error on container types converter build
 # currently, these are not used

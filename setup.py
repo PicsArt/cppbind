@@ -40,7 +40,7 @@ setup(
         "Programming Language :: Kotlin",
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
-        "License :: MIT License",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Code Generators",
     ],

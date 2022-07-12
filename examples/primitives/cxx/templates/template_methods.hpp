@@ -2,6 +2,8 @@
 #define template_methods_hpp
 
 #include <utility>
+#include <vector>
+#include <array>
 
 
 namespace cppbind::example {
@@ -49,6 +51,22 @@ class TemplateMethods  {
     template <typename T, typename V>
     std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * template:
+     *   T:
+     *     - type: int
+     *     - type: std::string
+     */
+    template <typename T>
+    static std::vector<T> merge(const std::vector<T>& first, const std::vector<T>& second) {
+        std::vector<T> v(first);
+        std::copy(second.begin(), second.end(), std::back_inserter(v));
+        return v;
     }
 };
 // [example-end]

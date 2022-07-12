@@ -16,6 +16,13 @@ assert(Utils.minus(first: 3, second: 2) == 1)
 assert(Utils.minus(first: 7.0, second: 3.0) == 4.0)
 // [static-usage-end]
 
+// overloaded methods with template arguments
+let sum1 = utils.sum(first: [1, 2, 0, 0], second: [3, 4, 0, 0])
+assert(sum1 == [4, 6, 0, 0])
+
+let sum2 = utils.sum(first: [5.0, 6.0, 0.0, 0.0], second: [7.0, 8.0, 0.0, 0.0])
+assert(sum2 == [12.0, 14.0, 0.0, 0.0])
+
 // constructor overloading
 let john_email = "john@email.com"
 let jane = "Jane Doe"

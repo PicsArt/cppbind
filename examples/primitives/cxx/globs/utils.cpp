@@ -49,3 +49,20 @@ void doNothing() {
 std::string greet(const std::string& name, const std::string& hometown) {
     return "Hello " + name + " from " + hometown;
 }
+
+
+ArrayInt sum(ArrayInt first, ArrayInt second) {
+    ArrayInt res;
+    for (int i = 0; i < 4; ++i) {
+        res[i] = first[i] + second[i];
+    }
+    return res;
+}
+
+std::array<float, 4> sum(std::array<float, 4> first, std::array<float, 4> second) {
+    std::array<float, 4> res;
+    for (int i = 0; i < 4; ++i) {
+        res[i] = first[i] + second[i];
+    }
+    return res;
+}

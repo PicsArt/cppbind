@@ -309,6 +309,7 @@ std::vector:
   custom:
     pname: Object
     tname: "List{{args_converters[0].kotlin.custom.tname}}"
+    is_kotlin_type_erased: True
   types:
     kotlin: "List<{{args[0].target_type_name}}>"
     jni: "{{args[0].target_type_name if args[0].custom.pname != 'Object' else 'jobject'}}Array"
@@ -377,6 +378,7 @@ std::map:
   custom:
     pname: Object
     tname: "Map{{args_converters[0].kotlin.custom.tname}}{{args_converters[1].kotlin.custom.tname}}"
+    is_kotlin_type_erased: True
   types:
     kotlin: "Map<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jmapobject
@@ -494,6 +496,9 @@ std::shared_ptr:
   custom:
     pname: Long
     tname: "{{args_converters[0].kotlin.custom.tname}}"
+    # for now shared pointer converter assumes it's argument is of CppBind generated type
+    # update the value of is_kotlin_type_erased to be dynamic whenever updating conversion logic to work with all types
+    is_kotlin_type_erased: False
   types:
     kotlin: "{{args[0].target_type_name}}"
     jni: jobjectid
@@ -605,6 +610,7 @@ std::pair:
   custom:
     pname: Object
     tname: "Pair{{args_converters[0].kotlin.custom.tname}}{{args_converters[1].kotlin.custom.tname}}"
+    is_kotlin_type_erased: True
   types:
     kotlin: "Pair<{{args[0].target_type_name}}, {{args[1].target_type_name}}>"
     jni: jobject
@@ -672,6 +678,7 @@ std::array:
   custom:
     pname: Object
     tname: "List{{args_converters[0].kotlin.custom.tname}}"
+    is_kotlin_type_erased: True
   types:
     kotlin: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].kotlin.cxx.type_name)).kotlin.target_type_name}}"
     jni: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].jni.cxx.type_name)).jni.target_type_name}}"

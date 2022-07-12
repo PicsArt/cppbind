@@ -77,6 +77,19 @@ assert(multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2) == "ABC2Defaul
 assert(multipleMixedDefaultValues(task: Task(title: "ABC"), r: Root(path: "Path") ) == "ABC1Path")
 assert(multipleMixedDefaultValues(task: Task(title: "ABC"), i: 2, r: Root(path: "Path") ) == "ABC2Path")
 // [complex-defaults-usage-end]
+
+let merged1 = merge(first: [1, 2], second: [3, 4])
+assert(merged1 == [1, 2, 3, 4])
+
+let merged2 = merge(first: ["first", "second"], second: ["third"])
+assert(merged2 == ["first", "second", "third"])
+
+let sum1 = sum(first: [1, 2, 0, 0], second: [3, 4, 0, 0])
+assert(sum1 == [4, 6, 0, 0])
+
+let sum2 = sum(first: [5.0, 6.0, 0.0, 0.0], second: [7.0, 8.0, 0.0, 0.0])
+assert(sum2 == [12.0, 14.0, 0.0, 0.0])
+
 }
 
 

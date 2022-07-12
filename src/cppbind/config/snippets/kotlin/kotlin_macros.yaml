@@ -125,6 +125,18 @@ templates:
       {%- macro get_template_getter_name() -%}
             {{get_template_getter_name_by_lang('kotlin')}}
       {%- endmacro -%}
+      {%- macro get_jvm_name() -%}
+      {#-   TODO: update removal of the leading symbol after fixing overloading postfix to match kotlin formatting -#}
+      {%-   set overloading_postfix = vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix[1:] -%}
+      {%-   if cxx.is_template or (cxx.is_overloaded and overloading_postfix) -%}
+      {%-     for arg in args -%}
+      {%-       if arg.converter.kotlin.custom.is_kotlin_type_erased|default(False) -%}
+                  @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_postfix}}")
+                  {%- break -%}
+      {%-       endif -%}
+      {%-     endfor %}
+      {%-   endif -%}
+      {%- endmacro -%}
 
 includes:
   kotlin:

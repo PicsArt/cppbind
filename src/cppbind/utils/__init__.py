@@ -244,6 +244,9 @@ def init_jinja_env():
     def contains(input_, pattern):
         return pattern in input_
 
+    def startswith(input_, prefix):
+        return input_.startswith(prefix)
+
     def replace_regex(input_, pattern, repl, count=0):
         return re.sub(pattern, repl, input_, count)
 
@@ -311,7 +314,7 @@ def init_jinja_env():
 
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
-                      extensions=['jinja2.ext.do', 'jinja2.ext.debug'])
+                      extensions=['jinja2.ext.do', 'jinja2.ext.debug', 'jinja2.ext.loopcontrols'])
 
     env.filters['all'] = all
     env.filters['any'] = any
@@ -332,6 +335,7 @@ def init_jinja_env():
 
     env.tests['match_regexp'] = match_regexp
     env.tests['contains'] = contains
+    env.tests['startswith'] = startswith
 
     env.globals['Error'] = Error
     env.globals['path'] = os.path

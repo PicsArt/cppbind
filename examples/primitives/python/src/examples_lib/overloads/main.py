@@ -1,5 +1,5 @@
-from examples_lib.overloads import pretty_print, Employee, Utils
 from examples_lib.getters import NumberInt
+from examples_lib.overloads import pretty_print, Employee, Utils
 
 # [overload-usage-start]
 assert Utils.sum(1, 2) == 3
@@ -14,6 +14,13 @@ assert utils.concatenate("a", "b", "c") == "abc"
 assert Utils.minus(3, 2) == 1
 assert Utils.minus(7.0, 3.0) == 4.0
 # [static-usage-end]
+
+# overloaded methods with template arguments
+sum1 = utils.sum_lists([1, 2, 0, 0], [3, 4, 0, 0])
+assert (sum1 == [4, 6, 0, 0])
+
+sum2 = utils.sum_lists([5.0, 6.0, 0.0, 0.0], [7.0, 8.0, 0.0, 0.0])
+assert (sum2 == [12.0, 14.0, 0.0, 0.0])
 
 # constructor overloading
 john = 'John Doe'

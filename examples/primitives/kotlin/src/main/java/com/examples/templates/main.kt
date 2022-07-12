@@ -69,6 +69,11 @@ var pairRootPrj = tm.makePair(root1, prj1)
 assert(pairRootPrj.first.path == root1.path)
 assert(pairRootPrj.second.title == prj1.title)
 
+val merged1 = TemplateMethods.merge(listOf(1, 2), listOf(3, 4))
+assert(merged1 == listOf(1, 2, 3, 4))
+
+val merged2 = TemplateMethods.merge(listOf("first", "second"), listOf("third"))
+assert(merged2 == listOf("first", "second", "third"))
 // [template-funcs-examples-end]
 
 // [addressable-examples]

@@ -67,6 +67,12 @@ assert(Mirror(reflecting: pairRootPrj).children.count == 2)
 assert(pairRootPrj.0.path == root1.path)
 assert(pairRootPrj.1.title == prj1.title)
 
+let merged1 = TemplateMethods.merge(first: [1, 2], second: [3, 4])
+assert(merged1 == [1, 2, 3, 4])
+
+let merged2 = TemplateMethods.merge(first: ["first", "second"], second: ["third"])
+assert(merged2 == ["first", "second", "third"])
+
 // [template-funcs-examples-end]
 
 // [addressable-examples]

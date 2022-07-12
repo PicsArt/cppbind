@@ -1,5 +1,7 @@
 #ifndef globs_hpp
 #define globs_hpp
+
+#include <array>
 #include <string>
 
 #include "cxx/enums/color.hpp"
@@ -190,5 +192,51 @@ void doNothing();
 std::string greet(const std::string& name, const std::string& hometown);
 // [custom-arg-examples-end]
 
+
+// [overloading-with-template-args-examples]
+using ArrayInt = std::array<int, 4>;
+/**
+ * An example of template function which is overloaded in target languages and for Kotlin should be annotated
+ * with JvmName, otherwise all overloads will have the same JVM signature.
+ * __API__
+ * action: gen_function
+ * throws: no_throw
+ * package: globs
+ * file: templateOverloadedUtils
+ * template:
+ *   T:
+ *     - type: int
+ *     - type: std::string
+ */
+template <typename T>
+std::vector<T> merge(const std::vector<T>& first, const std::vector<T>& second) {
+    std::vector<T> v(first);
+    std::copy(second.begin(), second.end(), std::back_inserter(v));
+    return v;
+}
+
+/**
+ * An example of overloaded function which has template argument and for Kotlin should be annotated
+ * with JvmName, otherwise all overloads will have the same JVM signature.
+ * __API__
+ * action: gen_function
+ * throws: no_throw
+ * package: globs
+ * file: templateOverloadedUtils
+ */
+ArrayInt sum(ArrayInt first, ArrayInt second) ;
+
+/**
+ * An example of overloaded function which has template argument and for Kotlin should be annotated
+ * with JvmName, otherwise all overloads will have the same JVM signature.
+ * __API__
+ * action: gen_function
+ * throws: no_throw
+ * package: globs
+ * file: templateOverloadedUtils
+ */
+std::array<float, 4> sum(std::array<float, 4> first, std::array<float, 4> second);
+
+// [overloading-with-template-args-examples]
 
 #endif

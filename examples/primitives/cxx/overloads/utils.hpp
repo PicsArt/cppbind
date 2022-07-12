@@ -1,5 +1,7 @@
 #ifndef overload_hpp
 #define overload_hpp
+
+#include <array>
 #include <string>
 
 namespace cppbind::example {
@@ -84,6 +86,38 @@ struct Utils {
         return first - second;
     }
     // [static-example-end]
+
+    // [overloaded-with-template-args]
+    using ArrayInt = std::array<int, 4>;
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * python.name: sum_lists
+     */
+    ArrayInt sum(ArrayInt first, ArrayInt second) {
+        ArrayInt res;
+        for (int i = 0; i < 4; ++i) {
+            res[i] = first[i] + second[i];
+        }
+        return res;
+    }
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * python.name: sum_lists
+     */
+    std::array<float, 4> sum(std::array<float, 4> first, std::array<float, 4> second) {
+        std::array<float, 4> res;
+        for (int i = 0; i < 4; ++i) {
+            res[i] = first[i] + second[i];
+        }
+        return res;
+    }
+    // [overloaded-with-template-args]
 };
 }
 #endif

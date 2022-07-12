@@ -17,6 +17,13 @@ assert(Utils.minus(3, 2) == 1)
 assert(Utils.minus(7.0f, 3.0f) == 4.0f)
 // [static-usage-end]
 
+// overloaded methods with template arguments
+val sum1 = utils.sum(listOf(1, 2, 0, 0), listOf(3, 4, 0, 0))
+assert(sum1 == listOf(4, 6, 0, 0))
+
+val sum2 = utils.sum(listOf(5F, 6F, 0F, 0F), listOf(7F, 8F, 0F, 0F))
+assert(sum2 == listOf(12F, 14F, 0F, 0F))
+
 // constructor overloading
 val john = "John Doe"
 val john_email = "john@email.com"

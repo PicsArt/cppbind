@@ -80,6 +80,12 @@ pair_root_prj = tm.make_pair(a=root1, b=prj1)
 assert len(pair_root_prj) == 2
 assert pair_root_prj[0].path == root1.path
 assert pair_root_prj[1].title == prj1.title
+
+merged1 = TemplateMethods.merge([1, 2], [3, 4])
+assert(merged1 == [1, 2, 3, 4])
+
+merged2 = TemplateMethods.merge(["first", "second"], ["third"])
+assert(merged2 == ["first", "second", "third"])
 # [template-funcs-examples-end]
 
 # [addressable-examples]

@@ -80,3 +80,15 @@ assert multiple_mixed_default_values(Task("ABC"), i=2) == "ABC2DefaultRoot"
 assert multiple_mixed_default_values(Task("ABC"), r=Root("Path")) == "ABC1Path"
 assert multiple_mixed_default_values(Task("ABC"), i=2, r=Root("Path")) == "ABC2Path"
 # [complex-defaults-usage-end]
+
+merged1 = merge_int([1, 2], [3, 4])
+assert(merged1 == [1, 2, 3, 4])
+
+merged2 = merge_string(["first", "second"], ["third"])
+assert(merged2 == ["first", "second", "third"])
+
+s1 = sum([1, 2, 0, 0], [3, 4, 0, 0])
+assert(s1 == [4, 6, 0, 0])
+
+s2 = sum1([5.0, 6.0, 0.0, 0.0], [7.0, 8.0, 0.0, 0.0])
+assert(s2 == [12.0, 14.0, 0.0, 0.0])

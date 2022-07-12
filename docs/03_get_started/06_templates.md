@@ -16,7 +16,7 @@ end="// [example-end]"
 %} 
 ~~~
 
-Here we have two template member functions: `max` and `makePair`. As you
+Here we have three template member functions: `max`, `makePair` and `merge`. As you
 can see, we have specified all possible types for each parameter.
 CppBind generates overloaded methods in target languages with each
 combination of template arguments.
@@ -51,8 +51,8 @@ combination of template arguments.
         %} 
         ~~~
 
-As we can see, CppBind generated two overloaded methods for both `max`
-and `makePair`. And here are some usage examples:
+As we can see, CppBind generated two overloaded methods for each of the source methods.
+And here are some usage examples:
 
 === "Kotlin"
     ~~~Java
@@ -82,6 +82,11 @@ and `makePair`. And here are some usage examples:
     ~~~
 
 ----
+!!! Note
+    In the case of Kotlin, the generated `merge` methods are also annotated with the `JvmName` annotation.
+    Without this annotation, the two `merge` methods would have the same JVM signature, and the code would not compile.
+    The annotation is generated if the `is_kotlin_type_erased` property from type converters' **custom** section is set
+    to `True` for at least one of the arguments type converter. More on type converters can be found [here](04_advanced_features/02_custom_types.md)  
 
 ## Class templates
 

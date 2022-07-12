@@ -72,6 +72,18 @@ assert(multipleMixedDefaultValues(Task("ABC"), r=Root("Path") ) == "ABC1Path")
 assert(multipleMixedDefaultValues(Task("ABC"), 2, Root("Path") ) == "ABC2Path")
 // [complex-defaults-usage-end]
 
+val merged1 = merge(listOf(1, 2), listOf(3, 4))
+assert(merged1 == listOf(1, 2, 3, 4))
+
+val merged2 = merge(listOf("first", "second"), listOf("third"))
+assert(merged2 == listOf("first", "second", "third"))
+
+val sum1 = sum(listOf(1, 2, 0, 0), listOf(3, 4, 0, 0))
+assert(sum1 == listOf(4, 6, 0, 0))
+
+val sum2 = sum(listOf(5F, 6F, 0F, 0F), listOf(7F, 8F, 0F, 0F))
+assert(sum2 == listOf(12F, 14F, 0F, 0F))
+
 }
 
 class GlobsApp {

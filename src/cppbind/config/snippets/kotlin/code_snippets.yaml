@@ -835,11 +835,16 @@ method:
         {{gen_tostring_function()}}
         {%- else -%}
         {%- if not cxx.is_static %}
+        {%- set overloading_postfix = vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix %}
         {#- this should go to shared macro #}
         {%- macro gen_func(args, index=none) -%}
         {%- set comma = joiner(', ') -%}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        {%- set jvm_name = get_jvm_name() %}
+        {%- if jvm_name %}
+        {{jvm_name}}
         {%- endif %}
         {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun {{vars.name}}(
         {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
@@ -874,9 +879,9 @@ method:
             {%- do call_args.append(arg_name) if not arg_name in call_args %}
             {%- endfor %}
             {%- if owner_class.vars.action == 'gen_interface' %}
-            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
             {%- else %}
-            val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            val result = j{{vars.name|capitalize}}{{overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
             {%- endif %}
             {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
             {%- if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
@@ -928,9 +933,9 @@ method:
             {%- do extra_call_args.append(arg_name) if not arg_name in call_args %}
             {%- endfor %}
             {%- if owner_class.vars.action == 'gen_interface' %}
-            {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
+            {{owner_class.converter.kotlin.target_type_name}}Helper.jSet{{overloading_postfix}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
             {%- else %}
-            jSet{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
+            jSet{{overloading_postfix}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
             {#- This should go to shared macro -#}
             {%- if vars.keep_alive %}
             {%- set args = args + [namespace(name='value', converter=rconverter)] -%}
@@ -958,6 +963,7 @@ method:
       - !include common_macros.yaml&overloading_postfix
       - |
         {%- if cxx.is_static %}
+        {%- set overloading_postfix = vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix %}
         {#- this should go to shared macro #}
         {%- macro gen_func(args, index=none) -%}
         {%- if vars.return_value_policy == 'reference_internal' -%}
@@ -970,6 +976,10 @@ method:
         {%- set comma = joiner(', ') -%}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        {%- set jvm_name = get_jvm_name() %}
+        {%- if jvm_name %}
+        {{jvm_name}}
         {%- endif %}
         fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}): {{rconverter.kotlin.target_type_name}}{{'?' if vars.nullable_return}} {
             {%- set call_args = [] %}
@@ -989,16 +999,16 @@ method:
             {%- do call_args.append(arg_name) if not arg_name in call_args %}
             {%- endfor %}
             {%- if owner_class.vars.action == 'gen_interface' %}
-            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            val result = {{owner_class.converter.kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
             {%- else %}
-            val result = j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
+            val result = j{{vars.name|capitalize}}{{overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({{call_args|join(', ')}})
             {%- endif %}
             {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent}}
             return {{result_converter.converted_name('result')}}
         }
         {%- set comma = joiner(', ') %}
         @JvmStatic
-        private external fun j{{vars.name|capitalize}}{{vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
+        private external fun j{{vars.name|capitalize}}{{overloading_postfix}}{{get_template_postfix()}}{{'_' + index|string if index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
         {%- endmacro -%}
         {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
@@ -1178,6 +1188,10 @@ function:
         {%- set comma = joiner(', ') -%}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
+        {%- endif %}
+        {%- set jvm_name = get_jvm_name() %}
+        {%- if jvm_name %}
+        {{jvm_name}}
         {%- endif %}
         fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}

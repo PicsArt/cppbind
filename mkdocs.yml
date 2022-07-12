@@ -68,3 +68,7 @@ plugins:
   - git-revision-date-localized
   - search
   - include-markdown
+
+extra_css:
+  - stylesheets/extra.css
+

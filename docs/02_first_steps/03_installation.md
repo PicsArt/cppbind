@@ -109,22 +109,9 @@ git clone https://github.com/PicsArt/cppbind.git
 cd cppbind
 ```
 
-If the project is already cloned, pull the latest version:
-
-``` bash
-git fetch
-git pull
-```
-
 === "Linux"
 
-    Install virtualenv:
-
-    ``` bash
-    python3 -m pip install virtualenv
-    ```
-
-    Create and activate a virtualenv:
+    Create and activate a virtual environment:
 
     ``` bash
     python3 -m venv venv
@@ -133,13 +120,7 @@ git pull
 
 === "macOS"
 
-    Install virtualenv:
-
-    ``` bash
-    python3 -m pip install virtualenv
-    ```
-
-    Create and activate a virtualenv:
+    Create and activate a virtual environment:
 
     ``` bash
     python3 -m venv venv
@@ -148,13 +129,7 @@ git pull
 
 === "Windows"
 
-    Install virtualenv:
-
-    ``` bash
-    python -m pip install virtualenv
-    ```
-
-    Create and activate a virtualenv:
+    Create and activate a virtual environment:
 
     ``` bash
     python -m venv venv

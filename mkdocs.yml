@@ -4,7 +4,6 @@ use_directory_urls: false
 nav:
   - Introduction: index.md
   - First Steps:
-    - Installation prerequisites: 02_first_steps/01_prerequisites.md
     - Supported languages: 02_first_steps/02_supported_languages.md
     - Installation: 02_first_steps/03_installation.md
     - “Hello user” tutorial: 02_first_steps/04_hello_user.md

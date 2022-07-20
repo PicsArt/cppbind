@@ -12,6 +12,7 @@ func runOptionalExamples() {
     assert(op.optionalLongWithDefault() == 7)
     assert(op.optionalDoubleWithDefault() == 9.0)
     assert(op.optionalFloatWithDefault() == 11.0)
+    assert(op.optionalShortWithDefault() == 10)
     assert(op.optionalBoolWithDefault() == true)
     assert(op.optionalStringWithDefault() == "abc")
     assert(op.optionalStringViewWithDefault() == "abc")
@@ -36,6 +37,7 @@ func runOptionalExamples() {
     assert(op.optionalUnsignedCharWithDefault(num: 200) == 200)
     assert(op.optionalLongWithDefault(value: 8) == 8)
     assert(op.optionalFloatWithDefault(value: 5.0) == 5.0)
+    assert(op.optionalShortWithDefault(value: 5) == 5)
     assert(op.optionalCharPointerWithDefault(optionalStr: "val") == "val")
 
     /// multiple default values with complex and non-complex values

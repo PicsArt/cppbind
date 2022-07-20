@@ -15,6 +15,7 @@ assert op.optional_int_with_default() == 5
 assert op.optional_long_with_default() == 7
 assert op.optional_double_with_default() == 9.0
 assert op.optional_float_with_default() == 11.0
+assert op.optional_short_with_default() == 10
 assert op.optional_bool_with_default() is True
 assert op.optional_string_with_default() == "abc"
 assert op.optional_string_view_with_default() == "abc"
@@ -48,6 +49,7 @@ assert op.optional_char_with_default(':') == ':'
 assert op.optional_unsigned_char_with_default(200) == 200
 assert op.optional_long_with_default(8) == 8
 assert op.optional_float_with_default(5.0) == 5.0
+assert op.optional_short_with_default(5) == 5
 # [optionals-usage]
 
 # multiple default values with complex and non - complex values

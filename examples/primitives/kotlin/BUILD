@@ -220,3 +220,11 @@ kt_jvm_test(
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.hashing.HashingApp",
 )
+
+kt_jvm_test(
+    name = "basic_types",
+    srcs = ["src/main/java/com/examples/basic_types/main.kt"],
+    deps = ["kt_examples_library", "@com_github_jetbrains_kotlin//:kotlin-reflect"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.basic_types.BasicTypesApp",
+)

@@ -65,9 +65,9 @@ unsigned int:
 short:
   custom:
     is_c_pointer_type: False
-    tname: Short
+    tname: CShort
   types:
-    swift: Short
+    swift: CShort
     c: short
     sc: CShort
   converters:

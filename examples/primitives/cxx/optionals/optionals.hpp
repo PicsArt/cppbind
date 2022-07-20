@@ -84,6 +84,15 @@ public:
 	    return value;
 	}
 
+	/**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+	short optionalShortWithDefault(short value = 10) {
+	    return value;
+	}
+
     /**
      * __API__
      * action: gen_method

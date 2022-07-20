@@ -145,6 +145,17 @@ inline std::vector<jfloat> getFloatArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
+inline std::vector<jshort> getShortArray(JNIEnv* env, jobject obj) {
+    jshortArray jshortArray1 = (jshortArray)obj;
+    int len = env->GetArrayLength(jshortArray1);
+    std::vector<jshort> ret;
+    ret.reserve(len);
+    jshort* arr = env->GetShortArrayElements(jshortArray1, nullptr);
+    std::copy(arr, arr + len, std::back_inserter(ret));
+    env->ReleaseShortArrayElements(jshortArray1, arr, 0);
+    return ret;
+}
+
 inline jobject extractObject(JNIEnv*, jobject obj)  {
     // to not have redundant checks
     return obj;
@@ -172,6 +183,11 @@ inline jdouble extractDouble(JNIEnv* env, jobject obj)  {
 inline jlong extractLong(JNIEnv* env, jobject obj)  {
     return env->CallLongMethod(obj,
         env->GetMethodID(env->FindClass("java/lang/Long"), "longValue", "()J"));
+}
+
+inline jshort extractShort(JNIEnv* env, jobject obj) {
+    return env->CallLongMethod(obj,
+        env->GetMethodID(env->FindClass("java/lang/Short"), "shortValue", "()S"));
 }
 
 inline jobject longToObject(JNIEnv* env, jlong val) {

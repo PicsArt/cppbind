@@ -143,3 +143,9 @@ swift_test(
     srcs = ["src/hashing/main.swift"],
     deps = [":sw_examples_library"],
 )
+
+swift_test(
+    name = "basic_types",
+    srcs = ["src/basic_types/main.swift"],
+    deps = [":sw_examples_library"],
+)

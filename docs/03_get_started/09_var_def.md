@@ -47,15 +47,21 @@ Each variable has the following properties:
 
 Values for the property **allowed_on** are divided into groups:
 
--   **file_system** - includes **dir** and **file**.
+- **file_system** - includes **dir** and **file**.
     **dir** - variable can be defined on a directory.
     **file** - variable can be defined on a file.
 
--   **cxx** - includes **class**, **class_template**, **struct**,
-    **struct_template**, **constructor**, **function**,
-    **function_template**, **cxx_method**, **enum** and **field**.
+- **cxx_method** - includes **method** and **method_template**.
 
--   **cmd_line** - includes **cmd_line** and **root**.
+- **cxx_constructor** - includes **constructor** and **constructor_template**.
+
+- **cxx_function** - includes **function** and **function_template**.
+
+- **cxx** - includes **class**, **class_template**, **struct**,
+    **struct_template**, **constructor**, **constructor_template**, **function**,
+    **function_template**, **method**, **method_template**, **enum** and **field**.
+
+- **cmd_line** - includes **cmd_line** and **root**.
     The values mentioned above are special keywords that show the kind
     of corresponding entity.
     Variables allowed on **root** are the ones common for the whole

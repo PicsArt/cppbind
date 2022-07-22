@@ -23,10 +23,13 @@ from cppbind.utils.clang import join_type_parts
 NODE_GROUP_ALIASES = {
     'cmd_line': ('cmd_line', 'root'),
     'file_system': ('dir', 'file'),
+    'cxx_method': ('method', 'method_template'),
+    'cxx_function': ('function', 'function_template'),
+    'cxx_constructor': ('constructor', 'constructor_template'),
     'cxx': (
-        'class', 'class_template', 'struct', 'struct_template', 'constructor',
-        'function', 'function_template', 'cxx_method', 'enum', 'field'
-    )
+        'class', 'class_template', 'struct', 'struct_template', 'constructor', 'constructor_template',
+        'function', 'function_template', 'method', 'method_template', 'enum', 'field'
+    ),
 }
 
 

@@ -9,14 +9,15 @@ import types
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 from enum import Enum
+
 from cached_property import cached_property
 from sortedcontainers import SortedSet
 
-from . import allowed_after_build, available_on
 import clang.cindex as cli
+import cppbind.utils.clang as cutil
 from cppbind.common.cxx_element import CXXElement
 from cppbind.utils import DefaultValueKind
-import cppbind.utils.clang as cutil
+from . import allowed_after_build, available_on
 
 
 class NodeType(Enum):
@@ -115,7 +116,8 @@ class Node(ABC):
 
 class DirectoryNode(Node):
 
-    def __init__(self, name, file_name=None, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+    def __init__(self, name, file_name=None, api=None, args=None, root=None, parent=None, children=None,
+                 pure_comment=None):
         super().__init__(api, args, root, parent, children, pure_comment)
         self.name = name
         self._file_name = file_name
@@ -275,7 +277,16 @@ class CXXNode(ClangNode):
     @property
     def kind_name(self):
         assert self.clang_cursor, "cursor is not provided"
-        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "")
+        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "").replace("cxx_", "")
+        if self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE:
+            if self.clang_cursor.lexical_parent.kind in (cli.CursorKind.STRUCT_DECL,
+                                                         cli.CursorKind.CLASS_DECL,
+                                                         cli.CursorKind.CLASS_TEMPLATE):
+                if self.spelling == self.clang_cursor.lexical_parent.spelling:
+                    return 'constructor_template'
+                else:
+                    return 'method_template'
+
         return cl_kind
 
     @property
@@ -348,21 +359,21 @@ class CXXNode(ClangNode):
             if '=' in [p.spelling for p in param_var.get_tokens()]:
                 for def_curs in param_var.walk_preorder():
                     if def_curs.kind in (
-                        cli.CursorKind.INTEGER_LITERAL,
-                        cli.CursorKind.FLOATING_LITERAL,
-                        cli.CursorKind.IMAGINARY_LITERAL,
-                        cli.CursorKind.STRING_LITERAL,
-                        cli.CursorKind.CHARACTER_LITERAL,
-                        cli.CursorKind.CXX_BOOL_LITERAL_EXPR
+                            cli.CursorKind.INTEGER_LITERAL,
+                            cli.CursorKind.FLOATING_LITERAL,
+                            cli.CursorKind.IMAGINARY_LITERAL,
+                            cli.CursorKind.STRING_LITERAL,
+                            cli.CursorKind.CHARACTER_LITERAL,
+                            cli.CursorKind.CXX_BOOL_LITERAL_EXPR
                     ):
                         kind = DefaultValueKind.LITERAL
                         val = next(def_curs.get_tokens(), None)
                         if val:
                             val = val.spelling
                     elif def_curs.kind in (
-                        cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
-                        cli.CursorKind.GNU_NULL_EXPR,
-                        cli.CursorKind.NULL_STMT):
+                            cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
+                            cli.CursorKind.GNU_NULL_EXPR,
+                            cli.CursorKind.NULL_STMT):
                         val = 'nullptr'
                         kind = DefaultValueKind.NULL_PTR
                     elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:

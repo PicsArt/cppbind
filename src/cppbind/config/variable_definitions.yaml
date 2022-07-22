@@ -11,12 +11,12 @@ action:
 file:
   inheritable: true
   default: '{{_file_name}}'
-  allowed_on: [ file, class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ file, class, class_template, struct, struct_template, enum, cxx_function ]
 
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ file_system, class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ file_system, class, class_template, struct, struct_template, enum, cxx_function ]
 
 name:
   inheritable: false
@@ -28,13 +28,13 @@ argument_label:
   inheritable: false
   type: dict
   swift.default: { }
-  allowed_on: [ function, function_template, cxx_method, constructor ]
+  allowed_on: [ cxx_function, cxx_method, cxx_constructor ]
 
 argument_name:
   inheritable: false
   type: dict
   default: { }
-  allowed_on: [ function, function_template, cxx_method, constructor ]
+  allowed_on: [ cxx_function, cxx_method, cxx_constructor ]
 
 interface_name:
   inheritable: false
@@ -77,7 +77,7 @@ include_cxx:
   inheritable: false
   type: list
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
 
 shared_ref:
   inheritable: true
@@ -89,13 +89,13 @@ template:
   inheritable: false
   default: null
   type: dict
-  allowed_on: [ class_template, struct_template, function_template ]
+  allowed_on: [ class_template, struct_template, function_template, method_template, constructor_template ]
 
 is_operator:
   inheritable: false
   default: '{{_is_operator}}'
   type: bool
-  allowed_on: [ cxx_method, function_template ]
+  allowed_on: [ cxx_method ]
 
 is_exception:
   inheritable: false
@@ -106,8 +106,8 @@ is_exception:
 throws:
   inheritable: false
   type: list
-  allowed_on: [ function, function_template, cxx_method, constructor ]
-  required_on: [ function, function_template, cxx_method, constructor ]
+  allowed_on: [ cxx_function, cxx_method, cxx_constructor ]
+  required_on: [ cxx_function, cxx_method, cxx_constructor ]
 
 bases_list:
   inheritable: false
@@ -119,13 +119,13 @@ nullable_return:
   inheritable: false
   default: false
   type: bool
-  allowed_on: [ cxx_method, function, function_template, field ]
+  allowed_on: [ cxx_method, cxx_function, field ]
 
 nullable_arg:
   inheritable: false
   default: [ ]
   type: list
-  allowed_on: [ cxx_method, constructor, function, function_template ]
+  allowed_on: [ cxx_method, cxx_constructor, cxx_function ]
 
 project_dir:
   inheritable: true
@@ -246,7 +246,7 @@ overloading_postfix:
   inheritable: false
   type: str
   default: null
-  allowed_on: [ function, function_template, cxx_method, constructor ]
+  allowed_on: [ cxx_function, cxx_method, cxx_constructor ]
 
 file_postfix:
   inheritable: true
@@ -338,21 +338,21 @@ c_file_fullname:
   kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
   python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.cpp"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
 
 h_file_fullname:
   inheritable: true
   kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
   python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.h"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
 
 file_fullname:
   inheritable: true
   kotlin.default: "{{out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt"
   python.default: ""
   swift.default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.swift"
-  allowed_on: [ class, class_template, struct, struct_template, enum, function, function_template ]
+  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
 
 pybind_module_filename:
   inheritable: true
@@ -383,13 +383,13 @@ return_value_policy:
     automatic
     {%- endif -%}
   options: [ 'copy', 'move', 'take_ownership', 'reference', 'reference_internal', 'automatic', 'automatic_reference' ]
-  allowed_on: [ cxx_method, function, function_template, field, constructor ]
+  allowed_on: [ cxx_method, cxx_constructor, cxx_function, field ]
 
 keep_alive:
   inheritable: false
   default: [ ]
   type: list
-  allowed_on: [ cxx_method, function_template, field, constructor ]
+  allowed_on: [ cxx_method, cxx_constructor, field ]
 
 is_c_wrapper_external:
   inheritable: true

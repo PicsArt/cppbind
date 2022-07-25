@@ -10,7 +10,7 @@
  * Please do not change it manually.
  */
 
-package example_lib.cppbind.alias
+package example_lib.cppbind
 
 typealias StringArray = Array<String>
 typealias ObjectArray = Array<Any>

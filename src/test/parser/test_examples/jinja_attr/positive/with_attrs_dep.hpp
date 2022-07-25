@@ -40,6 +40,8 @@ class AnotherExampleClass {
      *
      *
      *    second row
+     * l: "{{c == 'AnotherValueOfC'}}"
+     * m: "{{c != 'AnotherValueOfC'}}"
      */
     void AnotherExampleMethod() {
     }

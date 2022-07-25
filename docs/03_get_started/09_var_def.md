@@ -35,9 +35,9 @@ Each variable has the following properties:
     the definition of a variable on a disallowed entity.
 -   **required_on** indicates the parts of code (files, classes,
     methods, etc.) where defining the variable is mandatory.
--   **type** is the type of variable value. If the type is not defined,
-    CppBind deduces it from the variable\'s value. Supported types are
-    str, bool, list, and dict. CppBind complains about the definition of
+-   **type** is the type of variable value. Supported types are
+    str, bool, list, and dict. If the type is not defined explicitly,
+    CppBind sets it to str. CppBind complains about the definition of
     a value other than the variable type.
 -   **description** is an optional property that gives additional
     information on the variable.

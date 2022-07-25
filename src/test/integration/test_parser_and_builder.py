@@ -191,6 +191,10 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         assert method_node.args['k'] == ['first row\n\n\nsecond row'], \
             "new lines are not preserved in API comments section"
 
+        # check boolean variables are evaluated correctly
+        assert method_node.args['l'], "boolean variables are not evaluated correctly"
+        assert not method_node.args['m'], "boolean variables are not evaluated correctly"
+
         # check usage of "//" symbols as comment sign
         assert cls_node.children[1].args['a'] == cls_node.children[2].args['a'] == "ValueOfA", \
             "usage of '//' symbols as a start of api comment fails"

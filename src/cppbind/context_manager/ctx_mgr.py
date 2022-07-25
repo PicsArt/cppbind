@@ -135,12 +135,9 @@ class ContextManager:
                                                                att_name,
                                                                location)
 
-            # now we need to process variables of value and set value
+            # validate variable values
             if new_att_val not in (None, undefined):
-                if isinstance(new_att_val, str):
-                    # vars can have different types than string,
-                    # so we need to parse it to get correct type
-                    new_att_val = self.cppbind_api_parser.parse_attr(att_name, new_att_val)
+                self.cppbind_api_parser.validate_attr(att_name, new_att_val)
 
             options = ContextManager.get_var_property_value(properties, self.platform, self.language, 'options')
 

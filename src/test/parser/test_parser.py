@@ -201,16 +201,19 @@ def test_var_def_validation():
 def test_attr_type_mismatch_negative():
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples', 'jinja_attr/negative')
 
-    with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
-            pytest.raises(CppBindError, match=r"Type mismatch*"):
-        var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
-            load_yaml(os.path.join(test_dir, "var_def_with_type_mismatch.yaml")))
+    examples_dir = os.path.join(test_dir, "var_def_with_type_mismatch")
+    for example_file in os.listdir(examples_dir):
+        with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock, \
+                pytest.raises(CppBindError,
+                              match=r"Wrong template variable style"
+                              if example_file == "with_wrong_template.yaml" else r"Type mismatch*"):
+            var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
+                load_yaml(os.path.join(examples_dir, example_file)))
 
-        ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
-        ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
+            ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
+            ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
-        ir_builder.start_root()
-
+            ir_builder.start_root()
 
 @pytest.mark.parametrize(
     "var_def, api_section",
@@ -232,6 +235,7 @@ def test_attr_type_mismatch_negative():
             B:
               inheritable: false
               default: null
+              type: int
               allowed_on: [root]
               options: [1, 2, 3]
             """,

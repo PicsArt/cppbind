@@ -86,3 +86,15 @@ k:
 
       row2
   allowed_on: [cxx]
+
+l:
+  inheritable: false
+  default: false
+  type: bool
+  allowed_on: [cxx]
+
+m:
+  inheritable: false
+  default: false
+  type: bool
+  allowed_on: [cxx]

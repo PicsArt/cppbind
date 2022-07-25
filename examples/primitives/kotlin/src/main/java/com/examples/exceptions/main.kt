@@ -2,7 +2,7 @@ package com.examples.exceptions
 
 import com.examples.exceptions.*
 import com.examples.cppbind.exception_helpers.*
-import com.examples.cppbind.exceptionUtils.*
+import com.examples.cppbind.*
 
 
 fun logger(errMsg: String) : Unit {

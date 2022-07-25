@@ -15,10 +15,10 @@ file:
       {{[banner_logo, vars.banner_comment]|make_doxygen_comment}}
 
       package {{vars.full_package}}
-      {% set helpers = helper_includes|format_list('import {}.*')|join_unique %}
+      {% set helpers = helper_includes|unique_snippets|format_list('import {}.*') %}
       {%- set exc_vars = get_type_info("std::exception").vars %}
       {%- set exc_include = 'import ' + exc_vars.full_package + '.*' %}
-      {{[helpers, exc_include, include]|sort_snippets|join(new_line)}}
+      {{(helpers + [exc_include, include])|sort_snippets|join(new_line)}}
       {%- if glob_init %}
       {{glob_init}}
       {%- endif %}
@@ -786,10 +786,10 @@ constructor:
                 {%- set exc_info = get_type_info(exc_type) %}
                 {%- set exc_conv = make_type_converter(exc_type) %}
                 jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-                jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+                jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
                 jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
                 jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-                jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+                jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
                 jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
                 env->Throw(jthrowable(excObj));
             }
@@ -797,13 +797,13 @@ constructor:
             {%- endif %}
             {%- if not 'std::exception' in vars.throws %}
             catch (const std::exception& e) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
                 jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
                 env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
             }
             {%- endif %}
             catch (...) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
                 jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
                 env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
             }
@@ -1109,10 +1109,10 @@ method:
             {%- set exc_info = get_type_info(exc_type) %}
             {%- set exc_conv = make_type_converter(exc_type) %}
             jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
             jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
             jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
             jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
             env->Throw(jthrowable(excObj));
         }
@@ -1120,13 +1120,13 @@ method:
         {%- endif %}
         {%- if not 'std::exception' in vars.throws %}
         catch (const std::exception& e) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
         }
         {%- endif %}
         catch (...) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
         }
@@ -1303,10 +1303,10 @@ function:
             {%- set exc_info = get_type_info(exc_type) %}
             {%- set exc_conv = make_type_converter(exc_type) %}
             jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+            jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
             jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
             jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+            jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
             jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
             env->Throw(jthrowable(excObj));
         }
@@ -1314,13 +1314,13 @@ function:
         {%- endif %}
         {%- if not 'std::exception' in vars.throws %}
         catch (const std::exception& e) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
         }
         {%- endif %}
         catch (...) {
-            jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+            jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
             jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
             env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
         }
@@ -1588,10 +1588,10 @@ getter:
                 {%- set exc_info = get_type_info(exc_type) %}
                 {%- set exc_conv = make_type_converter(exc_type) %}
                 jclass excCls = env->FindClass("{{[exc_info.vars.full_package, exc_info.vars.name]|map('replace', '.', pat_sep)|path_join}}");
-                jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
+                jclass cppbindObjClass = env->FindClass("{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}}");
                 jmethodID cppbindConstructor = env->GetMethodID(cppbindObjClass, "<init>", "(JZ)V");
                 jobject cppbindObj = env->NewObject(cppbindObjClass, cppbindConstructor, reinterpret_cast<jobjectid>(new CppBindCObject {strdup({{exc_conv.cxx_type_name_global.snippet()}}), err_ptr}), true);
-                jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'alias.CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
+                jmethodID excConstructor = env->GetMethodID(excCls, "<init>", "(L{{[vars.helpers_package_prefix, 'CppBindObject']|map('replace', '.', pat_sep)|path_join}};)V");
                 jobject excObj = env->NewObject(excCls, excConstructor, cppbindObj);
                 env->Throw(jthrowable(excObj));
             }
@@ -1599,13 +1599,13 @@ getter:
         {%- endif %}
         {%- if not 'std::exception' in vars.throws %}
             catch (const std::exception& e) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
                 jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
                 env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF(e.what()));
             }
         {%- endif %}
             catch (...) {
-                jclass handlerCls = env->FindClass({{"\"{}/exceptionUtils/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
+                jclass handlerCls = env->FindClass({{"\"{}/ExceptionHandler\"".format(vars.helpers_package_prefix|replace('.', pat_sep))}});
                 jmethodID handlerMethod = env->GetStaticMethodID(handlerCls, "handleUncaughtException", "(Ljava/lang/String;)V");
                 env->CallStaticVoidMethod(handlerCls, handlerMethod, env->NewStringUTF("Uncaught Exception"));
             }

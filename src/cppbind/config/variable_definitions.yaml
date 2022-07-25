@@ -20,7 +20,6 @@ package:
 
 name:
   inheritable: false
-  type: str
   default: '{{_helper_module.get_operator_name(_object_name) if _is_operator and "get_operator_name" in _helper_module.__dict__ else _object_name}}'
   allowed_on: [ cxx, file_system ]
 
@@ -38,14 +37,12 @@ argument_name:
 
 interface_name:
   inheritable: false
-  type: str
   kotlin.default: 'I{{name}}'
   swift.default: '{{name}}'
   allowed_on: [ class, class_template, struct, struct_template ]
 
 interface_impl_class_name:
   inheritable: false
-  type: str
   default: '{{name}}Impl'
   allowed_on: [ class, class_template, struct, struct_template ]
 
@@ -57,19 +54,16 @@ include:
 
 code_fragment:
   inheritable: false
-  type: str
   default: null
   allowed_on: [ file_system, enum ]
 
 header_code_fragment:
   inheritable: false
-  type: str
   default: null
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
 footer_code_fragment:
   inheritable: false
-  type: str
   default: null
   allowed_on: [ class, class_template, struct, struct_template, enum ]
 
@@ -244,7 +238,6 @@ helpers_dir:
 
 overloading_postfix:
   inheritable: false
-  type: str
   default: null
   allowed_on: [ cxx_function, cxx_method, cxx_constructor ]
 
@@ -268,7 +261,6 @@ target_arch:
   inheritable: false
   default: x86_64
   allowed_on: [ cmd_line ]
-  type: str
   description: "Variable for setting target architecture"
 
 clang_args:
@@ -372,6 +364,7 @@ h_pybind_filename:
 descendants:
   inheritable: false
   default: null
+  type: list
   allowed_on: [ class, class_template, struct, struct_template ]
 
 return_value_policy:
@@ -394,6 +387,7 @@ keep_alive:
 is_c_wrapper_external:
   inheritable: true
   default: false
+  type: bool
   allowed_on: [ root ]
 
 hash_method:

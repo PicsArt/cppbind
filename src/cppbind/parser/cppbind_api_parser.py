@@ -5,7 +5,8 @@
 """
 Implements cppbind api parser on cxx comment
 """
-import distutils.util
+
+
 import re
 from collections import OrderedDict
 from collections import defaultdict
@@ -153,8 +154,6 @@ class APIParser:
                                location.file_name if location else None,
                                location.line_number if location else None)
 
-            value = self.parse_attr(attr, value, location)
-
             curr_max_prior = max(prev_priors[attr])
             # overwrite the value only if the current option
             # has higher priority than all previous ones.
@@ -170,14 +169,10 @@ class APIParser:
 
         return api, attr_dict
 
-    def parse_attr(self, attr_name, attr_value, location=None):
-        """
-        Evaluate the value of variable depending on its type.
-        """
-        attr_type = self.var_def[attr_name].get('type')
+    def validate_attr(self, attr_name, attr_value, location=None):
+        """Validate attributes"""
 
-        if isinstance(self.var_def[attr_name].get('default'), bool) or attr_type == 'bool':
-            return bool(distutils.util.strtobool(str(attr_value)))
+        attr_type = self.var_def[attr_name].get('type')
 
         if attr_type == 'dict':
             if not has_type(attr_value, dict):

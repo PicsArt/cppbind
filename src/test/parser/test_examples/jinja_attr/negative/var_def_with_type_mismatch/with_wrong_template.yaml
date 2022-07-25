@@ -1,0 +1,7 @@
+template:
+  type: dict
+  default:
+    T:
+      - type: int
+      - incorrect_key: value
+  allowed_on: [root]

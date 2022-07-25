@@ -1,0 +1,5 @@
+a:
+  default:
+    - True
+    - False
+  allowed_on: [root]

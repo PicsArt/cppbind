@@ -1,0 +1,4 @@
+a:
+  type: list
+  default: "{{1 + 2}}"
+  allowed_on: [root]

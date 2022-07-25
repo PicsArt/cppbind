@@ -56,8 +56,10 @@ class VariableEvaluator:
         """
         Method to eval/load variable value according to its type
         """
-        # we get actual type from 'type' parameter if it is defined, otherwise it is type of variable
-        actual_type = get_var_real_type(to_value(prop.get('type'))) or type(to_value(val))
+
+        val = to_value(val)
+        # we get actual type from 'type' parameter if it is defined, otherwise it is str
+        actual_type = get_var_real_type(to_value(prop.get('type'))) or str
         # if 'type' is not defined and default value is null, actual_type still can be None
         # we still check val since for some languages/platforms it can be null
         if actual_type and val is not None:
@@ -69,7 +71,7 @@ class VariableEvaluator:
                                 location.file_name if location else None,
                                 location.line_number if location else None)
                 try:
-                    val = JINJA2_ENV.from_string(to_value(val)).render(ctx)
+                    val = JINJA2_ENV.from_string(val).render(ctx)
                 except (JinjaUndefinedError, TypeError) as err:
                     Error.critical(
                         f"Jinja evaluation error for '{att_name}' variable: {err}",

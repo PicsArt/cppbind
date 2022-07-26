@@ -117,6 +117,7 @@ jni_functions: |
 templates:
     !concat
     - !include common_macros.yaml&templates
+    - !include common_macros.yaml&overloading_postfix
     - |
       {#- specializes common macros for kotlin -#}
       {%- macro get_template_postfix() -%}
@@ -126,12 +127,11 @@ templates:
             {{get_template_getter_name_by_lang('kotlin')}}
       {%- endmacro -%}
       {%- macro get_jvm_name() -%}
-      {#-   TODO: update removal of the leading symbol after fixing overloading postfix to match kotlin formatting -#}
-      {%-   set overloading_postfix = vars.overloading_postfix if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix[1:] -%}
-      {%-   if cxx.is_template or (cxx.is_overloaded and overloading_postfix) -%}
+      {#-   TODO: update overloading_index with overloading_postfix after fixing overloading postfix to match kotlin formatting -#}
+      {%-   if cxx.is_template or (cxx.is_overloaded and overloading_index) -%}
       {%-     for arg in args -%}
       {%-       if arg.converter.kotlin.custom.is_kotlin_type_erased|default(False) -%}
-                  @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_postfix}}")
+                  @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_index}}")
                   {%- break -%}
       {%-       endif -%}
       {%-     endfor %}
@@ -166,4 +166,16 @@ includes:
       {%- endmacro -%}
       {%- macro collect_desc_includes(converter, desc_includes) -%}
             {{collect_desc_includes_by_lang(converter, desc_includes, 'kotlin')}}
+      {%- endmacro -%}
+
+constructor:
+    !concat
+    - !include common_macros.yaml&templates
+    - !include common_macros.yaml&overloading_postfix
+    - |
+      {%- set constructor_jvm_name = 'jConstructor' if cxx.kind_name in ('constructor',  'constructor_template') else 'j' + vars.name|capitalize -%}
+      {%- set parent_type_name = owner_class. converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+      {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
+      {%- set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
+      {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix_by_lang('kotlin') + target_overloading_index)}}
       {%- endmacro -%}

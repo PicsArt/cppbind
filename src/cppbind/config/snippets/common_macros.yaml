@@ -3,7 +3,15 @@
 # MIT-style license that can be found in the LICENSE file.
 
 overloading_postfix: |
-  {%- set overloading_postfix = '' if overloading_index is none or overloading_index == 0 else ('_' + overloading_index|string) -%}
+  {%- macro get_overloading_postfix(vars) -%}
+  {%- if cxx.is_overloaded -%}
+  {%- if vars.overloading_postfix is not none -%}
+  {{vars.overloading_postfix}}
+  {%- elif overloading_index and overloading_index > 0 -%}
+  {{'_' + overloading_index|string}}
+  {%- endif -%}
+  {%- endif -%}
+  {%- endmacro -%}
 
 templates: |
   {%- macro get_template_postfix_by_lang(language) -%}
@@ -63,7 +71,7 @@ includes:
     {%-   if converter %}
     {%-     set vars = converter|attr(language)|attr('vars') -%}
     {%-     set vars_descendants = vars|attr('descendants') -%}
-    {%-     if vars and vars_descendants is defined -%} {#- todo ask for defined #}
+    {%-     if vars -%}
     {%-       for descendant in (vars_descendants if vars_descendants is not none else converter|attr(language)|attr('descendants')) -%}
     {%-         do collect_includes_by_lang(make_type_converter(descendant), desc_includes, language) -%}
     {%-       endfor -%}

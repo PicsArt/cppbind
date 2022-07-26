@@ -186,6 +186,8 @@ def make_class_context(ctx):
                 **make_class_context(ctx.parent_context)) if ctx.parent_context else None
 
             cxx = _type_info.cxx
+            # adding name to cxx namespace to identify
+            # setattr(cxx, 'name', ctx.cursor.spelling)
             base_types_infos = _type_info.base_types_infos
             arg_types_infos = _type_info.arg_types_infos
             type_info = _type_info

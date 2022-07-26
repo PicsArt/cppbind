@@ -289,3 +289,16 @@ py_test(
         ":py_examples_library",
     ],
 )
+
+py_test(
+    name = "factories",
+    srcs = ["src/examples_lib/factories/main.py"],
+    main = "src/examples_lib/factories/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+

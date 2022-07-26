@@ -149,3 +149,9 @@ swift_test(
     srcs = ["src/basic_types/main.swift"],
     deps = [":sw_examples_library"],
 )
+
+swift_test(
+    name = "factories",
+    srcs = ["src/factories/main.swift"],
+    deps = [":sw_examples_library"],
+)

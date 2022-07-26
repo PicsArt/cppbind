@@ -64,3 +64,14 @@ includes:
       {%- macro gen_include(converter) -%}
             {{gen_include_by_lang(converter, 'python')}}
       {%- endmacro -%}
+
+overloading_postfix: |
+  {%- macro get_overloading_postfix(vars) -%}
+  {%- if cxx.is_overloaded -%}
+  {%- if vars.overloading_postfix is not none -%}
+  {{'_' if not vars.overloading_postfix.startswith('_')}}{{vars.overloading_postfix|to_snake_case}}
+  {%- elif overloading_index and overloading_index > 0 -%}
+  {{overloading_index}}
+  {%- endif -%}
+  {%- endif -%}
+  {%- endmacro -%}

@@ -451,9 +451,19 @@ constructor:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{owner_class.converter.python.target_type_name|decapitalize}}.def(py::init<{%- for arg in args -%}
+      {{owner_class.converter.python.target_type_name|decapitalize}}.def(py::init{%- if cxx.kind_name in ('constructor',  'constructor_template') -%}
+                                                                                          <{%- for arg in args -%}
                                                                                           {{comma()}}{{arg.type_info.cxx.type_name}}
-                                                                                          {%- endfor -%}>(){{', ' if args}}
+                                                                                          {%- endfor -%}>()
+                                                                                          {%- else -%}
+                                                                                          {%- if cxx.is_overloaded -%}
+                                                                                          (py::overload_cast<
+                                                                                          {%- for arg in args -%}
+                                                                                          {{comma()}}{{arg.type_info.cxx.type_name}}
+                                                                                          {%- endfor -%}>
+                                                                                          {%- endif -%}(&{{owner_class.cxx.type_name}}::{{cxx.name}}){{')' if cxx.is_overloaded}}
+                                                                                          {%- endif -%}
+                                                                                          {{', ' if args}}
                                                                                           {%- set comma = joiner(', ') -%}
                                                                                           {%- for arg in args -%}
                                                                                           {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
@@ -596,15 +606,15 @@ function:
       unique_content:
         !concat
         - !include python_macros.yaml&templates
-        - !include common_macros.yaml&overloading_postfix
+        - !include python_macros.yaml&overloading_postfix
         - |
-          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}
+          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}
   python:
     include: *var_method_python_include
     body:
       !concat
       - !include python_macros.yaml&templates
-      - !include common_macros.yaml&overloading_postfix
+      - !include python_macros.yaml&overloading_postfix
       - |
         {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list %}
         {%- if incorrect_nullable_args %}
@@ -613,7 +623,7 @@ function:
         {%- set comma = joiner(', ') %}
         {% set rconverter = rconverter.python %}
         @bind
-        def {{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}(
+        def {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}(
                                         {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
                                         {%- for arg in args -%}
                                         {%- set arg_converter = arg.converter.python %}
@@ -645,14 +655,14 @@ function:
     body:
       !concat
       - !include python_macros.yaml&templates
-      - !include common_macros.yaml&overloading_postfix
+      - !include python_macros.yaml&overloading_postfix
       - |
         {
             {%- if cxx.namespace %}
             using namespace {{cxx.namespace}};
             {%- endif %}
             {%- set comma = joiner(', ') %}
-            m.def("{{vars.name|to_snake_case}}{{'_' + vars.overloading_postfix|to_snake_case if cxx.is_overloaded and vars.overloading_postfix is not none else overloading_postfix|replace('_', '')}}{{get_template_postfix()}}"{%- if cxx.is_overloaded -%}
+            m.def("{{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}"{%- if cxx.is_overloaded -%}
             , py::overload_cast<
             {%- for arg in args -%}
             {{comma()}}{{arg.type_info.cxx.type_name}}

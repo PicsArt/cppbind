@@ -130,6 +130,72 @@ And the usage example:
         %} 
         ~~~
 
+## Factory method as a constructor
+
+CppBind allows generating a constructor from a factory method by just annotating it with
+**gen_constructor**.
+Here's an example:
+
+~~~C++
+{% 
+include "../../examples/primitives/cxx/factories/school.h"
+start="[example-start]"
+end="// [example-end]"
+%} 
+~~~
+
+Here we have two overloaded factory methods marked with **gen_constructor**.
+CppBind generates two constructors corresponding to them.
+
+
+Here's a small usage example:
+=== "Kotlin"
+    ~~~Java
+    {% 
+    include "../../examples/primitives/kotlin/src/main/java/com/examples/factories/main.kt" 
+    start="[factories-usage-start]"
+    end="// [factories-usage-end]"
+    %} 
+    ~~~
+
+=== "Python"
+    ~~~Python
+    {% 
+    include "../../examples/primitives/python/src/examples_lib/factories/main.py" 
+    start="[factories-usage-start]"
+    end="# [factories-usage-end]"
+    %} 
+    ~~~
+
+=== "Swift"
+    ~~~Swift
+    {% 
+    include "../../examples/primitives/swift/src/factories/main.swift" 
+    start="[factories-usage-start]"
+    end="// [factories-usage-end]"
+    %} 
+    ~~~
+
+??? "The generated bindings"
+    === "Kotlin"
+        ~~~Java
+        {% 
+        include "../../examples/primitives/kotlin/src/main/java/com/examples/factories/school.kt" 
+        %} 
+        ~~~
+    === "Python"
+        ~~~Python
+        {% 
+        include "../../examples/primitives/python/src/examples_lib/factories/school_pygen.py" 
+        %} 
+        ~~~
+    === "Swift"
+        ~~~Swift
+        {% 
+        include "../../examples/primitives/swift/src/factories/school.swift" 
+        %} 
+        ~~~
+
 ## Special methods
 
 Many languages have a base class from which other classes are derived.

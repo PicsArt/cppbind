@@ -137,3 +137,16 @@ includes:
       {%- macro gen_import(converter) -%}
             {{gen_import_by_lang(converter, 'swift')}}
       {%- endmacro -%}
+
+constructor:
+    !concat
+    - !include common_macros.yaml&templates
+    - !include common_macros.yaml&overloading_postfix
+    - |
+      {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
+      {%- macro gen_constructor_c_name(target_overloading_index=none) -%}
+      {%- set target_type_name = owner_class.converter.swift.target_type_name -%}
+      {%- set is_constructor = cxx.kind_name in ('constructor',  'constructor_template') -%}
+      {%- set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
+      {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix_by_lang('swift')}}{{target_overloading_index}}
+      {%- endmacro -%}

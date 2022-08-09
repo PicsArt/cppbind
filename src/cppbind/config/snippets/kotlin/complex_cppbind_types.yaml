@@ -236,11 +236,11 @@ $Enum:
     kotlin_to_jdk:
       val {{target_name}} = {{name}}.value
     jdk_to_kotlin: |
-      val {{target_name}}_optional = {{target_type_name}}.getByValue({{name}})
-      if ({{target_name}}_optional == null) {
+      val {{target_name}}Optional = {{target_type_name}}.getByValue({{name}})
+      if ({{target_name}}Optional == null) {
           {{"ExceptionHandler.handleUncaughtException(\"Internal error: unresolved reference to non existing field of " + target_type_name + " enum.\")"}}
       }
-      val {{target_name}} = {{target_name}}_optional!!
+      val {{target_name}} = {{target_name}}Optional!!
     kotlin_include: |
       {%- if full_package is defined and vars.full_package != full_package and not parent_type_info -%}
       import {{vars.full_package}}.{{custom.tname}}
@@ -347,20 +347,22 @@ std::vector:
 
     kotlin_to_jdk: |
       {%- set array_init = '' if args[0].custom.pname != 'Object' else '{ Any() }' -%}
+      {%- set indexName = "index" + name|capitalize -%}
       val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
-      var index_{{name}} = 0
-      for (value_{{name}} in {{name}}) {
-          {{args[0].snippet('value_{}'.format(name))|indent}}
-          {{target_name}}[index_{{name}}] = {{args[0].converted_name('value_{}'.format(name))}}
-          ++index_{{name}}
+      var {{indexName}} = 0
+      for (value{{name|capitalize}} in {{name}}) {
+          {{args[0].snippet('value{}'.format(name|capitalize))|indent}}
+          {{target_name}}[{{indexName}}] = {{args[0].converted_name('value{}'.format(name|capitalize))}}
+          ++{{indexName}}
       }
     jdk_to_kotlin: |
       val {{target_name}}: MutableList<{{args[0].target_type_name}}> = mutableListOf()
-      for (value_{{name}} in {{name}}) {
-          {%- set var_name = 'value_' + name %}
+      {%- set indexName = "index" + name|capitalize %}
+      for (value{{name|capitalize}} in {{name}}) {
+          {%- set var_name = 'value' + name|capitalize %}
           {%- if args[0].custom.pname == "Object" %}
-          {%- set var_name = 'actual_' + var_name %}
-          @Suppress("UNCHECKED_CAST") val actual_value_{{name}} = value_{{name}} as {{args[0].source_type_name}}
+          {%- set var_name = 'actual' + var_name|capitalize %}
+          @Suppress("UNCHECKED_CAST") val {{var_name}} = value{{name|capitalize}} as {{args[0].source_type_name}}
           {%- endif %}
           {{args[0].snippet(var_name, value_policy=value_policy)|indent}}
           {{target_name}}.add({{args[0].converted_name(var_name)}})
@@ -438,38 +440,39 @@ std::map:
       {{target_type_name}} {{target_name}} = cppbind::make_jni_object_pair(env, {{key_name}}, {{val_name}});
 
     kotlin_to_jdk: |
-      {%- set tmp_key_name = 'tmp_key_' + target_name %}
-      {%- set tmp_val_name = 'tmp_val_' + target_name %}
+      {%- set tmp_key_name = 'tmpKey' + target_name|capitalize %}
+      {%- set tmp_val_name = 'tmpVal' + target_name|capitalize %}
       {%- set karray_init = '' if args[0].custom.pname != 'Object' else '{ Any() }' %}
       {%- set varray_init = '' if args[1].custom.pname != 'Object' else '{ Any() }' %}
+      {%- set indexName = "index" + name|capitalize %}
       val {{tmp_key_name}} = {{args[0].custom.pname}}Array({{name}}.size) {{karray_init}}
       val {{tmp_val_name}} = {{args[1].custom.pname}}Array({{name}}.size) {{varray_init}}
       val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
-      var index_{{name}} = 0
-      for ((key_{{name}}, value_{{name}}) in {{name}}) {
-          {{args[0].snippet('key_{}'.format(name))|indent}}
-          {{args[1].snippet('value_{}'.format(name))|indent}}
-          {{tmp_key_name}}[index_{{name}}] = {{args[0].converted_name('key_{}'.format(name))}}
-          {{tmp_val_name}}[index_{{name}}] = {{args[1].converted_name('value_{}'.format(name))}}
-          ++index_{{name}}
+      var {{indexName}} = 0
+      for ((key{{name|capitalize}}, value{{name|capitalize}}) in {{name}}) {
+          {{args[0].snippet('key{}'.format(name|capitalize))|indent}}
+          {{args[1].snippet('value{}'.format(name|capitalize))|indent}}
+          {{tmp_key_name}}[{{indexName}}] = {{args[0].converted_name('key{}'.format(name|capitalize))}}
+          {{tmp_val_name}}[{{indexName}}] = {{args[1].converted_name('value{}'.format(name|capitalize))}}
+          ++{{indexName}}
       }
 
     jdk_to_kotlin: |
       val {{target_name}} = HashMap<{{args[0].target_type_name}}, {{args[1].target_type_name}}>()
-      for (i_{{name}} in 0..{{name}}.first.size - 1) {
+      for (i{{name|capitalize}} in 0..{{name}}.first.size - 1) {
           {%- if args[0].custom.pname == 'Object' %}
-          @Suppress("UNCHECKED_CAST") val elem1_{{name}} = {{name}}.first.get(i_{{name}}) as {{args[0].source_type_name}}
+          @Suppress("UNCHECKED_CAST") val elem1{{name|capitalize}} = {{name}}.first.get(i{{name|capitalize}}) as {{args[0].source_type_name}}
           {%- else %}
-          val elem1_{{name}} = {{name}}.first.get(i_{{name}})
+          val elem1{{name|capitalize}} = {{name}}.first.get(i{{name|capitalize}})
           {%- endif %}
           {%- if args[1].custom.pname == 'Object' %}
-          @Suppress("UNCHECKED_CAST") val elem2_{{name}} = {{name}}.second.get(i_{{name}}) as {{args[1].source_type_name}}
+          @Suppress("UNCHECKED_CAST") val elem2{{name|capitalize}} = {{name}}.second.get(i{{name|capitalize}}) as {{args[1].source_type_name}}
           {%- else %}
-          val elem2_{{name}} = {{name}}.second.get(i_{{name}})
+          val elem2{{name|capitalize}} = {{name}}.second.get(i{{name|capitalize}})
           {%- endif %}
-          {{args[0].snippet('elem1_{}'.format(name), value_policy=value_policy)|indent}}
-          {{args[1].snippet('elem2_{}'.format(name), value_policy=value_policy)|indent}}
-          {{target_name}}.put({{args[0].converted_name('elem1_{}'.format(name))}}, {{args[1].converted_name('elem2_{}'.format(name))}})
+          {{args[0].snippet('elem1{}'.format(name|capitalize), value_policy=value_policy)|indent}}
+          {{args[1].snippet('elem2{}'.format(name|capitalize), value_policy=value_policy)|indent}}
+          {{target_name}}.put({{args[0].converted_name('elem1{}'.format(name|capitalize))}}, {{args[1].converted_name('elem2{}'.format(name|capitalize))}})
       }
     kotlin_ref_internal: |
       {%- set arg0 = args_converters[0].kotlin_ref_internal %}
@@ -649,17 +652,17 @@ std::pair:
       {%- endif %}
       {{target_type_name}} {{target_name}} = cppbind::make_jni_object_pair(env, first_{{name}}_obj, second_{{name}}_obj);
     kotlin_to_jdk: |
-      val first_{{name}} = {{name}}.first
-      val second_{{name}} = {{name}}.second
-      {{args[0].snippet('first_{}'.format(name))|indent}}
-      {{args[1].snippet('second_{}'.format(name))|indent}}
-      val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first_{}'.format(name))}}, {{args[0].converted_name('second_{}'.format(name))}})
+      val first{{name|capitalize}} = {{name}}.first
+      val second{{name|capitalize}} = {{name}}.second
+      {{args[0].snippet('first{}'.format(name|capitalize))|indent}}
+      {{args[1].snippet('second{}'.format(name|capitalize))|indent}}
+      val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first{}'.format(name|capitalize))}}, {{args[0].converted_name('second{}'.format(name|capitalize))}})
     jdk_to_kotlin: |
-      val first_{{name}} = {{name}}.first
-      val second_{{name}} = {{name}}.second
-      {{args[0].snippet('first_{}'.format(name), value_policy=value_policy)|indent}}
-      {{args[1].snippet('second_{}'.format(name), value_policy=value_policy)|indent}}
-      val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first_{}'.format(name))}}, {{args[0].converted_name('second_{}'.format(name))}})
+      val first{{name|capitalize}} = {{name}}.first
+      val second{{name|capitalize}} = {{name}}.second
+      {{args[0].snippet('first{}'.format(name|capitalize), value_policy=value_policy)|indent}}
+      {{args[1].snippet('second{}'.format(name|capitalize), value_policy=value_policy)|indent}}
+      val {{target_name}} = {{target_type_name}}({{args[0].converted_name('first{}'.format(name|capitalize))}}, {{args[0].converted_name('second{}'.format(name|capitalize))}})
     kotlin_ref_internal: |
       {%- if args_converters[0].kotlin_ref_internal %}
       {{args_converters[0].kotlin_ref_internal.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}

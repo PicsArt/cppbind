@@ -10,7 +10,7 @@ internal constructor(_id: Long) : AutoCloseable {
          * comments
          *
          */
-        protected fun construct_helper(): Long {
+        protected fun constructHelper(): Long {
 
             val id = jConstructor()
             return id
@@ -34,9 +34,7 @@ internal constructor(_id: Long) : AutoCloseable {
      * comments
      *
      */
-    constructor(): this(construct_helper()) {
-        //jSet_this(id, this)
-    }
+    constructor(): this(constructHelper()) {}
 
     override fun close() {
         if (id != 0L) {
@@ -51,6 +49,5 @@ internal constructor(_id: Long) : AutoCloseable {
         close()
     }
     ///// External wrapper functions ////////////
-    private external fun jSet_this(id: Long, self: Any): Void
     private external fun jFinalize(id: Long): Void
 }

@@ -176,6 +176,6 @@ constructor:
       {%- set constructor_jvm_name = 'jConstructor' if cxx.kind_name in ('constructor',  'constructor_template') else 'j' + vars.name|capitalize -%}
       {%- set parent_type_name = owner_class. converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
-      {%- set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
+      {%- set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
       {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix_by_lang('kotlin') + target_overloading_index)}}
       {%- endmacro -%}

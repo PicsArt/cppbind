@@ -22,15 +22,15 @@ rules:
           jfloat carray[] = {width_{{name}}, height_{{name}}};
           env->SetFloatArrayRegion({{target_name}}, 0 , 2, carray);
         kotlin_to_jdk: |
-          val width_{{name}} = {{name}}.getX().toFloat()
-          val height_{{name}} = {{name}}.getY().toFloat()
+          val width{{name|capitalize}} = {{name}}.getX().toFloat()
+          val height{{name|capitalize}} = {{name}}.getY().toFloat()
           val {{target_name}} = {{target_type_name}}(2)
-          {{target_name}}.set(0, width_{{name}})
-          {{target_name}}.set(1, height_{{name}})
+          {{target_name}}.set(0, width{{name|capitalize}})
+          {{target_name}}.set(1, height{{name|capitalize}})
         jdk_to_kotlin: |
-          val width_{{name}} = {{name}}[0]
-          val height_{{name}} = {{name}}[1]
-          val {{target_name}} = {{target_type_name}}(width_{{name}}, height_{{name}})
+          val width{{name|capitalize}} = {{name}}[0]
+          val height{{name|capitalize}} = {{name}}[1]
+          val {{target_name}} = {{target_type_name}}(width{{name|capitalize}}, height{{name|capitalize}})
 
   python.type_converters:
     cppbind::example::Size:

@@ -73,7 +73,7 @@ special_functions:
        * CppBind generated toString method returning underlying C++ object type and id.
        */
       {{tostring_decl}} {
-          return "<0x%x: %s>".format(cxxId, cxxTypeName)
+          return "<0x$cxxId: $cxxTypeName>"
       }
       {%- endmacro -%}
 

@@ -256,8 +256,8 @@ class CppBindIRBuilder:
         elif node.type == NodeType.CLANG_NODE:
             sys_vars.update({
                 '_source_modification_time': CppBindIRBuilder._get_modification_time(node.file_name),
-                '_is_operator': node.clang_cursor.displayname.startswith('operator'),
-                '_object_name': node.clang_cursor.spelling,
+                '_is_operator': node.displayname.startswith('operator'),
+                '_object_name': node.spelling,
                 '_helper_module': get_language_helper_module(self.ctx_mgr.language),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
@@ -303,9 +303,9 @@ class CppBindIRBuilder:
         ctx = self.get_sys_vars()
         if pure_comment is None:
             current_node = self.node_stack[-1]
-            if current_node.type == NodeType.CLANG_NODE and current_node.clang_cursor.raw_comment:
+            if current_node.type == NodeType.CLANG_NODE and current_node.cxx_element.raw_comment:
                 pure_comment, _ = APIParser.separate_pure_and_api_comment(
-                    current_node.clang_cursor.raw_comment)
+                    current_node.cxx_element.raw_comment)
         if pure_comment:
             ctx['_pure_comment'] = '\n'.join(pure_comment)
 

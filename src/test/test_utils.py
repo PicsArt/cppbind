@@ -6,7 +6,7 @@ import pytest
 
 import clang.cindex as cli
 from cppbind.common.error import CppBindError
-from cppbind.ir import available_on, allowed_after_build
+from cppbind.ir.utils import available_on, allowed_after_build
 from cppbind.utils import copy_yaml_config_template, load_module_from_path, clear_cppbind_generated_files
 
 from . import TEST_RULES_DIR

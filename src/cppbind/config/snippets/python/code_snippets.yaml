@@ -186,7 +186,7 @@ enum:
       {% set m = 'pybind_' + vars.full_package.split('.')[-1] %}
       class {{vars.name}}({{vars.bases_list|join(', ')}}{{', ' if vars.bases_list}}metaclass=CppBindEnumMetaclass):
           {{vars.comment|make_py_docstring|indent}}
-          {%- for case in enum_cases -%}
+          {%- for case in cxx.enum_cases -%}
           {%- if case.name not in vars.enum_excluded_cases -%}
           {%- if case.comment %}
           {{case.comment|make_py_comment|indent}}
@@ -218,7 +218,7 @@ enum:
           using namespace {{cxx.namespace}};
           {%- endif %}
           py::enum_<{{cxx.type_name}}>(m, "{{vars.name}}")
-              {%- for case in enum_cases %}
+              {%- for case in cxx.enum_cases %}
               {%- if case.name not in vars.enum_excluded_cases %}
               .value("{{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}}", {{cxx.type_name}}::{{case.name}})
               {%- endif %}
@@ -431,14 +431,14 @@ constructor:
                                        {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                        {%- if arg.default -%}
-                                       {%- if arg.is_enum %}
+                                       {%- if arg.type.is_enum %}
                                        {%- set enum_case_name = arg.default.split('::')|last %}
                                        {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
                                        {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
                                        {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                        {%- endif -%}
                                        {%- else -%}
-                                       {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                       {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.type.is_bool else arg.default}}
                                        {%- else %} = None
                                        {%- endif %}
                                        {%- endif %}
@@ -467,7 +467,7 @@ constructor:
                                                                                           {%- set comma = joiner(', ') -%}
                                                                                           {%- for arg in args -%}
                                                                                           {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-                                                                                          {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
+                                                                                          {%- if arg.default %}{{' = ' + arg.default if not (arg.type.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
                                                                                           {%- endif -%}
                                                                                           {%- endfor -%}
                                                                                           {#- This should go to shared macro -#}
@@ -511,14 +511,14 @@ method:
                                                           {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                                           {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                                           {%- if arg.default -%}
-                                                          {%- if arg.is_enum %}
+                                                          {%- if arg.type.is_enum %}
                                                           {%- set enum_case_name = arg.default.split('::')|last %}
                                                           {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
                                                           {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
                                                           {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                                           {%- endif -%}
                                                           {%- else -%}
-                                                          {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                                          {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.type.is_bool else arg.default}}
                                                           {%- else %} = None
                                                           {%- endif %}
                                                           {%- endif %}
@@ -570,7 +570,7 @@ method:
       {%- set comma = joiner(', ') -%}
       {%- for arg in args -%}
       {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-      {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
+      {%- if arg.default %}{{' = ' + arg.default if not (arg.type.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
       {%- endif -%}
       {%- endfor -%}
       {#- This should go to shared macro -#}
@@ -630,14 +630,14 @@ function:
                                         {%- set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                         {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
                                         {%- if arg.default -%}
-                                        {%- if arg.is_enum %}
+                                        {%- if arg.type.is_enum %}
                                         {%- set enum_case_name = arg.default.split('::')|last %}
                                         {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
                                         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
                                         {%- else %} = {{arg_type_hint}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
                                         {%- endif -%}
                                         {%- else -%}
-                                        {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.is_bool else arg.default}}
+                                        {%- if arg.default_is_literal %} = {{arg.default|capitalize if arg.type.is_bool else arg.default}}
                                         {%- else %} = None
                                         {%- endif %}
                                         {%- endif %}
@@ -677,7 +677,7 @@ function:
             {%- set comma = joiner(', ') -%}
             {%- for arg in args -%}
             {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-            {%- if arg.default %}{{' = ' + arg.default if not (arg.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
+            {%- if arg.default %}{{' = ' + arg.default if not (arg.type.is_enum and arg.default.split('::')|last in arg.type_info.vars.enum_excluded_cases)}}
             {%- endif -%}
             {%- endfor -%}{%- if return_type_info.cxx.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
         }

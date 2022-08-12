@@ -89,7 +89,7 @@ enum:
       {{vars.comment|make_doxygen_comment}}
       {% endif -%}
       public enum {{vars.name}}: CInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
-        {%- for case in enum_cases -%}
+        {%- for case in cxx.enum_cases -%}
         {%- if case.name not in vars.enum_excluded_cases -%}
         {%- if case.comment %}
         {{case.comment|make_doxygen_comment|indent(2)}}
@@ -289,7 +289,7 @@ class:
              * An internal property to keep an information about the underlying C++ object type.
              * It is intended to be used by the generated code.
              */
-            {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
+            {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
             {%- set polymorphic_base = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
 
@@ -310,7 +310,7 @@ class:
     glob_decl: *var_class_cxx_glob_decl
     glob_def:
       unique_content: |
-        const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.unqualified_canonical_type_name}}";
+        const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.type_name}}";
     namespace:
       unique_content: |
         {%- if cxx.namespace %}
@@ -323,7 +323,7 @@ class:
         {%- if has_no_base_cls -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
-            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+            static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
             {%- endif %}
             if (owner) {
                 {#- here is used almost the same logic as for c_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
@@ -331,9 +331,9 @@ class:
                 {%- if descendants %}
                 if (strcmp(cself.type, {{converter.cxx_type_name_global.snippet()}}) == 0)
                 {%- if vars.shared_ref %}
-                    delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                    delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cself.ptr);
                 {%- else %}
-                    delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                    delete static_cast<{{cxx.type_name}}*>(cself.ptr);
                 {%- endif %}
                 {%- for descendant in descendants %}
                 else if (strcmp(cself.type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
@@ -349,9 +349,9 @@ class:
                 }
                 {%- else -%}
                 {%- if vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                delete static_cast<{{cxx.type_name}}*>(cself.ptr);
                 {%- endif %}
                 {%- endif %}
             }
@@ -463,7 +463,7 @@ interface:
            * An internal property to keep an information about the underlying C++ object type.
            * It is intended to be used by the generated code.
            */
-          {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.unqualified_canonical_type_name}}" }
+          {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
           {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
@@ -484,7 +484,7 @@ interface:
     glob_decl: *var_class_cxx_glob_decl
     glob_def:
       unique_content: |
-        const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.unqualified_canonical_type_name}}";
+        const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.type_name}}";
     namespace:
       unique_content: |
         {%- if cxx.namespace %}
@@ -495,7 +495,7 @@ interface:
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
-            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+            static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
             {%- endif %}
             if (owner) {
                 {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
@@ -503,9 +503,9 @@ interface:
                 {%- if descendants %}
                 if (strcmp(cself.type, {{converter.cxx_type_name_global.snippet()}}) == 0)
                 {%- if vars.shared_ref %}
-                    delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                    delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cself.ptr);
                 {%- else %}
-                    delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                    delete static_cast<{{cxx.type_name}}*>(cself.ptr);
                 {%- endif %}
                 {%- for descendant in descendants %}
                 else if (strcmp(cself.type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
@@ -521,9 +521,9 @@ interface:
                 }
                 {%- else -%}
                 {%- if vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cself.ptr);
+                delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cself.ptr);
                 {%- else %}
-                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cself.ptr);
+                delete static_cast<{{cxx.type_name}}*>(cself.ptr);
                 {%- endif %}
                 {%- endif %}
             }
@@ -668,14 +668,14 @@ constructor:
         public convenience init(
         {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
-        {%- if arg.is_enum %}
+        {%- if arg.type.is_enum %}
         {%- set enum_case_name = arg.default.split('::')|last %}
         {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
         {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
+        {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.type.is_char else arg.default}}
         {%- elif arg.default_is_nullptr %} = nil
         {%- endif %}
         {%- endif %}
@@ -738,7 +738,7 @@ constructor:
           }
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}{{new_line}}
@@ -802,7 +802,7 @@ constructor:
             return result;
         }
         {% endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
         {% endfor -%}{{gen_func(args)}}
@@ -826,7 +826,7 @@ constructor:
           {%- endfor -%}
           {{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%- endmacro %}
-          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
           {%- for arg_with_default in non_primitive_default_args -%}
           {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
           {% endfor -%}{{gen_func(args)}}
@@ -851,7 +851,7 @@ method:
         {{gen_str_function()}}
         {% else -%}
         {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
-        {%- set is_override = cxx.is_override and not is_interface_override -%}
+        {%- set is_override = is_override and not is_interface_override -%}
         {%- if vars.is_operator and vars.name == '[]' -%}
         {%- set comma = joiner(', ') %}
         {# subscript operator #}
@@ -968,14 +968,14 @@ method:
         public {{"static " if cxx.is_static}}{{"override " if is_override}}func {{vars.name}}(
         {%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
-        {%- if arg.is_enum %}
+        {%- if arg.type.is_enum %}
         {%- set enum_case_name = arg.default.split('::')|last %}
         {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
         {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
+        {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.type.is_char else arg.default}}
         {%- elif arg.default_is_nullptr %} = nil
         {%- endif %}
         {%- endif %}
@@ -1039,7 +1039,7 @@ method:
           {%- endif %}
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1058,7 +1058,7 @@ method:
       func {{vars.name}}({%- for arg in args -%}{{comma()}}{{arg.name|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}}
       {%- endif %}
       {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
       {%- for arg_with_default in non_primitive_default_args -%}
       {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
       {% endfor -%}{{gen_func(args)}}
@@ -1131,7 +1131,7 @@ method:
             {%- endif %}
         }
         {% endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
         {% endfor -%}{{gen_func(args)}}
@@ -1211,7 +1211,7 @@ method:
           {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
           {%- endfor -%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%- endmacro -%}
-          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
           {%- for arg_with_default in non_primitive_default_args -%}
           {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
           {% endfor -%}{{gen_func(args)}}
@@ -1254,14 +1254,14 @@ function:
         {% endif -%}
         public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
           {%- if arg.default -%}
-          {%- if arg.is_enum %}
+          {%- if arg.type.is_enum %}
           {%- set enum_case_name = arg.default.split('::')|last %}
           {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
           {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {} function argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.displayname)) -%}
           {%- else %} = {{arg.converter.swift.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
           {%- endif -%}
           {%- else -%}
-          {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.is_char else arg.default}}
+          {%- if arg.default_is_literal %} = {{"\"{}\"".format(arg.default[1]) if arg.type.is_char else arg.default}}
           {%- elif arg.default_is_nullptr %} = nil
           {%- endif %}
           {%- endif %}
@@ -1324,7 +1324,7 @@ function:
           {%- endif %}
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}{{new_line}}
@@ -1393,7 +1393,7 @@ function:
             {%- endif %}
         }
         {% endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
         {% endfor -%}{{gen_func(args)}}
@@ -1416,7 +1416,7 @@ function:
           {{comma()}}{{arg.converter.c.target_type_name}} {% if arg.converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
           {%- endfor -%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%- endmacro -%}
-          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+          {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
           {%- for arg_with_default in non_primitive_default_args -%}
           {{gen_func(args[:args.index(arg_with_default)], loop.index)}}
           {% endfor -%}{{gen_func(args)}}
@@ -1603,7 +1603,7 @@ getter:
         {%- endif %}
         return {{result_converter.converted_name('result')}}
         {%- endmacro %}
-        {%- set override = cxx.is_override and not is_interface_override -%}
+        {%- set override = is_override and not is_interface_override -%}
         public {{'override ' if override}}var {% if cxx.is_template -%}
                                              {{get_template_getter_name()}}
                                              {%- else %}{{vars.name}}

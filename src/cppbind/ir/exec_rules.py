@@ -11,14 +11,12 @@ from dataclasses import dataclass
 
 from cached_property import cached_property
 
-from . import available_on
-import clang.cindex as cli
+from .utils import available_on
 import cppbind.utils.clang as cutil
 from cppbind import logging
+from cppbind.ir import ElementKind
 from cppbind.ir.ast import NodeType, Node
 from cppbind.parser import TEMPLATE_TYPE_PARAMETER_KEY, TEMPLATE_NON_TYPE_PARAMETER_KEY
-from cppbind.utils import DefaultValueKind
-from cppbind.utils.clang import extract_pure_comment
 
 
 @dataclass
@@ -46,8 +44,6 @@ class Context(BaseContext):
 
     def __init__(self, runner, node, template_info=None):
         super().__init__(runner, node)
-        if node.type == NodeType.CLANG_NODE:
-            assert node.clang_cursor, "cursor is not provided"
         self.template_info = template_info
 
     @property
@@ -84,65 +80,25 @@ class Context(BaseContext):
         node = self.node.find_adjacent_node(search_names, search_api)
         return self.runner.find_ctx_by_node(node)
 
-    @property
-    @available_on(cli.CursorKind.STRUCT_DECL,
-                  cli.CursorKind.CLASS_DECL,
-                  cli.CursorKind.CLASS_TEMPLATE)
-    def base_types(self):
-        """The list of base types having API"""
-
-        # find_by_type check is done to find types for template types
-        return [base_element.type for base_element in self.node.base_specifier_elements
-                if self.find_by_type(base_element.type)]
-
     @cached_property
-    @available_on(cli.CursorKind.STRUCT_DECL,
-                  cli.CursorKind.CLASS_DECL,
-                  cli.CursorKind.CLASS_TEMPLATE)
+    @available_on(ElementKind.STRUCT_DECL,
+                  ElementKind.CLASS_DECL,
+                  ElementKind.CLASS_TEMPLATE)
     def ancestor_contexts(self):
         """The list of contexts of the ancestors"""
-
-        def walk(base_types):
-            for base in base_types:
-                base = self.find_by_type(base)
-                for _base in walk(base.base_types):
-                    yield _base
-                yield base
-
-        return list(walk(self.base_types))
-
-    @property
-    def cursor(self):
-        return self.node.clang_cursor
+        return [
+            self.lookup_ctx_by_name(cutil.replace_template_choice(ancestor_node.full_displayname, self.template_choice))
+            for ancestor_node in self.node.ancestor_nodes]
 
     @property
     def parent_context(self):
         if self.node.parent.type == NodeType.CLANG_NODE:
             # TODO update this when we will expose templates at node level
             return self.lookup_ctx_by_name(
-                cutil.replace_template_choice(cutil.get_full_displayname(self.node.parent.clang_cursor),
+                cutil.replace_template_choice(self.node.parent.full_displayname,
                                               self.template_choice))
         else:
             return self.lookup_ctx_by_name(self.node.parent.full_displayname)
-
-    def find_by_type(self, search_type):
-        """Find context by clang type or string"""
-
-        search_name = search_type
-
-        # [temporary] - in case of non-templates find the node and then context, otherwise keep the old logic
-        if not cutil.is_template(search_type):
-            node = self.node.root.find_node_by_type(search_type)
-            return self.runner.find_ctx_by_node(node)
-
-        if isinstance(search_type, cli.Type):
-            # getting canonical for template base types
-            return self.find_by_type(search_type.spelling) or \
-                   self.find_by_type(search_type.get_canonical().spelling) or \
-                   self.find_by_type(cutil.template_type_name(search_type)) or \
-                   self.find_by_type(cutil.template_type_name(search_type.get_canonical()))
-
-        return self.lookup_ctx_by_name(search_name)
 
     def set_template_info(self, template_info):
         self.template_info = template_info
@@ -159,10 +115,10 @@ class Context(BaseContext):
         return self.runner.get_context(name)
 
     @property
-    @available_on(cli.CursorKind.STRUCT_DECL,
-                  cli.CursorKind.CLASS_DECL,
-                  cli.CursorKind.CLASS_TEMPLATE,
-                  cli.CursorKind.ENUM_DECL)
+    @available_on(ElementKind.STRUCT_DECL,
+                  ElementKind.CLASS_DECL,
+                  ElementKind.CLASS_TEMPLATE,
+                  ElementKind.ENUM_DECL)
     def cxx_type_name(self):
         """
         Returns cxx type name. Main usage of this property is for template types. For templates clang's type information
@@ -177,30 +133,10 @@ class Context(BaseContext):
         # spelling=Stack, displayname=Stack<T>
 
         template_choice = self.template_choice or {}
-        if self.node.is_template:
-            cxx_type_name = cutil.get_full_displayname(self.cursor)
+        if self.node.cxx_element.is_templated:
+            cxx_type_name = self.node.full_displayname
             return cutil.replace_template_choice(cxx_type_name, template_choice)
-        return self.cursor.type.spelling
-
-    @cached_property
-    @available_on(cli.CursorKind.CXX_METHOD)
-    def overridden_contexts(self):
-
-        def _get_overridden_contexts(cursor):
-            contexts = []
-            ancestor_contexts = self.parent_context.ancestor_contexts
-            if cursor.get_overriden_cursors():
-                for overridden in cursor.get_overriden_cursors():
-                    func_ctx = self.find_by_type(cutil.get_full_displayname(overridden))
-                    parent_ctx = self.find_by_type(cutil.get_full_displayname(overridden.lexical_parent))
-                    # if overridden method has not api but is parent has then consider it as well
-                    if parent_ctx in ancestor_contexts:
-                        if func_ctx:
-                            contexts.append(func_ctx)
-                        contexts += _get_overridden_contexts(overridden)
-            return contexts
-
-        return _get_overridden_contexts(self.cursor)
+        return self.node.cxx_element.get_type().spelling
 
 
 class RunRule:
@@ -269,8 +205,8 @@ class RunRule:
                     for child in node.children:
                         if child.type == NodeType.CLANG_NODE:
                             # check if the node is template and generate code for each combination of template args
-                            if child.clang_cursor.kind in (cli.CursorKind.CLASS_TEMPLATE,
-                                                           cli.CursorKind.FUNCTION_TEMPLATE):
+                            if child.kind in (ElementKind.CLASS_TEMPLATE,
+                                              ElementKind.FUNCTION_TEMPLATE):
                                 for _template_info in RunRule._get_template_combinations(child, ignore_parents=True):
                                     if template_info:
                                         # merge current node's context with parent
@@ -326,7 +262,7 @@ class RunRule:
                 self.all_contexts.setdefault(node.signature, ctx)
 
                 # this will be changed after template nodes will be exposed during ir post-processing
-                if node.type == NodeType.CLANG_NODE and node.is_class_or_struct and node.is_template:
+                if node.type == NodeType.CLANG_NODE and node.is_class_or_struct and node.cxx_element.is_templated:
                     # for template create a context also with only template type name(NOTE: this might not be used)
                     self.all_contexts.setdefault(cutil.template_type_name(node.signature), ctx)
                     # and for each specialization also create a context
@@ -373,7 +309,7 @@ class RunRule:
     @staticmethod
     def __node_key(node, template_info):
         node_key = (node,)
-        if node and node.type == NodeType.CLANG_NODE and node.is_template:
+        if node and node.type == NodeType.CLANG_NODE and node.cxx_element.is_templated:
             node_key = (node, json.dumps(template_info.__dict__))
         return node_key
 

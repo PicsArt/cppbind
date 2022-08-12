@@ -2,69 +2,48 @@
 # All rights reserved. Use of this source code is governed by a
 # MIT-style license that can be found in the LICENSE file.
 
-import types
 from functools import lru_cache
 
 from cached_property import cached_property
 
-import clang.cindex as cli
-import cppbind.utils.clang as cutil
-from cppbind.common.cxx_type import CXXType
+from cppbind.cxx_exposed import CXXExposedType, CXXRunnerExposedType
+from cppbind.ir import ElementKind
 from cppbind.ir.exec_rules import RunRule
 
 
 @lru_cache(maxsize=512)
-def create_type_info(runner: RunRule, cxx_type: CXXType):
-    return TypeInfo(runner, cxx_type)
+def create_type_info(runner: RunRule, cxx_exposed_type: CXXExposedType):
+    return TypeInfo(runner, cxx_exposed_type)
 
 
 class TypeInfo:
 
-    def __init__(self, runner, cxx_type):
+    def __init__(self, runner, cxx_exposed_type):
         self._runner = runner
-        self._cxx_type = cxx_type
+        self._cxx_exposed_type = cxx_exposed_type
         # get raw type to be able to find it's context(cxx type might be a typedef, pointer etc.)
-        self._raw_type = cxx_type.raw_type
+        self._raw_type = cxx_exposed_type._raw_type
         # get type context for cxx type
         self._type_ctx = runner.get_context(self._raw_type.unqualified_type_name)
 
     @cached_property
     def cxx(self):
-        _cxx = types.SimpleNamespace(
-            type_name=self._cxx_type.type_name,
-            pointee_name=self._cxx_type.pointee_name,
-            canonical_type=self._cxx_type.canonical_type,
-            is_pointer=self._cxx_type.is_pointer,
-            is_value_type=self._cxx_type.is_value,
-            is_lval_reference=self._cxx_type.is_lval_reference,
-            is_rval_reference=self._cxx_type.is_rval_reference,
-            unqualified_resolved_type_name=self._cxx_type.unqualified_resolved_type_name,
-            unqualified_type_name=self._cxx_type.unqualified_type_name,
-            unqualified_canonical_type_name=self._cxx_type.raw_type.unqualified_type_name,
-            is_const_qualified=self._cxx_type.is_const_qualified)
-        if self._type_ctx:
-            _cxx.namespace = self._type_ctx.node.namespace
-            _cxx.is_open = not cutil.is_final_cursor(self._type_ctx.cursor)
-            _cxx.is_abstract = self._type_ctx.cursor.is_abstract_record()
-            _cxx.kind_name = self._type_ctx.node.kind_name
-            _cxx.displayname = self._type_ctx.cursor.displayname
-            _cxx.source_file_name = self._type_ctx.node.file_name
-            if self._type_ctx.node.kind_name != 'enum':
-                _cxx.is_polymorphic = cutil.is_polymorphic(self._type_ctx.cursor)
-                _cxx.has_multiple_base_branches = cutil.has_multiple_base_branches(self._type_ctx.cursor)
-
-        return _cxx
+        return CXXRunnerExposedType(self._cxx_exposed_type._cxx_type,
+                                    template_choice=self._cxx_exposed_type._template_choice,
+                                    cxx_element=self._cxx_exposed_type._cxx_element,
+                                    ir=self._runner.ir,
+                                    ctx=self._type_ctx)
 
     @cached_property
     def base_types_infos(self):
-        return [create_type_info(self._runner, CXXType(base_type, self._type_ctx.template_choice))
+        return [create_type_info(self._runner, CXXExposedType(base_type, self._type_ctx.template_choice))
                 for base_type in
-                self._type_ctx.base_types] if self._type_ctx and self._type_ctx.node.kind_name != 'enum' else []
+                self._type_ctx.node.base_types] if self._type_ctx and self._type_ctx.node.kind_name != 'enum' else []
 
     @cached_property
     def parent_type_info(self):
-        _parent_type_info = create_type_info(self._runner, CXXType(self._type_ctx.parent_context.cxx_type_name,
-                                                                   self._type_ctx.template_choice)) \
+        _parent_type_info = create_type_info(self._runner, CXXExposedType(self._type_ctx.parent_context.cxx_type_name,
+                                                                          self._type_ctx.template_choice)) \
             if self._type_ctx and self._type_ctx.parent_context else None
         return _parent_type_info
 
@@ -77,7 +56,7 @@ class TypeInfo:
         Returns:
             List[Union[TypeInfo, None]]: List of type infos/Nones.
         """
-        return [create_type_info(self._runner, t[0]) if t and t[1] == cli.CursorKind.TEMPLATE_TYPE_PARAMETER else None
+        return [create_type_info(self._runner, t[0]) if t and t[1] == ElementKind.TEMPLATE_TYPE_PARAMETER else None
                 for t in self._raw_type.template_arguments] if self._raw_type.is_template else []
 
     @property

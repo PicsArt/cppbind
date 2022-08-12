@@ -168,14 +168,18 @@ def extract_pure_comment(raw_comment, end_index=None):
     return comment_lines
 
 
-def is_template(type_):
-    """Check whether cursor/type is a template, or string corresponds to a template cursor signature"""
+def is_templated(type_):
+    """
+    Check whether cursor/type is templated (is a template or depends on a template parameter),
+    or string corresponds to a template cursor signature
+    """
 
-    if isinstance(type_, cli.Type) or isinstance(type_, cli.Cursor):
-        cursor = type_.get_declaration() if isinstance(type_, cli.Type) else type_
-        is_parent_template = cursor.lexical_parent and is_template(cursor.lexical_parent)
-        return cursor.kind in (cli.CursorKind.CLASS_TEMPLATE,
-                               cli.CursorKind.FUNCTION_TEMPLATE) or is_parent_template is not None
+    if isinstance(type_, cli.Type):
+        return type_.get_num_template_arguments() != -1
+    elif isinstance(type_, cli.Cursor):
+        is_parent_template = type_.lexical_parent and is_templated(type_.lexical_parent)
+        return type_.kind in (cli.CursorKind.CLASS_TEMPLATE,
+                              cli.CursorKind.FUNCTION_TEMPLATE) or is_parent_template
 
     return '<' in type_ and '>' in type_
 
@@ -219,21 +223,52 @@ def is_integral_type(clang_type):
 # TODO consistent-cxx-info: this logic is related to the clang, should go to IR after refactoring
 def get_template_declaration(clang_type):
     """
+    Returns the declaration cursor for the template clang Type and None for non-template types.
+    Args:
+        clang_type (clang.cindex.Type):
+    Returns:
+        clang.cindex.Cursor: Declaration cursor.
+    """
+    if not is_templated(clang_type):
+        return None
+    decl_cursor = clang_type.get_declaration()
+    if decl_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+        return decl_cursor
+    spec_cursor = clang_type.get_declaration().get_specialized_cursor_template()
+    # the declaration is a specialized type cursor
+    while spec_cursor:
+        if spec_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+            return spec_cursor
+        spec_cursor = spec_cursor.get_specialized_cursor_template()
+    pointee = clang_type.get_pointee()
+    if pointee.kind != cli.TypeKind.INVALID:
+        return get_template_declaration(pointee)
+    return get_template_declaration(clang_type.get_canonical())
+
+
+def get_declaration(clang_type):
+    """
     Returns the declaration cursor for the clang Type.
     Args:
         clang_type (clang.cindex.Type):
     Returns:
         clang.cindex.Cursor: Declaration cursor.
     """
+    if is_templated(clang_type):
+        return get_template_declaration(clang_type)
+    return _get_declaration(clang_type)
+
+
+def _get_declaration(clang_type):
+    if clang_type.kind in (cli.TypeKind.INVALID, cli.TypeKind.UNEXPOSED):
+        return None
     decl_cursor = clang_type.get_declaration()
-    if decl_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
+    if decl_cursor.kind in (cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL):
         return decl_cursor
-    # the declaration was not template class, the type was a typedef or a specialized template type
-    decl_cursor = clang_type.get_canonical().get_declaration()
-    if decl_cursor.kind == cli.CursorKind.CLASS_TEMPLATE:
-        return decl_cursor
-    # the declaration is a specialized type cursor
-    return decl_cursor.get_specialized_cursor_template()
+    pointee = clang_type.get_pointee()
+    if pointee.kind != cli.TypeKind.INVALID:
+        return _get_declaration(pointee)
+    return _get_declaration(clang_type.get_canonical())
 
 
 # TODO consistent-cxx-info: this logic is related to the clang, should go to IR after refactoring

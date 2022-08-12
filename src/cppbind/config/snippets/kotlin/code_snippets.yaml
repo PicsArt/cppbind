@@ -85,7 +85,7 @@ enum:
       {%- endif %}
       enum class {{vars.name}}(val value: Int){{': ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
           {%- set comma = joiner(",") -%}
-          {%- for case in enum_cases -%}
+          {%- for case in cxx.enum_cases -%}
           {%- if case.name not in vars.enum_excluded_cases -%}
           {{comma()}}
           {%- if case.comment %}
@@ -167,7 +167,7 @@ var_class_cxx: &var_class_cxx
   glob_decl: *var_class_cxx_glob_decl
   glob_def:
     unique_content: |
-      const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.unqualified_canonical_type_name}}";
+      const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.type_name}}";
   body:
     scopes:
       - body
@@ -182,7 +182,7 @@ var_class_cxx: &var_class_cxx
         {%- set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
         extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv*, jobject, jobjectid id){
             {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
-            static_assert(std::has_virtual_destructor<{{cxx.unqualified_resolved_type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.unqualified_resolved_type_name)}});
+            static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
             {%- endif %}
             auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
             auto cppbind_obj_id_ptr = cppbind_obj_id ? cppbind_obj_id->ptr : nullptr;
@@ -190,9 +190,9 @@ var_class_cxx: &var_class_cxx
             {%- if descendants %}
             if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
             {%- if vars.shared_ref %}
-                delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
+                delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr);
             {%- else %}
-                delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
+                delete static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr);
             {%- endif %}
             {%- for descendant in descendants %}
             else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
@@ -208,9 +208,9 @@ var_class_cxx: &var_class_cxx
             }
             {%- else %}
             {%- if vars.shared_ref %}
-            delete static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr);
+            delete static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr);
             {%- else %}
-            delete static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr);
+            delete static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr);
             {%- endif %}
             {%- endif %}
             free(cppbind_obj_id->type);
@@ -300,7 +300,7 @@ class:
                    * An internal property to keep an information about the underlying C++ object type.
                    * It is intended to be used by the generated code.
                    */
-                  const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
+                  const val cppbindCxxTypeName: String = "{{cxx.type_name}}"
                   {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
                   /**
@@ -494,7 +494,7 @@ interface:
                    * An internal property to keep an information about the underlying C++ object type.
                    * It is intended to be used by the generated code.
                    */
-                  const val cppbindCxxTypeName: String = "{{cxx.unqualified_canonical_type_name}}"
+                  const val cppbindCxxTypeName: String = "{{cxx.type_name}}"
               }
 
               protected var cppbindObj = obj
@@ -669,14 +669,14 @@ constructor:
       constructor({%- for arg in args -%}
       {{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%- if arg.default -%}
-      {%- if arg.is_enum %}
+      {%- if arg.type.is_enum %}
       {%- set enum_case_name = arg.default.split('::')|last %}
       {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
       {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%- endif -%}
       {%- else -%}
-      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
+      {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.type.is_float}}{{'L' if arg.type.is_long}}{{'u' if arg.type.is_uchar}}
       {%- elif arg.default_is_nullptr %} = null
       {%- endif %}
       {%- endif %}
@@ -697,7 +697,7 @@ constructor:
           {%- endif %}
       }
       {%- endmacro -%}
-      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+      {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
       {%- for arg_with_default in non_primitive_default_args -%}
       {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
       {% endfor -%}{{gen_func(args)}}
@@ -737,7 +737,7 @@ constructor:
         @JvmStatic
         private external fun {{constructor_jvm_name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): Long
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -813,7 +813,7 @@ constructor:
             return result;
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -847,17 +847,17 @@ method:
         {%- if jvm_name %}
         {{jvm_name}}
         {%- endif %}
-        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun {{vars.name}}(
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if is_override}}fun {{vars.name}}(
         {%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
-        {%- if arg.is_enum %}
+        {%- if arg.type.is_enum %}
         {%- set enum_case_name = arg.default.split('::')|last %}
         {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
         {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
+        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.type.is_float}}{{'L' if arg.type.is_long}}{{'u' if arg.type.is_uchar}}
         {%- elif arg.default_is_nullptr %} = null
         {%- endif %}
         {%- endif %}
@@ -905,7 +905,7 @@ method:
             return {{result_converter.converted_name('result')}}
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -914,7 +914,7 @@ method:
         {%- if vars.is_operator and vars.name == 'get' and not return_type_info.cxx.is_const_qualified and return_type_info.cxx.is_lval_reference %}
         {% set setter_var_name = 'value' %}
 
-        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if cxx.is_override}}fun set(
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{'override ' if is_override}}fun set(
         {%- for arg in args -%}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
         {%- endfor-%}){
             {%- set call_args = ['cppbindObjId'] -%}
@@ -1010,7 +1010,7 @@ method:
         @JvmStatic
         private external fun j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1027,7 +1027,7 @@ method:
         {%- set comma = joiner(', ') -%}
         private external fun j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1051,7 +1051,7 @@ method:
         @JvmStatic
         external fun j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}(id: Long{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1163,7 +1163,7 @@ method:
         {{gen_method(is_set_op=true)}}
         {%- endif %}
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1195,14 +1195,14 @@ function:
         {%- endif %}
         fun {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.kotlin.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%- if arg.default -%}
-        {%- if arg.is_enum %}
+        {%- if arg.type.is_enum %}
         {%- set enum_case_name = arg.default.split('::')|last %}
         {%- if enum_case_name in arg.type_info.vars.enum_excluded_cases -%}
         {%- do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
         {%- else %} = {{arg.converter.kotlin.target_type_name}}.{{arg.type_info.vars.enum_case_names.get(enum_case_name, arg.type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%- endif -%}
         {%- else -%}
-        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.is_float}}{{'L' if arg.is_long}}{{'u' if arg.is_uchar}}
+        {%- if arg.default_is_literal %} = {{arg.default}}{{'F' if arg.type.is_float}}{{'L' if arg.type.is_long}}{{'u' if arg.type.is_uchar}}
         {%- elif arg.default_is_nullptr %} = null
         {%- endif %}
         {%- endif %}
@@ -1229,7 +1229,7 @@ function:
             return {{result_converter.converted_name('result')}}
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1243,7 +1243,7 @@ function:
         {%- set comma = joiner(', ') -%}
         private external fun j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({%- for arg in args -%}{{comma()}}{{vars.argument_name.get(arg.name, arg.name)}}: {{arg.converter.jdk.target_type_name}}{%- endfor-%}{{', vararg extraObjs: Any?' if args}}): {{rconverter.jdk.target_type_name}}
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1342,7 +1342,7 @@ function:
             {{call_code(call_args)|indent(4)}}
         }
         {%- endmacro -%}
-        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
+        {%- set non_primitive_default_args = args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
         {%- for arg_with_default in non_primitive_default_args -%}
         {{gen_func(args[:args.index(arg_with_default)], loop.index)}}{{new_line}}
         {% endfor -%}{{gen_func(args)}}
@@ -1494,11 +1494,9 @@ getter:
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        {{'open ' if cxx.is_open}}{{'override ' if cxx.is_override}}{{'var ' if setter is defined else 'val '}}
+        {{'open ' if cxx.is_open}}{{'override ' if is_override}}{{'var ' if setter is defined else 'val '}}
                                                {%- if cxx.is_template -%}
-                                               {%- for name in template_args_postfixes or [] %}
-                                               {%- if name != None %}{{name}}{% else %}{{template_type_converters[loop.index - 1].custom.tname}}{% endif %}
-                                               {%- endfor %}
+                                               {{get_template_getter_name()}}
                                                {%- else %}{{vars.name}}
                                                {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
             get() {
@@ -1521,7 +1519,7 @@ getter:
               {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
             {%- endif -%}
             {%- set converter = setter.args[0].converter.kotlin_to_jdk %}
-            {%- if cxx.is_override %}
+            {%- if is_override %}
             set(value) {
                 super.{{vars.name}} = value
             }

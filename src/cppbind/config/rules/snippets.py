@@ -5,18 +5,25 @@
 import copy
 import types
 
-import clang.cindex as cli
 import cppbind
 import cppbind.converter
-import cppbind.utils.clang as cutil
-from cppbind.common.cxx_type import CXXType
 from cppbind.common.error import Error
 from cppbind.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
 )
 from cppbind.common.type_info import create_type_info
-from cppbind.utils import DefaultValueKind, get_language_helper_module, get_public_attributes
+from cppbind.cxx_exposed import (
+    CXXArgumentExposedElement,
+    CXXEnumExposedElement,
+    CXXExposedElement,
+    CXXExposedType,
+    CXXFunctionExposedElement,
+    CXXClassExposedElement
+)
+from cppbind.ir import ElementKind
+from cppbind.utils import get_language_helper_module, get_public_attributes
+
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -80,30 +87,26 @@ def make_package_context(ctx):
 
 def make_func_context(ctx):
     def make():
-        args = [
-            types.SimpleNamespace(
-                converter=SNIPPETS_ENGINE.build_type_converter(CXXType(type_=arg.type,
-                                                                       template_choice=ctx.template_choice)),
-                type_info=create_type_info(ctx.runner, CXXType(type_=arg.type,
-                                                               template_choice=ctx.template_choice)),
-                name=arg.name,
-                default=arg.default.value,
-                is_enum=arg.type.get_canonical().kind == cli.TypeKind.ENUM,
-                is_bool=arg.type.get_canonical().kind == cli.TypeKind.BOOL,
-                is_long=arg.type.get_canonical().kind == cli.TypeKind.LONG,
-                is_float=arg.type.get_canonical().kind in (cli.TypeKind.FLOAT, cli.TypeKind.FLOAT128),
-                is_char=arg.type.get_canonical().kind in (cli.TypeKind.CHAR_S, cli.TypeKind.CHAR_U),
-                is_uchar=arg.type.get_canonical().kind == cli.TypeKind.UCHAR,
-                default_is_literal=arg.default.kind == DefaultValueKind.LITERAL,
-                default_is_nullptr=arg.default.kind == DefaultValueKind.NULL_PTR,
-            ) for arg in ctx.node.args_info
-        ]
+        # TODO: move args under cxx after removing exposed converter/type_info from here
+        args = []
+        for _arg in ctx.node.cxx_element.args:
+            converter = SNIPPETS_ENGINE.build_type_converter(CXXExposedType(cxx_type=_arg.get_type(),
+                                                                            template_choice=ctx.template_choice))
+            type_info = create_type_info(ctx.runner, CXXExposedType(cxx_type=_arg.get_type(),
+                                                                    template_choice=ctx.template_choice))
+            _cxx = CXXArgumentExposedElement(_arg)
 
-        if hasattr(ctx.node, 'result_type'):
-            _cxx_type = CXXType(type_=ctx.node.result_type,
-                                template_choice=ctx.template_choice)
-            rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
-            return_type_info = create_type_info(ctx.runner, _cxx_type)
+            # TODO: don't expose type_info and converter
+            _cxx.converter = converter
+            _cxx.type_info = type_info
+
+            args.append(_cxx)
+
+        if ctx.node.cxx_element.result_type:
+            _cxx_exposed_type = CXXExposedType(cxx_type=ctx.node.cxx_element.result_type,
+                                               template_choice=ctx.template_choice)
+            rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
+            return_type_info = create_type_info(ctx.runner, _cxx_exposed_type)
 
         # global functions do not have owner_class
         owner_class = types.SimpleNamespace(
@@ -115,33 +118,15 @@ def make_func_context(ctx):
         template_choice = ctx.template_choice
         template_args_postfixes = ctx.template_args_postfixes
 
-        cxx = types.SimpleNamespace(
-            name=ctx.cursor.spelling,
-            displayname=ctx.cursor.displayname,
-            source_file_name=ctx.node.file_name,
-            is_abstract=ctx.cursor.is_abstract_record(),
-            is_open=not cutil.is_final_cursor(ctx.cursor),
-            is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
-            is_protected=ctx.cursor.access_specifier == cli.AccessSpecifier.PROTECTED,
-            is_private=ctx.cursor.access_specifier == cli.AccessSpecifier.PRIVATE,
-            is_const=ctx.cursor.is_const_method(),
-            kind_name=ctx.node.kind_name,
-            access_specifier=ctx.cursor.access_specifier.name.lower(),
-            is_template=ctx.node.is_function_template,
-            is_overloaded=cutil.is_overloaded(ctx.cursor),
-            is_static=bool(ctx.cursor.is_static_method()),
-            namespace=ctx.node.namespace,
-            # for template methods
-            is_override=False
-        )
+        cxx = CXXFunctionExposedElement(ctx.node.cxx_element)
 
-        if ctx.cursor.kind == cli.CursorKind.CXX_METHOD:
+        is_override = False
+        if ctx.node.kind == ElementKind.CXX_METHOD:
             # at least one of the overridden cursors should have an api
-            cxx.is_override = bool(ctx.overridden_contexts)
+            is_override = bool(ctx.node.overridden_nodes)
 
-            is_interface_override = cxx.is_override and all(
-                [c.parent_context.vars.action == 'gen_interface' for c in ctx.overridden_contexts])
-            cxx.is_virtual = bool(ctx.cursor.is_virtual_method())
+            is_interface_override = is_override and all(
+                c.parent.api == 'gen_interface' for c in ctx.node.overridden_nodes)
 
         return get_public_attributes(locals())
 
@@ -153,12 +138,8 @@ def make_func_context(ctx):
 def make_enum_context(ctx):
     def make():
         # helper variables
-        enum_cases = ctx.node.enum_cases
-        cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
-                                    type_name=ctx.cxx_type_name,
-                                    source_file_name=ctx.node.file_name,
-                                    namespace=ctx.node.namespace,
-                                    kind_name=ctx.node.kind_name)
+        cxx = CXXEnumExposedElement(ctx.node.cxx_element)
+
         return locals()
 
     context = make_def_context(ctx)
@@ -171,23 +152,23 @@ def make_class_context(ctx):
         def make():
             # for cases when type kind is invalid clang type does not give enough information
             # for such cases we use string type name
-            _cxx_type = CXXType(type_=ctx.cxx_type_name,
-                                template_choice=ctx.template_choice,
-                                cursor=ctx.cursor)
-            _type_info = create_type_info(ctx.runner, _cxx_type)
+            _cxx_exposed_type = CXXExposedType(cxx_type=ctx.cxx_type_name,
+                                               template_choice=ctx.template_choice,
+                                               cxx_element=ctx.node.cxx_element)
+            _type_info = create_type_info(ctx.runner, _cxx_exposed_type)
 
-            converter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
+            converter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
 
-            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXType(base_type, ctx.template_choice))
-                                     for base_type in ctx.base_types]
+            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXExposedType(base_type,
+                                                                                         ctx.template_choice))
+                                     for base_type in ctx.node.base_types]
 
             # nested types have their owner_class
             owner_class = types.SimpleNamespace(
                 **make_class_context(ctx.parent_context)) if ctx.parent_context else None
 
-            cxx = _type_info.cxx
-            # adding name to cxx namespace to identify
-            # setattr(cxx, 'name', ctx.cursor.spelling)
+            cxx = CXXClassExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
+
             base_types_infos = _type_info.base_types_infos
             arg_types_infos = _type_info.arg_types_infos
             type_info = _type_info
@@ -236,21 +217,16 @@ def make_getter_context(ctx):
 def make_member_context(ctx):
     def make():
         # helper variables
-        _cxx_type = CXXType(type_=ctx.cursor.type,
-                            template_choice=ctx.template_choice)
-        return_type_info = create_type_info(ctx.runner, _cxx_type)
-        rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_type)
+        _cxx_exposed_type = CXXExposedType(cxx_type=ctx.node.cxx_element.get_type(),
+                                           template_choice=ctx.template_choice)
+        return_type_info = create_type_info(ctx.runner, _cxx_exposed_type)
+        rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
 
         owner_class = types.SimpleNamespace(
             **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
             'gen_class', 'gen_interface') else None
 
-        cxx = types.SimpleNamespace(name=ctx.cursor.spelling,
-                                    displayname=ctx.cursor.displayname,
-                                    source_file_name=ctx.node.file_name,
-                                    kind_name=ctx.node.kind_name,
-                                    is_public=ctx.cursor.access_specifier == cli.AccessSpecifier.PUBLIC,
-                                    is_template=ctx.node.is_template)
+        cxx = CXXExposedElement(ctx.node.cxx_element)
 
         return get_public_attributes(locals())
 

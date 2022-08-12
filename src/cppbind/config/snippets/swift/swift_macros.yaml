@@ -53,7 +53,7 @@ special_functions:
       {%- set tostring_decl = 'var description: String' -%}
       {%- set equals_decl = 'static func == (lhs: Self, rhs: Self) -> Bool' -%}
       {%- macro gen_hash_function() -%}
-      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set is_override = is_override and not is_interface_override -%}
       {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
@@ -66,7 +66,7 @@ special_functions:
       }
       {%- endmacro -%}
       {%- macro gen_equals_function() -%}
-      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set is_override = is_override and not is_interface_override -%}
       {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
       {%- set class_name = owner_class.converter.swift.get_target_type_name(definition=True) -%}
       {%- if vars.comment -%}
@@ -81,7 +81,7 @@ special_functions:
       }
       {%- endmacro -%}
       {%- macro gen_str_function() -%}
-      {%- set is_override = cxx.is_override and not is_interface_override -%}
+      {%- set is_override = is_override and not is_interface_override -%}
       {%- set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
       {%- if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}

@@ -97,13 +97,13 @@ class StackUsage  {
  * action: gen_class
  * file: my_stack
  * template:
- *   T:
+ *   TItem:
  *     - type: cppbind::example::Project
  *     - type: cppbind::example::Task
  * package: templates
  */
-template <class T>
-class MyStack: public cppbind::example::Stack<T> {
+template <class TItem>
+class MyStack: public cppbind::example::Stack<TItem> {
 public:
     /**
      * __API__
@@ -114,12 +114,12 @@ public:
 
     // not supported use cases
 
-    using Stack = cppbind::example::Stack<T>;
+    using Stack = cppbind::example::Stack<TItem>;
 
     /**
      * Typedefs of template types are not supported.
      */
-    T* firstItemOfTypedefTemplateStack(Stack* p) {
+    TItem* firstItemOfTypedefTemplateStack(Stack* p) {
         return p->top();
     };
 

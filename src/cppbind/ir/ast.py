@@ -5,7 +5,6 @@
 """
 """
 
-import types
 from abc import abstractmethod, ABC
 from collections import OrderedDict
 from enum import Enum
@@ -15,9 +14,10 @@ from sortedcontainers import SortedSet
 
 import clang.cindex as cli
 import cppbind.utils.clang as cutil
-from cppbind.common.cxx_element import CXXElement
-from cppbind.utils import DefaultValueKind
-from . import allowed_after_build, available_on
+from cppbind.ir.cxx_element import CXXElement
+from cppbind.ir.cxx_type import CXXType
+from .utils import allowed_after_build, available_on
+from . import ElementKind
 
 
 class NodeType(Enum):
@@ -168,11 +168,13 @@ class RootNode(Node):
         return self._node_map.get(node_signature)
 
     def find_node_by_type(self, type_):
-        """Find node by cursor type or string"""
+        """Find node by cursor Type, CXXType or string"""
 
         search_name = type_
-        if isinstance(type_, cli.Type):
-            search_name = cutil.get_signature(type_.get_declaration())
+        if isinstance(type_, (cli.Type, CXXType)):
+            # decl is None for the types which are invalid or unexposed
+            decl = cutil.get_declaration(type_) if isinstance(type_, cli.Type) else type_.get_declaration()
+            return self._node_map.get(cutil.get_signature(decl)) if decl else None
         return self._node_map.get(search_name)
 
     def _get_all_nodes(self):
@@ -208,39 +210,35 @@ class ClangNode(Node, ABC):
 
     def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, root, parent, children, pure_comment)
-        self.clang_cursor = clang_cursor
+        self.cxx_element = CXXElement.create_cxx_element(clang_cursor)
 
     @property
     def kind(self):
-        assert self.clang_cursor, "cursor is not provided"
-        return self.clang_cursor.kind
+        return self.cxx_element.kind
 
     @property
     def displayname(self):
-        assert self.clang_cursor, "cursor is not provided"
-        return self.clang_cursor.displayname
+        return self.cxx_element.displayname
 
     @property
     def spelling(self):
-        assert self.clang_cursor, "cursor is not provided"
-        return self.clang_cursor.spelling
+        return self.cxx_element.spelling
 
     @cached_property
     def full_displayname(self):
-        assert self.clang_cursor, "cursor is not provided"
-        return cutil.get_full_displayname(self.clang_cursor)
+        return self.cxx_element.get_full_displayname()
 
     @cached_property
     def signature(self):
-        return cutil.get_signature(self.clang_cursor)
+        return self.cxx_element.get_signature()
 
     @property
     def file_name(self):
-        return self.clang_cursor.extent.start.file.name
+        return self.cxx_element.extent.start.file.name
 
     @property
     def line_number(self):
-        return self.clang_cursor.extent.start.line
+        return self.cxx_element.extent.start.line
 
 
 class FileNode(ClangNode):
@@ -254,13 +252,12 @@ class FileNode(ClangNode):
 
     @property
     def kind_name(self):
-        assert self.clang_cursor, "cursor is not provided"
-        assert self.clang_cursor.kind == cli.CursorKind.TRANSLATION_UNIT
+        assert self.cxx_element.kind == ElementKind.TRANSLATION_UNIT
         return FILE_KIND_NAME
 
     @property
     def full_displayname(self):
-        return self.clang_cursor.extent.start.file.name
+        return self.cxx_element.extent.start.file.name
 
 
 class CXXNode(ClangNode):
@@ -276,35 +273,13 @@ class CXXNode(ClangNode):
 
     @property
     def kind_name(self):
-        assert self.clang_cursor, "cursor is not provided"
-        cl_kind = self.clang_cursor.kind.name.lower().replace("_decl", "").replace("cxx_", "")
-        if self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE:
-            if self.clang_cursor.lexical_parent.kind in (cli.CursorKind.STRUCT_DECL,
-                                                         cli.CursorKind.CLASS_DECL,
-                                                         cli.CursorKind.CLASS_TEMPLATE):
-                if self.spelling == self.clang_cursor.lexical_parent.spelling:
-                    return 'constructor_template'
-                else:
-                    return 'method_template'
-
-        return cl_kind
-
-    @property
-    @allowed_after_build
-    def is_template(self):
-        is_parent_template = self.parent and self.parent.type == NodeType.CLANG_NODE and self.parent.is_template
-        return self.clang_cursor.kind in (cli.CursorKind.CLASS_TEMPLATE,
-                                          cli.CursorKind.FUNCTION_TEMPLATE) or is_parent_template
-
-    @property
-    def is_function_template(self):
-        return self.clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE
+        return self.cxx_element.kind_name
 
     @property
     def is_class_or_struct(self):
-        return self.clang_cursor.kind in (cli.CursorKind.STRUCT_DECL,
-                                          cli.CursorKind.CLASS_DECL,
-                                          cli.CursorKind.CLASS_TEMPLATE)
+        return self.cxx_element.kind in (ElementKind.STRUCT_DECL,
+                                         ElementKind.CLASS_DECL,
+                                         ElementKind.CLASS_TEMPLATE)
 
     @cached_property
     @allowed_after_build
@@ -313,7 +288,7 @@ class CXXNode(ClangNode):
             return None
 
         base_type_specifier_nodes = []
-        for base_specifier in self.clang_cursor.get_children():
+        for base_specifier in self.cxx_element.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
                 # used canonical type spelling to support typedef cases
                 base_node = self.root.find_node(base_specifier.type.get_canonical().spelling)
@@ -340,136 +315,6 @@ class CXXNode(ClangNode):
         descendants.extend(self.direct_descendants)
 
         return descendants
-
-    @property
-    @available_on(cli.CursorKind.FUNCTION_DECL,
-                  cli.CursorKind.FUNCTION_TEMPLATE,
-                  cli.CursorKind.CXX_METHOD,
-                  cli.CursorKind.CONSTRUCTOR)
-    def args_info(self):
-        """Argument info of the node"""
-
-        _args = []
-
-        def get_default(param_var):
-            # todo implementation is odd for now
-            assert param_var.kind == cli.CursorKind.PARM_DECL
-            val = None
-            kind = None
-            if '=' in [p.spelling for p in param_var.get_tokens()]:
-                for def_curs in param_var.walk_preorder():
-                    if def_curs.kind in (
-                            cli.CursorKind.INTEGER_LITERAL,
-                            cli.CursorKind.FLOATING_LITERAL,
-                            cli.CursorKind.IMAGINARY_LITERAL,
-                            cli.CursorKind.STRING_LITERAL,
-                            cli.CursorKind.CHARACTER_LITERAL,
-                            cli.CursorKind.CXX_BOOL_LITERAL_EXPR
-                    ):
-                        kind = DefaultValueKind.LITERAL
-                        val = next(def_curs.get_tokens(), None)
-                        if val:
-                            val = val.spelling
-                    elif def_curs.kind in (
-                            cli.CursorKind.CXX_NULL_PTR_LITERAL_EXPR,
-                            cli.CursorKind.GNU_NULL_EXPR,
-                            cli.CursorKind.NULL_STMT):
-                        val = 'nullptr'
-                        kind = DefaultValueKind.NULL_PTR
-                    elif def_curs.kind == cli.CursorKind.DECL_REF_EXPR:
-                        val = ''.join([token.spelling for token in def_curs.get_tokens()])
-                        kind = DefaultValueKind.ENUM
-                    elif def_curs.kind == cli.CursorKind.CALL_EXPR:
-                        kind = DefaultValueKind.CALL_EXPR
-                        tokens = list(def_curs.get_tokens())
-                        val = ''.join([token.spelling for token in tokens if token.spelling != '='])
-
-                        if len(tokens) == 1:
-                            if tokens[0].kind == cli.TokenKind.LITERAL:
-                                # std::string case
-                                kind = DefaultValueKind.LITERAL
-                            elif val == 'nullptr':
-                                # std::shared_ptr case
-                                kind = DefaultValueKind.NULL_PTR
-                        # value is retrieved break to not override it
-                        break
-            return kind, val
-
-        # for function templates Cursor.get_arguments returns an empty array,
-        # using get_children instead
-        if self.is_function_template:
-            for i, arg_c in enumerate(self.clang_cursor.get_children()):
-                if arg_c.kind == cli.CursorKind.PARM_DECL:
-                    kind, val = get_default(arg_c)
-                    arg_params = types.SimpleNamespace(name=arg_c.spelling or f'arg{i + 1}',
-                                                       type=arg_c.type,
-                                                       cursor=arg_c,
-                                                       default=types.SimpleNamespace(kind=kind, value=val))
-                    _args.append(arg_params)
-        else:
-            for i, arg_c in enumerate(self.clang_cursor.get_arguments()):
-                kind, val = get_default(arg_c)
-                arg_params = types.SimpleNamespace(name=arg_c.spelling or f'arg{i + 1}',
-                                                   type=arg_c.type,
-                                                   cursor=arg_c,
-                                                   default=types.SimpleNamespace(kind=kind, value=val))
-                _args.append(arg_params)
-
-        return _args
-
-    @property
-    @available_on(cli.CursorKind.ENUM_DECL)
-    def enum_cases(self):
-        """Information about enum cases"""
-
-        _values = []
-        last_case_comment = None
-        for enum_value_c in self.clang_cursor.walk_preorder():
-            if enum_value_c.kind != cli.CursorKind.ENUM_CONSTANT_DECL:
-                continue
-            type_name = enum_value_c.kind.name.lower().replace("_decl", "")
-            if enum_value_c.raw_comment != last_case_comment:
-                comment = cutil.extract_pure_comment(enum_value_c.raw_comment)
-            elif last_case_comment:
-                comment = ['', 'The same as previous case comment.', '']
-            else:
-                comment = None
-            last_case_comment = enum_value_c.raw_comment
-            enum_val_params = types.SimpleNamespace(name=enum_value_c.spelling, type=type_name,
-                                                    value=enum_value_c.enum_value, comment=comment)
-            _values.append(enum_val_params)
-
-        return _values
-
-    @property
-    @available_on(cli.CursorKind.CXX_METHOD,
-                  cli.CursorKind.FUNCTION_DECL,
-                  cli.CursorKind.FUNCTION_TEMPLATE)
-    def result_type(self):
-        """Return type info for function nodes"""
-
-        return self.clang_cursor.result_type
-
-    @property
-    @allowed_after_build
-    def namespace(self):
-        """Namespace of the node"""
-
-        namespaces = []
-        parent = self.parent
-        while cli.CursorKind.NAMESPACE == parent.clang_cursor.kind:
-            if parent.spelling:
-                namespaces.append(parent.spelling)
-            parent = parent.parent
-
-        return '::'.join(reversed(namespaces))
-
-    @property
-    def template_type_parameters(self):
-        """List of template type parameters"""
-
-        return [child.type.spelling for child in self.clang_cursor.get_children() if
-                child.kind == cli.CursorKind.TEMPLATE_TYPE_PARAMETER]
 
     @allowed_after_build
     def find_adjacent_nodes(self, search_names, search_api=None):
@@ -503,12 +348,58 @@ class CXXNode(ClangNode):
     @available_on(cli.CursorKind.STRUCT_DECL,
                   cli.CursorKind.CLASS_DECL,
                   cli.CursorKind.CLASS_TEMPLATE)
-    def base_specifier_elements(self):
-        """The list of base type specifier elements"""
+    def base_types(self):
+        """
+        Returns:
+            List of base types which have an API.
+        Raises:
+            AttributeError: If current node is not a class/struct node.
+        """
+        return [base_type for base_type in self.cxx_element.base_types
+                if self.root.find_node_by_type(base_type)]
 
-        base_type_elements = []
-        for base_specifier in self.clang_cursor.get_children():
-            if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                base_type_elements.append(CXXElement(base_specifier))
+    @cached_property
+    @available_on(cli.CursorKind.STRUCT_DECL,
+                  cli.CursorKind.CLASS_DECL,
+                  cli.CursorKind.CLASS_TEMPLATE)
+    def ancestor_nodes(self):
+        """
+        Returns:
+            List of ancestor nodes which have an API.
+        Raises:
+            AttributeError: If current node is not a class/struct node.
+        """
+        def walk(base_types):
+            for base in base_types:
+                base = self.root.find_node_by_type(base)
+                for _base in walk(base.base_types):
+                    yield _base
+                yield base
 
-        return base_type_elements
+        return list(walk(self.base_types))
+
+    @cached_property
+    @available_on(cli.CursorKind.CXX_METHOD)
+    def overridden_nodes(self):
+        """
+        Returns:
+            List of overridden nodes which have an API.
+        Raises:
+            AttributeError: If current node is not a method node.
+        """
+
+        def _get_overridden_nodes(cxx_element):
+
+            nodes = []
+            ancestor_contexts = self.parent.ancestor_nodes
+            if cxx_element.get_overriden_cursors():
+                for overridden in cxx_element.get_overriden_cursors():
+                    func_node = self.root.find_node_by_type(cutil.get_full_displayname(overridden))
+                    parent_node = self.root.find_node_by_type(cutil.get_full_displayname(overridden.lexical_parent))
+                    # if overridden method has not api but is parent has then consider it as well
+                    if parent_node and parent_node in ancestor_contexts:
+                        if func_node:
+                            nodes.append(func_node)
+                        nodes += _get_overridden_nodes(overridden)
+            return nodes
+        return _get_overridden_nodes(self.cxx_element)

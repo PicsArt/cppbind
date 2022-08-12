@@ -88,9 +88,9 @@ jni_functions: |
       {%- if descendants %}
       if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
       {%- if vars.shared_ref %}
-          return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr)->get());
+          return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr)->get());
       {%- else %}
-          return reinterpret_cast<jlong>(static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr));
+          return reinterpret_cast<jlong>(static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr));
       {%- endif %}
       {%- for descendant in descendants %}
       else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
@@ -106,9 +106,9 @@ jni_functions: |
       }
       {%- else %}
       {%- if vars.shared_ref %}
-      return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.unqualified_resolved_type_name}}>*>(cppbind_obj_id_ptr)->get());
+      return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr)->get());
       {%- else %}
-      return reinterpret_cast<jlong>(static_cast<{{cxx.unqualified_resolved_type_name}}*>(cppbind_obj_id_ptr));
+      return reinterpret_cast<jlong>(static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr));
       {%- endif %}
       {%- endif %}
   }

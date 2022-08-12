@@ -1,6 +1,6 @@
 import pytest
 
-from cppbind.common.cxx_type import CXXType
+from cppbind.cxx_exposed import CXXExposedType
 
 
 @pytest.mark.parametrize(
@@ -41,6 +41,6 @@ from cppbind.common.cxx_type import CXXType
     ]
 )
 def test_get_template_arguments(spelling, arguments):
-    cxx_type = CXXType(spelling)
-    result = [t[0].type_ for t in cxx_type.template_arguments]
+    cxx_type = CXXExposedType(spelling)
+    result = [t[0]._cxx_type for t in cxx_type.template_arguments]
     assert result == arguments

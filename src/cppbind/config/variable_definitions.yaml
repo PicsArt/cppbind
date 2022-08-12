@@ -214,7 +214,7 @@ cxx_helpers_out_dir:
 
 exception_helpers_package:
   inheritable: true
-  default: exception_helpers
+  default: exceptions
   allowed_on: [ root ]
 
 exception_file_name:

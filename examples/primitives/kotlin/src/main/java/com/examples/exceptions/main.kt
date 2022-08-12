@@ -1,7 +1,7 @@
 package com.examples.exceptions
 
 import com.examples.exceptions.*
-import com.examples.cppbind.exception_helpers.*
+import com.examples.cppbind.exceptions.*
 import com.examples.cppbind.*
 
 

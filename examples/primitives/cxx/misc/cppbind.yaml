@@ -73,3 +73,7 @@ type_vars:
       linux.argument_name:
         __nptr: num
 
+dir_vars:
+  - dir: "."
+    vars:
+      python.enable_source_link_in_comment: true

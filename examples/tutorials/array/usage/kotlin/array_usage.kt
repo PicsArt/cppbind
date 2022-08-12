@@ -1,7 +1,7 @@
 package array_usage
 
 import example_lib.array.*
-import example_lib.cppbind.exception_helpers.*
+import example_lib.cppbind.exceptions.*
 
 
 class ArrayUsageApp {

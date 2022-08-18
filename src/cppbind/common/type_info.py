@@ -1,7 +1,7 @@
 # Copyright (c) 2022 PicsArt, Inc.
 # All rights reserved. Use of this source code is governed by a
 # MIT-style license that can be found in the LICENSE file.
-
+import types
 from functools import lru_cache
 
 from cached_property import cached_property
@@ -61,7 +61,11 @@ class TypeInfo:
 
     @property
     def vars(self):
-        return self._type_ctx.vars if self._type_ctx else None
+        return self._type_ctx.vars if self._type_ctx else types.SimpleNamespace(**self._runner.ir.args)
+
+    @property
+    def has_api(self):
+        return self._type_ctx is not None
 
     @property
     def template_args_postfixes(self):

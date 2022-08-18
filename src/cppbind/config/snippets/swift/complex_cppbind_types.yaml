@@ -488,7 +488,7 @@ std::shared_ptr:
     sc: "{{args[0].target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- if args[0].vars and not args[0].vars.shared_ref -%}
+      {%- if args[0].has_api and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
@@ -512,7 +512,7 @@ std::shared_ptr:
       {{gen_cast_block()}}
       {%- endif %}
     cxx_to_c: |
-      {%- if args[0].vars and not args[0].vars.shared_ref -%}
+      {%- if args[0].has_api and not args[0].vars.shared_ref -%}
       {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}

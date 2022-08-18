@@ -125,7 +125,7 @@ var_class_cxx_glob_decl: &var_class_cxx_glob_decl
     unique_content: |
       {#- this should go to shared macro -#}
       {%- macro collect_include_type_infos(type_info, include_type_infos) -%}
-      {%- if type_info.vars -%}
+      {%- if type_info.has_api -%}
       {%- do include_type_infos.append(type_info) -%}
       {%- endif -%}
       {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -135,7 +135,7 @@ var_class_cxx_glob_decl: &var_class_cxx_glob_decl
       {%- endfor -%}
       {%- endmacro -%}
       {%- macro collect_desc_include_type_infos(type_info, desc_include_type_infos) -%}
-      {%- if type_info.vars -%}
+      {%- if type_info.has_api -%}
       {%- for descendant in (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) -%}
           {%- do collect_include_type_infos(get_type_info(descendant), desc_include_type_infos) -%}
       {%- endfor -%}
@@ -571,7 +571,7 @@ var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
     {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current function/method. -#}
-    {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
+    {%- if type_info.has_api and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -593,7 +593,7 @@ var_method_cxx_glob_decl: &var_method_cxx_glob_decl
   unique_content: |
     {#- this should go to shared macro -#}
     {%- macro collect_type_info_names(type_info, result_type_info_names) -%}
-    {%- if type_info.vars -%}
+    {%- if type_info.has_api -%}
     {%- do result_type_info_names.append(type_info.cxx.unqualified_canonical_type_name) -%}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}
@@ -1421,7 +1421,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content: |
     {%- macro collect_fwd_decl_type_infos(type_info, fwd_decl_type_infos) -%}
     {#- Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current getter/setter. -#}
-    {%- if type_info.vars and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
+    {%- if type_info.has_api and type_info.vars.descendants is defined and (type_info.vars.descendants if type_info.vars.descendants is not none else type_info.descendants) and vars.c_file_fullname != type_info.vars.c_file_fullname -%}
     {%- do fwd_decl_type_infos.append(type_info) -%}
     {%- endif -%}
     {%- for arg_type_info in type_info.arg_types_infos -%}

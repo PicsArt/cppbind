@@ -69,9 +69,8 @@ includes:
     {%- endmacro -%}
     {%- macro collect_desc_includes_by_lang(converter, desc_includes, language) -%}
     {%-   if converter %}
-    {%-     set vars = converter|attr(language)|attr('vars') -%}
-    {%-     set vars_descendants = vars|attr('descendants') -%}
-    {%-     if vars -%}
+    {%-     if converter|attr(language)|attr('has_api') -%}
+    {%-       set vars_descendants = converter|attr(language)|attr('vars')|attr('descendants') -%}
     {%-       for descendant in (vars_descendants if vars_descendants is not none else converter|attr(language)|attr('descendants')) -%}
     {%-         do collect_includes_by_lang(make_type_converter(descendant), desc_includes, language) -%}
     {%-       endfor -%}
@@ -99,7 +98,7 @@ includes:
     {%- macro collect_desc_import_converters_by_lang(converter, desc_import_converters, language) -%}
     {%-   if converter -%} {# converter is None for non type template parameters #}
     {%-     set lang_converter = converter|attr(language) -%}
-    {%-     if lang_converter.vars and lang_converter.vars.descendants is defined -%}
+    {%-     if lang_converter.has_api and lang_converter.vars.descendants is defined -%}
     {%-       for descendant in (lang_converter.vars.descendants if lang_converter.vars.descendants is not none else lang_converter.descendants) -%}
     {%-         do collect_import_converters(make_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
     {%-       endfor -%}

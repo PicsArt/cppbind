@@ -175,6 +175,10 @@ class TypeConverter:
         return self._type_info.vars
 
     @property
+    def has_api(self):
+        return self._type_info.has_api
+
+    @property
     def is_obj_type(self):
         return self._type_info.vars is not None
 
@@ -223,6 +227,7 @@ class TypeConverter:
             cxx = self.cxx
             # make api variables available in converter under vars
             vars = self.vars
+            has_api = self.has_api
             template_args_postfixes = self.template_args_postfixes
 
             descendants = self.descendants

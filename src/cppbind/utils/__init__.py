@@ -279,17 +279,28 @@ def init_jinja_env():
     def sort_python_code(source):
         return sort_code_string(source).strip()
 
-    def make_doxygen_comment(comment):
+    class DoxygenCommentStyle(enum.IntEnum):
+        JAVADOC = 1
+        CPP = 2
+
+    def make_doxygen_comment(comment, style=DoxygenCommentStyle.JAVADOC):
+        if not isinstance(style, DoxygenCommentStyle):
+            raise ValueError(f'Incorrect doxygen style. Supported styles are: {",".join([f"DoxygenCommentStyle.{c.name}" for c in DoxygenCommentStyle])}')
+
         if isinstance(comment, str):
             comment = [comment]
         lines = []
         for line in comment:
             lines += line.split('\n')
-        nl = '\n * '
+        nl = '\n/// ' if style != DoxygenCommentStyle.JAVADOC else '\n * '
         if not lines or all((not line or line.isspace() for line in lines)):
             return ''
-        start = '' if not lines[0] or lines[0].isspace() else nl
-        return f"""/**{start}{nl.join(lines)}\n */"""
+        if not lines[0] or lines[0].isspace():
+            start = ''
+        else:
+            start = '/// ' if style != DoxygenCommentStyle.JAVADOC else nl
+        _comment = f"""{start}{nl.join(lines)}"""
+        return f"""{_comment}""" if style != DoxygenCommentStyle.JAVADOC else f"""/**{_comment}\n */"""
 
     def make_py_docstring(comment):
         nl = '\n'
@@ -338,6 +349,7 @@ def init_jinja_env():
     env.tests['startswith'] = startswith
 
     env.globals['Error'] = Error
+    env.globals['DoxygenCommentStyle'] = DoxygenCommentStyle
     env.globals['path'] = os.path
     env.globals['pat_sep'] = os.sep
 

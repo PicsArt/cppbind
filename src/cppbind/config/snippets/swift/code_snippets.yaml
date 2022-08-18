@@ -86,13 +86,13 @@ enum:
       {{vars.header_code_fragment}}{{new_line}}
       {% endif -%}
       {%- if vars.comment -%}
-      {{vars.comment|make_doxygen_comment}}
+      {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
       {% endif -%}
       public enum {{vars.name}}: CInt{{', ' if vars.bases_list}}{{vars.bases_list|join(', ')}} {
         {%- for case in cxx.enum_cases -%}
         {%- if case.name not in vars.enum_excluded_cases -%}
         {%- if case.comment %}
-        {{case.comment|make_doxygen_comment|indent(2)}}
+        {{case.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)|indent(2)}}
         {%- endif %}
         case {{vars.enum_case_names.get(case.name, vars.enum_case_name_prefix + case.name)}} = {{case.value}}
         {%- endif %}
@@ -209,7 +209,7 @@ class:
           {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
           {%- endif %}
           {%- if vars.comment -%}
-          {{vars.comment|make_doxygen_comment}}
+          {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
           {% endif -%}
           {%- set hash_fns = (body|string).split(new_line)|select('contains', hash_decl)|list -%}
           {%- set is_hashable = hash_fns|length == 1 and hash_fns|select('contains', 'override')|list|length == 0 -%}
@@ -233,16 +233,12 @@ class:
           public class {{class_name}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
             {%- if not base_types_infos|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
 
-            /**
-             * An internal property to keep a reference to the original C++ object.
-             * It is intended to be used by the generated code.
-             */
+            /// An internal property to keep a reference to the original C++ object.
+            /// It is intended to be used by the generated code.
             public let cself: {{converter.sc.target_type_name}}
 
-            /**
-             * An internal property to keep track whether Swift is responsible for deallocating the underlying C++ object or not.
-             * It is intended to be used by the generated code.
-             */
+            /// An internal property to keep track whether Swift is responsible for deallocating the underlying C++ object or not.
+            /// It is intended to be used by the generated code.
             public let owner: Bool
             private var refs: [Any]
 
@@ -257,10 +253,8 @@ class:
               release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}(cself, owner)
             }
 
-            /**
-             * An internal method to bind the lifetimes of the current and another object.
-             * It is intended to be used by the generated code.
-             */
+            /// An internal method to bind the lifetimes of the current and another object.
+            /// It is intended to be used by the generated code.
             public func keepCppBindReference(_ object: Any) {
               self.refs.append(object)
             }{{new_line}}
@@ -285,18 +279,14 @@ class:
             {%- if body %}
             {{body|string|indent(2)}}
             {%- endif %}
-            /**
-             * An internal property to keep an information about the underlying C++ object type.
-             * It is intended to be used by the generated code.
-             */
+            /// An internal property to keep an information about the underlying C++ object type.
+            /// It is intended to be used by the generated code.
             {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
             {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
             {%- set polymorphic_base = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
 
-            /**
-             * An internal method to create a Swift object from a C++ object.
-             * It is intended to be used by the generated code.
-             */
+            /// An internal method to create a Swift object from a C++ object.
+            /// It is intended to be used by the generated code.
             {{'override ' if polymorphic_base and (polymorphic_base.vars.descendants if polymorphic_base.vars.descendants is not none else polymorphic_base.descendants)}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
               {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
             }
@@ -401,20 +391,16 @@ interface:
         {%- do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}
         {%- if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         public protocol {{converter.swift.get_target_type_name(definition=True)}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
 
           {%- if not base_types_converters %}
-          /**
-           * An internal property to keep a reference to the original C++ object.
-           * It is intended to be used by the generated code.
-           */
+          /// An internal property to keep a reference to the original C++ object.
+          /// It is intended to be used by the generated code.
           var cself: {{converter.sc.target_type_name}} { get }{{new_line}}
-          /**
-           * An internal method to bind the lifetimes of the current and another object.
-           * It is intended to be used by the generated code.
-           */
+          /// An internal method to bind the lifetimes of the current and another object.
+          /// It is intended to be used by the generated code.
           func keepCppBindReference(_ object: Any)
           {%- endif %}
           {%- if interface_head %}
@@ -442,7 +428,7 @@ interface:
           public let owner: Bool
           private var refs: [Any]
 
-          // internal main initializer
+          /// internal main initializer
           internal required init(_ _cself: {{converter.sc.target_type_name}}, _ _owner: Bool = false) {
             self.cself = _cself
             self.owner = _owner
@@ -459,18 +445,14 @@ interface:
           {%- if head %}
           {{head|string|indent(2)}}
           {%- endif %}
-          /**
-           * An internal property to keep an information about the underlying C++ object type.
-           * It is intended to be used by the generated code.
-           */
+          /// An internal property to keep an information about the underlying C++ object type.
+          /// It is intended to be used by the generated code.
           {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
           {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
-          /**
-           * An internal method to create a Swift object from a C++ object.
-           * It is intended to be used by the generated code.
-           */
+          /// An internal method to create a Swift object from a C++ object.
+          /// It is intended to be used by the generated code.
           class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
             {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
           }
@@ -662,7 +644,7 @@ constructor:
         {#- this should go to shared macro -#}
         {%- macro gen_func(args, target_overloading_index=none) -%}
         {%- if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         {%- set comma = joiner(', ') -%}
         public convenience init(
@@ -856,7 +838,7 @@ method:
         {%- set comma = joiner(', ') %}
         {# subscript operator #}
         {%- if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         {%- set comma = joiner(', ') -%}
         {%- macro get_property() %}
@@ -959,7 +941,7 @@ method:
         {%- macro gen_func(args, target_overloading_index=none) -%}
         {%- set comma = joiner(', ') -%}
         {%- if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         {%- if vars.is_operator -%}
         public static func {{vars.name}}(cself: {{owner_class.converter.swift.target_type_name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
@@ -1049,7 +1031,7 @@ method:
       {#- this should go to shared macro -#}
       {%- macro gen_func(args, target_overloading_index=none) -%}
       {%- if vars.comment -%}
-      {{vars.comment|make_doxygen_comment}}
+      {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
       {% endif %}
       {%- set comma = joiner(', ') -%}
       {%- if vars.is_operator and vars.name == '[]' -%}
@@ -1250,7 +1232,7 @@ function:
         {%- macro gen_func(args, target_overloading_index=none) -%}
         {%- set comma = joiner(', ') -%}
         {%- if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         public func {{vars.name}}({%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{arg.converter.swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
           {%- if arg.default -%}
@@ -1467,7 +1449,7 @@ property_getter:
       {%- endif -%}
       {%- set result_converter = rconverter.sc_to_swift -%}
       {%- if vars.comment -%}
-      {{vars.comment|make_doxygen_comment}}
+      {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
       {% endif -%}
       {%- macro get_property() -%}
       let result = _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class.converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}(cself)
@@ -1523,7 +1505,7 @@ property_getter:
     interface_properties: |
       {%- set result_converter = rconverter.sc_to_swift -%}
       {%- if vars.comment -%}
-      {{vars.comment|make_doxygen_comment}}
+      {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
       {% endif -%}
       var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} { get {% if vars.action == 'gen_property_setter' %}set{% endif %} }
   cc:
@@ -1586,7 +1568,7 @@ getter:
         }
         {%- endmacro -%}
         {% if vars.comment -%}
-        {{vars.comment|make_doxygen_comment}}
+        {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
         {% endif -%}
         {%- macro get_property() -%}
         var cppbindErr = CppBindCObject()
@@ -1656,7 +1638,7 @@ getter:
     interface_properties: |
       {%- set result_converter = rconverter.sc_to_swift -%}
       {%- if vars.comment -%}
-      {{vars.comment|make_doxygen_comment}}
+      {{vars.comment|make_doxygen_comment(style=DoxygenCommentStyle.CPP)}}
       {% endif -%}
       var {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} { get{% if setter is defined %} set{% endif %} }
   cc:

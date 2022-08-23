@@ -1,13 +1,13 @@
 validations: |
   {%- macro run_method_validations() -%}
-  {%- set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) -%}
-  {%- if is_special_function and owner_class.vars.action == 'gen_interface' -%}
-  {%- do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
-  {%- endif -%}
-  {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
-  {%- if incorrect_nullable_args -%}
-  {%- do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
-  {%- endif -%}
+  {%-   set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) -%}
+  {%-   if is_special_function and owner_class.vars.action == 'gen_interface' -%}
+  {%-     do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%-   endif -%}
+  {%-   set incorrect_nullable_args = vars.nullable_arg|reject('in', args|map(attribute='name'))|list -%}
+  {%-   if incorrect_nullable_args -%}
+  {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+  {%-   endif -%}
   {%- endmacro -%}
 
 _special_function_decls: &_special_function_decls |
@@ -22,26 +22,26 @@ special_functions:
     - *_special_function_decls
     - |
       {%- macro gen_hash_function() -%}
-      {%- if vars.comment %}
+      {%-   if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
+      {%-   endif %}
       {{hash_decl}} {
           return j{{vars.name|capitalize}}(cppbindObjId).hashCode()
       }
       {%- endmacro -%}
       {%- macro gen_equals_function() -%}
-      {%- if vars.comment %}
+      {%-   if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
+      {%-   endif %}
       {{equals_decl}} {
           other as {{owner_class.converter.kotlin.get_target_type_name(definition=True)}}
           return j{{vars.name|capitalize}}(cppbindObjId, other.cppbindObjId, other)
       }
       {%- endmacro -%}
       {%- macro gen_tostring_function() -%}
-      {%- if vars.comment %}
+      {%-   if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
-      {%- endif %}
+      {%-   endif %}
       {{tostring_decl}} {
           return j{{vars.name|capitalize}}(cppbindObjId)
       }
@@ -80,37 +80,37 @@ special_functions:
 
 jni_functions: |
   {%- macro gen_jni_cxxid_function() -%}
-  {%- set cxxid_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
+  {%-   set cxxid_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
   extern "C" JNIEXPORT jlong {{cxxid_name}}(JNIEnv*, jobject, jobjectid id) {
       auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
       auto cppbind_obj_id_ptr = cppbind_obj_id->ptr;
-      {#- here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
-      {%- if descendants %}
+  {#-   here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
+  {%-   if descendants %}
       if (strcmp(cppbind_obj_id->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
-      {%- if vars.shared_ref %}
+  {%-     if vars.shared_ref %}
           return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr)->get());
-      {%- else %}
+  {%-     else %}
           return reinterpret_cast<jlong>(static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr));
-      {%- endif %}
-      {%- for descendant in descendants %}
+  {%-     endif %}
+  {%-     for descendant in descendants %}
       else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-      {%- if vars.shared_ref %}
+  {%-       if vars.shared_ref %}
           return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_id_ptr)->get());
-      {%- else %}
+  {%-       else %}
           return reinterpret_cast<jlong>(static_cast<{{descendant}}*>(cppbind_obj_id_ptr));
-      {%- endif %}
-      {%- endfor %}
+  {%-       endif %}
+  {%-     endfor %}
       else {
           std::cerr << "Unexpected object type: " << cppbind_obj_id->type << std::endl;
           exit(1);
       }
-      {%- else %}
-      {%- if vars.shared_ref %}
+  {%-   else %}
+  {%-     if vars.shared_ref %}
       return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr)->get());
-      {%- else %}
+  {%-     else %}
       return reinterpret_cast<jlong>(static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr));
-      {%- endif %}
-      {%- endif %}
+  {%-     endif %}
+  {%-   endif %}
   }
   {%- endmacro -%}
 
@@ -176,6 +176,6 @@ constructor:
       {%- set constructor_jvm_name = 'jConstructor' if cxx.kind_name in ('constructor',  'constructor_template') else 'j' + vars.name|capitalize -%}
       {%- set parent_type_name = owner_class. converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
-      {%- set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
+      {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
       {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix_by_lang('kotlin') + target_overloading_index)}}
       {%- endmacro -%}

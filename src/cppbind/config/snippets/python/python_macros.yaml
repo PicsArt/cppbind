@@ -40,7 +40,7 @@ templates:
   - |
     {#- specializes common macros for python -#}
     {%- macro get_template_postfix() -%}
-    {%- set postfix = get_template_postfix_by_lang('python')|to_snake_case|lower -%}
+    {%-   set postfix = get_template_postfix_by_lang('python')|to_snake_case|lower -%}
     {{'_' + postfix if postfix}}
     {%- endmacro -%}
     {%- macro get_template_getter_name() -%}
@@ -67,11 +67,11 @@ includes:
 
 overloading_postfix: |
   {%- macro get_overloading_postfix(vars) -%}
-  {%- if cxx.is_overloaded -%}
-  {%- if vars.overloading_postfix is not none -%}
+  {%-   if cxx.is_overloaded -%}
+  {%-     if vars.overloading_postfix is not none -%}
   {{'_' if not vars.overloading_postfix.startswith('_')}}{{vars.overloading_postfix|to_snake_case}}
-  {%- elif overloading_index and overloading_index > 0 -%}
+  {%-     elif overloading_index and overloading_index > 0 -%}
   {{overloading_index}}
-  {%- endif -%}
-  {%- endif -%}
+  {%-     endif -%}
+  {%-   endif -%}
   {%- endmacro -%}

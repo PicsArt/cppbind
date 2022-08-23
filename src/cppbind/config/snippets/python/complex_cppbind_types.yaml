@@ -65,7 +65,7 @@ $Object:
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_args_postfixes or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
+      {%-   if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
@@ -73,15 +73,15 @@ $Object:
     python: |
       {#- this should go to shared macro gen_namespace -#}
       {%- if full_package is defined -%}
-      {%- if parent_type_info -%}
-      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {%-   if parent_type_info -%}
+      {%-     set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
       {{converter.python.get_target_type_name(full_package=full_package)}}.
-      {%- else -%}
-      {#- this is common for include and target type name do not change one without other -#}
-      {%- if vars.full_package != full_package -%}
+      {%-   else -%}
+      {#-     this is common for include and target type name do not change one without other -#}
+      {%-     if vars.full_package != full_package -%}
       {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
-      {%- endif -%}
-      {%- endif -%}
+      {%-     endif -%}
+      {%-   endif -%}
       {%- endif -%}
       {%- if interface_class|default(False) -%}
       {{vars.interface_impl_class_name}}{{custom.tpostfix}}
@@ -115,15 +115,15 @@ $Enum:
     python: |
       {#- this should go to shared macro gen_namespace -#}
       {%- if full_package is defined -%}
-      {%- if parent_type_info -%}
-      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {%-   if parent_type_info -%}
+      {%-     set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
       {{converter.python.get_target_type_name(full_package=full_package)}}.
-      {%- else -%}
-      {#- this is common for include and target type name do not change one without other -#}
-      {%- if vars.full_package != full_package -%}
+      {%-   else -%}
+      {#-     this is common for include and target type name do not change one without other -#}
+      {%-     if vars.full_package != full_package -%}
       {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
-      {%- endif -%}
-      {%- endif -%}
+      {%-     endif -%}
+      {%-   endif -%}
       {%- endif -%}
       {{custom.tname}}
     pybind: "{{custom.tname}}"

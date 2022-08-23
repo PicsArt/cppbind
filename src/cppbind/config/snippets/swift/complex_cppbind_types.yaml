@@ -35,12 +35,12 @@ $Object:
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters -#}
       {%- for name in template_args_postfixes or [] -%}
-      {%- if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
+      {%-   if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].swift.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     namespace: |
       {#- this is an internal section no need to define in user defined custom converters -#}
       {%- if parent_type_info -%}
-      {%- set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
+      {%-   set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
       {{converter.swift.target_type_name}}.
       {%- endif -%}
     tname: |
@@ -61,12 +61,12 @@ $Object:
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- if vars.shared_ref -%}
-      {%- set is_nullable = nullable|default(False) -%}
-      {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
+      {%-   set is_nullable = nullable|default(False) -%}
+      {%-   set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- elif descendants %}
-      {%- set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
+      {%-   set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
       {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
       {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
@@ -76,24 +76,24 @@ $Object:
       {%- endif %}
     cxx_to_c: |
       {%- if value_policy is not defined -%}
-      {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
+      {%-   do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
       {%- set pointee = cxx.unqualified_resolved_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set this_converter = make_type_converter(cxx.unqualified_canonical_type_name) -%}
       {%- if vars.shared_ref -%}
-      {%- if not cxx.is_value_type -%}
-      {%- do Error.critical('shared_ref variable is set for ' + pointee + '. In this case cppbind supports object return only by value or wrapped into shared_ptr') -%}
-      {%- else %}
+      {%-   if not cxx.is_value_type -%}
+      {%-     do Error.critical('shared_ref variable is set for ' + pointee + '. In this case cppbind supports object return only by value or wrapped into shared_ptr') -%}
+      {%-   else %}
       std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
-      {%- set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
+      {%-     set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, nullable=is_nullable)}}
-      {%- endif %}
+      {%-   endif %}
       {%- else %}
       char* type_{{name}} = {{'strdup({})'.format(this_converter.cxx_type_name_global.snippet()) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
-      {%- if cxx.is_polymorphic and descendants %}
-      {%- macro demangle() -%}
+      {%-   if cxx.is_polymorphic and descendants %}
+      {%-     macro demangle() -%}
       const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
       int status = 0;
       char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
@@ -102,32 +102,32 @@ $Object:
       } else {
           type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
       }
-      {%- endmacro %}
-      {%- if is_nullable %}
+      {%-     endmacro %}
+      {%-     if is_nullable %}
       if ({{name}}) {
           {{demangle()|indent(4)}}
       } else {
           type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
       }
-      {%- else %}
+      {%-     else %}
       {{demangle()}}
-      {%- endif %}
-      {%- endif %}
-      {%- macro apply_rv_policy() -%}
+      {%-     endif %}
+      {%-   endif %}
+      {%-   macro apply_rv_policy() -%}
       const_cast<{{pointee}}*>(
-      {%- if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
-      {%- if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
-      {%- elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
-      {%- elif value_policy in ('automatic_reference', 'reference', 'reference_internal', 'automatic', 'take_ownership') -%} {{name}}
-      {%- endif -%}
-      {%- elif cxx_is_lval_reference -%}
-      {%- if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
-      {%- elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
-      {%- elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
-      {%- endif -%}
-      {%- else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
-      {%- endif -%})
-      {%- endmacro %}
+      {%-     if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
+      {%-       if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
+      {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
+      {%-       elif value_policy in ('automatic_reference', 'reference', 'reference_internal', 'automatic', 'take_ownership') -%} {{name}}
+      {%-       endif -%}
+      {%-     elif cxx_is_lval_reference -%}
+      {%-       if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
+      {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+      {%-       elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
+      {%-       endif -%}
+      {%-     else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
+      {%-     endif -%})
+      {%-   endmacro %}
       auto value_ptr_{{name}} = {{apply_rv_policy()}};
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if cxx.is_polymorphic else 'value_ptr_' + name}}};
       {%- endif %}
@@ -139,7 +139,7 @@ $Object:
       {%- endif -%}
     sc_to_swift: |
       {%- if value_policy is not defined -%}
-      {%- do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
+      {%-   do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
       {%- set lvalue_owner_swift = cxx_is_lval_reference and value_policy in ('take_ownership', 'automatic', 'automatic_reference', 'copy', 'move') -%}
       {%- set pointer_owner_swift = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
@@ -148,21 +148,21 @@ $Object:
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       var {{target_name}}: {{target_type_name}}{{'? = nil' if nullable|default(False)}}
       {%- if cxx.is_polymorphic and descendants %}
-      {%- if nullable|default(False) %}
+      {%-   if nullable|default(False) %}
       if ({{name}}.ptr != nil) {
         {{target_name}} = {{type_name}}.cppbindConstructObject({{name}}{{owner}})
       }
-      {%- else %}
+      {%-   else %}
       {{target_name}} = {{type_name}}.cppbindConstructObject({{name}}{{owner}})
-      {%- endif %}
+      {%-   endif %}
       {%- else %}
-      {%- if nullable|default(False) %}
+      {%-   if nullable|default(False) %}
       if ({{name}}.ptr != nil) {
         {{target_name}} = {{type_name}}({{name}}{{owner}})
       }
-      {%- else %}
+      {%-   else %}
       {{target_name}} = {{type_name}}({{name}}{{owner}})
-      {%- endif %}
+      {%-   endif %}
       {%- endif %}
     cxx_obj_recover: |
       {%- set converter = make_type_converter(cxx.unqualified_canonical_type_name) -%}
@@ -188,8 +188,8 @@ $Object:
       let typeName = String(cString: {{name}}.type)
       switch(typeName) {
       {%- for descendant in descendants %}
-      {%- set converter = make_type_converter(descendant).swift %}
-      {%- set type_name = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
+      {%-   set converter = make_type_converter(descendant).swift %}
+      {%-   set type_name = converter.get_target_type_name(interface_class=converter.vars.action == 'gen_interface') %}
       case({{type_name}}.cppbindCxxTypeName):
         return {{type_name}}({{name}}, owner)
       {%- endfor %}
@@ -351,14 +351,14 @@ std::vector:
       target: sc
       snippet: |
         {%- if args[0] %}
-        {%- set cleanup_code_fragment = args[0].snippet('{}Item'.format(name)) %}
-        {%- if cleanup_code_fragment %}
+        {%-   set cleanup_code_fragment = args[0].snippet('{}Item'.format(name)) %}
+        {%-   if cleanup_code_fragment %}
         let {{name}}Data = {{name}}.data.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)
         for i in 0..<Int({{name}}.size) {
           let {{name}}Item = {{name}}Data[i]
           {{cleanup_code_fragment|indent(2)}}
         }
-        {%- endif %}
+        {%-   endif %}
         {%- endif %}
         {{name}}.data.deallocate()
     swift_ref_internal: |
@@ -448,14 +448,14 @@ std::map:
       target: sc
       snippet: |
         {%- if args[1] %}
-        {%- set cleanup_code_fragment = args[1].snippet('{}Item'.format(name)) %}
-        {%- if cleanup_code_fragment %}
+        {%-   set cleanup_code_fragment = args[1].snippet('{}Item'.format(name)) %}
+        {%-   if cleanup_code_fragment %}
         let {{name}}Data = {{name}}.values.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)
         for i in 0..<Int({{name}}.size) {
           let {{name}}Item = {{name}}Data[i]
           {{cleanup_code_fragment|indent(2)}}
         }
-        {%- endif %}
+        {%-   endif %}
         {%- endif %}
         {{name}}.keys.deallocate()
         {{name}}.values.deallocate()
@@ -464,12 +464,12 @@ std::map:
       {%- set arg1 = args_converters[1].swift_ref_internal %}
       {%- if arg0 or arg1 -%}
       for ({{'key' + name if arg0 else '_'}}, {{'value' + name if arg1 else '_'}}) in {{name}} {
-        {%- if arg0 %}
-        {{arg0.snippet('key' + name, reference=reference, nullable=nullable)|indent(2)}}
-        {%- endif %}
-        {%- if arg1 %}
+      {%-   if arg0 %}
+      {{arg0.snippet('key' + name, reference=reference, nullable=nullable)|indent(2)}}
+      {%-   endif %}
+      {%-   if arg1 %}
         {{arg1.snippet('value' + name, reference=reference, nullable=nullable)|indent(2)}}
-        {%- endif %}
+      {%-   endif %}
       }
       {%- endif -%}
     swift_keep_alive: |
@@ -489,7 +489,7 @@ std::shared_ptr:
   converters:
     c_to_cxx: |
       {%- if args[0].has_api and not args[0].vars.shared_ref -%}
-      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
+      {%-   do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].target_type_name %}
@@ -497,11 +497,11 @@ std::shared_ptr:
       {%- set cxx_namespace = args[0].cxx.namespace.split('::')|map('capitalize')|join %}
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
-      {%- if args0_descendants -%}
+      {%-   if args0_descendants -%}
       {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
-      {%- else -%}
+      {%-   else -%}
       {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
-      {%- endif -%}
+      {%-   endif -%}
       {%- endmacro %}
       std::shared_ptr<{{pointee}}> {{target_name}}{{' = nullptr' if is_nullable}};
       {%- if is_nullable %}
@@ -513,7 +513,7 @@ std::shared_ptr:
       {%- endif %}
     cxx_to_c: |
       {%- if args[0].has_api and not args[0].vars.shared_ref -%}
-      {%- do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
+      {%-   do Error.critical(args[0].cxx.unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee_unqualified = args[0].cxx.unqualified_resolved_type_name %}
       {%- set pointee = args[0].cxx.type_name %}
@@ -539,26 +539,26 @@ std::shared_ptr:
       void* {{target_name}}_ptr = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
-          {%- if args[0].cxx.is_polymorphic and args0_descendants %}
+      {%-   if args[0].cxx.is_polymorphic and args0_descendants %}
           {{demangle()|indent(4)}}
-          {%- endif %}
-          {%- if args[0].cxx.is_polymorphic %}
+      {%-   endif %}
+      {%-   if args[0].cxx.is_polymorphic %}
           {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
-          {%- else %}
+      {%-   else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
-          {%- endif %}
+      {%-   endif %}
       } else {
           type_{{name}} = strdup("{{args[0].cxx.unqualified_canonical_type_name}}");
       }
       {%- else %}
-      {%- if args[0].cxx.is_polymorphic and args0_descendants %}
+      {%-   if args[0].cxx.is_polymorphic and args0_descendants %}
       {{demangle()}}
-      {%- endif %}
-      {%- if args[0].cxx.is_polymorphic %}
+      {%-   endif %}
+      {%-   if args[0].cxx.is_polymorphic %}
       {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
-      {%- else %}
+      {%-   else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
-      {%- endif %}
+      {%-   endif %}
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
@@ -645,18 +645,18 @@ std::pair:
       target: sc
       snippet: |
         {%- if args[0] %}
-        {%- set args0_cleanup_code_fragment = args[0].snippet('{}FirstItem'.format(name)) %}
-        {%- if args0_cleanup_code_fragment %}
+        {%-   set args0_cleanup_code_fragment = args[0].snippet('{}FirstItem'.format(name)) %}
+        {%-   if args0_cleanup_code_fragment %}
         let {{name}}FirstItem = {{name}}.first.assumingMemoryBound(to: {{args_converters[0].sc.target_type_name}}.self)[0]
         {{args0_cleanup_code_fragment}}
-        {%- endif %}
+        {%-   endif %}
         {%- endif %}
         {%- if args[1] %}
-        {%- set args1_cleanup_code_fragment = args[1].snippet('{}SecondItem'.format(name)) %}
-        {%- if args1_cleanup_code_fragment %}
+        {%-   set args1_cleanup_code_fragment = args[1].snippet('{}SecondItem'.format(name)) %}
+        {%-   if args1_cleanup_code_fragment %}
         let {{name}}SecondItem = {{name}}.second.assumingMemoryBound(to: {{args_converters[1].sc.target_type_name}}.self)[0]
         {{args1_cleanup_code_fragment}}
-        {%- endif %}
+        {%-   endif %}
         {%- endif %}
         {{name}}.first.deallocate()
         {{name}}.second.deallocate()

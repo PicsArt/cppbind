@@ -4,13 +4,13 @@
 
 overloading_postfix: |
   {%- macro get_overloading_postfix(vars) -%}
-  {%- if cxx.is_overloaded -%}
-  {%- if vars.overloading_postfix is not none -%}
+  {%-   if cxx.is_overloaded -%}
+  {%-     if vars.overloading_postfix is not none -%}
   {{vars.overloading_postfix}}
-  {%- elif overloading_index and overloading_index > 0 -%}
+  {%-     elif overloading_index and overloading_index > 0 -%}
   {{overloading_index|string}}
-  {%- endif -%}
-  {%- endif -%}
+  {%-     endif -%}
+  {%-   endif -%}
   {%- endmacro -%}
 
 templates: |

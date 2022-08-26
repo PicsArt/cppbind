@@ -19,6 +19,7 @@ from cppbind.ir.ast import (
     FILE_KIND_NAME
 )
 from cppbind.parser.cppbind_api_parser import APIParser
+from cppbind.utils import init_jinja_env
 
 ALL_PLATFORMS = sorted(list(default_config.platforms))
 
@@ -33,7 +34,9 @@ class ContextManager:
         self.ctx_desc = ctx_desc
         self.platform = platform
         self.language = language
-        self.cppbind_api_parser = APIParser(ctx_desc, platform, language)
+        jinja_env = init_jinja_env(language)
+        self.cppbind_api_parser = APIParser(ctx_desc, jinja_env, platform, language)
+        self.var_evaluator = VariableEvaluator(jinja_env)
 
     def eval_root_attrs(self, ctx, var_values, location=None):
         """Eval context variables for root node"""
@@ -116,11 +119,11 @@ class ContextManager:
                             properties, self.platform, self.language, undefined)
 
                         if new_att_val is not undefined:
-                            new_att_val = VariableEvaluator.eval_var_value(properties,
-                                                                           new_att_val,
-                                                                           ctx,
-                                                                           att_name,
-                                                                           location)
+                            new_att_val = self.var_evaluator.eval_var_value(properties,
+                                                                            new_att_val,
+                                                                            ctx,
+                                                                            att_name,
+                                                                            location)
             else:
                 # attribute is set check weather or not it is allowed.
                 if not allowed:
@@ -129,11 +132,11 @@ class ContextManager:
                                 location.line_number if location else None)
                     break
 
-                new_att_val = VariableEvaluator.eval_var_value(properties,
-                                                               new_att_val,
-                                                               ctx,
-                                                               att_name,
-                                                               location)
+                new_att_val = self.var_evaluator.eval_var_value(properties,
+                                                                new_att_val,
+                                                                ctx,
+                                                                att_name,
+                                                                location)
 
             # validate variable values
             if new_att_val not in (None, undefined):

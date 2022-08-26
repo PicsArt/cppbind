@@ -15,6 +15,7 @@ from cppbind.context_manager.ctx_mgr import ContextManager
 from cppbind.ir.ast import Node, RootNode
 from cppbind.parser.cppbind_api_parser import APIParser
 from cppbind.parser.cppbind_parser import CXXParser
+from cppbind.utils import init_jinja_env
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
@@ -91,7 +92,8 @@ def test_parser_processor_cr_counter(clang_config):
     ]
 )
 def test_api_parser(test_data, res_md5):
-    parser = APIParser(ContextDescriptor(None), 'linux', 'swift')
+    jinja_env = init_jinja_env('swift')
+    parser = APIParser(ContextDescriptor(None), jinja_env, 'linux', 'swift')
 
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section)
@@ -125,7 +127,8 @@ def test_api_parser(test_data, res_md5):
     ]
 )
 def test_api_parser_negative(test_data):
-    parser = APIParser(ContextDescriptor(None), 'linux', 'swift')
+    jinja_env = init_jinja_env('swift')
+    parser = APIParser(ContextDescriptor(None), jinja_env, 'linux', 'swift')
     _, api_section = APIParser.separate_pure_and_api_comment(test_data)
     try:
         parser.parse_comments(api_section)
@@ -157,7 +160,8 @@ def test_file_api_positive():
     file_api_folder = 'file_api_example'
 
     context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/*.yaml'))
-    api_parser = APIParser(ContextDescriptor(context_def_glob), 'linux', 'swift')
+    jinja_env = init_jinja_env('swift')
+    api_parser = APIParser(ContextDescriptor(context_def_glob), jinja_env, 'linux', 'swift')
 
     example_file_key = os.path.abspath(
         os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{file_api_folder}/example.h'))
@@ -172,7 +176,8 @@ def test_dir_api_positive():
     dir_api_folder = 'dir_api_example'
 
     context_def_glob = os.path.abspath(os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}/*.yaml'))
-    api_parser = APIParser(ContextDescriptor(context_def_glob), 'linux', 'python')
+    jinja_env = init_jinja_env('swift')
+    api_parser = APIParser(ContextDescriptor(context_def_glob), jinja_env, 'linux', 'python')
 
     example_dir_key = os.path.relpath(os.path.abspath(
         os.path.join(SCRIPT_DIR, f'../{CXX_INPUTS_FOLDER}/{dir_api_folder}')), os.getcwd())
@@ -464,7 +469,8 @@ def test_attr_options_positive(var_def, api_section):
     ]
 )
 def test_doxygen_comments(test_data, result):
-    parser = APIParser(ContextDescriptor(None), 'linux', 'swift')
+    jinja_env = init_jinja_env('swift')
+    parser = APIParser(ContextDescriptor(None), jinja_env, 'linux', 'swift')
 
     pure_comment, api_section = APIParser.separate_pure_and_api_comment(test_data)
     api, args = parser.parse_comments(api_section)

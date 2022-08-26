@@ -20,8 +20,11 @@ from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
 from cppbind import BANNER_LOGO
+from cppbind import default_config
 from cppbind.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from cppbind.common.error import Error
+
+DEFAULT_HELPER = 'helper'
 
 
 class DefaultValueKind(enum.IntEnum):
@@ -222,7 +225,8 @@ def get_public_attributes(attrs):
     return {k: v for k, v in attrs.items() if not k.startswith('_')}
 
 
-def init_jinja_env():
+@lru_cache
+def init_jinja_env(language):
     """
     Function with initializes jinja environment with custom filters/tests
     """
@@ -285,7 +289,8 @@ def init_jinja_env():
 
     def make_doxygen_comment(comment, style=DoxygenCommentStyle.JAVADOC):
         if not isinstance(style, DoxygenCommentStyle):
-            raise ValueError(f'Incorrect doxygen style. Supported styles are: {",".join([f"DoxygenCommentStyle.{c.name}" for c in DoxygenCommentStyle])}')
+            raise ValueError(
+                f'Incorrect doxygen style. Supported styles are: {",".join([f"DoxygenCommentStyle.{c.name}" for c in DoxygenCommentStyle])}')
 
         if isinstance(comment, str):
             comment = [comment]
@@ -352,14 +357,15 @@ def init_jinja_env():
     env.globals['DoxygenCommentStyle'] = DoxygenCommentStyle
     env.globals['path'] = os.path
     env.globals['pat_sep'] = os.sep
+    env.globals['marker'] = JINJA_UNIQUE_MARKER
+
+    # add default and custom helpers to jinja env
+    for name, module in get_helper_modules(language).items():
+        env.globals[name] = module
 
     return env
 
 
-JINJA2_ENV = init_jinja_env()
-
-
-@lru_cache
 def get_language_helper_module(language):
     try:
         language_helper_module = importlib.import_module(f'cppbind.converter.{language}')
@@ -369,3 +375,17 @@ def get_language_helper_module(language):
         logging.info(f"Helper module is not found for '{language}' language, loading default instead")
 
     return language_helper_module
+
+
+def get_helper_modules(language):
+    modules = {DEFAULT_HELPER: get_language_helper_module(language)}
+    if hasattr(default_config.application, 'custom_helpers_dir'):
+        helpers_paths = glob.glob(os.path.join(default_config.application.custom_helper_dir, language, '*.py'))
+        for module_path in helpers_paths:
+            module_name = os.path.splitext(os.path.basename(module_path))[0]
+            spec = importlib.util.spec_from_file_location(module_name, os.path.abspath(module_path))
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            modules[module_name] = module
+
+    return modules

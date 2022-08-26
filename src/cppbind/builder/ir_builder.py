@@ -23,7 +23,7 @@ from cppbind.ir.ast import (
     RootNode
 )
 from cppbind.parser.cppbind_api_parser import APIParser
-from cppbind.utils import get_android_ndk_sysroot, get_language_helper_module
+from cppbind.utils import get_android_ndk_sysroot
 import cppbind.utils.clang as cutil
 
 try:
@@ -258,7 +258,6 @@ class CppBindIRBuilder:
                 '_source_modification_time': CppBindIRBuilder._get_modification_time(node.file_name),
                 '_is_operator': node.displayname.startswith('operator'),
                 '_object_name': node.spelling,
-                '_helper_module': get_language_helper_module(self.ctx_mgr.language),
                 '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 

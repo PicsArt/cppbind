@@ -22,21 +22,17 @@ from cppbind.cxx_exposed import (
     CXXClassExposedElement
 )
 from cppbind.ir import ElementKind
-from cppbind.utils import get_language_helper_module, get_public_attributes
-
+from cppbind.utils import get_public_attributes
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
 # variables below should be set after loading this module by calling set_language function
 LANGUAGE = None
-LANGUAGE_HELPER_MODULE = None
 
 
 def set_language(language):
     global LANGUAGE
     LANGUAGE = language
-    global LANGUAGE_HELPER_MODULE
-    LANGUAGE_HELPER_MODULE = get_language_helper_module(language)
 
 
 def load_snippets_engine(runner, ctx_desc, platform, language):
@@ -57,8 +53,6 @@ def gen_init(ctx, ctx_desc, platform, language, *args, **kwargs):
 def make_def_context(ctx):
     def make():
         # helper variables
-        helper = LANGUAGE_HELPER_MODULE
-        marker = JINJA_UNIQUE_MARKER
         banner_logo = cppbind.BANNER_LOGO
         new_line = cppbind.converter.NEW_LINE
 

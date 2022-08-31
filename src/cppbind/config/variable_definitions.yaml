@@ -20,7 +20,7 @@ package:
 
 name:
   inheritable: false
-  default: '{{_helper_module.get_operator_name(_object_name) if _is_operator and "get_operator_name" in _helper_module.__dict__ else _object_name}}'
+  default: '{{helper.get_operator_name(_object_name) if _is_operator and "get_operator_name" in helper.__dict__ else _object_name}}'
   allowed_on: [ cxx, file_system ]
 
 argument_label:

@@ -52,7 +52,7 @@ def imports_comparator(first: str, second: str):
     Comparator for swift imports sorting.
      Swift imports should be in the following order:
         1. Regular imports like 'import ABC'
-        2. Declaration imports like 'import func ABC.sort.
+        2. Declaration imports like 'import func ABC.sort.'
         3. Test modules imports like '@testable import ModuleUnderTest'
     """
     first_is_test = first.startswith(TEST_IMPORT_PREFIX)

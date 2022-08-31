@@ -34,11 +34,12 @@ class APIParser:
     API_START_KW = default_config.api_start_kw
     ALL_PLATFORMS = sorted(default_config.platforms)
 
-    def __init__(self, ctx_desc, platform, language):
+    def __init__(self, ctx_desc, jinja_env, platform, language):
         self.ctx_desc = ctx_desc
         self.var_def = self.ctx_desc.get_var_def()
         self.platform = platform
         self.language = language
+        self.var_evaluator = VariableEvaluator(jinja_env)
 
     @staticmethod
     def separate_pure_and_api_comment(raw_comment, index=None):
@@ -111,7 +112,7 @@ class APIParser:
             # for dir api pass yaml file path
             location = location or SimpleNamespace(file_name=attrs.file, line_number=None)
             try:
-                api_attrs = VariableEvaluator.eval_attr_template(attrs, ctx)
+                api_attrs = self.var_evaluator.eval_attr_template(attrs, ctx)
                 return self.parse_api_attrs(api_attrs, location)
             except JinjaUndefinedError as err:
                 Error.critical(f"Jinja evaluation error: {err}", location.file_name, location.line_number)

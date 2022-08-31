@@ -4,7 +4,8 @@
 
 - type: "std::exception"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdException
     package_prefix: "{{helpers_package_prefix}}"
@@ -18,13 +19,15 @@
 
 - type: "std::exception::what()"
   vars:
-    action: gen_method
+    kotlin.action: gen_method
+    swift.action: gen_method
     python.action:
     throws: no_throw
 
 - type: "std::runtime_error"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdRuntimeError
     package_prefix: "{{helpers_package_prefix}}"
@@ -33,7 +36,8 @@
 
 - type: "std::logic_error"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdLogicError
     package_prefix: "{{helpers_package_prefix}}"
@@ -42,7 +46,8 @@
 
 - type: "std::bad_alloc"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdBadAlloc
     package_prefix: "{{helpers_package_prefix}}"
@@ -51,7 +56,8 @@
 
 - type: "std::bad_cast"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdBadCast
     package_prefix: "{{helpers_package_prefix}}"
@@ -60,7 +66,8 @@
 
 - type: "std::bad_typeid"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdBadTypeId
     package_prefix: "{{helpers_package_prefix}}"
@@ -69,7 +76,8 @@
 
 - type: "std::overflow_error"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdOverflowError
     package_prefix: "{{helpers_package_prefix}}"
@@ -78,7 +86,8 @@
 
 - type: "std::range_error"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdRangeError
     package_prefix: "{{helpers_package_prefix}}"
@@ -87,7 +96,8 @@
 
 - type: "std::underflow_error"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdUnderflowError
     package_prefix: "{{helpers_package_prefix}}"
@@ -96,7 +106,8 @@
 
 - type: "std::invalid_argument"
   vars:
-    action: gen_class
+    kotlin.action: gen_class
+    swift.action: gen_class
     python.action:
     name: StdInvalidArgument
     package_prefix: "{{helpers_package_prefix}}"
@@ -105,7 +116,8 @@
 
 - type: "std::length_error"
   vars:
-    action: gen_class
+    swift.action: gen_class
+    kotlin.action: gen_class
     python.action:
     name: StdLengthError
     package_prefix: "{{helpers_package_prefix}}"
@@ -114,7 +126,8 @@
 
 - type: "std::out_of_range"
   vars:
-    action: gen_class
+    swift.action: gen_class
+    kotlin.action: gen_class
     python.action:
     name: StdOutOfRange
     package_prefix: "{{helpers_package_prefix}}"
@@ -123,7 +136,8 @@
 
 - type: "std::domain_error"
   vars:
-    action: gen_class
+    swift.action: gen_class
+    kotlin.action: gen_class
     python.action:
     name: StdDomainError
     package_prefix: "{{helpers_package_prefix}}"

@@ -43,17 +43,18 @@ method:
       - |
         {%- set comma = joiner(', ') -%}
         {{method_comment(vars.name)}}
-        public function ({%- for arg in args -%}{{comma()}}{{arg.name}}: {{arg.converter.my_lang.target_type_name}}{%- endfor -%}) {
+        public function ({%- for arg in cxx.args -%}{{comma()}}{{arg.name}}: {{make_type_converter(arg.type).my_lang.target_type_name}}{%- endfor -%}) {
 
           {%- set args_list = [] -%}
-          {%- for arg in args %}
-            {# calling shareable macro which modifies macro arguments in order to use it later -#}
-            {{register_method_arg(args_list, arg)}}
-            {%- if arg.converter.my_section %}
-              {{arg.converter.my_section.snippet(arg.name)}}
-            {%- endif %}
+          {%- for arg in cxx.args %}
+          {%-   set arg_converter = make_type_converter(arg.type) %}
+          {#    calling shareable macro which modifies macro arguments in order to use it later -#}
+                {{register_method_arg(args_list, arg)}}
+          {%-   if arg_converter.my_section %}
+              {{arg_converter.my_section.snippet(arg.name)}}
+          {%- endif %}
 
-            {{arg.converter.my_lang_to_c.snippet(arg.name)}}
+            {{arg_converter.my_lang_to_c.snippet(arg.name)}}
           {%- endfor %}
           // arg names -> {{args_list}}
 

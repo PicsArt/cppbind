@@ -136,7 +136,7 @@ class Context(BaseContext):
         if self.node.cxx_element.is_templated:
             cxx_type_name = self.node.full_displayname
             return cutil.replace_template_choice(cxx_type_name, template_choice)
-        return self.node.cxx_element.get_type().spelling
+        return self.node.cxx_element.type.spelling
 
 
 class RunRule:

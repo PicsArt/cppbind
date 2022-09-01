@@ -5,7 +5,6 @@
 
 """Module to define cxx related element class and its dependencies"""
 
-
 import types
 
 from cached_property import cached_property
@@ -22,7 +21,8 @@ class CXXElement:
     def __init__(self, clang_cursor):
         self._clang_cursor = clang_cursor
 
-    def get_type(self):
+    @property
+    def type(self):
         """Get the type of the current cursor"""
         return CXXType(self._clang_cursor.type)
 
@@ -112,6 +112,16 @@ class CXXElement:
         """Checks whether the cursor is templated"""
         return cutil.is_templated(self._clang_cursor)
 
+    @property
+    def parent(self):
+        """
+        Returns:
+            Lexical parent of current element.
+        """
+
+        lexical_parent = self._clang_cursor.lexical_parent
+        return CXXElement.create_cxx_element(lexical_parent) if lexical_parent else None
+
     @staticmethod
     def create_cxx_element(clang_cursor):
         """Static factory method to create a cxx element based on the cursor kind"""
@@ -134,6 +144,8 @@ class CXXElement:
             return CXXClassElement(clang_cursor)
         if kind == cli.CursorKind.PARM_DECL:
             return CXXArgumentElement(clang_cursor)
+        if kind == cli.CursorKind.FIELD_DECL:
+            return CXXMemberElement(clang_cursor)
 
         return CXXElement(clang_cursor)
 
@@ -211,20 +223,35 @@ class CXXClassElement(CXXElement):
         return self._clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE
 
     @property
-    def base_specifier_elements(self):
-        """The list of base type specifier elements"""
+    def base_type_elements(self):
+        """
+        Returns:
+            List of base type elements.
+        """
 
-        base_type_elements = []
+        _base_type_elements = []
         for base_specifier in self._clang_cursor.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                base_type_elements.append(CXXClassElement(base_specifier))
+                _base_type_elements.append(CXXClassElement(base_specifier))
 
-        return base_type_elements
+        return _base_type_elements
 
     @property
-    def base_types(self):
-        """List of base types"""
-        return [base_element.get_type() for base_element in self.base_specifier_elements]
+    def ancestors(self):
+        """
+        Returns:
+            List of ancestor elements.
+        Raises:
+            AttributeError: If current element is not a class/struct.
+        """
+
+        def walk(base_type_elements):
+            for base in base_type_elements:
+                for _base in walk(base.base_type_elements):
+                    yield _base
+                yield base
+
+        return list(walk(self.base_type_elements))
 
 
 class CXXFunctionElement(CXXElement):
@@ -252,6 +279,24 @@ class CXXFunctionElement(CXXElement):
     def is_overloaded(self):
         """Checks the function cursor is overloaded"""
         return cutil.is_overloaded(self._clang_cursor)
+
+    @cached_property
+    def overridden_elements(self):
+        """
+        Returns:
+            List of overridden elements.
+        """
+
+        def _get_overridden_elems(cxx_element):
+
+            elements = []
+            if cxx_element.kind == cli.CursorKind.CXX_METHOD and cxx_element.get_overriden_cursors():
+                for overridden in cxx_element.get_overriden_cursors():
+                    elements.append(CXXFunctionElement(overridden))
+                    elements += _get_overridden_elems(overridden)
+            return elements
+
+        return _get_overridden_elems(self)
 
     @property
     def result_type(self):
@@ -368,3 +413,10 @@ class CXXArgumentElement(CXXElement):
     def default_is_nullptr(self):
         """Checks whether a default value is nullptr"""
         return self.__default_info.kind == DefaultValueKind.NULL_PTR
+
+
+class CXXMemberElement(CXXElement):
+    """Wrapper type on clang member/field cursor"""
+
+    def __init__(self, clang_cursor, arg_idx=None):
+        super(CXXMemberElement, self).__init__(clang_cursor)

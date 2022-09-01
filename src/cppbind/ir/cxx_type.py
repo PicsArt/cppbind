@@ -109,7 +109,7 @@ class CXXType:
         return self.__clang_type.get_canonical().kind == cli.TypeKind.UCHAR
 
     def __getattr__(self, prop):
-        """Delegate all missing methods/properties to the underlying clang Type obbject"""
+        """Delegate all missing methods/properties to the underlying clang Type object"""
 
         if not hasattr(self.__clang_type, prop):
             raise AttributeError(f"{self.__class__.__name__}.{prop} is invalid")

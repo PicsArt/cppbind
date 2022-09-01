@@ -344,20 +344,6 @@ class CXXNode(ClangNode):
 
         return None
 
-    @property
-    @available_on(cli.CursorKind.STRUCT_DECL,
-                  cli.CursorKind.CLASS_DECL,
-                  cli.CursorKind.CLASS_TEMPLATE)
-    def base_types(self):
-        """
-        Returns:
-            List of base types which have an API.
-        Raises:
-            AttributeError: If current node is not a class/struct node.
-        """
-        return [base_type for base_type in self.cxx_element.base_types
-                if self.root.find_node_by_type(base_type)]
-
     @cached_property
     @available_on(cli.CursorKind.STRUCT_DECL,
                   cli.CursorKind.CLASS_DECL,
@@ -369,14 +355,12 @@ class CXXNode(ClangNode):
         Raises:
             AttributeError: If current node is not a class/struct node.
         """
-        def walk(base_types):
-            for base in base_types:
-                base = self.root.find_node_by_type(base)
-                for _base in walk(base.base_types):
-                    yield _base
-                yield base
-
-        return list(walk(self.base_types))
+        bases = []
+        for base in self.cxx_element.base_type_elements:
+            base = self.root.find_node_by_type(base.type)
+            if base:
+                bases.append(base)
+        return bases
 
     @cached_property
     @available_on(cli.CursorKind.CXX_METHOD)

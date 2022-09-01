@@ -19,7 +19,7 @@ special_functions:
         {%- endmacro -%}
     pybind: |
       {%- macro gen_repr_function() -%}
-      {{converter.python.target_type_name|decapitalize}}.def("__repr__", [](const {{cxx.type_name}}& self) -> std::string {
+      {{make_type_converter(cxx.type).python.target_type_name|decapitalize}}.def("__repr__", [](const {{cxx.type_name}}& self) -> std::string {
           int status;
           const char* name = typeid(self).name();
           std::unique_ptr<char[], std::function<void(char*)>> demangledSymbol(

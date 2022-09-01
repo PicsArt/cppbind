@@ -2,6 +2,7 @@
 # All rights reserved. Use of this source code is governed by a
 # MIT-style license that can be found in the LICENSE file.
 
+from types import SimpleNamespace
 from cached_property import cached_property
 
 from cppbind.ir import ElementKind, TypeKind
@@ -97,8 +98,9 @@ class CXXExposedType:
     @cached_property
     def template_arguments(self):
         """
-        Returns a list of tuples containing the argument and its kind, e.g. for std::array<double, 3> returns
-        [(CXXExposedType('double'), CursorKind.TEMPLATE_TYPE_PARAMETER), (3, CursorKind.TEMPLATE_NON_TYPE_PARAMETER)].
+        Returns a list of namespaces containing the argument and its kind, e.g. for std::array<double, 3> returns
+        [SimpleNamespace(type=CXXExposedType('double'), kind=CursorKind.TEMPLATE_TYPE_PARAMETER),
+         SimpleNamespace(type=3, kind=CursorKind.TEMPLATE_NON_TYPE_PARAMETER)].
         Currently, type and integral parameters are supported.
         """
 
@@ -135,15 +137,16 @@ class CXXExposedType:
             # for now using clangs CursorKind for identifying type and non-type parameters
             # later we might have our own template parameter kind and expose it to snippets
             if cursor.kind == ElementKind.TEMPLATE_TYPE_PARAMETER:
-                args.append((CXXExposedType(argument, self._template_choice), ElementKind.TEMPLATE_TYPE_PARAMETER))
+                args.append(SimpleNamespace(type=CXXExposedType(argument, self._template_choice),
+                                            kind=ElementKind.TEMPLATE_TYPE_PARAMETER))
             elif cursor.kind == ElementKind.TEMPLATE_NON_TYPE_PARAMETER:
                 if isinstance(argument, CXXType) and argument.kind == TypeKind.INVALID:
                     # if the non-type argument is a clang Type then it's invalid so use its spelling
                     # retrieved from string parsing
                     argument = argument_spellings[ii]
                 if cutil.is_integral_type(cursor.type.get_canonical()):
-                    args.append((int(cutil.replace_template_choice(argument, self._template_choice)),
-                                 ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
+                    args.append(SimpleNamespace(type=int(cutil.replace_template_choice(argument, self._template_choice)),
+                                                kind=ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
                 else:
                     # non-integral non type parameter, currently not supported
                     args.append(None)
@@ -158,13 +161,13 @@ class CXXExposedType:
         for arg_spelling in cutil.get_template_arguments_from_str(self.type_name):
             parameter = cutil.replace_template_choice(arg_spelling, self._template_choice)
             if parameter.lstrip('+-').isnumeric():
-                args.append((int(parameter),
-                             ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
+                args.append(SimpleNamespace(type=int(parameter),
+                                            kind=ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
             else:
                 # NOTE: currently only from the string we cannot identify whether the argument is a type or not
                 # maybe we can check by trying to build its converter?
-                args.append((CXXExposedType(arg_spelling, self._template_choice),
-                             ElementKind.TEMPLATE_TYPE_PARAMETER))
+                args.append(SimpleNamespace(type=CXXExposedType(arg_spelling, self._template_choice),
+                                            kind=ElementKind.TEMPLATE_TYPE_PARAMETER))
         return args
 
     @property
@@ -283,3 +286,19 @@ class CXXRunnerExposedType(CXXExposedType):
     def is_polymorphic(self):
         """Checks whether the type is polymorphic"""
         return self.__node.cxx_element.is_polymorphic if self.__node else None
+
+    @property
+    def parent_type(self):
+        """Lexical parent type of the current type"""
+
+        if not self.__node:
+            return None
+
+        parent_element = self.__node.cxx_element.parent
+        if not parent_element:
+            return None
+
+        parent_cxx_type = parent_element.type if not parent_element.is_templated else cutil.replace_template_choice(
+            parent_element.get_full_displayname(), self._template_choice or self.__ctx.template_choice)
+
+        return CXXExposedType(parent_cxx_type, self._template_choice)

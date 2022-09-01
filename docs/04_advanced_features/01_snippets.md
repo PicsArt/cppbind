@@ -214,12 +214,6 @@ variables:
     For example, for `std::vector<int>` this variable will contain
     **int** converter.
 
--   **args_converters** - the list of converters of the template
-    arguments of the given type.
-    For example, for `std::vector<int>` this variable will contain
-    **int** converter and user can call a particular section of that
-    converter: `arg_converters[0].c_to_cxx.snippet(...)`.
-
 -   **descendants** - the list of types derived from the given type
     (is calculated by CppBind). More can be found
     [here](../04_advanced_features/05_object_type_preservation.md).

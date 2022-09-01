@@ -4,13 +4,13 @@ public class Example  {
   // body of function
   // method example (example)
     public function (i: myLangInt, m: myLangDict<myLangInt, myLangDict<myLangInt, myLangInt>>, e: myLangPointer) {
-        
+      
           // Calling a section without source and target attributes
 
         // Calling converter for int type from my_lang to c
     // conversion for variable i
     assign mylangtoci = int(i)
-        
+      
 
         // Calling converter for std::map
     // conversion for variable m
@@ -45,7 +45,7 @@ public class Example  {
         _val_mylangtocm[_i_m] = mylangtocval_m
         _i_m += 1
     }
-        
+      
 
         // Calling converter for object type from my_lang to c
     // conversion for variable e

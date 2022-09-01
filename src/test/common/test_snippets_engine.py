@@ -42,5 +42,5 @@ from cppbind.cxx_exposed import CXXExposedType
 )
 def test_get_template_arguments(spelling, arguments):
     cxx_type = CXXExposedType(spelling)
-    result = [t[0]._cxx_type for t in cxx_type.template_arguments]
+    result = [t.type._cxx_type for t in cxx_type.template_arguments]
     assert result == arguments

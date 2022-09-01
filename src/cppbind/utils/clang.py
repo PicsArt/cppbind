@@ -263,7 +263,9 @@ def _get_declaration(clang_type):
     if clang_type.kind in (cli.TypeKind.INVALID, cli.TypeKind.UNEXPOSED):
         return None
     decl_cursor = clang_type.get_declaration()
-    if decl_cursor.kind in (cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL):
+    if decl_cursor.kind == cli.CursorKind.NO_DECL_FOUND:
+        return None
+    if decl_cursor.kind in (cli.CursorKind.CLASS_DECL, cli.CursorKind.STRUCT_DECL, cli.CursorKind.ENUM_DECL):
         return decl_cursor
     pointee = clang_type.get_pointee()
     if pointee.kind != cli.TypeKind.INVALID:

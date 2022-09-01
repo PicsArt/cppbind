@@ -19,12 +19,12 @@ def make_doxygen_comment(pure_comment):
 */"""
 
 
-def validate_getter(cxx, vars, args, owner_class, setter):
-    if args:
+def validate_getter(cxx, vars, owner_class, setter):
+    if cxx.args:
         Error.critical(
             f'Getter should not have arguments: {owner_class.cxx.displayname}.{cxx.displayname}.')
     if setter:
-        if len(setter['args']) != 1:
+        if len(setter['cxx'].args) != 1:
             Error.critical(
                 f'Setter should have one argument: {owner_class.cxx.displayname}.{cxx.displayname}.')
 

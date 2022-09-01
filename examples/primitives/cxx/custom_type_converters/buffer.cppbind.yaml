@@ -3,7 +3,7 @@ rules:
     cppbind::example::Buffer:
       custom:
         pname: Buffer
-        tname: "Buffer{{args[0].target_type_name}}"
+        tname: "Buffer{{make_type_converter(template_args[0]).kotlin.target_type_name}}"
       types:
         kotlin: "{{custom.tname}}"
         jni: jobjectid

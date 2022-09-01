@@ -7,22 +7,20 @@ import types
 
 import cppbind
 import cppbind.converter
-from cppbind.common.error import Error
 from cppbind.common.snippets_engine import (
     JINJA_UNIQUE_MARKER,
     SnippetsEngine,
 )
 from cppbind.common.type_info import create_type_info
 from cppbind.cxx_exposed import (
-    CXXArgumentExposedElement,
+    CXXClassExposedElement,
     CXXEnumExposedElement,
-    CXXExposedElement,
     CXXExposedType,
     CXXFunctionExposedElement,
-    CXXClassExposedElement
+    CXXMemberExposedElement
 )
-from cppbind.ir import ElementKind
 from cppbind.utils import get_public_attributes
+
 
 SNIPPETS_ENGINE = None
 GLOBAL_VARIABLES = {}
@@ -58,14 +56,20 @@ def make_def_context(ctx):
 
         vars = ctx.vars
 
-        def make_type_converter(type_name, template_choice=None):
-            return SNIPPETS_ENGINE.build_type_converter_with_typename(type_name, template_choice)
+        def make_type_converter(type_name, error=True):
+            try:
+                if isinstance(type_name, str):
+                    return SNIPPETS_ENGINE.build_type_converter_with_typename(type_name)
+                else:
+                    return SNIPPETS_ENGINE.build_type_converter(type_name)
+            except KeyError:
+                if error:
+                    raise
+                return None
 
-        def get_type_info(type_name, template_choice=None):
-            converter = SNIPPETS_ENGINE.build_type_converter_with_typename(type_name, template_choice)
-            if converter:
-                return getattr(converter, LANGUAGE)._type_info
-            Error.critical(f'No type info found for: {type_name} with template choice - {template_choice}')
+        def get_type_info(type_name, error=True):
+            converter = make_type_converter(type_name, error=error)
+            return getattr(converter, LANGUAGE)._type_info if converter else None
 
         return locals()
 
@@ -81,27 +85,6 @@ def make_package_context(ctx):
 
 def make_func_context(ctx):
     def make():
-        # TODO: move args under cxx after removing exposed converter/type_info from here
-        args = []
-        for _arg in ctx.node.cxx_element.args:
-            converter = SNIPPETS_ENGINE.build_type_converter(CXXExposedType(cxx_type=_arg.get_type(),
-                                                                            template_choice=ctx.template_choice))
-            type_info = create_type_info(ctx.runner, CXXExposedType(cxx_type=_arg.get_type(),
-                                                                    template_choice=ctx.template_choice))
-            _cxx = CXXArgumentExposedElement(_arg)
-
-            # TODO: don't expose type_info and converter
-            _cxx.converter = converter
-            _cxx.type_info = type_info
-
-            args.append(_cxx)
-
-        if ctx.node.cxx_element.result_type:
-            _cxx_exposed_type = CXXExposedType(cxx_type=ctx.node.cxx_element.result_type,
-                                               template_choice=ctx.template_choice)
-            rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
-            return_type_info = create_type_info(ctx.runner, _cxx_exposed_type)
-
         # global functions do not have owner_class
         owner_class = types.SimpleNamespace(
             **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
@@ -112,15 +95,7 @@ def make_func_context(ctx):
         template_choice = ctx.template_choice
         template_args_postfixes = ctx.template_args_postfixes
 
-        cxx = CXXFunctionExposedElement(ctx.node.cxx_element)
-
-        is_override = False
-        if ctx.node.kind == ElementKind.CXX_METHOD:
-            # at least one of the overridden cursors should have an api
-            is_override = bool(ctx.node.overridden_nodes)
-
-            is_interface_override = is_override and all(
-                c.parent.api == 'gen_interface' for c in ctx.node.overridden_nodes)
+        cxx = CXXFunctionExposedElement(ctx.node.cxx_element, ctx.template_choice)
 
         return get_public_attributes(locals())
 
@@ -151,21 +126,11 @@ def make_class_context(ctx):
                                                cxx_element=ctx.node.cxx_element)
             _type_info = create_type_info(ctx.runner, _cxx_exposed_type)
 
-            converter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
-
-            base_types_converters = [SNIPPETS_ENGINE.build_type_converter(CXXExposedType(base_type,
-                                                                                         ctx.template_choice))
-                                     for base_type in ctx.node.base_types]
+            cxx = CXXClassExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
 
             # nested types have their owner_class
             owner_class = types.SimpleNamespace(
                 **make_class_context(ctx.parent_context)) if ctx.parent_context else None
-
-            cxx = CXXClassExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
-
-            base_types_infos = _type_info.base_types_infos
-            arg_types_infos = _type_info.arg_types_infos
-            type_info = _type_info
 
             descendants = _type_info.descendants
 
@@ -211,16 +176,11 @@ def make_getter_context(ctx):
 def make_member_context(ctx):
     def make():
         # helper variables
-        _cxx_exposed_type = CXXExposedType(cxx_type=ctx.node.cxx_element.get_type(),
-                                           template_choice=ctx.template_choice)
-        return_type_info = create_type_info(ctx.runner, _cxx_exposed_type)
-        rconverter = SNIPPETS_ENGINE.build_type_converter(_cxx_exposed_type)
-
         owner_class = types.SimpleNamespace(
             **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
             'gen_class', 'gen_interface') else None
 
-        cxx = CXXExposedElement(ctx.node.cxx_element)
+        cxx = CXXMemberExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
 
         return get_public_attributes(locals())
 

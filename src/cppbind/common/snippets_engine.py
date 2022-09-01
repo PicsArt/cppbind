@@ -141,6 +141,7 @@ class TypeConverter:
                  custom,
                  type_converter,
                  type_converter_builder,
+                 type_info_getter,
                  **kwargs):
         self._type_info = type_info
         self._type_converter = type_converter
@@ -148,6 +149,7 @@ class TypeConverter:
         self._snippet_name = snippet_name
         self._custom = custom
         self._type_converter_builder = type_converter_builder
+        self._type_info_getter = type_info_getter
         self._context = self._make_context()
 
     def snippet(self, name=None, **kwargs):
@@ -192,38 +194,21 @@ class TypeConverter:
         return self._type_info.descendants
 
     @property
-    def args(self):
-        """
-        Returns a list of adapters(for template type arguments) and values(for non-type template arguments) of
-        current type.
-        Returns:
-            List[Union[Adapter, int]]: List of adapters/values.
-        """
-        return [getattr(arg, self._snippet_name) if isinstance(arg, Adapter) else arg for arg in
-                self._template_args]
+    def template_args(self):
+        """List of template argument types"""
+        return [arg.type for arg in self._template_args]
 
     @property
-    def args_converters(self):
-        """
-        Returns a list of converters(for template type arguments) and Nones(for non-type template arguments) of
-        current type.
-        Returns:
-            List[Union[TypeConverter, int]]: List of converters/nones.
-        """
-        return [arg if isinstance(arg, Adapter) else None for arg in self._template_args]
-
-    @property
-    def parent_type_info(self):
-        return self._type_info.parent_type_info
+    def template_args_kinds(self):
+        """List of template argument kinds"""
+        return [arg.kind for arg in self._template_args]
 
     def _make_context(self):
         # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
         def make():
             # helper variables
-            args = self.args
-            args_converters = self.args_converters
-
-            parent_type_info = self.parent_type_info
+            template_args = self.template_args
+            template_args_kinds= self.template_args_kinds
 
             cxx = self.cxx
             # make api variables available in converter under vars
@@ -235,6 +220,7 @@ class TypeConverter:
 
             # helper functions
             make_type_converter = self._type_converter_builder
+            get_type_info = self._type_info_getter
 
             return locals()
 
@@ -625,11 +611,31 @@ class SnippetsEngine:
                             target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
                             target_types[name] = target_info
 
+            # TODO - unite this with the one in snippets.py `make_def_context` function after adding
+            # `make_type_converter` filter
+            def __make_type_converter(type_name, error=True):
+                try:
+                    if isinstance(type_name, str):
+                        return self.build_type_converter_with_typename(type_name)
+                    else:
+                        return self.build_type_converter(type_name)
+                except KeyError:
+                    if error:
+                        raise
+                    return None
+
+            # TODO - unite this with the one in snippets.py `make_def_context` function after adding
+            # `make_type_converter` filter
+            def __get_type_info(type_name, error=True):
+                converter = __make_type_converter(type_name, error=error)
+                return getattr(converter, self.language)._type_info if converter else None
+
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,
                                                            converters=type_converters,
                                                            custom=custom,
-                                                           type_converter_builder=self.build_type_converter_with_typename)
+                                                           type_converter_builder=__make_type_converter,
+                                                           type_info_getter=__get_type_info)
 
     def build_type_converter_with_typename(self, type_name, template_choice=None):
         return self.build_type_converter(CXXExposedType(type_name, template_choice))
@@ -688,11 +694,14 @@ class SnippetsEngine:
             if lookup_type.is_function_proto:
                 # here we assume lookup_type holds clang type
                 # update later when we will be able to parse lambda type from string
-                tmpl_args = [self.build_type_converter(CXXExposedType(arg_type, cxx_exposed_type._template_choice))
+
+                # TODO, maybe not only ElementKind.TEMPLATE_TYPE_PARAMETER
+                tmpl_args = [SimpleNamespace(type=CXXExposedType(arg_type, cxx_exposed_type._template_choice),
+                                             kind=ElementKind.TEMPLATE_TYPE_PARAMETER)
                              for arg_type in lookup_type._cxx_type.argument_types]
-                tmpl_args.append(
-                    self.build_type_converter(CXXExposedType(lookup_type._cxx_type.get_result(),
-                                                             cxx_exposed_type._template_choice)))
+                tmpl_args.append(SimpleNamespace(type=CXXExposedType(lookup_type._cxx_type.get_result(),
+                                                                     cxx_exposed_type._template_choice),
+                                                 kind=ElementKind.TEMPLATE_TYPE_PARAMETER))
 
                 type_info = self._create_type_info(FUNCTION_PROTO_INFO_TYPE,
                                                    cxx_exposed_type=cxx_exposed_type,
@@ -703,16 +712,8 @@ class SnippetsEngine:
             # e.g. a::Stack<T> and a::Stack<Project>
             # might be a template typedef so get the canonical type and then proceed
             if lookup_type.is_template and not lookup_type.is_typedef:
-                tmpl_args = []
-                for arg in lookup_type.template_arguments:
-                    if arg:
-                        if arg[1] == ElementKind.TEMPLATE_TYPE_PARAMETER:
-                            tmpl_args.append(self.build_type_converter(arg[0]))
-                        elif arg[1] == ElementKind.TEMPLATE_NON_TYPE_PARAMETER:
-                            tmpl_args.append(arg[0])
-                    else:
-                        # currently, only integral parameter is supported from non-type parameters
-                        tmpl_args.append(None)
+                # currently, only integral parameter is supported from non-type parameters
+                tmpl_args = lookup_type.template_arguments
 
                 # for the case when all arguments are exposed
                 # for example a::Stack<Project> then the canonical will

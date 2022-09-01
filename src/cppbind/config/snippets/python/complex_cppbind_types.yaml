@@ -65,7 +65,7 @@ $Object:
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_args_postfixes or [] -%}
-      {%-   if name != None %}{{name}}{% else %}{{args_converters[loop.index - 1].python.custom.tname if args_converters[loop.index - 1] else args[loop.index - 1]}}{% endif -%}
+      {%-   if name != None %}{{name}}{% else %}{{make_type_converter(template_args[loop.index - 1]).python.custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     tname: |
       {{vars.name}}{{custom.tpostfix}}
@@ -73,9 +73,9 @@ $Object:
     python: |
       {#- this should go to shared macro gen_namespace -#}
       {%- if full_package is defined -%}
-      {%-   if parent_type_info -%}
-      {%-     set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
-      {{converter.python.get_target_type_name(full_package=full_package)}}.
+      {%-   set parent_converter = make_type_converter(cxx.parent_type, error=False) if cxx.parent_type else none -%}
+      {%-   if parent_converter -%}
+      {{parent_converter.python.get_target_type_name(full_package=full_package)}}.
       {%-   else -%}
       {#-     this is common for include and target type name do not change one without other -#}
       {%-     if vars.full_package != full_package -%}
@@ -115,9 +115,9 @@ $Enum:
     python: |
       {#- this should go to shared macro gen_namespace -#}
       {%- if full_package is defined -%}
-      {%-   if parent_type_info -%}
-      {%-     set converter = make_type_converter(parent_type_info.cxx.type_name) -%}
-      {{converter.python.get_target_type_name(full_package=full_package)}}.
+      {%-   set parent_converter = make_type_converter(cxx.parent_type, error=False) if cxx.parent_type else none -%}
+      {%-   if parent_converter -%}
+      {{parent_converter.python.get_target_type_name(full_package=full_package)}}.
       {%-   else -%}
       {#-     this is common for include and target type name do not change one without other -#}
       {%-     if vars.full_package != full_package -%}
@@ -145,9 +145,9 @@ $FunctionProto:
     tname: Callable
   types:
     python: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in template_args[:-1] -%}{{comma()}}{{make_type_converter(arg).python.target_type_name}}{%- endfor -%}], {{make_type_converter(template_args|last).python.target_type_name}}]
     pybind: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in args[:-1] -%}{{comma()}}{{arg.target_type_name}}{%- endfor -%}], {{(args|last).target_type_name}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in template_args[:-1] -%}{{comma()}}{{make_type_converter(arg).pybind.target_type_name}}{%- endfor -%}], {{make_type_converter(template_args|last).pybind.target_type_name}}]
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -172,9 +172,11 @@ std::string_view:
 
 std::vector:
   custom:
-    tname: List[{{args[0].custom.tname}}]
+    tname: List[{{make_type_converter(template_args[0]).python.custom.tname}}]
   types:
-    python: List[{{args[0].get_target_type_name(full_package=full_package|default(args[0].vars.full_package))}}]
+    python: |
+      {%- set value_converter = make_type_converter(template_args[0]).python -%}
+      List[{{value_converter.get_target_type_name(full_package=full_package|default(value_converter.vars.full_package))}}]
     pybind: list
   converters:
     pybind_to_cxx:
@@ -186,8 +188,8 @@ std::function:
   custom:
     tname: "Function"
   types:
-    python: "{{args[0].target_type_name}}"
-    pybind: "{{args[0].target_type_name}}"
+    python: "{{make_type_converter(template_args[0]).python.target_type_name}}"
+    pybind: "{{make_type_converter(template_args[0]).pybind.target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -196,12 +198,14 @@ std::function:
 
 std::map:
   custom:
-    tname: "Map{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
+    tname: "Map{{make_type_converter(template_args[0]).python.custom.tname}}{{make_type_converter(template_args[1]).python.custom.tname}}"
   types:
     python: |
-      {%- set arg0_package = full_package|default(args[0].vars.full_package) -%}
-      {%- set arg1_package = full_package|default(args[1].vars.full_package) -%}
-      Dict[{{args[0].get_target_type_name(full_package=arg1_package)}}, {{args[1].get_target_type_name(full_package=arg1_package)}}]
+      {%- set key_converter = make_type_converter(template_args[0]).python -%}
+      {%- set value_converter = make_type_converter(template_args[1]).python -%}
+      {%- set key_package = full_package|default(key_converter.vars.full_package) -%}
+      {%- set value_package = full_package|default(value_converter.vars.full_package) -%}
+      Dict[{{key_converter.get_target_type_name(full_package=key_package)}}, {{value_converter.get_target_type_name(full_package=value_package)}}]
     pybind: dict
   converters:
     pybind_to_cxx:
@@ -214,10 +218,12 @@ std::unordered_map:
 
 std::shared_ptr:
   custom:
-    tname: "{{args_converters[0].python.custom.tname}}"
+    tname: "{{make_type_converter(template_args[0]).python.custom.tname}}"
   types:
-    python: "{{args[0].get_target_type_name(full_package=full_package|default(args[0].vars.full_package))}}"
-    pybind: "{{args[0].target_type_name}}"
+    python: |
+      {%- set object_converter = make_type_converter(template_args[0]).python -%}
+      {{object_converter.get_target_type_name(full_package=full_package|default(object_converter.vars.full_package))}}
+    pybind: "{{make_type_converter(template_args[0]).pybind.target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
@@ -241,12 +247,14 @@ json:
 
 std::pair:
   custom:
-    tname: "Pair{{args_converters[0].python.custom.tname}}{{args_converters[1].python.custom.tname}}"
+    tname: "Pair{{make_type_converter(template_args[0]).python.custom.tname}}{{make_type_converter(template_args[1]).python.custom.tname}}"
   types:
     python: |
-      {%- set arg0_package = full_package|default(args[0].vars.full_package) -%}
-      {%- set arg1_package = full_package|default(args[1].vars.full_package) -%}
-      Tuple[{{args[0].get_target_type_name(full_package=arg1_package)}}, {{args[1].get_target_type_name(full_package=arg1_package)}}]
+      {%- set first_converter = make_type_converter(template_args[0]).python -%}
+      {%- set second_converter = make_type_converter(template_args[1]).python -%}
+      {%- set first_package = full_package|default(first_converter.vars.full_package) -%}
+      {%- set second_package = full_package|default(second_converter.vars.full_package) -%}
+      Tuple[{{first_converter.get_target_type_name(full_package=first_package)}}, {{second_converter.get_target_type_name(full_package=second_package)}}]
     pybind: tuple
   converters:
     pybind_to_cxx:
@@ -256,10 +264,10 @@ std::pair:
 
 std::array:
   custom:
-    tname: List[{{args_converters[0].python.custom.tname}}]
+    tname: List[{{make_type_converter(template_args[0]).python.custom.tname}}]
   types:
-    python: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].python.cxx.type_name)).python.target_type_name}}"
-    pybind: "{{make_type_converter('std::vector<{}>'.format(args_converters[0].pybind.cxx.type_name)).pybind.target_type_name}}"
+    python: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).python.cxx.type_name)).python.target_type_name}}"
+    pybind: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).pybind.cxx.type_name)).pybind.target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:

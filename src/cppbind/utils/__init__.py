@@ -14,6 +14,7 @@ import os
 import re
 import shutil
 import sys
+from collections.abc import Iterable
 from functools import cmp_to_key, lru_cache
 
 from isort.api import sort_code_string
@@ -23,6 +24,7 @@ from cppbind import BANNER_LOGO
 from cppbind import default_config
 from cppbind.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from cppbind.common.error import Error
+from cppbind.ir import ElementKind
 
 DEFAULT_HELPER = 'helper'
 
@@ -328,6 +330,12 @@ def init_jinja_env(language):
     def increment(input_, value=1):
         return input_ + value
 
+    def map_callback(input_, callback, **kwargs):
+        if isinstance(input_, Iterable):
+            return [callback(item, **kwargs) for item in input_]
+        else:
+            return callback(input_, **kwargs)
+
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
                       extensions=['jinja2.ext.do', 'jinja2.ext.debug', 'jinja2.ext.loopcontrols'])
@@ -348,6 +356,7 @@ def init_jinja_env(language):
     env.filters['make_py_comment'] = make_py_comment
     env.filters['decapitalize'] = decapitalize
     env.filters['increment'] = increment
+    env.filters['map_callback'] = map_callback
 
     env.tests['match_regexp'] = match_regexp
     env.tests['contains'] = contains
@@ -358,6 +367,7 @@ def init_jinja_env(language):
     env.globals['path'] = os.path
     env.globals['pat_sep'] = os.sep
     env.globals['marker'] = JINJA_UNIQUE_MARKER
+    env.globals['ElementKind'] = ElementKind
 
     # add default and custom helpers to jinja env
     for name, module in get_helper_modules(language).items():

@@ -7,6 +7,7 @@ from .cxx_exposed_element import (
     CXXClassExposedElement,
     CXXEnumExposedElement,
     CXXExposedElement,
-    CXXFunctionExposedElement
+    CXXFunctionExposedElement,
+    CXXMemberExposedElement
 )
 from .cxx_exposed_type import CXXExposedType, CXXRunnerExposedType

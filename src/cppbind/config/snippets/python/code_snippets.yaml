@@ -255,7 +255,7 @@ var_class: &var_class
           {{marker}}{{vars.include|select('match_regexp', '^import\s.*$', '^from\s.*$')|join_unique}}
           {{marker}}{{vars.include|reject('match_regexp', '^import\s.*$', '^from\s.*$')|format_list('from {} import *')|join_unique}}
           {%- endif -%}
-          {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+          {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- for base in base_types_converters -%}
           {{gen_import(base)}}
           {%- endfor -%}
@@ -278,7 +278,7 @@ var_class: &var_class
           {{vars.header_code_fragment}}{{new_line}}
           {%- endif %}
           {%- set bases_specifiers = [] -%}
-          {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+          {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- for base_type_converter in base_types_converters -%}
           {%-   do bases_specifiers.append(base_type_converter.python.get_target_type_name(full_package=vars.full_package)) -%}
           {%- endfor -%}
@@ -332,7 +332,7 @@ var_class: &var_class
         - !include python_macros.yaml&includes.cxx
         - |
           {{gen_include(make_type_converter(cxx.type))}}
-          {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+          {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- for base_converter in base_types_converters -%}
           {{gen_include(base_converter)}}
           {%- endfor -%}
@@ -347,7 +347,7 @@ var_class: &var_class
         - |
           {%- set converter = make_type_converter(cxx.type) -%}
           {
-              {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+              {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
               {%- if cxx.namespace %}
               using namespace {{cxx.namespace}};
               {%- endif %}

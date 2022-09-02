@@ -14,8 +14,8 @@ utils: |
   {%- endmacro -%}
   {%- macro gen_override_keyword(cxx, exclude_interface=false) -%}
   {%-   if cxx.kind_name == 'method' -%}
-  {%-     set overridden_parent_infos = cxx.overridden_elements|map(attribute='parent.type')|map_callback(get_type_info, error=False)|reject('none') -%}
-  {%-     set ancestors = owner_class.cxx.ancestors|map_callback(get_type_info, error=False)|reject('none')|map(attribute='cxx.type_name') -%}
+  {%-     set overridden_parent_infos = cxx.overridden_elements|type_info(attribute='parent.type', error=False)|reject('none') -%}
+  {%-     set ancestors = owner_class.cxx.ancestors|type_info(error=False)|reject('none')|map(attribute='cxx.type_name') -%}
   {%-     for parent_info in overridden_parent_infos -%}
   {%-       if exclude_interface -%}
   {%-         if parent_info.has_api and parent_info.vars.action != 'gen_interface' and parent_info.cxx.type_name in ancestors -%}
@@ -228,10 +228,10 @@ global_declarations:
     {%-   endif -%}
     {#-   `vars.throws` is not defiend for property getters/setters -#}
     {%-   if vars.throws is defined and not 'no_throw' in vars.throws -%}
-            {{_gen_glob_decl_by_lang(vars.throws|map_callback(make_type_converter), language)}}
+            {{_gen_glob_decl_by_lang(vars.throws|type_converter, language)}}
     {%-   endif -%}
     {%-   if setter is defined and not 'no_throw' in setter.vars.throws -%}
-            {{_gen_glob_decl_by_lang(setter.vars.throws|map_callback(make_type_converter), language)}}
+            {{_gen_glob_decl_by_lang(setter.vars.throws|type_converter, language)}}
     {%-   endif -%}
             {{_gen_glob_decl_by_lang([make_type_converter('std::exception')], language)}}
     {%- endmacro -%}

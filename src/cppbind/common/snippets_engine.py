@@ -17,14 +17,21 @@ from types import SimpleNamespace
 
 from jinja2 import Template
 
-from cppbind import BANNER_LOGO, converter, logging
+from cppbind import BANNER_LOGO, logging
 from cppbind.common import JINJA_UNIQUE_MARKER
 from cppbind.common.error import Error
 from cppbind.common.type_info import create_type_info
 from cppbind.common.yaml_process import to_value
 from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
-from cppbind.utils import init_jinja_env, get_public_attributes
+from cppbind.utils import (
+    _get_type_info,
+    get_public_attributes,
+    get_types_infos,
+    init_jinja_env,
+    create_type_converter,
+    create_types_converters,
+)
 
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
@@ -383,6 +390,7 @@ class SnippetsEngine:
         self.code_infos = {}
         self.action_infos = []
         self.jinja_env = init_jinja_env(language)
+        self.__update_jinja_env()
 
     def load(self):
         action_snippets = self.ctx_desc.get_action_snippets()
@@ -611,31 +619,12 @@ class SnippetsEngine:
                             target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
                             target_types[name] = target_info
 
-            # TODO - unite this with the one in snippets.py `make_def_context` function after adding
-            # `make_type_converter` filter
-            def __make_type_converter(type_name, error=True):
-                try:
-                    if isinstance(type_name, str):
-                        return self.build_type_converter_with_typename(type_name)
-                    else:
-                        return self.build_type_converter(type_name)
-                except KeyError:
-                    if error:
-                        raise
-                    return None
-
-            # TODO - unite this with the one in snippets.py `make_def_context` function after adding
-            # `make_type_converter` filter
-            def __get_type_info(type_name, error=True):
-                converter = __make_type_converter(type_name, error=error)
-                return getattr(converter, self.language)._type_info if converter else None
-
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,
                                                            converters=type_converters,
                                                            custom=custom,
-                                                           type_converter_builder=__make_type_converter,
-                                                           type_info_getter=__get_type_info)
+                                                           type_converter_builder=partial(create_type_converter, self),
+                                                           type_info_getter=partial(_get_type_info, self, self.language))
 
     def build_type_converter_with_typename(self, type_name, template_choice=None):
         return self.build_type_converter(CXXExposedType(type_name, template_choice))
@@ -741,3 +730,9 @@ class SnippetsEngine:
                 return self._build_type_converter(cxx_exposed_type, canonical_type)
 
         return type_info
+
+    def __update_jinja_env(self):
+        """Add custom filters/globals to jinja environment"""
+
+        self.jinja_env.filters['type_converter'] = partial(create_types_converters, self)
+        self.jinja_env.filters['type_info'] = partial(get_types_infos, self, self.language)

@@ -16,6 +16,7 @@ import shutil
 import sys
 from collections.abc import Iterable
 from functools import cmp_to_key, lru_cache
+from operator import attrgetter
 
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
@@ -24,6 +25,7 @@ from cppbind import BANNER_LOGO
 from cppbind import default_config
 from cppbind.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from cppbind.common.error import Error
+from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
 
 DEFAULT_HELPER = 'helper'
@@ -230,7 +232,7 @@ def get_public_attributes(attrs):
 @lru_cache
 def init_jinja_env(language):
     """
-    Function with initializes jinja environment with custom filters/tests
+    Function which initializes jinja environment with custom filters/tests
     """
 
     def path_join(inputs_):
@@ -291,8 +293,8 @@ def init_jinja_env(language):
 
     def make_doxygen_comment(comment, style=DoxygenCommentStyle.JAVADOC):
         if not isinstance(style, DoxygenCommentStyle):
-            raise ValueError(
-                f'Incorrect doxygen style. Supported styles are: {",".join([f"DoxygenCommentStyle.{c.name}" for c in DoxygenCommentStyle])}')
+            raise ValueError(f'Incorrect doxygen style. Supported styles are: '
+                             f'{",".join([f"DoxygenCommentStyle.{c.name}" for c in DoxygenCommentStyle])}')
 
         if isinstance(comment, str):
             comment = [comment]
@@ -333,8 +335,17 @@ def init_jinja_env(language):
     def map_callback(input_, callback, **kwargs):
         if isinstance(input_, Iterable):
             return [callback(item, **kwargs) for item in input_]
-        else:
-            return callback(input_, **kwargs)
+        return callback(input_, **kwargs)
+
+    def map_type(input_):
+        if isinstance(input_, Iterable):
+            return [map_type(item) for item in input_]
+
+        if not hasattr(input_, 'type'):
+            Error.critical(f"'type' filter is acceptable only for objects (list of objects) with 'type' property. "
+                           f"{type(input_)} doesn't have 'type' property.")
+
+        return input_.type
 
     env = Environment(loader=BaseLoader(),
                       undefined=StrictUndefined,
@@ -357,6 +368,7 @@ def init_jinja_env(language):
     env.filters['decapitalize'] = decapitalize
     env.filters['increment'] = increment
     env.filters['map_callback'] = map_callback
+    env.filters['type'] = map_type
 
     env.tests['match_regexp'] = match_regexp
     env.tests['contains'] = contains
@@ -399,3 +411,59 @@ def get_helper_modules(language):
             modules[module_name] = module
 
     return modules
+
+
+def create_type_converter(snippets_engine, type_, error=True):
+    """Function to create a converter for a given type"""
+
+    try:
+        if isinstance(type_, str):
+            return snippets_engine.build_type_converter_with_typename(type_)
+        return snippets_engine.build_type_converter(type_)
+    except KeyError:
+        if error:
+            raise
+        return None
+
+
+def _get_type_info(snippets_engine, language, type_, error=True):
+    """Function to return the type info for a given type"""
+
+    converter = create_type_converter(snippets_engine, type_, error=error)
+    return getattr(converter, language)._type_info if converter else None
+
+
+def create_types_converters(snippets_engine, input_, attribute=None, error=True):
+    """Function to create converter(s) for given type(s)"""
+
+    if isinstance(input_, Iterable) and not isinstance(input_, str):
+        return [create_types_converters(snippets_engine, item, attribute, error) for item in input_]
+
+    try:
+        input_value = attrgetter(attribute)(input_) if attribute else input_
+    except AttributeError as err:
+        Error.critical(f"Error while applying 'type_converter' filter: {err}")
+    else:
+        if not isinstance(input_value, (str, CXXExposedType)):
+            Error.critical(f"'type_converter' filter is applicable only for 'str' and 'CXXExposedType' types "
+                           f"(or a list of those types). {type(input_value)} is an unexpected type.")
+
+        return create_type_converter(snippets_engine, input_value, error)
+
+
+def get_types_infos(snippets_engine, language, input_, attribute=None, error=True):
+    """Function to return the type info(s) for given type(s)"""
+
+    if isinstance(input_, Iterable) and not isinstance(input_, str):
+        return [get_types_infos(snippets_engine, language, item, attribute, error) for item in input_]
+
+    try:
+        input_value = attrgetter(attribute)(input_) if attribute else input_
+    except AttributeError as err:
+        Error.critical(f"Error while applying 'type_info' filter: {err}")
+    else:
+        if not isinstance(input_value, (str, CXXExposedType)):
+            Error.critical(f"'type_info' filter is applicable only for 'str' and 'CXXExposedType' types "
+                           f"(or a list of those types). {type(input_value)} is an unexpected type.")
+
+        return _get_type_info(snippets_engine, language, input_value, error)

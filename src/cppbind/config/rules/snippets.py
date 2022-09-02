@@ -4,6 +4,7 @@
 
 import copy
 import types
+from functools import partial
 
 import cppbind
 import cppbind.converter
@@ -19,7 +20,7 @@ from cppbind.cxx_exposed import (
     CXXFunctionExposedElement,
     CXXMemberExposedElement
 )
-from cppbind.utils import get_public_attributes
+from cppbind.utils import get_public_attributes, create_type_converter, _get_type_info
 
 
 SNIPPETS_ENGINE = None
@@ -56,20 +57,8 @@ def make_def_context(ctx):
 
         vars = ctx.vars
 
-        def make_type_converter(type_name, error=True):
-            try:
-                if isinstance(type_name, str):
-                    return SNIPPETS_ENGINE.build_type_converter_with_typename(type_name)
-                else:
-                    return SNIPPETS_ENGINE.build_type_converter(type_name)
-            except KeyError:
-                if error:
-                    raise
-                return None
-
-        def get_type_info(type_name, error=True):
-            converter = make_type_converter(type_name, error=error)
-            return getattr(converter, LANGUAGE)._type_info if converter else None
+        make_type_converter = partial(create_type_converter, SNIPPETS_ENGINE)
+        get_type_info = partial(_get_type_info, SNIPPETS_ENGINE, LANGUAGE)
 
         return locals()
 

@@ -136,7 +136,7 @@ var_class_swift_include: &var_class_swift_include
     - |
       {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
       {%- set import_converters = [] -%}
-      {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+      {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
       {%- for base in base_types_converters -%}
       {%-   do collect_import_converters(base, import_converters) -%}
       {%- endfor -%}
@@ -176,7 +176,7 @@ class:
           {%- if vars.header_code_fragment -%}
                 {{vars.header_code_fragment}}{{new_line}}
           {% endif -%}
-          {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+          {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
           {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
           {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
@@ -290,7 +290,7 @@ class:
       content: |
         {%- set converter = make_type_converter(cxx.type) -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
-        {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+        {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
         {%- set is_root_class = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- if is_root_class -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
@@ -342,7 +342,7 @@ class:
       content: |
         {%- set converter = make_type_converter(cxx.type) -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
-        {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+        {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
         {%- set is_root_class = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- if is_root_class -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner);
@@ -368,7 +368,7 @@ interface:
         {%- if vars.header_code_fragment -%}
         {{vars.header_code_fragment}}{{new_line}}
         {% endif -%}
-        {%- set base_types_converters = cxx.base_types|map_callback(make_type_converter, error=False)|reject('none')|list %}
+        {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
         {%- if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
         {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
@@ -518,7 +518,7 @@ var_method_swift_include: &var_method_swift_include
     !concat
     - !include swift_macros.yaml&includes.swift
     - |
-      {%- for arg_converter in cxx.args|map(attribute='type')|map_callback(make_type_converter) -%}
+      {%- for arg_converter in cxx.args|type_converter(attribute='type') -%}
       {{gen_import(arg_converter)}}
       {%- endfor -%}
       {%- if cxx.result_type -%}

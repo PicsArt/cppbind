@@ -34,18 +34,18 @@ utils: |
 
 
 templates: |
-  {%- macro get_template_postfix_by_lang(language) -%}
+  {%- macro get_template_postfix() -%}
   {%-   if cxx.is_template and template_choice -%}
   {%-     for value in template_choice.values() -%}
   {%-       if value is string -%}
-              {{make_type_converter(value)|attr(language)|attr('custom')|attr('tname')}}
+              {{make_type_converter(value).custom.tname}}
   {%-       else -%}
               {{value}}
   {%-       endif -%}
   {%-     endfor -%}
   {%-   endif -%}
   {%- endmacro -%}
-  {%- macro get_template_getter_name_by_lang(language) -%}
+  {%- macro get_template_getter_name() -%}
   {%-   if cxx.is_template and template_choice -%}
   {%-     set values = template_choice.values()|list -%}
   {%-     for template_arg_name in template_args_postfixes -%}
@@ -53,7 +53,7 @@ templates: |
             {{template_arg_name}}
   {%-       else -%}
   {%-         if template_arg_name is string -%}
-                {{make_type_converter(value)|attr(language)|attr('custom')|attr('tname')}}
+                {{make_type_converter(value).custom.tname}}
   {%-         else -%}
                 {{values[loop.index]}}
   {%-         endif -%}
@@ -65,75 +65,71 @@ templates: |
 
 includes:
   cxx: |
-    {%- macro gen_include_by_lang(converter, language) -%}
+    {%- macro gen_include(converter) -%}
     {%-   if converter -%}
-    {%-     if converter.cxx_include -%}
+    {%-     if converter.cxx_include is defined -%}
               {{marker}}{{converter.cxx_include.snippet()}}
     {%-     endif -%}
-    {%-     if converter|attr(language) -%}
-    {%-       for arg in converter|attr(language)|attr('template_args') -%}
-    {%-         if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-                  {{gen_include_by_lang(make_type_converter(arg, error=False), language)}}
-    {%-         endif -%}
-    {%-       endfor -%}
-    {%-     endif -%}
-    {%-   endif -%}
-    {%- endmacro -%}
-    {%- macro collect_includes_by_lang(converter, includes, language) -%}
-    {%-   if converter -%}
-    {%-     if converter.cxx_include -%}
-    {%-       do includes.append(converter.cxx_include.snippet()) -%}
-    {%-     endif -%}
-    {%-     for arg in converter|attr(language)|attr('template_args') -%}
-    {%-       if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_includes_by_lang(make_type_converter(arg, error=False), includes, language) -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+                {{gen_include(make_type_converter(arg, error=False))}}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
-    {%- macro collect_desc_includes_by_lang(converter, desc_includes, language) -%}
+    {%- macro collect_includes(converter, includes) -%}
     {%-   if converter -%}
-    {%-     if converter|attr(language)|attr('has_api') -%}
-    {%-       set vars_descendants = converter|attr(language)|attr('vars')|attr('descendants') -%}
-    {%-       for descendant in (vars_descendants if vars_descendants is not none else converter|attr(language)|attr('descendants')) -%}
-    {%-         do collect_includes_by_lang(make_type_converter(descendant), desc_includes, language) -%}
+    {%-     if converter.cxx_include is defined -%}
+    {%-       do includes.append(converter.cxx_include.snippet()) -%}
+    {%-     endif -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-         do collect_includes(make_type_converter(arg, error=False), includes) -%}
+    {%-       endif -%}
+    {%-     endfor -%}
+    {%-   endif -%}
+    {%- endmacro -%}
+    {%- macro collect_desc_includes(converter, desc_includes) -%}
+    {%-   if converter -%}
+    {%-     if converter.type_info.has_api -%}
+    {%-       set vars_descendants = converter.type_info.vars.descendants -%}
+    {%-       for descendant in (vars_descendants if vars_descendants is not none else converter.type_info.descendants) -%}
+    {%-         do collect_includes(make_type_converter(descendant), desc_includes) -%}
     {%-       endfor -%}
     {%-     endif -%}
-    {%-     for arg in converter|attr(language)|attr('template_args') -%}
-    {%-       if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_desc_includes_by_lang(make_type_converter(arg, error=False), desc_includes, language) -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-         do collect_desc_includes(make_type_converter(arg, error=False), desc_includes) -%}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
   target_language: |
-    {%- macro collect_import_converters_by_lang(converter, import_converters, language, gen_for_impl=false) -%}
+    {%- macro collect_import_converters(converter, import_converters, gen_for_impl=false) -%}
     {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     set lang_converter = converter|attr(language) -%}
-    {%-     set parent_converter = make_type_converter(lang_converter.cxx.parent_type, error=False) if lang_converter.cxx.parent_type else none -%}
+    {%-     set parent_converter = make_type_converter(converter.type_info.cxx.parent_type, error=False) if converter.type_info.cxx.parent_type else none -%}
     {%-     if parent_converter -%}
     {#-       in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
     {%-       do collect_import_converters(parent_converter, import_converters) -%}
     {%-     else -%}
     {%-       do import_converters.append((converter, gen_for_impl)) -%}
     {%-     endif -%}
-    {%-     for arg in lang_converter.template_args -%}
-    {%-       if lang_converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
     {%-         do collect_import_converters(make_type_converter(arg, error=False), import_converters, gen_for_impl) -%}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
-    {%- macro collect_desc_import_converters_by_lang(converter, desc_import_converters, language) -%}
+    {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
     {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     set lang_converter = converter|attr(language) -%}
-    {%-     if lang_converter.has_api and lang_converter.vars.descendants is defined -%}
-    {%-       for descendant in (lang_converter.vars.descendants if lang_converter.vars.descendants is not none else lang_converter.descendants) -%}
+    {%-     if converter.type_info.has_api and converter.type_info.vars.descendants is defined -%}
+    {%-       for descendant in (converter.type_info.vars.descendants if converter.type_info.vars.descendants is not none else converter.type_info.descendants) -%}
     {%-         do collect_import_converters(make_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
     {%-       endfor -%}
     {%-     endif -%}
-    {%-     for arg in lang_converter.template_args -%}
-    {%-       if lang_converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
     {%-         do collect_desc_import_converters(make_type_converter(arg, error=False), desc_import_converters) -%}
     {%-       endif -%}
     {%-     endfor -%}
@@ -141,16 +137,15 @@ includes:
     {%- endmacro -%}
     {%- macro gen_import_by_lang(converter, language) -%}
     {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     set lang_converter = converter|attr(language) -%}
     {%-     set lang_include = converter|attr(language + '_include') -%}
-    {%-     set parent_converter = make_type_converter(lang_converter.cxx.parent_type, error=False) if lang_converter.cxx.parent_type else none -%}
+    {%-     set parent_converter = make_type_converter(converter.type_info.cxx.parent_type, error=False) if converter.type_info.cxx.parent_type else none -%}
     {%-     if parent_converter -%}
               {{gen_import(parent_converter)}}
-    {%-     elif lang_include -%}
+    {%-     elif lang_include is defined -%}
               {{marker}}{{lang_include.snippet(full_package=vars.full_package)}}
     {%-     endif -%}
-    {%-     for arg in lang_converter.template_args -%}
-    {%-       if lang_converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
                 {{gen_import(make_type_converter(arg, error=False))}}
     {%-       endif -%}
     {%-     endfor -%}
@@ -159,131 +154,131 @@ includes:
 
 global_declarations:
   class: |
-    {%- macro collect_include_converters_by_lang(converter, include_converters, language) -%}
+    {%- macro collect_include_converters(converter, include_converters) -%}
     {%-   if converter -%}
-    {%-     if converter|attr(language)|attr('has_api') -%}
+    {%-     if converter.type_info.has_api -%}
     {%-       do include_converters.append(converter) -%}
     {%-     endif -%}
-    {%-     for arg in converter|attr(language)|attr('template_args') -%}
-    {%-       if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_include_converters_by_lang(make_type_converter(arg, error=False), include_converters, language) -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-         do collect_include_converters(make_type_converter(arg, error=False), include_converters) -%}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
-    {%- macro collect_desc_include_converters_by_lang(desc_converter, desc_include_converters, language) -%}
+    {%- macro collect_desc_include_converters(desc_converter, desc_include_converters) -%}
     {%-   if desc_converter -%}
-    {%-     if desc_converter|attr(language)|attr('has_api') -%}
-    {%-       set vars_descendants = desc_converter|attr(language)|attr('vars')|attr('descendants') -%}
-    {%-       for descendant in (vars_descendants if vars_descendants is not none else desc_converter|attr(language)|attr('descendants')) -%}
-    {%-         do collect_include_converters_by_lang(make_type_converter(descendant), desc_include_converters, language) -%}
+    {%-     if desc_converter.type_info.has_api -%}
+    {%-       set vars_descendants = desc_converter.type_info.vars.descendants -%}
+    {%-       for descendant in (vars_descendants if vars_descendants is not none else desc_converter.type_info.descendants) -%}
+    {%-         do collect_include_converters(make_type_converter(descendant), desc_include_converters) -%}
     {%-       endfor -%}
     {%-     endif -%}
-    {%-     for arg in desc_converter|attr(language)|attr('template_args') -%}
-    {%-       if (desc_converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_desc_include_converters_by_lang(make_type_converter(arg, error=False), desc_include_converters, language) -%}
+    {%-     for arg in desc_converter.template_args -%}
+    {%-       if desc_converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-         do collect_desc_include_converters(make_type_converter(arg, error=False), desc_include_converters) -%}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
-    {%- macro gen_glob_decl_by_lang(language) -%}
+    {%- macro gen_glob_decl() -%}
     {%-   set desc_include_converters = [] -%}
-    {%-   do collect_desc_include_converters_by_lang(make_type_converter(cxx.type), desc_include_converters, language) -%}
+    {%-   do collect_desc_include_converters(make_type_converter(cxx.type), desc_include_converters) -%}
     {%-   for desc_converter in desc_include_converters -%}
-    {%-     if desc_converter|attr(language)|attr('vars')|attr('c_file_fullname') != vars.c_file_fullname -%}
+    {%-     if desc_converter.type_info.vars.c_file_fullname != vars.c_file_fullname -%}
               {{marker}}{{'extern const char* ' + desc_converter.cxx_type_name_global.snippet() + ';'}}
     {%-     endif -%}
     {%-   endfor -%}
     {%- endmacro -%}
   method: |
-    {%- macro collect_type_converters_by_lang(converter, result_type_converters, language) -%}
-    {%-   if converter and converter|attr(language)|attr('has_api') -%}
+    {%- macro collect_type_converters(converter, result_type_converters) -%}
+    {%-   if converter and converter.type_info.has_api -%}
     {%-     do result_type_converters.append(converter) -%}
     {%-   endif -%}
     {%-   if converter -%}
-    {%-     for arg in converter|attr(language)|attr('template_args') -%}
-    {%-       if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-     for arg in converter.template_args -%}
+    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
     {%-         set arg_converter = make_type_converter(arg, error=False) -%}
     {%-         if arg_converter -%}
-    {%-           do collect_type_converters_by_lang(arg_converter, result_type_converters, language) -%}
+    {%-           do collect_type_converters(arg_converter, result_type_converters) -%}
     {%-         endif -%}
     {%-       endif -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
-    {%- macro _gen_glob_decl_by_lang(type_converters, language) -%}
+    {%- macro _gen_glob_decl(type_converters) -%}
     {%-   for type_conv in type_converters -%}
-    {#-   `cxx_type_name_global` is none for enum types -#}
-    {%-     if type_conv.cxx_type_name_global is not none and type_conv|attr(language)|attr('vars')|attr('c_file_fullname') != vars.c_file_fullname -%}
+    {#-   `cxx_type_name_global` is not defined for enum types -#}
+    {%-     if type_conv.cxx_type_name_global is defined and type_conv.type_info.vars.c_file_fullname != vars.c_file_fullname -%}
               {{marker}}{{'extern const char* ' + type_conv.cxx_type_name_global.snippet() + ';'}}
     {%-     endif -%}
     {%-   endfor -%}
     {%- endmacro -%}
-    {%- macro gen_glob_decl_by_lang(language) -%}
+    {%- macro gen_glob_decl() -%}
     {#-   `result_type` is none for constructors -#}
     {%-   if cxx.result_type -%}
     {%-     set result_type_converters = [] -%}
-    {%-     do collect_type_converters_by_lang(make_type_converter(cxx.result_type), result_type_converters, language) -%}
-            {{_gen_glob_decl_by_lang(result_type_converters, language)}}
+    {%-     do collect_type_converters(make_type_converter(cxx.result_type), result_type_converters) -%}
+            {{_gen_glob_decl(result_type_converters)}}
     {%-   endif -%}
     {#-   `vars.throws` is not defiend for property getters/setters -#}
     {%-   if vars.throws is defined and not 'no_throw' in vars.throws -%}
-            {{_gen_glob_decl_by_lang(vars.throws|type_converter, language)}}
+            {{_gen_glob_decl(vars.throws|type_converter)}}
     {%-   endif -%}
     {%-   if setter is defined and not 'no_throw' in setter.vars.throws -%}
-            {{_gen_glob_decl_by_lang(setter.vars.throws|type_converter, language)}}
+            {{_gen_glob_decl(setter.vars.throws|type_converter)}}
     {%-   endif -%}
-            {{_gen_glob_decl_by_lang([make_type_converter('std::exception')], language)}}
+            {{_gen_glob_decl([make_type_converter('std::exception')])}}
     {%- endmacro -%}
 
 forward_declarations:
   method: |
-    {%- macro collect_fwd_decl_converters_by_lang(converter, fwd_decl_converters, language) -%}
+    {%- macro collect_fwd_decl_converters(converter, fwd_decl_converters) -%}
     {#-   Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current function/method. -#}
-    {%-   if converter|attr(language)|attr('has_api') and converter|attr(language)|attr('vars')|attr('descendants') is defined and (converter|attr(language)|attr('vars')|attr('descendants') if converter|attr(language)|attr('vars')|attr('descendants') is not none else converter|attr(language)|attr('descendants')) and vars.c_file_fullname != converter|attr(language)|attr('vars')|attr('c_file_fullname') -%}
+    {%-   if converter.type_info.has_api and converter.type_info.vars.descendants is defined and (converter.type_info.vars.descendants if converter.type_info.vars.descendants is not none else converter.type_info.descendants) and vars.c_file_fullname != converter.type_info.vars.c_file_fullname -%}
     {%-     do fwd_decl_converters.append(converter) -%}
     {%-   endif -%}
-    {%-   for arg in converter|attr(language)|attr('template_args') -%}
-    {%-     if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-   for arg in converter.template_args -%}
+    {%-     if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
     {%-       set arg_converter = make_type_converter(arg, error=False) -%}
     {%-       if arg_converter -%}
-    {%-         do collect_fwd_decl_converters_by_lang(arg_converter, fwd_decl_converters, language) -%}
+    {%-         do collect_fwd_decl_converters(arg_converter, fwd_decl_converters) -%}
     {%-       endif -%}
     {%-     endif -%}
     {%-   endfor -%}
     {%- endmacro -%}
-    {%- macro gen_fwd_decl_by_lang(language) -%}
+    {%- macro gen_fwd_decl() -%}
     {%-   set fwd_decl_converters = [] -%}
     {%-   for arg in cxx.args -%}
-    {%-     do collect_fwd_decl_converters_by_lang(make_type_converter(arg.type), fwd_decl_converters, language) -%}
+    {%-     do collect_fwd_decl_converters(make_type_converter(arg.type), fwd_decl_converters) -%}
     {%-   endfor -%}
     {%-   for fwd_decl_converter in fwd_decl_converters -%}
-    {%-     set converter = make_type_converter('std::shared_ptr<' + fwd_decl_converter|attr(language)|attr('cxx')|attr('type_name') + '>') if fwd_decl_converter|attr(language)|attr('vars')|attr('shared_ref') else fwd_decl_converter -%}
+    {%-     set converter = make_type_converter('std::shared_ptr<' + fwd_decl_converter.type_info.cxx.type_name + '>') if fwd_decl_converter.type_info.vars.shared_ref else fwd_decl_converter -%}
             {{marker}}{{converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%-   endfor -%}
     {%- endmacro -%}
   getter: |
-    {%- macro collect_fwd_decl_converters_by_lang(converter, fwd_decl_converters, language) -%}
+    {%- macro collect_fwd_decl_converters(converter, fwd_decl_converters) -%}
     {#-   Type comparison is done when the type has descendants. Forward decl is not needed when the object recover function is generated in the same file as current getter/setter. -#}
-    {%-   if converter|attr(language)|attr('has_api') and converter|attr(language)|attr('vars')|attr('descendants') is defined and (converter|attr(language)|attr('vars')|attr('descendants') if converter|attr(language)|attr('vars')|attr('descendants') is not none else converter|attr(language)|attr('descendants')) and vars.c_file_fullname != converter|attr(language)|attr('vars')|attr('c_file_fullname') -%}
+    {%-   if converter.type_info.has_api and converter.type_info.vars.descendants is defined and (converter.type_info.vars.descendants if converter.type_info.vars.descendants is not none else converter.type_info.descendants) and vars.c_file_fullname != converter.type_info.vars.c_file_fullname -%}
     {%-     do fwd_decl_converters.append(converter) -%}
     {%-   endif -%}
-    {%-   for arg in converter|attr(language)|attr('template_args') -%}
-    {%-     if (converter|attr(language)|attr('template_args_kinds'))[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
+    {%-   for arg in converter.template_args -%}
+    {%-     if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
     {%-       set arg_converter = make_type_converter(arg, error=False) -%}
     {%-       if arg_converter -%}
-    {%-         do collect_fwd_decl_converters_by_lang(arg_converter, fwd_decl_converters, language) -%}
+    {%-         do collect_fwd_decl_converters(arg_converter, fwd_decl_converters) -%}
     {%-       endif -%}
     {%-     endif -%}
     {%-   endfor -%}
     {%- endmacro -%}
-    {%- macro gen_fwd_decl_by_lang(language) -%}
+    {%- macro gen_fwd_decl() -%}
     {%-   set fwd_decl_converters = [] -%}
     {%-   if setter is defined -%}
-    {%-     do collect_fwd_decl_converters_by_lang(make_type_converter(cxx.result_type), fwd_decl_converters, language) -%}
+    {%-     do collect_fwd_decl_converters(make_type_converter(cxx.result_type), fwd_decl_converters) -%}
     {%-   endif -%}
     {%-   for fwd_decl_converter in fwd_decl_converters -%}
-    {%-     set converter = make_type_converter('std::shared_ptr<' + fwd_decl_converter|attr(language)|attr('cxx')|attr('type_name') + '>') if fwd_decl_converter|attr(language)|attr('vars')|attr('shared_ref') else fwd_decl_converter -%}
+    {%-     set converter = make_type_converter('std::shared_ptr<' + fwd_decl_converter.type_info.cxx.type_name + '>') if fwd_decl_converter.type_info.vars.shared_ref else fwd_decl_converter -%}
             {{marker}}{{converter.cxx_obj_recover_func_decl.snippet(is_fwd_decl=True)}};
     {%-   endfor -%}
     {%- endmacro -%}

@@ -117,20 +117,13 @@ jni_functions: |
 templates:
     !concat
     - !include common_macros.yaml&templates
-    - !include common_macros.yaml&utils
     - |
       {#- specializes common macros for kotlin -#}
-      {%- macro get_template_postfix() -%}
-            {{get_template_postfix_by_lang('kotlin')}}
-      {%- endmacro -%}
-      {%- macro get_template_getter_name() -%}
-            {{get_template_getter_name_by_lang('kotlin')}}
-      {%- endmacro -%}
       {%- macro get_jvm_name(args) -%}
       {#-   TODO: update overloading_index with overloading_postfix after fixing overloading postfix to match kotlin formatting -#}
       {%-   if cxx.is_template or (cxx.is_overloaded and overloading_index) -%}
       {%-     for arg in args -%}
-      {%-       if make_type_converter(arg.type).kotlin.custom.is_kotlin_type_erased|default(False) -%}
+      {%-       if make_type_converter(arg.type).custom.is_kotlin_type_erased|default(False) -%}
                   @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_index}}")
                   {%- break -%}
       {%-       endif -%}
@@ -144,28 +137,8 @@ includes:
     - !include common_macros.yaml&includes.target_language
     - |
       {#- specializes common macros for kotlin -#}
-      {%- macro collect_import_converters(converter, import_converters, language, gen_for_impl=false) -%}
-            {{collect_import_converters_by_lang(converter, import_converters, 'kotlin', gen_for_impl)}}
-      {%- endmacro -%}
-      {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
-            {{collect_desc_import_converters_by_lang(converter, desc_import_converters, 'kotlin')}}
-      {%- endmacro -%}
       {%- macro gen_import(converter) -%}
             {{gen_import_by_lang(converter, 'kotlin')}}
-      {%- endmacro -%}
-  cxx:
-    !concat
-    - !include common_macros.yaml&includes.cxx
-    - |
-      {#- specializes common macros for kotlin -#}
-      {%- macro gen_include(converter) -%}
-            {{gen_include_by_lang(converter, 'kotlin')}}
-      {%- endmacro -%}
-      {%- macro collect_includes(converter, includes) -%}
-            {{collect_includes_by_lang(converter, includes, 'kotlin')}}
-      {%- endmacro -%}
-      {%- macro collect_desc_includes(converter, desc_includes) -%}
-            {{collect_desc_includes_by_lang(converter, desc_includes, 'kotlin')}}
       {%- endmacro -%}
 
 constructor:
@@ -177,37 +150,5 @@ constructor:
       {%- set parent_type_name = make_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
       {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
-      {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix_by_lang('kotlin') + target_overloading_index)}}
-      {%- endmacro -%}
-
-global_declarations:
-  class:
-    !concat
-    - !include common_macros.yaml&global_declarations.class
-    - |
-      {%- macro gen_glob_decl() -%}
-          {{gen_glob_decl_by_lang('kotlin')}}
-      {%- endmacro -%}
-  method:
-    !concat
-    - !include common_macros.yaml&global_declarations.method
-    - |
-      {%- macro gen_glob_decl() -%}
-          {{gen_glob_decl_by_lang('kotlin')}}
-      {%- endmacro -%}
-
-forward_declarations:
-  method:
-    !concat
-    - !include common_macros.yaml&forward_declarations.method
-    - |
-      {%- macro gen_fwd_decl() -%}
-          {{gen_fwd_decl_by_lang('kotlin')}}
-      {%- endmacro -%}
-  getter:
-    !concat
-    - !include common_macros.yaml&forward_declarations.getter
-    - |
-      {%- macro gen_fwd_decl() -%}
-          {{gen_fwd_decl_by_lang('kotlin')}}
+      {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}
       {%- endmacro -%}

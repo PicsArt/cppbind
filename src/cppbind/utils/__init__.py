@@ -426,11 +426,11 @@ def create_type_converter(snippets_engine, type_, error=True):
         return None
 
 
-def _get_type_info(snippets_engine, language, type_, error=True):
+def get_type_info(snippets_engine, type_, error=True):
     """Function to return the type info for a given type"""
 
     converter = create_type_converter(snippets_engine, type_, error=error)
-    return getattr(converter, language)._type_info if converter else None
+    return converter.type_info if converter else None
 
 
 def create_types_converters(snippets_engine, input_, attribute=None, error=True):
@@ -451,11 +451,11 @@ def create_types_converters(snippets_engine, input_, attribute=None, error=True)
         return create_type_converter(snippets_engine, input_value, error)
 
 
-def get_types_infos(snippets_engine, language, input_, attribute=None, error=True):
+def get_types_infos(snippets_engine, input_, attribute=None, error=True):
     """Function to return the type info(s) for given type(s)"""
 
     if isinstance(input_, Iterable) and not isinstance(input_, str):
-        return [get_types_infos(snippets_engine, language, item, attribute, error) for item in input_]
+        return [get_types_infos(snippets_engine, item, attribute, error) for item in input_]
 
     try:
         input_value = attrgetter(attribute)(input_) if attribute else input_
@@ -466,4 +466,4 @@ def get_types_infos(snippets_engine, language, input_, attribute=None, error=Tru
             Error.critical(f"'type_info' filter is applicable only for 'str' and 'CXXExposedType' types "
                            f"(or a list of those types). {type(input_value)} is an unexpected type.")
 
-        return _get_type_info(snippets_engine, language, input_value, error)
+        return get_type_info(snippets_engine, input_value, error)

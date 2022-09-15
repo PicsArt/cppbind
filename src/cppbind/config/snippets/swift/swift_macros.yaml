@@ -96,44 +96,12 @@ special_functions:
       }
       {%- endmacro -%}
 
-templates:
-    !concat
-    - !include common_macros.yaml&templates
-    - |
-      {#- specializes common macros for swift -#}
-      {%- macro get_template_postfix() -%}
-      {{get_template_postfix_by_lang('swift')}}
-      {%- endmacro -%}
-      {%- macro get_template_getter_name() -%}
-      {{get_template_getter_name_by_lang('swift')}}
-      {%- endmacro -%}
-
 includes:
-  cxx:
-    !concat
-    - !include common_macros.yaml&includes.cxx
-    - |
-      {#- specializes common macros for swift -#}
-      {%- macro gen_include(converter) -%}
-            {{gen_include_by_lang(converter, 'swift')}}
-      {%- endmacro -%}
-      {%- macro collect_includes(converter, includes) -%}
-            {{collect_includes_by_lang(converter, includes, 'swift')}}
-      {%- endmacro -%}
-      {%- macro collect_desc_includes(converter, desc_includes) -%}
-            {{collect_desc_includes_by_lang(converter, desc_includes, 'swift')}}
-      {%- endmacro -%}
   swift:
     !concat
     - !include common_macros.yaml&includes.target_language
     - |
       {#- specializes common macros for swift -#}
-      {%- macro collect_import_converters(converter, import_converters, language, gen_for_impl=false) -%}
-            {{collect_import_converters_by_lang(converter, import_converters, 'swift', gen_for_impl)}}
-      {%- endmacro -%}
-      {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
-            {{collect_desc_import_converters_by_lang(converter, desc_import_converters, 'swift')}}
-      {%- endmacro -%}
       {%- macro gen_import(converter) -%}
             {{gen_import_by_lang(converter, 'swift')}}
       {%- endmacro -%}
@@ -149,37 +117,5 @@ constructor:
       {%-   set target_type_name = owner_class_converter.swift.target_type_name -%}
       {%-   set is_constructor = cxx.kind_name in ('constructor',  'constructor_template') -%}
       {%-   set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
-      {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix_by_lang('swift')}}{{target_overloading_index}}
-      {%- endmacro -%}
-
-global_declarations:
-  class:
-    !concat
-    - !include common_macros.yaml&global_declarations.class
-    - |
-      {%- macro gen_glob_decl() -%}
-          {{gen_glob_decl_by_lang('swift')}}
-      {%- endmacro -%}
-  method:
-    !concat
-    - !include common_macros.yaml&global_declarations.method
-    - |
-      {%- macro gen_glob_decl() -%}
-          {{gen_glob_decl_by_lang('swift')}}
-      {%- endmacro -%}
-
-forward_declarations:
-  method:
-    !concat
-    - !include common_macros.yaml&forward_declarations.method
-    - |
-      {%- macro gen_fwd_decl() -%}
-          {{gen_fwd_decl_by_lang('swift')}}
-      {%- endmacro -%}
-  getter:
-    !concat
-    - !include common_macros.yaml&forward_declarations.getter
-    - |
-      {%- macro gen_fwd_decl() -%}
-          {{gen_fwd_decl_by_lang('swift')}}
+      {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index}}
       {%- endmacro -%}

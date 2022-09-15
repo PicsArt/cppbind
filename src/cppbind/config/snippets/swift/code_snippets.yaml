@@ -110,7 +110,7 @@ var_class_cxx_include: &var_class_cxx_include
     unique_content:
       !concat
       - !include cxx_macros.yaml&includes
-      - !include swift_macros.yaml&includes.cxx
+      - !include common_macros.yaml&includes.cxx
       - |
         {%- set includes = [] -%}
         {%- set converter = make_type_converter(cxx.type) -%}
@@ -125,14 +125,14 @@ var_class_cxx_include: &var_class_cxx_include
 var_class_cxx_glob_decl: &var_class_cxx_glob_decl
     unique_content:
       !concat
-      - !include swift_macros.yaml&global_declarations.class
+      - !include common_macros.yaml&global_declarations.class
       - |
         {{gen_glob_decl()}}
 
 var_class_swift_include: &var_class_swift_include
   unique_content:
     !concat
-    - !include swift_macros.yaml&includes.swift
+    - !include common_macros.yaml&includes.target_language
     - |
       {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
       {%- set import_converters = [] -%}
@@ -144,14 +144,14 @@ var_class_swift_include: &var_class_swift_include
       {%- set converter = make_type_converter(cxx.type) -%}
       {%- do collect_desc_import_converters(converter, desc_import_converters) -%}
       {%- for import_converter, _ in import_converters -%}
-      {%-   if import_converter.swift_include -%}
+      {%-   if import_converter.swift_include is defined -%}
       {{marker}}{{import_converter.swift_include.snippet(full_package=vars.full_package)}}
       {%-   endif -%}
       {%- endfor -%}
       {%- for desc_import_converter, gen_for_impl in desc_import_converters -%}
       {#- we need to import implementation classes for object construction (`gen_for_impl` is for tracking nested types) -#}
-      {%-   if desc_import_converter.swift_include -%}
-      {{marker}}{{desc_import_converter.swift_include.snippet(interface_class=(gen_for_impl and desc_import_converter.swift.vars.action=='gen_interface'))}}
+      {%-   if desc_import_converter.swift_include is defined -%}
+      {{marker}}{{desc_import_converter.swift_include.snippet(interface_class=(gen_for_impl and desc_import_converter.vars.action=='gen_interface'))}}
       {%-   endif -%}
       {%- endfor -%}
 
@@ -177,8 +177,8 @@ class:
                 {{vars.header_code_fragment}}{{new_line}}
           {% endif -%}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
-          {%- set base_interfaces = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
-          {%- set base_classes = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|map(attribute='target_type_name')|list -%}
+          {%- set base_interfaces = base_types_converters|selectattr('type_info.vars.action', 'equalto', 'gen_interface')|map(attribute='swift.target_type_name')|list -%}
+          {%- set base_classes = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|map(attribute='swift.target_type_name')|list -%}
           {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
           {%- if base_classes|length > 1 %}
           {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
@@ -262,11 +262,11 @@ class:
             /// It is intended to be used by the generated code.
             {{'override ' if base_classes}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
           {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
-          {%-   set polymorphic_base = base_types_converters|map(attribute='swift')|selectattr('vars.action', 'equalto', 'gen_class')|selectattr('cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
+          {%-   set polymorphic_base_converter = base_types_converters|selectattr('type_info.vars.action', 'equalto', 'gen_class')|selectattr('type_info.cxx.is_polymorphic', 'equalto', true)|first|default(none) %}
 
             /// An internal method to create a Swift object from a C++ object.
             /// It is intended to be used by the generated code.
-            {{'override ' if polymorphic_base and (polymorphic_base.vars.descendants if polymorphic_base.vars.descendants is not none else polymorphic_base.descendants)}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
+            {{'override ' if polymorphic_base_converter and (polymorphic_base_converter.type_info.vars.descendants if polymorphic_base_converter.type_info.vars.descendants is not none else polymorphic_base_converter.type_info.descendants)}}class func cppbindConstructObject(_ cppbindObj: CppBindCObject, _ owner: Bool = false) -> {{converter.swift.target_type_name}} {
               {{converter.swift_obj_construction.snippet(name="cppbindObj")|indent(4)}}
             }
           {%- endif %}
@@ -291,7 +291,7 @@ class:
         {%- set converter = make_type_converter(cxx.type) -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
-        {%- set is_root_class = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
+        {%- set is_root_class = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- if is_root_class -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
         {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
@@ -343,7 +343,7 @@ class:
         {%- set converter = make_type_converter(cxx.type) -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join %}
         {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
-        {%- set is_root_class = base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
+        {%- set is_root_class = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- if is_root_class -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner);
         {%- endif -%}
@@ -370,7 +370,7 @@ interface:
         {% endif -%}
         {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
-        {%- if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
+        {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
         {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
         {%- endif %}
         {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
@@ -434,7 +434,7 @@ interface:
         {%- endif %}
           /// An internal property to keep an information about the underlying C++ object type.
           /// It is intended to be used by the generated code.
-          {{'override ' if base_types_converters|map(attribute='swift')|rejectattr('vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
+          {{'override ' if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list}}class var cppbindCxxTypeName : String { return "{{cxx.type_name}}" }
         {#- object construction function is generated for all classes (not only for bases with reusing them for derived types) since the performance would be lowered in case of superbases with deep hierarchy -#}
         {%- if (vars.descendants if vars.descendants is not none else descendants) and cxx.is_polymorphic %}
 
@@ -529,7 +529,7 @@ var_method_cxx_include: &var_method_cxx_include
   unique_content:
     !concat
     - !include cxx_macros.yaml&includes
-    - !include swift_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {%- if vars.is_proj_type -%}
       {{marker}}#include "{{vars.prj_rel_file_name}}"
@@ -546,7 +546,7 @@ var_method_cxx_include: &var_method_cxx_include
 var_method_c_include: &var_method_c_include
   unique_content: |
     {%- macro gen_include(converter) -%}
-    {%-   if converter.c_include|default(none) -%}
+    {%-   if converter.c_include is defined -%}
     {{marker}}{{converter.c_include.snippet()}}
     {%-   endif -%}
     {%- endmacro -%}
@@ -560,14 +560,14 @@ var_method_c_include: &var_method_c_include
 var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content:
     !concat
-    - !include swift_macros.yaml&forward_declarations.method
+    - !include common_macros.yaml&forward_declarations.method
     - |
       {{gen_fwd_decl()}}
 
 var_method_cxx_glob_decl: &var_method_cxx_glob_decl
   unique_content:
     !concat
-    - !include swift_macros.yaml&global_declarations.method
+    - !include common_macros.yaml&global_declarations.method
     - |
       {{gen_glob_decl()}}
 
@@ -576,7 +576,7 @@ constructor:
     include: *var_method_swift_include
     head:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - !include swift_macros.yaml&constructor
       - |
@@ -636,7 +636,7 @@ constructor:
         {%-   endif %}
         {%-   for arg in args %}
         {%-     set arg_converter = make_type_converter(arg.type) %}
-        {%-     if arg_converter.sc_cleanup %}
+        {%-     if arg_converter.sc_cleanup is defined %}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
         {%-       set cleanup_code_fragment = arg_converter.sc_cleanup.snippet(arg_converter.swift_to_sc.converted_name(arg_name)) %}
         {%-       if cleanup_code_fragment %}
@@ -677,7 +677,7 @@ constructor:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - !include swift_macros.yaml&constructor
       - |
@@ -690,7 +690,7 @@ constructor:
         {%-   for arg in args -%}
         {%-     set arg_converter = make_type_converter(arg.type) -%}
         {{comma()}}{{arg_converter.c.target_type_name}}
-        {%-     if arg_converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
+        {%-     if arg_converter.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
         {%-   set call_args = [] -%}
         {%-   for arg in args -%}
         {%-     set arg_converter = make_type_converter(arg.type) -%}
@@ -743,7 +743,7 @@ constructor:
     body:
       content:
         !concat
-        - !include swift_macros.yaml&templates
+        - !include common_macros.yaml&templates
         - !include common_macros.yaml&utils
         - !include swift_macros.yaml&constructor
         - |
@@ -756,7 +756,7 @@ constructor:
           {%-   for arg in args -%}
           {%-     set arg_converter = make_type_converter(arg.type) -%}
           {{comma()}}{{arg_converter.c.target_type_name}}
-          {%-     if arg_converter.c.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+          {%-     if arg_converter.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
           {%-   endfor -%}
           {{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%- endmacro %}
@@ -774,7 +774,7 @@ method:
       - !include swift_macros.yaml&validations
       - !include swift_macros.yaml&exception_handling
       - !include swift_macros.yaml&special_functions.method
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
         {%- do run_method_validations() -%}
@@ -813,7 +813,7 @@ method:
         {%-       endif %}
         {%-       for arg in cxx.args %}
         {%-         set arg_converter = make_type_converter(arg.type) -%}
-        {%-         if arg_converter.sc_cleanup %}
+        {%-         if arg_converter.sc_cleanup is defined %}
         {%-           set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
         {%-           set cleanup_code_fragment = arg_converter.sc_cleanup.snippet(arg_converter.swift_to_sc.converted_name(arg_name)) %}
         {%-           if cleanup_code_fragment %}
@@ -821,7 +821,7 @@ method:
         {%-           endif %}
         {%-         endif %}
         {%-       endfor %}
-        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-         set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-         if conversion %}
         {{conversion|indent(4)}}{% endif %}
@@ -871,7 +871,7 @@ method:
             {%- endif %}
             {%- for arg in cxx.args %}
             {%-   set arg_converter = make_type_converter(arg.type) %}
-            {%-   if arg_converter.sc_cleanup %}
+            {%-   if arg_converter.sc_cleanup is defined %}
             {%-     set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
             {%-     set cleanup_code_fragment = arg_converter.sc_cleanup.snippet(arg_converter.swift_to_sc.converted_name(arg_name)) %}
             {%-     if cleanup_code_fragment %}
@@ -879,7 +879,7 @@ method:
         {%-     endif %}
         {%-   endif %}
         {%- endfor %}
-        {%- if rconverter.sc_cleanup %}
+        {%- if rconverter.sc_cleanup is defined %}
         {%-   set cleanup_code_fragment = rconverter.sc_cleanup.snippet(res_converter.converted_name('value')) %}
         {%-   if cleanup_code_fragment %}
             {{cleanup_code_fragment|indent(4)}}
@@ -957,7 +957,7 @@ method:
         {%-   endif %}
         {%-   for arg in args %}
         {%-     set arg_converter = make_type_converter(arg.type) -%}
-        {%-     if arg_converter.sc_cleanup %}
+        {%-     if arg_converter.sc_cleanup is defined %}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_camel_case -%}
         {%-       set cleanup_code_fragment = arg_converter.sc_cleanup.snippet(arg_converter.swift_to_sc.converted_name(arg_name)) %}
         {%-       if cleanup_code_fragment %}
@@ -971,7 +971,7 @@ method:
         {%-     if conversion %}
           {{conversion|indent(2)}}
         {%-     endif %}
-        {%-     if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-     if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-       set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-       if conversion %}
           {{conversion|indent(2)}}{% endif %}
@@ -1010,7 +1010,7 @@ method:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_' if owner_class.cxx.namespace else '' %}
@@ -1020,12 +1020,12 @@ method:
         {%- if not is_subscript_operator -%}
         {%-   macro gen_func(args, target_overloading_index=none) -%}
         {%-     set comma = joiner(', ') -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, get_overloading_postfix(vars) + get_template_postfix())}}{{'_' + target_overloading_index|string if target_overloading_index}}(
+        {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, get_overloading_postfix(vars) + get_template_postfix())}}{{'_' + target_overloading_index|string if target_overloading_index}}(
         {%-     if not cxx.is_static -%}
         {{owner_class_converter.c.target_type_name}} cself, {% endif -%}
         {%-     for arg in args -%}
         {%-       set arg_converter = make_type_converter(arg.type) -%}
-        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
+        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
         {%-     set call_args = [] %}
         {%-     for arg in args %}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1084,10 +1084,10 @@ method:
         {%- else -%}
         {%- set comma = joiner(', ') -%}
         {# subscript operator getter #}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_getitem_'), get_overloading_postfix(vars) + get_template_postfix())}}({{owner_class_converter.c.target_type_name}} cself,
+        {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_getitem_'), get_overloading_postfix(vars) + get_template_postfix())}}({{owner_class_converter.c.target_type_name}} cself,
         {%- for arg in cxx.args -%}
         {%- set arg_converter = make_type_converter(arg.type) -%}
-        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}) {
+        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}) {
         {%- set call_args = [] %}
         {%- for arg in cxx.args -%}
         {%-   set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1115,8 +1115,8 @@ method:
         {%    set comma = joiner(', ') -%}
         void {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), get_overloading_postfix(vars) + get_template_postfix())}}({{owner_class_converter.c.target_type_name}} cself, {% for arg in cxx.args -%}
         {%-   set arg_converter = make_type_converter(arg.type) -%}
-            {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if cxx.args}}{{rconverter.c.target_type_name}}
-        {%-   if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value) {
+            {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if cxx.args}}{{rconverter.c.target_type_name}}
+        {%-   if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value) {
         {%-     set call_args = [] %}
         {%-     for arg in cxx.args -%}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1144,7 +1144,7 @@ method:
     body:
       content:
         !concat
-        - !include swift_macros.yaml&templates
+        - !include common_macros.yaml&templates
         - !include common_macros.yaml&utils
         - |
           {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_' if owner_class.cxx.namespace else '' -%}
@@ -1155,11 +1155,11 @@ method:
           {%-   macro gen_func(args, target_overloading_index=none) -%}
           {%-     set comma = joiner(', ') -%}
           {%-     set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
-          {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}(
+          {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}(
           {%-     if not cxx.is_static -%}{{owner_class_converter.c.target_type_name}} cself, {% endif -%}
           {%-     for arg in args -%}
           {%-       set arg_converter = make_type_converter(arg.type) -%}
-          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
           {%-     endfor -%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%-   endmacro -%}
           {%-   set non_primitive_default_args = cxx.args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
@@ -1169,17 +1169,17 @@ method:
           {%- else %}
           {# subscript operator #}
           {%-   set comma = joiner(', ') %}
-          {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}
+          {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}
           {%- endif %} {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_getitem_') if is_subscript_operator else vars.name, get_overloading_postfix(vars) + get_template_postfix())}}({{owner_class_converter.c.target_type_name}} cself, {% for arg in cxx.args -%}
           {%- set arg_converter = make_type_converter(arg.type) -%}
-          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%});
+          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%});
           {# subscript operator setter #}
           {%- if not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
           {%    set comma = joiner(', ') %}
           void {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name|replace('[]', '_setitem_'), get_overloading_postfix(vars) + get_template_postfix())}}({{owner_class_converter.c.target_type_name}} cself, {% for arg in cxx.args -%}
           {%-   set arg_converter = make_type_converter(arg.type) -%}
-          {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.c.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if cxx.args}}{{rconverter.c.target_type_name}}
-          {%-   if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value);
+          {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if cxx.args}}{{rconverter.c.target_type_name}}
+          {%-   if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value);
           {%-   endif %}
           {%- endif -%}
 
@@ -1189,7 +1189,7 @@ function:
     include: *var_method_swift_include
     body:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- if vars.return_value_policy == 'reference_internal' -%}
@@ -1245,7 +1245,7 @@ function:
         {%-   endif %}
         {%-   for arg in args %}
         {%-     set arg_converter = make_type_converter(arg.type) %}
-        {%-     if arg_converter.sc_cleanup %}
+        {%-     if arg_converter.sc_cleanup is defined %}
         {%-       set cleanup_code_fragment = arg_converter.sc_cleanup.snippet(arg_converter.swift_to_sc.converted_name(arg.name|to_camel_case)) %}
         {%-       if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(2)}}
@@ -1292,7 +1292,7 @@ function:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {#- this should got to shared macro -#}
@@ -1301,11 +1301,11 @@ function:
         {%-   set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         {%-   set rconverter = make_type_converter(cxx.result_type) -%}
         {%-   set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace, vars.name, get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}(
+        {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{helper.get_c_func_name(cxx_namespace, vars.name, get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}(
         {%-   set comma = joiner(', ') %}
         {%-   for arg in args -%}
         {%-     set arg_converter = make_type_converter(arg.type) -%}
-        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.c.custom.is_c_pointer_type -%}
+        {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type -%}
         {{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
         {%-     set call_args = [] %}
         {%-     for arg in args -%}
@@ -1362,7 +1362,7 @@ function:
     body:
       content:
         !concat
-        - !include swift_macros.yaml&templates
+        - !include common_macros.yaml&templates
         - !include common_macros.yaml&utils
         - |
           {#- this should got to shared macro #}
@@ -1372,10 +1372,10 @@ function:
           {%-   set rconverter = make_type_converter(cxx.result_type) %}
           {%-   set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' %}
           {%-   set c_func_name = helper.get_c_func_name(cxx_namespace, vars.name, get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index) %}
-          {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
+          {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{c_func_name}}(
           {%-   for arg in args -%}
           {%-     set arg_converter = make_type_converter(arg.type) -%}
-          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.c.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
+          {{comma()}}{{arg_converter.c.target_type_name}} {% if arg_converter.custom.is_c_pointer_type %}{{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
           {%-   endfor -%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err);
           {%- endmacro -%}
           {%- set non_primitive_default_args = cxx.args|rejectattr('default', 'none')|rejectattr('type.is_enum')|rejectattr('default_is_nullptr')|rejectattr('default_is_literal')|list -%}
@@ -1393,14 +1393,14 @@ var_getter_swift_include: &var_getter_swift_include
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content:
     !concat
-    - !include swift_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {{gen_include(make_type_converter(cxx.result_type))}}
 
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content:
     !concat
-    - !include swift_macros.yaml&forward_declarations.getter
+    - !include common_macros.yaml&forward_declarations.getter
     - |
       {{gen_fwd_decl()}}
 
@@ -1424,7 +1424,7 @@ property_getter:
       {%-   if conversion %}
       {{conversion}}
       {%-   endif %}
-      {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+      {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
       {%-     set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) -%}
       {%-     if conversion %}
       {{conversion}}{% endif %}
@@ -1458,7 +1458,7 @@ property_getter:
       {%-       endif %}
       {%-     endfor %}
       {%-   endif %}
-      {%- if rconverter.sc_cleanup %}
+      {%- if rconverter.sc_cleanup is defined %}
       {%-   set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
       {%-   if cleanup_code_fragment %}
           {{cleanup_code_fragment|indent(4)}}
@@ -1483,7 +1483,7 @@ property_getter:
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
       {%- set rconverter = make_type_converter(cxx.result_type) -%}
-      {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself) {
+      {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself) {
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
@@ -1491,7 +1491,7 @@ property_getter:
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
       {% if vars.action == 'gen_property_setter' %}
-      void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}) {
+      void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}) {
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           {{rconverter.c_to_cxx.snippet(vars.name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{cxx.name}} = {{rconverter.c_to_cxx.converted_name(vars.name)}};
@@ -1504,9 +1504,9 @@ property_getter:
         {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
         {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself);
+        {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself);
         {%- if vars.action == 'gen_property_setter' %}
-        void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}});
+        void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}});
         {% endif %}
 
 getter:
@@ -1514,7 +1514,7 @@ getter:
     include: *var_getter_swift_include
     properties:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
@@ -1551,7 +1551,7 @@ getter:
         {%-   if conversion %}
         {{conversion}}
         {%-   endif %}
-        {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-     set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-     if conversion %}
         {{conversion}}{% endif %}
@@ -1582,7 +1582,7 @@ getter:
         {%- endif %}
             var cppbindErr = CppBindCObject()
             _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(setter.vars)}}{{get_template_postfix()}}(cself, {{converter.converted_name('value')}}, &cppbindErr)
-        {%- if rconverter.sc_cleanup %}
+        {%- if rconverter.sc_cleanup is defined %}
         {%-   set cleanup_code_fragment = rconverter.sc_cleanup.snippet(converter.converted_name('value')) %}
         {%-   if cleanup_code_fragment %}
             {{cleanup_code_fragment|indent(4)}}
@@ -1619,7 +1619,7 @@ getter:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include swift_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
@@ -1639,7 +1639,7 @@ getter:
             cppbind_err->type = strdup("Uncaught Exception");
         }
         {%- endmacro -%}
-        {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, CppBindCObject* _Nonnull cppbind_err) {
+        {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, CppBindCObject* _Nonnull cppbind_err) {
         {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
             try {
@@ -1652,7 +1652,7 @@ getter:
         }
         {%- if setter is defined %}
         {%    set converter = make_type_converter(setter.cxx.args[0].type).c_to_cxx %}
-        void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(setter.vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, {{make_type_converter(setter.cxx.args[0].type).c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.cxx.args[0].name}}, CppBindCObject* _Nonnull cppbind_err) {
+        void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(setter.vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, {{make_type_converter(setter.cxx.args[0].type).c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.cxx.args[0].name}}, CppBindCObject* _Nonnull cppbind_err) {
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
             {{converter.snippet(setter.cxx.args[0].name, nullable=vars.nullable_return)|indent(4)}}
             try {
@@ -1665,15 +1665,15 @@ getter:
     body:
       content:
         !concat
-        - !include swift_macros.yaml&templates
+        - !include common_macros.yaml&templates
         - !include common_macros.yaml&utils
         - |
           {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
           {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join -%}
           {%- set rconverter = make_type_converter(cxx.result_type) -%}
-          {{rconverter.c.target_type_name}}{% if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, CppBindCObject* _Nonnull cppbind_err);
+          {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, CppBindCObject* _Nonnull cppbind_err);
           {%- if setter is defined %}
           {%    set converter = make_type_converter(setter.cxx.args[0].type).c %}
           void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(setter.vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, {{converter.target_type_name}}
-          {%- if rconverter.c.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.cxx.args[0].name}}, CppBindCObject* _Nonnull cppbind_err);
+          {%- if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.cxx.args[0].name}}, CppBindCObject* _Nonnull cppbind_err);
           {% endif %}

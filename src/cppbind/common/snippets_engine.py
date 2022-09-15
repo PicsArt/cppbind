@@ -25,12 +25,12 @@ from cppbind.common.yaml_process import to_value
 from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
 from cppbind.utils import (
-    _get_type_info,
     get_public_attributes,
+    get_type_info,
     get_types_infos,
     init_jinja_env,
     create_type_converter,
-    create_types_converters,
+    create_types_converters
 )
 
 OBJECT_INFO_TYPE = '$Object'
@@ -140,94 +140,43 @@ class RenderFileAction(CopyFileAction):
 
 
 class TypeConverter:
+    """Base type converter class"""
 
     def __init__(self,
                  type_info,
+                 type_info_collector,
                  template_args,
-                 snippet_name,
-                 custom,
-                 type_converter,
-                 type_converter_builder,
-                 type_info_getter,
                  **kwargs):
-        self._type_info = type_info
-        self._type_converter = type_converter
-        self._template_args = template_args
-        self._snippet_name = snippet_name
-        self._custom = custom
-        self._type_converter_builder = type_converter_builder
-        self._type_info_getter = type_info_getter
-        self._context = self._make_context()
-
-    def snippet(self, name=None, **kwargs):
-        return self._type_converter.snippet(name, {**self._context, **kwargs})
-
-    def converted_name(self, name):
-        return self._type_converter.converted_name(name)
-
-    @property
-    def target_type_name(self):
-        return self._type_converter.target_type_name(self._context)
-
-    def get_target_type_name(self, **kwargs):
-        return self._type_converter.target_type_name(self._context, **kwargs)
-
-    @property
-    def source_type_name(self):
-        return self._type_converter.source_type_name(self._context)
-
-    @property
-    def cxx(self):
-        return self._type_info.cxx
-
-    @property
-    def vars(self):
-        return self._type_info.vars
-
-    @property
-    def has_api(self):
-        return self._type_info.has_api
-
-    @property
-    def is_obj_type(self):
-        return self._type_info.vars is not None
-
-    @property
-    def template_args_postfixes(self):
-        return self._type_info.template_args_postfixes
-
-    @property
-    def descendants(self):
-        return self._type_info.descendants
+        self.type_info = type_info
+        self.__type_info_collector = type_info_collector
+        self.__template_args = template_args
+        self.__kwargs = kwargs
+        self.__context = self.__make_context()
+        self.custom = self.__eval_custom(self.__context)
+        self.__create_section_converters()
 
     @property
     def template_args(self):
         """List of template argument types"""
-        return [arg.type for arg in self._template_args]
+        return [arg.type for arg in self.__template_args]
 
     @property
     def template_args_kinds(self):
         """List of template argument kinds"""
-        return [arg.kind for arg in self._template_args]
+        return [arg.kind for arg in self.__template_args]
 
-    def _make_context(self):
-        # is_type_converter = isinstance(self.type_converter, TypeConvertorInfo)
+    def __make_context(self):
+
         def make():
             # helper variables
             template_args = self.template_args
             template_args_kinds= self.template_args_kinds
 
-            cxx = self.cxx
-            # make api variables available in converter under vars
-            vars = self.vars
-            has_api = self.has_api
-            template_args_postfixes = self.template_args_postfixes
-
-            descendants = self.descendants
-
-            # helper functions
-            make_type_converter = self._type_converter_builder
-            get_type_info = self._type_info_getter
+            cxx = self.type_info.cxx
+            vars = self.type_info.vars
+            has_api = self.type_info.has_api
+            template_args_postfixes = self.type_info.template_args_postfixes
+            descendants = self.type_info.descendants
 
             return locals()
 
@@ -235,60 +184,68 @@ class TypeConverter:
         del context['self']
 
         # expose cxx and vars so that they can be overridden if required when calling snippets
-        self._expose_type_namespace(context, 'cxx')
-        self._expose_namespace(context, 'vars')
-
-        # evaluate custom sections jinja expressions
-        self._eval_custom(context)
+        self.__expose_type_namespace(context, 'cxx')
+        self.__expose_namespace(context, 'vars')
 
         return context
 
-    def _eval_custom(self, context):
+    def __eval_custom(self, context):
         custom = SimpleNamespace()
         # evaluate custom fields one by one to make available by defined order
-        for k, v in self._custom.__dict__.items():
+        for k, v in self.__type_info_collector.custom.__dict__.items():
             setattr(custom, k, v.render(context) if isinstance(v, Template) else v)
             # to make accessible for coming fields
             context['custom'] = custom
 
-        self.custom = custom
+        return custom
 
-    def _expose_namespace(self, context, name):
+    def __expose_namespace(self, context, name):
         if context[name]:
             for k, v in context[name].__dict__.items():
                 context[f'{name}_{k}'] = v
 
-    def _expose_type_namespace(self, context, name):
+    def __expose_type_namespace(self, context, name):
         if context[name]:
             for prop in get_public_attributes(CXXExposedType.__dict__):
                 context[f'cxx_{prop}'] = getattr(context[name], prop)
 
+    def __create_section_converters(self):
+        """Creates concrete section type converters"""
 
-class Adapter:
+        for name in self.__type_info_collector.target_type_infos:
+            type_converter_info = self.__type_info_collector.target_type_infos[name]
+            type_section_converter = TypeSectionConverter(type_converter_info, self.__context)
+            setattr(self, name, type_section_converter)
 
-    def __init__(self, type_info, type_info_collector, **kwargs):
-        self.type_info_collector = type_info_collector
-        self.type_info = type_info
-        self.template_args = []
-        self.kwargs = kwargs
+        for name in self.__type_info_collector.converters:
+            type_converter_info = self.__type_info_collector.converters[name]
+            type_section_converter = TypeSectionConverter(type_converter_info, self.__context)
+            setattr(self, name, type_section_converter)
 
-    def set_template_args(self, args):
-        self.template_args = args
 
-    def __getattr__(self, name):
-        if name in self.type_info_collector.target_type_infos:
-            type_info_collector = self.type_info_collector.target_type_infos[name]
-        elif name in self.type_info_collector.converters:
-            type_info_collector = self.type_info_collector.converters[name]
-        else:
-            return None
+class TypeSectionConverter:
+    """Concrete type section converter"""
 
-        return TypeConverter(type_info=self.type_info,
-                             template_args=self.template_args,
-                             snippet_name=name,
-                             custom=self.type_info_collector.custom,
-                             type_converter=type_info_collector,
-                             **self.kwargs)
+    def __init__(self, type_converter_info, context):
+        self.__type_converter_info = type_converter_info
+        self.__context = context
+
+    def snippet(self, name=None, **kwargs):
+        return self.__type_converter_info.snippet(name, {**self.__context, **kwargs})
+
+    def converted_name(self, name):
+        return self.__type_converter_info.converted_name(name)
+
+    @property
+    def target_type_name(self):
+        return self.__type_converter_info.target_type_name(self.__context)
+
+    def get_target_type_name(self, **kwargs):
+        return self.__type_converter_info.target_type_name(self.__context, **kwargs)
+
+    @property
+    def source_type_name(self):
+        return self.__type_converter_info.source_type_name(self.__context)
 
 
 class TypeInfoCollector:
@@ -300,10 +257,11 @@ class TypeInfoCollector:
         self.custom = custom
         self.kwargs = kwargs
 
-    def make_type_converter(self, type_info):
-        return Adapter(type_info=type_info,
-                       type_info_collector=self,
-                       **self.kwargs)
+    def make_type_converter(self, type_info, template_args):
+        return TypeConverter(type_info=type_info,
+                             type_info_collector=self,
+                             template_args=template_args,
+                             **self.kwargs)
 
 
 class TargetTypeInfo:
@@ -622,9 +580,7 @@ class SnippetsEngine:
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,
                                                            converters=type_converters,
-                                                           custom=custom,
-                                                           type_converter_builder=partial(create_type_converter, self),
-                                                           type_info_getter=partial(_get_type_info, self, self.language))
+                                                           custom=custom)
 
     def build_type_converter_with_typename(self, type_name, template_choice=None):
         return self.build_type_converter(CXXExposedType(type_name, template_choice))
@@ -645,10 +601,9 @@ class SnippetsEngine:
             return None
 
         type_info = create_type_info(self.runner, cxx_exposed_type)
-        type_converter = type_converter.make_type_converter(type_info)
 
-        if template_args:
-            type_converter.set_template_args([arg for arg in template_args if arg])
+        template_args = [arg for arg in template_args if arg] if template_args else []
+        type_converter = type_converter.make_type_converter(type_info, template_args)
 
         return type_converter
 
@@ -735,4 +690,7 @@ class SnippetsEngine:
         """Add custom filters/globals to jinja environment"""
 
         self.jinja_env.filters['type_converter'] = partial(create_types_converters, self)
-        self.jinja_env.filters['type_info'] = partial(get_types_infos, self, self.language)
+        self.jinja_env.filters['type_info'] = partial(get_types_infos, self)
+
+        self.jinja_env.globals['make_type_converter'] = partial(create_type_converter, self)
+        self.jinja_env.globals['get_type_info'] = partial(get_type_info, self)

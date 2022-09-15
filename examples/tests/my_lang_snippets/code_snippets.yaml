@@ -50,7 +50,7 @@ method:
           {%-   set arg_converter = make_type_converter(arg.type) %}
           {#    calling shareable macro which modifies macro arguments in order to use it later -#}
                 {{register_method_arg(args_list, arg)}}
-          {%-   if arg_converter.my_section %}
+          {%-   if arg_converter.my_section is defined %}
               {{arg_converter.my_section.snippet(arg.name)}}
           {%- endif %}
 

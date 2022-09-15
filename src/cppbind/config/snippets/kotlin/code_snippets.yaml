@@ -111,7 +111,7 @@ enum:
 var_class_cxx_glob_decl: &var_class_cxx_glob_decl
     unique_content:
       !concat
-      - !include kotlin_macros.yaml&global_declarations.class
+      - !include common_macros.yaml&global_declarations.class
       - |
         {{gen_glob_decl()}}
 
@@ -120,7 +120,7 @@ var_class_cxx: &var_class_cxx
     unique_content:
       !concat
       - !include cxx_macros.yaml&includes
-      - !include kotlin_macros.yaml&includes.cxx
+      - !include common_macros.yaml&includes.cxx
       - |
         {%- set includes = [] -%}
         {%- set converter = make_type_converter(cxx.type) -%}
@@ -155,7 +155,7 @@ var_class_cxx: &var_class_cxx
         {%- set converter = make_type_converter(cxx.type) %}
         {%- set descendants = vars.descendants if vars.descendants is not none else descendants %}
         {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
-        {%- set is_root_class = base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
+        {%- set is_root_class = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- set parent_type_name = converter.kotlin.get_target_type_name(interface_class=vars.action == 'gen_interface') %}
         {%- if is_root_class %}
         {%-   set finalize_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
@@ -213,7 +213,7 @@ var_class_cxx: &var_class_cxx
 var_class_kotlin_include: &var_class_kotlin_include
   unique_content:
     !concat
-    - !include kotlin_macros.yaml&includes.kotlin
+    - !include common_macros.yaml&includes.target_language
     - |
       {{marker if vars.include}}{{vars.include|format_list("import {}")|join_unique}}
       {%- set import_converters = [] -%}
@@ -224,14 +224,14 @@ var_class_kotlin_include: &var_class_kotlin_include
       {%- set desc_import_converters = [] -%}
       {%- do collect_desc_import_converters(make_type_converter(cxx.type), desc_import_converters) -%}
       {%- for import_converter, _ in import_converters -%}
-      {%-   if import_converter.kotlin_include -%}
+      {%-   if import_converter.kotlin_include is defined -%}
       {{marker}}{{import_converter.kotlin_include.snippet(full_package=vars.full_package)}}
       {%-   endif -%}
       {%- endfor -%}
       {%- for desc_import_converter, gen_for_impl in desc_import_converters -%}
       {#- we need to import implementation classes for object construction (`gen_for_impl` is for tracking nested types) -#}
-      {%-   if desc_import_converter.kotlin_include -%}
-      {{marker}}{{desc_import_converter.kotlin_include.snippet(interface_class=(gen_for_impl and desc_import_converter.kotlin.vars.action=='gen_interface'), full_package=vars.full_package)}}
+      {%-   if desc_import_converter.kotlin_include is defined -%}
+      {{marker}}{{desc_import_converter.kotlin_include.snippet(interface_class=(gen_for_impl and desc_import_converter.type_info.vars.action=='gen_interface'), full_package=vars.full_package)}}
       {%-   endif -%}
       {%- endfor -%}
 
@@ -257,10 +257,10 @@ class:
           {% endif -%}
           {%- set converter = make_type_converter(cxx.type) %}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
-          {%- set base_interfaces = base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'eq', 'gen_interface')|map(attribute='target_type_name')|list -%}
+          {%- set base_interfaces = base_types_converters|selectattr('type_info.vars.action', 'eq', 'gen_interface')|map(attribute='kotlin.target_type_name')|list -%}
           {%- set is_root_class = base_interfaces|length == base_types_converters|length %}
           {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or is_root_class else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
-          {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
+          {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
           {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
           {%- endif %}
           {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
@@ -306,7 +306,7 @@ class:
                   refs.add(ref)
               }
           {%- endif %}
-          {%- if base_types_converters|map(attribute='kotlin')|selectattr('vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
+          {%- if base_types_converters|selectattr('type_info.vars.action', 'equalto', 'gen_interface')|list or not base_types_converters %}
               /**
                * An internal getter to get the id of an object.
                * It is intended to be used by the generated code.
@@ -419,7 +419,7 @@ interface:
           {%- set converter = make_type_converter(cxx.type) %}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- set bases_specifiers = base_types_converters|map(attribute='kotlin.target_type_name')|list + vars.bases_list %}
-          {%- if base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+          {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list %}
           {%-   do Error.critical(cxx.type_name + ' interface cannot inherit from a class.') %}
           {%- endif %}
           {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
@@ -514,7 +514,7 @@ interface:
           {%- if head %}
               {{head|string|indent}}
           {%- endif %}
-          {%- if not base_types_converters|map(attribute='kotlin')|rejectattr('vars.action', 'equalto', 'gen_interface')|list %}
+          {%- if not base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list %}
 
               override fun close() {
                   if (cppbindObj.owner && cppbindObj.id != 0L) {
@@ -562,7 +562,7 @@ var_method_cxx_include: &var_method_cxx_include
   unique_content:
     !concat
     - !include cxx_macros.yaml&includes
-    - !include kotlin_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {%- if vars.is_proj_type -%}
       {{marker}}#include "{{vars.prj_rel_file_name}}"
@@ -579,14 +579,14 @@ var_method_cxx_include: &var_method_cxx_include
 var_method_cxx_forward_decl: &var_method_cxx_forward_decl
   unique_content:
     !concat
-    - !include kotlin_macros.yaml&forward_declarations.method
+    - !include common_macros.yaml&forward_declarations.method
     - |
       {{gen_fwd_decl()}}
 
 var_method_cxx_glob_decl: &var_method_cxx_glob_decl
   unique_content:
     !concat
-    - !include kotlin_macros.yaml&global_declarations.method
+    - !include common_macros.yaml&global_declarations.method
     - |
       {{gen_glob_decl()}}
 
@@ -643,7 +643,7 @@ constructor:
       {% endfor -%}{{gen_func(cxx.args)}}
     companion:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - !include kotlin_macros.yaml&constructor
       - |
@@ -687,7 +687,7 @@ constructor:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - !include kotlin_macros.yaml&constructor
       - |
@@ -767,6 +767,7 @@ method:
       - !include common_macros.yaml&utils
       - !include kotlin_macros.yaml&validations
       - !include kotlin_macros.yaml&special_functions.method
+      - !include common_macros.yaml&templates
       - !include kotlin_macros.yaml&templates
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -842,7 +843,7 @@ method:
         {%-           endif %}
         {%-         endfor %}
         {%-       endif %}
-        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-         set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
         {%-         if conversion %}
             {{conversion|indent(4)}}{% endif %}
@@ -907,6 +908,7 @@ method:
         {%- endif %}
     companion:
       !concat
+      - !include common_macros.yaml&templates
       - !include kotlin_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
@@ -965,7 +967,7 @@ method:
         {%- endif %}
     private_external:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -989,7 +991,7 @@ method:
         {%- endif -%}
     interface_external:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -1019,7 +1021,7 @@ method:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -1125,6 +1127,7 @@ function:
     include: *var_method_kotlin_include
     body:
       !concat
+      - !include common_macros.yaml&templates
       - !include kotlin_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
@@ -1191,7 +1194,7 @@ function:
         {% endfor -%}{{gen_func(cxx.args)}}
     glob_external:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -1217,7 +1220,7 @@ function:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
@@ -1316,14 +1319,14 @@ var_getter_kotlin_include: &var_getter_kotlin_include
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content:
     !concat
-    - !include kotlin_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {{gen_include(make_type_converter(cxx.result_type))}}
 
 var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
   unique_content:
     !concat
-    - !include kotlin_macros.yaml&forward_declarations.getter
+    - !include common_macros.yaml&forward_declarations.getter
     - |
       {{gen_fwd_decl()}}
 
@@ -1348,7 +1351,7 @@ property_getter:
               val result = j{{vars.name|capitalize}}(cppbindObjId)
       {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
-      {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+      {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
       {%-   set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
       {%-   if conversion %}
               {{conversion|indent(8)}}{% endif %}
@@ -1435,7 +1438,8 @@ getter:
     include: *var_getter_kotlin_include
     properties:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
+      - !include common_macros.yaml&utils
       - |
         {%- do helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
         {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
@@ -1457,7 +1461,7 @@ getter:
                 val result = j{{vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId)
         {%- endif %}
                 {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
-        {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-   set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
         {%-   if conversion %}
                 {{conversion|indent(8)}}{%- endif %}
@@ -1500,7 +1504,7 @@ getter:
         {%- endif %}
     private_external:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
         {%- if owner_class.vars.action == 'gen_class' -%}
@@ -1511,7 +1515,7 @@ getter:
         {%- endif %}
     interface_external:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
         {%- if owner_class.vars.action == 'gen_interface' -%}
@@ -1529,7 +1533,7 @@ getter:
     glob_decl: *var_method_cxx_glob_decl
     body:
       !concat
-      - !include kotlin_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- set rconverter = make_type_converter(cxx.result_type) -%}
         {%- macro gen_exc_try_block(vars) -%}

@@ -4,7 +4,6 @@
 
 import copy
 import types
-from functools import partial
 
 import cppbind
 import cppbind.converter
@@ -20,7 +19,7 @@ from cppbind.cxx_exposed import (
     CXXFunctionExposedElement,
     CXXMemberExposedElement
 )
-from cppbind.utils import get_public_attributes, create_type_converter, _get_type_info
+from cppbind.utils import get_public_attributes
 
 
 SNIPPETS_ENGINE = None
@@ -56,9 +55,6 @@ def make_def_context(ctx):
         new_line = cppbind.converter.NEW_LINE
 
         vars = ctx.vars
-
-        make_type_converter = partial(create_type_converter, SNIPPETS_ENGINE)
-        get_type_info = partial(_get_type_info, SNIPPETS_ENGINE, LANGUAGE)
 
         return locals()
 

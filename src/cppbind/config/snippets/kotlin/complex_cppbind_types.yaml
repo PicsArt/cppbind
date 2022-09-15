@@ -32,7 +32,7 @@ $Object:
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters #}
       {%- for name in template_args_postfixes or [] -%}
-      {%-   if name != None %}{{name}}{% else %}{{make_type_converter(template_args[loop.index - 1]).kotlin.custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
+      {%-   if name != None %}{{name}}{% else %}{{make_type_converter(template_args[loop.index - 1]).custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     namespace: |
       {#- this is an internal section no need to define in user defined custom converters #}
@@ -189,7 +189,7 @@ $Object:
       when ({{name}}Type) {
       {%- for descendant in descendants %}
       {%-   set desc_converter = make_type_converter(descendant) -%}
-      {%-   set desc_type_name = desc_converter.kotlin.get_target_type_name(interface_class=desc_converter.kotlin.vars.action == 'gen_interface') %}
+      {%-   set desc_type_name = desc_converter.kotlin.get_target_type_name(interface_class=desc_converter.type_info.vars.action == 'gen_interface') %}
           {{desc_type_name}}.cppbindCxxTypeName -> return {{desc_type_name}}(CppBindObject({{name}}, owner))
       {%- endfor %}
           else -> return {{type_name}}(CppBindObject({{name}}, owner))
@@ -308,17 +308,17 @@ std::string_view:
 std::vector:
   custom:
     pname: Object
-    tname: "List{{make_type_converter(template_args[0]).kotlin.custom.tname}}"
+    tname: "List{{make_type_converter(template_args[0]).custom.tname}}"
     is_kotlin_type_erased: True
   types:
     kotlin: "List<{{make_type_converter(template_args[0]).kotlin.target_type_name}}>"
-    jni: "{{make_type_converter(template_args[0]).jni.target_type_name if make_type_converter(template_args[0]).kotlin.custom.pname != 'Object' else 'jobject'}}Array"
-    jdk: "{{make_type_converter(template_args[0]).kotlin.custom.pname}}Array"
+    jni: "{{make_type_converter(template_args[0]).jni.target_type_name if make_type_converter(template_args[0]).custom.pname != 'Object' else 'jobject'}}Array"
+    jdk: "{{make_type_converter(template_args[0]).custom.pname}}Array"
   converters:
     jni_to_cxx: |
       {%- set value_converter = make_type_converter(template_args[0]) -%}
       {%- set tmp_name = '_' + target_name %}
-      {%- set jni_array_get = 'cppbind::get{}Array'.format(value_converter.kotlin.custom.pname) %}
+      {%- set jni_array_get = 'cppbind::get{}Array'.format(value_converter.custom.pname) %}
       {{cxx.unqualified_resolved_type_name}} {{target_name}};
       auto {{tmp_name}} = {{jni_array_get}}(env, {{name}});
       for (auto& value_{{tmp_name}} : {{tmp_name}}) {
@@ -328,13 +328,13 @@ std::vector:
 
     cxx_to_jni: |
       {%- set value_converter = make_type_converter(template_args[0]) -%}
-      {%- set jni_type_prefix = value_converter.kotlin.custom.pname %}
+      {%- set jni_type_prefix = value_converter.custom.pname %}
       {%- set jni_array_set = 'Set{}ArrayRegion'.format(jni_type_prefix) if jni_type_prefix != 'Object' else 'SetObjectArrayElement' -%}
 
       {%- if jni_type_prefix != 'Object' %}
-      {{target_type_name}} {{target_name}} = env->New{{value_converter.kotlin.custom.pname}}Array({{name}}.size());
+      {{target_type_name}} {{target_name}} = env->New{{value_converter.custom.pname}}Array({{name}}.size());
       {%- else %}
-      {{target_type_name}} {{target_name}} = env->New{{value_converter.kotlin.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+      {{target_type_name}} {{target_name}} = env->New{{value_converter.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
       {%- endif %}
       size_t index_{{name}} = 0;
       for (auto& value_{{name}} : {{name}}) {
@@ -349,7 +349,7 @@ std::vector:
 
     kotlin_to_jdk: |
       {%- set value_converter = make_type_converter(template_args[0]) -%}
-      {%- set array_init = '' if value_converter.kotlin.custom.pname != 'Object' else '{ Any() }' -%}
+      {%- set array_init = '' if value_converter.custom.pname != 'Object' else '{ Any() }' -%}
       {%- set indexName = "index" + name|capitalize -%}
       val {{target_name}} = {{target_type_name}}({{name}}.size) {{array_init}}
       var {{indexName}} = 0
@@ -364,7 +364,7 @@ std::vector:
       {%- set indexName = "index" + name|capitalize %}
       for (value{{name|capitalize}} in {{name}}) {
       {%- set var_name = 'value' + name|capitalize %}
-      {%- if value_converter.kotlin.custom.pname == "Object" %}
+      {%- if value_converter.custom.pname == "Object" %}
       {%-   set var_name = 'actual' + var_name|capitalize %}
           @Suppress("UNCHECKED_CAST") val {{var_name}} = value{{name|capitalize}} as {{value_converter.jdk.target_type_name}}
       {%- endif %}
@@ -373,7 +373,7 @@ std::vector:
       }
     kotlin_ref_internal: |
       {%- set value_converter = make_type_converter(template_args[0]).kotlin_ref_internal -%}
-      {%- if value_converter -%}
+      {%- if value_converter is defined -%}
       for (value{{name}} in {{name}}) {
           {{value_converter.snippet('value' + name, reference=reference, nullable=nullable)|indent(4)}}
       }
@@ -384,12 +384,12 @@ std::vector:
 std::map:
   custom:
     pname: Object
-    tname: "Map{{make_type_converter(template_args[0]).kotlin.custom.tname}}{{make_type_converter(template_args[1]).kotlin.custom.tname}}"
+    tname: "Map{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
     is_kotlin_type_erased: True
   types:
     kotlin: "Map<{{make_type_converter(template_args[0]).kotlin.target_type_name}}, {{make_type_converter(template_args[1]).kotlin.target_type_name}}>"
     jni: jmapobject
-    jdk: "Pair<{{make_type_converter(template_args[0]).kotlin.custom.pname}}Array, {{make_type_converter(template_args[1]).kotlin.custom.pname}}Array>"
+    jdk: "Pair<{{make_type_converter(template_args[0]).custom.pname}}Array, {{make_type_converter(template_args[1]).custom.pname}}Array>"
   converters:
     jni_to_cxx: |
       {%- set key_converter = make_type_converter(template_args[0]) -%}
@@ -397,8 +397,8 @@ std::map:
       {%- set tmp_name = '_' + target_name %}
       {%- set tmp_key_name = 'tmp_key_' + target_name %}
       {%- set tmp_val_name = 'tmp_val_' + target_name %}
-      {%- set jni_array_get_k = 'cppbind::get{}Array'.format(key_converter.kotlin.custom.pname) %}
-      {%- set jni_array_get_v = 'cppbind::get{}Array'.format(value_converter.kotlin.custom.pname) %}
+      {%- set jni_array_get_k = 'cppbind::get{}Array'.format(key_converter.custom.pname) %}
+      {%- set jni_array_get_v = 'cppbind::get{}Array'.format(value_converter.custom.pname) %}
       {{cxx.unqualified_resolved_type_name}} {{target_name}};
       auto {{tmp_name}} = cppbind::extract_jni_pair(env, {{name}});
       auto {{tmp_key_name}} = {{jni_array_get_k}}(env, {{tmp_name}}.first);
@@ -416,30 +416,30 @@ std::map:
       {%- set value_converter = make_type_converter(template_args[1]) -%}
       {%- set key_name = 'tmp_key_' + target_name %}
       {%- set val_name = 'tmp_val_' + target_name %}
-      {%- set key_array_set = 'Set{}ArrayRegion'.format(key_converter.kotlin.custom.pname) if key_converter.kotlin.custom.pname != 'Object' %}
-      {%- set val_array_set = 'Set{}ArrayRegion'.format(value_converter.kotlin.custom.pname) if value_converter.kotlin.custom.pname != 'Object' %}
-      {%- if key_converter.kotlin.custom.pname != 'Object' %}
-      auto {{key_name}} = env->New{{key_converter.kotlin.custom.pname}}Array({{name}}.size());
+      {%- set key_array_set = 'Set{}ArrayRegion'.format(key_converter.custom.pname) if key_converter.custom.pname != 'Object' %}
+      {%- set val_array_set = 'Set{}ArrayRegion'.format(value_converter.custom.pname) if value_converter.custom.pname != 'Object' %}
+      {%- if key_converter.custom.pname != 'Object' %}
+      auto {{key_name}} = env->New{{key_converter.custom.pname}}Array({{name}}.size());
       {%- else %}
-      jobjectArray {{key_name}} = env->New{{key_converter.kotlin.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+      jobjectArray {{key_name}} = env->New{{key_converter.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
       {%- endif %}
-      {%- if value_converter.kotlin.custom.pname != 'Object' %}
-      auto {{val_name}} = env->New{{value_converter.kotlin.custom.pname}}Array({{name}}.size());
+      {%- if value_converter.custom.pname != 'Object' %}
+      auto {{val_name}} = env->New{{value_converter.custom.pname}}Array({{name}}.size());
       {%- else %}
-      jobjectArray {{val_name}} = env->New{{value_converter.kotlin.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
+      jobjectArray {{val_name}} = env->New{{value_converter.custom.pname}}Array({{name}}.size(), env->FindClass("java/lang/Object"), NULL);
       {%- endif %}
       size_t index_{{name}}  = 0;
       for (auto& value_{{name}} : {{name}}) {
           auto key_{{name}} = value_{{name}}.first;
           auto val_{{name}} = value_{{name}}.second;
           {{key_converter.cxx_to_jni.snippet('key_{}'.format(name), value_policy=value_policy)|indent}}
-      {%- if key_converter.kotlin.custom.pname != 'Object' %}
+      {%- if key_converter.custom.pname != 'Object' %}
           env->{{key_array_set}}({{key_name}}, index_{{name}}, 1, &{{key_converter.cxx_to_jni.converted_name('key_{}'.format(name))}});
       {%- else %}
           env->SetObjectArrayElement({{key_name}}, index_{{name}}, {{key_converter.cxx_to_jni.converted_name('key_{}'.format(name))}});
       {%- endif %}
           {{value_converter.cxx_to_jni.snippet('val_{}'.format(name), value_policy=value_policy)|indent}}
-      {%- if value_converter.kotlin.custom.pname != 'Object' %}
+      {%- if value_converter.custom.pname != 'Object' %}
           env->{{val_array_set}}({{val_name}}, index_{{name}}, 1, &{{value_converter.cxx_to_jni.converted_name('val_{}'.format(name))}});
       {%- else %}
           env->SetObjectArrayElement({{val_name}}, index_{{name}}, {{value_converter.cxx_to_jni.converted_name('val_{}'.format(name))}});
@@ -453,11 +453,11 @@ std::map:
       {%- set value_converter = make_type_converter(template_args[1]) -%}
       {%- set tmp_key_name = 'tmpKey' + target_name|capitalize %}
       {%- set tmp_val_name = 'tmpVal' + target_name|capitalize %}
-      {%- set karray_init = '' if key_converter.kotlin.custom.pname != 'Object' else '{ Any() }' %}
-      {%- set varray_init = '' if value_converter.kotlin.custom.pname != 'Object' else '{ Any() }' %}
+      {%- set karray_init = '' if key_converter.custom.pname != 'Object' else '{ Any() }' %}
+      {%- set varray_init = '' if value_converter.custom.pname != 'Object' else '{ Any() }' %}
       {%- set indexName = "index" + name|capitalize %}
-      val {{tmp_key_name}} = {{key_converter.kotlin.custom.pname}}Array({{name}}.size) {{karray_init}}
-      val {{tmp_val_name}} = {{value_converter.kotlin.custom.pname}}Array({{name}}.size) {{varray_init}}
+      val {{tmp_key_name}} = {{key_converter.custom.pname}}Array({{name}}.size) {{karray_init}}
+      val {{tmp_val_name}} = {{value_converter.custom.pname}}Array({{name}}.size) {{varray_init}}
       val {{target_name}} = {{target_type_name}}({{tmp_key_name}}, {{tmp_val_name}})
       var {{indexName}} = 0
       for ((key{{name|capitalize}}, value{{name|capitalize}}) in {{name}}) {
@@ -473,12 +473,12 @@ std::map:
       {%- set value_converter = make_type_converter(template_args[1]) -%}
       val {{target_name}} = HashMap<{{key_converter.kotlin.target_type_name}}, {{value_converter.kotlin.target_type_name}}>()
       for (i{{name|capitalize}} in 0..{{name}}.first.size - 1) {
-      {%- if key_converter.kotlin.custom.pname == 'Object' %}
+      {%- if key_converter.custom.pname == 'Object' %}
           @Suppress("UNCHECKED_CAST") val elem1{{name|capitalize}} = {{name}}.first.get(i{{name|capitalize}}) as {{key_converter.jdk.target_type_name}}
       {%- else %}
           val elem1{{name|capitalize}} = {{name}}.first.get(i{{name|capitalize}})
       {%- endif %}
-      {%- if value_converter.kotlin.custom.pname == 'Object' %}
+      {%- if value_converter.custom.pname == 'Object' %}
           @Suppress("UNCHECKED_CAST") val elem2{{name|capitalize}} = {{name}}.second.get(i{{name|capitalize}}) as {{value_converter.jdk.target_type_name}}
       {%- else %}
           val elem2{{name|capitalize}} = {{name}}.second.get(i{{name|capitalize}})
@@ -490,12 +490,12 @@ std::map:
     kotlin_ref_internal: |
       {%- set key_converter = make_type_converter(template_args[0]).kotlin_ref_internal %}
       {%- set value_converter = make_type_converter(template_args[1]).kotlin_ref_internal %}
-      {%- if key_converter or value_converter -%}
-      for (({{'key' + name if key_converter else '_'}}, {{'value' + name if value_converter else '_'}}) in {{name}}) {
-      {%-   if key_converter %}
+      {%- if key_converter is defined or value_converter is defined -%}
+      for (({{'key' + name if key_converter is defined else '_'}}, {{'value' + name if value_converter is defined else '_'}}) in {{name}}) {
+      {%-   if key_converter is defined %}
           {{key_converter.snippet('key' + name, reference=reference, nullable=nullable)|indent(4)}}
       {%-   endif %}
-      {%-   if value_converter %}
+      {%-   if value_converter is defined %}
           {{value_converter.snippet('value' + name, reference=reference, nullable=nullable)|indent(4)}}
       {%-   endif %}
       }
@@ -511,7 +511,7 @@ std::unordered_map:
 std::shared_ptr:
   custom:
     pname: Long
-    tname: "{{make_type_converter(template_args[0]).kotlin.custom.tname}}"
+    tname: "{{make_type_converter(template_args[0]).custom.tname}}"
     # for now shared pointer converter assumes it's argument is of CppBind generated type
     # update the value of is_kotlin_type_erased to be dynamic whenever updating conversion logic to work with all types
     is_kotlin_type_erased: False
@@ -522,13 +522,13 @@ std::shared_ptr:
   converters:
     jni_to_cxx: |
       {%- set object_converter = make_type_converter(template_args[0]) -%}
-      {%- if object_converter.kotlin.has_api and not object_converter.kotlin.vars.shared_ref -%}
+      {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
       {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {%- set pointee = object_converter.jni_to_cxx.target_type_name %}
       {%- set is_nullable = nullable|default(False) %}
-      {%- set obj_descendants = object_converter.kotlin.vars.descendants if object_converter.kotlin.vars.descendants is not none else object_converter.kotlin.descendants %}
-      {%- set cxx_namespace = object_converter.kotlin.cxx.namespace.split('::')|map('capitalize')|join %}
+      {%- set obj_descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants %}
+      {%- set cxx_namespace = object_converter.type_info.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- macro gen_cast_block() -%}
       {%-   if obj_descendants -%}
       {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
@@ -548,14 +548,14 @@ std::shared_ptr:
       {%- endif %}
     cxx_to_jni: |
       {%- set object_converter = make_type_converter(template_args[0]) -%}
-      {%- if object_converter.kotlin.has_api and not object_converter.kotlin.vars.shared_ref -%}
+      {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
       {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
       {# TODO: won´t work if arg[0] itself is a template type #}
       {%- set pointee_unqualified = template_args[0].unqualified_resolved_type_name %}
       {%- set pointee = template_args[0].type_name %}
       {%- set is_nullable = nullable|default(False) %}
-      {%- set obj_descendants = object_converter.kotlin.vars.descendants if object_converter.kotlin.vars.descendants is not none else object_converter.kotlin.descendants -%}
+      {%- set obj_descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
       {%- macro demangle() %}
       auto& arg_pointee_{{name}} = *{{name}}.get();
       const char* name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}arg_pointee_{{name}}).name();
@@ -567,15 +567,15 @@ std::shared_ptr:
           type_{{name}} = strdup({{object_converter.cxx_type_name_global.snippet()}});
       }
       {%- endmacro %}
-      char* type_{{name}} = {{'strdup({})'.format(object_converter.cxx_type_name_global.snippet()) if not (object_converter.kotlin.cxx.is_polymorphic and obj_descendants) else 'nullptr'}};
+      char* type_{{name}} = {{'strdup({})'.format(object_converter.cxx_type_name_global.snippet()) if not (object_converter.type_info.cxx.is_polymorphic and obj_descendants) else 'nullptr'}};
       void* {{target_name}}_ptr = nullptr;
       CppBindCObject* cppbind_obj_{{target_name}} = nullptr;
       {%- if is_nullable %}
       if ({{name}}) {
-      {%- if object_converter.kotlin.cxx.is_polymorphic and obj_descendants %}
+      {%- if object_converter.type_info.cxx.is_polymorphic and obj_descendants %}
           {{demangle()|indent(4)}}
       {%- endif %}
-      {%- if object_converter.kotlin.cxx.is_polymorphic %}
+      {%- if object_converter.type_info.cxx.is_polymorphic %}
           {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
       {%-   else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
@@ -583,10 +583,10 @@ std::shared_ptr:
           cppbind_obj_{{target_name}} = new CppBindCObject {type_{{name}}, {{target_name}}_ptr};
       }
       {%- else %}
-      {%-   if object_converter.kotlin.cxx.is_polymorphic and obj_descendants %}
+      {%-   if object_converter.type_info.cxx.is_polymorphic and obj_descendants %}
       {{demangle()}}
       {%-   endif %}
-      {%-   if object_converter.kotlin.cxx.is_polymorphic %}
+      {%-   if object_converter.type_info.cxx.is_polymorphic %}
       {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
       {%-   else %}
       {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
@@ -602,7 +602,7 @@ std::shared_ptr:
       {{make_type_converter(template_args[0]).jdk_to_kotlin.snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
     cxx_obj_recover: |
       {%- set object_converter = make_type_converter(template_args[0]) -%}
-      {%- set descendants = object_converter.kotlin.vars.descendants if object_converter.kotlin.vars.descendants is not none else object_converter.kotlin.descendants -%}
+      {%- set descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
       auto cppbind_obj_{{name}} = reinterpret_cast<CppBindCObject*>({{name}});
       auto cppbind_obj_{{name}}_ptr = cppbind_obj_{{name}} ? cppbind_obj_{{name}}->ptr : nullptr;
       if (cppbind_obj_{{name}}_ptr) {
@@ -619,14 +619,14 @@ std::shared_ptr:
       }
       return nullptr;
     cxx_obj_recover_func_decl: |
-      {%- set cxx_namespace = make_type_converter(template_args[0]).kotlin.cxx.namespace.split('::')|map('capitalize')|join -%}
+      {%- set cxx_namespace = make_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
       {{'std::shared_ptr<{}>'.format(template_args[0].unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(template_args[0]).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
 
 
 std::pair:
   custom:
     pname: Object
-    tname: "Pair{{make_type_converter(template_args[0]).kotlin.custom.tname}}{{make_type_converter(template_args[1]).kotlin.custom.tname}}"
+    tname: "Pair{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
     is_kotlin_type_erased: True
   types:
     kotlin: "Pair<{{make_type_converter(template_args[0]).kotlin.target_type_name}}, {{make_type_converter(template_args[1]).kotlin.target_type_name}}>"
@@ -644,8 +644,8 @@ std::pair:
       auto firstObject_{{name}} = env->GetObjectField({{name}}, firstID_{{name}});
       auto secondObject_{{name}} = env->GetObjectField({{name}}, secondID_{{name}});
       {%- set tmp_first = '_' + target_name %}
-      {%- set extract_first = 'cppbind::extract{}'.format(first_converter.kotlin.custom.pname) %}
-      {%- set extract_second = 'cppbind::extract{}'.format(second_converter.kotlin.custom.pname) %}
+      {%- set extract_first = 'cppbind::extract{}'.format(first_converter.custom.pname) %}
+      {%- set extract_second = 'cppbind::extract{}'.format(second_converter.custom.pname) %}
       auto first_{{name}} = {{extract_first}}(env, firstObject_{{name}});
       auto second_{{name}} = {{extract_second}}(env, secondObject_{{name}});
       {{first_converter.jni_to_cxx.snippet('first_{}'.format(name))}}
@@ -658,13 +658,13 @@ std::pair:
       auto second_{{name}} = {{name}}.second;
       {{first_converter.cxx_to_jni.snippet('first_{}'.format(name), value_policy=value_policy)}}
       {{second_converter.cxx_to_jni.snippet('second_{}'.format(name), value_policy=value_policy)}}
-      {%- if first_converter.kotlin.custom.pname != 'Object' %}
-      jobject first_{{name}}_obj = cppbind::{{first_converter.kotlin.custom.pname|lower}}ToObject(env, {{first_converter.cxx_to_jni.converted_name('first_{}'.format(name))}});
+      {%- if first_converter.custom.pname != 'Object' %}
+      jobject first_{{name}}_obj = cppbind::{{first_converter.custom.pname|lower}}ToObject(env, {{first_converter.cxx_to_jni.converted_name('first_{}'.format(name))}});
       {%- else %}
       jobject first_{{name}}_obj = {{first_converter.cxx_to_jni.converted_name('first_{}'.format(name))}};
       {%- endif %}
-      {%- if second_converter.kotlin.custom.pname != 'Object' %}
-      jobject second_{{name}}_obj = cppbind::{{second_converter.kotlin.custom.pname|lower}}ToObject(env, {{second_converter.cxx_to_jni.converted_name('second_{}'.format(name))}});
+      {%- if second_converter.custom.pname != 'Object' %}
+      jobject second_{{name}}_obj = cppbind::{{second_converter.custom.pname|lower}}ToObject(env, {{second_converter.cxx_to_jni.converted_name('second_{}'.format(name))}});
       {%- else %}
       jobject second_{{name}}_obj = {{second_converter.cxx_to_jni.converted_name('second_{}'.format(name))}};
       {%- endif %}
@@ -688,10 +688,10 @@ std::pair:
     kotlin_ref_internal: |
       {%- set first_converter = make_type_converter(template_args[0]).kotlin_ref_internal -%}
       {%- set second_converter = make_type_converter(template_args[1]).kotlin_ref_internal -%}
-      {%- if first_converter %}
+      {%- if first_converter is defined %}
       {{first_converter.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}
       {%- endif %}
-      {%- if second_converter %}
+      {%- if second_converter is defined %}
       {{second_converter.snippet(name + '.second', reference=reference, nullable=nullable)|indent(2)}}
       {%- endif %}
     kotlin_keep_alive: |
@@ -704,12 +704,12 @@ std::__ndk1::pair:
 std::array:
   custom:
     pname: Object
-    tname: "List{{make_type_converter(template_args[0]).kotlin.custom.tname}}"
+    tname: "List{{make_type_converter(template_args[0]).custom.tname}}"
     is_kotlin_type_erased: True
   types:
-    kotlin: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).kotlin.cxx.type_name)).kotlin.target_type_name}}"
-    jni: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).jni.cxx.type_name)).jni.target_type_name}}"
-    jdk: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).jdk.cxx.type_name)).jdk.target_type_name}}"
+    kotlin: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).type_info.cxx.type_name)).kotlin.target_type_name}}"
+    jni: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).type_info.cxx.type_name)).jni.target_type_name}}"
+    jdk: "{{make_type_converter('std::vector<{}>'.format(make_type_converter(template_args[0]).type_info.cxx.type_name)).jdk.target_type_name}}"
   converters:
     jni_to_cxx: |
       {%- set tmp_name = '_' + target_name %}

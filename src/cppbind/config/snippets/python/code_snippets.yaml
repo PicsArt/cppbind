@@ -318,9 +318,9 @@ var_class: &var_class
   python_init:
     include:
       unique_content: |
-        {%- set converter = make_type_converter(cxx.type).python -%}
-        {%- if not (converter.cxx.parent_type and get_type_info(converter.cxx.parent_type, error=False)) -%}{#- do not generate an import for nested type in __init__.py -#}
-        from .{{vars.full_package.split('.')[-1]}} import {{converter.target_type_name}}
+        {%- set converter = make_type_converter(cxx.type) -%}
+        {%- if not (converter.type_info.cxx.parent_type and get_type_info(converter.type_info.cxx.parent_type, error=False)) -%}{#- do not generate an import for nested type in __init__.py -#}
+        from .{{vars.full_package.split('.')[-1]}} import {{converter.python.target_type_name}}
         {%- endif -%}
   cxx:
     header: *var_cxx_header
@@ -329,7 +329,7 @@ var_class: &var_class
       unique_content:
         !concat
         - !include cxx_macros.yaml&includes
-        - !include python_macros.yaml&includes.cxx
+        - !include common_macros.yaml&includes.cxx
         - |
           {{gen_include(make_type_converter(cxx.type))}}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
@@ -357,8 +357,8 @@ var_class: &var_class
                                             , std::shared_ptr<{{cxx.type_name}}>
               {%- endif %}
               {%- if base_types_converters -%}
-                                           , {% for base_type in base_types_converters -%}
-                                           {{comma()}}{{base_type.python.cxx.type_name}}
+                                           , {% for base_type_converter in base_types_converters -%}
+                                           {{comma()}}{{base_type_converter.type_info.cxx.type_name}}
               {%-   endfor -%}
               {%- endif %}> {{converter.python.target_type_name|decapitalize}}(m, "{{converter.python.target_type_name}}"{{', py::is_final()' if not cxx.is_open}});
               {{body|string|indent(4)}}
@@ -409,7 +409,7 @@ var_method_cxx_include: &var_method_cxx_include
   unique_content:
     !concat
     - !include cxx_macros.yaml&includes
-    - !include python_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {%- if vars.is_proj_type -%}
       {{marker}}#include "{{vars.prj_rel_file_name}}"
@@ -618,7 +618,7 @@ function:
         - !include python_macros.yaml&templates
         - !include python_macros.yaml&overloading_postfix
         - |
-          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}
+          from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_python_template_postfix()}}
   python:
     include: *var_method_python_include
     body:
@@ -633,7 +633,7 @@ function:
         {%- set comma = joiner(', ') %}
         {% set rconverter = make_type_converter(cxx.result_type).python %}
         @bind
-        def {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}(
+        def {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_python_template_postfix()}}(
         {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
         {%- for arg in cxx.args -%}
         {%-   set arg_converter = make_type_converter(arg.type).python %}
@@ -673,7 +673,7 @@ function:
             using namespace {{cxx.namespace}};
             {%- endif %}
             {%- set comma = joiner(', ') %}
-            m.def("{{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}"{%- if cxx.is_overloaded -%}
+            m.def("{{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_python_template_postfix()}}"{%- if cxx.is_overloaded -%}
             , py::overload_cast<
             {%-   for arg in cxx.args -%}
             {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
@@ -718,7 +718,7 @@ var_getter_python_include: &var_getter_python_include
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content:
     !concat
-    - !include python_macros.yaml&includes.cxx
+    - !include common_macros.yaml&includes.cxx
     - |
       {{gen_include(make_type_converter(cxx.result_type))}}
 
@@ -771,7 +771,7 @@ getter:
     include: *var_getter_python_include
     properties:
       !concat
-      - !include python_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- do helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
         {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
@@ -805,7 +805,7 @@ getter:
     include: *var_getter_cxx_include
     body:
       !concat
-      - !include python_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - |
         {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
         {%- macro gen_name() -%}

@@ -734,6 +734,112 @@ std::array:
     cxx_include: |
       #include <algorithm>
 
+std::optional:
+  custom:
+    pname: Object
+    tname: "Optional{{make_type_converter(template_args[0]).custom.tname}}"
+  types:
+    kotlin: "{{make_type_converter(template_args[0]).kotlin.target_type_name}}?"
+    jni: "{{make_type_converter(template_args[0]).jni.target_type_name if make_type_converter(template_args[0]).custom.pname == 'Object' else make_type_converter(template_args[0]).jni.target_type_name + 'Array'}}"
+    jdk: "{{make_type_converter(template_args[0]).jdk.target_type_name + '?' if make_type_converter(template_args[0]).custom.pname == 'Object' else  make_type_converter(template_args[0]).jdk.target_type_name + 'Array' + '?'}}"
+  converters:
+    jni_to_cxx: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {{cxx.unqualified_resolved_type_name}} {{target_name}} {std::nullopt};
+      {% if value_converter.custom.pname == 'Object' %}
+      if({{name}}){
+          auto _{{name}} = cppbind::extractObject(env, {{name}});
+          {{value_converter.jni_to_cxx.snippet('_{}'.format(name))|indent(4)}}
+          {{target_name}} = std::optional<{{value_converter.jni_to_cxx.target_type_name}}>(jnitocxx_{{name}});
+      }
+      {% else %}
+      {%- set tmp_name = '_' + target_name -%}
+      {%- set jni_array_get = 'cppbind::get{}Array'.format(value_converter.custom.pname) -%}
+      {%- set jni_target_type_name = make_type_converter(value_converter.jni_to_cxx.target_type_name).jni.target_type_name -%}
+      if({{name}}){
+          auto {{tmp_name}} = {{jni_array_get}}(env, {{name}})[0];
+          {{value_converter.jni_to_cxx.snippet('{}'.format(tmp_name))|indent(4)}}
+          {{target_name}} = std::optional<{{value_converter.jni_to_cxx.target_type_name}}>({{value_converter.jni_to_cxx.converted_name(tmp_name)}});
+      }
+      {% endif %}
+
+
+    cxx_to_jni: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set jni_type_signature = helper.get_jni_type_signature(value_converter.cxx_to_jni.target_type_name) -%}
+      {% if value_converter.custom.pname == 'Object' %}
+      {{value_converter.cxx_to_jni.target_type_name}} {{target_name}} = nullptr;
+      if ({{name}}) {
+          auto _{{name}} = {{name}}.value();
+          {{value_converter.cxx_to_jni.snippet('_{}'.format(name), value_policy=value_policy)|indent(4)}}
+          {{target_name}} = {{value_converter.cxx_to_jni.converted_name('_{}'.format(name))}};
+      }
+      {% else %}
+      {{target_type_name}} {{target_name}} = nullptr;
+      if ({{name}}) {
+          {{target_name}} = env->New{{value_converter.custom.pname}}Array(1);
+          auto {{name}}_value = {{name}}.value();
+          {{value_converter.cxx_to_jni.snippet('{}'.format(name + '_value'), value_policy=value_policy)|indent(4)}}
+          env->{{'Set{}ArrayRegion'.format(value_converter.custom.pname)}}({{target_name}}, 0, 1, &{{value_converter.cxx_to_jni.converted_name(name + '_value')}});
+      }
+      {% endif %}
+
+
+    kotlin_to_jdk: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%  if value_converter.custom.pname == 'Object' %}
+      val {{target_name}} = {{name}}?.let {
+      {%-   set conversion = value_converter.kotlin_to_jdk.snippet(name) %}
+      {%-   if conversion %}
+          {{conversion|indent(4)}}
+      {%-   endif %}
+          {{value_converter.kotlin_to_jdk.converted_name(name)}}
+      }
+      {% else %}
+      val {{target_name}} = {{name}}?.let {
+      {%-   set conversion = value_converter.kotlin_to_jdk.snippet(name) %}
+      {%-   if conversion %}
+          {{conversion|indent(4)}}
+      {%-   endif %}
+          {{value_converter.custom.pname}}Array(1) { {{value_converter.kotlin_to_jdk.converted_name(name)}} }
+      }
+      {% endif %}
+    jdk_to_kotlin: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%  if value_converter.custom.pname == 'Object' %}
+      val {{target_name}} = {{name}}?.let {
+      {%-   set conversion = value_converter.jdk_to_kotlin.snippet(name, value_policy=value_policy) %}
+      {%-   if conversion %}
+          {{conversion|indent(4)}}
+      {%-   endif %}
+          {{value_converter.jdk_to_kotlin.converted_name(name)}}
+      }
+      {% else %}
+      val {{target_name}} = {{name}}?.let {
+          val _{{name}} = {{name}}[0]
+      {%-   set conversion = value_converter.jdk_to_kotlin.snippet('_{}'.format(name), value_policy=value_policy) %}
+      {%-   if conversion %}
+          {{conversion|indent(4)}}
+      {%-   endif %}
+          {{value_converter.jdk_to_kotlin.converted_name('_{}'.format(name))}}
+      }
+      {% endif %}
+    kotlin_ref_internal: |
+      {%- set value_converter = make_type_converter(template_args[0]).kotlin_ref_internal -%}
+      {%- if value_converter is defined -%}
+      if ({{name}} != null) {
+        {{value_converter.snippet(name  + "!!", reference=reference, nullable=nullable)|indent(4)}}
+      }
+      {%- endif -%}
+    kotlin_keep_alive: |
+      if ({{reference}} != null) {
+        {{name}}.keepCppBindReference({{reference}}!!)
+      }
+
+
+std::__ndk1::optional:
+  std::optional
+
 # dummy converters to not throw error on container types converter build
 # currently, these are not used
 std::hash:

@@ -26,7 +26,8 @@ bool:
     jdk: Boolean
   converters:
     jni_to_cxx:
-    cxx_to_jni:
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = {{name}};
     kotlin_to_jdk:
     jdk_to_kotlin:
 
@@ -54,7 +55,8 @@ unsigned int:
     jdk: Long
   converters:
     jni_to_cxx:
-    cxx_to_jni:
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = {{name}};
     kotlin_to_jdk:
     jdk_to_kotlin:
 
@@ -87,10 +89,34 @@ long:
     jdk_to_kotlin:
 
 long long:
-  long
+  custom:
+    pname: Long
+    tname: Long
+  types:
+    kotlin: Long
+    jni: jlong
+    jdk: Long
+  converters:
+    jni_to_cxx:
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = {{name}};
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 unsigned long:
-  long
+  custom:
+    pname: Long
+    tname: Long
+  types:
+    kotlin: Long
+    jni: jlong
+    jdk: Long
+  converters:
+    jni_to_cxx:
+    cxx_to_jni: |
+      {{target_type_name}} {{target_name}} = {{name}};
+    kotlin_to_jdk:
+    jdk_to_kotlin:
 
 unsigned long long:
   long
@@ -129,7 +155,7 @@ char:
     tname: Char
   types:
     kotlin: Char
-    jni: jbyte
+    jni: jchar
     jdk: Char
   converters:
     jni_to_cxx: |

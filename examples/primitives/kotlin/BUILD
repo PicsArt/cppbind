@@ -236,3 +236,11 @@ kt_jvm_test(
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.factories.FactoriesApp",
 )
+
+kt_jvm_test(
+    name = "stl_types",
+    srcs = ["src/main/java/com/examples/stl_types/main.kt"],
+    deps = ["kt_examples_library"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.stl_types.OptionalApp",
+)

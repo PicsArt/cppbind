@@ -13,7 +13,7 @@
 package example_lib.cppbind
 
 typealias StringArray = Array<String>
-typealias ObjectArray = Array<Any>
+typealias ObjectArray = Array<Any?>
 
 /**
  * An internal dataclass to keep an information about an object.

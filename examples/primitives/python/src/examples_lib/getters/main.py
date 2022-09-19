@@ -4,7 +4,7 @@ from examples_lib.getters.number_pygen import *
 
 # [number-usage]
 intNum = NumberInt(5)
-doubleNum = NumberFloat(1.0)
+doubleNum = NumberDouble(1.0)
 assert (intNum.num == 5)
 intNum.num = 2
 assert (intNum.num == 2)

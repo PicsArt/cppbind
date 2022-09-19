@@ -45,6 +45,7 @@ $Object:
       {%- endif -%}
     tname: |
       {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
+    pname: Object
   types:
     swift: |
       {{custom.namespace if not definition|default(False)}}
@@ -217,6 +218,7 @@ $Enum:
   custom:
     is_c_pointer_type: False
     tname: "{{vars.name}}"
+    pname: Int
   types:
     swift: "{{custom.tname}}"
     c: int
@@ -300,6 +302,7 @@ std::vector:
   custom:
     is_c_pointer_type: False
     tname: "Array{{make_type_converter(template_args[0]).custom.tname}}"
+    pname: "Array"
   types:
     swift: "Array<{{make_type_converter(template_args[0]).swift.target_type_name}}>"
     c: "CppBindCDataArray"
@@ -380,6 +383,7 @@ std::map:
   custom:
     is_c_pointer_type: False
     tname: "Dictionary{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
+    pname: Map
   types:
     swift: "Dictionary<{{make_type_converter(template_args[0]).swift.target_type_name}}, {{make_type_converter(template_args[1]).swift.target_type_name}}>"
     c: "CppBindCDataMap"
@@ -607,6 +611,7 @@ std::pair:
   custom:
     is_c_pointer_type: False
     tname: "Pair{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
+    pname: Pair
   types:
     swift: "({{make_type_converter(template_args[0]).swift.target_type_name}}, {{make_type_converter(template_args[1]).swift.target_type_name}})"
     c: "CppBindCDataPair"
@@ -735,6 +740,82 @@ std::array:
     cxx_include: |
       #include <algorithm>
 
+
+std::optional:
+  custom:
+    is_c_pointer_type: False
+    tname: "Optional{{make_type_converter(template_args[0]).custom.tname}}"
+  types:
+    swift: "{{make_type_converter(template_args[0]).swift.target_type_name}}?"
+    c: "{{'CppBindOptional' + make_type_converter(template_args[0]).custom.pname|default(make_type_converter(template_args[0]).swift.target_type_name)}}"
+    sc: "{{'CppBindOptional' + make_type_converter(template_args[0]).custom.pname|default(make_type_converter(template_args[0]).swift.target_type_name)}}"
+  converters:
+    c_to_cxx: |
+      {%- set value_converter = make_type_converter(template_args[0]).c_to_cxx -%}
+      {{cxx.unqualified_resolved_type_name}} {{target_name}} {std::nullopt};
+      if ({{name}}.has_value) {
+          auto& {{name}}_val = {{name}}.value;
+          {{name}}.has_value = true;
+          {{value_converter.snippet('{}_val'.format(name))|indent(4)}}
+          {{target_name}} = {{cxx.unqualified_resolved_type_name}}({{value_converter.converted_name('{}_val'.format(name))}});
+      }
+    cxx_to_c: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      CppBindOptional{{value_converter.custom.pname|default(value_converter.swift.target_type_name)}} {{target_name}} {};
+      if ({{name}}) {
+          auto {{name}}_val = {{name}}.value();
+          {{value_converter.cxx_to_c.snippet('{}_val'.format(name), value_policy=value_policy)|indent(4)}}
+          {{target_name}}.value = {{value_converter.cxx_to_c.converted_name('{}_val'.format(name))}};
+          {{target_name}}.has_value = true;
+      } else {
+          {{target_name}}.has_value = false;
+      }
+    swift_to_sc: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      var {{target_name}} = CppBindOptional{{value_converter.custom.pname|default(value_converter.swift.target_type_name)}}()
+      if {{name}} != nil {
+        let {{name}}Unwrapped = {{name}}!
+        {{value_converter.swift_to_sc.snippet('{}Unwrapped'.format(name))|indent(2)}}
+        {{target_name}}.value = {{value_converter.swift_to_sc.converted_name('{}Unwrapped'.format(name))|to_camel_case}}
+        {{target_name}}.has_value = true
+      } else {
+        {{target_name}}.has_value = false
+      }
+    sc_to_swift: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      var {{target_name}}: {{value_converter.swift.target_type_name}}? = nil;
+      if ({{name}}.has_value) {
+        let {{name}}Value = {{name}}.value{{'!' if value_converter.custom.is_c_pointer_type}}
+        {{value_converter.sc_to_swift.snippet('{}Value'.format(name), value_policy=value_policy)|indent(2)}}
+        {{target_name}} = Optional({{value_converter.sc_to_swift.converted_name('{}Value'.format(name))}})
+      }
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- set value_converter = make_type_converter(template_args[0]).sc_cleanup -%}
+        {%- if value_converter is defined %}
+        {%-   set cleanup_code_fragment = value_converter.snippet('{}.value'.format(name)) %}
+        {%-   if cleanup_code_fragment %}
+        if ({{name}}.has_value){
+        {{cleanup_code_fragment|indent(2)}}
+        }
+        {%-   endif %}
+        {%- endif %}
+    swift_ref_internal: |
+      {%- set value_converter = make_type_converter(template_args[0]).swift_ref_internal -%}
+      {%- if value_converter is defined -%}
+      if ({{name}} != nil) {
+        {{value_converter.snippet(name  + "!", reference=reference, nullable=nullable)|indent(4)}}
+      }
+      {%- endif -%}
+    swift_keep_alive: |
+      if ({{reference}} != nil) {
+        {{name}}.keepCppBindReference({{reference}}!)
+      }
+
+std::__1::optional:
+  std::optional
 
 # dummy converters to not throw error on container types converter build
 # currently, these are not used

@@ -29,10 +29,26 @@ OPERATOR_MAPPING = {
     '[]': 'get',
 }
 
+JNI_TYPE_SIGNATURE = dict(
+    jboolean='Z',
+    jbyte='B',
+    jchar='C',
+    jshort='S',
+    jint='I',
+    jlong='J',
+    jfloat='F',
+    jdouble='D',
+    jobjectid='J'
+)
+
 
 def get_operator_name(spelling):
     operator = spelling.replace('operator', '').strip()
     return OPERATOR_MAPPING.get(operator, spelling)
+
+
+def get_jni_type_signature(native_type):
+    return JNI_TYPE_SIGNATURE.get(native_type)
 
 
 def arg_str(type_name, name, default=None, **kwargs):

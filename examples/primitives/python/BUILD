@@ -302,3 +302,15 @@ py_test(
     ],
 )
 
+py_test(
+    name = "stl_types",
+    srcs = ["src/examples_lib/stl_types/main.py"],
+    main = "src/examples_lib/stl_types/main.py",
+    python_version = "PY3",
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":py_examples_library",
+    ],
+)
+

@@ -336,6 +336,23 @@ std::char_traits<char>:
     python_to_pybind:
     pybind_to_python:
 
+std::optional:
+  custom:
+    tname: "Optional{{make_type_converter(template_args[0]).custom.tname}}"
+  types:
+    python: |
+      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set arg_package = full_package|default(value_converter.type_info.vars.full_package) -%}
+      Optional[{{value_converter.python.get_target_type_name(full_package=arg_package)}}]
+  converters:
+    pybind_to_cxx:
+    cxx_to_pybind:
+    python_to_pybind:
+    pybind_to_python:
+
+std::__1::optional:
+  std::optional
+
 std::__1::hash:
   std::hash
 

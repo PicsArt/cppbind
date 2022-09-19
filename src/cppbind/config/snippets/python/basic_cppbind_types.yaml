@@ -45,7 +45,7 @@ unsigned int:
 
 short:
   custom:
-    tname: Int
+    tname: Short
   types:
     python: int
     pybind: int
@@ -58,7 +58,7 @@ short:
 
 long:
   custom:
-    tname: Int
+    tname: Long
   types:
     python: int
     pybind: int
@@ -93,7 +93,7 @@ float:
 
 double:
   custom:
-    tname: Float
+    tname: Double
   types:
     python: float
     pybind: float

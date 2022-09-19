@@ -156,6 +156,28 @@ inline std::vector<jshort> getShortArray(JNIEnv* env, jobject obj) {
     return ret;
 }
 
+inline std::vector<jboolean> getBooleanArray(JNIEnv* env, jobject obj) {
+    jbooleanArray jbooleanArray1 = (jbooleanArray)obj;
+    int len = env->GetArrayLength(jbooleanArray1);
+    std::vector<jboolean> ret;
+    ret.reserve(len);
+    jboolean* arr = env->GetBooleanArrayElements(jbooleanArray1, nullptr);
+    std::copy(arr, arr + len, std::back_inserter(ret));
+    env->ReleaseBooleanArrayElements(jbooleanArray1, arr, 0);
+    return ret;
+}
+
+inline std::vector<jchar> getCharArray(JNIEnv* env, jobject obj) {
+    jcharArray jcharArray1 = (jcharArray)obj;
+    int len = env->GetArrayLength(jcharArray1);
+    std::vector<jchar> ret;
+    ret.reserve(len);
+    jchar* arr = env->GetCharArrayElements(jcharArray1, nullptr);
+    std::copy(arr, arr + len, std::back_inserter(ret));
+    env->ReleaseCharArrayElements(jcharArray1, arr, 0);
+    return ret;
+}
+
 inline jobject extractObject(JNIEnv*, jobject obj)  {
     // to not have redundant checks
     return obj;

@@ -12,6 +12,7 @@
 
 #ifndef __C_HELPERS_H_
 #define __C_HELPERS_H_
+#include <stdbool.h>
 
 typedef struct _CppBindCDataArray{
     void* data;
@@ -34,5 +35,84 @@ typedef struct _CppBindCObject {
     void* ptr;
 } CppBindCObject;
 
+typedef struct _CppBindOptionalInt {
+    int value;
+    bool has_value;
+} CppBindOptionalInt;
+
+typedef struct _CppBindOptionalFloat {
+    float value;
+    bool has_value;
+} CppBindOptionalFloat;
+
+typedef struct _CppBindOptionalDouble {
+    double value;
+    bool has_value;
+} CppBindOptionalDouble;
+
+typedef struct _CppBindOptionalCLong {
+    long value;
+    bool has_value;
+} CppBindOptionalCLong;
+
+typedef struct _CppBindOptionalCShort {
+    short value;
+    bool has_value;
+} CppBindOptionalCShort;
+
+typedef struct _CppBindOptionalString {
+    char* value;
+    bool has_value;
+} CppBindOptionalString;
+
+typedef struct _CppBindOptionalBool {
+    bool value;
+    bool has_value;
+} CppBindOptionalBool;
+
+typedef struct _CppBindOptionalUInt {
+    unsigned int value;
+    bool has_value;
+} CppBindOptionalUInt;
+
+typedef struct _CppBindOptionalCUnsignedLong {
+    unsigned long value;
+    bool has_value;
+} CppBindOptionalCUnsignedLong;
+
+typedef struct _CppBindOptionalCLongLong {
+    long long value;
+    bool has_value;
+} CppBindOptionalCLongLong;
+
+typedef struct _CppBindOptionalCUnsignedChar {
+    unsigned char value;
+    bool has_value;
+} CppBindOptionalCUnsignedChar;
+
+typedef struct _CppBindOptionalCharacter {
+    char value;
+    bool has_value;
+} CppBindOptionalCharacter;
+
+typedef struct _CppBindOptionalArray {
+    CppBindCDataArray value;
+    bool has_value;
+} CppBindOptionalArray;
+
+typedef struct _CppBindOptionalObject {
+    CppBindCObject value;
+    bool has_value;
+} CppBindOptionalObject;
+
+typedef struct _CppBindOptionalMap {
+    CppBindCDataMap value;
+    bool has_value;
+} CppBindOptionalMap;
+
+typedef struct _CppBindOptionalPair {
+    CppBindCDataPair value;
+    bool has_value;
+} CppBindOptionalPair;
 
 #endif //__C_HELPERS_H_

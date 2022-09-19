@@ -45,7 +45,7 @@ class Function:
     def __init_optionals(self):
         self.optionals = set()
         for arg_name, type_hint in self.annotations.items():
-            if re.match(r'^Optional\[[_a-zA-Z][_a-zA-Z0-9]+\.?[_a-zA-Z0-9]+]$', type_hint) is not None:
+            if type_hint.startswith("Optional["):
                 self.optionals.add(arg_name)
 
     def __init_default_args(self):

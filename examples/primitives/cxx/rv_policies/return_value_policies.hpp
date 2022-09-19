@@ -34,7 +34,7 @@ struct Value {
     }
 
     Value(Value&& v) {
-        _name = v.name();
+        _name = std::move(v._name);
         std::cout<<"Value move constructor for name="<<_name<<std::endl;
     }
 
@@ -69,6 +69,58 @@ private:
  * __API__
  * action: gen_class
  * package: rv_policies
+ * shared_ref: False
+ * swift.name: SwMovableValue
+ */
+struct MovableValue {
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    MovableValue(std::string name) : _name(name) {
+        std::cout<<"MovableValue constructor with name="<<_name<<std::endl;
+    }
+
+    MovableValue(const MovableValue& v) = delete;
+
+    MovableValue(MovableValue&& v) {
+        _name = std::move(v._name);
+        std::cout<<"MovableValue move constructor for name="<<_name<<std::endl;
+    }
+
+    /**
+     * __API__
+     * action: gen_getter
+     * throws: no_throw
+     */
+     std::string name() const {
+        return _name;
+     }
+
+     /**
+      * __API__
+      * action: gen_setter
+      * throws: no_throw
+      */
+    void setName(std::string name) const {
+        std::cout<<"set name called"<<std::endl;
+        _name = name;
+     }
+
+    ~MovableValue() {
+        std::cout<<"MovableValue destructor for name="<<_name<<" "<<this<<std::endl;
+    }
+
+private:
+    mutable std::string _name;
+};
+
+
+/**
+ * __API__
+ * action: gen_class
+ * package: rv_policies
  * shared_ref: True
  */
 struct ValueSharedRef {
@@ -87,7 +139,7 @@ struct ValueSharedRef {
     }
 
     ValueSharedRef(ValueSharedRef&& v) {
-        _name = v.name();
+        _name = std::move(v._name);
         std::cout<<"ValueSharedRef move constructor for name="<<_name<<std::endl;
     }
 
@@ -239,6 +291,16 @@ public:
      */
     Value getValueMove() {
         return *_valuePtr;
+    };
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * return_value_policy: move
+     */
+    MovableValue getMovableValue() {
+        return MovableValue("abc");
     };
 
     /**

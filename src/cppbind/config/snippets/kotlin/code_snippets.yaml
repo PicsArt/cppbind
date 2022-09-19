@@ -1044,7 +1044,7 @@ method:
         {%-     endif -%}
         {%      if rconverter.jni.target_type_name != 'void' and not is_set_op %}
         try {
-            const auto& result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
+            decltype(auto) result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
                                                 <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                                 {%- endif -%}({{call_args|join(', ')}});
             {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
@@ -1245,7 +1245,7 @@ function:
         {%-     endif -%}
         {%-     if rconverter.jni.target_type_name != 'void' %}
         try {
-            const auto& result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
+            decltype(auto) result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
                                                 <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                                 {%- endif -%}({{call_args|join(', ')}});
             {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
@@ -1417,7 +1417,7 @@ property_getter:
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
-          const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}};
+          decltype(auto) result = {{this_converter.converted_name('id')}}->{{cxx.name}};
           {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
           return {{rconverter.cxx_to_jni.converted_name('result')}};
       }
@@ -1583,7 +1583,7 @@ getter:
             void* err_ptr = nullptr;
         {%- endif %}
             try {
-                const auto& result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
+                decltype(auto) result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
                 {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
                 return {{rconverter.cxx_to_jni.converted_name('result')}};
             }

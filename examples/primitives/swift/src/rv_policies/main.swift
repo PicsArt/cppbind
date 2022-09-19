@@ -26,7 +26,7 @@ func runRVPoliciesExamples() {
         // RVP=move - a new object is created and the owner is swift
         let valuePtrMoved = holder.getPtrMove()
         valuePtrMoved.name = "update"
-        assert(holder.getPtrMove().name == "initial")
+        assert(holder.getPtrReference().name == "")
     }
 
     // RVP=reference - owner is cpp without the clean pointer is not deleted
@@ -151,7 +151,7 @@ func runRVPoliciesExamples() {
         // RVP=move - a new object is created and the owner is swift
         let valueRefMoved = holder.getRefMove()
         valueRefMoved.name = "update"
-        assert(holder.getRefMove().name == "initial")
+        assert(holder.getRefReference().name == "")
     }
 
     // RVP=reference - owner is cpp without calling clean after exiting the block swift object will be deleted but cpp object won't be deallocated
@@ -265,6 +265,13 @@ func runRVPoliciesExamples() {
         assert(sharedRefTakeOwnership.name == "initial")
         sharedRefTakeOwnership.name = "update"
         assert(holder.getSharedRefTakeOwnership().name == sharedRefTakeOwnership.name)
+    }
+
+    do {
+        let holder = ValuesHolder()
+        defer { holder.clean() }
+        let movableValue = holder.getMovableValue()
+        assert(movableValue.name == "abc")
     }
 
     /// reference internal

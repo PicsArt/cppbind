@@ -93,7 +93,6 @@ $Object:
       {{shared_ptr_conv.cxx_to_jni.snippet(name + '_shared_ptr', target_name=target_name, nullable=is_nullable)}}
       {%- else %}
       {%-   macro apply_rv_policy() -%}
-      const_cast<{{pointee}}*>(
       {%-     if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
       {%-       if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
       {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
@@ -104,10 +103,13 @@ $Object:
       {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
       {%-       elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
       {%-       endif -%}
-      {%-     else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
-      {%-     endif -%})
+      {%-     else -%}
+      {%-       if value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+      {%-       else -%} new {{pointee}}({{name}})
+      {%-       endif -%}
+      {%-     endif -%}
       {%-   endmacro -%}
-      {{cxx.unqualified_resolved_type_name}}* {{target_name}}_ptr = {{apply_rv_policy()}};
+      {{cxx.unqualified_resolved_type_name}}* {{target_name}}_ptr = {{apply_rv_policy() if not cxx.is_const_qualified else 'const_cast<{0}*>({1})'.format(pointee, apply_rv_policy())}};
       char* type_{{name}} = {{'strdup({})'.format(this_converter.cxx_type_name_global.snippet()) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
       {%-   macro demangle() -%}
       const char* name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
@@ -576,9 +578,9 @@ std::shared_ptr:
           {{demangle()|indent(4)}}
       {%- endif %}
       {%- if object_converter.type_info.cxx.is_polymorphic %}
-          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}}));
       {%-   else %}
-          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}});
       {%-   endif %}
           cppbind_obj_{{target_name}} = new CppBindCObject {type_{{name}}, {{target_name}}_ptr};
       }
@@ -587,9 +589,9 @@ std::shared_ptr:
       {{demangle()}}
       {%-   endif %}
       {%-   if object_converter.type_info.cxx.is_polymorphic %}
-      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}}));
       {%-   else %}
-      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name}});
+      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}});
       {%-   endif %}
       cppbind_obj_{{target_name}} = new CppBindCObject {type_{{name}}, {{target_name}}_ptr};
       {%- endif %}

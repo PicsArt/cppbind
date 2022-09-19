@@ -1042,7 +1042,7 @@ method:
         {%-     endif %}
         {%-     if rconverter.c.target_type_name != 'void' %}
             try {
-                const auto& result = {%if not cxx.is_static %}{{this_converter.converted_name('cself')}}->
+                decltype(auto) result = {%if not cxx.is_static %}{{this_converter.converted_name('cself')}}->
                                      {%- else%}{{owner_class.cxx.type_name}}::{% endif %}{{cxx.name}}
                                      {%- if cxx.is_template -%}
                                      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
@@ -1101,7 +1101,7 @@ method:
         {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
         {%- if rconverter.c.target_type_name != 'void' %}
-            const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}
+            decltype(auto) result = {{this_converter.converted_name('cself')}}->{{cxx.name}}
                                  {%- if cxx.is_template -%}
                                  <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>{%- endif -%}({{call_args|join(', ')}});
             {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(8)}}
@@ -1316,7 +1316,7 @@ function:
         {%-     endfor %}
         {%-     if rconverter.c.target_type_name != 'void' %}
             try {
-                const auto& result = {{cxx.namespace}}::{{cxx.name}}
+                decltype(auto) result = {{cxx.namespace}}::{{cxx.name}}
                                      {%- if cxx.is_template -%}
                                      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
                                      {%- endif -%}({{call_args|join(', ')}});
@@ -1486,7 +1486,7 @@ property_getter:
       {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself) {
       {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
-          const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
+          decltype(auto) result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
           {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(4)}}
           return {{rconverter.cxx_to_c.converted_name('result')}};
       }
@@ -1643,7 +1643,7 @@ getter:
         {%- set this_converter = make_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
             try {
-                const auto& result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
+                decltype(auto) result = {{this_converter.converted_name('cself')}}->{{cxx.name}}{{template_args}}();
                 {{rconverter.cxx_to_c.snippet('result', nullable=vars.nullable_return, value_policy=vars.return_value_policy)|indent(8)}}
                 return {{rconverter.cxx_to_c.converted_name('result')}};
             } {{gen_exc_catch_block(vars)|indent(4)}}

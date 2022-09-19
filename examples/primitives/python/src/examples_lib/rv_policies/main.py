@@ -30,8 +30,12 @@ holder = ValuesHolder()
 value_ptr_moved = holder.get_ptr_move()
 value_ptr_moved.name = "update"
 print("DEBUG: ", holder.get_ptr_move().name)
-assert holder.get_ptr_move().name == "initial"
+assert holder.get_ptr_reference().name == ""
 holder.clean()
+
+holder = ValuesHolder()
+movable_value = holder.get_movable_value()
+assert movable_value.name == "abc"
 
 # RVP=reference - owner is cpp
 holder = ValuesHolder()
@@ -151,7 +155,7 @@ holder = ValuesHolder()
 value_ref_moved = holder.get_ref_move()
 value_ref_moved.name = "update"
 print("DEBUG: ", holder.get_ref_move().name)
-assert holder.get_ref_move().name == "initial"
+assert holder.get_ref_reference().name == ""
 holder.clean()
 
 # RVP=automatic_reference - copy is used and a new object is created which owner is python

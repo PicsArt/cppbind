@@ -115,7 +115,6 @@ $Object:
       {%-     endif %}
       {%-   endif %}
       {%-   macro apply_rv_policy() -%}
-      const_cast<{{pointee}}*>(
       {%-     if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
       {%-       if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
       {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
@@ -126,10 +125,13 @@ $Object:
       {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
       {%-       elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
       {%-       endif -%}
-      {%-     else -%} new {{pointee}}({{name}}){# copy for return by value and rvalue ref update after changing const auto& #}
-      {%-     endif -%})
+      {%-     else -%}
+      {%-       if value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+      {%-       else -%} new {{pointee}}({{name}})
+      {%-       endif -%}
+      {%-     endif -%}
       {%-   endmacro %}
-      auto value_ptr_{{name}} = {{apply_rv_policy()}};
+      auto value_ptr_{{name}} = {{apply_rv_policy() if not cxx.is_const_qualified else 'const_cast<{0}*>({1})'.format(pointee, apply_rv_policy())}};
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if cxx.is_polymorphic else 'value_ptr_' + name}}};
       {%- endif %}
     swift_to_sc: |
@@ -563,9 +565,9 @@ std::shared_ptr:
           {{demangle()|indent(4)}}
       {%-   endif %}
       {%-   if object_converter.type_info.cxx.is_polymorphic %}
-          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
+          {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}}));
       {%-   else %}
-          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
+          {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}});
       {%-   endif %}
       } else {
           type_{{name}} = strdup("{{template_args[0].unqualified_canonical_type_name}}");
@@ -575,9 +577,9 @@ std::shared_ptr:
       {{demangle()}}
       {%-   endif %}
       {%-   if object_converter.type_info.cxx.is_polymorphic %}
-      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}})));
+      {{target_name}}_ptr = new std::shared_ptr<void>(std::dynamic_pointer_cast<void>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}}));
       {%-   else %}
-      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>(std::const_pointer_cast<{{pointee_unqualified}}>({{name}}));
+      {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}});
       {%-   endif %}
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};

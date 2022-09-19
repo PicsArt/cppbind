@@ -28,7 +28,7 @@ fun use() {
         // RVP=move - a new object is created and the owner is kotlin
         val valuePtrMoved = holder.getPtrMove()
         valuePtrMoved.name = "update"
-        assert(holder.getPtrMove().name == "initial")
+        assert(holder.getPtrReference().name == "")
         holder.clean()
     }
 
@@ -166,7 +166,7 @@ fun use() {
         // RVP=move - a new object is created and the owner is kotlin
         val valueRefMoved = holder.getRefMove()
         valueRefMoved.name = "update"
-        assert(holder.getRefMove().name == "initial")
+        assert(holder.getRefReference().name == "")
         holder.clean()
     }
 
@@ -289,6 +289,13 @@ fun use() {
             holder.getSharedRefTakeOwnership()
                 .use { res -> assert(res.name == sharedRefTakeOwnership.name) }
         }
+        holder.clean()
+    }
+
+    run {
+        val holder = ValuesHolder()
+        val movableValue = holder.getMovableValue()
+        assert(movableValue.name == "abc")
         holder.clean()
     }
 

@@ -13,14 +13,13 @@ class TestModulemap(unittest.TestCase):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR,
                                                           '../../../examples/features/modulemap/HelloExample/HelloExample'))
-        self.runner = RunCompare(examples_root=self.examples_root,
-                                 source_glob='cxx/*cppbind.yaml',
-                                 languages=['swift'])
+        self.runner = RunCompare(examples_root=self.examples_root, languages=['swift'])
 
     def setUp(self) -> None:
         self.runner.setup()
         # copy example sources and config to current tmp directory
         shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
+        self.runner.setup_config()
 
     def tearDown(self) -> None:
         self.runner.teardown()

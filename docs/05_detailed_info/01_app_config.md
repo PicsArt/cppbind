@@ -34,6 +34,10 @@ application. Let's go over the parameters from this section:
 -   **custom_config_dir** - Directory containing user-defined type
     converter yaml files. For more details go to
     [Writing type converter](../04_advanced_features/02_custom_types.md).
+-   **custom_helpers_dir** - Directory containing user-defined python modules which can be used in jinja snippets
+    by their names. Modules search is done with `/**/<language>/**/*.py` pattern. 
+    An example can be found in **my_lang** [example](https://github.com/PicsArt/cppbind/tree/master/examples/tests).
+    In this example there's a helper module(my_lang.py) under **helpers/my_lang** directory which is used in **code_snippets.yaml**(`{%- do my_lang.validate_default_helper_module() -%}`). 
 
 -   **context_def_glob** - Glob pattern of project configuration yaml
     files.

@@ -768,7 +768,7 @@ std::optional:
 
     cxx_to_jni: |
       {%- set value_converter = get_type_converter(template_args[0]) -%}
-      {%- set jni_type_signature = helper.get_jni_type_signature(value_converter.cxx_to_jni.target_type_name) -%}
+      {%- set jni_type_signature = cppbind_helper.get_jni_type_signature(value_converter.cxx_to_jni.target_type_name) -%}
       {% if value_converter.custom.pname == 'Object' %}
       {{value_converter.cxx_to_jni.target_type_name}} {{target_name}} = nullptr;
       if ({{name}}) {

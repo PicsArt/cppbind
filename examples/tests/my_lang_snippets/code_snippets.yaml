@@ -13,7 +13,8 @@ file:
     scopes:
       - body
     content: |
-      {{body}}
+      {%- do my_lang.validate_default_helper_module() -%}
+      {{body}}{{cppbind_helper.NEW_LINE}}
 
 # code snippets for class
 class:

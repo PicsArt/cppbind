@@ -79,7 +79,7 @@ $Object:
       {%-   else -%}
       {#-     this is common for include and target type name do not change one without other -#}
       {%-     if vars.full_package != full_package -%}
-      {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
+      {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
       {%-     endif -%}
       {%-   endif -%}
       {%- endif -%}
@@ -102,7 +102,7 @@ $Object:
     python_include: |
       {#- this is common for include and target type name do not change one without other -#}
       {%- if full_package is defined and vars.full_package != full_package -%}
-      import {{vars.full_package}} as {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
+      import {{vars.full_package}} as {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
       {%- endif -%}
     cxx_include: |
       {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
@@ -121,7 +121,7 @@ $Enum:
       {%-   else -%}
       {#-     this is common for include and target type name do not change one without other -#}
       {%-     if vars.full_package != full_package -%}
-      {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
+      {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}.
       {%-     endif -%}
       {%-   endif -%}
       {%- endif -%}
@@ -135,7 +135,7 @@ $Enum:
     python_include: |
       {#- this is common for include and target type name do not change one without other -#}
       {%- if full_package is defined and vars.full_package != full_package -%}
-      import {{vars.full_package}} as {{helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
+      import {{vars.full_package}} as {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
       {%- endif -%}
     cxx_include: |
       {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}

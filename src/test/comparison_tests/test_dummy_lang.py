@@ -14,15 +14,17 @@ class TestDummyLang(unittest.TestCase):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.join(SCRIPT_DIR, '../../../examples/tests/')
         self.runner = RunCompare(examples_root=self.examples_root,
-                                 source_glob='**/*cppbind.yaml',
                                  languages=['my_lang'])
 
     def setUp(self) -> None:
         self.runner.setup()
         # copy example sources and config to current tmp directory
         shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
+        shutil.copytree(os.path.join(self.examples_root, 'helpers'), './helpers')
         shutil.copytree(os.path.join(self.examples_root, 'my_lang_snippets'), './my_lang_snippets')
         shutil.copyfile(os.path.join(self.examples_root, 'my_lang_cppbind.yaml'), './my_lang_cppbind.yaml')
+        shutil.copyfile(os.path.join(self.examples_root, 'cppbind_config.cfg'), './cppbind_config.cfg')
+        self.runner.setup_config()
 
     def tearDown(self) -> None:
         self.runner.teardown()

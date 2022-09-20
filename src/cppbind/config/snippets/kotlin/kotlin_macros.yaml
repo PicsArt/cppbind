@@ -80,7 +80,7 @@ special_functions:
 
 jni_functions: |
   {%- macro gen_jni_cxxid_function() -%}
-  {%-   set cxxid_name = helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
+  {%-   set cxxid_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, 'jGetcxxid') -%}
   extern "C" JNIEXPORT jlong {{cxxid_name}}(JNIEnv*, jobject, jobjectid id) {
       auto cppbind_obj_id = reinterpret_cast<CppBindCObject*>(id);
       auto cppbind_obj_id_ptr = cppbind_obj_id->ptr;
@@ -150,5 +150,5 @@ constructor:
       {%- set parent_type_name = get_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
       {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
-      {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}
+      {{cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}
       {%- endmacro -%}

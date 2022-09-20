@@ -28,7 +28,7 @@ from cppbind.common.error import Error
 from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
 
-DEFAULT_HELPER = 'helper'
+DEFAULT_HELPER = 'cppbind_helper'
 
 
 class DefaultValueKind(enum.IntEnum):
@@ -400,9 +400,12 @@ def get_language_helper_module(language):
 
 
 def get_helper_modules(language):
-    modules = {DEFAULT_HELPER: get_language_helper_module(language)}
+    default_module = get_language_helper_module(language)
+    modules = {DEFAULT_HELPER: default_module}
+    sys.modules[DEFAULT_HELPER] = default_module
     if hasattr(default_config.application, 'custom_helpers_dir'):
-        helpers_paths = glob.glob(os.path.join(default_config.application.custom_helper_dir, language, '*.py'))
+        helpers_paths = glob.glob(os.path.join(default_config.application.custom_helpers_dir, f'**/{language}/**/*.py'),
+                                  recursive=True)
         for module_path in helpers_paths:
             module_name = os.path.splitext(os.path.basename(module_path))[0]
             spec = importlib.util.spec_from_file_location(module_name, os.path.abspath(module_path))

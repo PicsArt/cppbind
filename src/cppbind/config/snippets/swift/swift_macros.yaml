@@ -62,7 +62,7 @@ special_functions:
       {%    endif -%}
       public {{gen_override_keyword(cxx, exclude_interface=true)}}{{hash_decl}} {
         var cppbindErr = CppBindCObject()
-        let result = {{helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
+        let result = {{cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
         hasher.combine(result)
       }
@@ -74,7 +74,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
       public {{equals_decl|replace('Self', class_name)}} {
-      {%-   set c_func = helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
+      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
         var cppbindErr = CppBindCObject()
         let result = {{c_func}}(lhs.cself, rhs.cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
@@ -87,7 +87,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
       public {{gen_override_keyword(cxx, exclude_interface=true)}}{{tostring_decl}} {
-      {%-   set c_func = helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
+      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
         var cppbindErr = CppBindCObject()
         let result = {{c_func}}(cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}

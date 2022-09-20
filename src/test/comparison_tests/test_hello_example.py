@@ -13,14 +13,14 @@ class TestHelloExampleFilesIdentical(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR, '../../../examples/tutorials/hello_user/'))
-        self.runner = RunCompare(examples_root=self.examples_root,
-                                 source_glob='cppbind.yaml')
+        self.runner = RunCompare(examples_root=self.examples_root)
 
     def setUp(self) -> None:
         self.runner.setup()
         # copy example sources and config to current tmp directory
         shutil.copytree(os.path.join(self.examples_root, 'cxx'), './cxx')
         shutil.copyfile(os.path.join(self.examples_root, 'cppbind.yaml'), './cppbind.yaml')
+        self.runner.setup_config()
 
     def tearDown(self) -> None:
         self.runner.teardown()

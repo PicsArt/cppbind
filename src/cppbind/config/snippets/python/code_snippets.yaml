@@ -773,8 +773,8 @@ getter:
       !concat
       - !include common_macros.yaml&templates
       - |
-        {%- do helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
-        {%- do helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
         {{get_template_getter_name()}}

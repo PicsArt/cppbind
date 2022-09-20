@@ -285,7 +285,7 @@ var_class: &var_class
           {%- do bases_specifiers.extend(vars.bases_list) -%}
           {%- do bases_specifiers.append('metaclass=CppBindMetaclass') %}
           
-          class {{make_type_converter(cxx.type).python.target_type_name}}({{bases_specifiers|join(', ')}}):
+          class {{get_type_converter(cxx.type).python.target_type_name}}({{bases_specifiers|join(', ')}}):
           {%- if vars.comment %}
               {{vars.comment|make_py_docstring|indent}}
           {%- endif %}
@@ -318,7 +318,7 @@ var_class: &var_class
   python_init:
     include:
       unique_content: |
-        {%- set converter = make_type_converter(cxx.type) -%}
+        {%- set converter = get_type_converter(cxx.type) -%}
         {%- if not (converter.type_info.cxx.parent_type and get_type_info(converter.type_info.cxx.parent_type, error=False)) -%}{#- do not generate an import for nested type in __init__.py -#}
         from .{{vars.full_package.split('.')[-1]}} import {{converter.python.target_type_name}}
         {%- endif -%}
@@ -331,7 +331,7 @@ var_class: &var_class
         - !include cxx_macros.yaml&includes
         - !include common_macros.yaml&includes.cxx
         - |
-          {{gen_include(make_type_converter(cxx.type))}}
+          {{gen_include(get_type_converter(cxx.type))}}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- for base_converter in base_types_converters -%}
           {{gen_include(base_converter)}}
@@ -345,7 +345,7 @@ var_class: &var_class
         !concat
         - !include python_macros.yaml&special_functions.class.pybind
         - |
-          {%- set converter = make_type_converter(cxx.type) -%}
+          {%- set converter = get_type_converter(cxx.type) -%}
           {
               {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
               {%- if cxx.namespace %}
@@ -383,7 +383,7 @@ var_bind_method: &var_bind_method
   converter:
     unique_content: |
       {%- for arg in cxx.args -%}
-      {%-   set arg_converter = make_type_converter(arg.type) -%}
+      {%-   set arg_converter = get_type_converter(arg.type) -%}
       {%-   set converter = arg_converter.python_to_pybind -%}
       {%-   set snippet = converter.snippet('arg') -%}
       {%-   if snippet -%}
@@ -399,10 +399,10 @@ var_method_python_include: &var_method_python_include
     - !include python_macros.yaml&includes.python
     - |
       {%- for arg in cxx.args -%}
-      {{gen_import(make_type_converter(arg.type))}}
+      {{gen_import(get_type_converter(arg.type))}}
       {%- endfor -%}
       {%- if cxx.result_type -%}
-      {{gen_import(make_type_converter(cxx.result_type))}}
+      {{gen_import(get_type_converter(cxx.result_type))}}
       {%- endif -%}
 
 var_method_cxx_include: &var_method_cxx_include
@@ -415,10 +415,10 @@ var_method_cxx_include: &var_method_cxx_include
       {{marker}}#include "{{vars.prj_rel_file_name}}"
       {%- endif -%}
       {%- for arg in cxx.args -%}
-      {{gen_include(make_type_converter(arg.type))}}
+      {{gen_include(get_type_converter(arg.type))}}
       {%- endfor -%}
       {%- if cxx.result_type -%}
-      {{gen_include(make_type_converter(cxx.result_type))}}
+      {{gen_include(get_type_converter(cxx.result_type))}}
       {%- endif -%}
       {%- set includes = gen_user_defined_cxx_includes(vars) -%}
       {%- if includes -%}{{includes}}{%- endif -%}
@@ -434,7 +434,7 @@ constructor:
       {% set comma = joiner(', ') %}
       @bind
       def __init__(self{{', ' if cxx.args}}{%- for arg in cxx.args -%}
-      {%-   set arg_converter = make_type_converter(arg.type).python %}
+      {%-   set arg_converter = get_type_converter(arg.type).python %}
       {%-   set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                        {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%-   if arg.default -%}
@@ -459,7 +459,7 @@ constructor:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{make_type_converter(owner_class.cxx.type).python.target_type_name|decapitalize}}.def(py::init{%- if cxx.kind_name in ('constructor',  'constructor_template') -%}
+      {{get_type_converter(owner_class.cxx.type).python.target_type_name|decapitalize}}.def(py::init{%- if cxx.kind_name in ('constructor',  'constructor_template') -%}
       <{%-  for arg in cxx.args -%}
                                                                                           {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
       {%-   endfor -%}>()
@@ -509,13 +509,13 @@ method:
       {%- if cxx.is_static %}
       @classmethod
       {%- endif %}
-      {%- set rconverter = make_type_converter(cxx.result_type).python %}
+      {%- set rconverter = get_type_converter(cxx.result_type).python %}
       {%- set comment = vars.comment|to_snake_case(cxx.args|map(attribute='name')) %}
       @bind
       def {{_name}}({{'self' if not cxx.is_static else 'cls'}}{{', ' if cxx.args}}
       {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
       {%- for arg in cxx.args -%}
-      {%-   set arg_converter = make_type_converter(arg.type).python %}
+      {%-   set arg_converter = get_type_converter(arg.type).python %}
       {%-   set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                                           {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
       {%-   if arg.default -%}
@@ -543,7 +543,7 @@ method:
       def __setitem__({{'self' if not cxx.is_static else 'cls'}}{{', ' if cxx.args}}
       {%-   set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
       {%-   for arg in cxx.args -%}
-      {%-     set arg_converter = make_type_converter(arg.type).python %}
+      {%-     set arg_converter = get_type_converter(arg.type).python %}
       {%-     set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                                           {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{arg_type_hint}}{{comma()}}{{setter_var_name}}: {{rtype_hint}}
       {%-   endfor %}):
@@ -564,7 +564,7 @@ method:
       {%-   set _name = '__str__' %}
       {%- endif %}
       {%- set comma = joiner(', ') -%}
-      {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
+      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
       {{owner_class_converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
       , py::overload_cast<
       {%-   for arg in cxx.args -%}
@@ -600,7 +600,7 @@ method:
       {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
       {#-   This should go to shared macro -#}
       {%-   if vars.keep_alive -%}
-      {%-     set args = cxx.args + [make_type_converter(cxx.result_type)] %}
+      {%-     set args = cxx.args + [get_type_converter(cxx.result_type)] %}
       {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
       {%-     if invalid_args -%}
       {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
@@ -631,12 +631,12 @@ function:
         {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
         {%- endif %}
         {%- set comma = joiner(', ') %}
-        {% set rconverter = make_type_converter(cxx.result_type).python %}
+        {% set rconverter = get_type_converter(cxx.result_type).python %}
         @bind
         def {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_python_template_postfix()}}(
         {%- set rtype_hint = rconverter.get_target_type_name(full_package=vars.full_package) -%}
         {%- for arg in cxx.args -%}
-        {%-   set arg_converter = make_type_converter(arg.type).python %}
+        {%-   set arg_converter = get_type_converter(arg.type).python %}
         {%-   set arg_type_hint = arg_converter.get_target_type_name(full_package=vars.full_package) -%}
                                         {{comma()}}{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}: {{'Optional['  if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{{arg_type_hint}}{{']' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%-   if arg.default -%}
@@ -700,7 +700,7 @@ function:
 var_bind_getter: &var_bind_getter
   converter:
     unique_content: |
-      {%- set rconverter = make_type_converter(cxx.result_type) -%}
+      {%- set rconverter = get_type_converter(cxx.result_type) -%}
       {%- set snippet = rconverter.python_to_pybind.snippet('arg') -%}
       {%- if snippet -%}
       {{marker}}if type_hint == '{{rconverter.python.target_type_name}}':
@@ -713,14 +713,14 @@ var_getter_python_include: &var_getter_python_include
     !concat
     - !include python_macros.yaml&includes.python
     - |
-      {{gen_import(make_type_converter(cxx.result_type))}}
+      {{gen_import(get_type_converter(cxx.result_type))}}
 
 var_getter_cxx_include: &var_getter_cxx_include
   unique_content:
     !concat
     - !include common_macros.yaml&includes.cxx
     - |
-      {{gen_include(make_type_converter(cxx.result_type))}}
+      {{gen_include(get_type_converter(cxx.result_type))}}
 
 property_getter:
   python:
@@ -730,7 +730,7 @@ property_getter:
       {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {%- set _name = vars.name|to_snake_case -%}
-      {%- set rconverter = make_type_converter(cxx.result_type).python -%}
+      {%- set rconverter = get_type_converter(cxx.result_type).python -%}
       {% set arg_type_hint = rconverter.get_target_type_name(full_package=vars.full_package) %}
       @property
       @bind
@@ -749,13 +749,13 @@ property_getter:
     include: *var_getter_cxx_include
     body: |
       {%- set _name = vars.name|to_snake_case -%}
-      {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
+      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
       {%- if vars.action == 'gen_property_setter' -%}
       {{owner_class_converter.python.target_type_name|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}
       {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif -%}
       {#-     This should go to shared macro -#}
       {%-     if vars.keep_alive -%}
-      {%-       set args = [make_type_converter(cxx.result_type)] %}
+      {%-       set args = [get_type_converter(cxx.result_type)] %}
       {%-       set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
       {%-       if invalid_args -%}
       {%-         do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
@@ -781,7 +781,7 @@ getter:
         {%-   else %}{{vars.name}}
         {%-   endif -%}
         {%- endmacro -%}
-        {%- set rconverter = make_type_converter(cxx.result_type).python %}
+        {%- set rconverter = get_type_converter(cxx.result_type).python %}
         {%- set arg_type_hint = rconverter.get_target_type_name(full_package=vars.full_package) %}
         @property
         @bind
@@ -807,7 +807,7 @@ getter:
       !concat
       - !include common_macros.yaml&templates
       - |
-        {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
+        {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
         {{get_template_getter_name()}}
@@ -824,7 +824,7 @@ getter:
         {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}}
         {#-   This should go to shared macro -#}
         {%-   if vars.keep_alive -%}
-        {%-     set args = [make_type_converter(cxx.result_type)] %}
+        {%-     set args = [get_type_converter(cxx.result_type)] %}
         {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-     if invalid_args -%}
         {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}

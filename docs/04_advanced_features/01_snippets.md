@@ -230,13 +230,13 @@ variables:
 -   **Error** - exposed CppBind module to log some error messages in
     type converter snippets.
 
--   **make_type_converter** - exposed helper function to be able to
-    create type converter by type name.
+-   **get_type_converter** - exposed helper function to be able to
+    look up type converter by type name.
     This function can be used to call one type converter sections from
     another one.
     For example, if you want to reuse **std::string** converter logic
     inside your own converter, you can do the following:
-    `{% set string_converter = make_type_converter('std::string') %}`
+    `{% set string_converter = get_type_converter('std::string') %}`
     `{{string_converter.c_to_cxx.snippet(...)}}`, where we can pass
     input/output variable names to **snippet** function.
 
@@ -248,7 +248,7 @@ variables:
     **\_**. The difference between these two mechanisms is that in the
     second case the value of the variable can be altered by the converter
     snippet user when calling the type converter:
-    `make_type_converter('int').c_to_cxx.snippet(cxx_type_name='INT')`.
+    `get_type_converter('int').c_to_cxx.snippet(cxx_type_name='INT')`.
 
 ### Type converter search mechanism
 

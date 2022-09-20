@@ -44,15 +44,15 @@ std::__1::map:
 # type converter section for std::map
 std::map:
   types:
-    my_lang: "myLangDict<{{make_type_converter(template_args[0]).my_lang.target_type_name}}, {{make_type_converter(template_args[1]).my_lang.target_type_name}}>"
+    my_lang: "myLangDict<{{get_type_converter(template_args[0]).my_lang.target_type_name}}, {{get_type_converter(template_args[1]).my_lang.target_type_name}}>"
     c: CppBindCDataMap
   converters:
     my_lang_to_c:
       !concat
       - !include shareable_macros/types_converter_macros.yaml&converter_comment_macro
       - |
-        {%- set arg0_converter = make_type_converter(template_args[0]).my_lang_to_c -%}
-        {%- set arg1_converter = make_type_converter(template_args[1]).my_lang_to_c -%}
+        {%- set arg0_converter = get_type_converter(template_args[0]).my_lang_to_c -%}
+        {%- set arg1_converter = get_type_converter(template_args[1]).my_lang_to_c -%}
         // Calling converter for std::map
         {{put_type_comment(name)}}
         var {{target_name}} = {{target_type_name}}()

@@ -35,11 +35,11 @@ $Object:
     tpostfix: |
       {#- this is an internal section no need to define in user defined custom converters -#}
       {%- for name in template_args_postfixes or [] -%}
-      {%-   if name != None %}{{name}}{% else %}{{make_type_converter(template_args[loop.index - 1]).custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
+      {%-   if name != None %}{{name}}{% else %}{{get_type_converter(template_args[loop.index - 1]).custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     namespace: |
       {#- this is an internal section no need to define in user defined custom converters -#}
-      {%- set parent_converter = make_type_converter(cxx.parent_type, error=False) if cxx.parent_type else none -%}
+      {%- set parent_converter = get_type_converter(cxx.parent_type, error=False) if cxx.parent_type else none -%}
       {%- if parent_converter -%}
       {{parent_converter.swift.target_type_name}}.
       {%- endif -%}
@@ -63,12 +63,12 @@ $Object:
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- if vars.shared_ref -%}
       {%-   set is_nullable = nullable|default(False) -%}
-      {%-   set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
+      {%-   set shared_ptr_conv = get_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.c_to_cxx.snippet(name, target_name=target_name + '_shared_ptr', nullable=is_nullable)}}
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- elif descendants %}
       {%-   set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
-      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
       {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
       {%- endif %}
@@ -82,13 +82,13 @@ $Object:
       {%- set pointee = cxx.unqualified_resolved_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
-      {%- set this_converter = make_type_converter(cxx) -%}
+      {%- set this_converter = get_type_converter(cxx) -%}
       {%- if vars.shared_ref -%}
       {%-   if not cxx.is_value_type -%}
       {%-     do Error.critical('shared_ref variable is set for ' + pointee + '. In this case cppbind supports object return only by value or wrapped into shared_ptr') -%}
       {%-   else %}
       std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
-      {%-     set shared_ptr_conv = make_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
+      {%-     set shared_ptr_conv = get_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
       {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, nullable=is_nullable)}}
       {%-   endif %}
       {%- else %}
@@ -168,13 +168,13 @@ $Object:
       {%-   endif %}
       {%- endif %}
     cxx_obj_recover: |
-      {%- set converter = make_type_converter(cxx) -%}
+      {%- set converter = get_type_converter(cxx) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{converter.cxx_type_name_global.snippet()}}) == 0)
               return static_cast<{{cxx.unqualified_resolved_type_name}}*>({{name}}.ptr);
           {%- for descendant in descendants %}
-          else if (strcmp({{name}}.type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
+          else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
               return static_cast<{{descendant}}*>({{name}}.ptr);
           {%- endfor %}
           else {
@@ -185,13 +185,13 @@ $Object:
       return nullptr;
     cxx_type_name_global: |
       {%- set cxx_namespace = cxx.namespace|replace('::', '_') -%}
-      {{'CPPBIND_' + ((cxx_namespace + '_' if cxx_namespace else '') + make_type_converter(cxx).swift.target_type_name|replace('.', '_'))|upper}}
+      {{'CPPBIND_' + ((cxx_namespace + '_' if cxx_namespace else '') + get_type_converter(cxx).swift.target_type_name|replace('.', '_'))|upper}}
     swift_obj_construction: |
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       let typeName = String(cString: {{name}}.type)
       switch(typeName) {
       {%- for descendant in descendants %}
-      {%-   set converter = make_type_converter(descendant) %}
+      {%-   set converter = get_type_converter(descendant) %}
       {%-   set type_name = converter.swift.get_target_type_name(interface_class=converter.type_info.vars.action == 'gen_interface') %}
       case({{type_name}}.cppbindCxxTypeName):
         return {{type_name}}({{name}}, owner)
@@ -202,7 +202,7 @@ $Object:
       }
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.unqualified_resolved_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.unqualified_resolved_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
     swift_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepCppBindReference({{reference}})
@@ -272,13 +272,13 @@ std::string_view:
     sc: UnsafeMutablePointer<CChar>
   converters:
     c_to_cxx: |
-      {{make_type_converter('std::string').c_to_cxx.snippet(name)}}
+      {{get_type_converter('std::string').c_to_cxx.snippet(name)}}
     cxx_to_c: |
-      {{make_type_converter('std::string').cxx_to_c.snippet(name)}}
+      {{get_type_converter('std::string').cxx_to_c.snippet(name)}}
     swift_to_sc: |
-      {{make_type_converter('std::string').swift_to_sc.snippet(name)}}
+      {{get_type_converter('std::string').swift_to_sc.snippet(name)}}
     sc_to_swift: |
-      {{make_type_converter('std::string').sc_to_swift.snippet(name)}}
+      {{get_type_converter('std::string').sc_to_swift.snippet(name)}}
 
 const char *:
   custom:
@@ -303,15 +303,15 @@ const char *:
 std::vector:
   custom:
     is_c_pointer_type: False
-    tname: "Array{{make_type_converter(template_args[0]).custom.tname}}"
+    tname: "Array{{get_type_converter(template_args[0]).custom.tname}}"
     pname: "Array"
   types:
-    swift: "Array<{{make_type_converter(template_args[0]).swift.target_type_name}}>"
+    swift: "Array<{{get_type_converter(template_args[0]).swift.target_type_name}}>"
     c: "CppBindCDataArray"
     sc: "CppBindCDataArray"
   converters:
     c_to_cxx: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       {{cxx.unqualified_resolved_type_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{value_converter.c.target_type_name}}*>({{name}}.data);
@@ -322,7 +322,7 @@ std::vector:
           {{target_name}}.emplace_back({{value_converter.c_to_cxx.converted_name('value_{}'.format(name))}});
       }
     cxx_to_c: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       auto _data_{{target_name}} = new {{value_converter.c.target_type_name}} [{{name}}.size()];
       {{target_type_name}} {{target_name}} = { _data_{{target_name}}, static_cast<long long>({{name}}.size()) };
       for (int _i_{{name}} = 0; _i_{{name}} < {{name}}.size(); ++_i_{{name}}) {
@@ -331,7 +331,7 @@ std::vector:
           _data_{{target_name}}[_i_{{name}}] = {{value_converter.cxx_to_c.converted_name('value_{}'.format(name))}};
       }
     swift_to_sc: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       let _{{target_name}}Data = UnsafeMutablePointer<{{value_converter.sc.target_type_name}}>.allocate(capacity: {{name}}.count)
       var {{target_name}} = {{target_type_name}}()
       {{target_name}}.data = UnsafeMutableRawPointer(_{{target_name}}Data)
@@ -342,7 +342,7 @@ std::vector:
         _{{target_name}}Data[i] = {{value_converter.swift_to_sc.converted_name('{}Val'.format(name))|to_camel_case}}
       }
     sc_to_swift: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       let _{{name}}Buffer = UnsafeBufferPointer<{{value_converter.sc.target_type_name}}>(
         start: {{name}}.data.assumingMemoryBound(to: {{value_converter.sc.target_type_name}}.self),
         count: Int({{name}}.size))
@@ -359,7 +359,7 @@ std::vector:
       source: swift
       target: sc
       snippet: |
-        {%- set value_converter = make_type_converter(template_args[0]) -%}
+        {%- set value_converter = get_type_converter(template_args[0]) -%}
         {%- if value_converter.sc_cleanup is defined %}
         {%-   set cleanup_code_fragment = value_converter.sc_cleanup.snippet('{}Item'.format(name)) %}
         {%-   if cleanup_code_fragment %}
@@ -372,7 +372,7 @@ std::vector:
         {%- endif %}
         {{name}}.data.deallocate()
     swift_ref_internal: |
-      {%- set value_converter = make_type_converter(template_args[0]).swift_ref_internal -%}
+      {%- set value_converter = get_type_converter(template_args[0]).swift_ref_internal -%}
       {%- if value_converter is defined -%}
       for value{{name}} in {{name}} {
         {{value_converter.snippet('value' + name, reference=reference, nullable=nullable)|indent(2)}}
@@ -384,16 +384,16 @@ std::vector:
 std::map:
   custom:
     is_c_pointer_type: False
-    tname: "Dictionary{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
+    tname: "Dictionary{{get_type_converter(template_args[0]).custom.tname}}{{get_type_converter(template_args[1]).custom.tname}}"
     pname: Map
   types:
-    swift: "Dictionary<{{make_type_converter(template_args[0]).swift.target_type_name}}, {{make_type_converter(template_args[1]).swift.target_type_name}}>"
+    swift: "Dictionary<{{get_type_converter(template_args[0]).swift.target_type_name}}, {{get_type_converter(template_args[1]).swift.target_type_name}}>"
     c: "CppBindCDataMap"
     sc: "CppBindCDataMap"
   converters:
     c_to_cxx: |
-      {%- set key_converter = make_type_converter(template_args[0]) -%}
-      {%- set value_converter = make_type_converter(template_args[1]) -%}
+      {%- set key_converter = get_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[1]) -%}
       {{cxx.unqualified_resolved_type_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
@@ -404,8 +404,8 @@ std::map:
           {{target_name}}.insert({ {{key_converter.c_to_cxx.converted_name('ktmp_{}'.format(name))}}, {{value_converter.c_to_cxx.converted_name('vtmp_{}'.format(name))}} });
       }
     cxx_to_c: |
-      {%- set key_converter = make_type_converter(template_args[0]) -%}
-      {%- set value_converter = make_type_converter(template_args[1]) -%}
+      {%- set key_converter = get_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[1]) -%}
       auto _k_data_{{target_name}} = new {{key_converter.c.target_type_name}} [{{name}}.size()];
       auto _v_data_{{target_name}} = new {{value_converter.c.target_type_name}} [{{name}}.size()];
       {{target_type_name}} {{target_name}} = { _k_data_{{target_name}}, _v_data_{{target_name}}, static_cast<long long>({{name}}.size()) };
@@ -422,8 +422,8 @@ std::map:
           }
       }
     swift_to_sc: |
-      {%- set key_converter = make_type_converter(template_args[0]) -%}
-      {%- set value_converter = make_type_converter(template_args[1]) -%}
+      {%- set key_converter = get_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[1]) -%}
       let _{{target_name}}Key = UnsafeMutablePointer<{{key_converter.sc.target_type_name}}>.allocate(
         capacity: {{name}}.count)
       let _{{target_name}}Val = UnsafeMutablePointer<{{value_converter.sc.target_type_name}}>.allocate(
@@ -441,8 +441,8 @@ std::map:
         {{name}}Idx += 1
       }
     sc_to_swift: |
-      {%- set key_converter = make_type_converter(template_args[0]) -%}
-      {%- set value_converter = make_type_converter(template_args[1]) -%}
+      {%- set key_converter = get_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[1]) -%}
       let {{name}}BufferKey = UnsafeBufferPointer<{{key_converter.sc.target_type_name}}>(
         start: {{name}}.keys.assumingMemoryBound(to: {{key_converter.sc.target_type_name}}.self),
         count: Int({{name}}.size))
@@ -467,7 +467,7 @@ std::map:
       source: swift
       target: sc
       snippet: |
-        {%- set value_converter = make_type_converter(template_args[1]) -%}
+        {%- set value_converter = get_type_converter(template_args[1]) -%}
         {%- if value_converter.sc_cleanup is defined %}
         {%-   set cleanup_code_fragment = value_converter.sc_cleanup.snippet('{}Item'.format(name)) %}
         {%-   if cleanup_code_fragment %}
@@ -481,8 +481,8 @@ std::map:
         {{name}}.keys.deallocate()
         {{name}}.values.deallocate()
     swift_ref_internal: |
-      {%- set key_converter = make_type_converter(template_args[0]).swift_ref_internal %}
-      {%- set value_converter = make_type_converter(template_args[1]).swift_ref_internal %}
+      {%- set key_converter = get_type_converter(template_args[0]).swift_ref_internal %}
+      {%- set value_converter = get_type_converter(template_args[1]).swift_ref_internal %}
       {%- if key_converter is defined or value_converter is defined -%}
       for ({{'key' + name if key_converter else '_'}}, {{'value' + name if value_converter else '_'}}) in {{name}} {
       {%-   if key_converter is defined %}
@@ -502,14 +502,14 @@ std::unordered_map:
 std::shared_ptr:
   custom:
     is_c_pointer_type: False
-    tname: "{{make_type_converter(template_args[0]).custom.tname}}"
+    tname: "{{get_type_converter(template_args[0]).custom.tname}}"
   types:
-    swift: "{{make_type_converter(template_args[0]).swift.target_type_name}}"
-    c: "{{make_type_converter(template_args[0]).c.target_type_name}}"
-    sc: "{{make_type_converter(template_args[0]).sc.target_type_name}}"
+    swift: "{{get_type_converter(template_args[0]).swift.target_type_name}}"
+    c: "{{get_type_converter(template_args[0]).c.target_type_name}}"
+    sc: "{{get_type_converter(template_args[0]).sc.target_type_name}}"
   converters:
     c_to_cxx: |
-      {%- set object_converter = make_type_converter(template_args[0]) -%}
+      {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
       {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
@@ -520,7 +520,7 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
       {%-   if obj_descendants -%}
-      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
       {%-   else -%}
       {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%-   endif -%}
@@ -534,7 +534,7 @@ std::shared_ptr:
       {{gen_cast_block()}}
       {%- endif %}
     cxx_to_c: |
-      {%- set object_converter = make_type_converter(template_args[0]) -%}
+      {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
       {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
@@ -584,19 +584,19 @@ std::shared_ptr:
       {%- endif %}
       {{target_type_name}} {{target_name}} = {type_{{name}}, {{target_name}}_ptr};
     swift_to_sc: |
-      {{make_type_converter(template_args[0]).swift_to_sc.snippet(name, nullable=nullable|default(False))}}
+      {{get_type_converter(template_args[0]).swift_to_sc.snippet(name, nullable=nullable|default(False))}}
     sc_to_swift: |
-      {{make_type_converter(template_args[0]).sc_to_swift.snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
+      {{get_type_converter(template_args[0]).sc_to_swift.snippet(name, nullable=nullable|default(False), value_policy='take_ownership')}}
     # for shared pointers we always use take_ownership
     # although for now take_ownership is not working as expected as we do not have object caching yet
     cxx_obj_recover: |
-      {%- set object_converter = make_type_converter(template_args[0]) -%}
+      {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- set descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{object_converter.cxx_type_name_global.snippet()}}) == 0)
               return *static_cast<std::shared_ptr<{{template_args[0].unqualified_resolved_type_name}}>*>({{name}}.ptr);
           {%- for descendant in descendants %}
-          else if (strcmp({{name}}.type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
+          else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
               return *static_cast<std::shared_ptr<{{descendant}}>*>({{name}}.ptr);
           {%- endfor %}
           else {
@@ -606,30 +606,30 @@ std::shared_ptr:
       }
       return nullptr;
     cxx_obj_recover_func_decl: |
-      {%- set cxx_namespace = make_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(template_args[0].unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{make_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
+      {{'std::shared_ptr<{}>'.format(template_args[0].unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
 
 std::pair:
   custom:
     is_c_pointer_type: False
-    tname: "Pair{{make_type_converter(template_args[0]).custom.tname}}{{make_type_converter(template_args[1]).custom.tname}}"
+    tname: "Pair{{get_type_converter(template_args[0]).custom.tname}}{{get_type_converter(template_args[1]).custom.tname}}"
     pname: Pair
   types:
-    swift: "({{make_type_converter(template_args[0]).swift.target_type_name}}, {{make_type_converter(template_args[1]).swift.target_type_name}})"
+    swift: "({{get_type_converter(template_args[0]).swift.target_type_name}}, {{get_type_converter(template_args[1]).swift.target_type_name}})"
     c: "CppBindCDataPair"
     sc: "CppBindCDataPair"
   converters:
     c_to_cxx: |
-      {%- set first_converter = make_type_converter(template_args[0]) -%}
-      {%- set second_converter = make_type_converter(template_args[1]) -%}
+      {%- set first_converter = get_type_converter(template_args[0]) -%}
+      {%- set second_converter = get_type_converter(template_args[1]) -%}
       auto& first_tmp_{{name}} = *reinterpret_cast<{{first_converter.c.target_type_name}}*>({{name}}.first);
       auto& second_tmp_{{name}} = *reinterpret_cast<{{second_converter.c.target_type_name}}*>({{name}}.second);
       {{first_converter.c_to_cxx.snippet('first_tmp_{}'.format(name))}}
       {{second_converter.c_to_cxx.snippet('second_tmp_{}'.format(name))}}
       {{cxx.unqualified_resolved_type_name}} {{target_name}} { {{first_converter.c_to_cxx.converted_name('first_tmp_{}'.format(name))}}, {{second_converter.c_to_cxx.converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
-      {%- set first_converter = make_type_converter(template_args[0]) -%}
-      {%- set second_converter = make_type_converter(template_args[1]) -%}
+      {%- set first_converter = get_type_converter(template_args[0]) -%}
+      {%- set second_converter = get_type_converter(template_args[1]) -%}
       auto _first_data_{{target_name}} = new {{first_converter.c.target_type_name}};
       auto _second_data_{{target_name}} = new {{second_converter.c.target_type_name}};
       const auto& first_{{name}} = {{name}}.first;
@@ -640,8 +640,8 @@ std::pair:
       *_second_data_{{target_name}} = {{second_converter.cxx_to_c.converted_name('second_{}'.format(name))}};
       {{target_type_name}} {{target_name}} = { _first_data_{{target_name}}, _second_data_{{target_name}} };
     swift_to_sc: |
-      {%- set first_converter = make_type_converter(template_args[0]) -%}
-      {%- set second_converter = make_type_converter(template_args[1]) -%}
+      {%- set first_converter = get_type_converter(template_args[0]) -%}
+      {%- set second_converter = get_type_converter(template_args[1]) -%}
       let _{{target_name}}First = UnsafeMutablePointer<{{first_converter.sc.target_type_name}}>.allocate(capacity: 1)
       let _{{target_name}}Second = UnsafeMutablePointer<{{second_converter.sc.target_type_name}}>.allocate(capacity: 1)
       var {{target_name}} = {{target_type_name}}()
@@ -654,8 +654,8 @@ std::pair:
       _{{target_name}}First[0] = {{first_converter.swift_to_sc.converted_name('{}First'.format(name))|to_camel_case}}
       _{{target_name}}Second[0] = {{second_converter.swift_to_sc.converted_name('{}Second'.format(name))|to_camel_case}}
     sc_to_swift: |
-      {%- set first_converter = make_type_converter(template_args[0]) -%}
-      {%- set second_converter = make_type_converter(template_args[1]) -%}
+      {%- set first_converter = get_type_converter(template_args[0]) -%}
+      {%- set second_converter = get_type_converter(template_args[1]) -%}
       let _{{name}}FirstData = UnsafeBufferPointer<{{first_converter.sc.target_type_name}}>(
         start: {{name}}.first.assumingMemoryBound(to: {{first_converter.sc.target_type_name}}.self),
         count: 1)
@@ -675,7 +675,7 @@ std::pair:
       source: swift
       target: sc
       snippet: |
-        {%- set first_converter = make_type_converter(template_args[0]) -%}
+        {%- set first_converter = get_type_converter(template_args[0]) -%}
         {%- if first_converter.sc_cleanup is defined %}
         {%-   set first_cleanup_code_fragment = first_converter.sc_cleanup.snippet('{}FirstItem'.format(name)) %}
         {%-   if first_cleanup_code_fragment %}
@@ -683,7 +683,7 @@ std::pair:
         {{first_cleanup_code_fragment}}
         {%-   endif %}
         {%- endif %}
-        {%- set second_converter = make_type_converter(template_args[1]) -%}
+        {%- set second_converter = get_type_converter(template_args[1]) -%}
         {%- if second_converter.sc_cleanup is defined %}
         {%-   set second_cleanup_code_fragment = second_converter.sc_cleanup.snippet('{}SecondItem'.format(name)) %}
         {%-   if second_cleanup_code_fragment %}
@@ -694,8 +694,8 @@ std::pair:
         {{name}}.first.deallocate()
         {{name}}.second.deallocate()
     swift_ref_internal: |
-      {%- set first_converter = make_type_converter(template_args[0]).swift_ref_internal -%}
-      {%- set second_converter = make_type_converter(template_args[1]).swift_ref_internal -%}
+      {%- set first_converter = get_type_converter(template_args[0]).swift_ref_internal -%}
+      {%- set second_converter = get_type_converter(template_args[1]).swift_ref_internal -%}
       {%- if first_converter is defined %}
       {{first_converter.snippet(name + '.first', reference=reference, nullable=nullable)|indent(2)}}
       {%- endif %}
@@ -709,33 +709,33 @@ std::pair:
 std::array:
   custom:
     is_c_pointer_type: False
-    tname: "Array{{make_type_converter(template_args[0]).custom.tname}}"
+    tname: "Array{{get_type_converter(template_args[0]).custom.tname}}"
   types:
-    swift: "{{make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift.target_type_name}}"
-    c: "{{make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).c.target_type_name}}"
-    sc: "{{make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc.target_type_name}}"
+    swift: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift.target_type_name}}"
+    c: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).c.target_type_name}}"
+    sc: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc.target_type_name}}"
   converters:
     c_to_cxx: |
       {{cxx.unqualified_resolved_type_name}} {{target_name}} {};
-      auto data_{{name}} = reinterpret_cast<{{make_type_converter(template_args[0]).c.target_type_name}}*>({{name}}.data);
+      auto data_{{name}} = reinterpret_cast<{{get_type_converter(template_args[0]).c.target_type_name}}*>({{name}}.data);
       std::copy_n(data_{{name}}, {{template_args[1]}}, {{target_name}}.begin());
     cxx_to_c: |
-      {%- set converter = make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).cxx_to_c -%}
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).cxx_to_c -%}
       {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
     swift_to_sc: |
-      {%- set converter = make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_to_sc -%}
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_to_sc -%}
       {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
     sc_to_swift: |
-      {%- set converter = make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_to_swift -%}
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_to_swift -%}
       {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
     sc_cleanup:
       source: swift
       target: sc
       snippet: |
-        {%- set converter = make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_cleanup -%}
+        {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_cleanup -%}
         {{converter.snippet(name)}}
     swift_ref_internal: |
-        {%- set converter = make_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_ref_internal -%}
+        {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_ref_internal -%}
         {{converter.snippet(name)}}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
@@ -746,14 +746,14 @@ std::array:
 std::optional:
   custom:
     is_c_pointer_type: False
-    tname: "Optional{{make_type_converter(template_args[0]).custom.tname}}"
+    tname: "Optional{{get_type_converter(template_args[0]).custom.tname}}"
   types:
-    swift: "{{make_type_converter(template_args[0]).swift.target_type_name}}?"
-    c: "{{'CppBindOptional' + make_type_converter(template_args[0]).custom.pname|default(make_type_converter(template_args[0]).swift.target_type_name)}}"
-    sc: "{{'CppBindOptional' + make_type_converter(template_args[0]).custom.pname|default(make_type_converter(template_args[0]).swift.target_type_name)}}"
+    swift: "{{get_type_converter(template_args[0]).swift.target_type_name}}?"
+    c: "{{'CppBindOptional' + get_type_converter(template_args[0]).custom.pname|default(get_type_converter(template_args[0]).swift.target_type_name)}}"
+    sc: "{{'CppBindOptional' + get_type_converter(template_args[0]).custom.pname|default(get_type_converter(template_args[0]).swift.target_type_name)}}"
   converters:
     c_to_cxx: |
-      {%- set value_converter = make_type_converter(template_args[0]).c_to_cxx -%}
+      {%- set value_converter = get_type_converter(template_args[0]).c_to_cxx -%}
       {{cxx.unqualified_resolved_type_name}} {{target_name}} {std::nullopt};
       if ({{name}}.has_value) {
           auto& {{name}}_val = {{name}}.value;
@@ -762,7 +762,7 @@ std::optional:
           {{target_name}} = {{cxx.unqualified_resolved_type_name}}({{value_converter.converted_name('{}_val'.format(name))}});
       }
     cxx_to_c: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       CppBindOptional{{value_converter.custom.pname|default(value_converter.swift.target_type_name)}} {{target_name}} {};
       if ({{name}}) {
           auto {{name}}_val = {{name}}.value();
@@ -773,7 +773,7 @@ std::optional:
           {{target_name}}.has_value = false;
       }
     swift_to_sc: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       var {{target_name}} = CppBindOptional{{value_converter.custom.pname|default(value_converter.swift.target_type_name)}}()
       if {{name}} != nil {
         let {{name}}Unwrapped = {{name}}!
@@ -784,7 +784,7 @@ std::optional:
         {{target_name}}.has_value = false
       }
     sc_to_swift: |
-      {%- set value_converter = make_type_converter(template_args[0]) -%}
+      {%- set value_converter = get_type_converter(template_args[0]) -%}
       var {{target_name}}: {{value_converter.swift.target_type_name}}? = nil;
       if ({{name}}.has_value) {
         let {{name}}Value = {{name}}.value{{'!' if value_converter.custom.is_c_pointer_type}}
@@ -795,7 +795,7 @@ std::optional:
       source: swift
       target: sc
       snippet: |
-        {%- set value_converter = make_type_converter(template_args[0]).sc_cleanup -%}
+        {%- set value_converter = get_type_converter(template_args[0]).sc_cleanup -%}
         {%- if value_converter is defined %}
         {%-   set cleanup_code_fragment = value_converter.snippet('{}.value'.format(name)) %}
         {%-   if cleanup_code_fragment %}
@@ -805,7 +805,7 @@ std::optional:
         {%-   endif %}
         {%- endif %}
     swift_ref_internal: |
-      {%- set value_converter = make_type_converter(template_args[0]).swift_ref_internal -%}
+      {%- set value_converter = get_type_converter(template_args[0]).swift_ref_internal -%}
       {%- if value_converter is defined -%}
       if ({{name}} != nil) {
         {{value_converter.snippet(name  + "!", reference=reference, nullable=nullable)|indent(4)}}

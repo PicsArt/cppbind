@@ -34,7 +34,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%-   endif %}
       {{equals_decl}} {
-          other as {{make_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(definition=True)}}
+          other as {{get_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(definition=True)}}
           return j{{vars.name|capitalize}}(cppbindObjId, other.cppbindObjId, other)
       }
       {%- endmacro -%}
@@ -64,7 +64,7 @@ special_functions:
        * CppBind generated equals method comparing the underlying C++ object ids.
        */
       {{equals_decl}} {
-          other as {{make_type_converter(cxx.type).kotlin.get_target_type_name(interface_class=interface_class, definition=True)}}
+          other as {{get_type_converter(cxx.type).kotlin.get_target_type_name(interface_class=interface_class, definition=True)}}
           return cxxId == other.cxxId
       }
       {%- endmacro -%}
@@ -86,14 +86,14 @@ jni_functions: |
       auto cppbind_obj_id_ptr = cppbind_obj_id->ptr;
   {#-   here is used almost the same logic as for jni_to_cxx section of Object/std::shared_ptr type converter (instead of constructing target value we delete it here) -#}
   {%-   if descendants %}
-      if (strcmp(cppbind_obj_id->type, {{make_type_converter(cxx.type).cxx_type_name_global.snippet()}}) == 0)
+      if (strcmp(cppbind_obj_id->type, {{get_type_converter(cxx.type).cxx_type_name_global.snippet()}}) == 0)
   {%-     if vars.shared_ref %}
           return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{cxx.type_name}}>*>(cppbind_obj_id_ptr)->get());
   {%-     else %}
           return reinterpret_cast<jlong>(static_cast<{{cxx.type_name}}*>(cppbind_obj_id_ptr));
   {%-     endif %}
   {%-     for descendant in descendants %}
-      else if (strcmp(cppbind_obj_id->type, {{make_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
+      else if (strcmp(cppbind_obj_id->type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
   {%-       if vars.shared_ref %}
           return reinterpret_cast<jlong>(static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_id_ptr)->get());
   {%-       else %}
@@ -123,7 +123,7 @@ templates:
       {#-   TODO: update overloading_index with overloading_postfix after fixing overloading postfix to match kotlin formatting -#}
       {%-   if cxx.is_template or (cxx.is_overloaded and overloading_index) -%}
       {%-     for arg in args -%}
-      {%-       if make_type_converter(arg.type).custom.is_kotlin_type_erased|default(False) -%}
+      {%-       if get_type_converter(arg.type).custom.is_kotlin_type_erased|default(False) -%}
                   @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_index}}")
                   {%- break -%}
       {%-       endif -%}
@@ -147,7 +147,7 @@ constructor:
     - !include common_macros.yaml&utils
     - |
       {%- set constructor_jvm_name = 'jConstructor' if cxx.kind_name in ('constructor',  'constructor_template') else 'j' + vars.name|capitalize -%}
-      {%- set parent_type_name = make_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+      {%- set parent_type_name = get_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
       {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
       {{helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}

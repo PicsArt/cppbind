@@ -692,5 +692,5 @@ class SnippetsEngine:
         self.jinja_env.filters['type_converter'] = partial(create_types_converters, self)
         self.jinja_env.filters['type_info'] = partial(get_types_infos, self)
 
-        self.jinja_env.globals['make_type_converter'] = partial(create_type_converter, self)
+        self.jinja_env.globals['get_type_converter'] = partial(create_type_converter, self)
         self.jinja_env.globals['get_type_info'] = partial(get_type_info, self)

@@ -50,11 +50,11 @@ special_functions:
     - *_special_function_decls
     - !include common_macros.yaml&utils
     - |
-      {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
+      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
       {%- set hash_decl = 'func hash(into hasher: inout Hasher)' -%}
       {%- set tostring_decl = 'var description: String' -%}
       {%- set equals_decl = 'static func == (lhs: Self, rhs: Self) -> Bool' -%}
-      {%- set rconverter = make_type_converter(cxx.result_type) -%}
+      {%- set rconverter = get_type_converter(cxx.result_type) -%}
       {%- macro gen_hash_function() -%}
       {%-   set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
       {%-   if vars.comment -%}
@@ -111,7 +111,7 @@ constructor:
     - !include common_macros.yaml&templates
     - !include common_macros.yaml&utils
     - |
-      {%- set owner_class_converter = make_type_converter(owner_class.cxx.type) -%}
+      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
       {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- macro gen_constructor_c_name(target_overloading_index=none) -%}
       {%-   set target_type_name = owner_class_converter.swift.target_type_name -%}

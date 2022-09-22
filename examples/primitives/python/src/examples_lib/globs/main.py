@@ -92,3 +92,6 @@ assert(s1 == [4, 6, 0, 0])
 
 s2 = sum1([5.0, 6.0, 0.0, 0.0], [7.0, 8.0, 0.0, 0.0])
 assert(s2 == [12.0, 14.0, 0.0, 0.0])
+
+getVecColor = get_vector_color([Color.Red])
+assert(getVecColor[0] == Color.Red)

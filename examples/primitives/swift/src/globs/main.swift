@@ -90,6 +90,9 @@ assert(sum1 == [4, 6, 0, 0])
 let sum2 = sum(first: [5.0, 6.0, 0.0, 0.0], second: [7.0, 8.0, 0.0, 0.0])
 assert(sum2 == [12.0, 14.0, 0.0, 0.0])
 
+let getVecColor = getVectorColor(c: [Color.Red])
+assert(getVecColor[0] == Color.Red)
+
 }
 
 

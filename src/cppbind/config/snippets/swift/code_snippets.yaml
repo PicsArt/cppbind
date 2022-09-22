@@ -19,7 +19,6 @@ file:
     file_path: |
       {{vars.c_file_fullname}}
     scopes:
-      - namespace
       - body
       - include
       - glob_decl
@@ -48,7 +47,6 @@ file:
 
       {{forward_decl}}
       {%- endif %}
-      {{namespace}}
 
       {{body}}{{new_line}}
   ch:
@@ -281,11 +279,6 @@ class:
       unique_content: |
         {%- set converter = get_type_converter(cxx.type) -%}
         const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.type_name}}";
-    namespace:
-      unique_content: |
-        {%- if cxx.namespace %}
-        using namespace {{cxx.namespace}};
-        {%- endif %}
     body:
       content: |
         {%- set converter = get_type_converter(cxx.type) -%}
@@ -294,6 +287,9 @@ class:
         {%- set is_root_class = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length == 0 %}
         {%- if is_root_class -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.target_type_name|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
+        {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+        {%- endif %}
         {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
         {%- endif %}
@@ -455,16 +451,14 @@ interface:
       unique_content: |
         {%- set converter = get_type_converter(cxx.type) -%}
         const char* {{converter.cxx_type_name_global.snippet()}} = "{{cxx.type_name}}";
-    namespace:
-      unique_content: |
-        {%- if cxx.namespace %}
-        using namespace {{cxx.namespace}};
-        {%- endif %}
     body:
       content: |
         {%- set converter = get_type_converter(cxx.type) -%}
         {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
         void release_{{cxx_namespace + "_" if cxx_namespace}}{{converter.swift.get_target_type_name(interface_class=True)|replace('.',  '_')}}({{converter.c.target_type_name}} cself, bool owner) {
+        {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+        {%- endif %}
         {%- if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
         {%- endif %}
@@ -691,6 +685,9 @@ constructor:
         {%-     set arg_converter = get_type_converter(arg.type) -%}
         {{comma()}}{{arg_converter.c.target_type_name}}
         {%-     if arg_converter.custom.is_c_pointer_type %} {{'_Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else '_Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%-   set call_args = [] -%}
         {%-   for arg in args -%}
         {%-     set arg_converter = get_type_converter(arg.type) -%}
@@ -1026,6 +1023,9 @@ method:
         {%-     for arg in args -%}
         {%-       set arg_converter = get_type_converter(arg.type) -%}
         {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%-     set call_args = [] %}
         {%-     for arg in args %}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1088,6 +1088,9 @@ method:
         {%- for arg in cxx.args -%}
         {%- set arg_converter = get_type_converter(arg.type) -%}
         {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%- set call_args = [] %}
         {%- for arg in cxx.args -%}
         {%-   set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1117,6 +1120,9 @@ method:
         {%-   set arg_converter = get_type_converter(arg.type) -%}
             {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type %}{{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if cxx.args}}{{rconverter.c.target_type_name}}
         {%-   if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} value) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%-     set call_args = [] %}
         {%-     for arg in cxx.args -%}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1307,6 +1313,9 @@ function:
         {%-     set arg_converter = get_type_converter(arg.type) -%}
         {{comma()}}{{arg_converter.c.target_type_name}}{% if arg_converter.custom.is_c_pointer_type -%}
         {{' _Nullable' if arg.name in vars.nullable_arg or arg.default_is_nullptr else ' _Nonnull'}}{% endif %} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor-%}{{', ' if args}}CppBindCObject* _Nonnull cppbind_err) {
+        {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+        {%- endif %}
         {%-     set call_args = [] %}
         {%-     for arg in args -%}
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1484,6 +1493,9 @@ property_getter:
       {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
       {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself) {
+      {%- if owner_class.cxx.namespace %}
+          using namespace {{owner_class.cxx.namespace}};
+      {%- endif %}
       {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           decltype(auto) result = {{this_converter.converted_name('cself')}}->{{cxx.name}};
@@ -1492,6 +1504,9 @@ property_getter:
       }
       {% if vars.action == 'gen_property_setter' %}
       void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}}) {
+      {%- if owner_class.cxx.namespace %}
+          using namespace {{owner_class.cxx.namespace}};
+      {%- endif %}
           {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
           {{rconverter.c_to_cxx.snippet(vars.name, nullable=vars.nullable_return)|indent(4)}}
           {{this_converter.converted_name('cself')}}->{{cxx.name}} = {{rconverter.c_to_cxx.converted_name(vars.name)}};
@@ -1640,6 +1655,9 @@ getter:
         }
         {%- endmacro -%}
         {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} _prop_get_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, CppBindCObject* _Nonnull cppbind_err) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').c_to_cxx if owner_class.vars.shared_ref else owner_class_converter.c_to_cxx -%}
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
             try {
@@ -1653,6 +1671,9 @@ getter:
         {%- if setter is defined %}
         {%    set converter = get_type_converter(setter.cxx.args[0].type).c_to_cxx %}
         void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.',  '_')}}_{{vars.name}}{{get_overloading_postfix(setter.vars)}}{{get_template_postfix()}}({{owner_class_converter.c.target_type_name}} cself, {{get_type_converter(setter.cxx.args[0].type).c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{setter.cxx.args[0].name}}, CppBindCObject* _Nonnull cppbind_err) {
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
             {{this_converter.snippet('cself', cxx_is_pointer=True)|indent(4)}}
             {{converter.snippet(setter.cxx.args[0].name, nullable=vars.nullable_return)|indent(4)}}
             try {

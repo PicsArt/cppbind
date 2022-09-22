@@ -404,3 +404,9 @@ tostring_method:
   inheritable: true
   default: toString
   allowed_on: [ root ]
+
+is_overridden:
+  inheritable: false
+  default: null
+  type: bool
+  allowed_on: [ cxx_method ]

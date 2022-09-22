@@ -162,6 +162,10 @@ goodDoctor.close()
 goodYoungDoctor.close()
 goodOldDoctor.close()
 
+// test is_overridden
+val electricBicycle = ElectricBicycle(1)
+assert(electricBicycle.type() == "ElectricBicycle")
+
 }
 
 class InheritanceApp {

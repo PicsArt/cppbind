@@ -10,8 +10,6 @@ namespace cppbind::example {
  * action: gen_class
  * shared_ref: True
  * package: inheritance
- * descendants:
- *  - cppbind::example::Bicycle
  */
 class Vehicle {
 public:

@@ -35,6 +35,38 @@ public:
 
     std::string name;
 };
+
+/**
+ * __API__
+ * action: gen_class
+ * shared_ref: True
+ * package: inheritance
+ */
+class ElectricBicycle : public Bicycle {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    ElectricBicycle(int numberOfSeats) : Bicycle(numberOfSeats) {
+        name = "ElectricBicycle";
+    };
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * name: type
+     * is_overridden: True
+     */
+    std::string bicycleType(){
+        return name;
+    }
+
+    std::string name;
+};
+
 // [example-end]
 }
 #endif

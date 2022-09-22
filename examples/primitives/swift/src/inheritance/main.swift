@@ -133,6 +133,10 @@ let goodOldDoctor = GoodOldDoctor(doctorName: "good_old_doctor")
 assert(doctorUsage.getGoodDoctorName(d: goodOldDoctor) == "good_doctor")
 assert(doctorUsage.getGoodDoctorName(d: doctorUsage.getGoodVirtualDoctor() as! GoodDoctor) == "good_doctor")
 
+// test is_overridden
+let electricBicycle = ElectricBicycle(numberOfSeats: 1)
+assert(electricBicycle.type() == "ElectricBicycle")
+
 }
 
 #if os(Linux)

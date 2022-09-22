@@ -384,6 +384,15 @@ Now let's go through the key variables:
     appropriate string converting method will be generated. The variable is
     allowed on **root** and should be defined once per project. 
 
+- **is_overridden** - variable to allow users to define whether the method 
+    is overridden or not in the target language. If this variable is not specified
+    then CPPBind will detect if the method is overridden in C++ 
+    and apply it to the target language. This variable might be useful when 
+    the name of the method is changed in a way that makes it overridden in the target language.
+    In that case the user should explicitly set the value of **is_overridden** to **True**.
+    See **ElectricBicycle** class example here:
+    [is_overridden example](../03_get_started/04_inheritance.md#single-inheritance).
+
 !!! Note
     The default value and other properties can be easily overridden.
     An example demonstrating this:

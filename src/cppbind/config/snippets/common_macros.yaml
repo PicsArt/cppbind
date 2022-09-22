@@ -14,21 +14,27 @@ utils: |
   {%- endmacro -%}
   {%- macro gen_override_keyword(cxx, exclude_interface=false) -%}
   {%-   if cxx.kind_name == 'method' -%}
-  {%-     set overridden_parent_infos = cxx.overridden_elements|type_info(attribute='parent.type', error=False)|reject('none') -%}
-  {%-     set ancestors = owner_class.cxx.ancestors|type_info(error=False)|reject('none')|map(attribute='cxx.type_name') -%}
-  {%-     for parent_info in overridden_parent_infos -%}
-  {%-       if exclude_interface -%}
-  {%-         if parent_info.has_api and parent_info.vars.action != 'gen_interface' and parent_info.cxx.type_name in ancestors -%}
-                {{'override '}}
-  {%-           break -%}
-  {%-         endif -%}
-  {%-       else -%}
-  {%-         if parent_info.has_api and parent_info.cxx.type_name in ancestors -%}
-                {{'override '}}
-  {%-           break -%}
-  {%-         endif -%}
+  {%-     if vars.is_overridden is not none -%}
+  {%-       if vars.is_overridden -%}
+              {{'override '}}
   {%-       endif -%}
-  {%-     endfor -%}
+  {%-     else -%}
+  {%-       set overridden_parent_infos = cxx.overridden_elements|type_info(attribute='parent.type', error=False)|reject('none') -%}
+  {%-       set ancestors = owner_class.cxx.ancestors|type_info(error=False)|reject('none')|map(attribute='cxx.type_name') -%}
+  {%-       for parent_info in overridden_parent_infos -%}
+  {%-         if exclude_interface -%}
+  {%-           if parent_info.has_api and parent_info.vars.action != 'gen_interface' and parent_info.cxx.type_name in ancestors -%}
+                  {{'override '}}
+  {%-             break -%}
+  {%-           endif -%}
+  {%-         else -%}
+  {%-           if parent_info.has_api and parent_info.cxx.type_name in ancestors -%}
+                  {{'override '}}
+  {%-             break -%}
+  {%-           endif -%}
+  {%-         endif -%}
+  {%-       endfor -%}
+  {%-     endif -%}
   {%-   endif -%}
   {%- endmacro -%}
 

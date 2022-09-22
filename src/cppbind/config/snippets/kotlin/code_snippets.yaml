@@ -35,7 +35,6 @@ file:
     file_path: |
       {{vars.c_file_fullname}}
     scopes:
-      - namespace
       - body
       - include
       - glob_decl
@@ -63,7 +62,6 @@ file:
 
       {{forward_decl}}
       {%- endif %}
-      {{namespace}}
 
       {{body}}
       {% set file = path.splitext(path.basename(vars.file_fullname))[0] %}
@@ -135,11 +133,6 @@ var_class_cxx: &var_class_cxx
         {%- endif -%}
         {%- set includes = gen_user_defined_cxx_includes(vars) -%}
         {%- if includes -%}{{includes}}{%- endif -%}
-  namespace:
-    unique_content: |
-      {%- if cxx.namespace %}
-      using namespace {{cxx.namespace}};
-      {%- endif %}
   glob_decl: *var_class_cxx_glob_decl
   glob_def:
     unique_content: |
@@ -160,6 +153,9 @@ var_class_cxx: &var_class_cxx
         {%- if is_root_class %}
         {%-   set finalize_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, 'jFinalize') %}
         extern "C" JNIEXPORT void {{finalize_name}}(JNIEnv*, jobject, jobjectid id){
+        {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+        {%- endif %}
         {%-   if not vars.shared_ref and cxx.is_polymorphic and (vars.descendants if vars.descendants is not none else descendants) %}
             static_assert(std::has_virtual_destructor<{{cxx.type_name}}>::value, {{'"{} type must have virtual destructor"'.format(cxx.type_name)}});
         {%-   endif %}
@@ -700,6 +696,9 @@ constructor:
         {%    for arg in args -%}
         {{comma()}}{{get_type_converter(arg.type).jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
         {%-   endfor %}{{', ...' if args}}){
+        {%-   if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%-   endif %}
         {%-   set call_args = [] -%}
         {%-   for arg in args -%}
         {%-     set arg_name = vars.argument_name.get(arg.name, arg.name)|to_snake_case -%}
@@ -1100,6 +1099,9 @@ method:
         {%-     for arg in args -%}
         {{comma()}}{{get_type_converter(arg.type).jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
         {%-     endfor %}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}{{', ...' if args}}){
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
         {%-     set call_args = [] %}
             {{args_snippet(args, call_args)|indent(4)}}
         {%-     if not cxx.is_static %}
@@ -1298,6 +1300,9 @@ function:
         {%-   for arg in args -%}
         {{comma()}}{{get_type_converter(arg.type).jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
         {%-   endfor %}{{', ...' if args}}){
+        {%- if cxx.namespace %}
+            using namespace {{cxx.namespace}};
+        {%- endif %}
         {%-   set call_args = [] %}
             {{args_snippet(args, call_args)|indent(4)}}
             {{call_code(call_args)|indent(4)}}
@@ -1415,6 +1420,9 @@ property_getter:
       {%- set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class_converter.jni_to_cxx -%}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
+      {%- if owner_class.cxx.namespace %}
+          using namespace {{owner_class.cxx.namespace}};
+      {%- endif %}
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
           decltype(auto) result = {{this_converter.converted_name('id')}}->{{cxx.name}};
@@ -1425,6 +1433,9 @@ property_getter:
       {%    set func_name="jSet%s"|format(vars.name|lower) %}
       {%-   set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
+      {%- if owner_class.cxx.namespace %}
+          using namespace {{owner_class.cxx.namespace}};
+      {%- endif %}
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
       {%    set converter = rconverter.jni_to_cxx %}
@@ -1577,6 +1588,9 @@ getter:
         {%- set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
         {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class_converter.jni_to_cxx %}
         extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
             validateID(id);
             {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
         {%- if 'no_throw' not in vars.throws %}
@@ -1596,6 +1610,9 @@ getter:
         {%    set func_name="j%s%s"|format(setter.vars.name|capitalize, get_template_postfix()) %}
         {%-   set jni_setter_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
         extern "C" JNIEXPORT void {{jni_setter_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{get_type_converter(setter.cxx.args[0].type).jni.target_type_name}} {{setter.cxx.args[0].name}}, ...){
+        {%- if owner_class.cxx.namespace %}
+            using namespace {{owner_class.cxx.namespace}};
+        {%- endif %}
             validateID(id);
             {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
         {%-   set converter = get_type_converter(setter.cxx.args[0].type).jni_to_cxx %}

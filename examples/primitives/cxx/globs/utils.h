@@ -3,6 +3,7 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
 #include "cxx/enums/color.hpp"
 #include "cxx/simple/project.hpp"
@@ -91,6 +92,15 @@ namespace cppbind::example {
     std::pair<T*, V*> makePair(T* a, V* b) {
        return std::make_pair(a, b);
     }
+
+    /**
+     * __API__
+     * action: gen_function
+     * package: globs
+     * swift.file: GlobUtils
+     * throws: no_throw
+     */
+    std::vector<Color> getVectorColor(std::vector<Color> c);
 }
 
 // [example-end]

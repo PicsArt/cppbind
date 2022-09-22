@@ -84,6 +84,9 @@ assert(sum1 == listOf(4, 6, 0, 0))
 val sum2 = sum(listOf(5F, 6F, 0F, 0F), listOf(7F, 8F, 0F, 0F))
 assert(sum2 == listOf(12F, 14F, 0F, 0F))
 
+var getVecColor = getVectorColor(listOf(Color.Red))
+assert(getVecColor[0] == Color.Red)
+
 }
 
 class GlobsApp {

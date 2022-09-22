@@ -66,3 +66,9 @@ std::array<float, 4> sum(std::array<float, 4> first, std::array<float, 4> second
     }
     return res;
 }
+
+namespace cppbind::example {
+    std::vector<Color> getVectorColor(std::vector<Color> c) {
+        return c;
+    }
+}

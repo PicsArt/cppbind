@@ -166,8 +166,6 @@ variables:
 -   **cxx** - a namespace containing several useful cxx-related
     fields. Here are the available fields: <br />
     **type_name** - cxx type name. <br />
-    **pointee_name** - cxx pointee type name (the name without pointer
-    or reference sign). <br />
     **canonical_type** - an object representing canonical type
     information of the given type. <br />
     **is_pointer** - a boolean
@@ -179,12 +177,10 @@ variables:
     type is an lvalue reference or not. <br />
     **is_rval_reference** - a boolean variable showing whether the cxx
     type is an rvalue reference or not. <br />
-    **unqualified_resolved_type_name** - cxx type name or canonical
-    type name when the type is a typedef on a pointer/reference. <br />
+    **resolved_type** - cxx pointee type or canonical
+    type when the type is a typedef on a pointer/reference. <br />
     **unqualified_type_name** - cxx type name without any
     qualification (without `const` and `volatile`). <br />
-    **unqualified_canonical_type_name** - canonical type name of the
-    cxx type without any qualifiers and pointers/references. <br />
     **is_const_qualified** - a boolean variable showing whether the
     cxx type is const qualified or not. <br />
     **namespace** - namespace of the cxx type. <br />

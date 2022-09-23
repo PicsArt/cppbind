@@ -597,7 +597,7 @@ method:
       {%- if cxx.result_type.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%-   set setter_var_name = 'value' -%}
       {%-   if vars.is_operator and vars.name == '__getitem__' and not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
-      {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.unqualified_resolved_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
+      {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.resolved_type.unqualified_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
       {#-   This should go to shared macro -#}
       {%-   if vars.keep_alive -%}
       {%-     set args = cxx.args + [get_type_converter(cxx.result_type)] %}

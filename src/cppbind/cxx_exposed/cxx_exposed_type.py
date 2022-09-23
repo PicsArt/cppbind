@@ -197,16 +197,10 @@ class CXXExposedType:
         return cutil.get_unqualified_type_name(self.type_name)
 
     @property
-    def unqualified_canonical_type_name(self):
-        return self._raw_type.unqualified_type_name
-
-    @property
-    def unqualified_resolved_type_name(self):
-        """Returns unqualified type name if the type is not typedef on pointer, otherwise returns canonical name"""
-        return self._raw_type.unqualified_type_name if \
-            (isinstance(self._cxx_type, CXXType) and self.is_typedef and (
-                    self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) \
-            else cutil.get_unqualified_type_name(self.pointee_name)
+    def resolved_type(self):
+        """Returns pointee type if the type is not typedef on pointer, otherwise returns canonical type"""
+        return self._raw_type if (isinstance(self._cxx_type, CXXType) and self.is_typedef and (
+                    self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) else self.pointee_type
 
     @property
     def is_const_qualified(self):
@@ -216,7 +210,7 @@ class CXXExposedType:
         return self.type_name.startswith('const')
 
     @property
-    def pointee_name(self):
+    def __pointee_name(self):
         return cutil.replace_template_choice(
             self.pointee_type._cxx_type.spelling if isinstance(self._cxx_type, CXXType) else self.pointee_type._cxx_type,
             self._template_choice)

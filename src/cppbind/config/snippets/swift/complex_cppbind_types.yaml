@@ -58,7 +58,7 @@ $Object:
     sc: "CppBindCObject"
   converters:
     c_to_cxx: |
-      {%- set pointee = cxx.unqualified_resolved_type_name -%}
+      {%- set pointee = cxx.resolved_type.unqualified_type_name -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
       {%- if vars.shared_ref -%}
@@ -79,7 +79,7 @@ $Object:
       {%- if value_policy is not defined -%}
       {%-   do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
       {%- endif -%}
-      {%- set pointee = cxx.unqualified_resolved_type_name -%}
+      {%- set pointee = cxx.resolved_type.unqualified_type_name -%}
       {%- set is_nullable = nullable|default(False) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set this_converter = get_type_converter(cxx) -%}
@@ -172,7 +172,7 @@ $Object:
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{converter.cxx_type_name_global.snippet()}}) == 0)
-              return static_cast<{{cxx.unqualified_resolved_type_name}}*>({{name}}.ptr);
+              return static_cast<{{cxx.resolved_type.unqualified_type_name}}*>({{name}}.ptr);
           {%- for descendant in descendants %}
           else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
               return static_cast<{{descendant}}*>({{name}}.ptr);
@@ -202,7 +202,7 @@ $Object:
       }
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.unqualified_resolved_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.resolved_type.unqualified_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
     swift_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepCppBindReference({{reference}})
@@ -227,7 +227,7 @@ $Enum:
     sc: CInt
   converters:
     c_to_cxx: |
-      auto {{target_name}} = static_cast<{{cxx.unqualified_resolved_type_name}}>({{name}});
+      auto {{target_name}} = static_cast<{{cxx.resolved_type.unqualified_type_name}}>({{name}});
     cxx_to_c: |
       {{target_type_name}} {{target_name}} = static_cast<{{target_type_name}}>({{name}});
     swift_to_sc: |
@@ -312,7 +312,7 @@ std::vector:
   converters:
     c_to_cxx: |
       {%- set value_converter = get_type_converter(template_args[0]) -%}
-      {{cxx.unqualified_resolved_type_name}} {{target_name}};
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}};
 
       auto data_{{name}} = reinterpret_cast<{{value_converter.c.target_type_name}}*>({{name}}.data);
 
@@ -394,7 +394,7 @@ std::map:
     c_to_cxx: |
       {%- set key_converter = get_type_converter(template_args[0]) -%}
       {%- set value_converter = get_type_converter(template_args[1]) -%}
-      {{cxx.unqualified_resolved_type_name}} {{target_name}};
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}};
 
       for (size_t _i_{{name}} = 0; _i_{{name}} < {{name}}.size; ++_i_{{name}}) {
           auto ktmp_{{name}} = reinterpret_cast<{{key_converter.c.target_type_name}}*>({{name}}.keys)[_i_{{name}}];
@@ -511,9 +511,9 @@ std::shared_ptr:
     c_to_cxx: |
       {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
-      {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
+      {%-   do Error.critical(template_args[0].resolved_type.unqualified_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = template_args[0].unqualified_resolved_type_name %}
+      {%- set pointee_unqualified = template_args[0].resolved_type.unqualified_type_name %}
       {%- set pointee = object_converter.c_to_cxx.target_type_name %}
       {%- set obj_descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants %}
       {%- set cxx_namespace = object_converter.type_info.cxx.namespace.split('::')|map('capitalize')|join %}
@@ -536,9 +536,9 @@ std::shared_ptr:
     cxx_to_c: |
       {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- if object_converter.type_info.has_api and not object_converter.type_info.vars.shared_ref -%}
-      {%-   do Error.critical(template_args[0].unqualified_resolved_type_name + ' has an invalid value for shared_ref variable.') -%}
+      {%-   do Error.critical(template_args[0].resolved_type.unqualified_type_name + ' has an invalid value for shared_ref variable.') -%}
       {%- endif -%}
-      {%- set pointee_unqualified = template_args[0].unqualified_resolved_type_name %}
+      {%- set pointee_unqualified = template_args[0].resolved_type.unqualified_type_name %}
       {%- set pointee = template_args[0].type_name %}
       {%- set is_nullable = nullable|default(False) %}
       {%- set obj_descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
@@ -569,8 +569,6 @@ std::shared_ptr:
       {%-   else %}
           {{target_name}}_ptr = new std::shared_ptr<{{pointee}}>({{name if not object_converter.type_info.cxx.is_const_qualified else 'std::const_pointer_cast<{0}>({1})'.format(pointee_unqualified, name)}});
       {%-   endif %}
-      } else {
-          type_{{name}} = strdup("{{template_args[0].unqualified_canonical_type_name}}");
       }
       {%- else %}
       {%-   if object_converter.type_info.cxx.is_polymorphic and obj_descendants %}
@@ -594,7 +592,7 @@ std::shared_ptr:
       {%- set descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{object_converter.cxx_type_name_global.snippet()}}) == 0)
-              return *static_cast<std::shared_ptr<{{template_args[0].unqualified_resolved_type_name}}>*>({{name}}.ptr);
+              return *static_cast<std::shared_ptr<{{template_args[0].resolved_type.unqualified_type_name}}>*>({{name}}.ptr);
           {%- for descendant in descendants %}
           else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
               return *static_cast<std::shared_ptr<{{descendant}}>*>({{name}}.ptr);
@@ -607,7 +605,7 @@ std::shared_ptr:
       return nullptr;
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(template_args[0].unqualified_resolved_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{'std::shared_ptr<{}>'.format(template_args[0].resolved_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
 
 std::pair:
   custom:
@@ -626,7 +624,7 @@ std::pair:
       auto& second_tmp_{{name}} = *reinterpret_cast<{{second_converter.c.target_type_name}}*>({{name}}.second);
       {{first_converter.c_to_cxx.snippet('first_tmp_{}'.format(name))}}
       {{second_converter.c_to_cxx.snippet('second_tmp_{}'.format(name))}}
-      {{cxx.unqualified_resolved_type_name}} {{target_name}} { {{first_converter.c_to_cxx.converted_name('first_tmp_{}'.format(name))}}, {{second_converter.c_to_cxx.converted_name('second_tmp_{}'.format(name))}} };
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}} { {{first_converter.c_to_cxx.converted_name('first_tmp_{}'.format(name))}}, {{second_converter.c_to_cxx.converted_name('second_tmp_{}'.format(name))}} };
     cxx_to_c: |
       {%- set first_converter = get_type_converter(template_args[0]) -%}
       {%- set second_converter = get_type_converter(template_args[1]) -%}
@@ -716,7 +714,7 @@ std::array:
     sc: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc.target_type_name}}"
   converters:
     c_to_cxx: |
-      {{cxx.unqualified_resolved_type_name}} {{target_name}} {};
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}} {};
       auto data_{{name}} = reinterpret_cast<{{get_type_converter(template_args[0]).c.target_type_name}}*>({{name}}.data);
       std::copy_n(data_{{name}}, {{template_args[1]}}, {{target_name}}.begin());
     cxx_to_c: |
@@ -754,12 +752,12 @@ std::optional:
   converters:
     c_to_cxx: |
       {%- set value_converter = get_type_converter(template_args[0]).c_to_cxx -%}
-      {{cxx.unqualified_resolved_type_name}} {{target_name}} {std::nullopt};
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}} {std::nullopt};
       if ({{name}}.has_value) {
           auto& {{name}}_val = {{name}}.value;
           {{name}}.has_value = true;
           {{value_converter.snippet('{}_val'.format(name))|indent(4)}}
-          {{target_name}} = {{cxx.unqualified_resolved_type_name}}({{value_converter.converted_name('{}_val'.format(name))}});
+          {{target_name}} = {{cxx.resolved_type.unqualified_type_name}}({{value_converter.converted_name('{}_val'.format(name))}});
       }
     cxx_to_c: |
       {%- set value_converter = get_type_converter(template_args[0]) -%}

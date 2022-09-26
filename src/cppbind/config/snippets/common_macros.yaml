@@ -67,94 +67,56 @@ templates: |
   {%-     endfor -%}
   {%-   endif -%}
   {%- endmacro -%}
-
+  {%- macro gen_template_args_snippets(arg_types, section_name, full_package=none) -%}
+  {%-   for arg_type in arg_types -%}
+  {%-     set arg_converter = get_type_converter(arg_type)|attr(section_name) -%}
+  {%-     if arg_converter is defined -%}
+            {{arg_converter.snippet(full_package=full_package)}}
+  {%-     endif -%}
+  {%-   endfor -%}
+  {%- endmacro -%}
 
 includes:
   cxx: |
     {%- macro gen_include(converter) -%}
-    {%-   if converter -%}
-    {%-     if converter.cxx_include is defined -%}
-              {{marker}}{{converter.cxx_include.snippet()}}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-                {{gen_include(get_type_converter(arg, error=False))}}
-    {%-       endif -%}
-    {%-     endfor -%}
+    {%-   if converter and converter.cxx_include is defined -%}
+            {{marker}}{{converter.cxx_include.snippet()}}
     {%-   endif -%}
     {%- endmacro -%}
     {%- macro collect_includes(converter, includes) -%}
-    {%-   if converter -%}
-    {%-     if converter.cxx_include is defined -%}
-    {%-       do includes.append(converter.cxx_include.snippet()) -%}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_includes(get_type_converter(arg, error=False), includes) -%}
-    {%-       endif -%}
-    {%-     endfor -%}
+    {%-   if converter.cxx_include is defined -%}
+    {%-     do includes.append(converter.cxx_include.snippet()) -%}
     {%-   endif -%}
     {%- endmacro -%}
     {%- macro collect_desc_includes(converter, desc_includes) -%}
-    {%-   if converter -%}
-    {%-     if converter.type_info.has_api -%}
-    {%-       set vars_descendants = converter.type_info.vars.descendants -%}
-    {%-       for descendant in (vars_descendants if vars_descendants is not none else converter.type_info.descendants) -%}
-    {%-         do collect_includes(get_type_converter(descendant), desc_includes) -%}
-    {%-       endfor -%}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_desc_includes(get_type_converter(arg, error=False), desc_includes) -%}
-    {%-       endif -%}
+    {%-   if converter.type_info.has_api -%}
+    {%-     set vars_descendants = converter.type_info.vars.descendants -%}
+    {%-     for descendant in (vars_descendants if vars_descendants is not none else converter.type_info.descendants) -%}
+    {%-       do collect_includes(get_type_converter(descendant), desc_includes) -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
   target_language: |
     {%- macro collect_import_converters(converter, import_converters, gen_for_impl=false) -%}
-    {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     set parent_converter = get_type_converter(converter.type_info.cxx.parent_type, error=False) if converter.type_info.cxx.parent_type else none -%}
-    {%-     if parent_converter -%}
-    {#-       in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
-    {%-       do collect_import_converters(parent_converter, import_converters) -%}
-    {%-     else -%}
-    {%-       do import_converters.append((converter, gen_for_impl)) -%}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_import_converters(get_type_converter(arg, error=False), import_converters, gen_for_impl) -%}
-    {%-       endif -%}
-    {%-     endfor -%}
+    {%-   set parent_converter = get_type_converter(converter.type_info.cxx.parent_type, error=False) if converter.type_info.cxx.parent_type else none -%}
+    {%-   if parent_converter -%}
+    {#-     in case of nested cases we don't need `gen_for_impl` anymore, so we don't pass it deeper -#}
+    {%-     do collect_import_converters(parent_converter, import_converters) -%}
+    {%-   else -%}
+    {%-     do import_converters.append((converter, gen_for_impl)) -%}
     {%-   endif -%}
     {%- endmacro -%}
     {%- macro collect_desc_import_converters(converter, desc_import_converters) -%}
-    {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     if converter.type_info.has_api and converter.type_info.vars.descendants is defined -%}
-    {%-       for descendant in (converter.type_info.vars.descendants if converter.type_info.vars.descendants is not none else converter.type_info.descendants) -%}
-    {%-         do collect_import_converters(get_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
-    {%-       endfor -%}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-    {%-         do collect_desc_import_converters(get_type_converter(arg, error=False), desc_import_converters) -%}
-    {%-       endif -%}
+    {%-   if converter.type_info.has_api and converter.type_info.vars.descendants is defined -%}
+    {%-     for descendant in (converter.type_info.vars.descendants if converter.type_info.vars.descendants is not none else converter.type_info.descendants) -%}
+    {%-       do collect_import_converters(get_type_converter(descendant), desc_import_converters, gen_for_impl=true) -%}
     {%-     endfor -%}
     {%-   endif -%}
     {%- endmacro -%}
     {%- macro gen_import_by_lang(converter, language) -%}
-    {%-   if converter -%} {# converter is None for non type template parameters #}
-    {%-     set lang_include = converter|attr(language + '_include') -%}
-    {%-     set parent_converter = get_type_converter(converter.type_info.cxx.parent_type, error=False) if converter.type_info.cxx.parent_type else none -%}
-    {%-     if parent_converter -%}
-              {{gen_import(parent_converter)}}
-    {%-     elif lang_include is defined -%}
-              {{marker}}{{lang_include.snippet(full_package=vars.full_package)}}
-    {%-     endif -%}
-    {%-     for arg in converter.template_args -%}
-    {%-       if converter.template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER -%}
-                {{gen_import(get_type_converter(arg, error=False))}}
-    {%-       endif -%}
-    {%-     endfor -%}
+    {%-   set lang_include = converter|attr(language + '_include') -%}
+    {%-   if lang_include is defined -%}
+            {{marker}}{{lang_include.snippet(full_package=vars.full_package)}}
     {%-   endif -%}
     {%- endmacro -%}
 

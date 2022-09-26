@@ -213,8 +213,12 @@ $Object:
       {%- endif -%}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
-    cxx_include: |
-      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {% if vars.is_proj_type %}{{marker}}#include "{{vars.prj_rel_file_name}}"{% endif %}
+        {{- gen_template_args_snippets(template_args|zip(template_args_kinds)|rejectattr('_2', 'equalto', ElementKind.TEMPLATE_NON_TYPE_PARAMETER)|map(attribute='_1'), 'cxx_include') -}}
 
 $Enum:
   custom:
@@ -380,6 +384,11 @@ std::vector:
       {%- endif -%}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
 
 std::map:
   custom:
@@ -495,6 +504,11 @@ std::map:
       {%- endif -%}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
 
 std::unordered_map:
   std::map
@@ -606,6 +620,11 @@ std::shared_ptr:
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
       {{'std::shared_ptr<{}>'.format(template_args[0].resolved_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
 
 std::pair:
   custom:
@@ -702,6 +721,11 @@ std::pair:
       {%- endif %}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
 
 # TODO this converter uses std::vector and will be revisited/optimized in https://picsart.atlassian.net/browse/IEGEN-484
 std::array:
@@ -737,9 +761,12 @@ std::array:
         {{converter.snippet(name)}}
     swift_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
-    cxx_include: |
-      #include <algorithm>
-
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{marker}}#include <algorithm>
+        {{- gen_template_args_snippets(['std::vector<{}>'.format(template_args[0].type_name)], 'cxx_include') -}}
 
 std::optional:
   custom:
@@ -813,6 +840,11 @@ std::optional:
       if ({{reference}} != nil) {
         {{name}}.keepCppBindReference({{reference}}!)
       }
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
 
 std::__1::optional:
   std::optional

@@ -209,18 +209,33 @@ $Object:
       {%- endif -%}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
-    kotlin_include: |
-      {%- if full_package is defined and vars.full_package != full_package and not (cxx.parent_type and get_type_info(cxx.parent_type, error=False)) -%}
-      import {{vars.full_package}}.
-      {#-   TODO: this is duplicated from types.kotlin, reuse logic when kotlin target_type_name will be available here -#}
-      {%-   if interface_class|default(False) -%}
-      {{vars.interface_impl_class_name}}{{custom.tpostfix}}
-      {%-   else -%}
-      {{custom.tname}}
-      {%-   endif -%}
-      {%- endif -%}
-    cxx_include: |
-      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {% if vars.is_proj_type %}{{marker}}#include "{{vars.prj_rel_file_name}}"{% endif %}
+        {{- gen_template_args_snippets(template_args|zip(template_args_kinds)|rejectattr('_2', 'equalto', ElementKind.TEMPLATE_NON_TYPE_PARAMETER)|map(attribute='_1'), 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {%- set parent_converter = get_type_converter(cxx.parent_type, error=False) if cxx.parent_type else none -%}
+        {%- if parent_converter -%}
+        {%-   if parent_converter.kotlin_include is defined -%}
+                {{parent_converter.kotlin_include.snippet(full_package=full_package)}}
+        {%-   endif -%}
+        {%- else -%}
+        {%-   if full_package is defined and vars.full_package != full_package -%}
+        {{marker}}import {{vars.full_package}}.
+        {#-     TODO: this is duplicated from types.kotlin, reuse logic when kotlin target_type_name will be available here -#}
+        {%-     if interface_class|default(False) -%}
+        {{vars.interface_impl_class_name}}{{custom.tpostfix}}
+        {%-     else -%}
+        {{custom.tname}}
+        {%-     endif -%}
+        {%-   endif -%}
+        {%- endif -%}
+        {{- gen_template_args_snippets(template_args|zip(template_args_kinds)|rejectattr('_2', 'equalto', ElementKind.TEMPLATE_NON_TYPE_PARAMETER)|map(attribute='_1'), 'kotlin_include', full_package) -}}
 
 $Enum:
   custom:
@@ -382,6 +397,16 @@ std::vector:
       {%- endif -%}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
 
 std::map:
   custom:
@@ -504,7 +529,16 @@ std::map:
       {%- endif -%}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
-
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'kotlin_include', full_package) -}}
 
 std::unordered_map:
   std::map
@@ -623,7 +657,16 @@ std::shared_ptr:
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
       {{'std::shared_ptr<{}>'.format(template_args[0].resolved_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
-
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
 
 std::pair:
   custom:
@@ -698,6 +741,16 @@ std::pair:
       {%- endif %}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'kotlin_include', full_package) -}}
 
 std::__ndk1::pair:
   std::pair
@@ -733,8 +786,17 @@ std::array:
         {{converter.snippet(name)}}
     kotlin_keep_alive: |
       {{name}}.keepCppBindReference({{reference}})
-    cxx_include: |
-      #include <algorithm>
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{marker}}#include <algorithm>
+        {{- gen_template_args_snippets(['std::vector<{}>'.format(template_args[0].type_name)], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(['std::vector<{}>'.format(template_args[0].type_name)], 'kotlin_include', full_package) -}}
 
 std::optional:
   custom:
@@ -837,6 +899,16 @@ std::optional:
       if ({{reference}} != null) {
         {{name}}.keepCppBindReference({{reference}}!!)
       }
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    kotlin_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
 
 
 std::__ndk1::optional:

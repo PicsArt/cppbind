@@ -17,6 +17,7 @@ import sys
 from collections.abc import Iterable
 from functools import cmp_to_key, lru_cache
 from operator import attrgetter
+from types import SimpleNamespace
 
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
@@ -258,6 +259,15 @@ def init_jinja_env(language):
     def replace_regex(input_, pattern, repl, count=0):
         return re.sub(pattern, repl, input_, count)
 
+    def _zip(*args):
+        if len(args) < 2:
+            Error.critical("'zip' filter requires at least 2 arguments")
+        for arg in args:
+            if not isinstance(arg, Iterable):
+                Error.critical("Arguments of the 'zip' filter must be iterable objects")
+
+        return (SimpleNamespace(**{f"_{idx + 1}": item for idx, item in enumerate(group)}) for group in zip(*args))
+
     def _split(inputs_):
         parts = []
         if not isinstance(inputs_, list):
@@ -359,6 +369,7 @@ def init_jinja_env(language):
     env.filters['to_camel_case'] = make_camel_case
     env.filters['join_unique'] = join_unique
     env.filters['replace_regex'] = replace_regex
+    env.filters['zip'] = _zip
     env.filters['sort_snippets'] = sort_snippets
     env.filters['unique_snippets'] = unique_snippets
     env.filters['sort_python_code'] = sort_python_code

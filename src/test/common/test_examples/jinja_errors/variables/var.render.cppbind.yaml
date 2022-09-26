@@ -1,0 +1,20 @@
+# variable render negative test case example
+# render error in src_glob
+vars:
+  src_glob: "{{'./**/jinja_errors/example.hpp' + undefined}}" # undefined variable
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          {#- incorrect variable usage -#}
+          {{path.join(vars.non_existing, 'test')}}
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+
+  kotlin.type_converters: {}

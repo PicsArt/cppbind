@@ -1,0 +1,36 @@
+# variables negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          ./test.kt
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+  kotlin.type_converters: {}
+
+  kotlin.actions:
+    - file:
+        files_glob:
+          "./**/*.hpp"
+        copy_to: |
+          {% set filename, file_extension = path.splitext(file_name) %}
+
+        variables:
+          helper_includes: |
+            {#- incorrect variable usage -#}
+            {{vars.helpers_package_prefixx}}
+

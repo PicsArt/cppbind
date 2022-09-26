@@ -1,0 +1,20 @@
+# variable syntax negative test case example
+# syntax error in src_glob
+vars:
+  src_glob: "{{'./**/jinja_errors/example.hpp'+}}" # incorrect syntax
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          {#- incorrect variable usage -#}
+          {{path.join(vars.non_existing, 'test')}}
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+
+  kotlin.type_converters: {}

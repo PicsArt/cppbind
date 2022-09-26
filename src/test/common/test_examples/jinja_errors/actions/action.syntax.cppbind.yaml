@@ -1,0 +1,34 @@
+# copy_to negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          ./test.kt
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+  kotlin.type_converters: {}
+
+  kotlin.actions:
+    - file:
+        files_glob:
+          "{{['./', 'test'] | path_join}}"
+        copy_to: |
+          {#- contains jinja syntax error -#}
+          {% set filename, file_extension = path.splitext(file_name)+ %}
+
+
+

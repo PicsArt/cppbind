@@ -6,14 +6,13 @@
 Implements cppbind api parser on cxx comment
 """
 
-
 import re
 from collections import OrderedDict
 from collections import defaultdict
 from types import SimpleNamespace
 
 import yaml
-from jinja2.exceptions import UndefinedError as JinjaUndefinedError
+from jinja2.exceptions import TemplateSyntaxError
 
 from cppbind import default_config
 from cppbind.common.error import Error
@@ -114,8 +113,13 @@ class APIParser:
             try:
                 api_attrs = self.var_evaluator.eval_attr_template(attrs, ctx)
                 return self.parse_api_attrs(api_attrs, location)
-            except JinjaUndefinedError as err:
-                Error.critical(f"Jinja evaluation error: {err}", location.file_name, location.line_number)
+            except TemplateSyntaxError as e:
+                Error.critical(
+                    f"Jinja syntax error - {str(e)}",
+                    file=attrs.file,
+                    line=attrs.line_number)
+            except Exception as e:
+                Error.critical(f"Jinja render error while evaluating yaml api - {e}", attrs.file, attrs.line_number)
 
         return None
 

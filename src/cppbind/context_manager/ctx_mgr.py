@@ -142,7 +142,7 @@ class ContextManager:
             if new_att_val not in (None, undefined):
                 self.cppbind_api_parser.validate_attr(att_name, new_att_val)
 
-            options = ContextManager.get_var_property_value(properties, self.platform, self.language, 'options')
+            options = to_value(ContextManager.get_var_property_value(properties, self.platform, self.language, 'options'))
 
             if new_att_val not in (None, undefined) and options is not None:
                 if new_att_val not in options:
@@ -178,7 +178,7 @@ class ContextManager:
         # we search for specific key by descending order of priority
         for key in (plat + '.' + lang + f'.{prop}', plat + f'.{prop}', lang + f'.{prop}', prop):
             if key in props:
-                return to_value(props[key])
+                return props[key]
 
         return default
 

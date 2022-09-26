@@ -95,8 +95,12 @@ class CppBindIRBuilder:
 
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
-            location = SimpleNamespace(file_name=dir_node.file_name,
-                                       line_number=dir_node.line_number)
+            if self.ctx_mgr.ctx_desc.has_yaml_api(dir_name):
+                # in case dir has a yaml api, yaml node location can be used to report errors properly
+                location = None
+            else:
+                location = SimpleNamespace(file_name=dir_node.file_name,
+                                           line_number=dir_node.line_number)
             api, args = self.ctx_mgr.eval_dir_attrs(dir_name, ctx, location)
             dir_node.api = api
             dir_node.args = args
@@ -163,8 +167,12 @@ class CppBindIRBuilder:
             pure_comment, api_section = APIParser.separate_pure_and_api_comment(cursor.raw_comment)
 
         ctx = self.get_full_ctx(pure_comment)
-        location = SimpleNamespace(file_name=cursor.extent.start.file.name,
-                                   line_number=cursor.extent.start.line)
+        if self.ctx_mgr.ctx_desc.has_yaml_api(cursor_display_name):
+            # in case type has a yaml api, yaml node location can be used to report errors properly
+            location = None
+        else:
+            location = SimpleNamespace(file_name=cursor.extent.start.file.name,
+                                       line_number=cursor.extent.start.line)
 
         res = self.ctx_mgr.eval_clang_attrs(cursor_display_name,
                                             current_node.kind_name,

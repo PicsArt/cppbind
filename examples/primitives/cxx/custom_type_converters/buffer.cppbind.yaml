@@ -17,6 +17,16 @@ rules:
           val {{target_name}} = {{name}}.getObjId()
         jdk_to_kotlin:
           val {{target_name}} = {{target_type_name}}({{name}})
+        cxx_include:
+          !concat
+          - !include common_macros.yaml&templates
+          - |
+            {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+        kotlin_include:
+          !concat
+          - !include common_macros.yaml&templates
+          - |
+            {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
 
   python.type_converters:
     cppbind::example::Buffer:

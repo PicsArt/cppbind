@@ -99,13 +99,22 @@ $Object:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
-    python_include: |
-      {#- this is common for include and target type name do not change one without other -#}
-      {%- if full_package is defined and vars.full_package != full_package -%}
-      import {{vars.full_package}} as {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
-      {%- endif -%}
-    cxx_include: |
-      {% if vars.is_proj_type %}#include "{{vars.prj_rel_file_name}}"{% endif %}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {#- this is common for include and target type name do not change one without other -#}
+        {%- if full_package is defined and vars.full_package != full_package -%}
+        {{marker}}import {{vars.full_package}} as {{cppbind_helper.relative_package(vars.full_package, full_package)|replace('.', '_')}}
+        {%- endif -%}
+        {{- gen_template_args_snippets(template_args|zip(template_args_kinds)|rejectattr('_2', 'equalto', ElementKind.TEMPLATE_NON_TYPE_PARAMETER)|map(attribute='_1'), 'python_include', full_package) -}}
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {% if vars.is_proj_type %}{{marker}}#include "{{vars.prj_rel_file_name}}"{% endif %}
+        {{- gen_template_args_snippets(template_args|zip(template_args_kinds)|rejectattr('_2', 'equalto', ElementKind.TEMPLATE_NON_TYPE_PARAMETER)|map(attribute='_1'), 'cxx_include') -}}
+
 
 $Enum:
   custom:
@@ -183,6 +192,16 @@ std::vector:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'python_include', full_package) -}}
 
 std::function:
   custom:
@@ -212,6 +231,16 @@ std::map:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'python_include', full_package) -}}
 
 std::unordered_map:
   std::map
@@ -229,6 +258,16 @@ std::shared_ptr:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'python_include', full_package) -}}
 
 nlohmann::json:
   custom:
@@ -261,6 +300,16 @@ std::pair:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:2], 'python_include', full_package) -}}
 
 std::array:
   custom:
@@ -273,6 +322,16 @@ std::array:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(['std::vector<{}>'.format(template_args[0].type_name)], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(['std::vector<{}>'.format(template_args[0].type_name)], 'python_include', full_package) -}}
 
 # dummy converters to not throw error on container types converter build
 # currently, these are not used
@@ -349,6 +408,16 @@ std::optional:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args[:1], 'python_include', full_package) -}}
 
 std::__1::optional:
   std::optional

@@ -1,0 +1,24 @@
+# code_snippet file_path negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          {#- jinja syntax error -#}
+          {{'test'+}}
+        scopes:
+          - body
+        unique_content: |
+          {{body}}
+
+  kotlin.type_converters: {}

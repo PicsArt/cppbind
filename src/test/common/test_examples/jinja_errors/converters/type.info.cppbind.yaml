@@ -1,0 +1,48 @@
+# target type name negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          ./test.kt
+        scopes:
+          - body
+        content: |
+          {{body}}
+    class:
+      kotlin:
+        body:
+          scopes:
+            - body
+          content: |
+            {{body}}
+    constructor:
+      kotlin:
+        body:
+          content: |
+            {{get_type_converter(cxx.args[0].type).kotlin.target_type_name}}
+
+  kotlin.type_converters:
+    int:
+      types:
+        kotlin: |
+          {#- undefined variable usage -#}
+          Int{{invalid + invalid}}
+        jni: jint
+        jdk: Int
+      converters:
+        jni_to_cxx:
+        cxx_to_jni:
+        kotlin_to_jdk:
+        jdk_to_kotlin:
+

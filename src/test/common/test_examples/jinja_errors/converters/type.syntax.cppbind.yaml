@@ -1,0 +1,37 @@
+# converter.kotlin_to_jdk negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          ./test.kt
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+
+  kotlin.type_converters:
+    int:
+      types:
+        kotlin: Int
+        jni: jint
+        jdk: Int
+      converters:
+        jni_to_cxx:
+        cxx_to_jni:
+        kotlin_to_jdk: |
+          {#- jinja syntax error -#}
+          {{path.join(namee, 'test')+}}
+        jdk_to_kotlin:
+

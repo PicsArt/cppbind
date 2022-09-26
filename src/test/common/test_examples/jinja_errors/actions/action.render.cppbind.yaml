@@ -1,0 +1,33 @@
+# render_to negative test case example
+
+vars: |
+  src_glob:
+    - ./**/jinja_errors/example.hpp
+
+var_def:
+  !join
+  - !include variable_definitions.yaml
+
+
+rules:
+  kotlin.code_snippets:
+    file:
+      kotlin:
+        file_path: |
+          ./test.kt
+        scopes:
+          - body
+        content: |
+          {{body}}
+
+  kotlin.type_converters: { }
+
+  kotlin.actions:
+    - file:
+        files_glob: |
+          {#- file contains jinja error -#}
+          ./**/jinja_errors/utils.kt
+        render_to: |
+          {% set filename, file_extension = path.splitext(file_name) %}
+          {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.helpers_dir) -%}
+          {{path.join(vars.helpers_out_dir, file_rel_name)}}

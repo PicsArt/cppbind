@@ -15,11 +15,11 @@ from collections.abc import MutableMapping
 from functools import lru_cache, partial
 from types import SimpleNamespace
 
-from jinja2 import Template
+from jinja2 import TemplateSyntaxError, Template
 
 from cppbind import BANNER_LOGO, logging
 from cppbind.common import JINJA_UNIQUE_MARKER
-from cppbind.common.error import Error
+from cppbind.common.error import Error, CppBindError
 from cppbind.common.type_info import create_type_info
 from cppbind.common.yaml_process import to_value
 from cppbind.cxx_exposed import CXXExposedType
@@ -36,6 +36,20 @@ from cppbind.utils import (
 OBJECT_INFO_TYPE = '$Object'
 ENUM_INFO_TYPE = '$Enum'
 FUNCTION_PROTO_INFO_TYPE = '$FunctionProto'
+
+# snippets
+FILE = 'file'
+FILE_PATH = 'file_path'
+CONTENT = 'content'
+UNIQUE_CONTENT = 'unique_content'
+SCOPES = 'scopes'
+
+# actions
+FILES_GLOB = 'files_glob'
+FILES_ACTION_KIND = 'file'
+FILE_ACTION_VARIABLE = 'variables'
+COPY_ACTION = 'copy_to'
+RENDER_ACTION = 'render_to'
 
 
 class Snippet:
@@ -55,6 +69,28 @@ class Snippet:
         return value
 
 
+class JinjaTemplate:
+    def __init__(self, jinja_env, template_str, scope, file, line_number):
+        try:
+            self.template = jinja_env.from_string(template_str) if isinstance(template_str, str) else template_str
+        except TemplateSyntaxError as e:
+            Error.critical(f"Jinja syntax error in {scope} - {str(e)}" if scope else f"Jinja syntax error - {str(e)}",
+                           file=file,
+                           line=line_number + e.lineno)
+        self.scope = scope
+        self.file = file
+        self.line_number = line_number
+
+    def render(self, context):
+        try:
+            return self.template.render(context) if isinstance(self.template, Template) else self.template
+        except CppBindError:
+            raise
+        except Exception as e:
+            raise Error.critical(
+                f'Jinja render error in {self.scope} - {str(e)}.', file=self.file, line=self.line_number)
+
+
 class Action:
     """Base class for any action subclass"""
 
@@ -69,7 +105,7 @@ class FileAction(Action):
     """Class represents file actions"""
 
     def __init__(self, jinja_env, src_glob_tmpls, dest_tmpl, variables_tmpl):
-        super().__init__('file_action')
+        super().__init__(FILES_ACTION_KIND)
         self.src_glob_tmpls = src_glob_tmpls
         self.dest_tmpl = dest_tmpl
         self.variables_tmpl = variables_tmpl
@@ -129,7 +165,11 @@ class RenderFileAction(CopyFileAction):
         """Implementation logic of file render action"""
 
         os.makedirs(os.path.dirname(target_file), exist_ok=True)
-        src_file_content = self.jinja_env.from_string(open(src_file).read()).render(context)
+        src_file_content = JinjaTemplate(self.jinja_env,
+                                         open(src_file).read(),
+                                         None,
+                                         os.path.abspath(src_file),
+                                         0).render(context)
         target_file_content = None
         if os.path.isfile(target_file):
             target_file_content = open(target_file).read()
@@ -170,7 +210,7 @@ class TypeConverter:
         def make():
             # helper variables
             template_args = self.template_args
-            template_args_kinds= self.template_args_kinds
+            template_args_kinds = self.template_args_kinds
 
             cxx = self.type_info.cxx
             vars = self.type_info.vars
@@ -193,7 +233,7 @@ class TypeConverter:
         custom = SimpleNamespace()
         # evaluate custom fields one by one to make available by defined order
         for k, v in self.__type_info_collector.custom.__dict__.items():
-            setattr(custom, k, v.render(context) if isinstance(v, Template) else v)
+            setattr(custom, k, v.render(context))
             # to make accessible for coming fields
             context['custom'] = custom
 
@@ -321,7 +361,7 @@ class ScopeInfo:
 class FileScopeInfo(ScopeInfo):
 
     def __init__(self, file_path_tmpl, parent_scopes, scopes, snippet_tmpl, unique_snippet_tmpl):
-        super().__init__(name='file', parent_scopes=parent_scopes,
+        super().__init__(name=FILE, parent_scopes=parent_scopes,
                          scopes=scopes, snippet_tmpl=snippet_tmpl,
                          unique_snippet_tmpl=unique_snippet_tmpl)
         self.file_path_tmpl = file_path_tmpl
@@ -395,26 +435,46 @@ class SnippetsEngine:
 
     def _load_actions(self, actions_info):
         def handle_file_action(info_dict):
-            src_glob_tmpls = info_dict['files_glob']
+            src_glob_tmpls = src_glob_node = info_dict[FILES_GLOB]
+
             if not src_glob_tmpls.is_of_type(list):
                 src_glob_tmpls = [src_glob_tmpls.value]
-            src_glob_tmpls = [self.jinja_env.from_string(tmpl) for tmpl in src_glob_tmpls]
+            src_glob_tmpls = [JinjaTemplate(self.jinja_env,
+                                            tmpl,
+                                            f'{FILES_ACTION_KIND}:{FILES_GLOB}',
+                                            src_glob_node.file,
+                                            src_glob_node.line_number) for tmpl in src_glob_tmpls]
 
             variables = info_dict.get('variables', {})
             variables_tmpl = {}
             for var_name, var_tmpl in variables.items():
-                var_tmpl = self.jinja_env.from_string(var_tmpl.value)
+                var_tmpl = JinjaTemplate(self.jinja_env,
+                                         var_tmpl.value,
+                                         f'{FILES_ACTION_KIND}:{FILE_ACTION_VARIABLE}:{var_name}',
+                                         var_tmpl.file,
+                                         var_tmpl.line_number)
                 variables_tmpl[var_name] = var_tmpl
 
-            if 'copy_to' in info_dict and info_dict['copy_to']:
+            if COPY_ACTION in info_dict and info_dict[COPY_ACTION]:
+                action_node = info_dict[COPY_ACTION]
                 self.action_infos.append(CopyFileAction(self.jinja_env,
                                                         src_glob_tmpls,
-                                                        self.jinja_env.from_string(info_dict['copy_to'].value),
+                                                        JinjaTemplate(
+                                                            self.jinja_env,
+                                                            action_node.value,
+                                                            f'{FILES_ACTION_KIND}:{COPY_ACTION}',
+                                                            action_node.file,
+                                                            action_node.line_number),
                                                         variables_tmpl))
-            elif 'render_to' in info_dict and info_dict['render_to']:
+            elif RENDER_ACTION in info_dict and info_dict[RENDER_ACTION]:
+                action_node = info_dict[RENDER_ACTION]
                 self.action_infos.append(RenderFileAction(self.jinja_env,
                                                           src_glob_tmpls,
-                                                          self.jinja_env.from_string(info_dict['render_to'].value),
+                                                          JinjaTemplate(self.jinja_env,
+                                                                        action_node.value,
+                                                                        f'{FILES_ACTION_KIND}:{RENDER_ACTION}',
+                                                                        action_node.file,
+                                                                        action_node.line_number),
                                                           variables_tmpl))
 
         def handle_default(info_dict):
@@ -426,15 +486,12 @@ class SnippetsEngine:
         # load into structures
         for action_info in actions_info:
             for action_name, action_data in action_info.items():
-                try:
-                    actions_map.get(action_name, handle_default)(action_data)
-                except Exception as err:
-                    Error.critical(f"Error in action {action_name}. Error {str(err)}")
+                actions_map.get(action_name, handle_default)(action_data)
 
     def _load_code_info(self, code_info_dict):
         # load into structures
-        self._load_file_info(code_info_dict['file'])
-        del code_info_dict['file']
+        self._load_file_info(code_info_dict[FILE])
+        del code_info_dict[FILE]
         # remove variables since they are used for placeholders
         self._remove_placeholder_vars(code_info_dict)
 
@@ -458,10 +515,10 @@ class SnippetsEngine:
             if not info_map.is_of_type(MutableMapping):
                 # leaf node
                 yield scopes, SimpleNamespace(content=info_map, unique_content=None, scopes=[])
-            elif 'content' in info_map or 'unique_content' in info_map:
-                yield (scopes, SimpleNamespace(content=info_map.get('content', None),
-                                               unique_content=info_map.get('unique_content', None),
-                                               scopes=info_map.get('scopes', [])))
+            elif CONTENT in info_map or UNIQUE_CONTENT in info_map:
+                yield (scopes, SimpleNamespace(content=info_map.get(CONTENT, None),
+                                               unique_content=info_map.get(UNIQUE_CONTENT, None),
+                                               scopes=info_map.get(SCOPES, [])))
             else:
                 for scope, child_info_map in info_map.items():
                     for d in scope_walk(child_info_map, scopes + tuple([scope])):
@@ -470,14 +527,22 @@ class SnippetsEngine:
         scope_infos = {}
 
         for scopes, info in scope_walk(code_info_dict):
-            try:
-                snippet = info.content
-                snippet = snippet and self.jinja_env.from_string(snippet.value)
-                unique_snippet = info.unique_content
-                unique_snippet = unique_snippet and self.jinja_env.from_string(unique_snippet.value)
-            except Exception as err:
-                Error.critical(f"Error in code snippets {code_name}, "
-                               f"in scope {':'.join(scopes)}. Error {str(err)}")
+            snippet = info.content
+            if snippet:
+                snippet = JinjaTemplate(self.jinja_env,
+                                        snippet.value,
+                                        f'{code_name}:{":".join(scopes)}:{CONTENT}',
+                                        snippet.file,
+                                        snippet.line_number)
+
+            unique_snippet = info.unique_content
+            if unique_snippet:
+                unique_snippet = JinjaTemplate(self.jinja_env,
+                                               unique_snippet.value,
+                                               f"{code_name}:{':'.join(scopes)}:{UNIQUE_CONTENT}",
+                                               unique_snippet.file,
+                                               unique_snippet.line_number)
+
             scope_infos[scopes] = ScopeInfo(name=code_name,
                                             parent_scopes=scopes,
                                             scopes=info.scopes,
@@ -489,21 +554,31 @@ class SnippetsEngine:
     def _load_file_info(self, code_info_dict):
         # load into structures
         for file_name, info_map in code_info_dict.items():
-            try:
-                file_path = self.jinja_env.from_string(info_map['file_path'].value)
-                snippet = info_map.get('content', None)
-                snippet = snippet and self.jinja_env.from_string(snippet.value)
-                unique_snippet = info_map.get('unique_content', None)
-                unique_snippet = unique_snippet and self.jinja_env.from_string(unique_snippet.value)
-            except Exception as err:
-                Error.critical(f"Error in code file {file_name} snippets. "
-                               f"Error {str(err)}")
-            else:
-                self.file_infos[file_name] = FileScopeInfo(file_path,
-                                                           [file_name],
-                                                           info_map.get('scopes', []),
-                                                           snippet,
-                                                           unique_snippet)
+            file_node = info_map[FILE_PATH]
+            file_path = JinjaTemplate(self.jinja_env,
+                                      file_node.value,
+                                      f'{FILE}:{file_name}:{FILE_PATH}',
+                                      file_node.file,
+                                      file_node.line_number)
+            snippet = info_map.get(CONTENT, None)
+            if snippet:
+                snippet = JinjaTemplate(self.jinja_env,
+                                        snippet.value,
+                                        f'{FILE}:{file_name}:{CONTENT}',
+                                        snippet.file,
+                                        snippet.line_number)
+            unique_snippet = info_map.get(UNIQUE_CONTENT, None)
+            if unique_snippet:
+                unique_snippet = JinjaTemplate(self.jinja_env,
+                                               unique_snippet.value,
+                                               f'{FILE}:{file_name}:{UNIQUE_CONTENT}',
+                                               unique_snippet.file,
+                                               unique_snippet.line_number)
+            self.file_infos[file_name] = FileScopeInfo(file_path,
+                                                       [file_name],
+                                                       info_map.get(SCOPES, []),
+                                                       snippet,
+                                                       unique_snippet)
 
     def _load_type_info(self, type_info_dict):
         # remove variables since they are used for placeholders
@@ -535,47 +610,68 @@ class SnippetsEngine:
                         if info.is_of_type(dict):
                             target_lang = to_value(info.get(SnippetsEngine.TARGET_KEY, target_lang))
                             source_lang = to_value(info.get(SnippetsEngine.SOURCE_KEY, source_lang))
-
-                        target_tmpl = source_tmpl = None
+                        target_type_info = source_type_info = None
                         if target_lang and source_lang:
                             target_tmpl = source_tmpl = '{{cxx.type_name}}'
+                            file = section_val.file
+                            # setting the initial line number the start of the converter
+                            # i.e. the line number of cxx type name
+                            source_line_number = target_line_number = info_map.line_number
                             if target_lang in info_map[SnippetsEngine.TYPES_KEY]:
-                                target_tmpl = info_map[SnippetsEngine.TYPES_KEY][target_lang].value
+                                target_node = info_map[SnippetsEngine.TYPES_KEY][target_lang]
+                                target_tmpl = target_node.value
+                                target_line_number = target_node.line_number
                             if source_lang in info_map[SnippetsEngine.TYPES_KEY]:
-                                source_tmpl = info_map[SnippetsEngine.TYPES_KEY][source_lang].value
+                                source_node = info_map[SnippetsEngine.TYPES_KEY][source_lang]
+                                source_tmpl = source_node.value
+                                source_line_number = source_node.line_number
 
-                        try:
-                            target_type_info = source_type_info = None
                             if target_tmpl is not None and source_tmpl is not None:
-                                target_type_info = self.jinja_env.from_string(target_tmpl)
-                                source_type_info = self.jinja_env.from_string(source_tmpl)
-                            snippet_tmpl = info and self.jinja_env.from_string(
-                                info[SnippetsEngine.SNIPPET_KEY].value if info.is_of_type(dict) else info.value)
-                        except Exception as err:
-                            Error.critical(f"Error in code snippets for {type_name}, "
-                                           f"in converter {name}. Error {str(err)}")
-                        else:
-                            target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
-                                                            name=name,
-                                                            target_type_info=target_type_info,
-                                                            source_type_info=source_type_info)
-                            type_converters[name] = target_info
+                                target_type_info = JinjaTemplate(self.jinja_env,
+                                                                 target_tmpl,
+                                                                 f'{type_name}:{SnippetsEngine.TYPES_KEY}:{target_lang}',
+                                                                 file,
+                                                                 target_line_number)
+                                source_type_info = JinjaTemplate(self.jinja_env,
+                                                                 source_tmpl,
+                                                                 f'{type_name}:{SnippetsEngine.TYPES_KEY}:{source_lang}',
+                                                                 file,
+                                                                 source_line_number)
+
+                        snippet_tmpl = info and JinjaTemplate(self.jinja_env,
+                                                              info[SnippetsEngine.SNIPPET_KEY].value if info.is_of_type(
+                                                                  dict) else info.value,
+                                                              f'{type_name}:{SnippetsEngine.CONVERTERS_KEY}:{name}',
+                                                              info.file,
+                                                              info.line_number)
+
+                        target_info = TypeConvertorInfo(snippet_tmpl=snippet_tmpl,
+                                                        name=name,
+                                                        target_type_info=target_type_info,
+                                                        source_type_info=source_type_info)
+                        type_converters[name] = target_info
                 elif section_key == SnippetsEngine.CUSTOM_KEY:
                     # primitive type info
-                    custom = SimpleNamespace(
-                        **{k: self.jinja_env.from_string(v.value) if isinstance(v.value, str) else v.value for k, v in
-                           section_val.items()})
+                    custom = {}
+                    for k, v in section_val.items():
+                        custom[k] = JinjaTemplate(
+                            self.jinja_env,
+                            v.value,
+                            f'{type_name}:custom:{k}',
+                            v.file,
+                            v.line_number)
+
+                    custom = SimpleNamespace(**custom)
                 else:
                     # type info
                     for name, info in section_val.items():
-                        try:
-                            target_type_info = self.jinja_env.from_string(info.value)
-                        except Exception as err:
-                            Error.critical(f"Error in type info {type_name}, "
-                                           f"in converter {name}. Error {str(err)}")
-                        else:
-                            target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
-                            target_types[name] = target_info
+                        target_type_info = JinjaTemplate(self.jinja_env,
+                                                         info.value,
+                                                         f'{type_name}:{SnippetsEngine.TYPES_KEY}:{name}',
+                                                         info.file,
+                                                         info.line_number)
+                        target_info = TargetTypeInfo(name=name, target_type_info=target_type_info)
+                        target_types[name] = target_info
 
             self.type_infos[type_name] = TypeInfoCollector(name=type_name,
                                                            target_type_infos=target_types,

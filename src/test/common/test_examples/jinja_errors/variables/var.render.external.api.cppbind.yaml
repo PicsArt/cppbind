@@ -1,0 +1,15 @@
+# config to test external api variable render error
+
+vars:
+  src_glob:
+    - ./**/jinja_errors/api_var_external_example.hpp
+
+
+type_vars:
+  - type: "cppbind::example::Example"
+    vars:
+      action: "{{gen_class + ''}}" # undefined variable
+      include_cxx:
+        - <stdexcept>
+        - <new>
+        - <typeinfo>

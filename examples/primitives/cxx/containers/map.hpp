@@ -141,6 +141,16 @@ struct MapExamples {
         return mapMixedData;
     }
 
+     /**
+     * Method for checking that the template arguments that are not translated
+     * into target languages are not required to have converters.
+     *
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void checkComparatorArgument(const std::map<int, int, std::greater<int>>&){}
+
 private:
     std::unordered_map<std::string, std::string> mapStringData;
     std::unordered_map<int, int> mapIntData;

@@ -19,6 +19,7 @@ from cppbind.cxx_exposed import (
     CXXFunctionExposedElement,
     CXXMemberExposedElement
 )
+from cppbind.ir.ast import DIR_KIND_NAME, FILE_KIND_NAME
 from cppbind.utils import get_public_attributes
 
 
@@ -63,18 +64,16 @@ def make_def_context(ctx):
     return context
 
 
-def make_package_context(ctx):
-    context = make_def_context(ctx)
-    return context
+def make_dir_context(ctx):
+    return make_def_context(ctx)
+
+
+def make_file_context(ctx):
+    return make_def_context(ctx)
 
 
 def make_func_context(ctx):
     def make():
-        # global functions do not have owner_class
-        owner_class = types.SimpleNamespace(
-            **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
-            'gen_class', 'gen_interface') else None
-
         overloading_index = ctx.node.overloading_index
         # capturing template related properties since we use single context with different template choice
         template_choice = ctx.template_choice
@@ -85,6 +84,34 @@ def make_func_context(ctx):
         return get_public_attributes(locals())
 
     context = make_def_context(ctx)
+    context.update(make())
+    return context
+
+
+def make_method_context(ctx):
+    def make():
+        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
+
+        if ctx.setter:
+            # setter is generated alongside with getter, setting template choice from getter context
+            _setter_ctx = ctx.setter
+            _setter_ctx.set_template_info(ctx.template_info)
+            setter = make_method_context(_setter_ctx)
+
+        return get_public_attributes(locals())
+
+    context = make_func_context(ctx)
+    context.update(make())
+    return context
+
+
+def make_constructor_context(ctx):
+    def make():
+        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
+
+        return locals()
+
+    context = make_func_context(ctx)
     context.update(make())
     return context
 
@@ -131,40 +158,9 @@ def make_class_context(ctx):
     return context
 
 
-def make_constructor_context(ctx):
-    def make():
-        # helper variables
-
-        return locals()
-
-    context = make_func_context(ctx)
-    context.update(make())
-    return context
-
-
-def make_getter_context(ctx):
-    def make():
-        # helper variables
-        if ctx.setter:
-            # setter is generated alongside with getter, setting template choice from getter context
-            setter_ctx = ctx.setter
-            setter_ctx.set_template_info(ctx.template_info)
-            setter = make_func_context(setter_ctx)
-
-        return locals()
-
-    context = make_func_context(ctx)
-    context.update(make())
-    return context
-
-
 def make_member_context(ctx):
     def make():
-        # helper variables
-        owner_class = types.SimpleNamespace(
-            **make_class_context(ctx.parent_context)) if ctx.parent_context and ctx.parent_context.vars.action in (
-            'gen_class', 'gen_interface') else None
-
+        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
         cxx = CXXMemberExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
 
         return get_public_attributes(locals())
@@ -208,54 +204,43 @@ def get_file(context, builder, fscope_name):
     return builder.get_file(file_name, init_func=lambda s: preprocess_scope(context, s, file_info))
 
 
-def gen_package(ctx, builder):
-    context = make_package_context(ctx)
-    preprocess_entry(context, builder, 'package')
+def gen_entity(ctx, builder, api, node_kind_name):
+    """A function for calling the right preprocess function"""
 
+    # remove 'gen_'
+    api_instruction_name = api[4:]
 
-def gen_enum(ctx, builder):
-    context = make_enum_context(ctx)
-    preprocess_entry(context, builder, 'enum')
+    if node_kind_name == DIR_KIND_NAME:
+        context = make_dir_context(ctx)
+    elif node_kind_name == FILE_KIND_NAME:
+        context = make_file_context(ctx)
+    elif node_kind_name in (
+        'class',
+        'class_template',
+        'struct',
+        'struct_template'
+    ):
+        context = make_class_context(ctx)
+    elif node_kind_name == 'enum':
+        context = make_enum_context(ctx)
+    elif node_kind_name in (
+        'function',
+        'function_template'
+    ):
+        context = make_func_context(ctx)
+    elif node_kind_name in (
+        'method',
+        'method_template'
+    ):
+        context = make_method_context(ctx)
+    elif node_kind_name in (
+        'constructor',
+        'constructor_template',
+    ):
+        context = make_constructor_context(ctx)
+    elif node_kind_name == 'field':
+        context = make_member_context(ctx)
+    else:
+        context = make_def_context(ctx)
 
-
-def gen_class(ctx, builder):
-    context = make_class_context(ctx)
-    preprocess_entry(context, builder, 'class')
-
-
-def gen_interface(ctx, builder):
-    context = make_class_context(ctx)
-    preprocess_entry(context, builder, 'interface')
-
-
-def gen_constructor(ctx, builder):
-    context = make_constructor_context(ctx)
-    preprocess_entry(context, builder, 'constructor')
-
-
-def gen_method(ctx, builder):
-    context = make_func_context(ctx)
-    preprocess_entry(context, builder, 'method')
-
-
-def gen_function(ctx, builder):
-    context = make_func_context(ctx)
-    preprocess_entry(context, builder, 'function')
-
-
-def gen_getter(ctx, builder):
-    context = make_getter_context(ctx)
-    preprocess_entry(context, builder, 'getter')
-
-
-def gen_property_getter(ctx, builder):
-    context = make_member_context(ctx)
-    preprocess_entry(context, builder, 'property_getter')
-
-
-def gen_property_setter(ctx, builder):
-    gen_property_getter(ctx, builder)
-
-
-def gen_setter(ctx, builder):
-    return
+    preprocess_entry(context, builder, api_instruction_name)

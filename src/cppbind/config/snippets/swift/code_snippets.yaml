@@ -1413,7 +1413,7 @@ var_getter_cxx_forward_decl: &var_getter_cxx_forward_decl
     - |
       {{gen_fwd_decl()}}
 
-property_getter:
+var_property_getter_setter: &var_property_getter_setter
   swift:
     include: *var_getter_swift_include
     properties: |
@@ -1523,6 +1523,10 @@ property_getter:
         {%- if vars.action == 'gen_property_setter' %}
         void _prop_set_{{cxx_namespace + "_" if cxx_namespace}}{{owner_class_converter.swift.target_type_name|replace('.', '_')}}_{{vars.name}}({{owner_class_converter.c.target_type_name}} cself, {{rconverter.c.target_type_name}}{% if rconverter.custom.is_c_pointer_type %}{{' _Nullable' if vars.nullable_return else ' _Nonnull'}}{% endif %} {{vars.name}});
         {% endif %}
+
+property_getter: *var_property_getter_setter
+
+property_setter: *var_property_getter_setter
 
 getter:
   swift:

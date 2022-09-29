@@ -722,7 +722,7 @@ var_getter_cxx_include: &var_getter_cxx_include
     - |
       {{gen_include(get_type_converter(cxx.result_type))}}
 
-property_getter:
+var_property_getter_setter: &var_property_getter_setter
   python:
     include: *var_getter_python_include
     properties: |
@@ -765,6 +765,10 @@ property_getter:
       {%-   else -%}
       {{owner_class_converter.python.target_type_name|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- endif -%}
+
+property_getter: *var_property_getter_setter
+
+property_setter: *var_property_getter_setter
 
 getter:
   python:

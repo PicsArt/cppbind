@@ -1,0 +1,13 @@
+# for checking custom 'gen' instructions
+report:
+  my_lang:
+    body:
+      scopes:
+        - body
+      content: |
+
+        /*
+          Generated report for {{vars.name}} {{cxx.kind_name}}:
+            Target file name: {{vars.file}}.my_lang
+            Source file name: {{path.basename(cxx.source_file_name)}}
+        */

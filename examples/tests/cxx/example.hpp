@@ -13,3 +13,11 @@ class Example {
         return 0;
     };
 };
+
+/**
+ * for checking custom 'gen' instruction
+ *
+ * __API__
+ * action: gen_report
+ */
+class ReportExample {};

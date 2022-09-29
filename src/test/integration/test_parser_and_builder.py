@@ -378,14 +378,14 @@ def test_cmd_line_ctx_positive():
         assert ir_builder.ir.args['b'] == 'CmdLineValueOfB', "command line context must overwrite root one"
 
 
-@patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/exclude_glob"))
 def test_src_exclude_glob(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     plat, lang = 'linux', 'python'
 
-    clang_cfg['src_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'main.hpp'))]
-    clang_cfg['src_exclude_glob'] = [os.path.abspath(os.path.join(os.getcwd(), 'module.hpp'))]
+    clang_cfg['src_glob'] = [os.path.join(SCRIPT_DIR, 'test_examples/exclude_glob/main.hpp')]
+    clang_cfg['clang_args'].append(f'-I{os.path.relpath(SCRIPT_DIR, os.getcwd())}')
+    clang_cfg['src_exclude_glob'] = [os.path.join(SCRIPT_DIR, 'test_examples/exclude_glob/module.hpp')]
     exclude_files = absolute_path_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
     cppbind_filter = CXXParserFilter(exclude_files=exclude_files)
     parser = CXXParser(filter_=cppbind_filter)
@@ -396,8 +396,15 @@ def test_src_exclude_glob(clang_config):
     processor.start_root()
     parser.parse(processor, **clang_cfg)
 
-    assert len(processor.ir.children[0].children[0].children) == 1
-    assert processor.ir.children[0].children[0].children[0].full_displayname == 'TestStruct'
+    # find the file node
+    # as IR may differ depending on the current working directory find the file node recursively
+    children = processor.ir.children
+    while children[0].children:
+        if not children[0].children[0].children:
+            break
+        children = children[0].children
+    assert len(children[0].children) == 1
+    assert children[0].children[0].full_displayname == 'TestStruct'
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/ir_process"))

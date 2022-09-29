@@ -5,6 +5,7 @@
 """
 Filter module decides which clang cursor needs to be processed and which one needs to be skipped.
 """
+import os
 
 import clang.cindex as cli
 import cppbind.utils.clang as cutil
@@ -100,7 +101,7 @@ class CXXParserFilter(CXXFilter):
 
         # skip function(template)/method cursors which are not declarations
         if cursor.kind in [cli.CursorKind.FUNCTION_DECL, cli.CursorKind.FUNCTION_TEMPLATE,
-                           cli.CursorKind.CXX_METHOD, cli.CursorKind.CONSTRUCTOR]\
+                           cli.CursorKind.CXX_METHOD, cli.CursorKind.CONSTRUCTOR] \
                 and cursor.lexical_parent != cursor.semantic_parent:
             return True
 
@@ -110,7 +111,7 @@ class CXXParserFilter(CXXFilter):
 
         file = cursor.extent.start.file
         # file is None especially in case of unexposed cursor types
-        if file is None or self.filter_by_file(file.name):
+        if file is None or self.filter_by_file(os.path.abspath(file.name)):
             return True
 
         return False

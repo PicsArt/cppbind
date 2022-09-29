@@ -1,4 +1,4 @@
-#include "module.hpp"
+#include "test_examples/exclude_glob/module.hpp"
 
 /**
  * __API__

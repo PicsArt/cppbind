@@ -1,7 +1,9 @@
 rules:
     my_lang.code_snippets:
-        !include my_lang_snippets/code_snippets.yaml
-    
+        !join
+        - !include my_lang_snippets/code_snippets.yaml
+        - !include my_lang_snippets/custom_section_snippets.yaml
+
     my_lang.type_converters:
         !include my_lang_snippets/types.yaml
 

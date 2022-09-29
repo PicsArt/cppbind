@@ -51,7 +51,7 @@ class Context(BaseContext):
         """Find the context of the setter corresponding to the current getter context"""
 
         if self.node.api != 'gen_getter':
-            raise AttributeError(f"{self.__class__.__name__}.setter is invalid.")
+            return None
 
         search_api = 'gen_setter'
         name = self.node.spelling
@@ -240,11 +240,10 @@ class RunRule:
         if api == Node.API_NONE:
             return
         logging.debug(f"Call API: {api.lstrip(api)} on {node.displayname}")
-        func = getattr(rule, api)
         context = self.get_context(node.signature)
         # set current template context to generate code based on correct template choice
         context.set_template_info(template_info)
-        func(context, builder)
+        rule.gen_entity(context, builder, api, node.kind_name)
 
     def get_context(self, type_name):
         return self.all_contexts.get(type_name)

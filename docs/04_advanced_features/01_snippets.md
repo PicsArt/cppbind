@@ -159,17 +159,30 @@ CppBind provides some predefined variables which can be used inside type
 converter snippets logic. Here is the list of the most important exposed
 variables:
 
--   **vars** - a namespace containing the variables attached to the
+- **vars** - a namespace containing the variables attached to the
     type with CppBind API annotations. The list of variables available in this namespace can be found
     [here](../03_get_started/09_var_def.md).
 
--   **cxx** - a namespace containing several useful cxx-related
+- **cxx** - a namespace containing several useful cxx-related
     fields. Here are the available fields: <br />
     **type_name** - cxx type name. <br />
+    **unqualified_type_name** - cxx type name without any
+    qualification (without `const` and `volatile`). <br />
     **canonical_type** - an object representing canonical type
     information of the given type. <br />
-    **is_pointer** - a boolean
-    variable showing whether the cxx type
+    **pointee_type** - an object representing pointee type
+    information of the given type. <br />
+    **resolved_type** - cxx pointee type or canonical
+    type when the type is a typedef on a pointer/reference. <br />
+    **parent_type** - outer type information of the cxx type if
+    the type is nested. <br />
+    **namespace** - namespace of the cxx type. <br />
+    **template_arguments** - a list of namespaces containing the
+    template argument cxx type and the kind. The kind field indicates
+    whether the template argument is a type or non-type parameter.
+    Possible values are **ElementKind.TEMPLATE_TYPE_PARAMETER** and
+    **ElementKind.TEMPLATE_NON_TYPE_PARAMETER**. <br />
+    **is_pointer** - a boolean variable showing whether the cxx type
     is pointer or not. <br />
     **is_value_type** - a boolean variable showing whether the cxx
     type is of value type (not pointer or reference) or not. <br />
@@ -177,57 +190,68 @@ variables:
     type is an lvalue reference or not. <br />
     **is_rval_reference** - a boolean variable showing whether the cxx
     type is an rvalue reference or not. <br />
-    **resolved_type** - cxx pointee type or canonical
-    type when the type is a typedef on a pointer/reference. <br />
-    **unqualified_type_name** - cxx type name without any
-    qualification (without `const` and `volatile`). <br />
     **is_const_qualified** - a boolean variable showing whether the
     cxx type is const qualified or not. <br />
-    **namespace** - namespace of the cxx type. <br />
-    **is_open** - a boolean variable showing whether the cxx type is
-    open (not final) or not (open for being derived from). <br />
-    **is_abstract** - a boolean showing whether the cxx type is
-    abstract or not. <br />
-    **kind_name** - the kind name of the cxx type. <br />
-    **displayname** - the display name of the cxx type. <br />
     **is_polymorphic** - a boolean variable showing whether the cxx
     type is polymorphic or not. <br />
-    **has_multiple_base_branches** - a boolean variable showing
-    whether the cxx type has multiple base branches in its hierarchy
-    or not. 
+    **is_template** - a boolean variable showing whether the cxx type
+    is a template or not. <br />
+    **is_function_proto** - a boolean variable showing whether the cxx type
+    is a function prototype or not. <br />
+    **is_typedef** - a boolean variable showing whether the cxx type
+    is a typedef to another type or not. <br />
+    **is_enum** - a boolean variable showing whether the cxx type
+    is an enum or not. <br />
+    **is_bool** - a boolean variable showing whether the cxx type
+    is a boolean or not. <br />
+    **is_long** - a boolean variable showing whether the cxx type
+    is long or not. <br />
+    **is_float** - a boolean variable showing whether the cxx type
+    is float or not. <br />
+    **is_char** - a boolean variable showing whether the cxx type
+    is char or not. <br />
+    **is_uchar** - a boolean variable showing whether the cxx type
+    is unsigned char or not.
 
--   **name** - source variable name for which the current type
+- **name** - source variable name for which the current type
     converter is called.
 
--   **target_name** - output variable name after the cxx type
+- **target_name** - output variable name after the cxx type
     conversion.
 
--   **target_type_name** - the type name of the cxx type corresponding
+- **target_type_name** - the type name of the cxx type corresponding
     to the target language.
 
--   **args** - the list of converters of the template arguments of the
-    given type for a particular section (e.g. for **c_to_cxx**).
-    For example, for `std::vector<int>` this variable will contain
-    **int** converter.
+- **template_args** - the list of the template arguments of the
+    given type. For example, for `std::vector<int>` this variable will contain
+    cxx type information of the **int** type.
 
--   **descendants** - the list of types derived from the given type
+- **template_args_kinds** - the list of the template argument kinds of the
+    given type. For example, for `std::array<int, 2>` this variable be
+    **[ElementKind.TEMPLATE_TYPE_PARAMETER, ElementKind.TEMPLATE_NON_TYPE_PARAMETER]**.
+    An element inside this list indicates whether the template argument is a
+    template type parameter or not.
+
+- **descendants** - the list of types derived from the given type
     (is calculated by CppBind). More can be found
     [here](../04_advanced_features/05_object_type_preservation.md).
 
--   **template_args_postfixes** - the list of names corresponding to
+- **has_api** - a boolean variable showing whether the cxx type has CppBind
+    API annotations.
+
+- **template_args_postfixes** - the list of names corresponding to
     template arguments of the cxx type.
 
--   **parent_type_info** - outer type information of the cxx type if
-    the type is nested.
+- **template_choice** - the current template choice for templated types.
 
--   **helper** - exposed Python module containing helper utility
+- **cppbind_helper** - exposed Python module containing helper utility
     functions.
 
--   **Error** - exposed CppBind module to log some error messages in
+- **Error** - exposed CppBind module to log some error messages in
     type converter snippets.
 
--   **get_type_converter** - exposed helper function to be able to
-    look up type converter by type name.
+- **get_type_converter** - exposed helper function to be able to
+    look up type converter by cxx type/type_name.
     This function can be used to call one type converter sections from
     another one.
     For example, if you want to reuse **std::string** converter logic
@@ -235,6 +259,22 @@ variables:
     `{% set string_converter = get_type_converter('std::string') %}`
     `{{string_converter.c_to_cxx.snippet(...)}}`, where we can pass
     input/output variable names to **snippet** function.
+    When the desired type converter is not found, a specific exception
+    is thrown. This default behavior can be changed with the help of an
+    optional **error** argument: `get_type_converter(type, error=False)`,
+    which will return **None** in case of a failure.
+
+- **get_type_info** - exposed helper function to be able to
+    look up type info by cxx type/type_name.
+    This function can be used to get type information about a specific type.
+    For example, if you want to get information about **MyClass** type
+    inside your own converter, you can do the following:
+    `{% set class_converter = get_type_info('MyClass') %}`
+    `{{class_converter.vars.name}}`.
+    When the desired type info is not found, a specific exception
+    is thrown. This default behavior can be changed with the help of an
+    optional **error** argument: `get_type_info(type, error=False)`,
+    which will return **None** in case of a failure.
 
 !!! Note
     Available fields under **cxx** namespace can be accessed via member

@@ -65,7 +65,7 @@ cppbind run kotlin swift python
 
 !!! Note
     Most of the optional arguments are command-line level CppBind variables.
-    For more info see `cmd_line` in [Variable Definitions](../03_get_started/09_var_def.md).
+    For more info see `cmd_line` in [Variable Definitions](../main_features/var_def.md).
 
 ## cppbind clean
 

@@ -1,6 +1,6 @@
 # "Array" tutorial
 
-["Hello user"](../02_first_steps/04_hello_user.md)
+["Hello user"](../first_steps/hello_user.md)
 tutorial shows how to annotate source files to tell CppBind
 what to expose in target languages. Let's examine the case of using a
 third-party library. In this case it's impossible to modify source
@@ -33,7 +33,7 @@ in the project. For this tutorial's case, we have changed the value of
 **src_glob** variable in the project config file, since our C++ source
 file is located under **cxx** directory: `src_glob: ["cxx/array.cpp"]`.
 More information about CppBind variables can be 
-[here](../03_get_started/09_var_def.md).
+[here](../main_features/var_def.md).
 
 !!! Note
     When generating bindings on the macOS platform for Kotlin, you need the
@@ -55,7 +55,7 @@ for `Array` class. API instructions are associated with the appropriate
 entity with the help of C++ signature which are written in front of the
 **type** key. Writing instructions in config file has the same effect as
 writing them in doxygen style comments. More detailed information about
-this mechanism can be found here: [Section type_vars](../05_detailed_info/02_proj_config.md#section-type_vars).
+this mechanism can be found here: [Section type_vars](../configuration/proj_config.md#section-type_vars).
 
 To make written API annotations available for CppBind we use project
 config files merging feature: **type_vars** sections of project config
@@ -66,7 +66,7 @@ defined in those files. In our tutorial, we have written API annotations
 for the "Array" class in the file named **array.cppbind.yaml**. To
 change the name pattern of the project config files, you should modify
 **context_def_glob** application variable (more details can be found
-[here](../05_detailed_info/01_app_config.md).
+[here](../configuration/app_config.md).
 Another way to include API annotations written in a separate file is
 including the file in the project config file, under **type_vars**
 section (the same way as it's done for std_exc_api.yaml file in default

@@ -86,7 +86,7 @@ And here are some usage examples:
     In the case of Kotlin, the generated `merge` methods are also annotated with the `JvmName` annotation.
     Without this annotation, the two `merge` methods would have the same JVM signature, and the code would not compile.
     The annotation is generated if the `is_kotlin_type_erased` property from type converters' **custom** section is set
-    to `True` for at least one of the arguments type converter. More on type converters can be found [here](04_advanced_features/02_custom_types.md)  
+    to `True` for at least one of the arguments type converter. More on type converters can be found [here](../advanced_topics/cppbind_snippets/custom_types.md)  
 
 ## Class templates
 

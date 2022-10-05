@@ -6,7 +6,7 @@ file containing the following configuration:
 
 ~~~Yaml
 {% 
-include "../../examples/features/modulemap/HelloExample/HelloExample/cxx/modulemap.cppbind.yaml"
+include "../../../examples/features/modulemap/HelloExample/HelloExample/cxx/modulemap.cppbind.yaml"
 %} 
 ~~~
 
@@ -16,7 +16,7 @@ modulemap_variable_definitions.yaml:
 
 ~~~Yaml
 {% 
-include "../../src/cppbind/config/modulemap_variable_definitions.yaml"
+include "../../../src/cppbind/config/modulemap_variable_definitions.yaml"
 %} 
 ~~~
 

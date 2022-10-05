@@ -8,7 +8,7 @@ have parent-child relationship defined via the following hierarchy:
 **method/property**. To tell CppBind that the entity will be exposed to
 the target language, the user defines API in doxygen style comments or
 under the **type_vars** section as described here:
-[Section type_vars](../05_detailed_info/02_proj_config.md#section-type_vars).
+[Section type_vars](../configuration/proj_config.md#section-type_vars).
 Project configuration is described through the variables used inside API
 annotations. Using variables allows defining the following: which code
 should be parsed, how the target code should look, where output should
@@ -141,7 +141,7 @@ mac.kotlin.clang_args:
 Now let's go through the key variables:
 
 - **action** - indicates what should be generated: class, method, etc.
-    Details are [here](../03_get_started/08_gen_actions.md).
+    Details are [here](../main_features/gen_actions.md).
 
 - **file** - output file name.
 
@@ -154,12 +154,12 @@ Now let's go through the key variables:
 - **argument_label** - dictionary to define the mapping from function
     original argument names to argument labels. Currently used only for
     Swift. See more details here: 
-    [Custom argument names and labels](../03_get_started/01_functions.md#custom-argument-names-and-labels).
+    [Custom argument names and labels](../main_features/functions.md#custom-argument-names-and-labels).
 
 - **argument_name** - dictionary to define the mapping from function
     original argument names to changed argument names. Used to change
     function argument names for the target language. See more details
-    here: [Custom argument names and labels](../03_get_started/01_functions.md#custom-argument-names-and-labels).
+    here: [Custom argument names and labels](../main_features/functions.md#custom-argument-names-and-labels).
 
 - **interface_name** - name for the generated interface when action is
     **gen_interface**.
@@ -198,7 +198,7 @@ Now let's go through the key variables:
 
 - **template** - variable for template types/functions to specify all
     possible types for template parameters. More details are
-    [here](../03_get_started/06_templates.md).
+    [here](../main_features/templates.md).
 
 - **is_operator** - variable to indicate whether the C++ method is
     an operator or not. Although its default value is True for
@@ -208,7 +208,7 @@ Now let's go through the key variables:
     regular method instead.
     For such cases, this variable can be used to override the default
     value. More details and use cases can be found
-    [here](../03_get_started/07_operators.md).
+    [here](../main_features/operators.md).
 
 - **is_exception** - indicates an exception class that should be
     generated (an object of this class may be thrown in the target
@@ -221,10 +221,10 @@ Now let's go through the key variables:
     additionally implemented by the target type.
 
 - **nullable_return** - indicates whether the function can return null
-    value or not. Details are here: [Nullable arguments](../03_get_started/01_functions.md#nullable-arguments).
+    value or not. Details are here: [Nullable arguments](../main_features/functions.md#nullable-arguments).
 
 - **nullable_arg** - list of arguments that can have null value.
-    Examples are here: [Nullable arguments](../03_get_started/01_functions.md#nullable-arguments).
+    Examples are here: [Nullable arguments](../main_features/functions.md#nullable-arguments).
 
 - **project_dir** - root directory of C++ source code, which will be
     parsed.
@@ -354,16 +354,16 @@ Now let's go through the key variables:
     includes of all submodules.
 
 - **descendants** - list of all derived types of current type. Details
-    can be found [here](../04_advanced_features/05_object_type_preservation.md).
+    can be found [here](../main_features/object_type_preservation.md).
 
 - **return_value_policy** - policy to define return value lifetime and
     ownership. Details can be found here:
-    [Return value policies](../03_get_started/01_functions.md#return-value-policies).
+    [Return value policies](../main_features/functions.md#return-value-policies).
 
 - **keep_alive** - list containing indices of arguments whose
     lifetimes should be bound to `this` object's lifetime. The indices
     are 1-based. See more details here:
-    [Keep alive policy](../03_get_started/01_functions.md#keep-alive-policy).
+    [Keep alive policy](../main_features/functions.md#keep-alive-policy).
 
 - **is_c\_wrapper_external** - boolean to define whether the C binding
     helpers must be included as from external lib or not (generate
@@ -391,7 +391,7 @@ Now let's go through the key variables:
     the name of the method is changed in a way that makes it overridden in the target language.
     In that case the user should explicitly set the value of **is_overridden** to **True**.
     See **ElectricBicycle** class example here:
-    [is_overridden example](../03_get_started/04_inheritance.md#single-inheritance).
+    [is_overridden example](../main_features/inheritance.md#single-inheritance).
 
 !!! Note
     The default value and other properties can be easily overridden.

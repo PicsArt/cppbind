@@ -11,7 +11,7 @@ via the **context_def_glob** parameter. The default value of
 any file in the project having **cppbind.yaml** suffix. If the user
 operates this default value, they need to have a project config file
 with a name suffixed with **cppbind.yaml**. This value can be changed in
-application config file: [App config](../05_detailed_info/01_app_config.md).
+application config file: [App config](../configuration/app_config.md).
 
 ??? "An example of project config file"
     ~~~yaml
@@ -36,7 +36,7 @@ style API comments. CppBind provides a set of default variables defined
 under the **var_def** section. This section is mandatory in the project
 config file and should be defined only once per project. CppBind
 complains about redefinition in multiple config files. More details on
-variables definitions you can find [here](../03_get_started/09_var_def.md).
+variables definitions you can find [here](../main_features/var_def.md).
 
 ## Section **vars**
 
@@ -46,7 +46,7 @@ under **var_def** section. For example, the user can set the value of
 the **src_glob** variable by controlling C++ source files that must be
 processed by CppBind. This section also should be defined only once per
 project. The full list of default variables provided by CppBind is
-available [here](../03_get_started/09_var_def.md).
+available [here](../main_features/var_def.md).
 
 ## Section **rules** 
 
@@ -61,7 +61,7 @@ run only for languages having corresponding snippets under the **rules**
 section. Currently, CppBind includes snippets for **Swift**, **Kotlin**,
 and **Python** languages in the default rules definition. To disable a
 language, remove its snippets from the **rules** section. For more
-detail see [Snippets](../04_advanced_features/01_snippets.md).
+detail see [Snippets](../advanced_topics/cppbind_snippets/code_snippets.md).
 
 Here is the minimal rules configuration for Swift, Kotlin, and Python
 languages:
@@ -157,7 +157,7 @@ for types/functions. The primary use case of this feature is the
 generation of bindings for types/functions from the standard library or
 a third-party library. CppBind uses this feature to generate bindings
 for standard exceptions. More details can be found
-[here](../03_get_started/05_exception_handling.md).
+[here](../main_features/exception_handling.md).
 
 To define API annotations, use the **type** key. CppBind supports two
 ways to specify the type. The first way is to specify the full C++

@@ -1,78 +1,3 @@
-# Snippets
-
-In order to generate binding codes for a target language, CppBind uses
-snippets described in yaml files. CppBind uses the **jinja2** template
-language to describe the logic inside snippets. During rendering process
-appropriate context is passed to the snippets to be rendered.
-
-There are three types of snippets: **code**, **type converter**, and
-**action** snippets.
-
-## Code snippets
-
-Code snippets are used for classes, interfaces, functions, enums,
-constructors, property getters/setters, files, directories, etc. A
-snippet can be used to generate code into multiple files, such as C/C++
-and target language code to implement binding logic between those
-languages.
-
-``` yaml
-file:
-  my_lang:
-    file_path: |
-      {{"my_lang" + pat_sep + [vars.file]|map('replace', '.', pat_sep)|path_join}}.my_lang
-    scopes:
-      - body
-    content: |
-      {{body}}
-
-class:
-  my_lang:
-    body:
-      scopes:
-        - body
-        - include
-      content: |
-        public class {{vars.name}} {
-            // body of method
-            {{body|string|indent}}
-        }
-```
-
-In the above-described code you can see **file** block which defines
-what files are going to be generated. The first level of this section is
-**file** and under this level you can see **my_lang** section which is
-used to describe file generation properties (path and content) for
-**my_lang** dummy language. **class** code block is an example of code
-snippets for generating a class for **my_lang** language. When
-encountered with `action: gen_class` instruction, CppBind removes `gen`
-prefix and searches for **class** section in code snippets. After
-finding **class** section CppBind generates appropriate code in the file
-defined by **file** section. The same mechanism is used for other
-instructions (**gen_interface**, **gen_method**, etc.).
-
-Here we have subsections under **class** parent section: **include**,
-**body**, and these subsections are used to group generated code
-fragments. There are also **scopes** defining subsections to gather
-snippet values from the lower levels and use them in the current
-section. For example, we use the function body inside the class. This
-mechanism is implemented through the stack-like structure of scopes: the
-scopes are like C++ entities (files consist of classes, classes contain
-methods, etc.). The following structure allows CppBind to support nested
-types: for example, we have **enum** section at the top level of code
-snippets but the same snippets are used regardless our enum is nested or
-not.
-
-Actual snippets are described under **content** or **unique_content**
-sections. **unique_content** section is used to generate unique lines or
-code fragment. It is mainly used for `#include` directives to avoid
-repetitions. This section can be controlled with special **marker**
-variable: CppBind splits the content of rendered **unique_content**
-section by **marker**, picks unique tokens and joins them to get the
-final result.
-
-## Type converter snippets
-
 Type converter snippets are responsible for defining type information
 and conversion logic between source and target languages for the given
 cxx type.
@@ -129,7 +54,7 @@ converters:
 ```
 
 More information about writing your own type converters can be found
-[here](../04_advanced_features/02_custom_types.md).
+[here](../../advanced_topics/cppbind_snippets/custom_types.md).
 
 ### Type converter optional subsections
 
@@ -153,7 +78,7 @@ CppBind allows the user to define any custom subsection under the
 attributes and call that snippet as a function to generate some custom
 code fragments.
 
-### Exposed variables
+### Available variables
 
 CppBind provides some predefined variables which can be used inside type
 converter snippets logic. Here is the list of the most important exposed
@@ -161,7 +86,7 @@ variables:
 
 - **vars** - a namespace containing the variables attached to the
     type with CppBind API annotations. The list of variables available in this namespace can be found
-    [here](../03_get_started/09_var_def.md).
+    [here](../../main_features/var_def.md).
 
 - **cxx** - a namespace containing several useful cxx-related
     fields. Here are the available fields: <br />
@@ -234,7 +159,7 @@ variables:
 
 - **descendants** - the list of types derived from the given type
     (is calculated by CppBind). More can be found
-    [here](../04_advanced_features/05_object_type_preservation.md).
+    [here](../../main_features/object_type_preservation.md).
 
 - **has_api** - a boolean variable showing whether the cxx type has CppBind
     API annotations.
@@ -300,46 +225,3 @@ Task is typedef to another type, CppBind will try to get the actual type
 name and find a converter for that type. If after the described whole
 process no converter is found, CppBind will complain about the usage of
 a type with non-existing converter.
-
-## Action snippets
-
-Action snippets are used to commit an action. Mainly we use it to copy
-helper and utility files from standard directories to output
-directories. For example, we have a C file where we define structures,
-keep utility files for exception handling support, etc.
-
-Here is an example of action snippets for Swift target language, where
-we define the source and destination for copy action:
-
-``` yaml
-- file:
-    files_glob:
-      "{{[cxx_helpers_dir, '**/*.h*'] | path_join}}"
-    copy_to: |
-      {%- set file_rel_name = path.relpath(file_name, cxx_helpers_dir) -%}
-      {{path.join(cxx_out_dir, file_rel_name)}}
-
-    variables:
-        helper_includes: |
-          {%- set file_rel_name = path.relpath(file_name, vars.helpers_dir) -%}
-          {{path.splitext(file_rel_name)[0].replace(pat_sep, '.')}}
-```
-
-Action is described by a pair of special keys showing the action object
-and purpose. For example, action can describe the copy(action) operation
-of a file(object). We have a list of supported actions:
-
-
-<center>Actions</center>
-<center>
-
-| Action keys    | Purpose of action                                                              |
-| :----------    | :---------------------------------------------------------------------------   |
-| file/copy_to   |  Copy input files described by **files_glob** glob pattern to the destination  |
-| file/render_to |  Render input template files with root context and copy to the destination     |
-
-</center>
-
-**Variables** section defines variables connected to the given action
-and then uses it in code snippets. For example, we define variables to
-generate `#include` directives in C bindings.

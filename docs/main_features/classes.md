@@ -217,7 +217,7 @@ Users can define their own implementations by adding `hash`, `equals`
 and `toString` to C++ classes. The names of these methods can be
 configured with **hash_method**, **equals_method** and
 **tostring_method** variables. More on variables can be found
-[here](../03_get_started/09_var_def.md).
+[here](../main_features/var_def.md).
 
 Let's see an example:
 

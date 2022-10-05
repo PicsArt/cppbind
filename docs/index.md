@@ -35,66 +35,66 @@ list of the main features of CppBind is following:
 
 -   
 
-    [Functions](03_get_started/01_functions.md)
+    [Functions](main_features/functions.md)
 
     :   -   [Global
-            functions](03_get_started/01_functions.md#global-functions)
+            functions](main_features/functions.md#global-functions)
         -   [Overloaded
-            functions](03_get_started/01_functions.md#overloaded-methods)
+            functions](main_features/functions.md#overloaded-methods)
         -   [Optional
-            arguments](03_get_started/01_functions.md#nullable-arguments)
+            arguments](main_features/functions.md#nullable-arguments)
         -   [Default
-            arguments](03_get_started/01_functions.md#default-arguments)
+            arguments](main_features/functions.md#default-arguments)
         -   [Return value's lifetime and ownership
-            management](03_get_started/01_functions.md#return-value-policies)
+            management](main_features/functions.md#return-value-policies)
         -   [Controlling function arguments'
-            lifetime](03_get_started/01_functions.md#keep-alive-policy)
+            lifetime](main_features/functions.md#keep-alive-policy)
 
 -   
 
-    [OOP](03_get_started/02_classes.md)
+    [OOP](main_features/classes.md)
 
     :   -   [Classes and
-            structs](03_get_started/02_classes.md)
+            structs](main_features/classes.md)
         -   [Nested
-            types](03_get_started/02_classes.md#nested-types)
+            types](main_features/classes.md#nested-types)
         -   [C++ classes/structs as target language
-            interfaces](03_get_started/02_classes.md)
-        -   [Enumerations](03_get_started/03_enums.md)
+            interfaces](main_features/classes.md)
+        -   [Enumerations](main_features/enums.md)
         -   
-            [Inheritance](03_get_started/04_inheritance.md)
+            [Inheritance](main_features/inheritance.md)
             :   -   [Single
-                    inheritance](03_get_started/04_inheritance.md#single-inheritance)
+                    inheritance](main_features/inheritance.md#single-inheritance)
                 -   [Multiple inheritance through the target language
-                    interfaces](03_get_started/04_inheritance.md#multiple-inheritance)
+                    interfaces](main_features/inheritance.md#multiple-inheritance)
         -   [Object type
-            preservation](04_advanced_features/05_object_type_preservation.md)
+            preservation](main_features/object_type_preservation.md)
         -   [Static
-            methods](03_get_started/01_functions.md#static-methods)
+            methods](main_features/functions.md#static-methods)
         -   [Method
-            overloading](03_get_started/01_functions.md#overloaded-methods)
+            overloading](main_features/functions.md#overloaded-methods)
         -   [Converting getters/setters to target language
-            properties](03_get_started/01_functions.md)
+            properties](main_features/functions.md)
         -   
-            [Operator overloading](03_get_started/07_operators.md)
+            [Operator overloading](main_features/operators.md)
             :   -   [Overloading subscript
-                    operator](03_get_started/07_operators.md#overloading-subscript-operator)
+                    operator](main_features/operators.md#overloading-subscript-operator)
         -   
-            [Templates](03_get_started/06_templates.md)
+            [Templates](main_features/templates.md)
             :   -   [Template
-                    classes](03_get_started/06_templates.md#class-templates)
+                    classes](main_features/templates.md#class-templates)
                 -   [Template methods and
-                    functions](03_get_started/06_templates.md)
+                    functions](main_features/templates.md)
                 -   [Converting getters/setters with template parameters
                     to target language
-                    properties](03_get_started/06_templates.md#template-getterssetters)
+                    properties](main_features/templates.md#template-getterssetters)
         -   [Exception
-            handling](03_get_started/05_exception_handling.md)
+            handling](main_features/exception_handling.md)
         -   [Standard library types (std::shared_ptr, std::vector,
             std::map,
             etc.)](https://github.com/PicsArt/cppbind/tree/master/examples/primitives/cxx/containers)
         -   [Custom type
-            conversions](04_advanced_features/02_custom_types.md)
+            conversions](advanced_topics/cppbind_snippets/custom_types.md)
         -   [Intelligent code
             completion](https://en.wikipedia.org/wiki/Intelligent_code_completion)
 
@@ -108,9 +108,9 @@ case. In the second case, separate config files can be used. The second
 use case works well for binding third-party C++ libraries.
 
 -   To configure a project with self-owned files, you can read our
-    "Hello User" [tutorial](02_first_steps/04_hello_user.md).
+    "Hello User" [tutorial](first_steps/hello_user.md).
 -   To configure a project with third-party/standard library files, you
-    can read our "Array" [tutorial](02_first_steps/05_array_tutorial.md).
+    can read our "Array" [tutorial](first_steps/array_tutorial.md).
 
 Above-described usages can also be mixed: annotations for self-owned
 files are written inside those files, while third-party/standard library
@@ -119,7 +119,7 @@ files are annotated via separate config files.
 # Installation
 
 There are some required steps to install and use CppBind. The
-installation steps are described [here](02_first_steps/03_installation.md).
+installation steps are described [here](first_steps/installation.md).
 
 # License
 

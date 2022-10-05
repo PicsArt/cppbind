@@ -1,4 +1,4 @@
-# Writing type converter
+# Writing custom type converter
 
 Type conversions are described in yaml config files. CppBind supports
 several primitive and complex types and has default implementation of
@@ -26,13 +26,13 @@ Since CppBind finds and merges **rules** which are spread all over the
 project, you can also have a separate file where **rules** section can
 be defined and then merged with other **rules** sections in project
 config files. More information about merging mechanism can be found
-[Section rules](../05_detailed_info/02_proj_config.md#section-rules).
+[Section rules](../../configuration/proj_config.md#section-rules).
 
 To write a custom type converter you need to fill the type converter
 required sections with correct snippets. The required fields are type
 information sections and conversion sections from source to target
 languages. More information about type converter sections can be found
-[here](../04_advanced_features/01_snippets.md).
+[here](../../advanced_topics/cppbind_snippets/code_snippets.md).
 
 The following is an example of `nlohmann::json` converter:
 

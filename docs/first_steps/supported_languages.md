@@ -33,7 +33,7 @@ generates Python API which is a wrapper for pybind codes.
     which allows CppBind to transfer custom exceptions from C++ to Python
     only as RuntimeError, thus losing the reference to the original
     exception type. Currently this limitation exists only for Python. More
-    detailed information is available [here](../03_get_started/05_exception_handling.md).
+    detailed information is available [here](../main_features/exception_handling.md).
 
     Besides the limitations pybind gives us opportunity to support some more
     features for Python. For example, currently we have a support for

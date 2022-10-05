@@ -26,7 +26,7 @@ only for generated Swift bindings, and for other languages, default
 value will be used, i.e., source file name. And finally, variable
 **throws** defines what kind of exceptions the `concat` function can
 throw. Its value is **no_throw** which means it does not throw any
-exception. For more details on variables, see [Variable Definitions](../03_get_started/09_var_def.md).
+exception. For more details on variables, see [Variable Definitions](../main_features/var_def.md).
 
 And here is a small code demonstrating usage of the generated bindings:
 

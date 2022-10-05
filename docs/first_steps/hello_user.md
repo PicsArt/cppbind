@@ -82,7 +82,7 @@ are going to be processed by CppBind. The default value of this variable
 corresponds to all header files in the project. In our example we have
 changed the value of **src_glob**, since our source files are located
 under **cxx** directory. More information about CppBind variables can be
-found [here](../03_get_started/09_var_def.md).
+found [here](../main_features/var_def.md).
 
 !!! Note
     When generating bindings on the macOS platform for Kotlin, you need the
@@ -103,14 +103,14 @@ Here we have just added the **\_\_API\_\_** tag to start CppBind
 annotation for this particular method and added the instruction
 **action: gen_method**, which tells CppBind that a binding needs to be
 generated for this method. For the complete list of available
-instructions, see [Generation instructions](../03_get_started/08_gen_actions.md).
+instructions, see [Generation instructions](../main_features/gen_actions.md).
 
 You can notice the usage of the **throws** variable in API comments.
 There are variables which are required on some entities. In this case,
 the **throws** variable is required on all methods/constructors. This
 requirement is added to ensure that the user hasn't forgotten to
 mention possible exceptions that the method/constructor can throw. More
-details can be found [here](../03_get_started/05_exception_handling.md).
+details can be found [here](../main_features/exception_handling.md).
 
 That is it. You should be able to use it from your codes written in
 target languages. Here are usage examples for Kotlin, Python, and Swift.

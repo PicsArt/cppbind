@@ -33,34 +33,34 @@ CppBind generates bindings for C++ types and entities like classes,
 methods, global functions, enums, nested structures, templates, etc. The
 list of the main features of CppBind is following:
 
-- [Functions](https://cppbind.io/03_get_started/01_functions.html)
-  - [Global functions](https://cppbind.io/03_get_started/01_functions.html#global-functions)
-  - [Overloaded functions](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
-  - [Optional arguments](https://cppbind.io/03_get_started/01_functions.html#nullable-arguments)
-  - [Default arguments](https://cppbind.io/03_get_started/01_functions.html#default-arguments)
-  - [Return value's lifetime and ownership management](https://cppbind.io/03_get_started/01_functions.html#return-value-policies)
-  - [Controlling function arguments' lifetime](https://cppbind.io/03_get_started/01_functions.html#keep-alive-policy)
-- [OOP](https://cppbind.io/03_get_started/02_classes.html)
-  - [Classes and structs](https://cppbind.io/03_get_started/02_classes.html)
-  - [Nested types](https://cppbind.io/03_get_started/02_classes.html#nested-types)
-  - [C++ classes/structs as target language interfaces](https://cppbind.io/03_get_started/02_classes.html)
-  - [Enumerations](https://cppbind.io/03_get_started/03_enums.html)
-  - [Inheritance](https://cppbind.io/03_get_started/04_inheritance.html)
-    - [Single inheritance](https://cppbind.io/03_get_started/04_inheritance.html#single-inheritance)
-    - [Multiple inheritance through the target language interfaces](https://cppbind.io/03_get_started/04_inheritance.html#multiple-inheritance)
-  - [Object type preservation](https://cppbind.io/04_advanced_features/05_object_type_preservation.html)
-  - [Static methods](https://cppbind.io/03_get_started/01_functions.html#static-methods)
-  - [Method overloading](https://cppbind.io/03_get_started/01_functions.html#overloaded-methods)
-  - [Converting getters/setters to target language properties](https://cppbind.io/03_get_started/01_functions.html)
-  - [Operator overloading](https://cppbind.io/03_get_started/07_operators.html)
-    - [Overloading subscript operator](https://cppbind.io/03_get_started/07_operators.html#overloading-subscript-operator)
-  - [Templates](https://cppbind.io/03_get_started/06_templates.html)
-    - [Template classes](https://cppbind.io/03_get_started/06_templates.html#class-templates)
-    - [Template methods and functions](https://cppbind.io/03_get_started/06_templates.html)
-    - [Converting getters/setters with template parameters to target language properties](https://cppbind.io/03_get_started/06_templates.html#template-getters-setters)
-  - [Exception handling](https://cppbind.io/03_get_started/05_exception_handling.html)
+- [Functions](https://cppbind.io/main_features/functions.html)
+  - [Global functions](https://cppbind.io/main_features/functions.html#global-functions)
+  - [Overloaded functions](https://cppbind.io/main_features/functions.html#overloaded-methods)
+  - [Optional arguments](https://cppbind.io/main_features/functions.html#nullable-arguments)
+  - [Default arguments](https://cppbind.io/main_features/functions.html#default-arguments)
+  - [Return value's lifetime and ownership management](https://cppbind.io/main_features/functions.html#return-value-policies)
+  - [Controlling function arguments' lifetime](https://cppbind.io/main_features/functions.html#keep-alive-policy)
+- [OOP](https://cppbind.io/main_features/classes.html)
+  - [Classes and structs](https://cppbind.io/main_features/classes.html)
+  - [Nested types](https://cppbind.io/main_features/classes.html#nested-types)
+  - [C++ classes/structs as target language interfaces](https://cppbind.io/main_features/classes.html)
+  - [Enumerations](https://cppbind.io/main_features/enums.html)
+  - [Inheritance](https://cppbind.io/main_features/inheritance.html)
+    - [Single inheritance](https://cppbind.io/main_features/inheritance.html#single-inheritance)
+    - [Multiple inheritance through the target language interfaces](https://cppbind.io/main_features/inheritance.html#multiple-inheritance)
+  - [Object type preservation](https://cppbind.io/main_features/object_type_preservation.html)
+  - [Static methods](https://cppbind.io/main_features/functions.html#static-methods)
+  - [Method overloading](https://cppbind.io/main_features/functions.html#overloaded-methods)
+  - [Converting getters/setters to target language properties](https://cppbind.io/main_features/functions.html)
+  - [Operator overloading](https://cppbind.io/main_features/operators.html)
+    - [Overloading subscript operator](https://cppbind.io/main_features/operators.html#overloading-subscript-operator)
+  - [Templates](https://cppbind.io/main_features/templates.html)
+    - [Template classes](https://cppbind.io/main_features/templates.html#class-templates)
+    - [Template methods and functions](https://cppbind.io/main_features/templates.html)
+    - [Converting getters/setters with template parameters to target language properties](https://cppbind.io/main_features/templates.html#template-getters-setters)
+  - [Exception handling](https://cppbind.io/main_features/exception_handling.html)
   - [Standard library types (std::shared_ptr, std::vector, std::map, etc.)](https://github.com/PicsArt/cppbind/tree/master/examples/primitives/cxx/containers)
-  - [Custom type conversions](https://cppbind.io/04_advanced_features/02_custom_types.html)
+  - [Custom type conversions](https://cppbind.io/advanced_topics/cppbind_snippets/custom_types.html)
   - [Intelligent code completion](https://en.wikipedia.org/wiki/Intelligent_code_completion)
 
 # Usage
@@ -74,10 +74,10 @@ use case works well for binding third-party C++ libraries.
 
 -   To configure a project with self-owned files, you can read our
     "Hello User"
-    [tutorial](https://cppbind.io/02_first_steps/04_hello_user.html).
+    [tutorial](https://cppbind.io/first_steps/hello_user.html).
 -   To configure a project with third-party/standard library files, you
     can read our "Array"
-    [tutorial](https://cppbind.io/02_first_steps/05_array_tutorial.html).
+    [tutorial](https://cppbind.io/first_steps/array_tutorial.html).
 
 Above-described usages can also be mixed: annotations for self-owned
 files are written inside those files, while third-party/standard library
@@ -87,7 +87,7 @@ files are annotated via separate config files.
 
 There are some required steps to install and use CppBind. The
 installation steps are described
-[here](https://cppbind.io/02_first_steps/03_installation.html).
+[here](https://cppbind.io/first_steps/installation.html).
 
 # License
 

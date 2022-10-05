@@ -3,13 +3,13 @@
 CppBind uses doxygen style comments for defining API for the given
 entity. CppBind API must contain **\_\_API\_\_** tag. Everything after
 **\_\_API\_\_** are instructions for CppBind. For defining an API we use
-variables from [Variable Definitions](../03_get_started/09_var_def.md).
+variables from [Variable Definitions](../main_features/var_def.md).
 CppBind uses them to know what should be generated, where
 the generated files should be saved, etc. **\_\_API\_\_** comments
 should be written in yaml format. Otherwise, CppBind complains about the
 wrong format. Jinja expressions and predefined system variables can be
 used here. Available system variables are described
-[here](../03_get_started/09_var_def.md).
+[here](../main_features/var_def.md).
 
 !!! Note
     **\_\_API\_\_** tag can be overridden in **cppbind_config.cfg**
@@ -29,7 +29,7 @@ Supported values for **action** are the following ones:
 
 -   **gen_interface** - generate interfaces for the languages that do
     not support multiple inheritance. For more details see:
-    [Multiple Inheritance](../03_get_started/04_inheritance.md#multiple-inheritance).
+    [Multiple Inheritance](../main_features/inheritance.md#multiple-inheritance).
 
 -   **gen_enum** - used to generate enums.
 

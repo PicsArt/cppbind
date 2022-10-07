@@ -121,6 +121,33 @@ val arrayIntSum = arrayInt + arrayIntCopy
 assert(arrayIntSum.data() == listOf(2, 4))
 // [array-examples-end]
 
+// [template-instance-examples-start]
+val vecInt = VectorInt()
+vecInt.pushBack(1)
+assert(vecInt[0] == 1)
+val vecIntCopy = VectorInt(vecInt)
+assert(vecInt == vecIntCopy)
+val vecIntSum = vecInt + vecIntCopy
+assert(vecIntSum[0] == 2)
+
+val vecString = StringsVector()
+vecString.pushBack("a")
+assert(vecString[0] == "a")
+val vecStringCopy = StringsVector(vecString)
+assert(vecString == vecStringCopy)
+val vecStringSum = vecString + vecStringCopy
+assert(vecStringSum[0] == "aa")
+
+val vecDouble = Vector()
+vecDouble.pushBack(1.0)
+assert(vecDouble[0] == 1.0)
+val vecDoubleCopy = Vector(vecDouble)
+assert(vecDouble == vecDoubleCopy)
+val vecDoubleSum = vecDouble + vecDoubleCopy
+assert(vecDoubleSum[0] == 2.0)
+
+// [template-instance-examples-end]
+
 // check array as an arg and return value
 assert(getFirstElement(arrayInt) == 1)
 val arrayMultiplied = multiplyElements(arrayInt, 2)

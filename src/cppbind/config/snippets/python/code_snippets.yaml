@@ -554,61 +554,64 @@ method:
   bind: *var_bind_method
   cxx:
     include: *var_method_cxx_include
-    body: |
-      {%- set _name = vars.name|to_snake_case %}
-      {%- if cxx.name == vars.hash_method %}
-      {%-   set _name = '__hash__' %}
-      {%- elif cxx.name == vars.equals_method %}
-      {%-   set _name = '__eq__' %}
-      {%- elif cxx.name == vars.tostring_method %}
-      {%-   set _name = '__str__' %}
-      {%- endif %}
-      {%- set comma = joiner(', ') -%}
-      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
-      {{owner_class_converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
-      , py::overload_cast<
-      {%-   for arg in cxx.args -%}
-      {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
-      {%-   endfor -%}>(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
-      {%- else -%}
-      , &{{owner_class.cxx.type_name}}::{{cxx.name}}
-      {%- endif -%}
-      {%- if cxx.is_template -%}
-      <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-      {%- endif -%}
-      {{', ' if cxx.args}}
-      {%- set comma = joiner(', ') -%}
-      {%- for arg in cxx.args -%}
-      {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
-      {%-   if arg.default %}{{' = ' + arg.default if not (arg.type.is_enum and arg.default.split('::')|last in get_type_info(arg.type).vars.enum_excluded_cases)}}
-      {%-   endif -%}
-      {%- endfor -%}
-      {#- This should go to shared macro -#}
-      {%- if vars.keep_alive and not (vars.is_operator and vars.name == '__getitem__') -%}
-      {%-   set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', cxx.args|length)|list %}
-      {%-   if cxx.is_static -%}
-      {%-     do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(name, owner)) -%}
-      {%-   endif -%}
-      {%-   if invalid_args -%}
-      {%-     do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
-      {%-   endif -%}
-      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
-      {%- endif -%}
-      {%- if cxx.result_type.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
-      {%-   set setter_var_name = 'value' -%}
-      {%-   if vars.is_operator and vars.name == '__getitem__' and not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
-      {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.resolved_type.unqualified_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
-      {#-   This should go to shared macro -#}
-      {%-   if vars.keep_alive -%}
-      {%-     set args = cxx.args + [get_type_converter(cxx.result_type)] %}
-      {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
-      {%-     if invalid_args -%}
-      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
-      {%-     endif -%}
-      , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
-      {%-   endif -%});
-      {%- endif %}
-
+    body:
+      !concat
+      - !include python_macros.yaml&templates
+      - |
+        {%- set _name = vars.name|to_snake_case %}
+        {%- if cxx.name == vars.hash_method %}
+        {%-   set _name = '__hash__' %}
+        {%- elif cxx.name == vars.equals_method %}
+        {%-   set _name = '__eq__' %}
+        {%- elif cxx.name == vars.tostring_method %}
+        {%-   set _name = '__str__' %}
+        {%- endif %}
+        {%- set comma = joiner(', ') -%}
+        {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
+        {{owner_class_converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
+        , py::overload_cast<
+        {%-   for arg in cxx.args -%}
+        {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
+        {%-   endfor -%}>(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+        {%- else -%}
+        , &{{owner_class.cxx.type_name}}::{{cxx.name}}
+        {%- endif -%}
+        {%- if cxx.is_template -%}
+        {{gen_template_instantiation(cxx, template_choice)}}
+        {%- endif -%}
+        {{', ' if cxx.args}}
+        {%- set comma = joiner(', ') -%}
+        {%- for arg in cxx.args -%}
+        {{comma()}}py::arg("{{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}")
+        {%-   if arg.default %}{{' = ' + arg.default if not (arg.type.is_enum and arg.default.split('::')|last in get_type_info(arg.type).vars.enum_excluded_cases)}}
+        {%-   endif -%}
+        {%- endfor -%}
+        {#- This should go to shared macro -#}
+        {%- if vars.keep_alive and not (vars.is_operator and vars.name == '__getitem__') -%}
+        {%-   set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', cxx.args|length)|list %}
+        {%-   if cxx.is_static -%}
+        {%-     do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(name, owner)) -%}
+        {%-   endif -%}
+        {%-   if invalid_args -%}
+        {%-     do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%-   endif -%}
+        , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+        {%- endif -%}
+        {%- if cxx.result_type.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+        {%-   set setter_var_name = 'value' -%}
+        {%-   if vars.is_operator and vars.name == '__getitem__' and not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
+        {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.resolved_type.unqualified_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
+        {#-   This should go to shared macro -#}
+        {%-   if vars.keep_alive -%}
+        {%-     set args = cxx.args + [get_type_converter(cxx.result_type)] %}
+        {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
+        {%-     if invalid_args -%}
+        {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%-     endif -%}
+        , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
+        {%-   endif -%});
+        {%- endif %}
+  
 
 function:
   python_init:
@@ -666,6 +669,7 @@ function:
     body:
       !concat
       - !include python_macros.yaml&templates
+      - !include common_macros.yaml&templates
       - !include python_macros.yaml&overloading_postfix
       - |
         {
@@ -682,7 +686,7 @@ function:
             , &{{cxx.namespace}}::{{cxx.name}}
             {%- endif -%}
             {%- if cxx.is_template -%}
-            <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
+            {{gen_template_instantiation(cxx, template_choice)}}
             {%- endif -%}
             {{', ' if cxx.args}}
             {%- set comma = joiner(', ') -%}
@@ -818,14 +822,9 @@ getter:
         {%-   else %}{{vars.name}}
         {%-   endif -%}
         {%- endmacro -%}
-        {%- if cxx.is_template -%}
-        {%-   set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
-        {%- else %}
-        {%-   set template_args = '' %}
-        {%- endif %}
         {%- if setter is defined %}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
-        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{template_args}}
+        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
         {#-   This should go to shared macro -#}
         {%-   if vars.keep_alive -%}
         {%-     set args = [get_type_converter(cxx.result_type)] %}
@@ -836,6 +835,6 @@ getter:
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
         {%-   endif -%});
         {%- else %}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{template_args}}
+        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
         {%-     if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
         {%- endif %}

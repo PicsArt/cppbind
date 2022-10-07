@@ -17,7 +17,10 @@ from examples_lib.templates import (
     ArrayInt2,
     ArrayFloat2,
     get_first_element_int,
-    multiply_elements
+    multiply_elements,
+    VectorInt,
+    StringsVector,
+    Vector
 )
 
 # [stack-examples-start]
@@ -136,6 +139,32 @@ assert(arrayInt[0] == 1)
 arrayIntSum = arrayInt + arrayIntCopy
 assert(arrayIntSum.data() == [2, 4])
 # [array-examples-end]
+
+# [template-instance-examples-start]
+vec_int = VectorInt()
+vec_int.push_back(1)
+assert(vec_int[0] == 1)
+vec_int_copy = VectorInt(vec_int)
+assert(vec_int == vec_int_copy)
+vec_int_sum = vec_int + vec_int_copy
+assert(vec_int_sum[0] == 2)
+
+vec_string = StringsVector()
+vec_string.push_back("a")
+assert(vec_string[0] == "a")
+vec_string_copy = StringsVector(vec_string)
+assert(vec_string == vec_string_copy)
+vec_string_sum = vec_string + vec_string_copy
+assert(vec_string_sum[0] == "aa")
+
+vec_double = Vector()
+vec_double.push_back(1.0)
+assert(vec_double[0] == 1.0)
+vec_double_copy = Vector(vec_double)
+assert(vec_double == vec_double_copy)
+vec_double_sum = vec_double + vec_double_copy
+assert(vec_double_sum[0] == 2.0)
+# [template-instance-examples-end]
 
 # check array as an arg and return value
 assert(get_first_element_int(arrayInt) == 1)

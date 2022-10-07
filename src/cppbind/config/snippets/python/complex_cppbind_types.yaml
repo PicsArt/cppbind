@@ -68,7 +68,11 @@ $Object:
       {%-   if name != None %}{{name}}{% else %}{{get_type_converter(template_args[loop.index - 1]).custom.tname if template_args_kinds[loop.index - 1] != ElementKind.TEMPLATE_NON_TYPE_PARAMETER else template_args[loop.index - 1]}}{% endif -%}
       {%- endfor -%}
     tname: |
-      {{vars.name}}{{custom.tpostfix}}
+      {#- if template_instance is specified but name is not provided then use vars.name -#}
+      {%- if vars.template_instance is not defined or not template_args_postfixes -%}
+      {{vars.name}}
+      {%- endif -%}
+      {{custom.tpostfix}}
   types:
     python: |
       {#- this should go to shared macro gen_namespace -#}

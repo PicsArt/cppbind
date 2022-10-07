@@ -75,6 +75,14 @@ templates: |
   {%-     endif -%}
   {%-   endfor -%}
   {%- endmacro -%}
+  {%- macro gen_template_instantiation(cxx, template_choice) -%}
+  {%-   set comma = joiner(', ') -%}
+  <
+  {%-   for param in cxx.template_parameters -%}
+  {{comma()}}{{template_choice.get(param)}}
+  {%-   endfor -%}
+  >
+  {%- endmacro -%}
 
 includes:
   cxx: |

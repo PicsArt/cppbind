@@ -23,6 +23,10 @@ from cppbind.utils.clang import extract_pure_comment
 
 TEMPLATE_NON_TYPE_PARAMETER_KEY = 'value'
 TEMPLATE_TYPE_PARAMETER_KEY = 'type'
+TEMPLATE_NAME_KEY = 'name'
+TEMPLATE_INSTANCE_KEY = 'template_instance'
+TEMPLATE_INSTANCE_ARGS_KEY = 'args'
+TEMPLATE_KEY = 'template'
 
 
 class APIParser:
@@ -178,13 +182,34 @@ class APIParser:
         """Validate attributes"""
 
         attr_type = self.var_def[attr_name].get('type')
-
-        if attr_type == 'dict':
-            if not has_type(attr_value, dict):
-                Error.critical(f"Wrong variable type: {type(attr_value)}, it must be dictionary",
+        # TODO: remove these validations when there'll be a mechanism to validate complex variables like list, dict
+        if attr_type == 'list':
+            if not has_type(attr_value, list):
+                Error.critical(f"Wrong variable type: {type(attr_value)}, it must be a list",
                                location.file_name if location else None,
                                location.line_number if location else None)
-            if attr_name == 'template':
+            if attr_name == TEMPLATE_INSTANCE_KEY:
+                for template_instance in attr_value:
+                    if not isinstance(template_instance, dict):
+                        Error.critical(
+                            f"Wrong {TEMPLATE_INSTANCE_KEY} variable style: {attr_value}, "
+                            f"items of {TEMPLATE_INSTANCE_KEY} must be of dictionary type.",
+                            location.file_name if location else None,
+                            location.line_number if location else None
+                        )
+                    if TEMPLATE_INSTANCE_ARGS_KEY not in template_instance:
+                        Error.critical(
+                            f"Wrong {TEMPLATE_INSTANCE_KEY} variable style: {attr_value}, "
+                            f"{TEMPLATE_INSTANCE_KEY} must have mandatory '{TEMPLATE_INSTANCE_ARGS_KEY}' variable.",
+                            location.file_name if location else None,
+                            location.line_number if location else None
+                        )
+        if attr_type == 'dict':
+            if not has_type(attr_value, dict):
+                Error.critical(f"Wrong variable type: {type(attr_value)}, it must be a dictionary",
+                               location.file_name if location else None,
+                               location.line_number if location else None)
+            if attr_name == TEMPLATE_KEY:
                 for attrs in attr_value.values():
                     for attr in attrs:
                         if not isinstance(attr, dict) or TEMPLATE_TYPE_PARAMETER_KEY not in attr \
@@ -202,7 +227,7 @@ class APIParser:
     @staticmethod
     def has_api(raw_comment):
         """
-        Tests whether or not comment has API section.
+        Tests whether the comment has an API section.
         """
         return raw_comment and APIParser.API_START_KW in raw_comment
 

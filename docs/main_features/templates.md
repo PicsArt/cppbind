@@ -2,11 +2,14 @@
 
 This section covers function and class templates. To generate bindings
 for function and class templates, we specify all expected values of
-template parameters with the `template` variable. The value of a
-`template` variable is a mapping between template parameters and their
-expected arguments.
+template parameters. CppBind provides two variables: `template` and `template_instance`, to specify all possible template instantiations.
+The value of `template` variable is a mapping between template parameters and their expected arguments, in this case CppBind 
+deduces all possible combinations of template arguments, while the value of `template_instance` is a list of all instantiations. 
 
-Let's see an example:
+!!! Note
+    `template` and `template_instance` cannot be used together.
+
+Let's see an example using `template` variable:
 
 ~~~C++
 {% 
@@ -21,9 +24,6 @@ can see, we have specified all possible types for each parameter.
 CppBind generates overloaded methods in target languages with each
 combination of template arguments.
 
-!!! Note
-    Keys in **\_\_API\_\_** should be in the same order as the template
-    parameter list.
 
 !!! Note
     We specified the template argument's type full name in **\_\_API\_\_**,
@@ -88,11 +88,81 @@ And here are some usage examples:
     The annotation is generated if the `is_kotlin_type_erased` property from type converters' **custom** section is set
     to `True` for at least one of the arguments type converter. More on type converters can be found [here](../advanced_topics/cppbind_snippets/custom_types.md)  
 
+There might be cases when the exact instantiations must be specified. For these cases `template_instance` variable can be used.
+In the next section we'll see an examples using this variable.
+
 ## Class templates
 
-For a class template, CppBind generates a new type for each
-specialization. Let's generate bindings for a template class `Stack`.
-We should specify all expected types for template parameter `T`.
+In this section we will see class template examples.
+Let's take a look at an example using `template_instance` variable:
+
+~~~C++
+{% 
+include "../../examples/primitives/cxx/templates/vector.hpp"
+start="[template-instance-example-start]"
+end="// [template-instance-example-end]"
+%} 
+~~~
+
+!!! Note
+    **name** key is handled differently for `template` and `template_instance` variables.
+    In the case of `template_instance` it's the exact name of the generated type/function, while for the `template` 
+    it's used as a part of postfix for the generated type/function.
+
+??? "Generated bindings"
+    === "Kotlin"
+        ~~~Java
+        {% 
+        include "../../examples/primitives/kotlin/src/main/java/com/examples/templates/vector.kt" 
+        %} 
+        ~~~
+    === "Python"
+        ~~~Python
+        {% 
+        include "../../examples/primitives/python/src/examples_lib/templates/vector_pygen.py" 
+        %} 
+        ~~~
+    === "Swift"
+        ~~~Swift
+        {% 
+        include "../../examples/primitives/swift/src/templates/template_vector.swift" 
+        %} 
+        ~~~
+
+For a class template, CppBind generates a new type for each instantiation.
+Here we have three generated types: `VectorInt`, `Vector` and `StringsVector`.
+
+And here are the usage examples:
+
+=== "Kotlin"
+    ~~~Java
+    {% 
+    include "../../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt" 
+    start="[template-instance-examples-start]"
+    end="// [template-instance-examples-end]"
+    %} 
+    ~~~
+
+=== "Python"
+    ~~~Python
+    {% 
+    include "../../examples/primitives/python/src/examples_lib/templates/main.py" 
+    start="[template-instance-examples-start]"
+    end="# [template-instance-examples-end]"
+    %} 
+    ~~~
+
+=== "Swift"
+    ~~~Swift
+    {% 
+    include "../../examples/primitives/swift/src/templates/main.swift" 
+    start="[template-instance-examples-start]"
+    end="// [template-instance-examples-end]"
+    %} 
+    ~~~
+
+Now let's see another example using `template` variable.
+In this example we have a template class `Stack<T>` and we've specified all possible values for the template parameter `T`.
 
 Here is the code in C++:
 
@@ -105,11 +175,11 @@ Here is the code in C++:
 ~~~
 
 We specified three possible values for template parameter `T` which
-means there can be three specializations of `Stack`
+means there can be three instantiations of `Stack`
 (`cppbind::example::Stack<cppbind::example::Task>`,
 `cppbind::example::Stack<cppbind::example::Project>`,
 `cppbind::example::Stack<cppbind::example::Number<int>>`). CppBind will
-generate a new class for each of this specializations.
+generate a new class for each of these specializations.
 
 Note that we have specified `name` property for
 `cppbind::example::Project` and `cppbind::example::Number<int>`. This
@@ -117,6 +187,9 @@ property is used as a type name postfix in target language, i.e.
 `StackPrj` will be generated for
 `cppbind::example::Stack<cppbind::example::Project>` and `StackNumInt`
 for `cppbind::example::Stack<cppbind::example::Number<int>>`.
+For `cppbind::example::Task` we have not specified the property `name`, which means `StackTask` will be generated.
+In this case **tname** property from type converter's **custom** section is used as a postfix.
+More on type converters can be found [here](04_advanced_features/02_custom_types.md).
 
 === "Kotlin"
     ~~~Java
@@ -147,7 +220,7 @@ for `cppbind::example::Stack<cppbind::example::Number<int>>`.
 
 ----
 Now let's see how CppBind handles cases when the Stack template class
-is used as an function argument.
+is used as a function argument.
 
 ~~~C++
   {% 

@@ -1,0 +1,52 @@
+rules:
+  kotlin.type_converters:
+    std::allocator:
+      custom:
+        pname:
+        tname:
+      types:
+        kotlin: Dummy
+        jni: Dummy
+        jdk: Dummy
+      converters:
+        jni_to_cxx:
+        cxx_to_jni:
+        kotlin_to_jdk:
+        jdk_to_kotlin:
+
+    std::__ndk1::allocator:
+      std::allocator
+
+  python.type_converters:
+    std::allocator:
+      custom:
+        tname:
+      types:
+        python: Dummy
+        pybind: Dummy
+      converters:
+        pybind_to_cxx:
+        cxx_to_pybind:
+        python_to_pybind:
+        pybind_to_python:
+
+    std::__1::allocator:
+      std::allocator
+
+  swift.type_converters:
+    std::allocator:
+      custom:
+        is_c_pointer_type:
+        tname:
+      types:
+        swift: Dummy
+        c: Dummy
+        sc: Dummy
+      converters:
+        c_to_cxx:
+        cxx_to_c:
+        swift_to_sc:
+        sc_to_swift:
+
+    std::__1::allocator:
+      std::allocator

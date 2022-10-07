@@ -55,6 +55,7 @@ class CXXClassExposedElement(CXXExposedElement):
         self.is_polymorphic = cxx_element.is_polymorphic
         self.has_multiple_base_branches = cxx_element.has_multiple_base_branches
         self.is_template = cxx_element.is_template
+        self.template_parameters = cxx_element.template_parameters
 
     @cached_property
     def type_name(self):
@@ -102,6 +103,7 @@ class CXXFunctionExposedElement(CXXExposedElement):
         self.is_static = cxx_element.is_static
         self.is_const = cxx_element.is_const
         self.is_overloaded = cxx_element.is_overloaded
+        self.template_parameters = cxx_element.template_parameters
 
     @cached_property
     def overridden_elements(self):
@@ -137,6 +139,10 @@ class CXXArgumentExposedElement(CXXExposedElement):
     @cached_property
     def type(self):
         return CXXExposedType(self._cxx_element.type, template_choice=self.__template_choice)
+
+    @cached_property
+    def is_variadic(self):
+        return self._cxx_element.type.type_name.endswith('...')
 
 
 class CXXMemberExposedElement(CXXExposedElement):

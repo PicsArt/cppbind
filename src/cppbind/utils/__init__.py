@@ -247,11 +247,11 @@ def init_jinja_env(language):
     def join_unique(inputs_):
         return JINJA_UNIQUE_MARKER.join(inputs_)
 
-    def match_regexp(input_, *patterns):
+    def match_regex(input_, *patterns):
         return any(re.match(pattern, input_) for pattern in patterns)
 
-    def contains(input_, pattern):
-        return pattern in input_
+    def contains(input_, item):
+        return item in input_
 
     def startswith(input_, prefix):
         return input_.startswith(prefix)
@@ -339,8 +339,8 @@ def init_jinja_env(language):
     def decapitalize(input_):
         return input_[0].lower() + input_[1:]
 
-    def increment(input_, value=1):
-        return input_ + value
+    def increment(input_, amount=1):
+        return input_ + amount
 
     def map_callback(input_, callback, **kwargs):
         if isinstance(input_, Iterable):
@@ -381,7 +381,7 @@ def init_jinja_env(language):
     env.filters['map_callback'] = map_callback
     env.filters['type'] = map_type
 
-    env.tests['match_regexp'] = match_regexp
+    env.tests['match_regex'] = match_regex
     env.tests['contains'] = contains
     env.tests['startswith'] = startswith
 

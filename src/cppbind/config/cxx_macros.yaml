@@ -5,8 +5,8 @@
 includes: |
   {%- macro gen_user_defined_cxx_includes(vars) -%}
   {%- if vars.include_cxx|default([]) -%}
-  {{marker}}{{vars.include_cxx|select('match_regexp', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
-  {{marker}}{{vars.include_cxx|reject('match_regexp', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
+  {{marker}}{{vars.include_cxx|select('match_regex', '^<.*>$', '^".*"$')|format_list('#include {}')|join_unique}}
+  {{marker}}{{vars.include_cxx|reject('match_regex', '^<.*>$', '^".*"$')|format_list('#include "{}"')|join_unique}}
   {%- endif -%}
   {%- endmacro -%}
 

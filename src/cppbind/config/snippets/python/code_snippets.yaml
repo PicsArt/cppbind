@@ -252,8 +252,8 @@ var_class: &var_class
           {{marker}}from abc import abstractmethod
           {%- endif -%}
           {%- if vars.include -%}
-          {{marker}}{{vars.include|select('match_regexp', '^import\s.*$', '^from\s.*$')|join_unique}}
-          {{marker}}{{vars.include|reject('match_regexp', '^import\s.*$', '^from\s.*$')|format_list('from {} import *')|join_unique}}
+          {{marker}}{{vars.include|select('match_regex', '^import\s.*$', '^from\s.*$')|join_unique}}
+          {{marker}}{{vars.include|reject('match_regex', '^import\s.*$', '^from\s.*$')|format_list('from {} import *')|join_unique}}
           {%- endif -%}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- for base in base_types_converters -%}

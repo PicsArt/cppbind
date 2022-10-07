@@ -11,12 +11,18 @@ from dataclasses import dataclass
 
 from cached_property import cached_property
 
-from .utils import available_on
 import cppbind.utils.clang as cutil
 from cppbind import logging
 from cppbind.ir import ElementKind
 from cppbind.ir.ast import NodeType, Node
+from cppbind.ir.utils import available_on
 from cppbind.parser import TEMPLATE_TYPE_PARAMETER_KEY, TEMPLATE_NON_TYPE_PARAMETER_KEY
+from cppbind.parser.cppbind_api_parser import (
+    TEMPLATE_NAME_KEY,
+    TEMPLATE_INSTANCE_KEY,
+    TEMPLATE_INSTANCE_ARGS_KEY,
+    TEMPLATE_KEY
+)
 
 
 @dataclass
@@ -207,7 +213,7 @@ class RunRule:
                             # check if the node is template and generate code for each combination of template args
                             if child.kind in (ElementKind.CLASS_TEMPLATE,
                                               ElementKind.FUNCTION_TEMPLATE):
-                                for _template_info in RunRule._get_template_combinations(child, ignore_parents=True):
+                                for _template_info in RunRule._get_template_infos(child, ignore_parents=True):
                                     if template_info:
                                         # merge current node's context with parent
                                         # this might be revisited in #242
@@ -265,44 +271,94 @@ class RunRule:
                     # for template create a context also with only template type name(NOTE: this might not be used)
                     self.all_contexts.setdefault(cutil.template_type_name(node.signature), ctx)
                     # and for each specialization also create a context
-                    for template_info in RunRule._get_template_combinations(node):
+                    for template_info in RunRule._get_template_infos(node):
                         context = Context(self, node, template_info)
                         self.all_contexts[context.cxx_type_name] = context
 
     @staticmethod
-    def _get_template_combinations(node, ignore_parents=False):
+    def _get_template_combinations_from_instance(node, ignore_parents=False):
+        """
+        Returns list of TemplateInfos from the value of template_instance.
+        Args:
+            node(CXXNode): A template node.
+            ignore_parents(bool): A flag to indicate whether parent node's choice should be added or not.
+        Returns:
+            List[TemplateInfo]: List of template info retrieved from template_instance variables.
+        """
+        node_template_arg = node.args.get(TEMPLATE_INSTANCE_KEY) or []
+        parent = node.parent
+        parameters = node.cxx_element.template_parameters
+        choices = []
+        parent_choices = []
+        if not ignore_parents:
+            if parent.type == NodeType.CLANG_NODE and parent.is_class_or_struct:
+                # calling _get_template_combinations not _get_template_combinations_from_instance as user might
+                # interchangeably use template and template_instance variables
+                parent_choices = RunRule._get_template_infos(node.parent, ignore_parents)
+
+        for spec in node_template_arg:
+            choice = dict(zip(parameters, cutil.get_template_arguments_from_str(
+                f'<{spec.get(TEMPLATE_INSTANCE_ARGS_KEY)}>')))
+            template_choice_name = [spec[TEMPLATE_NAME_KEY]] if TEMPLATE_NAME_KEY in spec else None
+            if parent_choices:
+                choices += [TemplateInfo(choice={**parent_choice.choice, **choice},
+                                         template_args_postfixes=template_choice_name) for parent_choice
+                            in parent_choices]
+            else:
+                choices.append(TemplateInfo(choice=choice, template_args_postfixes=template_choice_name))
+
+        return choices
+
+    @staticmethod
+    def _get_template_infos(node, ignore_parents=False):
+        """
+        Returns list of TemplateInfos from the value of template or template_instance.
+        Args:
+            node(CXXNode): A template node.
+            ignore_parents(bool): A flag to indicate whether parent node's choice should be added or not.
+        Returns:
+            List[TemplateInfo]: List of template info retrieved from template or template_instance variables.
+        """
+        # this function logic will be moved when templates will be exposed during post-processing
+        if TEMPLATE_INSTANCE_KEY in node.args:
+            return RunRule._get_template_combinations_from_instance(node, ignore_parents)
+
         parent = node.parent
         # for template choice we need to consider all template parent types
         template_arg = {}
 
         # current node template argument
-        node_template_arg = node.args.get('template') or {}
+        node_template_arg = node.args.get(TEMPLATE_KEY) or {}
         template_arg.update(node_template_arg)
 
+        parent_choices = {}
         if not ignore_parents:
-            while parent.type == NodeType.CLANG_NODE and parent.is_class_or_struct:
-                parent_template = parent.args.get('template')
-                # if parent also has a template argument join with child's
-                if parent_template:
-                    template_arg.update(parent_template)
-                parent = parent.parent
+            if parent.type == NodeType.CLANG_NODE and parent.is_class_or_struct:
+                # calling _get_template_combinations as user might
+                # interchangeably use template and template_instance variables
+                parent_choices = RunRule._get_template_infos(node.parent, ignore_parents)
 
-        # helper map to easily get template names for different combinations
-        node_type_name_map = {
-            k: {i.get(TEMPLATE_TYPE_PARAMETER_KEY) or i.get(TEMPLATE_NON_TYPE_PARAMETER_KEY): i.get('name') for i in v}
-            for k, v in node_template_arg.items()}
+        # reorder user provided template  to match the template type/function order
+        node_template_arg = {k: node_template_arg[k] for k in node.cxx_element.template_parameters}
 
-        all_possible_args = list(itertools.product(*template_arg.values()))
-        template_keys = template_arg.keys()
+        all_possible_args = list(itertools.product(*node_template_arg.values()))
+        template_keys = node_template_arg.keys()
         all_contexts = []
         for _, combination in enumerate(all_possible_args):
-            choice = [item.get(TEMPLATE_TYPE_PARAMETER_KEY) or item.get(TEMPLATE_NON_TYPE_PARAMETER_KEY) for item in
-                      combination]
+            choice = []
+            choice_names = []
+            for template_arg_info in combination:
+                choice.append(template_arg_info.get(TEMPLATE_TYPE_PARAMETER_KEY, template_arg_info.get(
+                    TEMPLATE_NON_TYPE_PARAMETER_KEY)))
+                choice_names.append(template_arg_info.get(TEMPLATE_NAME_KEY))
             _template_choice = dict(zip(template_keys, choice))
-            # only if the current node is template then it should have template postfixes
-            choice_names = [node_type_name_map[template_param][_template_choice[template_param]]
-                            for template_param in node_template_arg.keys()]
-            all_contexts.append(TemplateInfo(choice=_template_choice, template_args_postfixes=choice_names))
+            if parent_choices:
+                all_contexts += [
+                    TemplateInfo(choice={**_template_choice, **parent_choice.choice},
+                                 template_args_postfixes=choice_names) for
+                    parent_choice in parent_choices]
+            else:
+                all_contexts.append(TemplateInfo(choice=_template_choice, template_args_postfixes=choice_names))
         return all_contexts
 
     @staticmethod

@@ -1043,9 +1043,7 @@ method:
         {%-     endif -%}
         {%      if rconverter.jni.target_type_name != 'void' and not is_set_op %}
         try {
-            decltype(auto) result = {{prefix}}{{cxx.name}}{%- if cxx.is_template -%}
-                                                <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                                {%- endif -%}({{call_args|join(', ')}});
+            decltype(auto) result = {{prefix}}{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}({{call_args|join(', ')}});
             {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
             return {{rconverter.cxx_to_jni.converted_name('result')}};
         }
@@ -1247,9 +1245,7 @@ function:
         {%-     endif -%}
         {%-     if rconverter.jni.target_type_name != 'void' %}
         try {
-            decltype(auto) result = {{cxx.namespace}}::{{cxx.name}}{%- if cxx.is_template -%}
-                                                <{{template_choice.values()|format_list("{type}", 'type')|join(', ')}}>
-                                                {%- endif -%}({{call_args|join(', ')}});
+            decltype(auto) result = {{cxx.namespace}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}({{call_args|join(', ')}});
             {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(4)}}
             return {{rconverter.cxx_to_jni.converted_name('result')}};
         }
@@ -1466,7 +1462,7 @@ getter:
         {%- endif %}
         {{'open ' if cxx.is_open}}{{gen_override_keyword(cxx)}}{{'var ' if setter is defined else 'val '}}
         {%- if cxx.is_template -%}
-                                               {{get_template_getter_name()}}
+        {{get_template_getter_name()}}
         {%- else %}{{vars.name}}
         {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
             get() {
@@ -1582,11 +1578,6 @@ getter:
             }
         {%- endmacro -%}
         {%- set func_name="j%s%s"|format(vars.name|capitalize, get_template_postfix()) %}
-        {%- if cxx.is_template -%}
-        {%-   set template_args = '<' + template_choice.values()|format_list("{type}", 'type')|join(', ') + '>' %}
-        {%- else %}
-        {%-   set template_args = '' %}
-        {%- endif %}
         {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) %}
         {%- set parent_type_name = owner_class_converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class_converter.kotlin.target_type_name %}
         {%- set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
@@ -1601,7 +1592,7 @@ getter:
             void* err_ptr = nullptr;
         {%- endif %}
             try {
-                decltype(auto) result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{template_args}}();
+                decltype(auto) result = {{this_converter.converted_name('id')}}->{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}();
                 {{rconverter.cxx_to_jni.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
                 return {{rconverter.cxx_to_jni.converted_name('result')}};
             }
@@ -1625,7 +1616,7 @@ getter:
             void* err_ptr = nullptr;
         {%-   endif %}
             try {
-               {{this_converter.converted_name('id')}}->{{setter.cxx.name}}{{template_args}}({{converter.converted_name(setter.cxx.args[0].name)}});
+               {{this_converter.converted_name('id')}}->{{setter.cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}({{converter.converted_name(setter.cxx.args[0].name)}});
             }
             {{gen_exc_try_block(setter.vars)}}
         }

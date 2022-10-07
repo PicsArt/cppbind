@@ -121,6 +121,33 @@ let arrayIntSum = arrayInt + arrayIntCopy
 assert(arrayIntSum.data() == [2, 4])
 // [array-examples-end]
 
+// [template-instance-examples-start]
+let vecInt = VectorInt()
+vecInt.pushBack(value: 1)
+assert(vecInt[0] == 1)
+let vecIntCopy = VectorInt(vec: vecInt)
+assert(vecInt == vecIntCopy)
+let vecIntSum = vecInt + vecIntCopy
+assert(vecIntSum[0] == 2)
+
+let vecString = StringsVector()
+vecString.pushBack(value: "a")
+assert(vecString[0] == "a")
+let vecStringCopy = StringsVector(vec: vecString)
+assert(vecString == vecStringCopy)
+let vecStringSum = vecString + vecStringCopy
+assert(vecStringSum[0] == "aa")
+
+let vecDouble = Vector()
+vecDouble.pushBack(value: 1.0)
+assert(vecDouble[0] == 1.0)
+let vecDoubleCopy = Vector(vec: vecDouble)
+assert(vecDouble == vecDoubleCopy)
+let vecDoubleSum = vecDouble + vecDoubleCopy
+assert(vecDoubleSum[0] == 2.0)
+
+// [template-instance-examples-end]
+
 // check array as an arg and return value
 assert(getFirstElement(a: arrayInt) == 1)
 let arrayMultiplied = multiplyElements(a: arrayInt, num: 2)

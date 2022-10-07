@@ -44,7 +44,11 @@ $Object:
       {{parent_converter.swift.target_type_name}}.
       {%- endif -%}
     tname: |
-      {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}{{custom.tpostfix}}
+      {#- if template_instance is specified but name is not provided then use vars.name -#}
+      {%- if vars.template_instance is not defined or not template_args_postfixes -%}
+      {{vars.interface_name if vars.action == 'gen_interface' else vars.name}}
+      {%- endif -%}
+      {{custom.tpostfix}}
     pname: Object
   types:
     swift: |

@@ -41,11 +41,11 @@ class TemplateMethods  {
      * action: gen_method
      * throws: no_throw
      * template:
+     *   V:
+     *     - type: cppbind::example::Project
      *   T:
      *     - type: cppbind::example::Project
      *     - type: cppbind::example::Root
-     *   V:
-     *     - type: cppbind::example::Project
      * return_value_policy: reference
      */
     template <typename T, typename V>

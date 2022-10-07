@@ -212,7 +212,7 @@ class TestContextDescriptor(unittest.TestCase):
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {var_def_file}, "
-            "line -> 274, "
+            "line -> 278, "
             "msg -> Jinja syntax error in vars.src_glob - unexpected 'end of print statement'"))
 
     def test_variable_def_default_render_jinja_error(self):
@@ -225,7 +225,7 @@ class TestContextDescriptor(unittest.TestCase):
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {var_def_file}, "
-            "line -> 274, "
+            "line -> 278, "
             "msg -> Jinja render error in vars.src_glob - 'undefined' is undefined"))
 
     def test_variable_source_api_render_jinja_error(self):

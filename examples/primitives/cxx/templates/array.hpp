@@ -12,14 +12,14 @@ namespace cppbind::example {
  * action: gen_class
  * package: templates
  * template:
- *  T:
- *   - type: float
- *   - type: int
  *  SIZE:
  *   - value: 2
  *     name: '2'
  *   - value: 3
  *     name: '3'
+ *  T:
+ *   - type: float
+ *   - type: int
  */
 template <typename T = float, std::size_t SIZE = 2>
 class Array {

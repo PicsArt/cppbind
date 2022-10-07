@@ -113,6 +113,15 @@ class CXXElement:
         return cutil.is_templated(self._clang_cursor)
 
     @property
+    def template_parameters(self):
+        """Return the list of template parameters.
+         For example for
+          template <typename T, typename Allocator=std::allocator<T>>
+          class Vector {
+        will return ['T', 'Allocator']."""
+        return [c.spelling for c in self.get_template_parameter_cursors()]
+
+    @property
     def parent(self):
         """
         Returns:

@@ -81,8 +81,12 @@ shared_ref:
 
 template:
   inheritable: false
-  default: null
   type: dict
+  allowed_on: [ class_template, struct_template, function_template, method_template, constructor_template ]
+
+template_instance:
+  inheritable: false
+  type: list
   allowed_on: [ class_template, struct_template, function_template, method_template, constructor_template ]
 
 is_operator:

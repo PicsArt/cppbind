@@ -26,6 +26,9 @@ std::__ndk1::basic_string:
 std::__ndk1::array:
   std::array
 
+std::__ndk1::optional:
+  std::optional
+
 $Object:
   custom:
     pname: Long
@@ -913,7 +916,3 @@ std::optional:
       - !include common_macros.yaml&templates
       - |
         {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
-
-
-std::__ndk1::optional:
-  std::optional

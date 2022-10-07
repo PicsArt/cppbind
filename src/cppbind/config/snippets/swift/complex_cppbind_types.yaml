@@ -29,6 +29,9 @@ std::__1::basic_string:
 std::__1::array:
   std::array
 
+std::__1::optional:
+  std::optional
+
 $Object:
   custom:
     is_c_pointer_type: False
@@ -849,6 +852,3 @@ std::optional:
       - !include common_macros.yaml&templates
       - |
         {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
-
-std::__1::optional:
-  std::optional

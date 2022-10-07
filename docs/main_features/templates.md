@@ -189,7 +189,7 @@ property is used as a type name postfix in target language, i.e.
 for `cppbind::example::Stack<cppbind::example::Number<int>>`.
 For `cppbind::example::Task` we have not specified the property `name`, which means `StackTask` will be generated.
 In this case **tname** property from type converter's **custom** section is used as a postfix.
-More on type converters can be found [here](04_advanced_features/02_custom_types.md).
+More on type converters can be found [here](../advanced_topics/cppbind_snippets/custom_types.md).
 
 === "Kotlin"
     ~~~Java

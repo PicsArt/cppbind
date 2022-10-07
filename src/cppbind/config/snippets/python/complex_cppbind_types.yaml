@@ -59,6 +59,9 @@ std::__1::pair:
 std::__1::array:
   std::array
 
+std::__1::optional:
+  std::optional
+
 $Object:
   custom:
     pname: object
@@ -360,6 +363,3 @@ std::optional:
       - !include common_macros.yaml&templates
       - |
         {{- gen_template_args_snippets(template_args[:1], 'python_include', full_package) -}}
-
-std::__1::optional:
-  std::optional

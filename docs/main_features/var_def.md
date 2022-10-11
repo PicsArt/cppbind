@@ -91,34 +91,40 @@ doesn't have **allowed_on** property, then it's allowed on all
 entities.
 
 If the user does not specify a value for a variable, then the default
-value is used. There are predefined system variables that can be used to
+value is used. There are predefined variables that can be used to
 define the default value for the variable or assign a new value. Here is
-the list of system variables:
+the list of that variables:
 
--   **path** - os.path module (mainly used to join paths).
--   **getenv** - os.getenv module (used for getting environment
+- **path** - os.path module (mainly used to join paths).
+- **getenv** - os.getenv module (used for getting environment
     variables).
--   **\_object_kind** - kind of the processed object, e.g root, dir,
+- **\_object_kind** - kind of the processed object, e.g root, dir,
     class etc.
--   **\_current_working_dir** - current working directory.
--   **\_source_modification_time** - source code modification time.
--   **\_output_modification_time** - unique datetime-based key which is
+- **\_current_working_dir** - current working directory.
+- **\_source_modification_time** - source code modification time.
+- **\_output_modification_time** - unique datetime-based key which is
     used for comparing previously generated code with the new one.
--   **\_pure_comment** - doxygen style comment without CppBind API part.
--   **\_line_number** - the line number of the processed source code.
--   **source_file_fullname** - full path of the processed file.
--   **\_file_name** - the name of the processed file.
--   **\_is_operator** - indicates whether the method is a C++ operator
+- **\_pure_comment** - doxygen style comment without CppBind API part.
+- **\_line_number** - the line number of the processed source code.
+- **source_file_fullname** - full path of the processed file.
+- **\_file_name** - the name of the processed file.
+- **\_is_operator** - indicates whether the method is a C++ operator
     or not.
--   **\_object_name** - the name of the processed object, e.g., class
+- **\_object_name** - the name of the processed object, e.g., class
     name, method name, etc.
--   **\_cppbind_extras_dir** - the path of the directory containing
+- **\_cppbind_extras_dir** - the path of the directory containing
     CppBind configuration default files.
--   **\_helper_module** - Python helper module for the current target
-    language containing helper functions.
--   **get_android_ndk_sysroot** - internal helper function to
+- **cppbind_helper** - Python helper module containing helper utility functions.
+- **\_get_git_repo_url** - Python helper function to get the git repo URL
+    corresponding to the directory passed as an argument to this function.
+- **get_android_ndk_sysroot** - internal helper function to
     dynamically construct android ndk sysroot path using android ndk
     installation path.
+
+The variables which are defined before the definition of the current variable
+also can be used in the default value definition.
+In case the variable is inheritable, its parent entity context (available variables)
+is also available when defining the default value of the variable.
 
 Users can write jinja expressions in the **vars** section, API
 annotations, and variable default values definitions. Those expressions

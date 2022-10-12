@@ -84,6 +84,11 @@ class CXXElement:
         """Whether the cursor accessibility is protected"""
         return self._clang_cursor.access_specifier == cli.AccessSpecifier.PROTECTED
 
+    @property
+    def raw_comment(self):
+        """Returns the raw comment text associated with the cursor"""
+        return self._clang_cursor.raw_comment
+
     @cached_property
     def namespace(self):
         """The namespace of the cursor"""
@@ -189,7 +194,6 @@ class CXXEnumElement(CXXElement):
         for enum_value_c in self._clang_cursor.walk_preorder():
             if enum_value_c.kind != cli.CursorKind.ENUM_CONSTANT_DECL:
                 continue
-            type_name = enum_value_c.kind.name.lower().replace("_decl", "")
             if enum_value_c.raw_comment != last_case_comment:
                 comment = cutil.extract_pure_comment(enum_value_c.raw_comment)
             elif last_case_comment:
@@ -198,7 +202,6 @@ class CXXEnumElement(CXXElement):
                 comment = None
             last_case_comment = enum_value_c.raw_comment
             enum_val_params = types.SimpleNamespace(name=enum_value_c.spelling,
-                                                    type=type_name,
                                                     value=enum_value_c.enum_value,
                                                     comment=comment)
             _values.append(enum_val_params)

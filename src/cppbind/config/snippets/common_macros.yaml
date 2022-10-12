@@ -20,7 +20,7 @@ utils: |
   {%-       endif -%}
   {%-     else -%}
   {%-       set overridden_parent_infos = cxx.overridden_elements|type_info(attribute='parent.type', error=False)|reject('none') -%}
-  {%-       set ancestors = owner_class.cxx.ancestors|type_info(error=False)|reject('none')|map(attribute='cxx.type_name') -%}
+  {%-       set ancestors = cxx.parent.ancestors|type_info(error=False)|reject('none')|map(attribute='cxx.type_name') -%}
   {%-       for parent_info in overridden_parent_infos -%}
   {%-         if exclude_interface -%}
   {%-           if parent_info.has_api and parent_info.vars.action != 'gen_interface' and parent_info.cxx.type_name in ancestors -%}

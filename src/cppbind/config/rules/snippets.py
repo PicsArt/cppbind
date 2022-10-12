@@ -90,8 +90,6 @@ def make_func_context(ctx):
 
 def make_method_context(ctx):
     def make():
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
-
         if ctx.setter:
             # setter is generated alongside with getter, setting template choice from getter context
             _setter_ctx = ctx.setter
@@ -106,14 +104,7 @@ def make_method_context(ctx):
 
 
 def make_constructor_context(ctx):
-    def make():
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
-
-        return locals()
-
-    context = make_func_context(ctx)
-    context.update(make())
-    return context
+    return make_func_context(ctx)
 
 
 def make_enum_context(ctx):
@@ -140,10 +131,6 @@ def make_class_context(ctx):
 
             cxx = CXXClassExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
 
-            # nested types have their owner_class
-            owner_class = types.SimpleNamespace(
-                **make_class_context(ctx.parent_context)) if ctx.parent_context else None
-
             descendants = _type_info.descendants
 
             return get_public_attributes(locals())
@@ -160,7 +147,6 @@ def make_class_context(ctx):
 
 def make_member_context(ctx):
     def make():
-        owner_class = types.SimpleNamespace(**make_class_context(ctx.parent_context)) if ctx.parent_context else None
         cxx = CXXMemberExposedElement(ctx.node.cxx_element, template_choice=ctx.template_choice)
 
         return get_public_attributes(locals())

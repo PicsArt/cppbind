@@ -1,12 +1,12 @@
 validations: |
   {%- macro run_method_validations() -%}
   {%-   set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) -%}
-  {%-   if is_special_function and owner_class.vars.action == 'gen_interface' -%}
-  {%-     do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%-   if is_special_function and get_type_info(cxx.parent.type).vars.action == 'gen_interface' -%}
+  {%-     do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(cxx.parent.displayname, cxx.displayname) -%}
   {%-   endif -%}
   {%-   set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
   {%-   if incorrect_nullable_args -%}
-  {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+  {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname) -%}
   {%-   endif -%}
   {%- endmacro -%}
 
@@ -34,7 +34,7 @@ special_functions:
       {{vars.comment|make_doxygen_comment}}
       {%-   endif %}
       {{equals_decl}} {
-          other as {{get_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(definition=True)}}
+          other as {{get_type_converter(cxx.parent.type).kotlin.get_target_type_name(definition=True)}}
           return j{{vars.name|capitalize}}(cppbindObjId, other.cppbindObjId, other)
       }
       {%- endmacro -%}
@@ -146,8 +146,9 @@ constructor:
     - !include common_macros.yaml&templates
     - !include common_macros.yaml&utils
     - |
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
       {%- set constructor_jvm_name = 'jConstructor' if cxx.kind_name in ('constructor',  'constructor_template') else 'j' + vars.name|capitalize -%}
-      {%- set parent_type_name = get_type_converter(owner_class.cxx.type).kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+      {%- set parent_type_name = parent_class_converter.kotlin.get_target_type_name(interface_class=parent_class_converter.type_info.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
       {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
       {{cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}

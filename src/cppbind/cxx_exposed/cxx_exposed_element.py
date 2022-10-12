@@ -11,13 +11,15 @@ from cached_property import cached_property
 
 import cppbind.utils.clang as cutil
 from cppbind.cxx_exposed.cxx_exposed_type import CXXExposedType
+from cppbind.ir import ElementKind
 
 
 class CXXExposedElement:
     """Class to define exposed properties to snippets"""
 
-    def __init__(self, cxx_element):
+    def __init__(self, cxx_element, template_choice=None):
         self._cxx_element = cxx_element
+        self._template_choice = template_choice
 
         self.kind_name = cxx_element.kind_name
         self.name = cxx_element.name
@@ -26,12 +28,44 @@ class CXXExposedElement:
         self.is_public = cxx_element.is_public
         self.is_private = cxx_element.is_private
         self.is_protected = cxx_element.is_protected
+        self.raw_comment = cxx_element.raw_comment
         self.namespace = cxx_element.namespace
         self.is_abstract = cxx_element.is_abstract
         self.is_open = cxx_element.is_open
 
     def _get_full_displayname(self):
         return self._cxx_element.get_full_displayname()
+
+    @cached_property
+    def parent(self):
+        return CXXExposedElement.__create_cxx_exposed_element(self._cxx_element.parent, self._template_choice)
+
+    @staticmethod
+    def __create_cxx_exposed_element(cxx_element, template_choice):
+        """Static factory method to create a cxx exposed element based on the cxx element kind"""
+
+        kind = cxx_element.kind
+        if kind == ElementKind.ENUM_DECL:
+            return CXXEnumExposedElement(cxx_element)
+        if kind in (
+            ElementKind.FUNCTION_DECL,
+            ElementKind.FUNCTION_TEMPLATE,
+            ElementKind.CXX_METHOD,
+            ElementKind.CONSTRUCTOR
+        ):
+            return CXXFunctionExposedElement(cxx_element, template_choice)
+        if kind in (
+            ElementKind.CLASS_DECL,
+            ElementKind.STRUCT_DECL,
+            ElementKind.CLASS_TEMPLATE
+        ):
+            return CXXClassExposedElement(cxx_element, template_choice)
+        if kind == ElementKind.PARM_DECL:
+            return CXXArgumentExposedElement(cxx_element, template_choice)
+        if kind == ElementKind.FIELD_DECL:
+            return CXXMemberExposedElement(cxx_element, template_choice)
+
+        return CXXExposedElement(cxx_element, template_choice)
 
 
 class CXXEnumExposedElement(CXXExposedElement):
@@ -48,8 +82,7 @@ class CXXClassExposedElement(CXXExposedElement):
     """Class to define exposed class/struct properties to snippets"""
 
     def __init__(self, cxx_element, template_choice=None):
-        super(CXXClassExposedElement, self).__init__(cxx_element)
-        self.__template_choice = template_choice
+        super(CXXClassExposedElement, self).__init__(cxx_element, template_choice)
         self.__is_templated = cxx_element.is_templated
 
         self.is_polymorphic = cxx_element.is_polymorphic
@@ -64,7 +97,7 @@ class CXXClassExposedElement(CXXExposedElement):
         # in case of templates type.spelling is empty or partial defined (without template parameter specialization)
         # always using display name for unexposed types e.g T
         cxx_type_name = self._cxx_element.get_full_displayname()
-        return cutil.replace_template_choice(cxx_type_name, self.__template_choice)
+        return cutil.replace_template_choice(cxx_type_name, self._template_choice)
 
     @cached_property
     def base_types(self):
@@ -73,7 +106,7 @@ class CXXClassExposedElement(CXXExposedElement):
             List of base types exposed elements with template choice.
         """
         # specializing this in exposed type due to template_choice
-        return [CXXExposedType(element.type, self.__template_choice) for element in
+        return [CXXExposedType(element.type, self._template_choice) for element in
                 self._cxx_element.base_type_elements]
 
     @cached_property
@@ -83,21 +116,20 @@ class CXXClassExposedElement(CXXExposedElement):
             List of base types exposed elements with template choice.
         """
         # specializing this in exposed type due to template_choice
-        return [CXXExposedType(ancestor.type, self.__template_choice) for ancestor in
+        return [CXXExposedType(ancestor.type, self._template_choice) for ancestor in
                 self._cxx_element.ancestors]
 
     @cached_property
     def type(self):
         return CXXExposedType(self.type_name if self._cxx_element.is_templated else self._cxx_element.type,
-                              template_choice=self.__template_choice)
+                              template_choice=self._template_choice)
 
 
 class CXXFunctionExposedElement(CXXExposedElement):
     """Class to define exposed function/method properties to snippets"""
 
     def __init__(self, cxx_element, template_choice):
-        super(CXXFunctionExposedElement, self).__init__(cxx_element)
-        self.__template_choice = template_choice
+        super(CXXFunctionExposedElement, self).__init__(cxx_element, template_choice)
 
         self.is_template = cxx_element.is_template
         self.is_static = cxx_element.is_static
@@ -107,21 +139,17 @@ class CXXFunctionExposedElement(CXXExposedElement):
 
     @cached_property
     def overridden_elements(self):
-        return [CXXFunctionExposedElement(element, template_choice=self.__template_choice)
+        return [CXXFunctionExposedElement(element, template_choice=self._template_choice)
                 for element in self._cxx_element.overridden_elements]
 
     @cached_property
-    def parent(self):
-        return CXXClassExposedElement(self._cxx_element.parent, self.__template_choice)
-
-    @cached_property
     def result_type(self):
-        return CXXExposedType(self._cxx_element.result_type, template_choice=self.__template_choice) \
+        return CXXExposedType(self._cxx_element.result_type, template_choice=self._template_choice) \
             if self._cxx_element.result_type else None
 
     @cached_property
     def args(self):
-        return [CXXArgumentExposedElement(arg, template_choice=self.__template_choice)
+        return [CXXArgumentExposedElement(arg, template_choice=self._template_choice)
                 for arg in self._cxx_element.args]
 
 
@@ -129,8 +157,7 @@ class CXXArgumentExposedElement(CXXExposedElement):
     """Class to define exposed argument properties to snippets"""
 
     def __init__(self, cxx_element, template_choice=None):
-        super(CXXArgumentExposedElement, self).__init__(cxx_element)
-        self.__template_choice = template_choice
+        super(CXXArgumentExposedElement, self).__init__(cxx_element, template_choice)
 
         self.default = cxx_element.default
         self.default_is_literal = cxx_element.default_is_literal
@@ -138,7 +165,7 @@ class CXXArgumentExposedElement(CXXExposedElement):
 
     @cached_property
     def type(self):
-        return CXXExposedType(self._cxx_element.type, template_choice=self.__template_choice)
+        return CXXExposedType(self._cxx_element.type, template_choice=self._template_choice)
 
     @cached_property
     def is_variadic(self):
@@ -149,9 +176,8 @@ class CXXMemberExposedElement(CXXExposedElement):
     """Class to define exposed member properties to snippets"""
 
     def __init__(self, cxx_element, template_choice=None):
-        super(CXXMemberExposedElement, self).__init__(cxx_element)
-        self.__template_choice = template_choice
+        super(CXXMemberExposedElement, self).__init__(cxx_element, template_choice)
 
     @cached_property
     def result_type(self):
-        return CXXExposedType(self._cxx_element.type, template_choice=self.__template_choice)
+        return CXXExposedType(self._cxx_element.type, self._template_choice)

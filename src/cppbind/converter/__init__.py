@@ -19,23 +19,23 @@ def make_doxygen_comment(pure_comment):
 */"""
 
 
-def validate_getter(cxx, vars, owner_class, setter):
+def validate_getter(cxx, vars, setter):
     if cxx.args:
         Error.critical(
-            f'Getter should not have arguments: {owner_class.cxx.displayname}.{cxx.displayname}.')
+            f'Getter should not have arguments: {cxx.parent.displayname}.{cxx.displayname}.')
     if setter:
         if len(setter['cxx'].args) != 1:
             Error.critical(
-                f'Setter should have one argument: {owner_class.cxx.displayname}.{cxx.displayname}.')
+                f'Setter should have one argument: {cxx.parent.displayname}.{cxx.displayname}.')
 
         have_diff_nullability = (len(setter['vars'].nullable_arg) == 0) ^ (vars.nullable_return is False)
         if have_diff_nullability:
             Error.critical(
                 f'Setter argument and getter return value should have the same nullability:'
-                f' {owner_class.cxx.displayname}.{cxx.displayname}.')
+                f' {cxx.parent.displayname}.{cxx.displayname}.')
 
 
-def validate_template_getter_setter(cxx, vars, owner_class, setter):
+def validate_template_getter_setter(cxx, vars, setter):
     if not setter or not cxx.is_template:
         return
 
@@ -50,10 +50,10 @@ def validate_template_getter_setter(cxx, vars, owner_class, setter):
                 is_valid = False
                 break
     if not is_valid:
-        parent = owner_class.cxx.displayname
+        parent_name = cxx.parent.displayname
         Error.critical(
             f'Template getter/setter should have the same template argument types: '
-            f'{parent}.{cxx.displayname} and {parent}.{setter["cxx"].displayname}.')
+            f'{parent_name}.{cxx.displayname} and {parent_name}.{setter["cxx"].displayname}.')
 
 
 def relative_package(namespace1, namespace2):

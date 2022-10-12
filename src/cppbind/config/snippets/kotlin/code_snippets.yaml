@@ -592,7 +592,7 @@ constructor:
     head: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {#- this should go to shared macro #}
       {%- macro gen_func(args, target_overloading_index=none) -%}
@@ -608,7 +608,7 @@ constructor:
       {%-       if arg.type.is_enum %}
       {%-         set enum_case_name = arg.default.split('::')|last %}
       {%-         if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-      {%-           do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-           do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
       {%-         else %} = {{arg_converter.kotlin.target_type_name}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%-         endif -%}
       {%-       else -%}
@@ -622,7 +622,7 @@ constructor:
       {%-   if vars.keep_alive %}
       {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
       {%-     if invalid_args  %}
-      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args)) -%}
       {%-     endif %}
       {%-     for arg_idx in vars.keep_alive %}
       {%-       set converter = get_type_converter(args[arg_idx - 1].type) %}
@@ -689,15 +689,16 @@ constructor:
       - |
         {#- this should go to shared macro #}
         {%- macro gen_func(args, target_overloading_index=none) -%}
-        {%-   set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
-        {%-   set parent_type_name = owner_class_converter.kotlin.get_target_type_name(interface_class=owner_class.vars.action == 'gen_interface') %}
+        {%-   set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+        {%-   set parent_class_info = parent_class_converter.type_info -%}
+        {%-   set parent_type_name = parent_class_converter.kotlin.get_target_type_name(interface_class=parent_class_info.vars.action == 'gen_interface') %}
         extern "C" JNIEXPORT jobjectid {{get_constructor_jni_name(target_overloading_index)}}([[maybe_unused]] JNIEnv* env, jobject{{', ' if args}}
         {%-   set comma = joiner(', ') -%}
         {%    for arg in args -%}
         {{comma()}}{{get_type_converter(arg.type).jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
         {%-   endfor %}{{', ...' if args}}){
-        {%-   if owner_class.cxx.namespace %}
-            using namespace {{owner_class.cxx.namespace}};
+        {%-   if cxx.parent.namespace %}
+            using namespace {{cxx.parent.namespace}};
         {%-   endif %}
         {%-   set call_args = [] -%}
         {%-   for arg in args -%}
@@ -711,14 +712,14 @@ constructor:
         {%-   endif %}
             try {
         {%-   if cxx.kind_name in ('constructor',  'constructor_template') %}
-                {{owner_class.cxx.type_name}}* this_object = new {{owner_class.cxx.type_name}}({{call_args|join(', ')}});
+                {{cxx.parent.type_name}}* this_object = new {{cxx.parent.type_name}}({{call_args|join(', ')}});
         {%-   else %}
-                auto this_object = {{owner_class.cxx.type_name}}::{{cxx.name}}({{call_args|join(', ')}});
+                auto this_object = {{cxx.parent.type_name}}::{{cxx.name}}({{call_args|join(', ')}});
         {%-   endif %}
-        {%-   if not owner_class.vars.shared_ref %}
-                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class_converter.cxx_type_name_global.snippet()}}), this_object});
+        {%-   if not parent_class_info.vars.shared_ref %}
+                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{parent_class_converter.cxx_type_name_global.snippet()}}), this_object});
         {%-   else %}
-                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{owner_class_converter.cxx_type_name_global.snippet()}}), new std::shared_ptr<{{owner_class.cxx.type_name}}>(this_object)});
+                return reinterpret_cast<jlong>(new CppBindCObject {strdup({{parent_class_converter.cxx_type_name_global.snippet()}}), new std::shared_ptr<{{cxx.parent.type_name}}>(this_object)});
         {%-   endif %}
             }
         {%-   if 'no_throw' not in vars.throws %}
@@ -770,6 +771,7 @@ method:
       - !include kotlin_macros.yaml&templates
       - |
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
+        {%- set parent_class_info = get_type_info(cxx.parent.type) -%}
         {%- do run_method_validations() -%}
         {%- if cxx.name == vars.hash_method -%}
         {{gen_hash_function()}}
@@ -798,7 +800,7 @@ method:
         {%-           if arg.type.is_enum %}
         {%-             set enum_case_name = arg.default.split('::')|last %}
         {%-             if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-        {%-               do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%-               do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
         {%-             else %} = {{arg_converter.kotlin.target_type_name}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%-             endif -%}
         {%-           else -%}
@@ -824,8 +826,8 @@ method:
         {%-         set arg_name = vars.argument_name.get(arg.name, arg.name) %}
         {%-         do call_args.append(arg_name) if not arg_name in call_args %}
         {%-       endfor %}
-        {%-       if owner_class.vars.action == 'gen_interface' %}
-            val result = {{get_type_converter(owner_class.cxx.type).kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
+        {%-       if parent_class_info.vars.action == 'gen_interface' %}
+            val result = {{get_type_converter(cxx.parent.type).kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
         {%-       else %}
             val result = j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
         {%-       endif %}
@@ -833,7 +835,7 @@ method:
         {%-       if vars.keep_alive and not (vars.is_operator and vars.name == 'get') %}
         {%-         set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-         if invalid_args  %}
-        {%-           do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+        {%-           do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args)) -%}
         {%-         endif %}
         {%-         for arg_idx in vars.keep_alive %}
         {%-           set converter = get_type_converter(args[arg_idx - 1].type) %}
@@ -880,8 +882,8 @@ method:
         {%-         set arg_name = vars.argument_name.get(arg.name, arg.name) %}
         {%-         do extra_call_args.append(arg_name) if not arg_name in call_args %}
         {%-       endfor %}
-        {%-       if owner_class.vars.action == 'gen_interface' %}
-            {{get_type_converter(owner_class.cxx.type).kotlin.target_type_name}}Helper.jSet{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
+        {%-       if parent_class_info.vars.action == 'gen_interface' %}
+            {{get_type_converter(cxx.parent.type).kotlin.target_type_name}}Helper.jSet{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
         {%-       else %}
             jSet{{get_overloading_postfix(vars)}}{{get_template_postfix()}}({{call_args|join(', ')}}, {{setter_var_name}})
         {#-       This should go to shared macro -#}
@@ -889,7 +891,7 @@ method:
         {%-         set args = cxx.args + [namespace(name='value', converter=rconverter)] -%}
         {%-         set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-         if invalid_args  %}
-        {%-           do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+        {%-           do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args)) -%}
         {%-         endif %}
         {%-         for arg_idx in vars.keep_alive %}
         {%-           set converter = get_type_converter(args[arg_idx - 1].type) %}
@@ -916,11 +918,11 @@ method:
         {#-   this should go to shared macro #}
         {%-   macro gen_func(args, target_overloading_index=none) -%}
         {%-     if vars.return_value_policy == 'reference_internal' -%}
-        {%        do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+        {%        do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(cxx.parent.type_name, cxx.name)) -%}
         {%-     endif -%}
         {#-     This should go to shared macro -#}
         {%-     if vars.keep_alive %}
-        {%-       do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, owner_class.cxx.type_name)) -%}
+        {%-       do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(cxx.name, cxx.parent.type_name)) -%}
         {%-     endif %}
         {%-     set comma = joiner(', ') -%}
         {%-     if vars.comment %}
@@ -947,8 +949,8 @@ method:
         {%-       set arg_name = vars.argument_name.get(arg.name, arg.name) %}
         {%-       do call_args.append(arg_name) if not arg_name in call_args %}
         {%-     endfor %}
-        {%-     if owner_class.vars.action == 'gen_interface' %}
-            val result = {{get_type_converter(owner_class.cxx.type).kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
+        {%-     if get_type_info(cxx.parent.type).vars.action == 'gen_interface' %}
+            val result = {{get_type_converter(cxx.parent.type).kotlin.target_type_name}}Helper.j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
         {%-     else %}
             val result = j{{vars.name|capitalize}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index|string if target_overloading_index}}({{call_args|join(', ')}})
         {%-     endif %}
@@ -970,7 +972,7 @@ method:
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
-        {%- if owner_class.vars.action == 'gen_class' -%}
+        {%- if get_type_info(cxx.parent.type).vars.action == 'gen_class' -%}
         {%-   if not cxx.is_static %}
         {#-     this should go to shared macro #}
         {%-     macro gen_func(args, target_overloading_index=none) -%}
@@ -994,7 +996,7 @@ method:
       - !include common_macros.yaml&utils
       - |
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
-        {%- if owner_class.vars.action == 'gen_interface' -%}
+        {%- if get_type_info(cxx.parent.type).vars.action == 'gen_interface' -%}
         {%-   if not cxx.is_static %}
         {#-     this should go to shared macro #}
         {%-     macro gen_func(args, target_overloading_index=none) -%}
@@ -1026,8 +1028,9 @@ method:
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
         {#- this should go to shared macro #}
         {%- macro gen_func(args, target_overloading_index=none) -%}
-        {%-   set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
-        {%-   set parent_type_name = owner_class_converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class_converter.kotlin.target_type_name %}
+        {%-   set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+        {%-   set parent_class_info = parent_class_converter.type_info -%}
+        {%-   set parent_type_name = parent_class_converter.kotlin.target_type_name + 'Helper' if parent_class_info.vars.action == 'gen_interface' else parent_class_converter.kotlin.target_type_name %}
         {%-   set setter_var_name = 'value' -%}
         {%-   macro args_snippet(args, call_args) -%}
         {%-     for arg in args -%}
@@ -1097,18 +1100,18 @@ method:
         {%-     for arg in args -%}
         {{comma()}}{{get_type_converter(arg.type).jni.target_type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}
         {%-     endfor %}{{', ' + rconverter.jni.target_type_name + ' ' + setter_var_name if is_set_op}}{{', ...' if args}}){
-        {%- if owner_class.cxx.namespace %}
-            using namespace {{owner_class.cxx.namespace}};
+        {%- if cxx.parent.namespace %}
+            using namespace {{cxx.parent.namespace}};
         {%- endif %}
         {%-     set call_args = [] %}
             {{args_snippet(args, call_args)|indent(4)}}
         {%-     if not cxx.is_static %}
             validateID(id);
-        {%-       set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class_converter.jni_to_cxx -%}
+        {%-       set this_converter = get_type_converter('std::shared_ptr<' + cxx.parent.type_name + '>').jni_to_cxx if parent_class_info.vars.shared_ref else parent_class_converter.jni_to_cxx -%}
             {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
             {{call_code(this_converter.converted_name('id') + "->", call_args, is_set_op)|indent(4)}}
         {%-     else %}
-            {{call_code(owner_class.cxx.type_name + "::", call_args, is_set_op)|indent(4)}}
+            {{call_code(cxx.parent.type_name + "::", call_args, is_set_op)|indent(4)}}
         {%-     endif %}
         }
         {%-   endmacro -%}
@@ -1137,7 +1140,7 @@ function:
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
         {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
         {%- if incorrect_nullable_args -%}
-        {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+        {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname) -%}
         {%- endif -%}
         {#- this should go to shared macro #}
         {%- macro gen_func(args, target_overloading_index=none) -%}
@@ -1157,7 +1160,7 @@ function:
         {%-       if arg.type.is_enum %}
         {%-         set enum_case_name = arg.default.split('::')|last %}
         {%-         if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-        {%-           do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%-           do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
         {%-         else %} = {{arg_converter.kotlin.target_type_name}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%-       endif -%}
         {%-     else -%}
@@ -1336,18 +1339,20 @@ var_property_getter_setter: &var_property_getter_setter
     include: *var_getter_kotlin_include
     properties: |
       {%- if not cxx.is_public -%}
-      {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(cxx.parent.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
-      {%- set owner_name = get_type_converter(owner_class.cxx.type).kotlin.target_type_name -%}
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+      {%- set parent_class_info = parent_class_converter.type_info -%}
+      {%- set parent_name = parent_class_converter.kotlin.target_type_name -%}
       {% set result_converter = rconverter.jdk_to_kotlin %}
       {%- if vars.comment %}
       {{vars.comment|make_doxygen_comment}}
       {%- endif %}
       {{'var' if vars.action == 'gen_property_setter' else 'val'}} {{vars.name}}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
           get() {
-      {%- if owner_class.vars.action == 'gen_interface' %}
-              val result = {{owner_name}}Helper.j{{vars.name|capitalize}}(cppbindObjId)
+      {%- if parent_class_info.vars.action == 'gen_interface' %}
+              val result = {{parent_name}}Helper.j{{vars.name|capitalize}}(cppbindObjId)
       {%- else %}
               val result = j{{vars.name|capitalize}}(cppbindObjId)
       {%- endif %}
@@ -1363,8 +1368,8 @@ var_property_getter_setter: &var_property_getter_setter
       {%-   set converter = rconverter.kotlin_to_jdk %}
           set(value) {
               {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
-      {%-   if owner_class.vars.action == 'gen_interface' %}
-              {{owner_name}}Helper.jSet{{vars.name|lower}}(cppbindObjId, {{converter.converted_name('value')}}, value)
+      {%-   if parent_class_info.vars.action == 'gen_interface' %}
+              {{parent_name}}Helper.jSet{{vars.name|lower}}(cppbindObjId, {{converter.converted_name('value')}}, value)
       {%-   else %}
               jSet{{vars.name|lower}}(cppbindObjId, {{converter.converted_name('value')}}, value)
       {%-   endif %}
@@ -1373,7 +1378,7 @@ var_property_getter_setter: &var_property_getter_setter
       {%-     set args = [namespace(name='value', converter=rconverter)] %}
       {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
       {%-     if invalid_args  %}
-      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args)) -%}
       {%-     endif %}
       {%-     for arg_idx in vars.keep_alive %}
       {%-       set converter = args[arg_idx - 1].converter %}
@@ -1386,7 +1391,7 @@ var_property_getter_setter: &var_property_getter_setter
       {%  endif %}
     private_external: |
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
-      {%- if owner_class.vars.action == 'gen_class' -%}
+      {%- if get_type_info(cxx.parent.type).vars.action == 'gen_class' -%}
       private external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
       {%-   if vars.action == 'gen_property_setter' %}
       private external fun jSet{{vars.name|lower}}(id: Long, value: {{rconverter.jdk.target_type_name}}, valueObj: Any?): Unit
@@ -1394,7 +1399,7 @@ var_property_getter_setter: &var_property_getter_setter
       {%- endif %}
     interface_external: |
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
-      {%- if owner_class.vars.action == 'gen_interface' %}
+      {%- if get_type_info(cxx.parent.type).vars.action == 'gen_interface' %}
 
       @JvmStatic
       external fun j{{vars.name|capitalize}}(id: Long): {{rconverter.jdk.target_type_name}}
@@ -1410,14 +1415,15 @@ var_property_getter_setter: &var_property_getter_setter
     glob_decl: *var_method_cxx_glob_decl
     body: |
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
-      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) %}
-      {%- set parent_type_name = owner_class_converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class_converter.kotlin.target_type_name %}
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) %}
+      {%- set parent_class_info = parent_class_converter.type_info %}
+      {%- set parent_type_name = parent_class_converter.kotlin.target_type_name + 'Helper' if parent_class_info.vars.action == 'gen_interface' else parent_class_converter.kotlin.target_type_name %}
       {%- set func_name="j%s"|format(vars.name|capitalize) %}
       {%- set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-      {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class_converter.jni_to_cxx -%}
+      {%- set this_converter = get_type_converter('std::shared_ptr<' + cxx.parent.type_name + '>').jni_to_cxx if parent_class_info.vars.shared_ref else parent_class_converter.jni_to_cxx -%}
       extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
-      {%- if owner_class.cxx.namespace %}
-          using namespace {{owner_class.cxx.namespace}};
+      {%- if cxx.parent.namespace %}
+          using namespace {{cxx.parent.namespace}};
       {%- endif %}
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -1429,8 +1435,8 @@ var_property_getter_setter: &var_property_getter_setter
       {%    set func_name="jSet%s"|format(vars.name|lower) %}
       {%-   set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
       extern "C" JNIEXPORT void {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{rconverter.jni.target_type_name}} value, ...){
-      {%- if owner_class.cxx.namespace %}
-          using namespace {{owner_class.cxx.namespace}};
+      {%- if cxx.parent.namespace %}
+          using namespace {{cxx.parent.namespace}};
       {%- endif %}
           validateID(id);
           {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -1452,10 +1458,12 @@ getter:
       - !include common_macros.yaml&templates
       - !include common_macros.yaml&utils
       - |
-        {%- do cppbind_helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
-        {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_getter(cxx, vars, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, setter|default(none)) -%}
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
-        {%- set owner_name = get_type_converter(owner_class.cxx.type).kotlin.target_type_name -%}
+        {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+        {%- set parent_class_info = parent_class_converter.type_info -%}
+        {%- set parent_name = parent_class_converter.kotlin.target_type_name -%}
         {% set result_converter = rconverter.jdk_to_kotlin %}
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
@@ -1466,8 +1474,8 @@ getter:
         {%- else %}{{vars.name}}
         {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}}
             get() {
-        {%- if owner_class.vars.action == 'gen_interface' %}
-                val result = {{owner_name}}Helper.j{{vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId)
+        {%- if parent_class_info.vars.action == 'gen_interface' %}
+                val result = {{parent_name}}Helper.j{{vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId)
         {%- else %}
                 val result = j{{vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId)
         {%- endif %}
@@ -1482,7 +1490,7 @@ getter:
         {%-   if setter is defined %}
         {%-     set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.cxx.args|map(attribute='name'))|list -%}
         {%-     if incorrect_nullable_args -%}
-        {%-       do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
+        {%-       do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.cxx.parent.displayname, setter.cxx.displayname)) -%}
         {%-     endif -%}
         {%-     set converter = get_type_converter(setter.cxx.args[0].type).kotlin_to_jdk %}
         {%-     if gen_override_keyword(cxx) %}
@@ -1492,8 +1500,8 @@ getter:
         {%-     else %}
             set(value) {
                 {{converter.snippet('value', nullable=vars.nullable_return)|indent(8)}}
-        {%-     if owner_class.vars.action == 'gen_interface' %}
-                {{owner_name}}Helper.j{{setter.vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId, {{converter.converted_name('value')}}, value)
+        {%-     if parent_class_info.vars.action == 'gen_interface' %}
+                {{parent_name}}Helper.j{{setter.vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId, {{converter.converted_name('value')}}, value)
         {%-     else %}
                 j{{setter.vars.name|capitalize}}{{get_template_postfix()}}(cppbindObjId, {{converter.converted_name('value')}}, value)
         {%-     endif %}
@@ -1501,7 +1509,7 @@ getter:
         {%-       set args = [namespace(name='value', converter=rconverter)] %}
         {%-       set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-       if invalid_args  %}
-        {%-         do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args)) -%}
+        {%-         do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args)) -%}
         {%-       endif %}
         {%-       for arg_idx in vars.keep_alive %}
         {%-         set converter = args[arg_idx - 1].converter %}
@@ -1518,7 +1526,7 @@ getter:
       - !include common_macros.yaml&templates
       - |
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
-        {%- if owner_class.vars.action == 'gen_class' -%}
+        {%- if get_type_info(cxx.parent.type).vars.action == 'gen_class' -%}
         private external fun j{{vars.name|capitalize}}{{get_template_postfix()}}(id: Long): {{rconverter.jdk.target_type_name}}
         {%-   if setter is defined %}
         private external fun j{{setter.vars.name|capitalize}}{{get_template_postfix()}}(id: Long, value: {{get_type_converter(setter.cxx.args[0].type).jdk.target_type_name}}, valueObj: Any?): Unit
@@ -1529,7 +1537,7 @@ getter:
       - !include common_macros.yaml&templates
       - |
         {%- set rconverter = get_type_converter(cxx.result_type) -%}
-        {%- if owner_class.vars.action == 'gen_interface' -%}
+        {%- if get_type_info(cxx.parent.type).vars.action == 'gen_interface' -%}
         @JvmStatic
         external fun j{{vars.name|capitalize}}{{get_template_postfix()}}(id: Long): {{rconverter.jdk.target_type_name}}
         {%-   if setter is defined %}
@@ -1578,13 +1586,14 @@ getter:
             }
         {%- endmacro -%}
         {%- set func_name="j%s%s"|format(vars.name|capitalize, get_template_postfix()) %}
-        {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) %}
-        {%- set parent_type_name = owner_class_converter.kotlin.target_type_name + 'Helper' if owner_class.vars.action == 'gen_interface' else owner_class_converter.kotlin.target_type_name %}
+        {%- set parent_class_converter = get_type_converter(cxx.parent.type) %}
+        {%- set parent_class_info = parent_class_converter.type_info %}
+        {%- set parent_type_name = parent_class_converter.kotlin.target_type_name + 'Helper' if parent_class_info.vars.action == 'gen_interface' else parent_class_converter.kotlin.target_type_name %}
         {%- set jni_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
-        {%- set this_converter = get_type_converter('std::shared_ptr<' + owner_class.cxx.type_name + '>').jni_to_cxx if owner_class.vars.shared_ref else owner_class_converter.jni_to_cxx %}
+        {%- set this_converter = get_type_converter('std::shared_ptr<' + cxx.parent.type_name + '>').jni_to_cxx if parent_class_info.vars.shared_ref else parent_class_converter.jni_to_cxx %}
         extern "C" JNIEXPORT {{rconverter.jni.target_type_name}} {{jni_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id){
-        {%- if owner_class.cxx.namespace %}
-            using namespace {{owner_class.cxx.namespace}};
+        {%- if cxx.parent.namespace %}
+            using namespace {{cxx.parent.namespace}};
         {%- endif %}
             validateID(id);
             {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}
@@ -1605,8 +1614,8 @@ getter:
         {%    set func_name="j%s%s"|format(setter.vars.name|capitalize, get_template_postfix()) %}
         {%-   set jni_setter_name = cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, func_name) %}
         extern "C" JNIEXPORT void {{jni_setter_name}}([[maybe_unused]] JNIEnv* env, jobject, jobjectid id, {{get_type_converter(setter.cxx.args[0].type).jni.target_type_name}} {{setter.cxx.args[0].name}}, ...){
-        {%- if owner_class.cxx.namespace %}
-            using namespace {{owner_class.cxx.namespace}};
+        {%- if cxx.parent.namespace %}
+            using namespace {{cxx.parent.namespace}};
         {%- endif %}
             validateID(id);
             {{this_converter.snippet('id', cxx_is_pointer=True)|indent(4)}}

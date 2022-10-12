@@ -26,15 +26,15 @@ exception_handling: |
 validations: |
   {%- macro run_method_validations() -%}
   {%-   set is_special_function = vars.name in (vars.hash_method, vars.equals_method, vars.tostring_method) %}
-  {%-   if is_special_function and owner_class.vars.action == 'gen_interface' -%}
-  {%-     do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(owner_class.cxx.displayname, cxx.displayname) -%}
+  {%-   if is_special_function and get_type_info(cxx.parent.type).vars.action == 'gen_interface' -%}
+  {%-     do Error.critical("It is not allowed to define hash/equals/toString functions in interface: {}.{}.").format(cxx.parent.displayname, cxx.displayname) -%}
   {%-   endif -%}
   {%-   if cxx.is_static and vars.return_value_policy == 'reference_internal' -%}
-  {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(owner_class.cxx.type_name, cxx.name)) -%}
+  {% do Error.critical("Cannot apply reference internal policy on a static method's return value: {}::{}".format(cxx.parent.type_name, cxx.name)) -%}
   {%-   endif -%}
   {%-   set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
   {%-   if incorrect_nullable_args -%}
-  {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
+  {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname)) -%}
   {%-   endif -%}
   {%- endmacro -%}
 
@@ -50,31 +50,31 @@ special_functions:
     - *_special_function_decls
     - !include common_macros.yaml&utils
     - |
-      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
       {%- set hash_decl = 'func hash(into hasher: inout Hasher)' -%}
       {%- set tostring_decl = 'var description: String' -%}
       {%- set equals_decl = 'static func == (lhs: Self, rhs: Self) -> Bool' -%}
       {%- set rconverter = get_type_converter(cxx.result_type) -%}
       {%- macro gen_hash_function() -%}
-      {%-   set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
+      {%-   set cxx_namespace = (cxx.parent.namespace.split('::')|map('capitalize')|join + '_') if cxx.parent.namespace else '' %}
       {%-   if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
       public {{gen_override_keyword(cxx, exclude_interface=true)}}{{hash_decl}} {
         var cppbindErr = CppBindCObject()
-        let result = {{cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
+        let result = {{cppbind_helper.get_c_func_name(cxx_namespace + parent_class_converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
         hasher.combine(result)
       }
       {%- endmacro -%}
       {%- macro gen_equals_function() -%}
-      {%-   set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
-      {%-   set class_name = owner_class_converter.swift.get_target_type_name(definition=True) -%}
+      {%-   set cxx_namespace = (cxx.parent.namespace.split('::')|map('capitalize')|join + '_') if cxx.parent.namespace else '' %}
+      {%-   set class_name = parent_class_converter.swift.get_target_type_name(definition=True) -%}
       {%-   if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
       public {{equals_decl|replace('Self', class_name)}} {
-      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
+      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + parent_class_converter.swift.target_type_name, vars.name, '') %}
         var cppbindErr = CppBindCObject()
         let result = {{c_func}}(lhs.cself, rhs.cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
@@ -82,12 +82,12 @@ special_functions:
       }
       {%- endmacro -%}
       {%- macro gen_str_function() -%}
-      {%-   set cxx_namespace = (owner_class.cxx.namespace.split('::')|map('capitalize')|join + '_') if owner_class.cxx.namespace else '' %}
+      {%-   set cxx_namespace = (cxx.parent.namespace.split('::')|map('capitalize')|join + '_') if cxx.parent.namespace else '' %}
       {%-   if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
       public {{gen_override_keyword(cxx, exclude_interface=true)}}{{tostring_decl}} {
-      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + owner_class_converter.swift.target_type_name, vars.name, '') %}
+      {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + parent_class_converter.swift.target_type_name, vars.name, '') %}
         var cppbindErr = CppBindCObject()
         let result = {{c_func}}(cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
@@ -111,10 +111,10 @@ constructor:
     - !include common_macros.yaml&templates
     - !include common_macros.yaml&utils
     - |
-      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
-      {%- set cxx_namespace = owner_class.cxx.namespace.split('::')|map('capitalize')|join %}
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+      {%- set cxx_namespace = cxx.parent.namespace.split('::')|map('capitalize')|join %}
       {%- macro gen_constructor_c_name(target_overloading_index=none) -%}
-      {%-   set target_type_name = owner_class_converter.swift.target_type_name -%}
+      {%-   set target_type_name = parent_class_converter.swift.target_type_name -%}
       {%-   set is_constructor = cxx.kind_name in ('constructor',  'constructor_template') -%}
       {%-   set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
       {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index}}

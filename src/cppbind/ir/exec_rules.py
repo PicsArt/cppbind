@@ -96,16 +96,6 @@ class Context(BaseContext):
             self.lookup_ctx_by_name(cutil.replace_template_choice(ancestor_node.full_displayname, self.template_choice))
             for ancestor_node in self.node.ancestor_nodes]
 
-    @property
-    def parent_context(self):
-        if self.node.parent.type == NodeType.CLANG_NODE:
-            # TODO update this when we will expose templates at node level
-            return self.lookup_ctx_by_name(
-                cutil.replace_template_choice(self.node.parent.full_displayname,
-                                              self.template_choice))
-        else:
-            return self.lookup_ctx_by_name(self.node.parent.full_displayname)
-
     def set_template_info(self, template_info):
         self.template_info = template_info
 

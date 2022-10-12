@@ -429,7 +429,7 @@ constructor:
     constructor_body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {% set comma = joiner(', ') %}
       @bind
@@ -442,7 +442,7 @@ constructor:
       {%-       set arg_type_info = get_type_info(arg.type) %}
       {%-       set enum_case_name = arg.default.split('::')|last %}
       {%-       if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-      {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} constructor argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
       {%-       else %} = {{arg_type_hint}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%-       endif -%}
       {%-     else -%}
@@ -459,7 +459,7 @@ constructor:
     include: *var_method_cxx_include
     body: |
       {%- set comma = joiner(', ') %}
-      {{get_type_converter(owner_class.cxx.type).python.target_type_name|decapitalize}}.def(py::init{%- if cxx.kind_name in ('constructor',  'constructor_template') -%}
+      {{get_type_converter(cxx.parent.type).python.target_type_name|decapitalize}}.def(py::init{%- if cxx.kind_name in ('constructor',  'constructor_template') -%}
       <{%-  for arg in cxx.args -%}
                                                                                           {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
       {%-   endfor -%}>()
@@ -469,7 +469,7 @@ constructor:
       {%-     for arg in cxx.args -%}
                                                                                           {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
       {%-     endfor -%}>
-      {%-   endif -%}(&{{owner_class.cxx.type_name}}::{{cxx.name}}){{')' if cxx.is_overloaded}}
+      {%-   endif -%}(&{{cxx.parent.type_name}}::{{cxx.name}}){{')' if cxx.is_overloaded}}
       {%- endif -%}
                                                                                           {{', ' if cxx.args}}
       {%- set comma = joiner(', ') -%}
@@ -482,7 +482,7 @@ constructor:
       {%- if vars.keep_alive -%}
       {%-   set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', cxx.args|length)|list %}
       {%-     if invalid_args -%}
-      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args|join(','))) -%}
       {%-     endif -%}
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
       {%- endif %});
@@ -495,7 +495,7 @@ method:
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
-      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) -%}
+      {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname) -%}
       {%- endif -%}
       {%- set _name = vars.name|to_snake_case %}
       {%- if cxx.name == vars.hash_method %}
@@ -523,7 +523,7 @@ method:
       {%-       set arg_type_info = get_type_info(arg.type) %}
       {%-       set enum_case_name = arg.default.split('::')|last %}
       {%-       if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-      {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
       {%-       else %} = {{arg_type_hint}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
       {%-       endif -%}
       {%-     else -%}
@@ -567,14 +567,14 @@ method:
         {%-   set _name = '__str__' %}
         {%- endif %}
         {%- set comma = joiner(', ') -%}
-        {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
+        {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def{{'_static' if cxx.is_static }}("{{_name}}"{%- if cxx.is_overloaded -%}
         , py::overload_cast<
         {%-   for arg in cxx.args -%}
         {{comma()}}{{get_type_info(arg.type).cxx.type_name}}
-        {%-   endfor -%}>(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
+        {%-   endfor -%}>(&{{cxx.parent.type_name}}::{{cxx.name}}{{', py::const_' if cxx.is_const}})
         {%- else -%}
-        , &{{owner_class.cxx.type_name}}::{{cxx.name}}
+        , &{{cxx.parent.type_name}}::{{cxx.name}}
         {%- endif -%}
         {%- if cxx.is_template -%}
         {{gen_template_instantiation(cxx, template_choice)}}
@@ -593,25 +593,25 @@ method:
         {%-     do Error.critical('Cannot apply keep alive policy for a static member function: {}.{}'.format(name, owner)) -%}
         {%-   endif -%}
         {%-   if invalid_args -%}
-        {%-     do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%-     do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args|join(','))) -%}
         {%-   endif -%}
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
         {%- endif -%}
         {%- if cxx.result_type.type_name != 'void' and vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
         {%-   set setter_var_name = 'value' -%}
         {%-   if vars.is_operator and vars.name == '__getitem__' and not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{owner_class.cxx.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.resolved_type.unqualified_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def("__setitem__", []({{cxx.parent.type_name}}& self,{%- for arg in cxx.args %} {{get_type_info(arg.type).cxx.type_name}} {{vars.argument_name.get(arg.name, arg.name)|to_snake_case}}{%- endfor -%}, {{cxx.result_type.resolved_type.unqualified_type_name}} {{setter_var_name}}){ self[{{cxx.args[0].name|to_snake_case}}] = {{setter_var_name}}; }
         {#-   This should go to shared macro -#}
         {%-   if vars.keep_alive -%}
         {%-     set args = cxx.args + [get_type_converter(cxx.result_type)] %}
         {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-     if invalid_args -%}
-        {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args|join(','))) -%}
         {%-     endif -%}
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
         {%-   endif -%});
         {%- endif %}
-  
+
 
 function:
   python_init:
@@ -631,7 +631,7 @@ function:
       - |
         {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list %}
         {%- if incorrect_nullable_args %}
-        {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), owner_class.cxx.displayname, cxx.displayname) %}
+        {%-   do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.").format(', '.join(incorrect_nullable_args), cxx.parent.displayname, cxx.displayname) %}
         {%- endif %}
         {%- set comma = joiner(', ') %}
         {% set rconverter = get_type_converter(cxx.result_type).python %}
@@ -647,7 +647,7 @@ function:
         {%-       set arg_type_info = get_type_info(arg.type) %}
         {%-       set enum_case_name = arg.default.split('::')|last %}
         {%-       if enum_case_name in arg_type_info.vars.enum_excluded_cases -%}
-        {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], owner_class.cxx.displayname, cxx.displayname)) -%}
+        {%-         do Error.warning("{} field of {} enum is mentioned as excluded field, so it cannot be used as a default value for {}.{} method argument. CppBind is skipping default value addition in target language wrappers.".format(enum_case_name, arg.default.split('::')[-2], cxx.parent.displayname, cxx.displayname)) -%}
         {%-       else %} = {{arg_type_hint}}.{{arg_type_info.vars.enum_case_names.get(enum_case_name, arg_type_info.vars.enum_case_name_prefix + enum_case_name)}}
         {%-       endif -%}
         {%-     else -%}
@@ -731,7 +731,7 @@ var_property_getter_setter: &var_property_getter_setter
     include: *var_getter_python_include
     properties: |
       {%- if not cxx.is_public -%}
-      {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(owner_class.cxx.displayname, cxx.displayname)) -%}
+      {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(cxx.parent.displayname, cxx.displayname)) -%}
       {%- endif -%}
       {%- set _name = vars.name|to_snake_case -%}
       {%- set rconverter = get_type_converter(cxx.result_type).python -%}
@@ -753,21 +753,21 @@ var_property_getter_setter: &var_property_getter_setter
     include: *var_getter_cxx_include
     body: |
       {%- set _name = vars.name|to_snake_case -%}
-      {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
+      {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
       {%- if vars.action == 'gen_property_setter' -%}
-      {{owner_class_converter.python.target_type_name|decapitalize}}.def_readwrite("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}
+      {{parent_class_converter.python.target_type_name|decapitalize}}.def_readwrite("{{_name}}", &{{cxx.parent.type_name}}::{{cxx.name}}
       {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif -%}
       {#-     This should go to shared macro -#}
       {%-     if vars.keep_alive -%}
       {%-       set args = [get_type_converter(cxx.result_type)] %}
       {%-       set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
       {%-       if invalid_args -%}
-      {%-         do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+      {%-         do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args|join(','))) -%}
       {%-       endif -%}
       , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
       {%-     endif -%});
       {%-   else -%}
-      {{owner_class_converter.python.target_type_name|decapitalize}}.def_readonly("{{_name}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
+      {{parent_class_converter.python.target_type_name|decapitalize}}.def_readonly("{{_name}}", &{{cxx.parent.type_name}}::{{cxx.name}}{%- if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
       {%- endif -%}
 
 property_getter: *var_property_getter_setter
@@ -781,8 +781,8 @@ getter:
       !concat
       - !include common_macros.yaml&templates
       - |
-        {%- do cppbind_helper.validate_getter(cxx, vars, owner_class, setter|default(none)) -%}
-        {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, owner_class, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_getter(cxx, vars, setter|default(none)) -%}
+        {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, setter|default(none)) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
         {{get_template_getter_name()}}
@@ -799,7 +799,7 @@ getter:
         {%- if setter is defined %}
         {%-   set incorrect_nullable_args = setter.vars.nullable_arg|reject('in', setter.cxx.args|map(attribute='name'))|list -%}
         {%-   if incorrect_nullable_args -%}
-        {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.owner_class.cxx.displayname, setter.cxx.displayname)) -%}
+        {%-     do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.cxx.parent.displayname, setter.cxx.displayname)) -%}
         {%-   endif %}
         
         @{{gen_name()|to_snake_case}}.setter
@@ -815,7 +815,7 @@ getter:
       !concat
       - !include common_macros.yaml&templates
       - |
-        {%- set owner_class_converter = get_type_converter(owner_class.cxx.type) -%}
+        {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
         {{get_template_getter_name()}}
@@ -823,18 +823,18 @@ getter:
         {%-   endif -%}
         {%- endmacro -%}
         {%- if setter is defined %}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{owner_class.cxx.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
-        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{owner_class.cxx.type_name}}::{{setter.cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{cxx.parent.type_name}}::{{setter.cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
         {#-   This should go to shared macro -#}
         {%-   if vars.keep_alive -%}
         {%-     set args = [get_type_converter(cxx.result_type)] %}
         {%-     set invalid_args = vars.keep_alive|select('lt', 1)|list + vars.keep_alive|select('gt', args|length)|list %}
         {%-     if invalid_args -%}
-        {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, owner_class.cxx.type_name, invalid_args|join(','))) -%}
+        {%-       do Error.critical('The following indices of keep_alive for {}.{} are out of range: {}'.format(cxx.name, cxx.parent.type_name, invalid_args|join(','))) -%}
         {%-     endif -%}
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
         {%-   endif -%});
         {%- else %}
-        {{owner_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{owner_class.cxx.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
         {%-     if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
         {%- endif %}

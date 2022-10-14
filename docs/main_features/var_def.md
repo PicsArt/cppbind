@@ -198,9 +198,9 @@ Now let's go through the key variables:
 - **include_cxx** - additional C++ includes added to generated C
     bindings.
 
-- **shared_ref** - variable to manage how the object is held. If set
-    to false, the generated binding creates a regular pointer, otherwise
-    a shared pointer.
+- **shared_ref** - variable to define how the underlying C++ object is managed. If set
+    to false, the underlying object is kept as a raw pointer, otherwise it is managed by a shared pointer.
+    More on memory management can be found [here](memory_management.md).
 
 - **template** - variable for template types/functions to specify all
     possible types for template parameters. More details are

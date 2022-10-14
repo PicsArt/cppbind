@@ -685,7 +685,7 @@ invalid data.
     When applying the **keep_alive policy**, strong reference cycles may
     occur. Let's assume we have two types, and each keeps a reference to
     the other. Applying the **keep_alive** policy for both, a strong
-    reference cycle will occurs. Currently, CppBind does not detect
+    reference cycle will occur. Currently, CppBind does not detect
     reference cycles, so it's up to users to be careful not to create them.
 
 !!! Note

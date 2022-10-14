@@ -265,6 +265,14 @@ class CXXClassElement(CXXElement):
 
         return list(walk(self.base_type_elements))
 
+    @cached_property
+    def base_types(self):
+        """
+        Returns:
+            List of base types.
+        """
+        return [element.type for element in self.base_type_elements]
+
 
 class CXXFunctionElement(CXXElement):
     """Wrapper type on clang function/method cursor"""

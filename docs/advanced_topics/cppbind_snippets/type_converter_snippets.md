@@ -101,6 +101,7 @@ variables:
     type when the type is a typedef on a pointer/reference. <br />
     **parent_type** - outer type information of the cxx type if
     the type is nested. <br />
+    **base_types** - a list containing base types cxx information. <br />
     **namespace** - namespace of the cxx type. <br />
     **template_arguments** - a list of namespaces containing the
     template argument cxx type and the kind. The kind field indicates

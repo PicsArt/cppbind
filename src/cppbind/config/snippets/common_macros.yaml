@@ -37,6 +37,32 @@ utils: |
   {%-     endif -%}
   {%-   endif -%}
   {%- endmacro -%}
+  
+
+converters: |
+  {%- macro object_to_shared_ref(name, target_name, nullable, cxx, converter_name) -%}
+  {%-   set pointee = cxx.resolved_type.unqualified_type_name -%}
+  {%-   set shared_ptr_conv = get_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
+  {%-   if cxx.is_lval_reference or cxx.is_pointer -%}
+  {%-     set access_op = '->' if cxx.is_pointer else '.' -%}
+  {%-     set directly_inherited_from_shared_this = cppbind_helper.is_inherited_from_enable_shared_from_this(cxx, True) -%}
+  {%-     if directly_inherited_from_shared_this or cppbind_helper.is_inherited_from_enable_shared_from_this(cxx) -%}
+  std::shared_ptr<{{pointee}}> {{name}}_shared_ptr{{' = '}}
+  {%-       if directly_inherited_from_shared_this -%}
+  {{name}}{{access_op}}shared_from_this();
+  {%-       else -%}
+  {%-         set static_or_dynamic_pointer_cast = 'dynamic_pointer_cast' if cxx.is_polymorphic else 'static_pointer_cast' -%}
+  std::{{static_or_dynamic_pointer_cast}}<{{pointee}}>({{name}}{{access_op}}shared_from_this());
+  {%-       endif -%}
+  {{(shared_ptr_conv|attr(converter_name)).snippet(name + '_shared_ptr', target_name=target_name, nullable=nullable)}}
+  {%-     else -%}
+  {%-       do Error.critical("It's not allowed to return a reference or a pointer of the types which are marked with shared_ref=True and are not inherited from std::enabled_shared_from_this: " + pointee) -%}
+  {%-     endif -%}
+  {%-   else %}
+  std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
+  {{(shared_ptr_conv|attr(converter_name)).snippet(name + '_shared_ptr', target_name=target_name, nullable=nullable)}}
+  {%-   endif %}
+  {%- endmacro -%}
 
 
 templates: |

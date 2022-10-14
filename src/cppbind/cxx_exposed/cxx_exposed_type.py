@@ -3,10 +3,11 @@
 # MIT-style license that can be found in the LICENSE file.
 
 from types import SimpleNamespace
+
 from cached_property import cached_property
 
-from cppbind.ir import ElementKind, TypeKind
 import cppbind.utils.clang as cutil
+from cppbind.ir import ElementKind, TypeKind
 from cppbind.ir.cxx_type import CXXType
 
 
@@ -40,8 +41,9 @@ class CXXExposedType:
 
     @property
     def type_name(self):
-        return cutil.replace_template_choice(self._cxx_type if isinstance(self._cxx_type, str) else self._cxx_type.type_name,
-                                             self._template_choice)
+        return cutil.replace_template_choice(
+            self._cxx_type if isinstance(self._cxx_type, str) else self._cxx_type.type_name,
+            self._template_choice)
 
     @property
     def pointee_type(self):
@@ -145,8 +147,9 @@ class CXXExposedType:
                     # retrieved from string parsing
                     argument = argument_spellings[ii]
                 if cutil.is_integral_type(cursor.type.get_canonical()):
-                    args.append(SimpleNamespace(type=int(cutil.replace_template_choice(argument, self._template_choice)),
-                                                kind=ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
+                    args.append(
+                        SimpleNamespace(type=int(cutil.replace_template_choice(argument, self._template_choice)),
+                                        kind=ElementKind.TEMPLATE_NON_TYPE_PARAMETER))
                 else:
                     # non-integral non type parameter, currently not supported
                     args.append(None)
@@ -186,7 +189,8 @@ class CXXExposedType:
 
     @property
     def is_pointer(self):
-        return self._cxx_type.is_pointer if isinstance(self._cxx_type, CXXType) else self._cxx_type.strip().endswith('*')
+        return self._cxx_type.is_pointer if isinstance(self._cxx_type, CXXType) else self._cxx_type.strip().endswith(
+            '*')
 
     @property
     def is_value_type(self):
@@ -200,7 +204,7 @@ class CXXExposedType:
     def resolved_type(self):
         """Returns pointee type if the type is not typedef on pointer, otherwise returns canonical type"""
         return self._raw_type if (isinstance(self._cxx_type, CXXType) and self.is_typedef and (
-                    self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) else self.pointee_type
+                self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) else self.pointee_type
 
     @property
     def is_const_qualified(self):
@@ -210,9 +214,19 @@ class CXXExposedType:
         return self.type_name.startswith('const')
 
     @property
+    def base_types(self):
+        """
+        Returns a list of base exposed types.
+        """
+        # redefining to add a template choice
+        return [] if isinstance(self._cxx_type, str) else [CXXExposedType(base_type, self._template_choice) for
+                                                           base_type in self._cxx_type.base_types]
+
+    @property
     def __pointee_name(self):
         return cutil.replace_template_choice(
-            self.pointee_type._cxx_type.spelling if isinstance(self._cxx_type, CXXType) else self.pointee_type._cxx_type,
+            self.pointee_type._cxx_type.spelling if isinstance(self._cxx_type,
+                                                               CXXType) else self.pointee_type._cxx_type,
             self._template_choice)
 
     @property

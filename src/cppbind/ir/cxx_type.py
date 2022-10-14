@@ -108,6 +108,18 @@ class CXXType:
         """Checks the type is unsigned char"""
         return self.__clang_type.get_canonical().kind == cli.TypeKind.UCHAR
 
+    @property
+    def base_types(self):
+        """Returns a list of base types."""
+        _base_types = []
+        decl_cursor = self.get_declaration()
+        if decl_cursor:
+            for base_specifier in decl_cursor.get_children():
+                if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+                    _base_types.append(CXXType(base_specifier.type))
+
+        return _base_types
+
     def __getattr__(self, prop):
         """Delegate all missing methods/properties to the underlying clang Type object"""
 

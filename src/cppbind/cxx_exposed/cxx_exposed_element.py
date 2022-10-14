@@ -106,8 +106,7 @@ class CXXClassExposedElement(CXXExposedElement):
             List of base types exposed elements with template choice.
         """
         # specializing this in exposed type due to template_choice
-        return [CXXExposedType(element.type, self._template_choice) for element in
-                self._cxx_element.base_type_elements]
+        return [CXXExposedType(base, self._template_choice) for base in self._cxx_element.base_types]
 
     @cached_property
     def ancestors(self):

@@ -17,6 +17,7 @@ nav:
     - Exception handling: main_features/exception_handling.md
     - Templates: main_features/templates.md
     - Operator Overloading: main_features/operators.md
+    - Memory management: main_features/memory_management.md
     - Standard library types: main_features/standard_library_types.md
     - Generation instructions: main_features/gen_actions.md
     - Variable definitions: main_features/var_def.md

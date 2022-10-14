@@ -66,3 +66,12 @@ def relative_package(namespace1, namespace2):
         ii += 1
 
     return namespace1[end_idx:]
+
+
+def is_inherited_from_enable_shared_from_this(cxx, directly=False):
+    hase_direct_base = any('enable_shared_from_this' in base.type_name for base in cxx.base_types)
+    if directly or hase_direct_base:
+        return hase_direct_base
+    if cxx.base_types:
+        return any(is_inherited_from_enable_shared_from_this(base) for base in cxx.base_types)
+    return False

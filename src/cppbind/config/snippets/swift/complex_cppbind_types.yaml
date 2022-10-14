@@ -82,65 +82,62 @@ $Object:
       {%- else %}
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}static_cast<{{pointee}}*>({{name}}.ptr);
       {%- endif %}
-    cxx_to_c: |
-      {%- if value_policy is not defined -%}
-      {%-   do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
-      {%- endif -%}
-      {%- set pointee = cxx.resolved_type.unqualified_type_name -%}
-      {%- set is_nullable = nullable|default(False) -%}
-      {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
-      {%- set this_converter = get_type_converter(cxx) -%}
-      {%- if vars.shared_ref -%}
-      {%-   if not cxx.is_value_type -%}
-      {%-     do Error.critical('shared_ref variable is set for ' + pointee + '. In this case cppbind supports object return only by value or wrapped into shared_ptr') -%}
-      {%-   else %}
-      std::shared_ptr<{{pointee}}> {{name}}_shared_ptr = std::make_shared<{{pointee}}>({{name}});
-      {%-     set shared_ptr_conv = get_type_converter('std::shared_ptr<{}>'.format(pointee)) -%}
-      {{shared_ptr_conv.cxx_to_c.snippet(name + '_shared_ptr', target_name=target_name, nullable=is_nullable)}}
-      {%-   endif %}
-      {%- else %}
-      char* type_{{name}} = {{'strdup({})'.format(this_converter.cxx_type_name_global.snippet()) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
-      {%-   if cxx.is_polymorphic and descendants %}
-      {%-     macro demangle() -%}
-      const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
-      int status = 0;
-      char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
-      if (status == 0) {
-          type_{{name}} = demangled_{{name}};
-      } else {
-          type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
-      }
-      {%-     endmacro %}
-      {%-     if is_nullable %}
-      if ({{name}}) {
-          {{demangle()|indent(4)}}
-      } else {
-          type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
-      }
-      {%-     else %}
-      {{demangle()}}
-      {%-     endif %}
-      {%-   endif %}
-      {%-   macro apply_rv_policy() -%}
-      {%-     if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
-      {%-       if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
-      {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
-      {%-       elif value_policy in ('automatic_reference', 'reference', 'reference_internal', 'automatic', 'take_ownership') -%} {{name}}
-      {%-       endif -%}
-      {%-     elif cxx_is_lval_reference -%}
-      {%-       if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
-      {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
-      {%-       elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
-      {%-       endif -%}
-      {%-     else -%}
-      {%-       if value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
-      {%-       else -%} new {{pointee}}({{name}})
-      {%-       endif -%}
-      {%-     endif -%}
-      {%-   endmacro %}
-      auto value_ptr_{{name}} = {{apply_rv_policy() if not cxx.is_const_qualified else 'const_cast<{0}*>({1})'.format(pointee, apply_rv_policy())}};
-      {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if cxx.is_polymorphic else 'value_ptr_' + name}}};
-      {%- endif %}
+    cxx_to_c:
+      !concat
+      - !include common_macros.yaml&converters
+      - |
+        {%- if value_policy is not defined -%}
+        {%-   do Error.critical('Return value policy is not provided for type: ' + cxx.type_name) -%}
+        {%- endif -%}
+        {%- set pointee = cxx.resolved_type.unqualified_type_name -%}
+        {%- set is_nullable = nullable|default(False) -%}
+        {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
+        {%- set this_converter = get_type_converter(cxx) -%}
+        {%- if vars.shared_ref -%}
+        {{object_to_shared_ref(name, target_name, is_nullable, cxx, 'cxx_to_c')}}
+        {%- else %}
+        char* type_{{name}} = {{'strdup({})'.format(this_converter.cxx_type_name_global.snippet()) if not (cxx.is_polymorphic and descendants) else 'nullptr'}};
+        {%-   if cxx.is_polymorphic and descendants %}
+        {%-     macro demangle() -%}
+        const char * name_{{name}} = typeid({{'*' if cxx_is_pointer or cxx.canonical_type.is_pointer}}{{name}}).name();
+        int status = 0;
+        char* demangled_{{name}} = abi::__cxa_demangle(name_{{name}}, NULL, NULL, &status);
+        if (status == 0) {
+            type_{{name}} = demangled_{{name}};
+        } else {
+            type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
+        }
+        {%-     endmacro %}
+        {%-     if is_nullable %}
+        if ({{name}}) {
+            {{demangle()|indent(4)}}
+        } else {
+            type_{{name}} = strdup({{this_converter.cxx_type_name_global.snippet()}});
+        }
+        {%-     else %}
+        {{demangle()}}
+        {%-     endif %}
+        {%-   endif %}
+        {%-   macro apply_rv_policy() -%}
+        {%-     if cxx_is_pointer or cxx.canonical_type.is_pointer -%}
+        {%-       if value_policy == 'copy' -%} new {{pointee}}(*{{name}})
+        {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move(*{{name}}))
+        {%-       elif value_policy in ('automatic_reference', 'reference', 'reference_internal', 'automatic', 'take_ownership') -%} {{name}}
+        {%-       endif -%}
+        {%-     elif cxx_is_lval_reference -%}
+        {%-       if value_policy in ('copy', 'automatic', 'automatic_reference') -%} new {{pointee}}({{name}})
+        {%-       elif value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+        {%-       elif value_policy in ('reference', 'take_ownership', 'reference_internal') -%} &{{name}}
+        {%-       endif -%}
+        {%-     else -%}
+        {%-       if value_policy == 'move' -%} new {{pointee}}(std::move({{name}}))
+        {%-       else -%} new {{pointee}}({{name}})
+        {%-       endif -%}
+        {%-     endif -%}
+        {%-   endmacro %}
+        auto value_ptr_{{name}} = {{apply_rv_policy() if not cxx.is_const_qualified else 'const_cast<{0}*>({1})'.format(pointee, apply_rv_policy())}};
+        {{target_type_name}} {{target_name}} = {type_{{name}}, {{'dynamic_cast<void*>(value_ptr_{})'.format(name) if cxx.is_polymorphic else 'value_ptr_' + name}}};
+        {%- endif %}
     swift_to_sc: |
       {%- if nullable|default(False) -%}
       let {{target_name}} = {{name}}?.cself ?? CppBindCObject(type: nil, ptr: nil){# when the swift object is null we pass CppBindCObject with nulls to not deallocate the type name in c#}

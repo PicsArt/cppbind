@@ -25,6 +25,15 @@ assert(square.length == 5.0)
 assert(square.perimeter() == 20.0)
 // [multi-inheritance-usage-end]
 
+// [enable-shared-from-this-usage-start]
+val circle = Circle.create(2.0)
+assert(circle.area() * 4 == circle.incrementRadius(2.0).area())
+
+val regularTriangle = RegularTriangle(10.0)
+assert(regularTriangle.area() * 4 == regularTriangle.incrementSide(10.0).area())
+assert(regularTriangle.area() * 4 == regularTriangle.multiplySide(2.0).area())
+// [enable-shared-from-this-usage-end]
+
 
 // other test cases
 val gf = GeometricFigure(square)

@@ -19,7 +19,9 @@ from examples_lib.inheritance import (
     DoctorInfo,
     GoodDoctor,
     GoodYoungDoctor,
-    GoodOldDoctor
+    GoodOldDoctor,
+    Circle,
+    RegularTriangle
 )
 
 # [simple-inheritance-usage-start]
@@ -42,6 +44,15 @@ assert square.area == 25.0
 assert square.length == 5.0
 assert square.perimeter() == 20
 # [multi-inheritance-usage-end]
+
+# [enable-shared-from-this-usage-start]
+circle = Circle.create(2.0)
+assert(circle.area() * 4 == circle.increment_radius(2.0).area())
+
+regularTriangle = RegularTriangle(10.0)
+assert(regularTriangle.area() * 4 == regularTriangle.increment_side(10.0).area())
+assert(regularTriangle.area() * 4 == regularTriangle.multiply_side(2.0).area())
+# [enable-shared-from-this-usage-end]
 
 # other test cases
 gf = GeometricFigure(square)

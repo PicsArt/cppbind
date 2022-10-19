@@ -203,7 +203,7 @@ class CXXExposedType:
     @property
     def resolved_type(self):
         """Returns pointee type if the type is not typedef on pointer, otherwise returns canonical type"""
-        return self._raw_type if (isinstance(self._cxx_type, CXXType) and self.is_typedef and (
+        return self.canonical_pointee_type if (isinstance(self._cxx_type, CXXType) and self.is_typedef and (
                 self.canonical_type.is_pointer or self.canonical_type.is_lval_reference)) else self.pointee_type
 
     @property
@@ -230,7 +230,7 @@ class CXXExposedType:
             self._template_choice)
 
     @property
-    def _raw_type(self):
+    def canonical_pointee_type(self):
         t = self
         if self.is_typedef or not self._is_unexposed:
             t = self.canonical_type

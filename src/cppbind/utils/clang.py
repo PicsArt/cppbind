@@ -177,7 +177,7 @@ def is_templated(type_):
     if isinstance(type_, cli.Type):
         return type_.get_num_template_arguments() != -1
     elif isinstance(type_, cli.Cursor):
-        is_parent_template = type_.lexical_parent and is_templated(type_.lexical_parent)
+        is_parent_template = is_templated(type_.lexical_parent) if type_.lexical_parent else False
         return type_.kind in (cli.CursorKind.CLASS_TEMPLATE,
                               cli.CursorKind.FUNCTION_TEMPLATE) or is_parent_template
 

@@ -34,6 +34,7 @@ file:
       #include <memory>
       #include <type_traits>
       #include "{{path.relpath(vars.h_file_fullname, vars.out_prj_dir)}}"
+      {{cxx_helper_includes|format_list('#include "{}"')|join(new_line)}}
       {{include}}
       {%- if glob_decl %}
 
@@ -62,7 +63,7 @@ file:
       #ifndef _{{file_rel_path_id}}_
       #define _{{file_rel_path_id}}_
       {% set include_format = '#include <{}>' if vars.is_c_wrapper_external else '#include "{}"' %}
-      {{cxx_helper_includes|format_list(include_format)|join(new_line)}}
+      {{c_helper_includes|format_list(include_format)|join(new_line)}}
       {{include}}
       #include <stdbool.h>
 

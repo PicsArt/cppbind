@@ -2,8 +2,8 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_binary", "swift_library
 
 cc_library(
     name = "sw_examples_wrapper",
-    srcs = glob(["wrappers/**/*.c*"]),
-    hdrs = glob(["wrappers/**/*.h*"]),
+    srcs = glob(["wrappers/**/*.c*", "wrappers/**/*.hpp"]),
+    hdrs = glob(["wrappers/**/*.h"]),
     tags = ["swift_module=CWrapper"],
     visibility = ["//visibility:public"],
     deps = [

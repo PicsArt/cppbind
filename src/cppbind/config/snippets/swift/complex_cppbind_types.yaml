@@ -75,7 +75,7 @@ $Object:
       auto{{'&' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}} {{target_name}} = {{'*' if not (cxx_is_pointer or cxx.canonical_type.is_pointer)}}{{target_name}}_shared_ptr.get();
       {%- elif descendants %}
       {%-   set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
-      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}({{name}});
       {%- if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
       {%- endif %}
@@ -174,12 +174,19 @@ $Object:
     cxx_obj_recover: |
       {%- set converter = get_type_converter(cxx) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{converter.cxx_type_name_global.snippet()}}) == 0)
               return static_cast<{{cxx.resolved_type.unqualified_type_name}}*>({{name}}.ptr);
-          {%- for descendant in descendants %}
-          else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-              return static_cast<{{descendant}}*>({{name}}.ptr);
+          {%- for desc_converter in desc_converters %}
+          else if (strcmp({{name}}.type, {{desc_converter.cxx_type_name_global.snippet()}}) == 0)
+          {#- `has_template_descendant` check is used for handling extra descnendants in case of templates #}
+          {%-   if has_template_descendant %}
+              return cppbind::safe_cast<{{descendants[loop.index - 1]}}, {{cxx.resolved_type.unqualified_type_name}}>({{name}}.ptr);
+          {%-   else %}
+              return static_cast<{{descendants[loop.index - 1]}}*>({{name}}.ptr);
+          {%-   endif %}
           {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
@@ -192,21 +199,25 @@ $Object:
       {{'CPPBIND_' + ((cxx_namespace + '_' if cxx_namespace else '') + get_type_converter(cxx).swift.target_type_name|replace('.', '_'))|upper}}
     swift_obj_construction: |
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
+      {%- set obj_converter = get_type_converter(cxx).swift -%}
       let typeName = String(cString: {{name}}.type)
+      var obj : {{'Any' if has_template_descendant else obj_converter.target_type_name}}
       switch(typeName) {
-      {%- for descendant in descendants %}
-      {%-   set converter = get_type_converter(descendant) %}
-      {%-   set type_name = converter.swift.get_target_type_name(interface_class=converter.type_info.vars.action == 'gen_interface') %}
+      {%- for desc_converter in desc_converters %}
+      {%-   set type_name = desc_converter.swift.get_target_type_name(interface_class=desc_converter.type_info.vars.action == 'gen_interface') %}
       case({{type_name}}.cppbindCxxTypeName):
-        return {{type_name}}({{name}}, owner)
+        obj = {{type_name}}({{name}}, owner)
       {%- endfor %}
       default:
         {%- set type_name = custom.namespace + vars.interface_impl_class_name if vars.action == 'gen_interface' else vars.name %}
-        return {{type_name + custom.tpostfix}}({{name}}, owner)
+        obj = {{type_name + custom.tpostfix}}({{name}}, owner)
       }
+      return obj{{' as! ' + obj_converter.target_type_name if has_template_descendant}}
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.resolved_type.unqualified_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.canonical_pointee_type.unqualified_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
     swift_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepCppBindReference({{reference}})
@@ -538,7 +549,7 @@ std::shared_ptr:
       {%- set is_nullable = nullable|default(False) %}
       {%- macro gen_cast_block() -%}
       {%-   if obj_descendants -%}
-      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).swift.target_type_name|replace('.', '_')}}({{name}});
+      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{object_converter.swift.target_type_name|replace('.', '_')}}({{name}});
       {%-   else -%}
       {{target_name}} = *static_cast<std::shared_ptr<{{pointee}}>*>({{name}}.ptr);
       {%-   endif -%}
@@ -608,12 +619,19 @@ std::shared_ptr:
     cxx_obj_recover: |
       {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- set descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
       if ({{name}}.ptr) {
           if (strcmp({{name}}.type, {{object_converter.cxx_type_name_global.snippet()}}) == 0)
               return *static_cast<std::shared_ptr<{{template_args[0].resolved_type.unqualified_type_name}}>*>({{name}}.ptr);
-          {%- for descendant in descendants %}
-          else if (strcmp({{name}}.type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-              return *static_cast<std::shared_ptr<{{descendant}}>*>({{name}}.ptr);
+          {%- for desc_converter in desc_converters %}
+          else if (strcmp({{name}}.type, {{desc_converter.cxx_type_name_global.snippet()}}) == 0)
+          {#- `has_template_descendant` check is used for handling extra descnendants in case of templates #}
+          {%-   if has_template_descendant %}
+              return cppbind::safe_shared_ptr_cast<{{descendants[loop.index - 1]}}, {{template_args[0].resolved_type.unqualified_type_name}}>({{name}}.ptr);
+          {%-   else %}
+              return *static_cast<std::shared_ptr<{{descendants[loop.index - 1]}}>*>({{name}}.ptr);
+          {%-   endif %}
           {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << {{name}}.type << std::endl;
@@ -623,7 +641,7 @@ std::shared_ptr:
       return nullptr;
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(template_args[0].resolved_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
+      {{'std::shared_ptr<{}>'.format(template_args[0].canonical_pointee_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).swift.target_type_name|replace('.', '_')}}(CppBindCObject{{' ' + name if not is_fwd_decl|default(False)}})
     cxx_include:
       !concat
       - !include common_macros.yaml&templates

@@ -30,8 +30,8 @@ cc_library(
 
 cc_library(
     name = "hello_user_swift_wrapper",
-    srcs = glob(["swift/**/*.c*"]),
-    hdrs = glob(["swift/**/*.h*"]),
+    srcs = glob(["swift/**/*.c*", "swift/**/*.hpp"]),
+    hdrs = glob(["swift/**/*.h"]),
     tags = ["swift_module=CWrapper"],
     visibility = ["//visibility:public"],
     deps = [

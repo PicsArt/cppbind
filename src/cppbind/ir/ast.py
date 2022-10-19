@@ -90,8 +90,11 @@ class Node(ABC):
         # if signature is empty (e.g. for unexposed types) we assume the node to be not searchable/reusable
         # existence of unexposed cursor types can be dependant on platform (we have many of them on linux)
         if node.signature:
-            # put node in node map to be able to find node by its name
-            node.root._node_map[node.signature] = node
+            # keep the node with template_type_name (type name without template parameters) for lookups
+            if node.type == NodeType.CLANG_NODE and node.is_class_or_struct and node.cxx_element.is_templated:
+                node.root._node_map[cutil.template_type_name(node.signature)] = node
+            else:
+                node.root._node_map[node.signature] = node
 
     @cached_property
     @allowed_after_build
@@ -290,8 +293,17 @@ class CXXNode(ClangNode):
         base_type_specifier_nodes = []
         for base_specifier in self.cxx_element.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
-                # used canonical type spelling to support typedef cases
-                base_node = self.root.find_node(base_specifier.type.get_canonical().spelling)
+                base_type = base_specifier.type
+                # lookup is done with template_type_name (without template parameters)
+                type_name = cutil.template_type_name(base_type)
+                # lookup with type spelling, then with canonical type name spelling
+                # (to support template usages with namespace)
+                base_node = self.root.find_node(type_name)
+                if base_node is None:
+                    # canonical type spelling is used in case of typedefs
+                    canonical_type_name = cutil.template_type_name(base_type.get_canonical())
+                    base_node = self.root.find_node(canonical_type_name)
+
                 if base_node:
                     base_type_specifier_nodes.append(base_node)
 

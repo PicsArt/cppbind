@@ -4,7 +4,7 @@
 
 - file:
     files_glob: 
-      - "{{[vars.cxx_helpers_dir, '**/*.h*'] | path_join}}"
+      - "{{[vars.cxx_helpers_dir, '**/*.hpp'] | path_join}}"
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}
       {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
@@ -12,6 +12,20 @@
 
     variables:
       cxx_helper_includes: |
+        {% set filename, file_extension = path.splitext(file_name) %}
+        {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
+        {{[vars.cxx_helpers_out_rel_path, file_rel_name]|path_join}}
+
+- file:
+    files_glob:
+      - "{{[vars.cxx_helpers_dir, '**/*.h'] | path_join}}"
+    copy_to: |
+      {% set filename, file_extension = path.splitext(file_name) %}
+      {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
+      {{path.join(vars.cxx_helpers_out_dir, file_rel_name)}}
+
+    variables:
+      c_helper_includes: |
         {% set filename, file_extension = path.splitext(file_name) %}
         {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
         {{[vars.cxx_helpers_out_rel_path, file_rel_name]|path_join}}

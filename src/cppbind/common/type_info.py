@@ -8,6 +8,7 @@ from cached_property import cached_property
 
 from cppbind.cxx_exposed import CXXExposedType, CXXRunnerExposedType
 from cppbind.ir.exec_rules import RunRule
+from cppbind.utils.clang import replace_template_choice
 
 
 @lru_cache(maxsize=512)
@@ -20,10 +21,8 @@ class TypeInfo:
     def __init__(self, runner, cxx_exposed_type):
         self._runner = runner
         self._cxx_exposed_type = cxx_exposed_type
-        # get raw type to be able to find it's context(cxx type might be a typedef, pointer etc.)
-        self._raw_type = cxx_exposed_type._raw_type
-        # get type context for cxx type
-        self._type_ctx = runner.get_context(self._raw_type.unqualified_type_name)
+        # get canonical_pointee_type to be able to find it's context(cxx type might be a typedef, pointer etc.)
+        self._type_ctx = runner.get_context(cxx_exposed_type.canonical_pointee_type.unqualified_type_name)
 
     @cached_property
     def cxx(self):
@@ -51,5 +50,17 @@ class TypeInfo:
 
     @property
     def descendants(self):
-        return [descendant.full_displayname for descendant in self._type_ctx.node.descendants] \
-            if (self._type_ctx and self._type_ctx.node.descendants is not None) else None
+        if self._type_ctx is None or self._type_ctx.node.descendants is None:
+            return None
+
+        _descendants = []
+        for descendant_node in self._type_ctx.node.descendants:
+            if descendant_node.cxx_element.is_templated:
+                template_infos = RunRule._get_template_infos(descendant_node)
+                for template_info in template_infos:
+                    _descendants.append(replace_template_choice(descendant_node.full_displayname,
+                                                                template_info.choice))
+            else:
+                _descendants.append(descendant_node.full_displayname)
+
+        return _descendants

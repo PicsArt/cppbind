@@ -24,6 +24,7 @@ from cppbind.ir.ast import (
 )
 from cppbind.parser.cppbind_api_parser import APIParser
 from cppbind.utils import get_android_ndk_sysroot
+import clang.cindex as cli
 import cppbind.utils.clang as cutil
 
 try:
@@ -195,8 +196,14 @@ class CppBindIRBuilder:
 
     def __get_node(self, cursor):
         """Private method to create a new cxx node or return the cached one if it has been created earlier"""
-        cursor_signature = cutil.get_signature(cursor)
-        node = self.ir.find_node(cursor_signature)
+        lookup_name = cutil.get_signature(cursor)
+        # lookup by type names without template parameters in case of templated classes/structs
+        if cutil.is_templated(cursor.type) and cursor.kind in (cli.CursorKind.STRUCT_DECL,
+                                                               cli.CursorKind.CLASS_DECL,
+                                                               cli.CursorKind.STRUCT_DECL,
+                                                               cli.CursorKind.CXX_BASE_SPECIFIER):
+            lookup_name = cutil.template_type_name(lookup_name)
+        node = self.ir.find_node(lookup_name)
         if node is not None:
             return node
 

@@ -20,10 +20,6 @@ namespace cppbind::example {
  * __API__
  * action: gen_interface
  * package: templates
- * descendants:
- *  - cppbind::example::Stack<cppbind::example::Project>
- *  - cppbind::example::Stack<cppbind::example::Task>
- *  - cppbind::example::Stack<cppbind::example::Number<int>>
  */
 class Container {
 public:

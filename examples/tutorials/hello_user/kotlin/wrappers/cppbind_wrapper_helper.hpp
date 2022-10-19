@@ -247,5 +247,22 @@ inline jobject boolToObject(JNIEnv* env, jboolean val) {
     jmethodID constructorId = env->GetMethodID(cls, "<init>", "(Z)V");
     return env->NewObject(cls, constructorId, val);
 }
+
+template <class Descendant, class Base>
+inline auto safe_cast(void* obj_ptr) {
+    if constexpr (std::is_convertible<Descendant*, Base*>::value)
+        return static_cast<Descendant*>(obj_ptr);
+    else
+        return nullptr;
+}
+
+template <class Descendant, class Base>
+inline auto safe_shared_ptr_cast(void* obj_ptr) {
+    if constexpr (std::is_convertible<Descendant*, Base*>::value)
+        return *static_cast<std::shared_ptr<Descendant>*>(obj_ptr);
+    else
+        return nullptr;
+}
+
 } // end of cppbind
 #endif //__WRAPPER_HELPER_HPP__

@@ -99,6 +99,7 @@ variables:
     information of the given type. <br />
     **resolved_type** - cxx pointee type or canonical
     type when the type is a typedef on a pointer/reference. <br />
+    **canonical_pointee_type** - cxx pointee type of the canonical type. <br />
     **parent_type** - outer type information of the cxx type if
     the type is nested. <br />
     **base_types** - a list containing base types cxx information. <br />

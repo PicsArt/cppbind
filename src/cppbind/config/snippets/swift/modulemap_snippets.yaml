@@ -18,7 +18,7 @@ file:
 
           explicit module {{vars.c_wrapper_lib_name.split('.')[-1]}} {
               {{header|string|indent(8)}}
-              {{cxx_helper_includes|format_list('header "{}"')|join(new_line)|indent(8)}}
+              {{c_helper_includes|format_list('header "{}"')|join(new_line)|indent(8)}}
               export *
           }
       }{{new_line}}

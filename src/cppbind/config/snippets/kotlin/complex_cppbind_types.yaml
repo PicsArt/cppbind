@@ -73,7 +73,7 @@ $Object:
       {%- else %}
       {%-   if descendants %}
       {%-     set result_target_name = target_name + ('' if cxx_is_pointer or cxx.canonical_type.is_pointer else '_ptr') %}
-      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
+      {{pointee}}* {{result_target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).kotlin.target_type_name|replace('.', '_')}}({{name}});
       {%-     if not (cxx_is_pointer or cxx.canonical_type.is_pointer) %}
       auto& {{target_name}} = *{{result_target_name}};
       {%-     endif %}
@@ -171,14 +171,21 @@ $Object:
     cxx_obj_recover: |
       {%- set converter = get_type_converter(cxx) -%}
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
       auto cppbind_obj_{{name}} = reinterpret_cast<CppBindCObject*>({{name}});
       auto cppbind_obj_{{name}}_ptr = cppbind_obj_{{name}} ? cppbind_obj_{{name}}->ptr : nullptr;
       if (cppbind_obj_{{name}}_ptr) {
           if (strcmp(cppbind_obj_{{name}}->type, {{converter.cxx_type_name_global.snippet()}}) == 0)
               return static_cast<{{cxx.resolved_type.unqualified_type_name}}*>(cppbind_obj_{{name}}_ptr);
-      {%- for descendant in descendants %}
-          else if (strcmp(cppbind_obj_{{name}}->type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-              return static_cast<{{descendant}}*>(cppbind_obj_{{name}}_ptr);
+      {%- for desc_converter in desc_converters %}
+          else if (strcmp(cppbind_obj_{{name}}->type, {{desc_converter.cxx_type_name_global.snippet()}}) == 0)
+      {#- `has_template_descendant` check is used for handling extra descnendants in case of templates #}
+      {%-   if has_template_descendant %}
+              return cppbind::safe_cast<{{descendants[loop.index - 1]}}, {{cxx.resolved_type.unqualified_type_name}}>(cppbind_obj_{{name}}_ptr);
+      {%-   else %}
+              return static_cast<{{descendants[loop.index - 1]}}*>(cppbind_obj_{{name}}_ptr);
+      {%-   endif %}
       {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << cppbind_obj_{{name}}->type << std::endl;
@@ -191,19 +198,23 @@ $Object:
       {{'CPPBIND_' + ((cxx_namespace + '_' if cxx_namespace else '') + get_type_converter(cxx).kotlin.target_type_name|replace('.', '_'))|upper}}
     kotlin_obj_construction: |
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
-      {%- set type_name = get_type_converter(cxx).kotlin.get_target_type_name(interface_class=vars.action=='gen_interface') -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
+      {%- set converter = get_type_converter(cxx).kotlin -%}
+      {%- set type_name = converter.get_target_type_name(interface_class=vars.action=='gen_interface') -%}
       val {{name}}Type = jGettypebyid({{name}})
+      val obj : {{'Any' if has_template_descendant else converter.target_type_name}}
       when ({{name}}Type) {
-      {%- for descendant in descendants %}
-      {%-   set desc_converter = get_type_converter(descendant) -%}
+      {%- for desc_converter in desc_converters %}
       {%-   set desc_type_name = desc_converter.kotlin.get_target_type_name(interface_class=desc_converter.type_info.vars.action == 'gen_interface') %}
-          {{desc_type_name}}.cppbindCxxTypeName -> return {{desc_type_name}}(CppBindObject({{name}}, owner))
+          {{desc_type_name}}.cppbindCxxTypeName -> obj = {{desc_type_name}}(CppBindObject({{name}}, owner))
       {%- endfor %}
-          else -> return {{type_name}}(CppBindObject({{name}}, owner))
+          else -> obj = {{type_name}}(CppBindObject({{name}}, owner))
       }
+      return obj{{' as ' + converter.target_type_name if has_template_descendant}}
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{cxx.resolved_type.unqualified_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
+      {{cxx.canonical_pointee_type.unqualified_type_name}}* recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(cxx).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
     kotlin_ref_internal: |
       {%- if not nullable -%}
       {{name}}.keepCppBindReference({{reference}})
@@ -572,7 +583,7 @@ std::shared_ptr:
       {%- set cxx_namespace = object_converter.type_info.cxx.namespace.split('::')|map('capitalize')|join %}
       {%- macro gen_cast_block() -%}
       {%-   if obj_descendants -%}
-      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(pointee).kotlin.target_type_name|replace('.', '_')}}({{name}});
+      {{target_name}} = recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{object_converter.kotlin.target_type_name|replace('.', '_')}}({{name}});
       {%-   else -%}
       auto cppbind_obj_{{name}} = reinterpret_cast<CppBindCObject*>({{name}});
       auto cppbind_obj_{{name}}_ptr = cppbind_obj_{{name}} ? cppbind_obj_{{name}}->ptr : nullptr;
@@ -644,14 +655,21 @@ std::shared_ptr:
     cxx_obj_recover: |
       {%- set object_converter = get_type_converter(template_args[0]) -%}
       {%- set descendants = object_converter.type_info.vars.descendants if object_converter.type_info.vars.descendants is not none else object_converter.type_info.descendants -%}
+      {%- set desc_converters = descendants|type_converter -%}
+      {%- set has_template_descendant = desc_converters|selectattr('type_info.cxx.is_template', 'equalto', True)|list|length != 0 -%}
       auto cppbind_obj_{{name}} = reinterpret_cast<CppBindCObject*>({{name}});
       auto cppbind_obj_{{name}}_ptr = cppbind_obj_{{name}} ? cppbind_obj_{{name}}->ptr : nullptr;
       if (cppbind_obj_{{name}}_ptr) {
           if (strcmp(cppbind_obj_{{name}}->type, {{object_converter.cxx_type_name_global.snippet()}}) == 0)
               return *static_cast<std::shared_ptr<{{template_args[0].resolved_type.unqualified_type_name}}>*>(cppbind_obj_{{name}}_ptr);
-      {%- for descendant in descendants %}
-          else if (strcmp(cppbind_obj_{{name}}->type, {{get_type_converter(descendant).cxx_type_name_global.snippet()}}) == 0)
-              return *static_cast<std::shared_ptr<{{descendant}}>*>(cppbind_obj_{{name}}_ptr);
+      {%- for desc_converter in desc_converters %}
+          else if (strcmp(cppbind_obj_{{name}}->type, {{desc_converter.cxx_type_name_global.snippet()}}) == 0)
+      {#- `has_template_descendant` check is used for handling extra descnendants in case of templates #}
+      {%-   if has_template_descendant %}
+             return cppbind::safe_shared_ptr_cast<{{descendants[loop.index - 1]}}, {{template_args[0].resolved_type.unqualified_type_name}}>(cppbind_obj_{{name}}_ptr);
+      {%-   else %}
+             return *static_cast<std::shared_ptr<{{descendants[loop.index - 1]}}>*>(cppbind_obj_{{name}}_ptr);
+      {%-   endif %}
       {%- endfor %}
           else {
               std::cerr << "Unexpected object type: " << cppbind_obj_{{name}}->type << std::endl;
@@ -661,7 +679,7 @@ std::shared_ptr:
       return nullptr;
     cxx_obj_recover_func_decl: |
       {%- set cxx_namespace = get_type_converter(template_args[0]).type_info.cxx.namespace.split('::')|map('capitalize')|join -%}
-      {{'std::shared_ptr<{}>'.format(template_args[0].resolved_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
+      {{'std::shared_ptr<{}>'.format(template_args[0].canonical_pointee_type.unqualified_type_name)}} recover_obj_from_{{cxx_namespace + "_" if cxx_namespace}}{{get_type_converter(template_args[0]).kotlin.target_type_name|replace('.', '_')}}(jobjectid{{' ' + name if not is_fwd_decl|default(False)}})
     cxx_include:
       !concat
       - !include common_macros.yaml&templates

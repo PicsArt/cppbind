@@ -18,6 +18,12 @@ object construction with the actual type is done with switch-case blocks
 where we compare preserved type information with the possible descendant
 subtypes.
 
+!!! Note
+    Currently, CppBind has some limitations when calculating the list of
+    descendants in case of class templates: it is not able to separate descendants
+    per instantiation of the class template. That's why there are redundant descendants
+    in the list, which leads to the generation of unreachable if/else branches.
+
 Here is an example of a base class with a user-defined list of
 descendant classes:
 

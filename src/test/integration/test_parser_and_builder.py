@@ -420,9 +420,7 @@ def test_descendants_list(clang_config):
     ir_builder.end_root()
 
     ir = IRPostProcessor().process_ir(ir_builder.ir)
-
-    cls_nodes = ir.children[0].children[0].children
-    cls_node_map = {cls_node.full_displayname : cls_node for cls_node in cls_nodes}
+    cls_node_map = ir.root._node_map
 
     get_nodes_display_names = lambda nodes: [node.full_displayname for node in nodes]
 
@@ -437,6 +435,13 @@ def test_descendants_list(clang_config):
     assert get_nodes_display_names(cls_node_map["C8"].descendants) == ['C10', 'C9']
     assert get_nodes_display_names(cls_node_map["C9"].descendants) == ['C10']
     assert get_nodes_display_names(cls_node_map["C10"].descendants) == []
+    assert get_nodes_display_names(cls_node_map["C12"].descendants) == ['C13', 'C14', 'C15<Type>']
+    assert get_nodes_display_names(cls_node_map["example::C16"].descendants) == ['example::C18<U>', 'example::C17<V>']
+    assert get_nodes_display_names(cls_node_map["example::C17"].descendants) == ['example::C18<U>']
+
+    # check there are no redundant nodes in IR
+    for type_name in ('C12<T>', 'C12<int>', 'C12<double>', 'C12<Type>'):
+        assert type_name not in cls_node_map
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/node_reuse"))

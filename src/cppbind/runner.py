@@ -7,6 +7,7 @@ Main module which parses command line arguments and runs cppbind.
 """
 
 import argparse
+import cProfile
 import json
 import os
 import sys
@@ -142,6 +143,7 @@ def run_package():
     Command line arguments parser
     """
 
+    profiler = cProfile.Profile()
     # register parent parser
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument('--log-level', choices=LOG_LEVELS, type=str, help='Log level', required=False)
@@ -150,6 +152,7 @@ def run_package():
                                help='Error limit',
                                default=int(default_config.application.error_limit),
                                required=False)
+    parent_parser.add_argument('--profile', action='store_true', help='Profiling code and generating reports', required=False)
 
     parser = argparse.ArgumentParser(description="These are common cppbind commands:")
     sub_parser = parser.add_subparsers(required=True)
@@ -169,8 +172,11 @@ def run_package():
     run_parser = sub_parser.add_parser('run', help='Run cppbind to generate code for given languages.',
                                        parents=[parent_parser])
 
-    current_sub_parser_args = parent_parser.parse_known_args()[1]
-    if current_sub_parser_args and current_sub_parser_args[0] == 'run':
+    current_sub_parser_args = parent_parser.parse_known_args()
+
+    if current_sub_parser_args[0].profile:
+        profiler.enable()
+    if current_sub_parser_args and current_sub_parser_args[1][0] == 'run':
         ctx_desc = ContextDescriptor(getattr(default_config.application, 'context_def_glob', None))
         all_languages = ctx_desc.get_deduced_languages()
 
@@ -216,6 +222,10 @@ def run_package():
     Error.set_error_limit(args.error_limit)
 
     args.func(args)
+
+    if current_sub_parser_args[0].profile:
+        profiler.disable()
+        profiler.dump_stats("profile.prof")
 
 
 if __name__ == "__main__":

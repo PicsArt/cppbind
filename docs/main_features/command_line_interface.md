@@ -48,6 +48,8 @@ cppbind run kotlin swift python
                   Amount of errors, after which CppBind stops the execution and reports an error.
                   The default value is -1, which means CppBind skips all noncritical errors and only
                   after the execution reports all encountered errors.
+                  
+--profile         Profiling code and generating reports
 
 --out_prj_dir OUT_PRJ_DIR
                   The root directory of project output.
@@ -66,6 +68,13 @@ cppbind run kotlin swift python
 !!! Note
     Most of the optional arguments are command-line level CppBind variables.
     For more info see `cmd_line` in [Variable Definitions](../main_features/var_def.md).
+
+!!! Note
+    To visualize profiling results you can use snakeViz browser based graphical viewer.
+    : Install with pip:
+        : **pip install snakeviz**
+    : Start SnakeViz from the command line:
+        : **snakeviz profile.prof**
 
 ## cppbind clean
 

@@ -87,6 +87,13 @@ func runStlTypesExamples() {
     assert(sameMap(map: [1:2, 2:3])! == [1:2, 2:3])
     assert(sameMap(map: nil) == nil)
 
+    // check for std::span
+    let l1 = [1,2,3,4]
+    let l2 = [5,6]
+    assert(sumSpan(items: [1,2,3]) == 6)
+    assert(getSpan(items: l1) == l1)
+    assert(getSpan2(items: [5,6,7,8,9]) == l2)
+
 }
 
 #if os(Linux)

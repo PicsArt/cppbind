@@ -29,6 +29,12 @@ std::__ndk1::array:
 std::__ndk1::optional:
   std::optional
 
+std::__ndk1::optional:
+  std::optional
+
+std::__ndk1::span:
+  std::span
+
 $Object:
   custom:
     pname: Long
@@ -932,3 +938,32 @@ std::optional:
       - !include common_macros.yaml&templates
       - |
         {{- gen_template_args_snippets(template_args[:1], 'kotlin_include', full_package) -}}
+
+std::span:
+  custom:
+    pname: Object
+    tname: "List{{get_type_converter(template_args[0]).custom.tname}}"
+    is_kotlin_type_erased: True
+  types:
+    kotlin: "{{get_type_converter('std::vector<{}>'.format(get_type_converter(template_args[0]).type_info.cxx.type_name)).kotlin.target_type_name}}"
+    jni: "{{get_type_converter('std::vector<{}>'.format(get_type_converter(template_args[0]).type_info.cxx.type_name)).jni.target_type_name}}"
+    jdk: "{{get_type_converter('std::vector<{}>'.format(get_type_converter(template_args[0]).type_info.cxx.type_name)).jdk.target_type_name}}"
+  converters:
+    jni_to_cxx: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).jni_to_cxx -%}
+      {{converter.snippet(name, target_name=target_name+"Vector", value_policy=value_policy)}}
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}}({{target_name}}Vector);
+    cxx_to_jni: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).cxx_to_jni -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    kotlin_to_jdk: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).kotlin_to_jdk -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    jdk_to_kotlin: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).jdk_to_kotlin -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    kotlin_ref_internal: |
+        {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).kotlin_ref_internal -%}
+        {{converter.snippet(name)}}
+    kotlin_keep_alive: |
+      {{name}}.keepCppBindReference({{reference}})

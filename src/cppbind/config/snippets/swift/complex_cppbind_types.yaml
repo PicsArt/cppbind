@@ -32,6 +32,12 @@ std::__1::array:
 std::__1::optional:
   std::optional
 
+std::__1::optional:
+  std::optional
+
+std::__1::span:
+  std::span
+
 $Object:
   custom:
     is_c_pointer_type: False
@@ -867,3 +873,37 @@ std::optional:
       - !include common_macros.yaml&templates
       - |
         {{- gen_template_args_snippets(template_args[:1], 'cxx_include') -}}
+
+std::span:
+  custom:
+    is_c_pointer_type: False
+    tname: "Array{{get_type_converter(template_args[0]).custom.tname}}"
+  types:
+    swift: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift.target_type_name}}"
+    c: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).c.target_type_name}}"
+    sc: "{{get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc.target_type_name}}"
+  converters:
+    c_to_cxx: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).c_to_cxx -%}
+      {{converter.snippet(name, target_name=target_name+"Vector", value_policy=value_policy)}}
+      {{cxx.resolved_type.unqualified_type_name}} {{target_name}}({{target_name}}Vector);
+    cxx_to_c: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).cxx_to_c -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    swift_to_sc: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_to_sc -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    sc_to_swift: |
+      {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_to_swift -%}
+      {{converter.snippet(name, target_name=target_name, value_policy=value_policy)}}
+    sc_cleanup:
+      source: swift
+      target: sc
+      snippet: |
+        {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).sc_cleanup -%}
+        {{converter.snippet(name)}}
+    swift_ref_internal: |
+        {%- set converter = get_type_converter('std::vector<{}>'.format(template_args[0].type_name)).swift_ref_internal -%}
+        {{converter.snippet(name)}}
+    swift_keep_alive: |
+      {{name}}.keepCppBindReference({{reference}})

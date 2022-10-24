@@ -86,9 +86,16 @@ assert(samePair(null) == null)
 assert(sameMap(mapOf<Int, Int>(1 to 1))!!.get(1) == 1)
 assert(sameMap(null) == null)
 
+// check for std::span
+val l1 = listOf(1,2,3,4)
+val l2 = listOf(5,6)
+assert(sumSpan(listOf(1,2,3)) == 6)
+assert(getSpan(l1) == l1)
+assert(getSpan2(listOf(5,6,7,8,9)) == l2)
+
 }
 
-class OptionalApp {
+class StlTypesApp {
 
     companion object {
         @JvmStatic

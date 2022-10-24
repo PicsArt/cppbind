@@ -40,7 +40,7 @@ class CXXParser:
         """
         index = cli.Index.create()
         # build parser arguments
-        args = ['-x', 'c++', '--std=c++17'] + clang_args + ['-I' + includeDir.strip()
+        args = ['-x', 'c++', '--std=c++20'] + clang_args + ['-I' + includeDir.strip()
                                                             for includeDir in
                                                             include_dirs]
 

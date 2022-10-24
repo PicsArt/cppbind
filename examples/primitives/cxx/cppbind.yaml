@@ -55,6 +55,7 @@ vars:
     - cxx/containers/json.hpp
     - cxx/**/policies_doc_examples.hpp
     - cxx/typedefs/queue_template.hpp
+    - cxx/stl_types/span.hpp
   swift.file_postfix: ""
   swift.package_prefix: ""
   swift.cxx_out_dir: "{{path.join(out_prj_dir, 'swift/wrappers')}}"

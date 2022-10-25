@@ -2,7 +2,7 @@ title: Binding C++ with Kotlin, Python, Swift
 description: CppBind is a software development tool that automates 
             language bindings generation between C++ and Kotlin, Python, Swift.
 
-![Binding C++ with Kotlin Python Swift](https://drive.google.com/uc?export=view&id=1ex-4r2ZNZK3f4eYr09me_7TREj8H-wln)
+![Binding C++ with Kotlin Python Swift](https://raw.githubusercontent.com/PicsArt/cppbind/master/docs/_static/img/cppbind-logo.svg)
 
 # Introduction
 

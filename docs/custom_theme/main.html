@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cppbind.io/{{page.url}}" />
+    <meta property="og:image" content="https://raw.githubusercontent.com/PicsArt/cppbind/master/docs/_static/img/cppbind-logo-og.svg" />
+    <meta property="og:image:alt" content="Call c++ from swift python kotlin " />
+    <meta property="og:title" content='CppBind - {{page.title}}' />
+    <meta property="og:description" content="Binding C++ with Kotlin, Python, Swift" />
+{% endblock %}
+

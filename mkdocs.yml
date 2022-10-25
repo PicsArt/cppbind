@@ -50,6 +50,7 @@ theme:
     - navigation.expand
   logo: _static/img/cppbind-icon.svg  
   favicon: _static/img/cppbind-icon.svg
+  custom_dir: docs/custom_theme/
 
 markdown_extensions:
   - toc:
@@ -59,7 +60,7 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - meta
-  
+
   - def_list
   - codehilite:
       linenums: true

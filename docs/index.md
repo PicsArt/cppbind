@@ -27,7 +27,7 @@ these challenges, we introduce CppBind.
 -   Provides the ability to add support for other languages;
 -   Can be used to generate bindings for third-party C++ libraries.
 
-# Features
+## Features
 
 CppBind generates bindings for C++ types and entities like classes,
 methods, global functions, enums, nested structures, templates, etc. The
@@ -98,7 +98,7 @@ list of the main features of CppBind is following:
         -   [Intelligent code
             completion](https://en.wikipedia.org/wiki/Intelligent_code_completion)
 
-# Usage
+## Usage
 
 CppBind instructions are controlled using annotations. There are two
 prominent use cases for annotating C++ source files: either you are the
@@ -116,19 +116,19 @@ Above-described usages can also be mixed: annotations for self-owned
 files are written inside those files, while third-party/standard library
 files are annotated via separate config files.
 
-# Installation
+## Installation
 
 There are some required steps to install and use CppBind. The
 installation steps are described [here](first_steps/installation.md).
 
-# License
+## License
 
 CppBind is provided under the MIT license that can be found in the
 [LICENSE](https://github.com/PicsArt/cppbind/blob/master/LICENSE) file.
 By using, distributing, or contributing to this project, you agree to
 the terms and conditions of this license.
 
-# How to contribute to CppBind?
+### Contributing
 
 If you like CppBind and would like to contribute to this open-source
 project, please check the [Contribution

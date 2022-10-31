@@ -30,22 +30,19 @@ class Scope:
     def name(self):
         return self._name
 
-    def add_unique(self, *parts, add_front=False):
+    def add_unique(self, *parts):
         """
         Adds text to corresponding partition
         """
         return self.add(
             *[part for part in list(dict.fromkeys(parts))
-              if part not in self.parts], add_front=add_front)
+              if part not in self.parts])
 
-    def add(self, *parts, add_front=False):
+    def add(self, *parts):
         """
         Adds text or scope to corresponding partition
         """
-        if add_front:
-            self.parts = list(parts) + self.parts
-        else:
-            self.parts = self.parts + list(parts)
+        self.parts = self.parts + list(parts)
 
         # register scopes
         self._register_scopes(*parts)

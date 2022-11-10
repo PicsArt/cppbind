@@ -6,15 +6,16 @@
 Helper module for processing yaml files
 """
 import copy
-import glob
 import os
 
 from collections.abc import MutableMapping
+from functools import lru_cache
 
 import yaml
 
 from cppbind import Error
 from cppbind.common.config import config, PROJECT_CONFIG_DIR
+from cppbind.utils import list_files, filter_by_glob
 
 
 class YamlNode(MutableMapping):
@@ -74,6 +75,14 @@ class YamlKeyDuplicationError(Exception):
     """
 
 
+@lru_cache
+def init_yaml_list(dirs):
+    yaml_files = []
+    for d in dirs:
+        yaml_files.extend(list_files(d, ('.yaml', '.yml')))
+    return yaml_files
+
+
 class MyLoader(yaml.SafeLoader):
     """YAML MyLoader with `!include` constructor."""
 
@@ -91,7 +100,7 @@ class MyLoader(yaml.SafeLoader):
             self._root = os.path.curdir
 
         self.dirs = [self._root]
-
+        self.yaml_files = init_yaml_list(dirs=tuple(self.custom_dirs + [os.path.abspath(os.path.curdir)]))
         super().__init__(stream)
 
     def construct_yaml_map(self, node):
@@ -143,7 +152,6 @@ def join_nodes(rdata, edata):
 
 def construct_include(loader, node):
     """Include file referenced at node."""
-
     try:
         entries = loader.construct_sequence(node)
     except Exception:
@@ -169,7 +177,7 @@ def construct_include(loader, node):
 
         rdata = None
 
-        file_paths = set(file_path for file_glob in filenames for file_path in glob.glob(file_glob, recursive=True))
+        file_paths = set(item for pattern in filenames for item in filter_by_glob(loader.yaml_files, pattern))
         for file_path in file_paths:
             sub_yaml = None
             try:
@@ -245,6 +253,7 @@ yaml.add_constructor('!concat', construct_concat, MyLoader)
 MyLoader.add_constructor('tag:yaml.org,2002:map', MyLoader.construct_yaml_map)
 
 
+@lru_cache
 def load_yaml(file_path):
     """Load yaml file in specific dirs using MyLoader custom loader"""
     try:

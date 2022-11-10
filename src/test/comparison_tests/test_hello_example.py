@@ -13,7 +13,7 @@ class TestHelloExampleFilesIdentical(unittest.TestCase):
     def __init__(self, methodName='runTest'):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR, '../../../examples/tutorials/hello_user/'))
-        self.runner = RunCompare(examples_root=self.examples_root)
+        self.runner = RunCompare(examples_root=self.examples_root, working_dir='tmp_hello_example')
 
     def setUp(self) -> None:
         self.runner.setup()

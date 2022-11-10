@@ -15,15 +15,16 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 class RunCompare:
 
-    def __init__(self, examples_root, languages=None):
+    def __init__(self, examples_root, working_dir, languages=None):
         self.languages = languages or ['kotlin', 'swift', 'python']
         self.test_dir = os.getcwd()
         self.gen_root = './'
         self.examples_root = examples_root
+        self.working_dir = working_dir
 
     def setup(self) -> None:
-        os.makedirs('tmp')
-        os.chdir('tmp')
+        os.makedirs(self.working_dir)
+        os.chdir(self.working_dir)
 
     def setup_config(self):
         # load current config as it's copied during setup and was not available when loading the default config
@@ -40,7 +41,7 @@ class RunCompare:
             setattr(config.application, key, value)
         os.chdir(self.test_dir)
         # clear all generate files
-        shutil.rmtree('tmp')
+        shutil.rmtree(self.working_dir)
 
     def run(self):
         # run cppbind with given config

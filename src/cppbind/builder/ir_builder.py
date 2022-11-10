@@ -290,8 +290,8 @@ class CppBindIRBuilder:
         """
         sys_vars = copy.copy(self._sys_vars)
 
-        def _get_git_repo_url(project_dir=None):
-            if project_dir and 'git' in sys.modules:
+        def _get_git_repo_url(project_dir):
+            if 'git' in sys.modules:
                 try:
                     repo = git.Repo(project_dir)
                     url = next(repo.remote().urls).replace('.git', '')
@@ -303,8 +303,7 @@ class CppBindIRBuilder:
                     # TypeError may be thrown in case of incorrect reference to a git commit
                     Error.warning(
                         f'Could not find a git repository under: {project_dir}.')
-                    return ''
-            return None
+                    return None
 
         sys_vars['_get_git_repo_url'] = _get_git_repo_url
 

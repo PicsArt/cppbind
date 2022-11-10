@@ -28,6 +28,21 @@ def test_builder(out_dir):
         "Builder output has bean changed"
 
 
+def test_scope(out_dir):
+    builder = Builder()
+
+    builder.add_scope_stack()
+
+    file_scope = builder.get_file("test_file", os.path.join(out_dir, "test.txt"))
+
+    scope = Scope(name="test_name")
+    file_scope.add(scope)
+    assert scope.get_scope(scope_name="test_scope_name_1", create=True).name == "test_scope_name_1"
+    assert len(scope.parts) == 1
+    assert scope.get_scope(scope_name="test_scope_name_2", create=True, add_as_part=False).name == "test_scope_name_2"
+    assert len(scope.parts) == 1
+
+
 def test_is_output_changed():
     old = """
     some string %s next1

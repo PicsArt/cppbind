@@ -50,7 +50,7 @@ class Scope:
         # register scopes
         self._register_scopes(*parts)
 
-    def get_scope(self, scope_name, create=False, init_func=None, add_as_part=True):
+    def get_scope(self, scope_name, create=False, add_as_part=True):
         scope = self.file_scope.lookup_scope(scope_name)
 
         if scope is None and create:
@@ -61,8 +61,6 @@ class Scope:
                 self.add(scope)
             else:
                 self._register_scopes(scope)
-            if init_func:
-                init_func(scope)
 
         return scope
 
@@ -98,6 +96,7 @@ class Scope:
                         self.file_scope.register_scope(data, dept)
 
     def __getitem__(self, scope_name):
+        # This is not called for now, and value of the create might be incorrect.
         return self.get_scope(scope_name, create=True)
 
     def __repr__(self):

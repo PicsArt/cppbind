@@ -64,3 +64,24 @@ assert extended_task_root.path == '/home'
 extended_task_root.add_subtask(task)
 assert extended_task_root.subtasks[0] == task
 # [extended-types-examples]
+
+# Check incorrect args exception handling
+try:
+    Task("My Task", "My Task2")
+    assert False
+except ValueError as e:
+    assert str(e) == "Incorrect number of arguments are given"
+
+# Check incorrect kwargs exception handling
+try:
+    Project(title="title", name="name")
+    assert False
+except ValueError as e:
+    assert str(e) == "Incorrect keyword argument is given: name"
+
+# Check incorrect kwargs exception handling
+try:
+    Project(name="title")
+    assert False
+except ValueError as e:
+    assert str(e) == "Incorrect keyword argument is given: name"

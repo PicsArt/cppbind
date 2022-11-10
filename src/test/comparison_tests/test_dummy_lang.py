@@ -14,7 +14,7 @@ class TestDummyLang(unittest.TestCase):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.join(SCRIPT_DIR, '../../../examples/tests/')
         self.runner = RunCompare(examples_root=self.examples_root,
-                                 languages=['my_lang'])
+                                 languages=['my_lang'], working_dir='tmp_dummy_lang')
 
     def setUp(self) -> None:
         self.runner.setup()

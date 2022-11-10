@@ -13,7 +13,7 @@ class TestModulemap(unittest.TestCase):
         super().__init__(methodName=methodName)
         self.examples_root = os.path.abspath(os.path.join(SCRIPT_DIR,
                                                           '../../../examples/features/modulemap/HelloExample/HelloExample'))
-        self.runner = RunCompare(examples_root=self.examples_root, languages=['swift'])
+        self.runner = RunCompare(examples_root=self.examples_root, languages=['swift'], working_dir='tmp_modulemap')
 
     def setUp(self) -> None:
         self.runner.setup()

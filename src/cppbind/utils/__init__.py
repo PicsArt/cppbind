@@ -21,6 +21,7 @@ from types import SimpleNamespace
 
 from isort.api import sort_code_string
 from jinja2 import BaseLoader, Environment, StrictUndefined
+from wcmatch import glob as wcglob
 
 from cppbind import BANNER_LOGO
 from cppbind import default_config
@@ -54,6 +55,38 @@ def absolute_path_from_glob(src_glob):
         all_absolute_paths.update(abs_paths)
 
     return all_absolute_paths
+
+
+def list_files(path, extentions=None):
+    """ List all files in a directory specified by path
+    Args:
+        path - the root directory path
+        extensions - a iterator of file extensions to include, pass None to get all files.
+    Returns:
+        A list of files specified by extensions
+    """
+    file_paths = []
+    for root, _, files in os.walk(path):
+        for file in files:
+            if extentions is None:
+                file_paths.append(os.path.join(os.path.abspath(root), file))
+            else:
+                for ext in extentions:
+                    if file.endswith(ext):
+                        file_paths.append(os.path.join(os.path.abspath(root), file))
+
+    return file_paths
+
+
+def filter_by_glob(files, pattern):
+    """ Filter list of files by specified pattern
+    Args:
+        files - list of file paths
+        pattern - filter that describes a set of strings that matches the pattern
+    Returns:
+        A list of files filtered by specified pattern
+    """
+    return [file for file in files if wcglob.globmatch(file, pattern, flags=wcglob.GLOBSTAR)]
 
 
 def load_from_paths(loader, path_name, default_dirs):

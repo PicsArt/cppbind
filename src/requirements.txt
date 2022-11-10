@@ -11,3 +11,4 @@ PyYAML==5.4
 sortedcontainers==2.4.0
 twine==3.8.0
 wheel==0.36.2
+wcmatch==8.4.1

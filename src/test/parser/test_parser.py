@@ -1,8 +1,9 @@
 import copy
+import git
 import hashlib
 import os
 import types
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 import pytest
 import yaml
@@ -476,3 +477,19 @@ def test_doxygen_comments(test_data, result):
     api, args = parser.parse_comments(api_section)
     assert args['action'] == 'gen_method'
     assert pure_comment[1] == result
+
+
+def test_get_git_repo_url():
+    lang, plat = 'python', 'linux'
+    ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
+    ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
+    _get_git_repo_url = ir_builder.get_sys_vars()['_get_git_repo_url']
+
+    with patch('git.Repo.active_branch') as mock_git_repo_branch:
+        with patch('git.Remote.urls', new_callable=PropertyMock) as mock_git_repo_urls:
+            mock_git_repo_branch.name = "TestBranch"
+            mock_git_repo_urls.return_value = iter(["TestRepo"])
+            git_repo_url = _get_git_repo_url(os.path.abspath(SCRIPT_DIR + 3 * '/..'))
+            assert git_repo_url == 'TestRepo/tree/TestBranch/'
+
+    assert _get_git_repo_url('.') is None

@@ -1,6 +1,4 @@
-
 name: SonarCloud
-
 
 on:
   push:
@@ -52,8 +50,13 @@ jobs:
       - name: Run sonar
         run: |
           export PATH=$PWD/sonar-scanner-4.4.0.2170-linux/bin:$PATH
-          sonar-scanner
-
+          sonar-scanner -Dsonar.projectKey=PicsArt_cppbind \
+                        -Dsonar.organization=picsart \
+                        -Dsonar.host.url=https://sonarcloud.io \
+                        -Dsonar.projectName=cppbind \
+                        -Dsonar.sources=src/cppbind,src/cppbind/config/rules,src/cppbind/config/std_helpers/python \
+                        -Dsonar.exclusions=src/cppbind/config/** \
+                        -Dsonar.python.coverage.reportPaths=coverage.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

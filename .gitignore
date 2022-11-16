@@ -1,6 +1,3 @@
-
-
-
 # ignore everything in the following folders
 local_expr/**
 
@@ -147,5 +144,8 @@ venv.bak/
 
 **/xcshareddata/
 
-#profiling report
+# profiling report
 profile.prof
+
+# sonar
+sonar-project.properties

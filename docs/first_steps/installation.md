@@ -35,13 +35,13 @@
     run the following command:
 
     ``` bash
-    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib"' >> ~/.profile
+    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib;"' >> ~/.profile
     ```
 
     If only CommandLineTools is installed, then:
 
     ``` bash
-    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Library/Developer/CommandLineTools/usr/lib"' >> ~/.profile
+    echo 'export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/Library/Developer/CommandLineTools/usr/lib;"' >> ~/.profile
     ```
 
     If your shell is Zsh instead of Bash, you need to replace **.profile**

@@ -5,7 +5,7 @@
 
 namespace cppbind::example {
 
-const int SIZE = 10;
+const int ARRAY_SIZE = 10;
 // [example-start]
 /**
  * An example for with overloaded operators.
@@ -21,7 +21,7 @@ public:
      * throws: no_throw
      */
 	IntArray() {
-	    for(int i = 0; i < SIZE; i++) {
+	    for(int i = 0; i < ARRAY_SIZE; i++) {
            arr[i] = i;
         }
 	}
@@ -32,7 +32,7 @@ public:
      * throws: no_throw
      */
 	int& operator[](int i) {
-         if( i > SIZE ) {
+         if( i > ARRAY_SIZE ) {
             return arr[0];
          }
          return arr[i];
@@ -45,7 +45,7 @@ public:
      */
 	const int& operator[](std::string i) {
 	     int ii = std::stoi(i);
-         if( ii > SIZE ) {
+         if( ii > ARRAY_SIZE ) {
             return arr[0];
          }
          return arr[ii];
@@ -58,7 +58,7 @@ public:
      */
 	int operator[](double i) {
 	     int ii = static_cast<int>(i);
-         if( ii > SIZE ) {
+         if( ii > ARRAY_SIZE ) {
             return arr[0];
          }
          return arr[ii];

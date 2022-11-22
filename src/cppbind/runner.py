@@ -76,8 +76,8 @@ class WrapperGenerator:
 
         exclude_files = absolute_path_from_glob(root_ctx['src_exclude_glob']) if root_ctx['src_exclude_glob'] else None
         cppbind_filter = CppBindFilter(exclude_files=exclude_files, ir=ir)
-        parser = CXXParser(filter_=cppbind_filter)
-        parser.parse(ir_builder, **root_ctx)
+        parser = CXXParser(ir_builder, var_values.single_tu, filter_=cppbind_filter)
+        parser.parse(**root_ctx)
 
         # `end_root` is called here to keep symmetry with the `start_root` call
         ir_builder.end_root()
@@ -142,7 +142,6 @@ def run_package():
     """
     Command line arguments parser
     """
-
     profiler = cProfile.Profile()
     # register parent parser
     parent_parser = argparse.ArgumentParser(add_help=False)
@@ -152,7 +151,18 @@ def run_package():
                                help='Error limit',
                                default=int(default_config.application.error_limit),
                                required=False)
-    parent_parser.add_argument('--profile', action='store_true', help='Profiling code and generating reports', required=False)
+    parent_parser.add_argument('--profile', action='store_true', help='Profiling code and generating reports',
+                               required=False)
+    parent_parser.add_argument('--report-file',
+                               type=str,
+                               help='Profiling reports file.',
+                               default='profile.prof',
+                               required=False)
+
+    parent_parser.add_argument('--single-tu',
+                               type=lambda x: (str(x).lower() == 'true'),
+                               help='Process all sources as a single translation unit.',
+                               default=True)
 
     parser = argparse.ArgumentParser(description="These are common cppbind commands:")
     sub_parser = parser.add_subparsers(required=True)
@@ -160,7 +170,7 @@ def run_package():
     # register clean sub parser
     clean_parser = sub_parser.add_parser('clean', help='Clean all cppbind generated files from directory.',
                                          parents=[parent_parser])
-    clean_parser.add_argument('dir', help='Directory from where all cppbind generated files will be deleted.',)
+    clean_parser.add_argument('dir', help='Directory from where all cppbind generated files will be deleted.')
     clean_parser.set_defaults(func=clean)
 
     # register init sub parser
@@ -225,7 +235,7 @@ def run_package():
 
     if current_sub_parser_args[0].profile:
         profiler.disable()
-        profiler.dump_stats("profile.prof")
+        profiler.dump_stats(args.report_file)
 
 
 if __name__ == "__main__":

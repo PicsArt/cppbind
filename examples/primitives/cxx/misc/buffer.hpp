@@ -1,3 +1,5 @@
+#ifndef buffer_hpp
+#define buffer_hpp
 // This is an example of a classes that do not have cppbind api but have custom wrappers and cppbind converters.
 #include <iostream>
 #include <string>
@@ -23,3 +25,4 @@ struct Size {
 };
 
 }
+#endif

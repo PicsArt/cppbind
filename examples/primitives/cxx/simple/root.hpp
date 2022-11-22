@@ -16,7 +16,6 @@ namespace cppbind::example {
  * shared_ref: False
  * swift.package: simple
  * kotlin.package: simple
- * python.package: simple
  */
 struct Root {
 public:

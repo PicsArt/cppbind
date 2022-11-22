@@ -55,6 +55,8 @@ class CppBindIRBuilder:
         self._processed_dirs = {}
         # cache for holding parent args
         self._parent_arg_mapping = {}
+        # list to keep processed file by processing order
+        self.processed_api_files = []
 
     def start_root(self, var_values=None):
         """
@@ -80,7 +82,7 @@ class CppBindIRBuilder:
         assert node.name == RootNode.ROOT_KEY
         assert len(self.node_stack) == 0, "stack should be empty"
         # set flag which shows that IR built process is completed
-        self.ir._set_built_flag()
+        self.ir._finalize_ir_build(self.processed_api_files)
 
     def start_dir(self, dir_name):
         """
@@ -93,6 +95,7 @@ class CppBindIRBuilder:
 
             dir_node = DirectoryNode(dir_name, file_name=file_name, root=self.ir)
             self.node_stack.append(dir_node)
+            self._processed_dirs[dir_name] = dir_node
 
             self.__update_internal_vars(dir_node)
             ctx = self.get_full_ctx()
@@ -113,38 +116,50 @@ class CppBindIRBuilder:
     def end_dir(self, dir_name):
         assert self.node_stack, "stack should not be empty"
         node = self.node_stack.pop()
+        assert isinstance(node, DirectoryNode), "Should be a directory node"
         assert node.name == dir_name
-        # node is not processed and has an API call or child with API call
-        if node.name not in self._processed_dirs and (node.api or node.children):
+        # has an API call or child with API call
+        if node.api or node.children:
             if len(self.node_stack) > 0:
-                parent_node = self.node_stack[-1]
+                if not isinstance(self.node_stack[-1], DirectoryNode):
+                    parent_node = self.node_stack[0]
+                else:
+                    parent_node = self.node_stack[-1]
                 if node not in parent_node.children:
                     parent_node.add_child(node)
-            self._processed_dirs[dir_name] = node
 
-    def start_tu(self, tu, *args, **kwargs):
+    def start_file(self, file_name, *args, **kwargs):
         """
-        Create file node and eval its context.
+        Create file node(can be an include) and eval its context.
         """
-        current_node = FileNode(tu.cursor, root=self.ir)
+        current_node = FileNode(file_name, root=self.ir)
         current_node.args = OrderedDict()
         self.node_stack.append(current_node)
+        self.processed_api_files.append(file_name)
 
         self.__update_internal_vars(current_node)
         ctx = self.get_full_ctx()
 
-        res = self.ctx_mgr.eval_file_attrs(tu.spelling, ctx)
+        res = self.ctx_mgr.eval_file_attrs(file_name, ctx)
         if res:
             api, args = res
             current_node.api = api
             current_node.args = args
 
-    def end_tu(self, tu, *args, **kwargs):
+    def end_file(self, file_name):
+        """
+        Ends current file from node stack and adds it to parent node if it has an api or has children with api.
+        """
         tu_node = self.node_stack.pop()
+        assert isinstance(tu_node, FileNode), "Should be a file node"
+        assert tu_node.spelling == file_name
         if tu_node.api or tu_node.children:  # node has API call or child whit API call
-            if len(self.node_stack) > 0:
-                parent_node = self.node_stack[-1]
-                parent_node.add_child(tu_node)
+            parent_node = self.node_stack[-1]
+            parent_node.add_child(tu_node)
+        else:
+            # file is not added to IR, remove it from processed list
+            self.processed_api_files.remove(file_name)
+
         # tu is processed it cannot be a parent anymore delete it's args if they're present
         self._parent_arg_mapping.pop(tu_node.full_displayname, None)
 
@@ -188,7 +203,9 @@ class CppBindIRBuilder:
 
     def end_cursor(self, cursor, *args, **kwargs):
         node = self.node_stack.pop()
-        if node.api or node.children:  # node has API call or child with API call
+        assert isinstance(node, CXXNode), "Should be a cxx node"
+        if node.api or node.children:
+            # node has API call or child with API call
             parent_node = self.node_stack[-1]
             parent_node.add_child(node)
         # cursor is processed it cannot be a parent anymore delete it's args if they're present
@@ -262,10 +279,19 @@ class CppBindIRBuilder:
         if node.type == NodeType.DIRECTORY_NODE:
             sys_vars.update({
                 '_source_modification_time': CppBindIRBuilder._get_modification_time(node.name),
-                '_is_operator': False,
                 '_object_name': node.name,
                 '_file_name': os.path.splitext(os.path.basename(
                     node.file_name))[0] if node.file_name else node.name,
+            })
+
+        elif node.type == NodeType.FILE_NODE:
+            # we have a virtual file like extra_includes.cpp so setting mod_time None for these type of files
+            mod_time = CppBindIRBuilder._get_modification_time(node.file_name) if os.path.exists(
+                node.file_name) else None
+            sys_vars.update({
+                '_source_modification_time': mod_time,
+                '_object_name': node.spelling,
+                '_file_name': os.path.splitext(os.path.basename(node.file_name))[0],
             })
 
         elif node.type == NodeType.CLANG_NODE:

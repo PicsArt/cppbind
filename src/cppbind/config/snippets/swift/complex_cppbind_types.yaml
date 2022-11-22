@@ -32,9 +32,6 @@ std::__1::array:
 std::__1::optional:
   std::optional
 
-std::__1::optional:
-  std::optional
-
 std::__1::span:
   std::span
 

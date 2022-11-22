@@ -40,6 +40,6 @@ dir_vars:
               print(json.dumps(parsed, indent=4, sort_keys=True))
 
 file_vars:
-  - file: "./root.hpp"
+  - file: "./task.hpp"
     vars:
-      package: simple
+      package: simple.task

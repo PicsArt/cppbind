@@ -161,3 +161,9 @@ swift_test(
     srcs = ["src/stl_types/main.swift"],
     deps = [":sw_examples_library"],
 )
+
+swift_test(
+    name = "macros",
+    srcs = ["src/macros/main.swift"],
+    deps = [":sw_examples_library"],
+)

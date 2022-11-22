@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "cxx/enums/color.hpp"
 #include "cxx/simple/project.hpp"
 #include "cxx/simple/root.hpp"
 #include "cxx/simple/task.hpp"
@@ -72,6 +71,8 @@ T max(T a, T b) {
    return a < b ? b:a;
 }
 
+#include "cxx/enums/color.hpp"
+
 namespace cppbind::example {
     /**
      * A global template function example in namespace.
@@ -115,7 +116,7 @@ namespace cppbind::example {
  * file: primitiveDefaults
  * throws: no_throw
  */
- cppbind::example::Color optionalColor(cppbind::example::Color c = cppbind::example::Color::Red);
+cppbind::example::Color optionalColor(cppbind::example::Color c = cppbind::example::Color::Red);
 
 /**
  * A global function with string default argument.

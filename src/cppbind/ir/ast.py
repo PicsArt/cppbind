@@ -16,8 +16,8 @@ import clang.cindex as cli
 import cppbind.utils.clang as cutil
 from cppbind.ir.cxx_element import CXXElement
 from cppbind.ir.cxx_type import CXXType
-from .utils import allowed_after_build, available_on
 from . import ElementKind
+from .utils import allowed_after_build, available_on
 
 
 class NodeType(Enum):
@@ -57,6 +57,16 @@ class Node(ABC):
 
     def __repr__(self):
         return f"Node(api={self.api}, args={self.args} children={self.children})"
+
+    @abstractmethod
+    def __iter__(self):
+        # each node is an iterator and defines its iteration order
+        pass
+
+    @abstractmethod
+    def __next__(self):
+        # each node is an iterator and defines its iteration order
+        pass
 
     @property
     @abstractmethod
@@ -112,7 +122,7 @@ class Node(ABC):
         yield self
 
         # now if needed dive into children
-        for child in self.children:
+        for child in self:
             for descendant in child.walk_preorder():
                 yield descendant
 
@@ -124,6 +134,16 @@ class DirectoryNode(Node):
         super().__init__(api, args, root, parent, children, pure_comment)
         self.name = name
         self._file_name = file_name
+
+    def __iter__(self):
+        # directory nodes are skipped from further iteration
+        # root provides iteration on files by their processing order
+        return self
+
+    def __next__(self):
+        # directory nodes are skipped from further iteration
+        # root provides iteration on files by their processing order
+        raise StopIteration
 
     @property
     def file_name(self):
@@ -158,9 +178,26 @@ class RootNode(Node):
         self.name = RootNode.ROOT_KEY
         self._node_map = {}
         self.__is_ir_built = False
+        # IR keeps the order of processed files to provide an iterator with correct order
+        self.__ordered_nodes = []
 
     def __repr__(self):
         return f"RootNode({self.__dict__})"
+
+    def __iter__(self):
+        # root node is an iterator and keeps all directories and files by their processing order
+        self.idx = 0
+        self.__length = len(self.__ordered_nodes)
+        return self
+
+    def __next__(self):
+        # root node is an iterator and keeps all directories and files by their processing order
+        # directories are iterated first and then files in their processing order
+        if self.idx < self.__length:
+            next_node = self.__ordered_nodes[self.idx]
+            self.idx += 1
+            return next_node
+        raise StopIteration
 
     def walk(self):
         for node in self.walk_preorder():
@@ -188,9 +225,19 @@ class RootNode(Node):
         """Protected method to check whether IR is built or not"""
         return self.__is_ir_built
 
-    def _set_built_flag(self):
-        """Protected method to set IR built flag to true"""
+    def _finalize_ir_build(self, processed_files):
+        """Protected method to set IR built flag to true and to define ir nodes by correct order."""
         self.__is_ir_built = True
+        dir_nodes = []
+        self.__get_directory_nodes(self, dir_nodes)
+        self.__ordered_nodes = dir_nodes + [self._node_map[file] for file in processed_files]
+        self.__length = len(self.__ordered_nodes)
+
+    def __get_directory_nodes(self, node, nodes):
+        for child in node.children:
+            if child.type == NodeType.DIRECTORY_NODE:
+                nodes.append(child)
+                self.__get_directory_nodes(child, nodes)
 
     @property
     def type(self):
@@ -214,6 +261,20 @@ class ClangNode(Node, ABC):
     def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
         super().__init__(api, args, root, parent, children, pure_comment)
         self.cxx_element = CXXElement.create_cxx_element(clang_cursor)
+
+    def __iter__(self):
+        # clang node is an iterator and gives its child nodes by their processing order
+        self.idx = 0
+        self.__length = len(self._children)
+        return self
+
+    def __next__(self):
+        # clang node is an iterator and gives its child nodes by their processing order
+        if self.idx < self.__length:
+            next_node = self._children[self.idx]
+            self.idx += 1
+            return next_node
+        raise StopIteration
 
     @property
     def kind(self):
@@ -244,10 +305,43 @@ class ClangNode(Node, ABC):
         return self.cxx_element.extent.start.line
 
 
-class FileNode(ClangNode):
+class FileNode(Node):
 
-    def __init__(self, clang_cursor, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
-        super().__init__(clang_cursor, api, args, root, parent, children, pure_comment)
+    def __init__(self, file_path, api=None, args=None, root=None, parent=None, children=None, pure_comment=None):
+        super().__init__(api, args, root, parent, children, pure_comment)
+        self.file_path = file_path
+
+    def __iter__(self):
+        self.idx = 0
+        self.__length = len(self._children)
+        return self
+
+    def __next__(self):
+        if self.idx < self.__length:
+            next_node = self._children[self.idx]
+            self.idx += 1
+            return next_node
+        raise StopIteration
+
+    @property
+    def displayname(self):
+        return self.file_path
+
+    @property
+    def spelling(self):
+        return self.file_path
+
+    @property
+    def line_number(self):
+        return None
+
+    @cached_property
+    def signature(self):
+        return self.file_path
+
+    @property
+    def file_name(self):
+        return self.file_path
 
     @property
     def type(self):
@@ -255,12 +349,11 @@ class FileNode(ClangNode):
 
     @property
     def kind_name(self):
-        assert self.cxx_element.kind == ElementKind.TRANSLATION_UNIT
         return FILE_KIND_NAME
 
     @property
     def full_displayname(self):
-        return self.cxx_element.extent.start.file.name
+        return self.file_path
 
 
 class CXXNode(ClangNode):
@@ -398,4 +491,5 @@ class CXXNode(ClangNode):
                             nodes.append(func_node)
                         nodes += _get_overridden_nodes(overridden)
             return nodes
+
         return _get_overridden_nodes(self.cxx_element)

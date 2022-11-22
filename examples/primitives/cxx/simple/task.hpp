@@ -12,7 +12,7 @@ namespace cppbind::example {
  * __API__
  * action: gen_class
  * shared_ref: False
- * package: simple
+ * swift.package: simple
  * python.package: simple.task
  * python.name: PyTask
  */

@@ -20,7 +20,7 @@ package:
 
 name:
   inheritable: false
-  default: '{{cppbind_helper.get_operator_name(_object_name) if _is_operator and "get_operator_name" in cppbind_helper.__dict__ else _object_name}}'
+  default: '{{cppbind_helper.get_operator_name(_object_name) if _is_operator|default(False) and "get_operator_name" in cppbind_helper.__dict__ else _object_name}}'
   allowed_on: [ cxx, file_system ]
 
 argument_label:

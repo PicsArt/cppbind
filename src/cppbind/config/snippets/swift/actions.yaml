@@ -3,7 +3,7 @@
 # MIT-style license that can be found in the LICENSE file.
 
 - file:
-    files_glob: 
+    files_glob:
       - "{{[vars.cxx_helpers_dir, '**/*.hpp'] | path_join}}"
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}
@@ -13,8 +13,9 @@
     variables:
       cxx_helper_includes: |
         {% set filename, file_extension = path.splitext(file_name) %}
+        {%- set prj_rel = path.relpath(vars.cxx_helpers_out_dir, vars.out_prj_dir) -%}
         {%- set file_rel_name = path.relpath(filename + vars.file_postfix + file_extension, vars.cxx_helpers_dir) -%}
-        {{[vars.cxx_helpers_out_rel_path, file_rel_name]|path_join}}
+        {{[prj_rel, file_rel_name]|path_join}}
 
 - file:
     files_glob:
@@ -31,7 +32,7 @@
         {{[vars.cxx_helpers_out_rel_path, file_rel_name]|path_join}}
 
 - file:
-    files_glob: 
+    files_glob:
       "{{[vars.cxx_helpers_dir, '**/*.c*'] | path_join}}"
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}
@@ -39,7 +40,7 @@
       {{path.join(vars.cxx_helpers_out_dir, file_rel_name)}}
 
 - file:
-    files_glob: 
+    files_glob:
       - "{{[vars.helpers_dir, '**/*.swift'] | path_join}}"
     copy_to: |
       {% set filename, file_extension = path.splitext(file_name) %}

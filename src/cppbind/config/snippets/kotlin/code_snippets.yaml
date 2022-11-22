@@ -255,11 +255,12 @@ class:
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
           {%- set base_interfaces = base_types_converters|selectattr('type_info.vars.action', 'eq', 'gen_interface')|map(attribute='kotlin.target_type_name')|list -%}
           {%- set is_root_class = base_interfaces|length == base_types_converters|length %}
-          {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or is_root_class else []) + (['Exception()'] if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
+          {%- set ancestor_infos = cxx.ancestors|type_info(error=False)|reject('none')|selectattr('has_api')|list %}
+          {%- set bases_specifiers = base_interfaces + base_types_converters|map(attribute='kotlin.target_type_name')|reject('in', base_interfaces)|format_list('{}(obj)') + vars.bases_list + (['AutoCloseable'] if not base_types_converters or is_root_class else []) + (['Exception()'] if vars.is_exception and not ancestor_infos|selectattr('vars.is_exception', 'equalto', True)|list else []) -%}
           {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
           {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
           {%- endif %}
-          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- if ancestor_infos|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
           {%-   do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
           {%- endif %}
           {%- if vars.comment %}
@@ -418,7 +419,8 @@ interface:
           {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list %}
           {%-   do Error.critical(cxx.type_name + ' interface cannot inherit from a class.') %}
           {%- endif %}
-          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- set ancestor_infos = cxx.ancestors|type_info(error=False)|reject('none')|selectattr('has_api')|list %}
+          {%- if ancestor_infos|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
           {%-   do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
           {%- endif %}
           {% if vars.comment %}
@@ -791,7 +793,7 @@ method:
         {%-       if jvm_name %}
         {{jvm_name}}
         {%-       endif %}
-        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{gen_override_keyword(cxx)}}fun {{vars.name}}(
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{gen_override_keyword(cxx, vars)}}fun {{vars.name}}(
         {%-       for arg in args -%}
         {%-         set arg_converter = get_type_converter(arg.type) -%}
         {%-         set arg_type_info = get_type_info(arg.type) -%}
@@ -861,7 +863,7 @@ method:
         {%-     if vars.is_operator and vars.name == 'get' and not cxx.result_type.is_const_qualified and cxx.result_type.is_lval_reference %}
         {%        set setter_var_name = 'value' %}
 
-        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{gen_override_keyword(cxx)}}fun set(
+        {{'open ' if cxx.is_open}}{{'operator ' if vars.is_operator}}{{gen_override_keyword(cxx, vars)}}fun set(
         {%-       for arg in cxx.args -%}
         {%-         set arg_converter = get_type_converter(arg.type) -%}
         {{vars.argument_name.get(arg.name, arg.name)}}: {{arg_converter.kotlin.target_type_name}}, {{setter_var_name}}: {{rconverter.kotlin.target_type_name}}
@@ -1468,7 +1470,7 @@ getter:
         {%- if vars.comment %}
         {{vars.comment|make_doxygen_comment}}
         {%- endif %}
-        {{'open ' if cxx.is_open}}{{gen_override_keyword(cxx)}}{{'var ' if setter is defined else 'val '}}
+        {{'open ' if cxx.is_open}}{{gen_override_keyword(cxx, vars)}}{{'var ' if setter is defined else 'val '}}
         {%- if cxx.is_template -%}
         {{get_template_getter_name(cxx, template_args_postfixes)}}
         {%- else %}{{vars.name}}
@@ -1493,7 +1495,7 @@ getter:
         {%-       do Error.critical("{} arguments are marked as nullable but {}.{} does not have such arguments.".format(', '.join(incorrect_nullable_args), setter.cxx.parent.displayname, setter.cxx.displayname)) -%}
         {%-     endif -%}
         {%-     set converter = get_type_converter(setter.cxx.args[0].type).kotlin_to_jdk %}
-        {%-     if gen_override_keyword(cxx) %}
+        {%-     if gen_override_keyword(cxx, vars) %}
             set(value) {
                 super.{{vars.name}} = value
             }

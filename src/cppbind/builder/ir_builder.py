@@ -214,12 +214,6 @@ class CppBindIRBuilder:
     def __get_node(self, cursor):
         """Private method to create a new cxx node or return the cached one if it has been created earlier"""
         lookup_name = cutil.get_signature(cursor)
-        # lookup by type names without template parameters in case of templated classes/structs
-        if cutil.is_templated(cursor.type) and cursor.kind in (cli.CursorKind.STRUCT_DECL,
-                                                               cli.CursorKind.CLASS_DECL,
-                                                               cli.CursorKind.STRUCT_DECL,
-                                                               cli.CursorKind.CXX_BASE_SPECIFIER):
-            lookup_name = cutil.template_type_name(lookup_name)
         node = self.ir.find_node(lookup_name)
         if node is not None:
             return node

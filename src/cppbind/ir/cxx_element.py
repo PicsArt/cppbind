@@ -46,7 +46,8 @@ class CXXElement:
         if self._clang_cursor.kind == cli.CursorKind.FUNCTION_TEMPLATE:
             if self._clang_cursor.lexical_parent.kind in (cli.CursorKind.STRUCT_DECL,
                                                           cli.CursorKind.CLASS_DECL,
-                                                          cli.CursorKind.CLASS_TEMPLATE):
+                                                          cli.CursorKind.CLASS_TEMPLATE,
+                                                          cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION):
                 if self._clang_cursor.spelling == self._clang_cursor.lexical_parent.spelling:
                     return 'constructor_template'
                 else:
@@ -161,7 +162,8 @@ class CXXElement:
         if kind in (
                 cli.CursorKind.CLASS_DECL,
                 cli.CursorKind.STRUCT_DECL,
-                cli.CursorKind.CLASS_TEMPLATE
+                cli.CursorKind.CLASS_TEMPLATE,
+                cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION
         ):
             return CXXClassElement(clang_cursor)
         if kind == cli.CursorKind.PARM_DECL:
@@ -240,7 +242,8 @@ class CXXClassElement(CXXElement):
     @property
     def is_template(self):
         """Checks whether the class/struct cursor corresponds to a template"""
-        return self._clang_cursor.kind == cli.CursorKind.CLASS_TEMPLATE
+        return self._clang_cursor.kind in (
+            cli.CursorKind.CLASS_TEMPLATE, cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION)
 
     @property
     def base_type_elements(self):
@@ -250,7 +253,10 @@ class CXXClassElement(CXXElement):
         """
 
         _base_type_elements = []
-        for base_specifier in self._clang_cursor.get_children():
+        cursor = self._clang_cursor
+        if self._clang_cursor.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
+            cursor = self._clang_cursor.get_definition()
+        for base_specifier in cursor.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
                 _base_type_elements.append(CXXClassElement(base_specifier))
 

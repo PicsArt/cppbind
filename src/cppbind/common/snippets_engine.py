@@ -832,6 +832,9 @@ class SnippetsEngine:
 
             return self.__get_type_info(input_value, error)
 
+    def __has_api(self, cxx_element):
+        return self.runner.get_context(cxx_element._get_full_displayname()) is not None
+
     def __update_jinja_env(self):
         """Add custom filters/globals to jinja environment"""
 
@@ -840,3 +843,7 @@ class SnippetsEngine:
 
         self.jinja_env.globals['get_type_converter'] = self.__create_type_converter
         self.jinja_env.globals['get_type_info'] = self.__get_type_info
+
+        self.jinja_env.globals['has_api'] = self.__has_api
+        self.jinja_env.tests['has_api'] = self.__has_api
+        self.jinja_env.filters['has_api'] = self.__has_api

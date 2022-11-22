@@ -11,12 +11,12 @@ action:
 file:
   inheritable: true
   default: '{{_file_name}}'
-  allowed_on: [ file, class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ file, class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 package:
   inheritable: true
   default: 'undefined'
-  allowed_on: [ file_system, class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ file_system, class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 name:
   inheritable: false
@@ -39,18 +39,18 @@ interface_name:
   inheritable: false
   kotlin.default: 'I{{name}}'
   swift.default: '{{name}}'
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template ]
 
 interface_impl_class_name:
   inheritable: false
   default: '{{name}}Impl'
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template ]
 
 include:
   inheritable: false
   type: list
   default: [ ]
-  allowed_on: [ file_system, class, class_template, struct, struct_template, enum ]
+  allowed_on: [ file_system, class, class_template, class_template_partial_specialization, struct, struct_template, enum ]
 
 code_fragment:
   inheritable: false
@@ -60,34 +60,34 @@ code_fragment:
 header_code_fragment:
   inheritable: false
   default: null
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum ]
 
 footer_code_fragment:
   inheritable: false
   default: null
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum ]
 
 include_cxx:
   inheritable: false
   type: list
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 shared_ref:
   inheritable: true
   default: false
   type: bool
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template ]
 
 template:
   inheritable: false
   type: dict
-  allowed_on: [ class_template, struct_template, function_template, method_template, constructor_template ]
+  allowed_on: [ class_template, class_template_partial_specialization, struct_template, function_template, method_template, constructor_template ]
 
 template_instance:
   inheritable: false
   type: list
-  allowed_on: [ class_template, struct_template, function_template, method_template, constructor_template ]
+  allowed_on: [ class_template, class_template_partial_specialization, struct, struct_template, function_template, method_template, constructor_template ]
 
 is_operator:
   inheritable: false
@@ -99,7 +99,7 @@ is_exception:
   inheritable: false
   default: false
   type: bool
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template ]
 
 throws:
   inheritable: false
@@ -111,7 +111,7 @@ bases_list:
   inheritable: false
   type: list
   default: [ ]
-  allowed_on: [ class, class_template, struct, struct_template, enum ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum ]
 
 nullable_return:
   inheritable: false
@@ -199,7 +199,7 @@ prj_rel_file_name:
 package_prefix:
   inheritable: true
   default: example_lib
-  allowed_on: [ root, file_system, class, class_template, struct, struct_template, enum ]
+  allowed_on: [ root, file_system, class, class_template, class_template_partial_specialization, struct, struct_template, enum ]
 
 helpers_package_prefix:
   inheritable: true
@@ -334,21 +334,21 @@ c_file_fullname:
   kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
   python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.cpp"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.cpp"
-  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 h_file_fullname:
   inheritable: true
   kotlin.default: "{{cxx_out_dir + pat_sep + [full_package, 'jni_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
   python.default: "{{cxx_out_dir + pat_sep + full_package|replace('.', pat_sep)}}_pybind.h"
   swift.default: "{{cxx_out_dir + pat_sep + [package_prefix, package, 'c_swift_' + file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.h"
-  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 file_fullname:
   inheritable: true
   kotlin.default: "{{out_dir + pat_sep + [full_package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.kt"
   python.default: ""
   swift.default: "{{out_dir + pat_sep + [package_prefix, package, file + file_postfix]|map('replace', '.', pat_sep)|path_join}}.swift"
-  allowed_on: [ class, class_template, struct, struct_template, enum, cxx_function ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template, enum, cxx_function ]
 
 pybind_module_filename:
   inheritable: true
@@ -369,7 +369,7 @@ descendants:
   inheritable: false
   default: null
   type: list
-  allowed_on: [ class, class_template, struct, struct_template ]
+  allowed_on: [ class, class_template, class_template_partial_specialization, struct, struct_template ]
 
 return_value_policy:
   inheritable: false

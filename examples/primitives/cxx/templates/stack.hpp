@@ -13,6 +13,7 @@
 #include <string>
 
 #include "cxx/templates/container.hpp"
+#include "cxx/simple/project.hpp"
 
 
 namespace cppbind::example {
@@ -101,6 +102,42 @@ private:
     std::vector<T*> _elements;
 
 };
+
+
+template <>
+class Stack<cppbind::example::Project>: public Container {
+
+public:
+
+    Stack() {};
+
+    Stack(cppbind::example::Stack<cppbind::example::Project>& stack) : _elements(stack._elements) {};
+
+    Stack(cppbind::example::Project* st) {
+        push(st);
+    };
+
+    void push(cppbind::example::Project* item) {
+        _elements.push_back(item);
+    };
+
+    void pop() {
+        _elements.pop_back();
+    };
+
+    cppbind::example::Project* top() const {
+        return _elements.back();
+    };
+
+    bool empty() const {
+         return _elements.empty();
+    }
+
+private:
+    std::vector<cppbind::example::Project*> _elements;
+
+};
+
 // [example-end]
 }
 #endif

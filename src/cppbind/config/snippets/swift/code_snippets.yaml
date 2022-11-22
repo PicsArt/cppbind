@@ -176,13 +176,14 @@ class:
                 {{vars.header_code_fragment}}{{new_line}}
           {% endif -%}
           {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
+          {%- set ancestor_infos = cxx.ancestors|type_info(error=False)|reject('none')|selectattr('has_api')|list %}
           {%- set base_interfaces = base_types_converters|selectattr('type_info.vars.action', 'equalto', 'gen_interface')|map(attribute='swift.target_type_name')|list -%}
           {%- set base_classes = base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|map(attribute='swift.target_type_name')|list -%}
           {%- set bases_specifiers =  base_classes + base_interfaces + vars.bases_list -%}
           {%- if base_classes|length > 1 %}
           {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
           {%- endif %}
-          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- if ancestor_infos|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
           {%-   do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
           {%- endif %}
           {%- if vars.comment -%}
@@ -205,7 +206,7 @@ class:
           {%- if is_string_convertible %}
           {%-   do bases_specifiers.append('CustomStringConvertible') -%}
           {%- endif -%}
-          {%- if vars.is_exception and not ancestors|selectattr('vars.is_exception', 'equalto', True)|list -%}
+          {%- if vars.is_exception and not ancestor_infos|selectattr('vars.is_exception', 'equalto', True)|list -%}
           {%-   do bases_specifiers.append('Error') -%}
           {%- endif -%}
           public class {{class_name}}{{': ' + bases_specifiers|join(', ') if bases_specifiers}} {
@@ -366,11 +367,12 @@ interface:
         {{vars.header_code_fragment}}{{new_line}}
         {% endif -%}
         {%- set base_types_converters = cxx.base_types|type_converter(error=False)|reject('none')|list %}
+        {%- set ancestor_infos = cxx.ancestors|type_info(error=False)|reject('none')|selectattr('has_api')|list %}
         {%- set bases_specifiers = base_types_converters|map(attribute='swift.target_type_name')|list + vars.bases_list -%}
         {%- if base_types_converters|rejectattr('type_info.vars.action', 'equalto', 'gen_interface')|list|length > 1 %}
         {%-   do Error.critical(cxx.type_name + ' has more than 1 non abstract base type.') %}
         {%- endif %}
-        {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+        {%- if ancestor_infos|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
         {%-   do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
         {%- endif %}
         {%- if vars.comment -%}
@@ -901,7 +903,7 @@ method:
         public static func {{vars.name}}(cself: {{parent_class_converter.swift.target_type_name}}{{', ' if args}}{%- for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{get_type_converter(arg.type).swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}{%- endfor-%}) {{'throws ' if 'no_throw' not in vars.throws}}-> {{rconverter.swift.target_type_name}}{{'?' if vars.nullable_return}} {
         {%-     set call_args = ['cself.cself'] -%}
         {%-   else -%}
-        public {{"static " if cxx.is_static}}{{gen_override_keyword(cxx, exclude_interface=true)}}func {{vars.name}}(
+        public {{"static " if cxx.is_static}}{{gen_override_keyword(cxx, vars, exclude_interface=true)}}func {{vars.name}}(
         {%-   for arg in args -%}{{comma()}}{{vars.argument_label.get(arg.name, '')}}{{' ' if arg.name in vars.argument_label}}{{vars.argument_name.get(arg.name, arg.name)|to_camel_case}}: {{get_type_converter(arg.type).swift.target_type_name}}{{'?' if arg.name in vars.nullable_arg or arg.default_is_nullptr}}
         {%-     set arg_converter = get_type_converter(arg.type) -%}
         {%-     set arg_type_info = get_type_info(arg.type) -%}
@@ -1571,7 +1573,7 @@ getter:
         {%-   endif %}
         return {{result_converter.converted_name('result')}}
         {%- endmacro -%}
-        public {{gen_override_keyword(cxx, exclude_interface=true)}}var {% if cxx.is_template -%}
+        public {{gen_override_keyword(cxx, vars, exclude_interface=true)}}var {% if cxx.is_template -%}
                                              {{get_template_getter_name(cxx, template_args_postfixes)}}
                                              {%- else %}{{vars.name}}
                                              {%- endif -%}: {{result_converter.target_type_name}}{{'?' if vars.nullable_return}} {

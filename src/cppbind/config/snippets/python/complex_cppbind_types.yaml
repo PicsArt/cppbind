@@ -161,7 +161,7 @@ $FunctionProto:
     tname: Callable
   types:
     python: |
-      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in template_args[:-1] -%}{{comma()}}{{get_type_converter(arg).python.target_type_name}}{%- endfor -%}], {{get_type_converter(template_args|last).python.target_type_name}}]
+      {%- set comma = joiner(', ') -%}Callable[[{%- for arg in template_args[:-1] -%}{{comma()}}{{get_type_converter(arg).python.get_target_type_name(full_package=full_package)}}{%- endfor -%}], {{get_type_converter(template_args|last).python.get_target_type_name(full_package=full_package)}}]
     pybind: |
       {%- set comma = joiner(', ') -%}Callable[[{%- for arg in template_args[:-1] -%}{{comma()}}{{get_type_converter(arg).pybind.target_type_name}}{%- endfor -%}], {{get_type_converter(template_args|last).pybind.target_type_name}}]
   converters:
@@ -169,6 +169,16 @@ $FunctionProto:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args, 'python_include', full_package) -}}
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args, 'cxx_include') -}}
 
 std::__cxx11::basic_string:
   custom:
@@ -214,13 +224,23 @@ std::function:
   custom:
     tname: "Function"
   types:
-    python: "{{get_type_converter(template_args[0]).python.target_type_name}}"
+    python: "{{get_type_converter(template_args[0]).python.get_target_type_name(full_package=full_package)}}"
     pybind: "{{get_type_converter(template_args[0]).pybind.target_type_name}}"
   converters:
     pybind_to_cxx:
     cxx_to_pybind:
     python_to_pybind:
     pybind_to_python:
+    python_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args, 'python_include', full_package) -}}
+    cxx_include:
+      !concat
+      - !include common_macros.yaml&templates
+      - |
+        {{- gen_template_args_snippets(template_args, 'cxx_include') -}}
 
 std::map:
   custom:

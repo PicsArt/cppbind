@@ -8,6 +8,7 @@
 
 #include "cxx/templates/stack.hpp"
 #include "cxx/simple/project.hpp"
+#include "cxx/simple/root.hpp"
 
 using StackProjectType = cppbind::example::Stack<cppbind::example::Project>;
 
@@ -120,6 +121,89 @@ public:
      * Typedefs of template types are not supported.
      */
     TItem* firstItemOfTypedefTemplateStack(Stack* p) {
+        return p->top();
+    };
+
+};
+
+
+/**
+ * An example of a fully specialized template type having an API.
+ * __API__
+ * action: gen_class
+ * package: templates.stack
+ * name: RootsStack
+ * file: stack_root
+ */
+template<>
+class Stack<Root>: public Container {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    Stack() {};
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void push(Root* item) {
+        _elements.push_back(item);
+    };
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    void pop() {
+        _elements.pop_back();
+    };
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     * return_value_policy: reference
+     */
+    Root* top() const {
+        return _elements.back();
+    };
+
+private:
+    std::vector<Root*> _elements;
+
+};
+
+
+/**
+ * An example of a type derived from a fully specialized template.
+ * __API__
+ * action: gen_class
+ * file: stack_root
+ * package: templates.stack
+ */
+class MyStackRoot: public Stack<Root> {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    MyStackRoot() {};
+
+    using StackRoot = Stack<Root>;
+
+    /**
+     * Method having typedef of a full specialization as an argument.
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    Root* firstItemOfTypedef(StackRoot* p) {
         return p->top();
     };
 

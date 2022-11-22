@@ -98,11 +98,18 @@ class Node(ABC):
         self._children.append(node)
 
         # if signature is empty (e.g. for unexposed types) we assume the node to be not searchable/reusable
-        # existence of unexposed cursor types can be dependant on platform (we have many of them on linux)
+        # existence of unexposed cursor types can be dependent on platform (we have many of them on linux)
         if node.signature:
             # keep the node with template_type_name (type name without template parameters) for lookups
             if node.type == NodeType.CLANG_NODE and node.is_class_or_struct and node.cxx_element.is_templated:
-                node.root._node_map[cutil.template_type_name(node.signature)] = node
+                template_type_name = cutil.template_type_name(node.signature)
+                if template_type_name in node.root._node_map:
+                    # a template specialization, add it to template nodes map
+                    template_node = node.root._node_map[template_type_name]
+                    template_node._template_spec_node_map[node.signature] = node
+                else:
+                    # a template node add it to root node_map
+                    node.root._node_map[cutil.template_type_name(node.signature)] = node
             else:
                 node.root._node_map[node.signature] = node
 
@@ -203,19 +210,26 @@ class RootNode(Node):
         for node in self.walk_preorder():
             yield node
 
-    def find_node(self, node_signature):
+    def find_node(self, node_signature, match_template=True):
         """Returns node in IR by its unique signature"""
-        return self._node_map.get(node_signature)
+        node = self._node_map.get(node_signature)
+        if node:
+            return node
+        if cutil.is_templated(node_signature):
+            template_node = self._node_map.get(cutil.template_type_name(node_signature))
+            if template_node:
+                return template_node._template_spec_node_map.get(node_signature, None if match_template else template_node)
+        return None
 
-    def find_node_by_type(self, type_):
+    def find_node_by_type(self, type_, match_template=True):
         """Find node by cursor Type, CXXType or string"""
 
         search_name = type_
         if isinstance(type_, (cli.Type, CXXType)):
             # decl is None for the types which are invalid or unexposed
             decl = cutil.get_declaration(type_) if isinstance(type_, cli.Type) else type_.get_declaration()
-            return self._node_map.get(cutil.get_signature(decl)) if decl else None
-        return self._node_map.get(search_name)
+            return self.find_node(cutil.get_signature(decl), match_template) if decl else None
+        return self.find_node(search_name, match_template)
 
     def _get_all_nodes(self):
         """Returns map of all nodes"""
@@ -362,6 +376,7 @@ class CXXNode(ClangNode):
         super().__init__(clang_cursor, api, args, root, parent, children, pure_comment)
         # keep direct descendants in sorted set to have deterministic order of nodes
         self.direct_descendants = SortedSet()
+        self._template_spec_node_map = {}
 
     @property
     def type(self):
@@ -375,11 +390,12 @@ class CXXNode(ClangNode):
     def is_class_or_struct(self):
         return self.cxx_element.kind in (ElementKind.STRUCT_DECL,
                                          ElementKind.CLASS_DECL,
-                                         ElementKind.CLASS_TEMPLATE)
+                                         ElementKind.CLASS_TEMPLATE,
+                                         ElementKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION)
 
     @cached_property
     @allowed_after_build
-    def base_type_specifier_nodes(self):
+    def _base_type_specifier_nodes(self):
         if not self.is_class_or_struct:
             return None
 
@@ -387,15 +403,12 @@ class CXXNode(ClangNode):
         for base_specifier in self.cxx_element.get_children():
             if base_specifier.kind == cli.CursorKind.CXX_BASE_SPECIFIER:
                 base_type = base_specifier.type
-                # lookup is done with template_type_name (without template parameters)
-                type_name = cutil.template_type_name(base_type)
                 # lookup with type spelling, then with canonical type name spelling
                 # (to support template usages with namespace)
-                base_node = self.root.find_node(type_name)
+                base_node = self.root.find_node(base_type.spelling, match_template=False)
                 if base_node is None:
                     # canonical type spelling is used in case of typedefs
-                    canonical_type_name = cutil.template_type_name(base_type.get_canonical())
-                    base_node = self.root.find_node(canonical_type_name)
+                    base_node = self.root.find_node(base_type.get_canonical().spelling, match_template=False)
 
                 if base_node:
                     base_type_specifier_nodes.append(base_node)
@@ -448,48 +461,3 @@ class CXXNode(ClangNode):
                 return i
 
         return None
-
-    @cached_property
-    @available_on(cli.CursorKind.STRUCT_DECL,
-                  cli.CursorKind.CLASS_DECL,
-                  cli.CursorKind.CLASS_TEMPLATE)
-    def ancestor_nodes(self):
-        """
-        Returns:
-            List of ancestor nodes which have an API.
-        Raises:
-            AttributeError: If current node is not a class/struct node.
-        """
-        bases = []
-        for base in self.cxx_element.base_type_elements:
-            base = self.root.find_node_by_type(base.type)
-            if base:
-                bases.append(base)
-        return bases
-
-    @cached_property
-    @available_on(cli.CursorKind.CXX_METHOD)
-    def overridden_nodes(self):
-        """
-        Returns:
-            List of overridden nodes which have an API.
-        Raises:
-            AttributeError: If current node is not a method node.
-        """
-
-        def _get_overridden_nodes(cxx_element):
-
-            nodes = []
-            ancestor_contexts = self.parent.ancestor_nodes
-            if cxx_element.get_overriden_cursors():
-                for overridden in cxx_element.get_overriden_cursors():
-                    func_node = self.root.find_node_by_type(cutil.get_full_displayname(overridden))
-                    parent_node = self.root.find_node_by_type(cutil.get_full_displayname(overridden.lexical_parent))
-                    # if overridden method has not api but is parent has then consider it as well
-                    if parent_node and parent_node in ancestor_contexts:
-                        if func_node:
-                            nodes.append(func_node)
-                        nodes += _get_overridden_nodes(overridden)
-            return nodes
-
-        return _get_overridden_nodes(self.cxx_element)

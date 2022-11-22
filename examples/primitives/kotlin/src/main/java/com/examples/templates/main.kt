@@ -1,6 +1,7 @@
 package com.examples.templates
 
 import com.examples.templates.*
+import com.examples.templates.stack.RootsStack
 import com.examples.simple.*
 import com.examples.forward_decl.student.Student
 import com.examples.overloads.Employee
@@ -29,6 +30,13 @@ assert(stackNumber.top().num == num1.num)
 stackPrj.push(prj)
 val stackPrjCopy = StackPrj(stackPrj)
 assert(stackPrj.top() == stackPrjCopy.top())
+
+// specialized stack usage
+val stackRoot = RootsStack()
+val rootHome = Root("/home")
+stackRoot.push(rootHome)
+assert(stackRoot.top().path == rootHome.path)
+
 // [stack-examples-end]
 
 //other test cases
@@ -119,6 +127,16 @@ assert(arrayInt == arrayIntCopy)
 assert(arrayInt[0] == 1)
 val arrayIntSum = arrayInt + arrayIntCopy
 assert(arrayIntSum.data() == listOf(2, 4))
+
+// template specialization example
+val array4Int = Array4Int(listOf(1, 2, 3, 4))
+assert(array4Int[0] == 1)
+assert(array4Int[3] == 4)
+
+val array4Float = Array4Float(listOf(1.0F, 2.0F, 3.0F, 4.0F))
+assert(array4Float[0] == 1.0F)
+assert(array4Float[3] == 4.0F)
+
 // [array-examples-end]
 
 // [template-instance-examples-start]
@@ -167,6 +185,38 @@ val elemsEmpty = ElementsEmpty.create()
 assert(elemsEmpty.holder.size == 0)
 // [variadic-examples-end]
 
+
+// [tuple-examples-start]
+val tupleDoubleInt = TupleDoubleInt(1, 2.0)
+assert(tupleDoubleInt.tail == 1)
+assert(tupleDoubleInt.rest.tail == 2.0)
+
+val tupleThreeInt = TupleThreeInt(1, 2, 3)
+assert(tupleThreeInt.tail == 1)
+assert(tupleThreeInt.rest.tail == 2)
+assert(tupleThreeInt.rest.rest.tail == 3)
+
+val tupleTwoInt = TupleTwoInt(1, 2)
+assert(tupleTwoInt.tail == 1)
+assert(tupleTwoInt.rest.tail == 2)
+// [tuple-examples-end]
+
+// tuple other usage examples
+val intsTuple = IntsTuple(1, 2, 3)
+assert(intsTuple.tail == 1)
+assert(intsTuple.rest.tail == 2)
+assert(intsTuple.rest.rest.tail == 3)
+
+val myTupleDouble = MyTupleDouble(1.0, 5.0)
+assert(myTupleDouble.tail == 1.0)
+assert(myTupleDouble.rest.tail == 5.0)
+
+val myTupleInt = MyTupleInt(1, 2)
+assert(myTupleInt.tail == 1)
+assert(myTupleInt.rest.tail == 2)
+
+assert(getTupleFirstElement(tupleDoubleInt) == 1)
+assert(getTupleFirstElement(tupleTwoInt) == 1)
 
 // check array as an arg and return value
 assert(getFirstElement(arrayInt) == 1)

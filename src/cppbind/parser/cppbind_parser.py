@@ -202,6 +202,7 @@ class CXXParser:
             cli.CursorKind.STRUCT_DECL,
             cli.CursorKind.CLASS_DECL,
             cli.CursorKind.CLASS_TEMPLATE,
+            cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
             cli.CursorKind.ENUM_DECL,
             cli.CursorKind.FUNCTION_DECL,
             cli.CursorKind.FUNCTION_TEMPLATE)
@@ -211,6 +212,7 @@ class CXXParser:
                 cli.CursorKind.STRUCT_DECL,
                 cli.CursorKind.CLASS_DECL,
                 cli.CursorKind.CLASS_TEMPLATE,
+                cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
                 cli.CursorKind.CONSTRUCTOR,
                 cli.CursorKind.CXX_METHOD,
                 cli.CursorKind.FIELD_DECL,

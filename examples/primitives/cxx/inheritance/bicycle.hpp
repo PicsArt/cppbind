@@ -67,6 +67,59 @@ public:
     std::string name;
 };
 
+
+/**
+ * __API__
+ * action: gen_class
+ * shared_ref: True
+ * package: inheritance
+ */
+class MountainBicycle : public Bicycle {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    MountainBicycle(int numberOfSeats) : Bicycle(numberOfSeats) {};
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    std::string type() const override {
+        return "MountainBicycle";
+    }
+
+};
+
+/**
+ * __API__
+ * action: gen_class
+ * shared_ref: True
+ * package: inheritance
+ */
+class ElectricCityBicycle : public ElectricBicycle {
+public:
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    ElectricCityBicycle(int numberOfSeats) : ElectricBicycle(numberOfSeats) {};
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    std::string type() const override {
+        return "ElectricCityBicycle";
+    }
+
+};
+
 // [example-end]
 }
 #endif

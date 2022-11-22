@@ -25,6 +25,13 @@ assert(stackNumber.top().num == num1.num)
 stackPrj.push(item: prj)
 let stackPrjCopy = StackPrj(stack: stackPrj)
 assert(stackPrj.top() == stackPrjCopy.top())
+
+// specialized stack usage
+let stackRoot = RootsStack()
+let rootHome = Root(path: "/home")
+stackRoot.push(item: rootHome)
+assert(stackRoot.top().path == rootHome.path)
+
 // [stack-examples-end]
 
 //other test cases
@@ -119,6 +126,16 @@ assert(arrayInt == arrayIntCopy)
 assert(arrayInt[0] == 1)
 let arrayIntSum = arrayInt + arrayIntCopy
 assert(arrayIntSum.data() == [2, 4])
+
+// template specialization example
+let array4Int = Array4Int(array: [1, 2, 3, 4])
+assert(array4Int[0] == 1)
+assert(array4Int[3] == 4)
+
+let array4Float = Array4Float(array: [1.0, 2.0, 3.0, 4.0])
+assert(array4Float[0] == 1.0)
+assert(array4Float[3] == 4.0)
+
 // [array-examples-end]
 
 // [template-instance-examples-start]
@@ -168,6 +185,39 @@ assert(elemsEmpty.holder.count == 0)
 // [variadic-examples-end]
 
 // check array as an arg and return letue
+// [tuple-examples-start]
+let tupleDoubleInt = TupleDoubleInt(t: 1, ts1: 1.0)
+assert(tupleDoubleInt.tail == 1)
+assert(tupleDoubleInt.rest.tail == 1.0)
+
+let tupleThreeInt = TupleThreeInt(t: 1, ts1: 2, ts2: 3)
+assert(tupleThreeInt.tail == 1)
+assert(tupleThreeInt.rest.tail == 2)
+assert(tupleThreeInt.rest.rest.tail == 3)
+
+let tupleTwoInt = TupleTwoInt(t: 1, ts1: 2)
+assert(tupleTwoInt.tail == 1)
+assert(tupleTwoInt.rest.tail == 2)
+// [tuple-examples-end]
+
+// tuple other usage examples
+let intsTuple = IntsTuple(a: 1, b: 2, c: 3)
+assert(intsTuple.tail == 1)
+assert(intsTuple.rest.tail == 2)
+assert(intsTuple.rest.rest.tail == 3)
+
+let myTupleDouble = MyTupleDouble(a: 1.0, b: 5.0)
+assert(myTupleDouble.tail == 1.0)
+assert(myTupleDouble.rest.tail == 5.0)
+
+let myTupleInt = MyTupleInt(a: 1, b: 2)
+assert(myTupleInt.tail == 1)
+assert(myTupleInt.rest.tail == 2)
+
+assert(getTupleFirstElement(t1: tupleDoubleInt) == 1)
+assert(getTupleFirstElement(t1: tupleTwoInt) == 1)
+
+// check array as an arg and return value
 assert(getFirstElement(a: arrayInt) == 1)
 assert(getLastElement(a: arrayInt) == 2)
 let arrayMultiplied = multiplyElements(a: arrayInt, num: 2)

@@ -27,7 +27,7 @@ NODE_GROUP_ALIASES = {
     'cxx_function': ('function', 'function_template'),
     'cxx_constructor': ('constructor', 'constructor_template'),
     'cxx': (
-        'class', 'class_template', 'struct', 'struct_template', 'constructor', 'constructor_template',
+        'class', 'class_template', 'class_template_partial_specialization', 'struct', 'struct_template', 'constructor', 'constructor_template',
         'function', 'function_template', 'method', 'method_template', 'enum', 'field'
     ),
 }

@@ -141,7 +141,7 @@ file:
 var_pybind_module_cxx: &var_pybind_module
   body:
     unique_content: |
-      {%- set package_name = vars.package|replace('.', '_') -%}
+      {%- set package_name = vars.full_package|replace('.', '_') -%}
       {{marker}}py::module_ {{package_name}} = m.def_submodule("{{vars.package}}", "{{vars.package}}");
       {{marker}}py::module_ {{package_name}}_{{vars.file}} = {{package_name}}.def_submodule("{{vars.file}}", "{{vars.file}}");
       {{marker}}bind{{vars.full_package|replace('.', '_')|to_camel_case(capitalize=True)}}({{package_name}}_{{vars.file}});
@@ -271,7 +271,8 @@ var_class: &var_class
           {%- if not cxx.is_polymorphic and cxx.has_multiple_base_branches -%}
           {%-   do Error.critical(cxx.type_name + ' is not polymorphic but has multiple branches in its base hierarchy') -%}
           {%- endif -%}
-          {%- if ancestors|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
+          {%- set ancestor_infos = cxx.ancestors|type_info(error=False)|reject('none')|selectattr('has_api')|list %}
+          {%- if ancestor_infos|rejectattr('vars.shared_ref', 'equalto', vars.shared_ref)|list|length != 0 %}
           {%-   do Error.critical(cxx.type_name + ' ancestors have different values for shared_ref variable.') %}
           {%- endif %}
           {%- if vars.header_code_fragment %}

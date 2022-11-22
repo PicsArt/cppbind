@@ -21,7 +21,10 @@ from examples_lib.inheritance import (
     GoodYoungDoctor,
     GoodOldDoctor,
     Circle,
-    RegularTriangle
+    RegularTriangle,
+    ElectricBicycle,
+    MountainBicycle,
+    ElectricCityBicycle
 )
 
 # [simple-inheritance-usage-start]
@@ -47,11 +50,11 @@ assert square.perimeter() == 20
 
 # [enable-shared-from-this-usage-start]
 circle = Circle.create(2.0)
-assert(circle.area() * 4 == circle.increment_radius(2.0).area())
+assert circle.area() * 4 == circle.increment_radius(2.0).area()
 
 regularTriangle = RegularTriangle(10.0)
-assert(regularTriangle.area() * 4 == regularTriangle.increment_side(10.0).area())
-assert(regularTriangle.area() * 4 == regularTriangle.multiply_side(2.0).area())
+assert regularTriangle.area() * 4 == regularTriangle.increment_side(10.0).area()
+assert regularTriangle.area() * 4 == regularTriangle.multiply_side(2.0).area()
 # [enable-shared-from-this-usage-end]
 
 # other test cases
@@ -63,9 +66,9 @@ assert gf.parallelogram == rhombus
 mv = MyVehicle(bicycle, bicycle)
 mv.vehicle = bicycle
 
-assert(mv.vehicle.type() == "bicycle")
+assert mv.vehicle.type() == "bicycle"
 mv.const_vehicle = bicycle
-assert(mv.const_vehicle.type() == "bicycle")
+assert mv.const_vehicle.type() == "bicycle"
 
 # mixed multiple inheritance with interface and class
 dt = DateTime(15, 1, 2015, 15, 15, 15)
@@ -139,3 +142,13 @@ assert doctor_usage.get_good_doctor_name(doctor_usage.get_good_doctor()) == "goo
 good_old_doctor = GoodOldDoctor("good_old_doctor")
 assert doctor_usage.get_good_doctor_name(good_old_doctor) == "good_doctor"
 assert doctor_usage.get_good_doctor_name(doctor_usage.get_good_virtual_doctor()) == "good_doctor"
+
+# test override and is_override
+electricBicycle = ElectricBicycle(1)
+assert electricBicycle.type() == "ElectricBicycle"
+
+mountainBicycle = MountainBicycle(1)
+assert mountainBicycle.type() == "MountainBicycle"
+
+electricCityBicycle = ElectricCityBicycle(1)
+assert electricCityBicycle.type() == "ElectricCityBicycle"

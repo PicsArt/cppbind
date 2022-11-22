@@ -156,7 +156,7 @@ using ArrayFloat = Array<>;
  * throws: no_throw
  * package: templates
  */
-cppbind::example::ArrayFloat addToElements(const cppbind::example::ArrayFloat& a, int num) {
+ArrayFloat addToElements(const cppbind::example::ArrayFloat& a, int num) {
     std::array<float, 2> res {num + a[0], num + a[1]};
     return res;
 }
@@ -217,6 +217,44 @@ public:
 private:
     std::array<float, LENGTH3> _arr {};
 };
+
+/**
+ * An example with template partial specialization.
+ * __API__
+ * action: gen_class
+ * shared_ref: True
+ * package: templates
+ * template_instance:
+ *   - args: float
+ *     name: Array4Float
+ *   - args: int
+ *     name: Array4Int
+ */
+template <typename T>
+class Array<T, 4> {
+
+public:
+
+    /**
+     * __API__
+     * action: gen_constructor
+     * throws: no_throw
+     */
+    Array(const std::array<T, 4> array) : _array(array) {}
+
+    /**
+     * __API__
+     * action: gen_method
+     * throws: no_throw
+     */
+    T& operator[](int idx) {
+        return _array[idx];
+    }
+
+private:
+    std::array<T, 4> _array {};
+};
+
 // [example-end]
 
 }

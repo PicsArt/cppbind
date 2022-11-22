@@ -117,5 +117,5 @@ constructor:
       {%-   set target_type_name = parent_class_converter.swift.target_type_name -%}
       {%-   set is_constructor = cxx.kind_name in ('constructor',  'constructor_template') -%}
       {%-   set target_overloading_index = '_' + target_overloading_index|string if target_overloading_index else '' -%}
-      {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix()}}{{target_overloading_index}}
+      {{'create' if is_constructor else 'func'}}_{{cxx_namespace + "_" if cxx_namespace}}{{target_type_name|replace('.',  '_')}}{{'_' + vars.name if not is_constructor}}{{get_overloading_postfix(vars)}}{{get_template_postfix(cxx)}}{{target_overloading_index}}
       {%- endmacro -%}

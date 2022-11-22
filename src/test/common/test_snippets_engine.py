@@ -37,6 +37,10 @@ from cppbind.cxx_exposed import CXXExposedType
         (
             'a::b::B',
             []
+        ),
+        (
+            'tuple<>',
+            []
         )
     ]
 )

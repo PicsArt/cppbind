@@ -66,28 +66,35 @@ converters: |
 
 
 templates: |
-  {%- macro get_template_postfix() -%}
-  {%-   if cxx.is_template and template_choice -%}
-  {%-     for value in template_choice.values() -%}
-  {%-       if value is string -%}
-              {{get_type_converter(value).custom.tname}}
+  {%- macro get_template_postfix(cxx) -%}
+  {%-   for kind in cxx.template_arguments -%}
+  {%-     if cxx.template_arguments[loop.index - 1].kind == ElementKind.TEMPLATE_TYPE_PARAMETER -%}
+  {%-       set converter = get_type_converter(cxx.template_arguments[loop.index - 1].value, error=False) -%}
+  {%-       if converter -%}
+              {{converter.custom.tname}}
   {%-       else -%}
-              {{value}}
+              {{cxx.template_arguments[loop.index - 1].value.type_name|replace('::', '_')|to_camel_case}}
   {%-       endif -%}
-  {%-     endfor -%}
-  {%-   endif -%}
+  {%-     else -%}
+            {{cxx.template_arguments[loop.index - 1].value}}
+  {%-     endif -%}
+  {%-   endfor -%}
   {%- endmacro -%}
-  {%- macro get_template_getter_name() -%}
-  {%-   if cxx.is_template and template_choice -%}
-  {%-     set values = template_choice.values()|list -%}
+  {%- macro get_template_getter_name(cxx, template_args_postfixes) -%}
+  {%-   if cxx.template_arguments -%}
   {%-     for template_arg_name in template_args_postfixes -%}
   {%-       if template_arg_name is not none -%}
             {{template_arg_name}}
   {%-       else -%}
-  {%-         if template_arg_name is string -%}
-                {{get_type_converter(value).custom.tname}}
+  {%-         if cxx.template_arguments[loop.index - 1].kind == ElementKind.TEMPLATE_TYPE_PARAMETER -%}
+  {%-           set converter = get_type_converter(cxx.template_arguments[loop.index - 1].value, error=False) -%}
+  {%-           if converter -%}
+                  {{converter.custom.tname}}
+  {%-           else -%}
+                  {{cxx.template_arguments[loop.index - 1].value.type_name|replace('::', '_')|to_camel_case}}
+  {%-           endif -%}
   {%-         else -%}
-                {{values[loop.index]}}
+                {{cxx.template_arguments[loop.index - 1].value}}
   {%-         endif -%}
   {%-       endif -%}
   {%-     endfor -%}
@@ -104,8 +111,8 @@ templates: |
   {%- macro gen_template_instantiation(cxx, template_choice) -%}
   {%-   set comma = joiner(', ') -%}
   <
-  {%-   for param in cxx.template_parameters -%}
-  {{comma()}}{{template_choice.get(param)}}
+  {%-   for arg in cxx.template_arguments -%}
+  {{comma()}}{{arg.value.type_name if arg.kind == ElementKind.TEMPLATE_TYPE_PARAMETER else arg.value}}
   {%-   endfor -%}
   >
   {%- endmacro -%}

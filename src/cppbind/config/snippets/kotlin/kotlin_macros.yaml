@@ -124,7 +124,7 @@ templates:
       {%-   if cxx.is_template or (cxx.is_overloaded and overloading_index) -%}
       {%-     for arg in args -%}
       {%-       if get_type_converter(arg.type).custom.is_kotlin_type_erased|default(False) -%}
-                  @JvmName("{{vars.name}}{{get_template_postfix() if cxx.is_template else overloading_index}}")
+                  @JvmName("{{vars.name}}{{get_template_postfix(cxx) if cxx.is_template else overloading_index}}")
                   {%- break -%}
       {%-       endif -%}
       {%-     endfor %}
@@ -151,5 +151,5 @@ constructor:
       {%- set parent_type_name = parent_class_converter.kotlin.get_target_type_name(interface_class=parent_class_converter.type_info.vars.action == 'gen_interface') %}
       {%- macro get_constructor_jni_name(target_overloading_index=none) -%}
       {%-   set target_overloading_index = target_overloading_index|string if target_overloading_index else '' -%}
-      {{cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix() + target_overloading_index)}}
+      {{cppbind_helper.get_jni_func_name(vars.full_package, parent_type_name, constructor_jvm_name + get_overloading_postfix(vars) + get_template_postfix(cxx) + target_overloading_index)}}
       {%- endmacro -%}

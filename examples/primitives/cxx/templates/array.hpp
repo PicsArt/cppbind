@@ -175,6 +175,20 @@ ArrayInt addToElements(const ArrayInt& a, int num) {
     return res;
 }
 
+/**
+ * An example of template function with an argument of Array<T, 2> type.
+ * __API__
+ * action: gen_function
+ * throws: no_throw
+ * package: templates
+ * template_instance:
+ *      - args: int, 2
+ */
+template<typename T, std::size_t SIZE>
+T getLastElement(const cppbind::example::Array<T, SIZE>& a) {
+    return a[SIZE - 1];
+}
+
 static constexpr size_t SIZE = 3;
 static constexpr size_t LENGTH3 = SIZE * SIZE;
 

@@ -287,8 +287,24 @@ class RunRule:
                 parent_choices = RunRule._get_template_infos(node.parent, ignore_parents)
 
         for spec in node_template_arg:
-            choice = dict(zip(parameters, cutil.get_template_arguments_from_str(
-                f'<{spec.get(TEMPLATE_INSTANCE_ARGS_KEY)}>')))
+            arguments = cutil.get_template_arguments_from_str(f'<{spec.get(TEMPLATE_INSTANCE_ARGS_KEY)}>')
+            i = 0
+            choice = {}
+            while True:
+                parameter = parameters[i]
+                if parameter.is_variadic:
+                    # assuming variadic parameter is the last one
+                    if i == len(parameters) - 1:
+                        choice[parameter.spelling] = arguments[i:]
+                        break
+                    else:
+                        raise RuntimeError(
+                            "CPPBind supports variadic parameter only if it's the last one in the parameter list.")
+                else:
+                    choice[parameter.spelling] = arguments[i]
+                if i == len(parameters) - 1:
+                    break
+                i += 1
             template_choice_name = [spec[TEMPLATE_NAME_KEY]] if TEMPLATE_NAME_KEY in spec else None
             if parent_choices:
                 choices += [TemplateInfo(choice={**parent_choice.choice, **choice},
@@ -329,7 +345,8 @@ class RunRule:
                 parent_choices = RunRule._get_template_infos(node.parent, ignore_parents)
 
         # reorder user provided template  to match the template type/function order
-        node_template_arg = {k: node_template_arg[k] for k in node.cxx_element.template_parameters}
+        node_template_arg = {param.spelling: node_template_arg[param.spelling] for param in
+                             node.cxx_element.template_parameters}
 
         all_possible_args = list(itertools.product(*node_template_arg.values()))
         template_keys = node_template_arg.keys()

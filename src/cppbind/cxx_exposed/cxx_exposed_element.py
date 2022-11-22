@@ -6,12 +6,16 @@
 """
 Module to define which cxx properties must be exposed to jinja snippets.
 """
+import itertools
+import types
+from copy import copy
 
 from cached_property import cached_property
 
 import cppbind.utils.clang as cutil
 from cppbind.cxx_exposed.cxx_exposed_type import CXXExposedType
 from cppbind.ir import ElementKind
+from cppbind.ir.cxx_element import CXXArgumentElement
 
 
 class CXXExposedElement:
@@ -48,16 +52,16 @@ class CXXExposedElement:
         if kind == ElementKind.ENUM_DECL:
             return CXXEnumExposedElement(cxx_element)
         if kind in (
-            ElementKind.FUNCTION_DECL,
-            ElementKind.FUNCTION_TEMPLATE,
-            ElementKind.CXX_METHOD,
-            ElementKind.CONSTRUCTOR
+                ElementKind.FUNCTION_DECL,
+                ElementKind.FUNCTION_TEMPLATE,
+                ElementKind.CXX_METHOD,
+                ElementKind.CONSTRUCTOR
         ):
             return CXXFunctionExposedElement(cxx_element, template_choice)
         if kind in (
-            ElementKind.CLASS_DECL,
-            ElementKind.STRUCT_DECL,
-            ElementKind.CLASS_TEMPLATE
+                ElementKind.CLASS_DECL,
+                ElementKind.STRUCT_DECL,
+                ElementKind.CLASS_TEMPLATE
         ):
             return CXXClassExposedElement(cxx_element, template_choice)
         if kind == ElementKind.PARM_DECL:
@@ -134,7 +138,6 @@ class CXXFunctionExposedElement(CXXExposedElement):
         self.is_static = cxx_element.is_static
         self.is_const = cxx_element.is_const
         self.is_overloaded = cxx_element.is_overloaded
-        self.template_parameters = cxx_element.template_parameters
 
     @cached_property
     def overridden_elements(self):
@@ -148,8 +151,48 @@ class CXXFunctionExposedElement(CXXExposedElement):
 
     @cached_property
     def args(self):
-        return [CXXArgumentExposedElement(arg, template_choice=self._template_choice)
-                for arg in self._cxx_element.args]
+        _args = []
+        template_choice = copy(self._template_choice)
+        for arg in self._cxx_element.args:
+            # if the argument is a template parameter pack, e.g., Args... then we unpack it
+            # and expose each as a separate argument
+            # for example if the choice for Args is [int, float]
+            # then we expose two arguments corresponding to int and float respectively
+            if arg.is_variadic:
+                for k in template_choice:
+                    if not isinstance(template_choice[k], list):
+                        template_choice[k] = [template_choice[k]]
+                for i, choice_values in enumerate(list(itertools.product(*template_choice.values()))):
+                    # copy the argument and set index to overwrite the name
+                    # e.g. first argument - args1, second - args2 and so on
+                    arg_copy = CXXArgumentElement(arg._clang_cursor, i)
+                    _args.append(CXXArgumentExposedElement(arg_copy,
+                                                           template_choice=dict(
+                                                               zip(template_choice.keys(), choice_values))))
+            else:
+                _args.append(CXXArgumentExposedElement(arg, template_choice=self._template_choice))
+        return _args
+
+    @cached_property
+    def template_arguments(self):
+        """Return list of namespaces containing template argument type and kind information."""
+        _args = []
+        if self.is_template:
+            for param in self._cxx_element.template_parameters:
+                value = self._template_choice[param.spelling]
+                if isinstance(value, list):
+                    for item in value:
+                        _args.append(types.SimpleNamespace(
+                            value=CXXExposedType(item,
+                                                 self._template_choice) if param.kind == ElementKind.TEMPLATE_TYPE_PARAMETER else item,
+                            kind=param.kind
+                        ))
+                else:
+                    val = CXXExposedType(value,
+                                         self._template_choice) if param.kind == ElementKind.TEMPLATE_TYPE_PARAMETER else value
+                    _args.append(types.SimpleNamespace(value=val,
+                                                       kind=param.kind))
+        return _args
 
 
 class CXXArgumentExposedElement(CXXExposedElement):
@@ -165,10 +208,6 @@ class CXXArgumentExposedElement(CXXExposedElement):
     @cached_property
     def type(self):
         return CXXExposedType(self._cxx_element.type, template_choice=self._template_choice)
-
-    @cached_property
-    def is_variadic(self):
-        return self._cxx_element.type.type_name.endswith('...')
 
 
 class CXXMemberExposedElement(CXXExposedElement):

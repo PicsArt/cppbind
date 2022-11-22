@@ -148,8 +148,29 @@ assert(vecDoubleSum[0] == 2.0)
 
 // [template-instance-examples-end]
 
+// [variadic-examples-start]
+val elemsInt = ElementsInt.create(1, 2)
+val holderInt = elemsInt.holder
+
+assert(holderInt.size == 2)
+assert(holderInt[0] == 1)
+assert(holderInt[1] == 2)
+
+val elemsString = ElementsString.create("a", "b", "c")
+val holderString = elemsString.holder
+
+assert(holderString.size == 3)
+assert(holderString[0] == "a")
+assert(holderString[2] == "c")
+
+val elemsEmpty = ElementsEmpty.create()
+assert(elemsEmpty.holder.size == 0)
+// [variadic-examples-end]
+
+
 // check array as an arg and return value
 assert(getFirstElement(arrayInt) == 1)
+assert(getLastElement(arrayInt) == 2)
 val arrayMultiplied = multiplyElements(arrayInt, 2)
 assert(arrayMultiplied.data() == listOf(2, 4))
 

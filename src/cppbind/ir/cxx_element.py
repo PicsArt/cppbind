@@ -117,14 +117,22 @@ class CXXElement:
         """Checks whether the cursor is templated"""
         return cutil.is_templated(self._clang_cursor)
 
-    @property
+    @cached_property
     def template_parameters(self):
-        """Return the list of template parameters.
+        """Return the list of namespaces containing template parameter information.
          For example for
-          template <typename T, typename Allocator=std::allocator<T>>
-          class Vector {
-        will return ['T', 'Allocator']."""
-        return [c.spelling for c in self.get_template_parameter_cursors()]
+          template <typename T, typename... Ts> class tuple {}
+        will return:
+        [
+            SimpleNamespace(is_variadic=False, kind=CursorKind.TEMPLATE_TYPE_PARAMETER, spelling='T'),
+            SimpleNamespace(is_variadic=True, kind=CursorKind.TEMPLATE_TYPE_PARAMETER, spelling='Ts'),
+        ]"""
+
+        return [types.SimpleNamespace(
+            is_variadic=cutil.is_variadic(c),
+            kind=c.kind,
+            spelling=c.spelling
+        ) for c in self.get_template_parameter_cursors()]
 
     @property
     def parent(self):
@@ -144,16 +152,16 @@ class CXXElement:
         if kind == cli.CursorKind.ENUM_DECL:
             return CXXEnumElement(clang_cursor)
         if kind in (
-            cli.CursorKind.FUNCTION_DECL,
-            cli.CursorKind.FUNCTION_TEMPLATE,
-            cli.CursorKind.CXX_METHOD,
-            cli.CursorKind.CONSTRUCTOR
+                cli.CursorKind.FUNCTION_DECL,
+                cli.CursorKind.FUNCTION_TEMPLATE,
+                cli.CursorKind.CXX_METHOD,
+                cli.CursorKind.CONSTRUCTOR
         ):
             return CXXFunctionElement(clang_cursor)
         if kind in (
-            cli.CursorKind.CLASS_DECL,
-            cli.CursorKind.STRUCT_DECL,
-            cli.CursorKind.CLASS_TEMPLATE
+                cli.CursorKind.CLASS_DECL,
+                cli.CursorKind.STRUCT_DECL,
+                cli.CursorKind.CLASS_TEMPLATE
         ):
             return CXXClassElement(clang_cursor)
         if kind == cli.CursorKind.PARM_DECL:
@@ -363,8 +371,8 @@ class CXXArgumentElement(CXXElement):
 
         # use arg{i} name when the cursor spelling is empty
         # TODO: maybe we can move this logic to snippets
-        if not spelling and self.__arg_idx is not None:
-            return f'arg{self.__arg_idx + 1}'
+        if (self.is_variadic or not spelling) and self.__arg_idx is not None:
+            return f'{spelling or "arg"}{self.__arg_idx + 1}'
 
         return spelling
 
@@ -433,6 +441,11 @@ class CXXArgumentElement(CXXElement):
     def default_is_nullptr(self):
         """Checks whether a default value is nullptr"""
         return self.__default_info.kind == DefaultValueKind.NULL_PTR
+
+    @cached_property
+    def is_variadic(self):
+        """Return whether the argument is template parameter pack or not."""
+        return cutil.is_variadic(self._clang_cursor)
 
 
 class CXXMemberElement(CXXElement):

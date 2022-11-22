@@ -136,9 +136,6 @@ all kinds of cxx elements.
 - **type** - type information about the class/struct. With the help of this variable
     we can access the properties of cxx type which are described in the **cxx** section
     in [this](type_converter_snippets.md#available-variables) doc.
-- **template_parameters** - the list of the template parameters if the class/struct is
-    templated (otherwise it's an empty list). For example, for a class/struct declared with
-    `template <typename T, typename V>`, the value of this property is `[T, V]`.
 
 #### Function (global function, method, constructor) specific properties
 
@@ -149,9 +146,11 @@ all kinds of cxx elements.
 - **overridden_elements** - a list of the overridden cxx elements of the method.
 - **result_type** - a cxx element corresponding to the function return type. 
 - **args** - a list of cxx elements corresponding to the function arguments.
-- **template_parameters** - the list of the template parameters if the function is
-    templated (otherwise it's an empty list). For example, for a function declared with
-    `template <typename T, typename V>`, the value of this property is `[T, V]`.
+- **template_arguments** - a list of namespaces containing
+    template argument's cxx type and kind. The kind field indicates
+    whether the template argument is a type or non-type parameter.
+    Possible values are **ElementKind.TEMPLATE_TYPE_PARAMETER** and
+    **ElementKind.TEMPLATE_NON_TYPE_PARAMETER**.
 
 #### Function argument specific properties
 

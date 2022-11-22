@@ -577,7 +577,7 @@ method:
         , &{{cxx.parent.type_name}}::{{cxx.name}}
         {%- endif -%}
         {%- if cxx.is_template -%}
-        {{gen_template_instantiation(cxx, template_choice)}}
+        {{gen_template_instantiation(cxx)}}
         {%- endif -%}
         {{', ' if cxx.args}}
         {%- set comma = joiner(', ') -%}
@@ -686,7 +686,7 @@ function:
             , &{{cxx.namespace}}::{{cxx.name}}
             {%- endif -%}
             {%- if cxx.is_template -%}
-            {{gen_template_instantiation(cxx, template_choice)}}
+            {{gen_template_instantiation(cxx)}}
             {%- endif -%}
             {{', ' if cxx.args}}
             {%- set comma = joiner(', ') -%}
@@ -785,7 +785,7 @@ getter:
         {%- do cppbind_helper.validate_template_getter_setter(cxx, vars, setter|default(none)) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
-        {{get_template_getter_name()}}
+        {{get_template_getter_name(cxx,  template_args_postfixes)}}
         {%-   else %}{{vars.name}}
         {%-   endif -%}
         {%- endmacro -%}
@@ -818,13 +818,13 @@ getter:
         {%- set parent_class_converter = get_type_converter(cxx.parent.type) -%}
         {%- macro gen_name() -%}
         {%-   if cxx.is_template -%}
-        {{get_template_getter_name()}}
+        {{get_template_getter_name(cxx,  template_args_postfixes)}}
         {%-   else %}{{vars.name}}
         {%-   endif -%}
         {%- endmacro -%}
         {%- if setter is defined %}
-        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
-        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{cxx.parent.type_name}}::{{setter.cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property("{{gen_name()|to_snake_case}}", py::cpp_function(&{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx) if cxx.is_template}}
+        {%-   if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %}), &{{cxx.parent.type_name}}::{{setter.cxx.name}}{{gen_template_instantiation(cxx) if cxx.is_template}}
         {#-   This should go to shared macro -#}
         {%-   if vars.keep_alive -%}
         {%-     set args = [get_type_converter(cxx.result_type)] %}
@@ -835,6 +835,6 @@ getter:
         , {{vars.keep_alive|map('increment')|format_list('py::keep_alive<1, {}>()')|join(', ')}}
         {%-   endif -%});
         {%- else %}
-        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx, template_choice) if cxx.is_template}}
+        {{parent_class_converter.python.target_type_name|decapitalize}}.def_property_readonly("{{gen_name()|to_snake_case}}", &{{cxx.parent.type_name}}::{{cxx.name}}{{gen_template_instantiation(cxx) if cxx.is_template}}
         {%-     if vars.return_value_policy %}, py::return_value_policy::{{vars.return_value_policy}}{%- endif %});
         {%- endif %}

@@ -2,9 +2,9 @@
 
 This section covers function and class templates. To generate bindings
 for function and class templates, we specify all expected values of
-template parameters. CppBind provides two variables: `template` and `template_instance`, to specify all possible template instantiations.
+template parameters. CppBind provides two variables: `template` and `template_instance`, to specify all template instantiations which should be exposed to target languages.
 The value of `template` variable is a mapping between template parameters and their expected arguments, in this case CppBind 
-deduces all possible combinations of template arguments, while the value of `template_instance` is a list of all instantiations. 
+deduces all combinations of template arguments, while the value of `template_instance` is a list of all instantiations. 
 
 !!! Note
     `template` and `template_instance` cannot be used together.
@@ -20,7 +20,7 @@ end="// [example-end]"
 ~~~
 
 Here we have three template member functions: `max`, `makePair` and `merge`. As you
-can see, we have specified all possible types for each parameter.
+can see, we have specified all types for each parameter that should be exposed to target languages.
 CppBind generates overloaded methods in target languages with each
 combination of template arguments.
 
@@ -162,7 +162,7 @@ And here are the usage examples:
     ~~~
 
 Now let's see another example using `template` variable.
-In this example we have a template class `Stack<T>` and we've specified all possible values for the template parameter `T`.
+In this example we have a template class `Stack<T>` and we've specified values that parameter `T` can have.
 
 Here is the code in C++:
 
@@ -174,11 +174,11 @@ Here is the code in C++:
   %} 
 ~~~
 
-We specified three possible values for template parameter `T` which
-means there can be three instantiations of `Stack`
-(`cppbind::example::Stack<cppbind::example::Task>`,
+We specified three values for template parameter `T` which
+means three instantiations of `Stack` will be exposed to target languages:
+`cppbind::example::Stack<cppbind::example::Task>`,
 `cppbind::example::Stack<cppbind::example::Project>`,
-`cppbind::example::Stack<cppbind::example::Number<int>>`). CppBind will
+`cppbind::example::Stack<cppbind::example::Number<int>>`. CppBind will
 generate a new class for each of these specializations.
 
 Note that we have specified `name` property for
@@ -285,7 +285,7 @@ Now let's see how the `name` is used for template getters/setters.
 ~~~
 
 In the above example, we have a template getter `fruits`, and we have
-specified two possible types for parameter `T`:
+specified two types for parameter `T`:
 `cppbind::example::Apple` and `cppbind::example::Pineapple`. Notice that
 the `name` is specified for both, which is used as a generated property
 name. As a result, we'll have `apple` and `pineapple` correspondingly.
@@ -378,7 +378,7 @@ end="// [example-end]"
 %} 
 ~~~
 
-As you can see, we have specified all possible values for both `T` and `SIZE`.
+As you can see, we have specified all values for both `T` and `SIZE`.
 CppBind generates four types corresponding to each combination of template arguments, i.e.,  `ArrayFloat1`, `ArrayFloat2`, `ArrayInt1` and `ArrayInt2`.
 
 Now let's see some usage examples:
@@ -427,5 +427,76 @@ Now let's see some usage examples:
         ~~~Swift
         {% 
         include "../../examples/primitives/swift/src/templates/array.swift" 
+        %} 
+        ~~~
+
+## Variadic Template Parameters
+
+Variadic templates are supported in the same way as regular templates,
+i.e., users should specify all variations they want to expose.
+
+Let's take a look at the following example.
+
+~~~C++
+  {% 
+    include "../../examples/primitives/cxx/templates/elements.hpp"
+    start="[example-start]"
+    end="// [example-end]"
+  %}
+~~~
+
+
+!!! Note
+    Only the `template_instance` variable can be used to expose instances for variadic templates.
+
+In the above example we specified three instantiations for `elements` struct,
+thus we will have three generated types in each target language.
+
+Let's take a look at some usage examples:
+
+=== "Kotlin"
+    ~~~Java
+    {% 
+    include "../../examples/primitives/kotlin/src/main/java/com/examples/templates/main.kt" 
+    start="// [variadic-examples-start]"
+    end="// [variadic-examples-end]"
+    %}
+    ~~~
+
+=== "Python"
+    ~~~Python
+    {% 
+    include "../../examples/primitives/python/src/examples_lib/templates/main.py" 
+    start="# [variadic-examples-start]"
+    end="# [variadic-examples-start]"
+    %}
+    ~~~
+
+=== "Swift"
+    ~~~Swift
+    {% 
+    include "../../examples/primitives/swift/src/templates/main.swift" 
+    start="// [variadic-examples-start]"
+    end="// [variadic-examples-start]"
+    %}
+    ~~~
+
+??? "Generated bindings"
+    === "Kotlin"
+        ~~~Java
+        {% 
+          include "../../examples/primitives/kotlin/src/main/java/com/examples/getters/fruits.kt" 
+        %} 
+        ~~~
+    === "Python"
+        ~~~Python
+        {% 
+          include "../../examples/primitives/python/src/examples_lib/getters/fruits_pygen.py" 
+        %} 
+        ~~~
+    === "Swift"
+        ~~~Swift
+        {% 
+          include "../../examples/primitives/swift/src/getters/fruits.swift" 
         %} 
         ~~~

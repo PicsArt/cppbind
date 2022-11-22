@@ -200,8 +200,29 @@ def replace_template_choice(type_name, template_choice):
         if replaced in template_choice:
             return template_choice[replaced]
         for typename, value in template_choice.items():
-            replaced = re.sub(rf'(^|[,<\s])(\s*){typename}([\s,>&*]|$)', rf'\g<1>\g<2>{value}\g<3>', replaced)
+            regex = rf'(^|[,<\s])(\s*){typename}([\s,>&.*]|$)'
+            val = ', '.join(value) if isinstance(value, list) else value
+            if val == '':
+                # val is an empty string when variadic template is used with an empty argument list e.g., tuple<>
+                match = re.search(regex, replaced)
+                # check if the first argument is empty and do not replace '<'
+                # e.g. for tuple<Ts...> will be tuple<...>
+                # for tuple<int, Ts...> will be tuple<int...>
+                g1 = '<' if match and '<' in match.group(1) else ''
+                g3 = '' if g1 else '\g<3>'
+                g3 = '>' if match and '>' in match.group(3) else g3
+                replaced = re.sub(regex, rf'{g1}{val}{g3}', replaced)
+            else:
+                replaced = re.sub(regex, rf'\g<1>\g<2>{val}\g<3>', replaced)
+        replaced = replaced.replace('.', '')
     return replaced
+
+
+def is_variadic(cursor):
+    """
+    Returns whether the cursor represents a template parameter pack or not.
+    """
+    return any(t.spelling == '...' for t in cursor.get_tokens())
 
 
 def is_integral_type(clang_type):
@@ -316,7 +337,9 @@ def get_template_arguments_from_str(type_spelling):
             arg_end_idx = length - i - 1
         if parentheses_count == 0:
             # if i=0 then self is not a template
-            if i != 0:
+            arg = type_spelling[length - i:arg_end_idx].strip()
+            # consider case with empty arguments, e.g. tuple<>
+            if i != 0 and arg:
                 template_args.append(type_spelling[length - i:arg_end_idx].strip())
             break
     return list(reversed(template_args))

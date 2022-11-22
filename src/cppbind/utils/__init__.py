@@ -16,7 +16,6 @@ import shutil
 import sys
 from collections.abc import Iterable
 from functools import cmp_to_key, lru_cache
-from operator import attrgetter
 from types import SimpleNamespace
 
 from isort.api import sort_code_string
@@ -27,7 +26,6 @@ from cppbind import BANNER_LOGO
 from cppbind import default_config
 from cppbind.common import JINJA_UNIQUE_MARKER, YAML_CONFIG_TEMPLATE_PATH
 from cppbind.common.error import Error
-from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
 
 DEFAULT_HELPER = 'cppbind_helper'
@@ -458,59 +456,3 @@ def get_helper_modules(language):
             modules[module_name] = module
 
     return modules
-
-
-def create_type_converter(snippets_engine, type_, error=True):
-    """Function to create a converter for a given type"""
-
-    try:
-        if isinstance(type_, str):
-            return snippets_engine.build_type_converter_with_typename(type_)
-        return snippets_engine.build_type_converter(type_)
-    except KeyError:
-        if error:
-            raise
-        return None
-
-
-def get_type_info(snippets_engine, type_, error=True):
-    """Function to return the type info for a given type"""
-
-    converter = create_type_converter(snippets_engine, type_, error=error)
-    return converter.type_info if converter else None
-
-
-def create_types_converters(snippets_engine, input_, attribute=None, error=True):
-    """Function to create converter(s) for given type(s)"""
-
-    if isinstance(input_, Iterable) and not isinstance(input_, str):
-        return [create_types_converters(snippets_engine, item, attribute, error) for item in input_]
-
-    try:
-        input_value = attrgetter(attribute)(input_) if attribute else input_
-    except AttributeError as err:
-        Error.critical(f"Error while applying 'type_converter' filter: {err}")
-    else:
-        if not isinstance(input_value, (str, CXXExposedType)):
-            Error.critical(f"'type_converter' filter is applicable only for 'str' and 'CXXExposedType' types "
-                           f"(or a list of those types). {type(input_value)} is an unexpected type.")
-
-        return create_type_converter(snippets_engine, input_value, error)
-
-
-def get_types_infos(snippets_engine, input_, attribute=None, error=True):
-    """Function to return the type info(s) for given type(s)"""
-
-    if isinstance(input_, Iterable) and not isinstance(input_, str):
-        return [get_types_infos(snippets_engine, item, attribute, error) for item in input_]
-
-    try:
-        input_value = attrgetter(attribute)(input_) if attribute else input_
-    except AttributeError as err:
-        Error.critical(f"Error while applying 'type_info' filter: {err}")
-    else:
-        if not isinstance(input_value, (str, CXXExposedType)):
-            Error.critical(f"'type_info' filter is applicable only for 'str' and 'CXXExposedType' types "
-                           f"(or a list of those types). {type(input_value)} is an unexpected type.")
-
-        return get_type_info(snippets_engine, input_value, error)

@@ -76,7 +76,6 @@ def make_func_context(ctx):
     def make():
         overloading_index = ctx.node.overloading_index
         # capturing template related properties since we use single context with different template choice
-        template_choice = ctx.template_choice
         template_args_postfixes = ctx.template_args_postfixes
 
         cxx = CXXFunctionExposedElement(ctx.node.cxx_element, ctx.template_choice)

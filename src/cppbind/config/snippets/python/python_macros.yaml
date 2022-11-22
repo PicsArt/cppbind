@@ -40,7 +40,7 @@ templates:
   - |
     {#- specializes common macros for python -#}
     {%- macro get_python_template_postfix() -%}
-    {%-   set postfix = get_template_postfix()|to_snake_case|lower -%}
+    {%-   set postfix = get_template_postfix(cxx)|to_snake_case|lower -%}
     {{'_' + postfix if postfix}}
     {%- endmacro -%}
 

@@ -120,6 +120,16 @@ class CXXType:
 
         return _base_types
 
+    @property
+    def is_variadic(self):
+        """Returns whether the type is a variadic template or an instance of a variadic template."""
+        if cutil.is_templated(self.__clang_type):
+            declaration = self.get_declaration()
+            if declaration:
+                return any(cutil.is_variadic(cursor) for cursor in
+                           cutil.get_template_parameter_cursors(self.get_declaration()))
+        return False
+
     def __getattr__(self, prop):
         """Delegate all missing methods/properties to the underlying clang Type object"""
 

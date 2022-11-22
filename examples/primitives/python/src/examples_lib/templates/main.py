@@ -17,10 +17,14 @@ from examples_lib.templates import (
     ArrayInt2,
     ArrayFloat2,
     get_first_element_int,
+    get_last_element_int2,
     multiply_elements,
     VectorInt,
     StringsVector,
-    Vector
+    Vector,
+    ElementsString,
+    ElementsInt,
+    ElementsEmpty
 )
 
 # [stack-examples-start]
@@ -166,8 +170,31 @@ vec_double_sum = vec_double + vec_double_copy
 assert(vec_double_sum[0] == 2.0)
 # [template-instance-examples-end]
 
+# [variadic-examples-start]
+
+elemsInt = ElementsInt.create(1, 2)
+holderInt = elemsInt.holder
+
+assert(len(holderInt) == 2)
+assert(holderInt[0] == 1)
+assert(holderInt[1] == 2)
+
+elemsString = ElementsString.create("a", "b", "c")
+holderString = elemsString.holder
+
+assert(len(holderString) == 3)
+assert(holderString[0] == "a")
+assert(holderString[2] == "c")
+
+elemsEmpty = ElementsEmpty.create()
+assert(len(elemsEmpty.holder) == 0)
+
+# [variadic-examples-end]
+
 # check array as an arg and return value
 assert(get_first_element_int(arrayInt) == 1)
+assert(get_last_element_int2(arrayInt) == 2)
+
 arrayMultiplied = multiply_elements(arrayInt, 2)
 assert(arrayMultiplied.data() == [2, 4])
 

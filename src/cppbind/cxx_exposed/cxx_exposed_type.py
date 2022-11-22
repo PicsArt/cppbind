@@ -43,7 +43,7 @@ class CXXExposedType:
     def type_name(self):
         return cutil.replace_template_choice(
             self._cxx_type if isinstance(self._cxx_type, str) else self._cxx_type.type_name,
-            self._template_choice)
+            self._template_choice).rstrip('.')
 
     @property
     def pointee_type(self):
@@ -98,6 +98,25 @@ class CXXExposedType:
         return False
 
     @cached_property
+    def __template_parameter_cursors(self):
+        if self._cxx_element:
+            return self._cxx_element.get_template_parameter_cursors()
+        else:
+            cursor = self._cxx_type.get_template_declaration()
+            return cutil.get_template_parameter_cursors(cursor)
+
+    @cached_property
+    def is_variadic(self):
+        """Returns whether the type is a variadic template or an instance of a variadic template."""
+        if isinstance(self._cxx_type, str):
+            # in case of strings we cannot identify whether it's variadic or not
+            return False
+        elif isinstance(self._cxx_type, CXXType):
+            return self._cxx_type.is_variadic
+        else:
+            return any(cutil.is_variadic(cursor) for cursor in self.__template_parameter_cursors)
+
+    @cached_property
     def template_arguments(self):
         """
         Returns a list of namespaces containing the argument and its kind, e.g. for std::array<double, 3> returns
@@ -114,11 +133,13 @@ class CXXExposedType:
             return self.__arguments_from_type_name()
 
         # either cursor or type is available, thus we can use them to retrieve information about template parameters
-        if self._cxx_element:
-            cursors = self._cxx_element.get_template_parameter_cursors()
-        else:
-            cursor = self._cxx_type.get_template_declaration()
-            cursors = cutil.get_template_parameter_cursors(cursor)
+        cursors = self.__template_parameter_cursors
+
+        if self.is_variadic:
+            # for variadic use string parse
+            # NOTE: later when adding support for other template parameter
+            # kinds like enums, floating point parameters, etc., it might be reasonable to not use string parsing
+            return self.__arguments_from_type_name()
 
         if isinstance(self._cxx_type, CXXType) and self._cxx_type.kind != TypeKind.UNEXPOSED:
             # clang Type is available, and it's not unexposed, we can take template arguments from it
@@ -198,7 +219,7 @@ class CXXExposedType:
 
     @property
     def unqualified_type_name(self):
-        return cutil.get_unqualified_type_name(self.type_name)
+        return cutil.get_unqualified_type_name(self.type_name).rstrip('.')
 
     @property
     def resolved_type(self):

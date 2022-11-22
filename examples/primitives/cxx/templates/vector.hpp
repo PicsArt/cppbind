@@ -18,7 +18,7 @@ namespace cppbind::example {
  *        name: StringsVector
  *      - args: double, std::allocator<double>
  */
-template <typename T, typename Allocator=std::allocator<T>>
+template <typename T, typename Allocator>
 class Vector {
 
 public:
@@ -36,7 +36,7 @@ public:
      */
     Vector(const cppbind::example::Vector<T, Allocator>& vec) : _vec(vec._vec) {}
 
-    Vector(const std::vector<T>& vec) : _vec(vec._vec) {}
+    Vector(const std::vector<T>& vec) : _vec(vec) {}
 
     /**
      * __API__
@@ -106,20 +106,21 @@ private:
 };
 // [template-instance-example-end]
 
-///**
-// * __API__
-// * action: gen_function
-// * throws: no_throw
-// * swift.file: template_vector
-// * template_instance:
-// *   - args: int, int
-// *     name: createIntArray
-// */
-//template <typename T, typename... Args>
-//static Vector<T>* createVector(Args&&... args) {
-//    return new Vector<T>(std::vector<T>(std::forward<Args>(args)...));
-//}
-
+/**
+ * An example with variadic template.
+ * __API__
+ * action: gen_function
+ * throws: no_throw
+ * package: templates
+ * swift.file: template_vector
+ * template_instance:
+ *   - args: int, int, int
+ *     name: createIntArray
+ */
+template <typename T, typename ...Args>
+static cppbind::example::Vector<T, std::allocator<T>>* createVector(Args... args) {
+    return new Vector<T, std::allocator<T>>(std::vector<T>(args...));
+}
 
 }
 #endif

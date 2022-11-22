@@ -13,7 +13,9 @@ import os
 import shutil
 from collections.abc import MutableMapping
 from functools import lru_cache, partial
+from operator import attrgetter
 from types import SimpleNamespace
+from typing import Iterable
 
 from jinja2 import TemplateSyntaxError, Template
 
@@ -26,11 +28,7 @@ from cppbind.cxx_exposed import CXXExposedType
 from cppbind.ir import ElementKind
 from cppbind.utils import (
     get_public_attributes,
-    get_type_info,
-    get_types_infos,
     init_jinja_env,
-    create_type_converter,
-    create_types_converters
 )
 
 OBJECT_INFO_TYPE = '$Object'
@@ -782,11 +780,63 @@ class SnippetsEngine:
 
         return type_info
 
+    def __create_type_converter(self, type_, error=True):
+        """Function to create a converter for a given type"""
+
+        try:
+            if isinstance(type_, str):
+                return self.build_type_converter_with_typename(type_)
+            return self.build_type_converter(type_)
+        except KeyError:
+            if error:
+                raise
+            return None
+
+    def __get_type_info(self, type_, error=True):
+        """Function to return the type info for a given type"""
+
+        converter = self.__create_type_converter(type_, error=error)
+        return converter.type_info if converter else None
+
+    def __create_types_converters(self, input_, attribute=None, error=True):
+        """Function to create converter(s) for given type(s)"""
+
+        if isinstance(input_, Iterable) and not isinstance(input_, str):
+            return [self.__create_types_converters(item, attribute, error) for item in input_]
+
+        try:
+            input_value = attrgetter(attribute)(input_) if attribute else input_
+        except AttributeError as err:
+            Error.critical(f"Error while applying 'type_converter' filter: {err}")
+        else:
+            if not isinstance(input_value, (str, CXXExposedType)):
+                Error.critical(f"'type_converter' filter is applicable only for 'str' and 'CXXExposedType' types "
+                               f"(or a list of those types). {type(input_value)} is an unexpected type.")
+
+            return self.__create_type_converter(input_value, error)
+
+    def __get_types_infos(self, input_, attribute=None, error=True):
+        """Function to return the type info(s) for given type(s)"""
+
+        if isinstance(input_, Iterable) and not isinstance(input_, str):
+            return [self.__get_types_infos(item, attribute, error) for item in input_]
+
+        try:
+            input_value = attrgetter(attribute)(input_) if attribute else input_
+        except AttributeError as err:
+            Error.critical(f"Error while applying 'type_info' filter: {err}")
+        else:
+            if not isinstance(input_value, (str, CXXExposedType)):
+                Error.critical(f"'type_info' filter is applicable only for 'str' and 'CXXExposedType' types "
+                               f"(or a list of those types). {type(input_value)} is an unexpected type.")
+
+            return self.__get_type_info(input_value, error)
+
     def __update_jinja_env(self):
         """Add custom filters/globals to jinja environment"""
 
-        self.jinja_env.filters['type_converter'] = partial(create_types_converters, self)
-        self.jinja_env.filters['type_info'] = partial(get_types_infos, self)
+        self.jinja_env.filters['type_converter'] = self.__create_types_converters
+        self.jinja_env.filters['type_info'] = self.__get_types_infos
 
-        self.jinja_env.globals['get_type_converter'] = partial(create_type_converter, self)
-        self.jinja_env.globals['get_type_info'] = partial(get_type_info, self)
+        self.jinja_env.globals['get_type_converter'] = self.__create_type_converter
+        self.jinja_env.globals['get_type_info'] = self.__get_type_info

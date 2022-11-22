@@ -148,8 +148,28 @@ assert(vecDoubleSum[0] == 2.0)
 
 // [template-instance-examples-end]
 
-// check array as an arg and return value
+// [variadic-examples-start]
+let elemsInt = ElementsInt.create(ts1: 1, ts2: 2)
+let holderInt = elemsInt.holder
+
+assert(holderInt.count == 2)
+assert(holderInt[0] == 1)
+assert(holderInt[1] == 2)
+
+let elemsString = ElementsString.create(ts1: "a", ts2: "b", ts3: "c")
+let holderString = elemsString.holder
+
+assert(holderString.count == 3)
+assert(holderString[0] == "a")
+assert(holderString[2] == "c")
+
+let elemsEmpty = ElementsEmpty.create()
+assert(elemsEmpty.holder.count == 0)
+// [variadic-examples-end]
+
+// check array as an arg and return letue
 assert(getFirstElement(a: arrayInt) == 1)
+assert(getLastElement(a: arrayInt) == 2)
 let arrayMultiplied = multiplyElements(a: arrayInt, num: 2)
 assert(arrayMultiplied.data() == [2, 4])
 

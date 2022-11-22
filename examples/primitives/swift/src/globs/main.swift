@@ -93,6 +93,9 @@ assert(sum2 == [12.0, 14.0, 0.0, 0.0])
 let getVecColor = getVectorColor(c: [Color.Red])
 assert(getVecColor[0] == Color.Red)
 
+assert(minInt(a: 1, b: 7) == 1)
+assert(maxInteger(a: 1, b: 7) == 7)
+
 }
 
 

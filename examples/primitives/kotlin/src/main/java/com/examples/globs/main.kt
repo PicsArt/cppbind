@@ -5,6 +5,7 @@ import com.examples.globs.complex.*
 import com.examples.globs.custom_args.*
 import com.examples.globs.primitives.*
 import com.examples.simple.*
+import com.examples.simple.task.Task
 
 fun use() {
 // [simple-usage-example-start]
@@ -86,6 +87,9 @@ assert(sum2 == listOf(12F, 14F, 0F, 0F))
 
 var getVecColor = getVectorColor(listOf(Color.Red))
 assert(getVecColor[0] == Color.Red)
+
+assert(minInt(1, 7) == 1)
+assert(maxInt(1, 7) == 7)
 
 }
 

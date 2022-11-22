@@ -1,0 +1,15 @@
+type_vars:
+  !join
+  - - type: "mul(double, double)"
+      vars:
+        action: gen_function
+        throws: no_throw
+        package: macros
+        name: mulD
+
+  - - type: "cppbind::example::mul(long, long)"
+      vars:
+        action: gen_function
+        throws: no_throw
+        package: macros
+        name: mulL

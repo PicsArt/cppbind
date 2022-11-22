@@ -1,5 +1,6 @@
 import os
 import unittest
+from types import SimpleNamespace
 
 from cppbind import PROJECT_CONFIG_DIR
 from cppbind.common.error import CppBindError, Error
@@ -13,6 +14,7 @@ class TestContextDescriptor(unittest.TestCase):
 
     def setUp(self) -> None:
         Error.set_error_limit(0)
+        self.var_values = SimpleNamespace(single_tu=True)
 
     # ---------- code snippets ---------- #
     def test_snippet_filepath_syntax_jinja_error(self):
@@ -20,7 +22,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -32,7 +34,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -44,7 +46,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -57,7 +59,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -70,7 +72,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -82,7 +84,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -95,7 +97,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -107,7 +109,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -120,7 +122,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -131,7 +133,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(SCRIPT_DIR + '/test_examples/jinja_errors/actions/action.render.cppbind.yaml')
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {os.path.join(SCRIPT_DIR, 'test_examples/jinja_errors/utils.kt')}, "
@@ -143,7 +145,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -156,7 +158,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f'file -> {config_file}, '
@@ -169,7 +171,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -183,7 +185,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -195,7 +197,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -208,7 +210,7 @@ class TestContextDescriptor(unittest.TestCase):
         # update default value to be of invalid jinja syntax
         ctx_desc.get_var_def()['src_glob'].value['default'].value = ['{{"test" +}}']
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {var_def_file}, "
@@ -221,7 +223,7 @@ class TestContextDescriptor(unittest.TestCase):
         # update default value to use undefined variable
         ctx_desc.get_var_def()['src_glob'].value['default'].value = ['{{"test" + undefined}}']
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {var_def_file}, "
@@ -235,7 +237,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc.get_var_def()['src_glob'].value['default'].value = [source_file]
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {source_file}, "
@@ -249,7 +251,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc.get_var_def()['src_glob'].value['default'].value = [source_file]
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {source_file}, "
@@ -261,7 +263,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "
@@ -273,7 +275,7 @@ class TestContextDescriptor(unittest.TestCase):
         ctx_desc = ContextDescriptor(config_file)
 
         with self.assertRaises(CppBindError) as ctx:
-            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, None)
+            WrapperGenerator.run_for('linux', 'kotlin', ctx_desc, self.var_values)
 
         self.assertTrue(str(ctx.exception).endswith(
             f"file -> {config_file}, "

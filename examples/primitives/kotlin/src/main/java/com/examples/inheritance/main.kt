@@ -1,7 +1,7 @@
 package com.examples.inheritance
 
 import com.examples.inheritance.*
-import com.examples.simple.Task
+import com.examples.simple.task.Task
 import com.examples.simple.Root
 
 fun use() {

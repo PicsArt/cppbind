@@ -244,3 +244,11 @@ kt_jvm_test(
     jvm_flags = ["-Djava.library.path=kotlin"],
     main_class = "com.examples.stl_types.StlTypesApp",
 )
+
+kt_jvm_test(
+    name = "macros",
+    srcs = ["src/main/java/com/examples/macros/main.kt"],
+    deps = ["kt_examples_library"],
+    jvm_flags = ["-Djava.library.path=kotlin"],
+    main_class = "com.examples.macros.MacrosApp",
+)

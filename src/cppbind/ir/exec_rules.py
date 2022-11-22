@@ -196,33 +196,33 @@ class RunRule:
                     processed[node_key] = builder.capture_stacks()
                     logging.debug(f"Captured stack {RunRule.__str_stacks(processed[node_key])}.")
 
-                if node.children:
-                    logging.debug(f"Processing children for {node.displayname}.")
-                    for child in node.children:
-                        if child.type == NodeType.CLANG_NODE:
-                            # check if the node is template and generate code for each combination of template args
-                            if child.kind in (ElementKind.CLASS_TEMPLATE,
-                                              ElementKind.FUNCTION_TEMPLATE):
-                                for _template_info in RunRule._get_template_infos(child, ignore_parents=True):
-                                    if template_info:
-                                        # merge current node's context with parent
-                                        # this might be revisited in #242
-                                        # and will be changed after template nodes will be exposed during
-                                        # ir post processing
-                                        _template_info.choice.update(template_info.choice)
-                                    _run_recursive(child, _template_info)
-                            else:
-                                _run_recursive(child, template_info)
+                logging.debug(f"Processing children for {node.displayname}.")
+                # iteration is defined by the IR
+                for child in node:
+                    if child.type == NodeType.CLANG_NODE:
+                        # check if the node is template and generate code for each combination of template args
+                        if child.kind in (ElementKind.CLASS_TEMPLATE,
+                                          ElementKind.FUNCTION_TEMPLATE):
+                            for _template_info in RunRule._get_template_infos(child, ignore_parents=True):
+                                if template_info:
+                                    # merge current node's context with parent
+                                    # this might be revisited in #242
+                                    # and will be changed after template nodes will be exposed during
+                                    # ir post-processing
+                                    _template_info.choice.update(template_info.choice)
+                                _run_recursive(child, _template_info)
                         else:
                             _run_recursive(child, template_info)
-                    logging.debug(f"End processing children for {node.displayname}.")
+                    else:
+                        _run_recursive(child, template_info)
+                logging.debug(f"End processing children for {node.displayname}.")
 
                 if stack_added:
                     builder.pop_scope_stack()
 
             # create common scope for entire ir
             # we have to add this scope to be able to allow
-            # write into single file from multiple roots
+            # to write into single file from multiple roots
             # since we do not have gen api for file
             # we register file and add one scope
             builder.add_scope_stack()

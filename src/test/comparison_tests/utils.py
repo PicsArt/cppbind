@@ -51,7 +51,7 @@ class RunCompare:
         with patch("cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def") as var_def_mock:
             # mock to get actual variables not only default ones
             var_def_mock.return_value = ctx_descriptor._ContextDescriptor__var_def
-            run(types.SimpleNamespace(plat_lang_options=self.languages), ctx_descriptor)
+            run(types.SimpleNamespace(plat_lang_options=self.languages, single_tu=True), ctx_descriptor)
 
     def compare(self):
         # compares files from current directory with the files of examples root directory

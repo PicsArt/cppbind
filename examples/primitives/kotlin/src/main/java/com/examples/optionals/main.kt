@@ -4,7 +4,7 @@ import com.examples.optionals.Optionals
 import com.examples.enums.Color
 import com.examples.enums.ColorShade
 import com.examples.enums.LogLevel
-import com.examples.simple.Task
+import com.examples.simple.task.Task
 import com.examples.simple.Root
 
 

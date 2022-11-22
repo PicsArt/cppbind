@@ -22,21 +22,13 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 CXX_INPUTS_FOLDER = 'test_cxx_inputs'
 
 
-def test_parser(clang_config):
-    parser = CXXParser()
-    processor = CXXPrintProcessor()
-    for c in parser.parse_x(**clang_config):
-        processor(c)
-
-
 def test_parser_processor(clang_config):
-    parser = CXXParser()
     processor = CXXPrintProcessor()
-    parser.parse(processor, **clang_config)
+    parser = CXXParser(processor, False)
+    parser.parse(**clang_config)
 
 
 def test_parser_processor_cr_counter(clang_config):
-    parser = CXXParser()
     count = 0
     max_dept = 0
     dept = 0
@@ -57,10 +49,11 @@ def test_parser_processor_cr_counter(clang_config):
 
     count_processor.start_cursor = incr_dept
     count_processor.end_cursor = decr_dept
-    parser.parse(count_processor, **clang_config)
+    parser = CXXParser(count_processor, False)
+    parser.parse(**clang_config)
 
-    assert count == 19, "number of cursors has bean changed"
-    assert max_dept == 5, "max depth has bean changed"
+    assert count == 9, "number of cursors has bean changed"
+    assert max_dept == 3, "max depth has bean changed"
 
 
 @pytest.mark.parametrize(
@@ -144,8 +137,6 @@ def test_parser_errors(clang_config):
 
     test_dir = os.path.join(SCRIPT_DIR, 'test_examples/negative')
 
-    parser = CXXParser()
-
     lang, plat = 'swift', 'linux'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
     ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
@@ -154,7 +145,8 @@ def test_parser_errors(clang_config):
     for file in os.listdir(test_dir):
         with pytest.raises(CppBindError):
             clang_cfg['src_glob'] = [os.path.join(test_dir, file)]
-            parser.parse(ir_builder, **clang_cfg)
+            parser = CXXParser(ir_builder, False)
+            parser.parse(**clang_cfg)
 
 
 def test_file_api_positive():

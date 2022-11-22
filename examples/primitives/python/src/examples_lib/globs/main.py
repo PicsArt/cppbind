@@ -95,3 +95,6 @@ assert(s2 == [12.0, 14.0, 0.0, 0.0])
 
 getVecColor = get_vector_color([Color.Red])
 assert(getVecColor[0] == Color.Red)
+
+assert(min_int(1, 7) == 1.0)
+assert(max_int(1, 7) == 7.0)

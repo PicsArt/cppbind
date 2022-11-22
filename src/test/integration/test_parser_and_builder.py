@@ -37,14 +37,14 @@ def test_parser_with_dir_api(clang_config):
 
     context_def_glob = os.path.join(api_rules_dir, dir_example_folder, '*.yaml')
 
-    parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
     processor = CppBindIRBuilder(RootNode(), ctx_mgr)
+    parser = CXXParser(processor, True)
     CppBindIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
     processor.start_root()
-    parser.parse(processor, **clang_cfg)
+    parser.parse(**clang_cfg)
 
     root = processor.ir
     dir_root = root.children[0]
@@ -71,14 +71,14 @@ def test_parser_with_file_api(clang_config):
     plat, lang = 'linux', 'python'
     context_def_glob = os.path.join(api_rules_dir, file_example_folder, '*.yaml')
 
-    parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
     processor = CppBindIRBuilder(RootNode(), ctx_mgr)
     CppBindIRBuilder._get_modification_time = MagicMock(return_value=datetime.datetime.utcnow())
+    parser = CXXParser(processor, True)
 
     processor.start_root()
-    parser.parse(processor, **clang_cfg)
+    parser.parse(**clang_cfg)
 
     root = processor.ir
     assert root.type is NodeType.ROOT_NODE
@@ -100,16 +100,16 @@ def test_jinja_attrs(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, '../parser/test_examples/jinja_attr/positive')
-    parser = CXXParser()
 
     clang_cfg['src_glob'] = [os.path.join(test_dir, 'with_jinja_attrs.hpp')]
 
     plat, lang = 'linux', 'swift'
     ctx_mgr = ContextManager(ContextDescriptor(None), plat, lang)
     ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
+    parser = CXXParser(ir_builder, True)
 
     ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+    parser.parse(**clang_cfg)
 
     for name in ('pkg_exc_1', 'pkg_exc_2', 'pkgInt', 'pkgDouble', 'pkg_shared'):
         assert name in str(ir_builder.ir), "Wrong evaluation of jinja variable value"
@@ -120,7 +120,6 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, '../parser/test_examples', 'jinja_attr/positive')
-    parser = CXXParser()
 
     with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
@@ -133,7 +132,8 @@ def test_attrs_dependencies_and_jinja_usage_positive(clang_config):
         ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
         ir_builder.start_root()
-        parser.parse(ir_builder, **clang_cfg)
+        parser = CXXParser(ir_builder, True)
+        parser.parse(**clang_cfg)
 
         namespace_node = ir_builder.ir.children[0].children[0].children[0]
 
@@ -204,7 +204,6 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
     test_dir = os.path.join(SCRIPT_DIR, '../parser/test_examples/jinja_attr/negative')
-    parser = CXXParser()
 
     # check wrong variables order in var def file
     with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
@@ -215,7 +214,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
 
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
         ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
-
+        parser = CXXParser(ir_builder, False)
         try:
             ir_builder.start_root()
         except CppBindError:
@@ -256,7 +255,7 @@ def test_attrs_dependencies_and_jinja_usage_negative(clang_config):
         ir_builder.start_root()
 
         try:
-            parser.parse(ir_builder, **clang_cfg)
+            parser.parse(**clang_cfg)
         except CppBindError:
             pass
         except Exception as err:
@@ -292,13 +291,13 @@ def test_empty_gen_rule(clang_config):
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
     context_def_glob = os.path.join(working_dir, '*.yaml')
 
-    parser = CXXParser()
     ctx_desc = ContextDescriptor(context_def_glob)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
     ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+    parser = CXXParser(ir_builder, False)
+    parser.parse(**clang_cfg)
 
     ir = ir_builder.ir
     dir_root = ir.children[0]
@@ -324,12 +323,12 @@ def test_root_config(clang_config):
     clang_cfg['src_glob'] = [os.path.join(working_dir, '*.hpp')]
     context_def_glob = os.path.join(working_dir, '*.yaml')
 
-    parser = CXXParser()
     ctx_mgr = ContextManager(ContextDescriptor(context_def_glob), plat, lang)
     ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
 
     ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+    parser = CXXParser(ir_builder, False)
+    parser.parse(**clang_cfg)
     root = ir_builder.ir
 
     assert root.api == Node.API_NONE, 'wrong root gen rule'
@@ -345,8 +344,6 @@ def test_root_config(clang_config):
 def test_sys_vars_available_in_api(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
 
-    parser = CXXParser()
-
     with patch('cppbind.context_manager.ctx_desc.ContextDescriptor.get_var_def') as var_def_mock:
         var_def_mock.return_value = ContextDescriptor.resolve_attr_aliases(
             load_yaml(os.path.join(os.getcwd(), "example_var_def.yaml")))
@@ -356,7 +353,8 @@ def test_sys_vars_available_in_api(clang_config):
         ctx_mgr = ContextManager(ContextDescriptor(None), 'linux', 'swift')
         ir_builder = CppBindIRBuilder(RootNode(), ctx_mgr)
         ir_builder.start_root()
-        parser.parse(ir_builder, **clang_cfg)
+        parser = CXXParser(ir_builder, False)
+        parser.parse(**clang_cfg)
 
         class_node = ir_builder.ir.children[0].children[0].children[0]
 
@@ -388,13 +386,13 @@ def test_src_exclude_glob(clang_config):
     clang_cfg['src_exclude_glob'] = [os.path.join(SCRIPT_DIR, 'test_examples/exclude_glob/module.hpp')]
     exclude_files = absolute_path_from_glob(clang_cfg['src_exclude_glob']) if clang_cfg['src_exclude_glob'] else None
     cppbind_filter = CXXParserFilter(exclude_files=exclude_files)
-    parser = CXXParser(filter_=cppbind_filter)
     ctx_desc = ContextDescriptor(None)
     ctx_mgr = ContextManager(ctx_desc, plat, lang)
 
     processor = CppBindIRBuilder(RootNode(), ctx_mgr)
+    parser = CXXParser(processor, False, filter_=cppbind_filter)
     processor.start_root()
-    parser.parse(processor, **clang_cfg)
+    parser.parse(**clang_cfg)
 
     # find the file node
     # as IR may differ depending on the current working directory find the file node recursively
@@ -411,12 +409,11 @@ def test_src_exclude_glob(clang_config):
 def test_descendants_list(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
     clang_cfg['src_glob'] = [os.path.join(os.getcwd(), 'descendants.hpp')]
-
-    parser = CXXParser()
     ir_builder = CppBindIRBuilder(RootNode(), ContextManager(ContextDescriptor(None), 'linux', 'swift'))
-
+    cppbind_filter = CppBindFilter(exclude_files=[], ir=ir_builder.ir)
     ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+    parser = CXXParser(ir_builder, True, cppbind_filter)
+    parser.parse(**clang_cfg)
     ir_builder.end_root()
 
     ir = IRPostProcessor().process_ir(ir_builder.ir)
@@ -445,39 +442,35 @@ def test_descendants_list(clang_config):
 
 
 @patch('os.getcwd', lambda: os.path.join(SCRIPT_DIR, "test_examples/node_reuse"))
-def test_node_reuse(clang_config):
+def test_node_not_contains_includes(clang_config):
     clang_cfg = copy.deepcopy(clang_config)
     clang_cfg['src_glob'] = [os.path.join(os.getcwd(), '*.hpp')]
 
     ir = RootNode()
-    parser = CXXParser(filter_=CppBindFilter(ir))
     ir_builder = CppBindIRBuilder(ir, ContextManager(ContextDescriptor(None), 'linux', 'swift'))
+    parser = CXXParser(ir_builder, False, filter_=CppBindFilter(ir))
 
     ir_builder.start_root()
-    parser.parse(ir_builder, **clang_cfg)
+    parser.parse(**clang_cfg)
     ir_builder.end_root()
 
     incl_file_node, main_file_node = ir.children[0].children
-    incl_ns_node_from_main, incl_cls_node_from_main, incl_func_node_from_main, main_ns_node = main_file_node.children
-    incl_ns_node, incl_cls_node, incl_func_node = incl_file_node.children
-
-    assert incl_ns_node is incl_ns_node_from_main, "two namespaces from the same file are not equivalent"
-    assert main_ns_node is not incl_ns_node, "two namespaces from different files are equivalent"
-
-    assert incl_cls_node is incl_cls_node_from_main, "two function nodes from the same file are not equivalent"
-    assert incl_func_node is incl_func_node_from_main, "two function nodes from different files are equivalent"
+    assert incl_file_node.spelling.endswith('test_examples/node_reuse/incl.hpp')
+    assert main_file_node.spelling.endswith('test_examples/node_reuse/main.hpp')
+    assert len(main_file_node.children) == 1, 'Included file should not appear in current TU node'
+    assert len(incl_file_node.children) == 3, 'File should contain only its nodes'
 
 
 def test_shared_ref_negative():
     with pytest.raises(CppBindError, match=r"Child_A ancestors have different values for shared_ref variable"):
         ctx_desc = ContextDescriptor("*/**/shared_ref.yaml")
-        WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
+        WrapperGenerator.run_for('linux', 'swift', ctx_desc, types.SimpleNamespace(single_tu=False))
 
 
 def test_non_polymorphic_multiple_bases_negative():
     with pytest.raises(CppBindError, match="ChildClass is not polymorphic but has multiple branches in its base hierarchy"):
         ctx_desc = ContextDescriptor("*/**/non_polym_bases.yaml")
-        WrapperGenerator.run_for('linux', 'swift', ctx_desc, None)
+        WrapperGenerator.run_for('linux', 'swift', ctx_desc, types.SimpleNamespace(single_tu=True))
 
     # remove generated empty directories
     shutil.rmtree(os.path.join(SCRIPT_DIR, 'non_polym_test_wrapper_dir'), ignore_errors=True)

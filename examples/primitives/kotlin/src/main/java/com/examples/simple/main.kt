@@ -1,7 +1,7 @@
 package com.examples.simple
 
 import com.examples.simple.Project
-import com.examples.simple.Task
+import com.examples.simple.task.Task
 import com.examples.simple.Root
 
 fun use() {

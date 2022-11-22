@@ -139,8 +139,6 @@ def make_class_context(ctx):
         return context
 
     context = _make(ctx)
-    ancestors = [types.SimpleNamespace(**_make(ancestor_context)) for ancestor_context in ctx.ancestor_contexts]
-    context.update(dict(ancestors=ancestors))
     return context
 
 
@@ -201,6 +199,7 @@ def gen_entity(ctx, builder, api, node_kind_name):
         context = make_file_context(ctx)
     elif node_kind_name in (
         'class',
+        'class_template_partial_specialization',
         'class_template',
         'struct',
         'struct_template'

@@ -24,5 +24,9 @@ class IRPostProcessor:
 
         for node in ir._get_all_nodes():
             if isinstance(node, CXXNode) and node.is_class_or_struct and node.api != Node.API_NONE:
-                for base_node in node.base_type_specifier_nodes:
+                for base_node in node._base_type_specifier_nodes:
                     base_node.direct_descendants.add(node)
+                    for template_node in base_node._template_spec_node_map.values():
+                        # add also to specializations, as currently, we do not have a mechanism to identify whether
+                        # it is template's descendant or specialization's
+                        template_node.direct_descendants.add(node)

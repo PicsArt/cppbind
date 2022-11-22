@@ -86,16 +86,6 @@ class Context(BaseContext):
         node = self.node.find_adjacent_node(search_names, search_api)
         return self.runner.find_ctx_by_node(node)
 
-    @cached_property
-    @available_on(ElementKind.STRUCT_DECL,
-                  ElementKind.CLASS_DECL,
-                  ElementKind.CLASS_TEMPLATE)
-    def ancestor_contexts(self):
-        """The list of contexts of the ancestors"""
-        return [
-            self.lookup_ctx_by_name(cutil.replace_template_choice(ancestor_node.full_displayname, self.template_choice))
-            for ancestor_node in self.node.ancestor_nodes]
-
     def set_template_info(self, template_info):
         self.template_info = template_info
 
@@ -114,6 +104,7 @@ class Context(BaseContext):
     @available_on(ElementKind.STRUCT_DECL,
                   ElementKind.CLASS_DECL,
                   ElementKind.CLASS_TEMPLATE,
+                  ElementKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
                   ElementKind.ENUM_DECL)
     def cxx_type_name(self):
         """
@@ -202,6 +193,7 @@ class RunRule:
                     if child.type == NodeType.CLANG_NODE:
                         # check if the node is template and generate code for each combination of template args
                         if child.kind in (ElementKind.CLASS_TEMPLATE,
+                                          ElementKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
                                           ElementKind.FUNCTION_TEMPLATE):
                             for _template_info in RunRule._get_template_infos(child, ignore_parents=True):
                                 if template_info:

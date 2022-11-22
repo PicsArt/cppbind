@@ -60,7 +60,7 @@ special_functions:
       {%-   if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
-      public {{gen_override_keyword(cxx, exclude_interface=true)}}{{hash_decl}} {
+      public {{gen_override_keyword(cxx, vars, exclude_interface=true)}}{{hash_decl}} {
         var cppbindErr = CppBindCObject()
         let result = {{cppbind_helper.get_c_func_name(cxx_namespace + parent_class_converter.swift.target_type_name, vars.name, '')}}(cself, &cppbindErr)
         {{gen_exception_handling_code()|indent(2)}}
@@ -86,7 +86,7 @@ special_functions:
       {%-   if vars.comment -%}
       {{vars.comment|make_doxygen_comment}}
       {%    endif -%}
-      public {{gen_override_keyword(cxx, exclude_interface=true)}}{{tostring_decl}} {
+      public {{gen_override_keyword(cxx, vars, exclude_interface=true)}}{{tostring_decl}} {
       {%-   set c_func = cppbind_helper.get_c_func_name(cxx_namespace + parent_class_converter.swift.target_type_name, vars.name, '') %}
         var cppbindErr = CppBindCObject()
         let result = {{c_func}}(cself, &cppbindErr)

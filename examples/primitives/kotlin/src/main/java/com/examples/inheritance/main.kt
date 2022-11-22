@@ -175,6 +175,13 @@ goodOldDoctor.close()
 val electricBicycle = ElectricBicycle(1)
 assert(electricBicycle.type() == "ElectricBicycle")
 
+// test override
+val mountainBicycle = MountainBicycle(1)
+assert(mountainBicycle.type() == "MountainBicycle")
+
+val electricCityBicycle = ElectricCityBicycle(1)
+assert(electricCityBicycle.type() == "ElectricCityBicycle")
+
 }
 
 class InheritanceApp {

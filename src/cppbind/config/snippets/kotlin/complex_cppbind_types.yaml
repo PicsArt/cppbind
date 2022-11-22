@@ -855,8 +855,6 @@ std::optional:
           {{target_name}} = std::optional<{{value_converter.jni_to_cxx.target_type_name}}>({{value_converter.jni_to_cxx.converted_name(tmp_name)}});
       }
       {% endif %}
-
-
     cxx_to_jni: |
       {%- set value_converter = get_type_converter(template_args[0]) -%}
       {%- set jni_type_signature = cppbind_helper.get_jni_type_signature(value_converter.cxx_to_jni.target_type_name) -%}
@@ -921,12 +919,12 @@ std::optional:
       {%- set value_converter = get_type_converter(template_args[0]).kotlin_ref_internal -%}
       {%- if value_converter is defined -%}
       if ({{name}} != null) {
-        {{value_converter.snippet(name  + "!!", reference=reference, nullable=nullable)|indent(4)}}
+          {{value_converter.snippet(name, reference=reference, nullable=nullable)|indent(4)}}
       }
       {%- endif -%}
     kotlin_keep_alive: |
       if ({{reference}} != null) {
-        {{name}}.keepCppBindReference({{reference}}!!)
+          {{name}}.keepCppBindReference({{reference}})
       }
     cxx_include:
       !concat

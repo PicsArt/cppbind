@@ -146,6 +146,13 @@ assert(doctorUsage.getGoodDoctorName(d: doctorUsage.getGoodVirtualDoctor() as! G
 let electricBicycle = ElectricBicycle(numberOfSeats: 1)
 assert(electricBicycle.type() == "ElectricBicycle")
 
+// test override
+let mountainBicycle = MountainBicycle(numberOfSeats: 1)
+assert(mountainBicycle.type() == "MountainBicycle")
+
+let electricCityBicycle = ElectricCityBicycle(numberOfSeats: 1)
+assert(electricCityBicycle.type() == "ElectricCityBicycle")
+
 }
 
 #if os(Linux)

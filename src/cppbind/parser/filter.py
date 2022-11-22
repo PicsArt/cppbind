@@ -96,7 +96,8 @@ class CXXParserFilter(CXXFilter):
 
         # skip struct/class/enum cursors which are not definitions
         if cursor.kind in [cli.CursorKind.CLASS_DECL, cli.CursorKind.ENUM_DECL,
-                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE] and not cursor.is_definition():
+                           cli.CursorKind.STRUCT_DECL, cli.CursorKind.CLASS_TEMPLATE,
+                           cli.CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION] and not cursor.is_definition():
             return True
 
         # skip function(template)/method cursors which are not declarations

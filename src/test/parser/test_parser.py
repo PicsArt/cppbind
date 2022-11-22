@@ -484,4 +484,4 @@ def test_get_git_repo_url():
             git_repo_url = _get_git_repo_url(os.path.abspath(SCRIPT_DIR + 3 * '/..'))
             assert git_repo_url == 'TestRepo/tree/TestBranch/'
 
-    assert _get_git_repo_url('.') is None
+    assert _get_git_repo_url('./dummy') is None

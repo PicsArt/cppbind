@@ -61,7 +61,8 @@ class CXXExposedElement:
         if kind in (
                 ElementKind.CLASS_DECL,
                 ElementKind.STRUCT_DECL,
-                ElementKind.CLASS_TEMPLATE
+                ElementKind.CLASS_TEMPLATE,
+                ElementKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION
         ):
             return CXXClassExposedElement(cxx_element, template_choice)
         if kind == ElementKind.PARM_DECL:

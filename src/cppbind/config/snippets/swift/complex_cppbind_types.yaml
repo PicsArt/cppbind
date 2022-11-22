@@ -214,8 +214,8 @@ $Object:
         obj = {{type_name}}({{name}}, owner)
       {%- endfor %}
       default:
-        {%- set type_name = custom.namespace + vars.interface_impl_class_name if vars.action == 'gen_interface' else vars.name %}
-        obj = {{type_name + custom.tpostfix}}({{name}}, owner)
+        {%- set type_name = obj_converter.get_target_type_name(interface_class=vars.action=='gen_interface') %}
+        obj = {{type_name}}({{name}}, owner)
       }
       return obj{{' as! ' + obj_converter.target_type_name if has_template_descendant}}
     cxx_obj_recover_func_decl: |

@@ -1,0 +1,28 @@
+.md-header {
+  background-image: url('https://raw.githubusercontent.com/PicsArt/cppbind/master/docs/_static/img/cppbind-navbar.svg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
+  background-image: url('https://raw.githubusercontent.com/PicsArt/cppbind/master/docs/_static/img/cppbind-scrollbar.svg');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+
+.md-header-nav__button.md-logo * {
+  height: 40px;
+  margin-top:-5px;
+}
+
+/* for mobile */
+@media only screen and (max-width: 76.1875em) {
+  html .md-nav--primary .md-nav__title--site, .md-nav__source {
+    background-image: url('https://raw.githubusercontent.com/PicsArt/cppbind/master/docs/_static/img/cppbind-navbar.svg');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+  }
+}

@@ -72,9 +72,12 @@ markdown_extensions:
 repo_url: https://github.com/PicsArt/cppbind
 edit_uri: ""
 
-copyright: Copyright &copy; <script>document.write( new Date().getFullYear() );</script> .
+copyright: Copyright &copy; <script>document.write( new Date().getFullYear() );</script> <a href="https://picsart.com">Picsart, Inc.</a>
 
 plugins:
   - git-revision-date-localized
   - search
   - include-markdown
+
+extra_css:
+  - stylesheets/extra.css

@@ -5,7 +5,7 @@ on:
 
 jobs:
   cppbind-publish:
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     steps:
       - name: Setup Python 3.9
         run: |
@@ -15,22 +15,19 @@ jobs:
           python3.9 -m venv $HOME/venv-python3.9
           echo "VIRTUAL_ENV=$HOME/venv-python3.9" >> $GITHUB_ENV
           echo "$HOME/venv-python3.9/bin" >> $GITHUB_PATH
-      
+
       - name: Add PYTHON_BIN_PATH to ENV
         run : echo "PYTHON_BIN_PATH=`which python3`" >> $GITHUB_ENV
-        
-      - name: Checkout branch
-        uses: actions/checkout@v2.3.4
+
+      - uses: actions/checkout@v2.3.4
+        name: Checkout branch
         with:
-          ref: ${{ github.head_ref }}
-          token: ${{ secrets.GH_TOKEN }}
-          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN  }}
 
       - name: Install requirements
         run : pip3 install -r src/requirements.txt
 
       - name: Set version name for release
-#         if: github.event_name == 'release'
         shell: bash
         run: |
           VERSION_NAME=${GITHUB_REF##*/}
@@ -38,16 +35,17 @@ jobs:
           sed -i -r "s/version=\"[0-9]*\.[0-9]*\.[0-9]*\"/version=\"$VERSION_NAME\"/g" setup.py
 
       - name: Build
-        run: python3 setup.py bdist_wheel
+        run: python3 setup.py sdist bdist_wheel
         env:
           CC: clang
 
-      - name: Publish
-        run: twine upload dist/*.whl -u ${{ secrets.NEXUS3_USERNAME }} -p ${{ secrets.NEXUS3_PASSWORD }} --repository-url https://nexus3.picsart.tools/repository/pypi-internal/
-        env:
-          CC: clang
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_PUBLISH_TOKEN }}
+          verbose: true
 
       - name: Set env of the run url
         if: always()
         run: echo "RUN_URL=https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> $GITHUB_ENV
-

@@ -411,6 +411,7 @@ def init_jinja_env(language):
     env.filters['increment'] = increment
     env.filters['map_callback'] = map_callback
     env.filters['type'] = map_type
+    env.filters['set'] = lambda x: set(x)
 
     env.tests['match_regex'] = match_regex
     env.tests['contains'] = contains

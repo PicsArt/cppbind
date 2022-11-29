@@ -22,7 +22,9 @@ file:
       {{vars.out_dir + pat_sep + vars.full_package|replace('.', pat_sep)}}.py
     scopes:
       - body
-      - include
+      - base_type_include
+      - type_hint_include
+      - argument_default_value_include
     content: |
       {{[banner_logo, vars.banner_comment]|make_py_docstring}}
       {%- set future_import = 'from __future__ import annotations' %}
@@ -34,7 +36,13 @@ file:
       {%-   set bind_import = 'from cppbind_utils{} import *'.format(vars.file_postfix) %}
       {%- endif %}
       {%- set helpers = helper_includes|format_list('from {} import *')|join_unique %}
-      {{[future_import, typing_import, pybind_import, include, helpers, bind_import]|join(new_line)|sort_python_code}}
+      {{[future_import, typing_import, pybind_import, argument_default_value_include, base_type_include, helpers, bind_import]|join(new_line)|sort_python_code}}
+      {%- set type_hint_includes = ((type_hint_include|string).split(new_line)|set - (base_type_include|string).split(new_line)|set - (argument_default_value_include|string).split(new_line)|set)|join(new_line) %}
+      {%- if type_hint_includes %}
+
+      if TYPE_CHECKING:
+          {{type_hint_includes|sort_python_code|indent(4)}}
+      {%- endif %}
       {{body}}{{new_line}}
   cxx:
     file_path: |
@@ -243,7 +251,7 @@ enum:
 
 var_class: &var_class
   python:
-    include:
+    base_type_include:
       unique_content:
         !concat
         - !include python_macros.yaml&includes.python
@@ -394,7 +402,7 @@ var_bind_method: &var_bind_method
       {%-   endif -%}
       {%- endfor -%}
 
-var_method_python_include: &var_method_python_include
+var_method_python_type_hint_include: &var_method_python_type_hint_include
   unique_content:
     !concat
     - !include python_macros.yaml&includes.python
@@ -405,6 +413,17 @@ var_method_python_include: &var_method_python_include
       {%- if cxx.result_type -%}
       {{gen_import(get_type_converter(cxx.result_type))}}
       {%- endif -%}
+
+var_method_python_argument_default_value_include: &var_method_python_argument_default_value_include
+  unique_content:
+    !concat
+    - !include python_macros.yaml&includes.python
+    - |
+      {%- for arg in cxx.args -%}
+      {%-   if arg.default and arg.type.is_enum -%}
+      {{gen_import(get_type_converter(arg.type))}}
+      {%-   endif -%}
+      {%- endfor -%}
 
 var_method_cxx_include: &var_method_cxx_include
   unique_content:
@@ -426,7 +445,8 @@ var_method_cxx_include: &var_method_cxx_include
 
 constructor:
   python:
-    include: *var_method_python_include
+    type_hint_include: *var_method_python_type_hint_include
+    argument_default_value_include: *var_method_python_argument_default_value_include
     constructor_body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
@@ -492,7 +512,8 @@ constructor:
 
 method:
   python:
-    include: *var_method_python_include
+    type_hint_include: *var_method_python_type_hint_include
+    argument_default_value_include: *var_method_python_argument_default_value_include
     body: |
       {%- set incorrect_nullable_args = vars.nullable_arg|reject('in', cxx.args|map(attribute='name'))|list -%}
       {%- if incorrect_nullable_args -%}
@@ -624,7 +645,8 @@ function:
         - |
           from .{{vars.full_package.split('.')[-1]}} import {{vars.name|to_snake_case}}{{get_overloading_postfix(vars)}}{{get_python_template_postfix()}}
   python:
-    include: *var_method_python_include
+    type_hint_include: *var_method_python_type_hint_include
+    argument_default_value_include: *var_method_python_argument_default_value_include
     body:
       !concat
       - !include python_macros.yaml&templates
@@ -713,7 +735,7 @@ var_bind_getter: &var_bind_getter
           return {{rconverter.python_to_pybind.converted_name('arg')}}
       {%- endif -%}
 
-var_getter_python_include: &var_getter_python_include
+var_getter_python_type_hint_include: &var_getter_python_type_hint_include
   unique_content:
     !concat
     - !include python_macros.yaml&includes.python
@@ -729,7 +751,7 @@ var_getter_cxx_include: &var_getter_cxx_include
 
 var_property_getter_setter: &var_property_getter_setter
   python:
-    include: *var_getter_python_include
+    type_hint_include: *var_getter_python_type_hint_include
     properties: |
       {%- if not cxx.is_public -%}
       {%-   do Error.critical("{}.{} is not a public field. Make it public or remove cppbind API.".format(cxx.parent.displayname, cxx.displayname)) -%}
@@ -777,7 +799,7 @@ property_setter: *var_property_getter_setter
 
 getter:
   python:
-    include: *var_getter_python_include
+    type_hint_include: *var_getter_python_type_hint_include
     properties:
       !concat
       - !include common_macros.yaml&templates

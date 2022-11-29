@@ -11,3 +11,4 @@ typealias ObjectArray = Array<Any?>
  * It is intended to be used by the generated code.
  */
 data class CppBindObject(var id : Long, val owner : Boolean = false)
+

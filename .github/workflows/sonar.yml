@@ -45,7 +45,7 @@ jobs:
       - name: Collect coverage info
         run: |
           coverage run -m pytest ./src/test
-          coverage xml
+          coverage xml -i
 
       - name: Run sonar
         run: |

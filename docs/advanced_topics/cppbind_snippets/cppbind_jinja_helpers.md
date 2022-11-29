@@ -22,6 +22,7 @@ Here is the set of custom jinja filters provided by CppBind:
 - [any](#any)
 - [decapitalize](#decapitalize)
 - [format_list](#format_list)
+- [has_api](#has_api)
 - [increment](#increment)
 - [join_unique](#join_unique)
 - [make_doxygen_comment](#make_doxygen_comment)
@@ -30,6 +31,7 @@ Here is the set of custom jinja filters provided by CppBind:
 - [map_callback](#map_callback)
 - [path_join](#path_join)
 - [replace_regex](#replace_regex)
+- [set](#set)
 - [sort_python_code](#sort_python_code)
 - [sort_snippets](#sort_snippets)
 - [to_camel_case](#to_camel_case)
@@ -75,6 +77,13 @@ also be identified using named index with the help of **arg_name** optional argu
 `list_of_strings|format_list('#include {item.name}', arg_name='item')`. The value
 provided by **arg_name** keyword will be replaced with the input data current item
 (**item.name** is an example of the usage with item property access).
+
+
+### has_api
+
+`has_api(value: CXXElement) -> bool`
+
+Returns whether the given cxx element has a CPPBind API or not.
 
 ### increment
 
@@ -144,6 +153,12 @@ in case they match the provided regex pattern. By default, it replaces all
 the occurrences, which can be changed with **count** parameter:
 `a_string|replace_regex(pattern, replacement_string)`,
 `a_string|replace_regex(pattern, replacement_string, count=1)`.
+
+### set
+
+`set(input: Iterable) -> set`
+
+Returns a Python `set` from the given iterable.
 
 ### sort_python_code
 
@@ -250,6 +265,7 @@ will result to the following list: `[namespace(_1=a1, _2=b1), namespace(_1=a2, _
 Here is the set of custom jinja tests provided by CppBind:
 
 - [contains](#contains)
+- [has_api](#has_api)
 - [match_regex](#match_regex)
 - [startswith](#startswith)
 

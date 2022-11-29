@@ -158,7 +158,7 @@ $Object:
       {%- set descendants = vars.descendants if vars.descendants is not none else descendants -%}
       {%- set lvalue_owner_kt = cxx_is_lval_reference and value_policy in ('copy', 'move', 'automatic', 'automatic_reference', 'take_ownership') -%}
       {%- set pointer_owner_kt = (cxx_is_pointer or cxx.canonical_type.is_pointer) and value_policy in ('copy', 'move', 'automatic', 'take_ownership') -%}
-      {%- set owner = ', true' if cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_kt or pointer_owner_kt else '' -%}
+      {%- set owner = ', true' if vars.shared_ref or cxx_is_value_type or cxx_is_rval_reference or lvalue_owner_kt or pointer_owner_kt else '' -%}
       {%- set type_name = custom.namespace + vars.interface_impl_class_name if vars.action == 'gen_interface' else target_type_name -%}
       {%- if cxx.is_polymorphic and descendants %}
       val {{target_name}} : {{target_type_name}}{{'?' if is_nullable}}

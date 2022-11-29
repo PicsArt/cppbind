@@ -144,7 +144,7 @@ venv.bak/
 
 **/xcshareddata/
 
-#profiling report
+# profiling report
 *profile.prof
 
 # sonar

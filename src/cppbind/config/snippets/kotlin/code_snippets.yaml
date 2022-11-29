@@ -846,7 +846,8 @@ method:
         {%-           endif %}
         {%-         endfor %}
         {%-       endif %}
-        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-       set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+        {%-       if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-         set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
         {%-         if conversion %}
             {{conversion|indent(4)}}{% endif %}
@@ -1359,7 +1360,8 @@ var_property_getter_setter: &var_property_getter_setter
               val result = j{{vars.name|capitalize}}(cppbindObjId)
       {%- endif %}
               {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
-      {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+      {%- set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+      {%- if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
       {%-   set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
       {%-   if conversion %}
               {{conversion|indent(8)}}{% endif %}
@@ -1482,7 +1484,8 @@ getter:
                 val result = j{{vars.name|capitalize}}{{get_template_postfix(cxx)}}(cppbindObjId)
         {%- endif %}
                 {{result_converter.snippet('result', value_policy=vars.return_value_policy, nullable=vars.nullable_return)|indent(8)}}
-        {%- if vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%- set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+        {%- if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.kotlin_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-   set conversion = rconverter.kotlin_ref_internal.snippet(result_converter.converted_name('result'), reference='this', nullable=vars.nullable_return) -%}
         {%-   if conversion %}
                 {{conversion|indent(8)}}{%- endif %}

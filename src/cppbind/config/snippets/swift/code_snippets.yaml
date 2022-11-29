@@ -821,7 +821,8 @@ method:
         {%-           endif %}
         {%-         endif %}
         {%-       endfor %}
-        {%-       if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-       set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+        {%-       if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-         set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-         if conversion %}
         {{conversion|indent(4)}}{% endif %}
@@ -971,7 +972,8 @@ method:
         {%-     if conversion %}
           {{conversion|indent(2)}}
         {%-     endif %}
-        {%-     if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-     set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+        {%-     if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-       set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-       if conversion %}
           {{conversion|indent(2)}}{% endif %}
@@ -1429,7 +1431,8 @@ var_property_getter_setter: &var_property_getter_setter
       {%-   if conversion %}
       {{conversion}}
       {%-   endif %}
-      {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+      {%-   set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+      {%-   if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
       {%-     set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) -%}
       {%-     if conversion %}
       {{conversion}}{% endif %}
@@ -1566,7 +1569,8 @@ getter:
         {%-   if conversion %}
         {{conversion}}
         {%-   endif %}
-        {%-   if vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
+        {%-   set result_is_shared = rconverter.type_info.vars.shared_ref|default(False) %}
+        {%-   if not result_is_shared and vars.return_value_policy == 'reference_internal' and rconverter.swift_ref_internal is defined and (cxx.result_type.is_lval_reference or cxx.result_type.is_pointer) %}
         {%-     set conversion = rconverter.swift_ref_internal.snippet(rconverter.sc_to_swift.converted_name('result'), reference='self', nullable=vars.nullable_return) %}
         {%-     if conversion %}
         {{conversion}}{% endif %}

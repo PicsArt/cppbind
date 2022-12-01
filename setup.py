@@ -52,5 +52,5 @@ setup(
                               for f in glob.glob('src/cppbind/config/**/*', recursive=True)]},
     entry_points={"console_scripts": [entry_point]},
     install_requires=requires,
-    python_requires='>=3.6',
+    python_requires='>=3.8',
 )
